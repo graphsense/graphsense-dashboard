@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% import 'macros/currency_value.html' as currency_value %}
+
+{% block header %}
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs-3.3.6/dt-1.10.12/b-1.2.2/b-html5-1.2.2/b-print-1.2.2/datatables.min.css"/>
+
+
+{% endblock %}
+
+
+{% block navbar %}
+
+ <div class="navbar-right">
+    <select id="currency-switcher" class="form-control navbar-form">
+    <!-- options are set by currency.js -->
+    </select>
+ </div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid">
+
+  <!-- heading -->
+  <div class="row">
+    <div class="col-md-12">
+      {% block detail_heading %}
+      {% endblock %}
+      <hr>
+    </div>
+  </div>
+
+  <div class="row"><!-- main contents -->
+
+    <div class="col-md-3"><!-- panel column -->
+      <!-- summary panel -->
+      <div id="summary" class="panel panel-default">
+        <div class="panel-heading {{nav_background_color}}">
+          <div class="white-text">Summary</div>
+        </div>
+        <table class="table">
+          {% block summary_panel %}
+          {% endblock %}
+        </table>
+      </div>
+
+      {% block panel_column %}
+      {% endblock %}
+    </div>
+
+    <div class="col-md-9"><!-- tab container -->
+      {% block tab_container %}
+      {% endblock %}
+    </div><!-- end of tab container -->
+
+  </div><!-- end of main contents -->
+
+</div><!-- end of container-fluid -->
+
+
+{% endblock %}
+
+{% block javascript %}
+
+
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs-3.3.6/dt-1.10.12/b-1.2.2/b-html5-1.2.2/b-print-1.2.2/datatables.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/common/utils.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/events.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/currency.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/summaryBox.js') }}"></script>
+<script src="{{ url_for('static', filename='js/detail.js') }}"></script>
+
+{% endblock %}

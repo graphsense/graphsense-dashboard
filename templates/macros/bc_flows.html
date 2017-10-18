@@ -1,0 +1,73 @@
+{% import 'macros/currency_value.html' as currency_value %}
+
+{% macro render(tx) -%}
+
+
+<div class="table-responsive">
+  <table class="table table-striped">
+  <thead>
+    <tr>
+      <th class="col-md-6">Inputs</th>
+      <th class="col-md-6">Outputs</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td style="padding: 0px">
+      <table class="table table-striped" style="margin: 0px; border-top: 0px">
+      {% if tx.coinbase %}
+        <tr>
+          <td class="col-md-8">
+            coinbase
+          </td>
+        </tr>
+      {% else %}
+        {% for input in tx['inputs'] %}
+          <tr>
+            <td class="col-md-8">
+            {% if input.tags|length > 0 %}
+              <a href="{{ url_for('show_address', address=input.address) }}">{{ input.tags | tag_string }}</a>
+            {% else %}
+              <a href="{{ url_for('show_address', address=input.address) }}">{{ input.address }}</a>
+            {% endif %}
+            </td>
+            <td class="col-md-4 text-right">
+              {{ currency_value.render(input.value.satoshi, input.value.eur, input.value.usd) }}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endif %}
+      </table>
+    </td>
+    <td style="padding: 0px">
+      <table class="table table-striped" style="margin: 0px; border-top: 0px">
+      {% for output in tx['outputs'] %}
+        <tr>
+          <td class="col-md-8">
+            {% if output.tags|length > 0 %}
+              <a href="{{ url_for('show_address', address=output.address) }}">{{ output.tags | tag_string }}</a>
+            {% else %}
+              <a href="{{ url_for('show_address', address=output.address) }}">{{ output.address }}</a>
+            {% endif %}
+          </td>
+          <td class="col-md-4 text-right">
+            {{ currency_value.render(output.value.satoshi, output.value.eur, output.value.usd) }}
+          </td>
+        </tr>
+      {% endfor %}
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td class="text-right">
+      <strong>
+        {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd) }}
+      </strong>
+    </td>
+  </tr>
+  </tbody>
+  </table>
+</div>
+
+{%- endmacro %}

@@ -1,0 +1,30 @@
+<ul id="dropdown" class="dropdown-menu" role="menu">
+  {% if suggestions.addresses %}
+    <li class="dropdown-menu-category-item">Addresses
+    <ul>
+      {% for address in suggestions.addresses %}
+      <li class="dropdown-menu-item"><a type="address" href="#">{{ address }}</a></li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endif %}
+  {% if suggestions.transactions %}
+  <li class="dropdown-menu-category-item">Transactions
+    <ul>
+      {% for transaction in suggestions.transactions %}
+      <li class="dropdown-menu-item"><a type="transaction" href="#">{{ transaction }}</a></li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endif %}
+  {% if suggestions.tags %}
+  <li class="dropdown-menu-category-item">Tags
+    <ul>
+
+      {% for tag in suggestions.tags %}
+      <li class="dropdown-menu-item"><a type="tag" href="#">{{ tag }}</a></li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endif %}
+</ul>

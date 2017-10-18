@@ -1,0 +1,60 @@
+{% extends "detail.html" %}
+{% set nav_background_color = 'blue-background' %}
+
+{% block header %}
+{{ super() }}
+<script language='javascript'>
+  var tx_hash = '{{tx['hash']}}';
+</script>
+{% endblock %}
+
+
+{% block detail_heading %}
+<h3>Transaction <small>{{tx['txHash']}}</small></h3>
+{% endblock %}
+
+
+{% block summary_panel %}
+<tr>
+  <td>Received Time</td>
+  <td>{{ tx['timestamp'] | format_time}}</td>
+</tr>
+<tr>
+  <td>Included in Block</td>
+  <td><a href="{{ url_for('show_block', height_or_hash=tx['height']) }}">{{ tx['height'] }}</a></td>
+</tr>
+<tr>
+  <td>Total Value</td>
+  <td>
+    {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd) }}
+  </td>
+</tr>
+{% if tx.fee %}
+<tr>
+  <td>Fee</td>
+  <td>
+    {{ currency_value.render(tx.fee.satoshi, tx.fee.eur, tx.fee.usd) }}
+  </td>
+</tr>
+{% endif %}
+
+{% endblock %}
+
+{% block tab_container %}
+<!-- Nav tabs -->
+<ul id="detail_tabs" class="nav nav-tabs">
+  <li id="currency_flows" class="active"><a href="#currency_flows">Currency Flows</a></li>
+</ul>
+<!-- Tab panes -->
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane active" id="currency_flows_tab">
+    {% import 'macros/bc_flows.html' as bc_flows%}
+    {{ bc_flows.render(tx) }}
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/detail_transaction.js') }}"></script>
+{% endblock %}

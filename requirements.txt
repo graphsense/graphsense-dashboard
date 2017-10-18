@@ -1,0 +1,4 @@
+requests==2.18.2
+flask==0.12.2
+python-dateutil
+uwsgi

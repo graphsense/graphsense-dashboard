@@ -1,0 +1,126 @@
+{% extends "detail.html" %}
+{% set nav_background_color = 'purple-background' %}
+
+{% block header %}
+{{ super() }}
+<script language='javascript'>
+  var cluster_id = '{{cluster.cluster}}';
+</script>
+{% endblock %}
+
+
+{% block detail_heading %}
+<h3>Cluster <small>{{cluster.cluster}}</small></h3>
+{% endblock %}
+
+
+{% block summary_panel %}
+<tr>
+  <td>No. Addresses</td>
+  <td>{{ cluster.noAddresses }}</td>
+</tr>
+<tr>
+  <td>No. Transactions</td>
+  <td>{{ (cluster.noIncomingTxs + cluster.noOutgoingTxs) }}
+      ( <span class="green-text">{{ cluster.noIncomingTxs}}</span> | <span class="red-text">{{ cluster.noOutgoingTxs }}</span> )
+  </td>
+</tr>
+<tr>
+  <td>First Usage</td>
+  <td><a href="{{ url_for('show_transaction', hash=cluster.firstTx.txHash) }}">
+  {{ cluster.firstTx.timestamp | format_time}}</a>
+  </td>
+</tr>
+<tr>
+  <td>Last Usage</td>
+  <td><a href="{{ url_for('show_transaction', hash=cluster.lastTx.txHash) }}">{{ cluster.lastTx.timestamp | format_time}}</a>
+  </td>
+</tr>
+<tr>
+  <td>Activity Period</td>
+  <td>{{ (cluster.firstTx.timestamp, cluster.lastTx.timestamp) | format_duration }}</td>
+</tr>
+<tr>
+  <td>Total Received</td>
+  <td>
+    {{ currency_value.render(cluster.totalReceived.satoshi, cluster.totalReceived.eur, cluster.totalReceived.usd) }}
+  </td>
+</tr>
+<tr>
+  <td>Final Balance</td>
+  <td>
+    {{ currency_value.render(cluster.balance.satoshi, cluster.balance.eur, cluster.balance.usd)  }}
+  </td>
+</tr>
+{% endblock %}
+
+{% block tab_container %}
+<!-- Nav tabs -->
+<ul id="detail_tabs" class="nav nav-tabs">
+  <li id="cg" class="active"><a href="#clustergraph">Cluster Graph</a></li>
+  <li id="addresses"><a href="#addresses">Addresses</a></li>
+  <li id="tags"><a href="#tags">Tags</a></li>
+</ul>
+<!-- Tab panes -->
+<div class="tab-content">
+
+  <div role="tabpanel" class="tab-pane active" id="cg_tab">
+    <div id="graph-control" class="row">
+      {% include 'partials/graph_control.html' %}
+    </div>
+    <div id="graph-container" class="row">
+      <!-- d3js address graph rendering -->
+    </div>
+  </div>
+
+  <div role="tabpanel" class="tab-pane" id="addresses_tab">
+    <div class="table-responsive detail-table">
+      <table id="addresses_table" class="table table-striped" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th class="col-md-2">Address</th>
+                    <th class="col-md-2">First Usage</th>
+                    <th class="col-md-2">Last Usage</th>
+                    <th class="col-md-2 currencyColumn btc">Received</th>
+                    <th class="col-md-2 currencyColumn eur">Received</th>
+                    <th class="col-md-2 currencyColumn usd">Received</th>
+                    <th class="col-md-2 currencyColumn btc">Balance</th>
+                    <th class="col-md-2 currencyColumn eur">Balance</th>
+                    <th class="col-md-2 currencyColumn usd">Balance</th>
+                </tr>
+            </thead>
+        </table>
+      </div>
+  </div>
+
+  <div role="tabpanel" class="tab-pane" id="tag_tab">
+    <div class="table-responsive detail-table">
+      <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th class="col-md-2">Address</th>
+                    <th class="col-md-2">Tag</th>
+                    <th class="col-md-2">Tag URI</th>
+                    <th calls="col-md-1">Description</th>
+                    <th class="col-md-1">Actor Category</th>
+                    <th class="col-md-1">Source</th>
+                    <th calls="col-md-1">Timestamp</th>
+                </tr>
+            </thead>
+        </table>
+      </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ super() }}
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphModel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphLayout.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphControl.js') }}"></script>
+
+
+<script src="{{ url_for('static', filename='js/detail_cluster.js') }}"></script>
+{% endblock %}

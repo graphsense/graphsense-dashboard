@@ -1,0 +1,192 @@
+{% extends "detail.html" %}
+{% if address.tags.explicit | length > 0 %}
+  {% set nav_background_color = 'green-background' %}
+{% elif address.tags.implicit | length > 0 %}
+  {% set nav_background_color = 'light-green-background' %}
+{% else %}
+  {% set nav_background_color = 'grey-background' %}
+{% endif %}
+
+
+{% block header %}
+{{ super() }}
+<script language='javascript'>
+  var address_id = '{{address['address']}}';
+</script>
+{% endblock %}
+
+
+{% block detail_heading %}
+  <h3>Address <small><span id="entity_id">{{address['address']}}</span>
+  {% if address.tags.explicit|length > 0 %}
+     | explicit tags: {{ address.tags.explicit | tag_string }}
+  {% elif address.tags.implicit|length > 0 %}
+     | implicit tags: {{ address.tags.implicit | tag_string }}
+  {% else %}
+     | anonymous
+  {% endif %}
+  </small></h3>
+{% endblock %}
+
+{% block summary_panel %}
+<tr>
+  <td>No. Transactions</td>
+  <td>{{ address['noIncomingTxs'] + address['noOutgoingTxs'] }}
+      ( <span class="green-text">{{ address['noIncomingTxs'] }}</span> |
+      <span class="red-text">{{ address['noOutgoingTxs'] }}</span> )
+  </td>
+</tr>
+<tr>
+  <td>First Usage</td>
+  <td><a href="{{ url_for('show_transaction', hash=address['firstTx']['txHash']) }}">{{ address['firstTx']['timestamp'] | format_time}}</a></td>
+</tr>
+<tr>
+  <td>Last Usage</td>
+  <td><a href="{{ url_for('show_transaction', hash=address['lastTx']['txHash']) }}">{{ address['lastTx']['timestamp'] | format_time}}</a></td>
+</tr>
+<tr>
+  <td>Activity Period</td>
+  <td>{{ (address.firstTx.timestamp, address.lastTx.timestamp) | format_duration }}</td>
+</tr>
+<tr>
+  <td>Total Received</td>
+  <td>
+    {{ currency_value.render(address.totalReceived.satoshi, address.totalReceived.eur, address.totalReceived.usd) }}
+  </td>
+</tr>
+<tr>
+  <td>Final Balance</td>
+  <td>
+    {{ currency_value.render(address.balance.satoshi, address.balance.eur, address.balance.usd) }}
+  </td>
+</tr>
+{% endblock %}
+
+
+<!-- cluster panel -->
+{% block panel_column %}
+{% if address.cluster %}
+<div id="cluster-summary" class="panel panel-default">
+  <div class="panel-heading purple-background">
+    <a class="white-text" href="{{ url_for('show_cluster', cluster_id=address.cluster.cluster) }}">Address Cluster <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
+  </div>
+  <table class="table">
+    <tr>
+      <td>No. Addresses</td>
+      <td>{{ address['cluster']['noAddresses'] }}</td>
+    </tr>
+    <tr>
+      <td>No. Transactions</td>
+      <td>{{ (address['cluster']['noIncomingTxs'] + address['cluster']['noOutgoingTxs']) }}
+          ( <span class="green-text">{{ address['cluster']['noIncomingTxs']}}</span> |
+          <span class="red-text">{{ address['cluster']['noOutgoingTxs'] }}</span> )
+      </td>
+    </tr>
+    <tr>
+      <td>First Usage</td>
+      <td><a href="{{ url_for('show_transaction', hash=address['cluster']['firstTx']['txHash']) }}">
+      {{ address['cluster']['firstTx']['timestamp'] | format_time}}</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Last Usage</td>
+      <td><a href="{{ url_for('show_transaction', hash=address['cluster']['lastTx']['txHash']) }}">{{ address['cluster']['lastTx']['timestamp'] | format_time}}</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Activity Period</td>
+      <td>{{ (address.cluster.firstTx.timestamp, address.cluster.lastTx.timestamp) | format_duration }}</td>
+    </tr>
+    <tr>
+      <td>Total Received</td>
+      <td>
+        {{ currency_value.render(address.cluster.totalReceived.satoshi, address.cluster.totalReceived.eur, address.cluster.totalReceived.usd) }}
+      </td>
+    </tr>
+    <tr>
+      <td>Final Balance</td>
+      <td>
+        {{ currency_value.render(address.cluster.balance.satoshi, address.cluster.balance.eur, address.cluster.balance.usd) }}
+      </td>
+    </tr>
+  </table>
+</div>
+{% endif %}
+{% endblock %}
+
+
+{% block tab_container %}
+<!-- Nav tabs -->
+<ul id="detail_tabs" class="nav nav-tabs">
+  <li id="ag" class="active"><a href="#addressgraph">Address Graph</a></li>
+  <li id="txs"><a href="#transactions">Transactions</a></li>
+  <li id="tags"><a href="#tags">Tags</a></li>
+</ul>
+
+<!-- Tab panes -->
+<div class="tab-content">
+
+  <div role="tabpanel" class="tab-pane active" id="ag_tab">
+    <div id="graph-control" class="row">
+      {% include 'partials/graph_control.html' %}
+    </div>
+    <div id="graph-container" class="row">
+      <!-- d3js address graph rendering -->
+    </div>
+  </div>
+
+  <div role="tabpanel" class="tab-pane" id="txs_tab">
+    <!-- data tables buttons container -->
+    <div id="trx-table-buttons"></div>
+    <div class="row">
+        <div class="table-responsive detail-table col-md-12">
+          <table id="txs_table" class="table table-striped" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th class="col-md-5">Transaction</th>
+                        <th class="col-md-2 currencyColumn btc">Value</th>
+                        <th class="col-md-2 currencyColumn eur">Value</th>
+                        <th class="col-md-2 currencyColumn usd">Value</th>
+                        <th class="col-md-2">Height</th>
+                        <th calls="col-md-2">Date</th>
+                    </tr>
+                </thead>
+            </table>
+          </div>
+    </div>
+  </div>
+
+  <div role="tabpanel" class="tab-pane" id="tag_tab">
+    <div class="table-responsive detail-table">
+      <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th class="col-md-2">Tag</th>
+                    <th class="col-md-1">Type</th>
+                    <th class="col-md-3">Tag URI</th>
+                    <th calls="col-md-1">Description</th>
+                    <th class="col-md-1">Actor Category</th>
+                    <th class="col-md-2">Source</th>
+                    <th calls="col-md-1">Timestamp</th>
+                </tr>
+            </thead>
+        </table>
+      </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ super() }}
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphControl.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphModel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graphviz/graphLayout.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/detail_address.js') }}"></script>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,8 @@
+.DS_Store
+
+# IDE settings
+/.idea/
+
+config.ini
+__pycache__/
+*.py[cod]
