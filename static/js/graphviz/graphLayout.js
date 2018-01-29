@@ -201,7 +201,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
                 .text(function(d) {
                     var label = d.id;
                     if(d.radius >= 15) {
-                        return label.substring(0,3) + "...";
+                        return label.toString().substring(0,3) + "...";
                     } else {
                         return "";
                     }
