@@ -156,7 +156,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
             nodeEnter.append("circle")
                 .attr("id", function(d) {return d.id;})
                 .attr("class", function(d) {
-                    var classString = d.type;
+                    var classString = d.nodeType;
                     if(d.category == "Explicit") {
                         classString += " tagged";
                     } else if(d.category == "Implicit") {
@@ -192,7 +192,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
 
             nodeEnter.append("a")
                 .attr("xlink:href", function(d) {
-                    return $SCRIPT_ROOT + '/' + d.type + '/' + d.id;
+                    return $SCRIPT_ROOT + '/' + d.nodeType + '/' + d.id;
                 })
                 .append("text")
                 .style("pointer-events", "all")
@@ -326,7 +326,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
         markerClicked = function(node, incoming) {
             simulation.stop();
 
-            var requestURI = $SCRIPT_ROOT + '/' + node.type + '/' + node.id + '/egonet.json';
+            var requestURI = $SCRIPT_ROOT + '/' + node.nodeType + '/' + node.id + '/egonet.json';
 
             if(graph.collapseNode(node.id, incoming)) {
                 update();
