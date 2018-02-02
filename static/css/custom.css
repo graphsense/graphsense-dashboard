@@ -189,7 +189,7 @@ footer > .container-fluid {
   fill: #9e9e9e;
 }
 
-.nodes circle.cluster.implicitlyTagged {
+.nodes circle.cluster.tagged {
   fill: #e1bee7;
 }
 
