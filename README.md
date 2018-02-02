@@ -1,6 +1,6 @@
 # GraphSense Dashboard
 
-A web dashboard for interactive cryptocurrency analysis.
+A Web dashboard for interactive cryptocurrency analysis.
 
 `graphsense-dashboard` provides a Docker container running a [Flask][flask]
 web application, which is deployed through uWSGI and [nginx][nginx].
@@ -16,7 +16,7 @@ Test
 
 ### Development Setup
 
-Make sure Python 3 is available on your system. Install the module
+Make sure Python 3.x is available on your system. Install the module
 dependencies, e.g. via `pip`
 
     pip install -r requirements.txt

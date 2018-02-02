@@ -20,7 +20,7 @@ storage = Storage('localhost', 9000)
 
 @app.context_processor
 def inject_version():
-    return dict(version='Version 0.3.1')
+    return dict(version='Version 0.3.2')
 
 
 # TEMPLATE FILTERS
