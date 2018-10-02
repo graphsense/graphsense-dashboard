@@ -1,0 +1,28 @@
+{
+  "name": "graphsense-gui",
+  "version": "1.0.0",
+  "description": "GraphSense GUI",
+  "main": "index.js",
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "babel-loader": "^8.0.4",
+    "clean-webpack-plugin": "^0.1.19",
+    "html-webpack-plugin": "^3.2.0",
+    "webpack-dev-server": "^3.1.9"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "babel": "./node_modules/.bin/babel src -d dist",
+    "start": "webpack-dev-server --open"
+  },
+  "author": "",
+  "license": "ISC"
+}

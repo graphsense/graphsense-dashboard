@@ -1,0 +1,6 @@
+elm-stuff
+*.swp
+*.swo
+node_modules
+.local.vimrc
+backend/db/data
