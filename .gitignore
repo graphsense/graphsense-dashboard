@@ -1,6 +1,4 @@
-elm-stuff
-*.swp
-*.swo
+*.sw?
 node_modules
-.local.vimrc
-backend/db/data
+dist
+.vimrc
