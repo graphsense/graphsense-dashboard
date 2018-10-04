@@ -4,7 +4,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin')
 const noop = require('noop-webpack-plugin')
 const webpack = require('webpack')
 
-const IS_DEV = false
+const IS_DEV = true
 
 module.exports = {
   mode: IS_DEV ? 'development' : 'production',
@@ -21,7 +21,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: 'Development'
     }),
-    IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop()
+    IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
+    new webpack.DefinePlugin({
+      IS_DEV: IS_DEV
+    })
   ],
   output: {
     filename: 'bundle.js',
