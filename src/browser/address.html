@@ -1,4 +1,32 @@
-<div class="row">
-  <span class="address-key">ID</span>
-  <span class="address-value id"></span>
+<div class="browser-component">
+  <div class="prop-table">
+    <div class="prop-row">
+      <span class="prop-key">Address</span>
+      <span class="prop-value">{{address}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">No. transactions</span>
+      <span class="prop-value id"><i class="fas fa-long-arrow-alt-down"></i> {{noIncomingTxs}} <i class="fas fa-long-arrow-alt-up"></i> {{noOutgoingTxs}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">First usage</span>
+      <span class="prop-value id">{{firstUsage}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">Last usage</span>
+      <span class="prop-value id">{{lastUsage}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">Activity period</span>
+      <span class="prop-value id">{{activityPeriod}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">Total received</span>
+      <span class="prop-value id">{{totalReceived}}</span>
+    </div>
+    <div class="prop-row">
+      <span class="prop-key">Final balance</span>
+      <span class="prop-value id">{{finalBalance}}</span>
+    </div>
+  </div>
 </div>

@@ -1,5 +1,6 @@
 import {select} from 'd3-selection'
 import './style.css'
+import '@fortawesome/fontawesome-free/css/all.css'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
 import Search from './browser/search.js'
@@ -14,8 +15,7 @@ let browser = new Browser(dispatcher)
 
 let rest = new Rest(dispatcher, baseUrl)
 
-let layout = new Layout(dispatcher)
-layout.setBrowser(browser)
+let layout = new Layout(dispatcher, browser)
 document.body.append(layout.render())
 
 if (module.hot) {

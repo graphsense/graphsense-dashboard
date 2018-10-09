@@ -11,6 +11,7 @@ export default class Browser {
       this.searchresult(result)
     })
     this.root = document.createElement('div')
+    this.root.className = 'h-full'
     this.search()
   }
   search () {

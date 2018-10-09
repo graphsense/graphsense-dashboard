@@ -6,6 +6,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "d3": "^5.7.0",
+    "moment": "^2.22.2",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.2"
   },
@@ -13,6 +14,7 @@
     "@babel/cli": "^7.1.2",
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
+    "@fortawesome/fontawesome-free": "^5.4.0",
     "babel-loader": "^8.0.4",
     "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^1.0.0",
@@ -20,7 +22,10 @@
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",
     "noop-webpack-plugin": "^1.0.1",
+    "postcss-loader": "^3.0.0",
     "style-loader": "^0.23.0",
+    "tailwindcss": "^0.6.6",
+    "url-loader": "^1.1.1",
     "webpack-dev-server": "^3.1.9"
   },
   "scripts": {

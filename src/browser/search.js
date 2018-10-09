@@ -3,6 +3,7 @@ import search from './search.html'
 export default class Search {
   constructor (onSearch) {
     this.root = document.createElement('div')
+    this.root.className = 'h-full'
     this.term = ''
     this.onSearch = onSearch
   }

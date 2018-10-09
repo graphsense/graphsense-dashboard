@@ -1,6 +1,8 @@
 const path = require('path')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const noop = require('noop-webpack-plugin')
 const webpack = require('webpack')
 
@@ -46,7 +48,8 @@ module.exports = {
         test: /\.css$/,
         use: [
           'style-loader',
-          'css-loader'
+          'css-loader',
+          'postcss-loader'
         ]
       },
       {
@@ -59,6 +62,11 @@ module.exports = {
             collapseWhitespace: false
           }
         }]
+      },
+      // the file-loader emits files.
+      {
+        test: /\.(woff(2)?|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        loader: 'file-loader'
       }
     ]
   },
