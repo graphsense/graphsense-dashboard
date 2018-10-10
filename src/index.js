@@ -8,7 +8,14 @@ import Address from './browser/address.js'
 import Rest from './rest.js'
 import Layout from './layout.js'
 
-const dispatcher = dispatch(IS_DEV, 'search', 'searchresult')
+const dispatcher = dispatch(IS_DEV,
+  'search',
+  'searchresult',
+  'addAddress',
+  'loadOutgoingTxs',
+  'loadIncomingTxs',
+  'loadTags'
+)
 const baseUrl = 'http://localhost:8000'
 
 let browser = new Browser(dispatcher)

@@ -1,6 +1,4 @@
-import {create} from 'd3-selection'
 import layout from './browser/layout.html'
-import {dispatch} from './dispatch.js'
 import Address from './browser/address.js'
 import Search from './browser/search.js'
 
@@ -26,22 +24,27 @@ export default class Browser {
     let content = [this.content[0]]
     let comp = null
     if (result.address) {
-      comp = new Address(result)
+      comp = new Address(this.dispatcher, result)
     }
     if (comp === null) return
     content.push(comp)
     this.content = content
     this.render()
   }
-  address (address) {
-    this.content = [ new Address(this.dispatcher) ]
-  }
   render () {
     this.root.innerHTML = layout
     let data = this.root.querySelector('#browser-data')
 
+    let c = 0
     this.content.forEach((comp) => {
+      c += 1
       data.appendChild(comp.render())
+      let options = comp.renderOptions()
+      if (!options) return
+      let el = document.createElement('div')
+      el.className = 'h-full mx-2 my-1 ' + (c < this.content.length ? 'browser-options-short' : '')
+      el.appendChild(options)
+      data.appendChild(el)
     })
     return this.root
   }

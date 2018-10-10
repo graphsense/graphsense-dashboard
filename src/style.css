@@ -77,7 +77,7 @@
 }
 
 .prop-table {
-  @apply table border-collapse ml-2 mt-1
+  @apply table border-collapse mx-2 my-1
 }
 .prop-row {
   @apply border-b table-row 
@@ -93,4 +93,8 @@
 
 .browser-component {
   @apply p-1 border-grey border-r h-full
+}
+
+.browser-options-short {
+  @apply max-w-xs
 }

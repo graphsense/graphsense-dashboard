@@ -1,9 +1,19 @@
 import address from './address.html'
 import {replace} from '../template_utils'
 import moment from 'moment'
+import option from './option.html'
+
+const options =
+  [
+    {icon: 'sign-in-alt', optionText: 'Incoming transactions', message: 'loadIncomingTxs'},
+    {icon: 'sign-out-alt', optionText: 'Outgoing transactions', message: 'loadOutgoingTxs'},
+    {icon: 'tags', optionText: 'Tags', message: 'loadTags'},
+    {icon: 'plus', optionText: 'Add to graph', message: 'addAddress'}
+  ]
 
 export default class Address {
-  constructor (data) {
+  constructor (dispatcher, data) {
+    this.dispatcher = dispatcher
     this.root = document.createElement('div')
     this.data = data
   }
@@ -20,5 +30,20 @@ export default class Address {
     }
     this.root.innerHTML = replace(address, {...this.data, ...flat})
     return this.root
+  }
+  renderOptions () {
+    let ul = document.createElement('ul')
+    ul.className = 'list-reset'
+    options.forEach((optionData) => {
+      let li = document.createElement('li')
+      li.className = 'cursor-pointer py-1'
+      li.innerHTML = replace(option, optionData)
+      li.addEventListener('click', () => {
+        console.log('calling', optionData.message, this.data.address)
+        this.dispatcher.call(optionData.message, this.data.address)
+      })
+      ul.appendChild(li)
+    })
+    return ul
   }
 }

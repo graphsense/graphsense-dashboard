@@ -18,4 +18,7 @@ export default class Search {
       })
     return this.root
   }
+  renderOptions () {
+    return null
+  }
 }
