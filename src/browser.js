@@ -3,7 +3,8 @@ import Address from './browser/address.js'
 import Search from './browser/search.js'
 
 export default class Browser {
-  constructor (dispatcher) {
+  constructor (dispatcher, store) {
+    this.store = store
     this.dispatcher = dispatcher
     this.dispatcher.on('searchresult.browser', (result) => {
       this.searchresult(result)
@@ -24,6 +25,7 @@ export default class Browser {
     let content = [this.content[0]]
     let comp = null
     if (result.address) {
+      this.store.add(result)
       comp = new Address(this.dispatcher, result)
     }
     if (comp === null) return

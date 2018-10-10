@@ -65,6 +65,7 @@ Dispatch.prototype = dispatch.prototype = {
   call: function (type, that) {
     if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) args[i] = arguments[i + 2]
     if (!this._.hasOwnProperty(type)) throw new Error('unknown type: ' + type)
+    console.log('calling', type, args)
     for (t = this._[type], i = 0, n = t.length; i < n; ++i) t[i].value.apply(that, args)
     add(this.history, type, that, Array.prototype.slice.call(arguments, 2))
   },
