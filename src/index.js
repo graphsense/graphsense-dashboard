@@ -17,7 +17,8 @@ const dispatcher = dispatch(IS_DEV,
   'loadIncomingTxs',
   'loadTags',
   'resultAddress',
-  'resultClusterForAddress'
+  'resultClusterForAddress',
+  'selectAddress'
 )
 const baseUrl = 'http://localhost:8000'
 

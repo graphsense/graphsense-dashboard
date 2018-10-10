@@ -98,3 +98,15 @@
 .browser-options-short {
   @apply max-w-xs
 }
+
+svg .addressNode {
+  stroke: black;
+  stroke-width: 1px;
+  fill: transparent;
+}
+
+svg .selected {
+  stroke: red;
+  stroke-width: 4px;
+}
+

@@ -10,6 +10,14 @@ export default class NodeGraph {
     this.dispatcher = dispatcher
     this.store = store
     this.adding = set()
+    this.layers = []
+    this.viewBox = {
+      x: -300,
+      y: -300,
+      w: 600,
+      h: 600
+    }
+    this.margin = margin * this.viewBox.w
     this.dispatcher.on('addAddress.graph', (address) => {
       let a = this.store.get('address', address)
       if (!a) {
@@ -39,14 +47,16 @@ export default class NodeGraph {
       cluster = this.store.add(cluster)
       this.add(cluster)
     })
-    this.layers = []
-    this.viewBox = {
-      x: -300,
-      y: -300,
-      w: 600,
-      h: 600
-    }
-    this.margin = margin * this.viewBox.w
+    this.dispatcher.on('selectAddress.graph', ([address, layerId]) => {
+      let filtered = this.layers.filter(({id}) => id === layerId)
+      console.log('filtered', filtered, this.layers)
+      if (filtered.length === 0) return
+      let sel = filtered[0].findAddressNode(address)
+      if (sel.select()) {
+        this.selectedNode.deselect()
+        this.selectedNode = sel
+      }
+    })
   }
   add (cluster) {
     // only allow adding of nodes if graph is empty

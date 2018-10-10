@@ -20,13 +20,13 @@ export default class Store {
       if (object.forAddress) {
         c.addresses.add(object.forAddress)
         object = {...object, ...c}
-        delete object.forAddress
         if (this.addresses.has(object.forAddress)) {
           let a = this.addresses.get(object.forAddress)
           a.cluster = object.cluster
           this.addresses.set(a.address, a)
         }
       }
+      delete object.forAddress
       this.clusters.set(object.cluster, object)
       return object
     }

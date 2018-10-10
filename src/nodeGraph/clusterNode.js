@@ -1,9 +1,11 @@
+import AddressNode from './addressNode.js'
+import {map} from 'd3-collection'
+
 const minWidth = 160
 const padding = 10
 const addressHeight = 50
 const gap = padding
 const labelHeight = 20
-const addressLabelHeight = 25
 const addressMinWidth = minWidth - 2 * padding
 
 export default class ClusterNode {
@@ -11,6 +13,18 @@ export default class ClusterNode {
     this.layer = layer
     this.cluster = cluster
     this.id = cluster.cluster
+    this.nodes = map()
+    cluster.addresses.each((address) => {
+      let a = this.layer.graph.store.get('address', address)
+      let ad = new AddressNode(a, this, addressHeight, addressMinWidth)
+      this.add(ad)
+    })
+  }
+  add (node) {
+    this.nodes.set(node.id, node)
+  }
+  findAddressNode (address) {
+    return this.nodes.get(address)
   }
   render (root) {
     let size = this.cluster.addresses.size()
@@ -29,26 +43,10 @@ export default class ClusterNode {
       .style('font-size', labelHeight + 'px')
       .text(`${size} + ${this.cluster.noAddresses - size}`)
     let cumY = padding
-    this.cluster.addresses.each((address) => {
-      let a = this.layer.graph.store.get('address', address)
-      this.renderAddress(root, padding, cumY, a)
+    this.nodes.each((address) => {
+      let g = root.append('g')
+      address.render(g, padding, cumY)
       cumY += addressHeight
     })
-  }
-  renderAddress (root, x, y, address) {
-    root.append('rect')
-      .attr('x', x)
-      .attr('y', y)
-      .attr('width', addressMinWidth)
-      .attr('height', addressHeight)
-      .attr('rx', 10)
-      .attr('ry', 10)
-      .style('fill', 'none')
-      .style('stroke', 'black')
-    root.append('text')
-      .attr('x', x + padding)
-      .attr('y', y + addressHeight / 2 + addressLabelHeight / 3)
-      .style('font-size', addressLabelHeight + 'px')
-      .text(address.address.substring(0, 8))
   }
 }
