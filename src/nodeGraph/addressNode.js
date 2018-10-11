@@ -10,10 +10,15 @@ export default class AddressNode {
     this.id = [address.address, layerId]
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
+    // absolute coords for linking, not meant for rendering of the node itself
+    this.x = 0
+    this.y = 0
   }
   render (root, x, y, height, width) {
     this.x = x
     this.y = y
+    this.width = width
+    this.height = height
     this.root = root
     this.root.classed('addressNode', true)
     this.root.append('text')
@@ -35,6 +40,10 @@ export default class AddressNode {
     if (this.graph.selectedNode === this) {
       this.select()
     }
+  }
+  translate (x, y) {
+    this.x += x
+    this.y += y
   }
   select () {
     this.root.classed('selected', true)

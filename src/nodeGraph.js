@@ -1,5 +1,6 @@
 import {create} from 'd3-selection'
 import {set, map} from 'd3-collection'
+import {linkHorizontal} from 'd3-shape'
 import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
@@ -34,7 +35,7 @@ export default class NodeGraph {
       }
       let c = this.store.get('cluster', a.cluster)
       if (!c) {
-        throw new Error(`inconsistency in store: cluster referenced by address ${address} as ${a.cluster} not found`)
+        throw new Error(`inconsistency in store`)
       }
       this.add(a, request.anchorNode, request.isOutgoing)
     })
@@ -63,6 +64,7 @@ export default class NodeGraph {
       }
     })
     this.dispatcher.on('resultEgonet.graph', ({addressId, isOutgoing, result}) => {
+      let a = this.store.get('address', addressId[0])
       result.nodes.forEach((node) => {
         if (node.id === addressId[0]) return
         let request = {
@@ -70,8 +72,14 @@ export default class NodeGraph {
           isOutgoing,
           address: node.id
         }
+        if (isOutgoing) {
+          a.outgoing.add(node.id)
+        } else {
+          a.incoming.add(node.id)
+        }
         this.dispatcher.call('addAddress', null, request)
       })
+      this.store.add(a)
     })
   }
   findAddressNode (address, layerId) {
@@ -108,26 +116,27 @@ export default class NodeGraph {
       if (!node) {
         node = new ClusterNode(object.cluster, layerId, this)
       }
-      node.add(addressNode.id)
+      node.add(addressNode.id[0])
     } else if (object.cluster) {
       if (this.clusterNodes.has([object.cluster, layerId])) return
       node = new ClusterNode(object.cluster, layerId, this)
     }
     this.clusterNodes.set(node.id, node)
 
-    layer.add(node.id)
+    layer.add(node.id[0])
     this.clear()
-    this.renderLayers()
+    this.render()
   }
   clear () {
     this.root.node().innerHTML = ''
   }
   render () {
-    this.root = create('svg')
+    this.root = this.root || create('svg')
       .classed('w-full h-full', true)
       .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
       .attr('preserveAspectRatio', 'xMidYMid meet')
     this.renderLayers()
+    this.renderLinks()
     return this.root.node()
   }
   renderLayers () {
@@ -140,6 +149,37 @@ export default class NodeGraph {
       let y = box.height / -2
       g.attr('transform', `translate(${x}, ${y})`)
       cumX = x + box.width + margin
+      layer.translate(x, y)
     })
+  }
+  renderLinks () {
+    const link = linkHorizontal()
+      .x(([node, isSource]) => isSource ? node.x + node.width : node.x)
+      .y(([node, isSource]) => node.y + node.height / 2)
+    for (let i = 0; i < this.layers.length; i++) {
+      this.layers[i].nodes.each((clusterId1) => {
+        let cluster1 = this.clusterNodes.get([clusterId1, this.layers[i].id])
+        cluster1.nodes.each((addressId1) => {
+          console.log('adressId', addressId1)
+          let address1 = this.addressNodes.get([addressId1, this.layers[i].id])
+          let a1 = this.store.get('address', addressId1)
+          this.linkToLayer(link, this.layers[i + 1], a1.outgoing, address1, true)
+          this.linkToLayer(link, this.layers[i - 1], a1.incoming, address1, false)
+        })
+      })
+    }
+  }
+  linkToLayer (link, layer, neighbors, source, isOutgoing) {
+    if (layer) {
+      layer.nodes.each((clusterId2) => {
+        let cluster2 = this.clusterNodes.get([clusterId2, layer.id])
+        cluster2.nodes.each((addressId2) => {
+          if (!neighbors.has(addressId2)) return
+          let address2 = this.addressNodes.get([addressId2, layer.id])
+          let path = link({source: [source, isOutgoing], target: [address2, !isOutgoing]})
+          this.root.append('path').classed('link', true).attr('d', path)
+        })
+      })
+    }
   }
 }

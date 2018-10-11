@@ -1,4 +1,3 @@
-import AddressNode from './addressNode.js'
 import {set} from 'd3-collection'
 
 const minWidth = 160
@@ -10,6 +9,9 @@ const addressMinWidth = minWidth - 2 * padding
 
 export default class ClusterNode {
   constructor (cluster, layerId, graph) {
+    // absolute coords for linking, not meant for rendering of the node itself
+    this.x = 0
+    this.y = 0
     this.id = [cluster, layerId]
     this.graph = graph
     this.nodes = set()
@@ -39,10 +41,17 @@ export default class ClusterNode {
     }
     let cumY = padding
     this.nodes.each((addressId) => {
-      let addressNode = this.graph.addressNodes.get(addressId)
+      let addressNode = this.graph.addressNodes.get([addressId, this.id[1]])
       let g = root.append('g')
       addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
       cumY += addressHeight
+    })
+  }
+  translate (x, y) {
+    this.x += x
+    this.y += y
+    this.nodes.each((nodeId) => {
+      this.graph.addressNodes.get([nodeId, this.id[1]]).translate(x, y)
     })
   }
 }

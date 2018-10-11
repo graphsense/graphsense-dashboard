@@ -10,9 +10,9 @@ export default class Store {
    */
   add (object) {
     if (object.address) {
-      if (this.addresses.has(object.address)) return
-      this.addresses.set(object.address, object)
-      console.log(this.addresses)
+      let a = this.addresses.get(object.address) || {outgoing: set(), incoming: set()}
+      this.addresses.set(object.address, {...a, ...object})
+      console.log('store addresses', this.addresses)
       return object
     }
     if (object.cluster) {

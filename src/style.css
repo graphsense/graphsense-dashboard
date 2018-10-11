@@ -115,3 +115,8 @@ svg .selected rect {
   stroke-width: 4px;
 }
 
+svg .link {
+  stroke: black;
+  stroke-width: 2px;
+  fill: none;
+}

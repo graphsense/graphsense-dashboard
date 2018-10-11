@@ -41,6 +41,7 @@ export default class Browser {
     let comp = null
     if (result.address) {
       this.store.add(result)
+
       comp = new Address(this.dispatcher, result)
     }
     if (comp === null) return
