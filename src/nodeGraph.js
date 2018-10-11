@@ -87,6 +87,21 @@ export default class NodeGraph {
       })
       this.store.add(a)
     })
+    this.dispatcher.on('resultClusterAddresses.graph', ({id, result}) => {
+      let node = this.clusterNodes.get(id)
+      result.forEach((address) => {
+        address.cluster = id[0]
+        let object = this.store.add(address)
+        if (this.addressNodes.has([address, id[1]])) return
+        let addressNode = new AddressNode(object, id[1], this)
+        console.log('new AddressNode', addressNode)
+        this.addressNodes.set(addressNode.id, addressNode)
+        node.add(addressNode.id[0])
+      })
+      this.clear()
+      this.render()
+      console.log(this)
+    })
   }
   findAddressNode (address, layerId) {
     return this.addressNodes.get([address, layerId])

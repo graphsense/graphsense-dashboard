@@ -22,7 +22,9 @@ const dispatcher = dispatch(IS_DEV,
   'selectNode',
   'applyTxFilters',
   'applyAddressFilters',
-  'resultEgonet'
+  'resultEgonet',
+  'resultClusterAddresses'
+
 )
 const baseUrl = 'http://localhost:8000'
 

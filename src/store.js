@@ -13,6 +13,11 @@ export default class Store {
     if (object.address) {
       let a = this.addresses.get(object.address) || empty
       this.addresses.set(object.address, {...a, ...object})
+      if (object.cluster) {
+        let c = this.clusters.get(object.cluster)
+        c.addresses.add(object.address)
+        this.clusters.set(object.cluster, c)
+      }
       return object
     }
     if (object.cluster) {

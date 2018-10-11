@@ -45,6 +45,9 @@ export default class ClusterNode {
           console.log('click')
           this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
         })
+      if (this.graph.selectedNode === this) {
+        this.select()
+      }
     }
     let cumY = padding
     this.nodes.each((addressId) => {

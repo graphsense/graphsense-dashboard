@@ -41,7 +41,7 @@ export default class Config {
       case 'cluster':
         el.innerHTML = clusterConfig
         this.setupTxFilters(el)
-        el.querySelector('#addresses-input select')
+        el.querySelector('#address-input select')
           .addEventListener('change', (e) => {
             this.node.addressFilters.set(e.target.value, null)
             this.render()
@@ -49,7 +49,7 @@ export default class Config {
         this.node.addressFilters.each((value, type) => {
           this.addFilter('address-filters', type, value)
         })
-        el.querySelector('#outgoing-input button')
+        el.querySelector('#address-input button')
           .addEventListener('click', () => {
             this.applyAddressFilters()
           })

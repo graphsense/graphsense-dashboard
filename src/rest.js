@@ -59,4 +59,10 @@ export default class Rest {
       this.dispatcher.call('resultEgonet', null, {type, id, isOutgoing, result})
     })
   }
+  clusterAddresses (id, limit) {
+    return json(`${this.baseUrl}/cluster/${id[0]}/addresses?limit=${limit}`).then((result) => {
+      console.log(result)
+      this.dispatcher.call('resultClusterAddresses', null, {id, result})
+    })
+  }
 }
