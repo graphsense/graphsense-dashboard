@@ -1,5 +1,5 @@
 import AddressNode from './addressNode.js'
-import {map} from 'd3-collection'
+import {set} from 'd3-collection'
 
 const minWidth = 160
 const padding = 10
@@ -9,28 +9,19 @@ const labelHeight = 20
 const addressMinWidth = minWidth - 2 * padding
 
 export default class ClusterNode {
-  constructor (cluster, layer) {
-    this.layer = layer
-    this.cluster = cluster
-    this.id = cluster.cluster
-    this.nodes = map()
-    console.log('clusterNode', cluster)
-    cluster.addresses.each((address) => {
-      let a = this.layer.graph.store.get('address', address)
-      let ad = new AddressNode(a, this, addressHeight, addressMinWidth)
-      this.add(ad)
-    })
+  constructor (cluster, layerId, graph) {
+    this.id = [cluster, layerId]
+    this.graph = graph
+    this.nodes = set()
   }
-  add (node) {
-    this.nodes.set(node.id[0], node)
-  }
-  findAddressNode (address) {
-    return this.nodes.get(address)
+  add (nodeId) {
+    this.nodes.add(nodeId)
   }
   render (root) {
-    // draw dashed rect only if it's not a mocked up cluster (see rest.js)
-    if (this.cluster.cluster >= 0) {
-      let size = this.cluster.addresses.size()
+    console.log('clusterNode', this.graph, this.id)
+    let cluster = this.graph.store.get('cluster', this.id[0])
+    if (!cluster.mockup) {
+      let size = this.nodes.size()
       let height = size * addressHeight + 2 * padding + labelHeight + gap
       root.append('rect')
         .attr('x', 0)
@@ -44,12 +35,13 @@ export default class ClusterNode {
         .attr('x', padding)
         .attr('y', height - padding)
         .style('font-size', labelHeight + 'px')
-        .text(`${size} + ${this.cluster.noAddresses - size}`)
+        .text(`${size} + ${cluster.noAddresses - size}`)
     }
     let cumY = padding
-    this.nodes.each((address) => {
+    this.nodes.each((addressId) => {
+      let addressNode = this.graph.addressNodes.get(addressId)
       let g = root.append('g')
-      address.render(g, padding, cumY)
+      addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
       cumY += addressHeight
     })
   }

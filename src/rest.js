@@ -35,8 +35,9 @@ export default class Rest {
     return json(this.baseUrl + '/address/' + request.address + '/cluster').then((result) => {
       if (!result.cluster) {
         // seems there exist addresses without cluster ...
-        // so mockup cluster with negative id
-        result.cluster = parseInt(Math.random() * 100000) * -1
+        // so mockup cluster with the address id
+        result.cluster = request.address
+        result.mockup = true
       }
       this.dispatcher.call('resultClusterForAddress', null, {request, result})
     })

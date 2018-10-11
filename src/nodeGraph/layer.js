@@ -1,4 +1,4 @@
-import {map} from 'd3-collection'
+import {set} from 'd3-collection'
 
 const margin = 10
 
@@ -6,23 +6,15 @@ export default class Layer {
   constructor (graph, id) {
     this.id = id
     this.graph = graph
-    this.nodes = map()
+    this.nodes = set()
   }
-  add (node) {
-    this.nodes.set(node.id, node)
-  }
-  findAddressNode (address) {
-    let a = this.graph.store.get('address', address)
-    // if(!a || !a.cluster) return
-    console.log(this.nodes, a, a.cluster)
-    let c = this.nodes.get(a.cluster)
-    // f(!c) return
-    console.log('layer', c)
-    return c.findAddressNode(address)
+  add (nodeId) {
+    this.nodes.add(nodeId)
   }
   render (root) {
     let cumY = 0
-    this.nodes.each((node, id) => {
+    this.nodes.each((nodeId) => {
+      let node = this.graph.clusterNodes.get(nodeId)
       let g = root.append('g')
       node.render(g)
       let box = g.node().getBBox()

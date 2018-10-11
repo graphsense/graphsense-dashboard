@@ -103,6 +103,7 @@ svg .addressNode rect{
   stroke: black;
   stroke-width: 1px;
   fill: transparent;
+  cursor: pointer;
 }
 
 svg .addressNode text{
