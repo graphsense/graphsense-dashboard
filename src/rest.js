@@ -1,4 +1,5 @@
 import {json} from 'd3-fetch'
+import {firstToUpper} from './util.js'
 
 export default class Rest {
   constructor (dispatcher, baseUrl) {
@@ -10,15 +11,19 @@ export default class Rest {
     this.dispatcher.on('loadIncomingTxs.rest', (request) => {
       this.incomingTxs(request)
     })
-    this.dispatcher.on('loadAddress.rest', (request) => {
-      this.address(request)
+    this.dispatcher.on('loadNode.rest', (request) => {
+      this.node(request)
     })
     this.dispatcher.on('loadClusterForAddress.rest', (request) => {
       this.clusterForAddress(request)
     })
-    this.dispatcher.on('applyAddressFilters.rest', ([addressId, isOutgoing, filters]) => {
+    this.dispatcher.on('applyTxFilters.rest', ([id, isOutgoing, type, filters]) => {
       if (!filters.has('limit')) return
-      this.egonet(addressId, isOutgoing, filters.get('limit'))
+      this.egonet(type, id, isOutgoing, filters.get('limit'))
+    })
+    this.dispatcher.on('applyAddressFilters.rest', ([id, filters]) => {
+      if (!filters.has('limit')) return
+      this.clusterAddresses(id, filters.get('limit'))
     })
   }
   search (term) {
@@ -26,17 +31,17 @@ export default class Rest {
       this.dispatcher.call('searchresult', null, result)
     })
   }
-  address (request) {
-    return json(this.baseUrl + '/address/' + request.address).then((result) => {
-      this.dispatcher.call('resultAddress', null, {request, result})
+  node (request) {
+    return json(`${this.baseUrl}/${request.type}/${request.id}`).then((result) => {
+      this.dispatcher.call('resultNode', null, {request, result})
     })
   }
   clusterForAddress (request) {
-    return json(this.baseUrl + '/address/' + request.address + '/cluster').then((result) => {
+    return json(this.baseUrl + '/address/' + request.id + '/cluster').then((result) => {
       if (!result.cluster) {
         // seems there exist addresses without cluster ...
         // so mockup cluster with the address id
-        result.cluster = request.address
+        result.cluster = request.id
         result.mockup = true
       }
       this.dispatcher.call('resultClusterForAddress', null, {request, result})
@@ -47,11 +52,11 @@ export default class Rest {
       console.log(result)
     })
   }
-  egonet (addressId, isOutgoing, limit) {
+  egonet (type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
-    return json(`${this.baseUrl}/address/${addressId[0]}/egonet?limit=${limit}&direction=${dir}`).then((result) => {
+    return json(`${this.baseUrl}/${type}/${id[0]}/egonet?limit=${limit}&direction=${dir}`).then((result) => {
       console.log(result)
-      this.dispatcher.call('resultEgonet', null, {addressId, isOutgoing, result})
+      this.dispatcher.call('resultEgonet', null, {type, id, isOutgoing, result})
     })
   }
 }

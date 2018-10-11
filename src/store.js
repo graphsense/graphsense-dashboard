@@ -9,17 +9,17 @@ export default class Store {
    * Adds an object to store if it does not exist
    */
   add (object) {
+    let empty = {outgoing: set(), incoming: set()}
     if (object.address) {
-      let a = this.addresses.get(object.address) || {outgoing: set(), incoming: set()}
+      let a = this.addresses.get(object.address) || empty
       this.addresses.set(object.address, {...a, ...object})
-      console.log('store addresses', this.addresses)
       return object
     }
     if (object.cluster) {
-      let c = this.clusters.get(object.cluster) || { addresses: set() }
+      let c = this.clusters.get(object.cluster) || { addresses: set(), ...empty }
+      object = {...object, ...c}
       if (object.forAddress) {
-        c.addresses.add(object.forAddress)
-        object = {...object, ...c}
+        object.addresses.add(object.forAddress)
         if (this.addresses.has(object.forAddress)) {
           let a = this.addresses.get(object.forAddress)
           a.cluster = object.cluster

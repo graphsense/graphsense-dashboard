@@ -106,8 +106,15 @@ svg .addressNode rect{
   cursor: pointer;
 }
 
-svg .addressNode text{
+svg .addressNode text {
   font-family: monospace;
+}
+
+svg .clusterNode rect{
+  stroke-dasharray: 5;
+  stroke: black;
+  fill: transparent;
+  cursor: pointer;
 }
 
 svg .selected rect {

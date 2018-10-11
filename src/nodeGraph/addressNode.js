@@ -35,7 +35,7 @@ export default class AddressNode {
 
       .attr('ry', 10)
       .on('click', () => {
-        this.graph.dispatcher.call('selectAddress', null, this.id)
+        this.graph.dispatcher.call('selectNode', null, ['address', this.id])
       })
     if (this.graph.selectedNode === this) {
       this.select()

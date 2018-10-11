@@ -1,12 +1,10 @@
 import layout from './config/layout.html'
 import graphConfig from './config/graph.html'
 import addressConfig from './config/address.html'
+import clusterConfig from './config/cluster.html'
 import filter from './config/filter.html'
 import {replace} from './template_utils.js'
-
-const availableFilters =
-  [ 'value', 'date'
-  ]
+import {firstToUpper} from './util.js'
 
 export default class Config {
   constructor (dispatcher, graph) {
@@ -15,11 +13,17 @@ export default class Config {
     this.root.className = 'h-full'
     this.view = 'graph'
     this.graph = graph
-    this.dispatcher.on('selectAddress.config', ([address, layerId]) => {
-      console.log('config', this.graph, address, layerId)
-      this.view = 'address'
-      this.addressNode = this.graph.findAddressNode(address, layerId)
-      console.log('addressNode', this.addressNode)
+    this.dispatcher.on('selectNode.config', ([type, nodeId]) => {
+      console.log('selectNode.config', this.graph, nodeId)
+      this.view = type
+      let nodes
+      if (type === 'address') {
+        nodes = this.graph.addressNodes
+      } else {
+        nodes = this.graph.clusterNodes
+      }
+      this.node = nodes.get(nodeId)
+      console.log('node', type, this.node)
       this.render()
     })
   }
@@ -32,70 +36,97 @@ export default class Config {
         break
       case 'address':
         el.innerHTML = addressConfig
-        el.querySelector('#outgoing-input select')
+        this.setupTxFilters(el)
+        break
+      case 'cluster':
+        el.innerHTML = clusterConfig
+        this.setupTxFilters(el)
+        el.querySelector('#addresses-input select')
           .addEventListener('change', (e) => {
-            this.addressNode.outgoingTxsFilters.set(e.target.value, null)
+            this.node.addressFilters.set(e.target.value, null)
             this.render()
           })
-        el.querySelector('#incoming-input select')
-          .addEventListener('change', (e) => {
-            this.addressNode.incomingTxsFilters.set(e.target.value, null)
-            this.render()
-          })
-        this.addressNode.outgoingTxsFilters.each((value, type) => {
-          this.addFilter(true, type, value)
-        })
-        this.addressNode.incomingTxsFilters.each((value, type) => {
-          this.addFilter(false, type, value)
+        this.node.addressFilters.each((value, type) => {
+          this.addFilter('address-filters', type, value)
         })
         el.querySelector('#outgoing-input button')
           .addEventListener('click', () => {
-            this.applyFilters(true)
-          })
-        el.querySelector('#incoming-input button')
-          .addEventListener('click', () => {
-            this.applyFilters(false)
+            this.applyAddressFilters()
           })
         break
     }
     return this.root
   }
-  addFilter (isOutgoing, type, value) {
-    let sel = isOutgoing ? 'outgoing-filters' : 'incoming-filters'
-    let filterSection = this.root.querySelector('#' + sel)
+  setupTxFilters (el) {
+    el.querySelector('#outgoing-input select')
+      .addEventListener('change', (e) => {
+        this.node.outgoingTxsFilters.set(e.target.value, null)
+        this.render()
+      })
+    el.querySelector('#incoming-input select')
+      .addEventListener('change', (e) => {
+        this.node.incomingTxsFilters.set(e.target.value, null)
+        this.render()
+      })
+    this.node.outgoingTxsFilters.each((value, type) => {
+      this.addFilter('outgoing-filters', type, value)
+    })
+    this.node.incomingTxsFilters.each((value, type) => {
+      this.addFilter('incoming-filters', type, value)
+    })
+    el.querySelector('#outgoing-input button')
+      .addEventListener('click', () => {
+        this.applyTxFilters(true)
+      })
+    el.querySelector('#incoming-input button')
+      .addEventListener('click', () => {
+        this.applyTxFilters(false)
+      })
+  }
+  addFilter (id, type, value) {
+    let filterSection = this.root.querySelector('#' + id)
     let f = document.createElement('div')
     f.className = 'table'
-    f.innerHTML = replace(filter, {filter: type})
+    f.innerHTML = replace(filter, {filter: firstToUpper(type)})
     let el = f.querySelector('div div')
     switch (type) {
       case 'limit':
-        this.addLimitFilter(el, isOutgoing, value)
+        this.addLimitFilter(el, id, value)
         break
     }
     filterSection.appendChild(f)
   }
-  addLimitFilter (root, isOutgoing, value) {
+  addLimitFilter (root, id, value) {
     let el = document.createElement('input')
     el.className = 'border w-8'
     el.setAttribute('type', 'number')
     el.setAttribute('min', '1')
     el.value = value
     el.addEventListener('input', (e) => {
-      if (isOutgoing) {
-        this.addressNode.outgoingTxsFilters.set('limit', e.target.value)
-      } else {
-        this.addressNode.incomingTxsFilters.set('limit', e.target.value)
+      switch (id) {
+        case 'outgoing-filters':
+          this.node.outgoingTxsFilters.set('limit', e.target.value)
+          break
+        case 'incoming-filters':
+          this.node.incomingTxsFilters.set('limit', e.target.value)
+          break
+        case 'address-filters':
+          this.node.addressFilters.set('limit', e.target.value)
+          break
       }
     })
     root.appendChild(el)
   }
-  applyFilters (isOutgoing) {
+  applyTxFilters (isOutgoing) {
     let filters
     if (isOutgoing) {
-      filters = this.addressNode.outgoingTxsFilters
+      filters = this.node.outgoingTxsFilters
     } else {
-      filters = this.addressNode.incomingTxsFilters
+      filters = this.node.incomingTxsFilters
     }
-    this.dispatcher.call('applyAddressFilters', null, [this.addressNode.id, isOutgoing, filters])
+    this.dispatcher.call('applyTxFilters', null, [this.node.id, isOutgoing, this.view, filters])
+  }
+  applyAddressFilters () {
+    this.dispatcher.call('applyAddressFilters', null, [this.node.id, this.node.addressFilters])
   }
 }

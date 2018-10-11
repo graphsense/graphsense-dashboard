@@ -1,5 +1,6 @@
 import layout from './browser/layout.html'
 import Address from './browser/address.js'
+import Cluster from './browser/cluster.js'
 import Search from './browser/search.js'
 
 export default class Browser {
@@ -11,10 +12,15 @@ export default class Browser {
       this.address(result.address)
       this.render()
     })
-    this.dispatcher.on('selectAddress.browser', ([address]) => {
-      this.address(address)
+    this.dispatcher.on('selectNode.browser', ([type, nodeId]) => {
+      if (type === 'address') {
+        this.address(nodeId[0])
+      } else if (type === 'cluster') {
+        this.cluster(nodeId[0])
+      }
       this.render()
     })
+
     this.root = document.createElement('div')
     this.root.className = 'h-full'
     this.search()
@@ -33,6 +39,15 @@ export default class Browser {
     }
     this.activeTab = 'address'
     this.content = [ new Address(this.dispatcher, address) ]
+  }
+  cluster (cluster) {
+    cluster = this.store.get('cluster', cluster)
+    if (!cluster) {
+      console.error(`browser: ${cluster} not found`)
+      return
+    }
+    this.activeTab = 'address'
+    this.content = [ new Cluster(this.dispatcher, cluster) ]
   }
   searchresult (result) {
     if (this.activeTab !== 'search') return

@@ -22,40 +22,43 @@ export default class NodeGraph {
       w: 600,
       h: 600
     }
-    this.dispatcher.on('addAddress.graph', (request) => {
-      let a = this.store.get('address', request.address)
+    this.dispatcher.on('addNode.graph', (request) => {
+      let a = this.store.get(request.type, request.id)
+      this.adding.add(request.id)
       if (!a) {
-        this.dispatcher.call('loadAddress', null, request)
-        this.adding.add(request.address)
+        this.dispatcher.call('loadNode', null, request)
         return
       }
-      if (!a.cluster) {
+      if (request.type === 'address' && !a.cluster) {
         this.dispatcher.call('loadClusterForAddress', null, request)
-        this.adding.add(request.address)
         return
-      }
-      let c = this.store.get('cluster', a.cluster)
-      if (!c) {
-        throw new Error(`inconsistency in store`)
       }
       this.add(a, request.anchorNode, request.isOutgoing)
     })
-    this.dispatcher.on('resultAddress.graph', (response) => {
-      if (!this.adding.has(response.result.address)) return
-      this.store.add(response.result)
-      this.dispatcher.call('loadClusterForAddress', null, response.request)
+    this.dispatcher.on('resultNode.graph', (response) => {
+      if (!this.adding.has(response.result.address) && !this.adding.has(response.result.cluster)) return
+      let o = this.store.add(response.result)
+      if (response.request.type === 'address' && !o.cluster) {
+        this.dispatcher.call('loadClusterForAddress', null, response.request)
+        return
+      }
+      this.add(o, response.request.anchorNode, response.request.isOutgoing)
     })
     this.dispatcher.on('resultClusterForAddress.graph', (response) => {
-      if (!this.adding.has(response.request.address)) return
-      this.adding.remove(response.request.address)
+      if (!this.adding.has(response.request.id)) return
       // merge address into cluster object for store
-      this.store.add({...response.result, ...{forAddress: response.request.address}})
-      let address = this.store.get('address', response.request.address)
+      this.store.add({...response.result, ...{forAddress: response.request.id}})
+      let address = this.store.get('address', response.request.id)
       this.add(address, response.request.anchorNode, response.request.isOutgoing)
     })
-    this.dispatcher.on('selectAddress.graph', ([address, layerId]) => {
-      console.log('graph', address, layerId)
-      let sel = this.findAddressNode(address, layerId)
+    this.dispatcher.on('selectNode.graph', ([type, nodeId]) => {
+      let nodes
+      if (type === 'address') {
+        nodes = this.addressNodes
+      } else if (type === 'cluster') {
+        nodes = this.clusterNodes
+      }
+      let sel = nodes.get(nodeId)
       if (sel) {
         sel.select()
         if (this.selectedNode && this.selectedNode !== sel) {
@@ -64,21 +67,23 @@ export default class NodeGraph {
         this.selectedNode = sel
       }
     })
-    this.dispatcher.on('resultEgonet.graph', ({addressId, isOutgoing, result}) => {
-      let a = this.store.get('address', addressId[0])
+    this.dispatcher.on('resultEgonet.graph', ({type, id, isOutgoing, result}) => {
+      let a = this.store.get(type, id[0])
+      console.log('a', a)
       result.nodes.forEach((node) => {
-        if (node.id === addressId[0]) return
+        if (node.id === id[0] || node.nodeType !== type) return
         let request = {
-          anchorNode: addressId,
+          anchorNode: id,
           isOutgoing,
-          address: node.id
+          type,
+          id: node.id
         }
         if (isOutgoing) {
           a.outgoing.add(node.id)
         } else {
           a.incoming.add(node.id)
         }
-        this.dispatcher.call('addAddress', null, request)
+        this.dispatcher.call('addNode', null, request)
       })
       this.store.add(a)
     })
@@ -87,6 +92,7 @@ export default class NodeGraph {
     return this.addressNodes.get([address, layerId])
   }
   add (object, anchorNode, isOutgoing) {
+    this.adding.remove(object.address || object.cluster)
     let layerId
     if (!anchorNode) {
       layerId = 0
@@ -165,6 +171,9 @@ export default class NodeGraph {
     for (let i = 0; i < this.layers.length; i++) {
       this.layers[i].nodes.each((clusterId1) => {
         let cluster1 = this.clusterNodes.get([clusterId1, this.layers[i].id])
+        let c1 = this.store.get('cluster', clusterId1)
+        this.linkToLayerCluster(link, this.layers[i + 1], c1.outgoing, cluster1, true)
+        this.linkToLayerCluster(link, this.layers[i - 1], c1.incoming, cluster1, false)
         cluster1.nodes.each((addressId1) => {
           console.log('adressId', addressId1)
           let address1 = this.addressNodes.get([addressId1, this.layers[i].id])
@@ -185,6 +194,17 @@ export default class NodeGraph {
           let path = link({source: [source, isOutgoing], target: [address2, !isOutgoing]})
           this.root.append('path').classed('link', true).attr('d', path)
         })
+      })
+    }
+  }
+  linkToLayerCluster (link, layer, neighbors, source, isOutgoing) {
+    if (layer) {
+      layer.nodes.each((clusterId2) => {
+        if (!neighbors.has(clusterId2)) return
+        let cluster2 = this.clusterNodes.get([clusterId2, layer.id])
+        let path = link({source: [source, isOutgoing], target: [cluster2, !isOutgoing]})
+        console.log('link clusters', source, cluster2)
+        this.root.append('path').classed('link', true).attr('d', path)
       })
     }
   }
