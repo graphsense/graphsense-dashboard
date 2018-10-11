@@ -1,6 +1,6 @@
 import {set} from 'd3-collection'
 
-const margin = 10
+const margin = 20
 
 export default class Layer {
   constructor (graph, id) {
