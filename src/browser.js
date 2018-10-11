@@ -9,6 +9,9 @@ export default class Browser {
     this.dispatcher.on('searchresult.browser', (result) => {
       this.searchresult(result)
     })
+    this.dispatcher.on('selectAddress.browser', ([address]) => {
+      this.address(address)
+    })
     this.root = document.createElement('div')
     this.root.className = 'h-full'
     this.search()
@@ -18,6 +21,16 @@ export default class Browser {
     this.content = [ new Search((term) => {
       this.dispatcher.call('search', null, term)
     }) ]
+  }
+  address (addr) {
+    let address = this.store.get('address', addr)
+    if (!address) {
+      console.error(`browser: ${addr} not found`)
+      return
+    }
+    this.activeTab = 'address'
+    this.content = [ new Address(this.dispatcher, address) ]
+    this.render()
   }
   searchresult (result) {
     if (this.activeTab !== 'search') return
