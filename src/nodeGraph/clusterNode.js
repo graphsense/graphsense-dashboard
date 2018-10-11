@@ -14,6 +14,7 @@ export default class ClusterNode {
     this.cluster = cluster
     this.id = cluster.cluster
     this.nodes = map()
+    console.log('clusterNode', cluster)
     cluster.addresses.each((address) => {
       let a = this.layer.graph.store.get('address', address)
       let ad = new AddressNode(a, this, addressHeight, addressMinWidth)
@@ -21,27 +22,30 @@ export default class ClusterNode {
     })
   }
   add (node) {
-    this.nodes.set(node.id, node)
+    this.nodes.set(node.id[0], node)
   }
   findAddressNode (address) {
     return this.nodes.get(address)
   }
   render (root) {
-    let size = this.cluster.addresses.size()
-    let height = size * addressHeight + 2 * padding + labelHeight + gap
-    root.append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', minWidth)
-      .attr('height', height)
-      .style('stroke-dasharray', '5')
-      .style('stroke', 'black')
-      .style('fill', 'none')
-    root.append('text')
-      .attr('x', padding)
-      .attr('y', height - padding)
-      .style('font-size', labelHeight + 'px')
-      .text(`${size} + ${this.cluster.noAddresses - size}`)
+    // draw dashed rect only if it's not a mocked up cluster (see rest.js)
+    if (this.cluster.cluster >= 0) {
+      let size = this.cluster.addresses.size()
+      let height = size * addressHeight + 2 * padding + labelHeight + gap
+      root.append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', minWidth)
+        .attr('height', height)
+        .style('stroke-dasharray', '5')
+        .style('stroke', 'black')
+        .style('fill', 'none')
+      root.append('text')
+        .attr('x', padding)
+        .attr('y', height - padding)
+        .style('font-size', labelHeight + 'px')
+        .text(`${size} + ${this.cluster.noAddresses - size}`)
+    }
     let cumY = padding
     this.nodes.each((address) => {
       let g = root.append('g')

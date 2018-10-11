@@ -99,13 +99,17 @@
   @apply max-w-xs
 }
 
-svg .addressNode {
+svg .addressNode rect{
   stroke: black;
   stroke-width: 1px;
   fill: transparent;
 }
 
-svg .selected {
+svg .addressNode text{
+  font-family: monospace;
+}
+
+svg .selected rect {
   stroke: red;
   stroke-width: 4px;
 }

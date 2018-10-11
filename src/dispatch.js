@@ -63,6 +63,10 @@ Dispatch.prototype = dispatch.prototype = {
     return new Dispatch(copy)
   },
   call: function (type, that) {
+    if (this.replaying) {
+      console.log(`omit call ${type} while replaying`)
+      return
+    }
     if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) args[i] = arguments[i + 2]
     if (!this._.hasOwnProperty(type)) throw new Error('unknown type: ' + type)
     console.log('calling', type, args)
@@ -84,10 +88,12 @@ Dispatch.prototype = dispatch.prototype = {
   },
   replay: function (name) {
     var that = this
+    this.replaying = true
     console.log('history', this.history)
     this.history.forEach(function (h) {
       that.apply(h.type + '.' + name, h.context, h.data)
     })
+    this.replaying = false
   }
 }
 

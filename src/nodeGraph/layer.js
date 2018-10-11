@@ -3,8 +3,8 @@ import {map} from 'd3-collection'
 const margin = 10
 
 export default class Layer {
-  constructor (graph) {
-    this.id = parseInt(Math.random() * 100000)
+  constructor (graph, id) {
+    this.id = id
     this.graph = graph
     this.nodes = map()
   }
@@ -17,6 +17,7 @@ export default class Layer {
     console.log(this.nodes, a, a.cluster)
     let c = this.nodes.get(a.cluster)
     // f(!c) return
+    console.log('layer', c)
     return c.findAddressNode(address)
   }
   render (root) {

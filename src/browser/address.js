@@ -39,7 +39,7 @@ export default class Address {
       li.className = 'cursor-pointer py-1'
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
-        this.dispatcher.call(optionData.message, null, this.data.address)
+        this.dispatcher.call(optionData.message, null, {address: this.data.address})
       })
       ul.appendChild(li)
     })

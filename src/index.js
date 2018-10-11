@@ -6,6 +6,7 @@ import Rest from './rest.js'
 import Layout from './layout.js'
 import Store from './store.js'
 import NodeGraph from './nodeGraph.js'
+import Config from './config.js'
 
 const dispatcher = dispatch(IS_DEV,
   'search',
@@ -18,7 +19,9 @@ const dispatcher = dispatch(IS_DEV,
   'loadTags',
   'resultAddress',
   'resultClusterForAddress',
-  'selectAddress'
+  'selectAddress',
+  'applyAddressFilters',
+  'resultEgonet'
 )
 const baseUrl = 'http://localhost:8000'
 
@@ -28,9 +31,11 @@ let browser = new Browser(dispatcher, store)
 
 let graph = new NodeGraph(dispatcher, store)
 
+let config = new Config(dispatcher, graph)
+
 let rest = new Rest(dispatcher, baseUrl)
 
-let layout = new Layout(dispatcher, browser, graph)
+let layout = new Layout(dispatcher, browser, graph, config)
 document.body.append(layout.render())
 
 if (module.hot) {
@@ -45,8 +50,17 @@ if (module.hot) {
     console.log('Updating graph module')
     dispatcher.on('.graph', null)
     graph = new NodeGraph(dispatcher, store)
+    config = new Config(dispatcher, graph)
     layout.setGraph(graph)
+    layout.setConfig(config)
     dispatcher.replay('graph')
+  })
+  module.hot.accept(['./config.js', './config/layout.html', './config/graph.html', './config/address.html', './config/cluster.html'], () => {
+    console.log('Updating config module')
+    dispatcher.on('.config', null)
+    config = new Config(dispatcher, graph)
+    layout.setConfig(config)
+    dispatcher.replay('config')
   })
   module.hot.accept('./rest.js', () => {
     console.log('Updating rest module')

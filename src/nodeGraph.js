@@ -3,7 +3,7 @@ import {set} from 'd3-collection'
 import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 
-const margin = 0.1
+const margin = 200
 
 export default class NodeGraph {
   constructor (dispatcher, store) {
@@ -17,59 +17,93 @@ export default class NodeGraph {
       w: 600,
       h: 600
     }
-    this.margin = margin * this.viewBox.w
-    this.dispatcher.on('addAddress.graph', (address) => {
-      let a = this.store.get('address', address)
+    this.dispatcher.on('addAddress.graph', (request) => {
+      let a = this.store.get('address', request.address)
       if (!a) {
-        this.dispatcher.call('loadAddress', null, address)
-        this.adding.add(address)
+        this.dispatcher.call('loadAddress', null, request)
+        this.adding.add(request.address)
         return
       }
       if (!a.cluster) {
-        this.dispatcher.call('loadClusterForAddress', null, address)
-        this.adding.add(address)
+        this.dispatcher.call('loadClusterForAddress', null, request)
+        this.adding.add(request.address)
         return
       }
       let c = this.store.get('cluster', a.cluster)
       if (!c) {
         throw new Error(`inconsistency in store: cluster referenced by address ${address} as ${a.cluster} not found`)
       }
-      this.add(c)
+      this.add(c, request.anchorNode, request.isOutgoing)
     })
-    this.dispatcher.on('resultAddress.graph', (address) => {
-      if (!this.adding.has(address.address)) return
-      this.store.add(address)
-      this.dispatcher.call('loadClusterForAddress', null, address)
+    this.dispatcher.on('resultAddress.graph', (response) => {
+      if (!this.adding.has(response.result.address)) return
+      this.store.add(response.result)
+      this.dispatcher.call('loadClusterForAddress', null, response.request)
     })
-    this.dispatcher.on('resultClusterForAddress.graph', (cluster) => {
-      if (!this.adding.has(cluster.forAddress)) return
-      this.adding.remove(cluster.forAddress)
-      cluster = this.store.add(cluster)
-      this.add(cluster)
+    this.dispatcher.on('resultClusterForAddress.graph', (response) => {
+      if (!this.adding.has(response.request.address)) return
+      this.adding.remove(response.request.address)
+      // merge address into cluster object for store
+      let cluster = this.store.add({...response.result, ...{forAddress: response.request.address}})
+      this.add(cluster, response.request.anchorNode, response.request.isOutgoing)
     })
     this.dispatcher.on('selectAddress.graph', ([address, layerId]) => {
-      let filtered = this.layers.filter(({id}) => id === layerId)
-      console.log('filtered', filtered, this.layers)
-      if (filtered.length === 0) return
-      let sel = filtered[0].findAddressNode(address)
-      if (sel.select()) {
-        this.selectedNode.deselect()
+      console.log('graph', address, layerId)
+      let sel = this.findAddressNode(address, layerId)
+      if (sel) {
+        sel.select()
+        if (this.selectedNode && this.selectedNode !== sel) {
+          this.selectedNode.deselect()
+        }
         this.selectedNode = sel
       }
     })
+    this.dispatcher.on('resultEgonet.graph', ({addressId, isOutgoing, result}) => {
+      result.nodes.forEach((node) => {
+        if (node.id === addressId[0]) return
+        let request = {
+          anchorNode: addressId,
+          isOutgoing,
+          address: node.id
+        }
+        this.dispatcher.call('addAddress', null, request)
+      })
+    })
   }
-  add (cluster) {
-    // only allow adding of nodes if graph is empty
-    if (this.layers.length > 0) return
-    let layer = new Layer(this)
+  findAddressNode (address, layerId) {
+    let filtered = this.layers.filter(({id}) => id === layerId)
+    console.log('graph find', filtered)
+    if (filtered.length === 0) return
+    return filtered[0].findAddressNode(address)
+  }
+  add (cluster, anchorNode, isOutgoing) {
+    let layerId
+    if (!anchorNode) {
+      layerId = 0
+    } else {
+      layerId = anchorNode[1] + (isOutgoing ? 1 : -1)
+    }
+    console.log('add', layerId)
+    let filtered = this.layers.filter(({id}) => id === layerId)
+    let layer
+    if (filtered.length === 0) {
+      layer = new Layer(this, layerId)
+      if (isOutgoing === false) {
+        this.layers.unshift(layer)
+      } else {
+        this.layers.push(layer)
+      }
+      console.log('pushing in layers', this.layers)
+    } else {
+      layer = filtered[0]
+    }
     let node = new ClusterNode(cluster, layer)
     layer.add(node)
-    this.layers.push(layer)
     this.clear()
     this.renderLayers()
   }
   clear () {
-    this.root.innerHTML = ''
+    this.root.node().innerHTML = ''
   }
   render () {
     this.root = create('svg')
@@ -88,7 +122,7 @@ export default class NodeGraph {
       let x = cumX - box.width / 2
       let y = box.height / -2
       g.attr('transform', `translate(${x}, ${y})`)
-      cumX = x + box.width + this.margin
+      cumX = x + box.width + margin
     })
   }
 }
