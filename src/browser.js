@@ -8,9 +8,12 @@ export default class Browser {
     this.dispatcher = dispatcher
     this.dispatcher.on('searchresult.browser', (result) => {
       this.searchresult(result)
+      this.address(result.address)
+      this.render()
     })
     this.dispatcher.on('selectAddress.browser', ([address]) => {
       this.address(address)
+      this.render()
     })
     this.root = document.createElement('div')
     this.root.className = 'h-full'
@@ -30,7 +33,6 @@ export default class Browser {
     }
     this.activeTab = 'address'
     this.content = [ new Address(this.dispatcher, address) ]
-    this.render()
   }
   searchresult (result) {
     if (this.activeTab !== 'search') return
@@ -44,12 +46,15 @@ export default class Browser {
     if (comp === null) return
     content.push(comp)
     this.content = content
-    this.render()
   }
   render () {
     this.root.innerHTML = layout
+    this.root.querySelector('#browser-nav-search-button')
+      .addEventListener('click', () => {
+        this.search()
+        this.render()
+      })
     let data = this.root.querySelector('#browser-data')
-
     let c = 0
     this.content.forEach((comp) => {
       c += 1
