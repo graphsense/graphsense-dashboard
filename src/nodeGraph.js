@@ -1,6 +1,7 @@
-import {create} from 'd3-selection'
+import {create, event} from 'd3-selection'
 import {set, map} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
+import {drag} from 'd3-drag'
 import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
@@ -135,6 +136,11 @@ export default class NodeGraph {
       .classed('w-full h-full', true)
       .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
       .attr('preserveAspectRatio', 'xMidYMid meet')
+      .call(drag().on('drag', () => {
+        this.viewBox.x -= event.dx
+        this.viewBox.y -= event.dy
+        this.root.attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
+      }))
     this.renderLayers()
     this.renderLinks()
     return this.root.node()
