@@ -10,7 +10,10 @@ Install all dependencies
 
 ### Production setup
 
-Set `IS_DEV` in `webpack.config.js` to `false`. Then run
+* Set `IS_DEV` in `webpack.config.js` to `false`. 
+* Adapt `baseUrl` in `src/index.js`
+
+Then run
 
     npm run build
 
@@ -18,7 +21,14 @@ Deploy `dist`.
 
 ### Development setup
 
-Set `IS_DEV` to `true`. Then run
+Clone [graphsense-REST-python](https://git-service.ait.ac.at/dil-graphsense/graphsense-REST-Python) and switch to branch `cors`.
+
+Having `docker` installed, run 
+
+    docker/build.sh
+    docker/start.sh
+
+In `webpack.config.js` set `IS_DEV` to `true`. Then run
 
     npm start
 
