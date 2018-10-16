@@ -21,22 +21,22 @@ export default class AddressNode {
     this.height = height
     this.root = root
     this.root.classed('addressNode', true)
-    this.root.append('text')
-      .attr('x', x + padding)
-      .attr('y', y + height / 2 + addressLabelHeight / 3)
-      .style('font-size', addressLabelHeight + 'px')
-      .text(this.id[0].substring(0, 8))
+      .on('click', () => {
+        this.graph.dispatcher.call('selectNode', null, ['address', this.id])
+      })
     this.root.append('rect')
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)
       .attr('height', height)
       .attr('rx', 10)
-
       .attr('ry', 10)
-      .on('click', () => {
-        this.graph.dispatcher.call('selectNode', null, ['address', this.id])
-      })
+
+    this.root.append('text')
+      .attr('x', x + padding)
+      .attr('y', y + height / 2 + addressLabelHeight / 3)
+      .style('font-size', addressLabelHeight + 'px')
+      .text(this.id[0].substring(0, 8))
     if (this.graph.selectedNode === this) {
       this.select()
     }

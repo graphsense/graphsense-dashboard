@@ -72,8 +72,16 @@
   @apply bg-grey;
 }
 
+.layout-border {
+  @apply border-grey-light
+}
+
+.navbar {
+  @apply layout-border bg-white border-r 
+}
+
 .nav-btn {
-  @apply pt-2 pb-1 text-center w-full
+  @apply pt-2 pb-1 text-center w-full text-gs-dark
 }
 
 .prop-table {
@@ -92,7 +100,7 @@
 }
 
 .browser-component {
-  @apply p-1 border-grey border-r h-full
+  @apply layout-border p-1 border-r h-full
 }
 
 .browser-options-short {
@@ -102,8 +110,8 @@
 svg .addressNode rect{
   stroke: black;
   stroke-width: 1px;
-  fill: transparent;
   cursor: pointer;
+  @apply text-grey-light fill-current
 }
 
 svg .addressNode text {
@@ -113,8 +121,8 @@ svg .addressNode text {
 svg .clusterNode rect{
   stroke-dasharray: 5;
   stroke: black;
-  fill: transparent;
   cursor: pointer;
+  @apply text-gs-light fill-current
 }
 
 svg .selected rect {
@@ -127,3 +135,4 @@ svg .link {
   stroke-width: 2px;
   fill: none;
 }
+

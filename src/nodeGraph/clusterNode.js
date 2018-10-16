@@ -31,20 +31,20 @@ export default class ClusterNode {
       this.width = minWidth
       let g = root.append('g')
         .classed('clusterNode', true)
-      g.append('text')
-        .attr('x', padding)
-        .attr('y', this.height - padding)
-        .style('font-size', labelHeight + 'px')
-        .text(`${size} + ${cluster.noAddresses - size}`)
+        .on('click', () => {
+          console.log('click')
+          this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
+        })
       g.append('rect')
         .attr('x', 0)
         .attr('y', 0)
         .attr('width', minWidth)
         .attr('height', this.height)
-        .on('click', () => {
-          console.log('click')
-          this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
-        })
+      g.append('text')
+        .attr('x', padding)
+        .attr('y', this.height - padding)
+        .style('font-size', labelHeight + 'px')
+        .text(`${size} + ${cluster.noAddresses - size}`)
       if (this.graph.selectedNode === this) {
         this.select()
       }
