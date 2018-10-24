@@ -26,7 +26,7 @@ const dispatcher = dispatch(IS_DEV,
   'resultClusterAddresses'
 
 )
-const baseUrl = 'http://localhost:8000'
+const baseUrl = 'http://localhost:8000/btc'
 
 let store = new Store()
 
