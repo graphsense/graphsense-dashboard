@@ -191,6 +191,7 @@ def normalize_address(term):
 @app.route('/tx/<hash>')
 def show_transaction(hash):
     tx = storage.transaction(hash)
+    # print('---------------',hash,tx)
     if tx is None:
         message = 'The transaction {} cannot be found ' \
                   'in the blockchain.'.format(hash)

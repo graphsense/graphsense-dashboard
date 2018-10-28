@@ -12,7 +12,7 @@ on your system (port 9000).
 
 Test
 
-    http://localhost:9000/block/1000
+    http://localhost:9000/btc/block/1000
 
 ### Development Setup
 
