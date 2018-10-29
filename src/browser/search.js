@@ -1,4 +1,5 @@
 import search from './search.html'
+import {set} from 'd3-collection'
 
 const limit = 100
 
@@ -6,6 +7,7 @@ export default class Search {
   constructor (dispatcher) {
     this.term = ''
     this.dispatcher = dispatcher
+    this.loading = set()
   }
   render () {
     if(this.root) {
@@ -46,7 +48,12 @@ export default class Search {
     this.result?.addresses?.forEach((addr => {
       if(!addr.startsWith(this.term)) return
       let li = document.createElement('li')
+      li.className = 'cursor-pointer'
       li.appendChild(document.createTextNode(addr))
+      li.addEventListener('click', () => {
+        this.loading.add(addr)
+        this.dispatcher.call('loadNode', null, {id : addr, type : 'address'})
+      })
       ul.appendChild(li)
     }))
     let el = this.root.querySelector('#browser-search-result')

@@ -18,6 +18,15 @@ export default class Browser {
       }
       this.render()
     })
+    this.dispatcher.on('resultNode.browser', (response) => {
+      if (!(this.content[0] instanceof Search)) return
+      if (!this.content[0].loading.has(response.result.address)) return
+      this.content[0].loading.remove(response.result.address)
+      let a = this.store.add(response.result)
+      this.content = this.content.slice(0, 1)
+      this.content[1] = new Address(this.dispatcher, a)
+      this.render()
+    })
 
     this.root = document.createElement('div')
     this.root.className = 'h-full'
