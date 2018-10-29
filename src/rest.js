@@ -5,8 +5,8 @@ export default class Rest {
   constructor (dispatcher, baseUrl) {
     this.dispatcher = dispatcher
     this.baseUrl = baseUrl
-    this.dispatcher.on('search.rest', (term) => {
-      this.search(term)
+    this.dispatcher.on('search.rest', ([str, limit]) => {
+      this.search(str, limit)
     })
     this.dispatcher.on('loadIncomingTxs.rest', (request) => {
       this.incomingTxs(request)
@@ -26,9 +26,9 @@ export default class Rest {
       this.clusterAddresses(id, filters.get('limit'))
     })
   }
-  search (term) {
-    return json(this.baseUrl + '/address/' + term).then((result) => {
-      this.dispatcher.call('searchresult', null, result)
+  search (str, limit) {
+    return json(this.baseUrl + '/search?q=' + encodeURIComponent(str) + '&limit=' + limit).then((result) => {
+      this.dispatcher.call('searchresult', null, [result, str])
     })
   }
   node (request) {

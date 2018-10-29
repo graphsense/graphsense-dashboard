@@ -9,8 +9,6 @@ export default class Browser {
     this.dispatcher = dispatcher
     this.dispatcher.on('searchresult.browser', (result) => {
       this.searchresult(result)
-      this.address(result.address)
-      this.render()
     })
     this.dispatcher.on('selectNode.browser', ([type, nodeId]) => {
       if (type === 'address') {
@@ -27,9 +25,8 @@ export default class Browser {
   }
   search () {
     this.activeTab = 'search'
-    this.content = [ new Search((term) => {
-      this.dispatcher.call('search', null, term)
-    }) ]
+
+    this.content = [ new Search(this.dispatcher) ]
   }
   address (addr) {
     let address = this.store.get('address', addr)
@@ -50,6 +47,14 @@ export default class Browser {
     this.content = [ new Cluster(this.dispatcher, cluster) ]
   }
   searchresult (result) {
+    if (this.activeTab !== 'search') return
+    console.log('searchresult', result)
+    // assume search being the first in content
+    let search = this.content[0]
+    search.setResult(result)
+    search.render()
+  }
+  pickresult (result) {
     if (this.activeTab !== 'search') return
     // assume search being the first in content
     let content = [this.content[0]]

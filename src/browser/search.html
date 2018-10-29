@@ -1,4 +1,8 @@
-<div class="browser-component">
-  <input class="border p-1 rounded" type="text"/>
-  <button id="browser-search-button" class="btn btn-primary">Go</button>
+<div class="browser-component flex flex-col">
+  <form class="">
+    <input class="browser-search-input border p-1 font-mono align-bottom" type="text"/>
+    <input type="submit" id="browser-search-button" class="btn btn-primary" value="Go"/>
+  </form>
+  <div id="browser-search-result" class="font-mono p-1 overflow-hidden flex-initial"/>
+  </div>
 </div>

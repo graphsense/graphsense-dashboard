@@ -62,7 +62,7 @@
  */
 
 .btn {
-  @apply font-normal py-1 px-2 rounded border;
+  @apply font-normal py-1 px-2 border;
 }
 
 .btn-primary {
@@ -105,6 +105,13 @@
 
 .browser-options-short {
   @apply max-w-xs
+}
+
+.browser-search-input {
+  width: 35ex;
+}
+.browser-search-input:focus {
+  outline: none;
 }
 
 svg .addressNode rect{
