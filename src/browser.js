@@ -2,6 +2,7 @@ import layout from './browser/layout.html'
 import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
 import Search from './browser/search.js'
+import TransactionsTable from './browser/transactions_table.js'
 
 export default class Browser {
   constructor (dispatcher, store) {
@@ -25,6 +26,13 @@ export default class Browser {
       let a = this.store.add(response.result)
       this.content = this.content.slice(0, 1)
       this.content[1] = new Address(this.dispatcher, a)
+      this.render()
+    })
+
+    this.dispatcher.on('initTransactionsTable.browser', (request) => {
+      let last = this.content[this.content.length - 1]
+      if (!(last instanceof Address)) return
+      this.content.push(new TransactionsTable(this.dispatcher, request.id, request.type))
       this.render()
     })
 

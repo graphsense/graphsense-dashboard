@@ -14,8 +14,6 @@ const dispatcher = dispatch(IS_DEV,
   'addNode',
   'loadNode',
   'loadClusterForAddress',
-  'loadOutgoingTxs',
-  'loadIncomingTxs',
   'loadTags',
   'resultNode',
   'resultClusterForAddress',
@@ -23,7 +21,10 @@ const dispatcher = dispatch(IS_DEV,
   'applyTxFilters',
   'applyAddressFilters',
   'resultEgonet',
-  'resultClusterAddresses'
+  'resultClusterAddresses',
+  'initTransactionsTable',
+  'loadTransactions',
+  'resultTransactions'
 
 )
 const baseUrl = 'http://localhost:8000/btc'

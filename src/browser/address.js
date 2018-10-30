@@ -11,8 +11,7 @@ export default class Address {
     this.template = address
     this.options =
       [
-        {icon: 'sign-in-alt', optionText: 'Incoming transactions', message: 'loadIncomingTxs'},
-        {icon: 'sign-out-alt', optionText: 'Outgoing transactions', message: 'loadOutgoingTxs'},
+        {icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable'},
         {icon: 'tags', optionText: 'Tags', message: 'loadTags'},
         {icon: 'plus', optionText: 'Add to graph', message: 'addNode'}
       ]

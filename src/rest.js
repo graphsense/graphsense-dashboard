@@ -8,8 +8,8 @@ export default class Rest {
     this.dispatcher.on('search.rest', ([str, limit]) => {
       this.search(str, limit)
     })
-    this.dispatcher.on('loadIncomingTxs.rest', (request) => {
-      this.incomingTxs(request)
+    this.dispatcher.on('loadTransactions.rest', (request) => {
+      this.transactions(request)
     })
     this.dispatcher.on('loadNode.rest', (request) => {
       this.node(request)
@@ -47,9 +47,9 @@ export default class Rest {
       this.dispatcher.call('resultClusterForAddress', null, {request, result})
     })
   }
-  incomingTxs (address) {
-    return json(this.baseUrl + '/address/' + address + '/transactions').then((result) => {
-      console.log(result)
+  transactions (request) {
+    return json(this.baseUrl + '/' + request.type + '/' + request.id + '/transactions').then((result) => {
+      this.dispatcher.call('resultTransactions', null, {result})
     })
   }
   egonet (type, id, isOutgoing, limit) {
