@@ -1,4 +1,3 @@
-import table from './transactions_table.html'
 import Table from './table.js'
 
 export default class TransactionsTable extends Table {
@@ -7,10 +6,18 @@ export default class TransactionsTable extends Table {
     this.nodeId = nodeId
     this.nodeType = nodeType
     this.columns = [
-      {data: 'txHash'},
-      {data: 'value.satoshi'},
-      {data: 'height'},
-      {data: 'timestamp'}
+      { name: 'Transaction',
+        data: 'txHash'
+      },
+      { name: 'Value',
+        data: 'value.satoshi'
+      },
+      { name: 'Height',
+        data: 'height'
+      },
+      { name: 'Timestamp',
+        data: 'timestamp'
+      }
     ]
     this.loadMessage = 'loadTransactions'
     this.resultMessage = 'resultTransactions'
@@ -19,8 +26,5 @@ export default class TransactionsTable extends Table {
   }
   isSmall () {
     return this.total < 200
-  }
-  render () {
-    return super.render(table)
   }
 }

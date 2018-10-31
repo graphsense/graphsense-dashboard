@@ -2,6 +2,7 @@ import 'jquery'
 import 'datatables.net'
 import 'datatables.net-scroller'
 import {browserHeight, browserPadding} from '../globals.js'
+import table from './table.html'
 
 const rowHeight = 30
 
@@ -17,10 +18,18 @@ export default class Table {
   isSmall () {
     return this.total < 5000
   }
-  render (table) {
+  render () {
     this.root = document.createElement('div')
     this.root.className = 'browser-component'
     this.root.innerHTML = table
+    let tr = this.root.querySelector('tr')
+    let el = this.root.querySelector('th')
+    this.columns.forEach(({name}) => {
+      let el2 = el.cloneNode()
+      el2.innerHTML = name
+      tr.appendChild(el2)
+    })
+    tr.removeChild(el)
     // DataTable Scroller needs DataTable to be present in the DOM
     // so wait a ms for it to be inserted upstream ... hackish!
     setTimeout(() => {

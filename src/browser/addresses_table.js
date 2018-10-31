@@ -1,4 +1,3 @@
-import table from './addresses_table.html'
 import Table from './table.js'
 
 export default class AddressesTable extends Table {
@@ -6,11 +5,21 @@ export default class AddressesTable extends Table {
     super(dispatcher, total)
     this.clusterId = clusterId
     this.columns = [
-      {data: 'address'},
-      {data: 'firstTx.timestamp'},
-      {data: 'lastTx.timestamp'},
-      {data: 'balance.satoshi'},
-      {data: 'totalReceived.satoshi'}
+      { name: 'Address',
+        data: 'address'
+      },
+      { name: 'First&nbsp;usage',
+        data: 'firstTx.timestamp'
+      },
+      { name: 'Last&nbsp;usage',
+        data: 'lastTx.timestamp'
+      },
+      { name: 'Balance',
+        data: 'balance.satoshi'
+      },
+      { name: 'Received',
+        data: 'totalReceived.satoshi'
+      }
     ]
     this.loadMessage = 'loadAddresses'
     this.resultMessage = 'resultAddresses'
@@ -19,8 +28,5 @@ export default class AddressesTable extends Table {
   }
   isSmall () {
     return this.total < 200
-  }
-  render () {
-    return super.render(table)
   }
 }
