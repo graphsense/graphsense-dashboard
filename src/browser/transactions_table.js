@@ -14,6 +14,7 @@ export default class TransactionsTable {
     this.nextPage = null
     this.total = total
     this.data = []
+    this.request = null
   }
   isSmall () {
     return this.total < 200
@@ -68,14 +69,21 @@ export default class TransactionsTable {
       drawCallback(data)
       return
     }
-    if (table.loading) return
+    if (table.loading) {
+      if (request.start + request.length <= table.data.length + table.loading.length) {
+        // update request while loading
+        table.loading = request
+      }
+      return
+    }
 
     table.dispatcher.on('resultTransactions.transactions_table', (response) => {
       if (response.page !== table.nextPage) return
-      table.loading = false
       table.data = table.data.concat(response.result.transactions)
       table.nextPage = response.result.nextPage
-      data.data = table.data.slice(request.start, request.start + request.length)
+      data.data = table.data.slice(table.loading.start, table.loading.start + table.loading.length)
+      data.draw = table.loading.draw
+      table.loading = null
       drawCallback(data)
       table.dispatcher.on('resultTransactions.transactions_table', null)
     })
@@ -87,6 +95,6 @@ export default class TransactionsTable {
         pagesize: request.length
       }
     table.dispatcher.call('loadTransactions', null, r)
-    table.loading = true
+    table.loading = request
   }
 }
