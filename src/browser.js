@@ -32,7 +32,8 @@ export default class Browser {
     this.dispatcher.on('initTransactionsTable.browser', (request) => {
       let last = this.content[this.content.length - 1]
       if (!(last instanceof Address)) return
-      this.content.push(new TransactionsTable(this.dispatcher, request.id, request.type))
+      let total = last.data.noIncomingTxs + last.data.noOutgoingTxs
+      this.content.push(new TransactionsTable(this.dispatcher, request.id, request.type, total))
       this.render()
     })
 

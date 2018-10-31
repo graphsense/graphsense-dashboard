@@ -24,6 +24,10 @@ module.exports = {
     IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
     new webpack.DefinePlugin({
       IS_DEV: IS_DEV
+    }),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
     })
   ],
   output: {
@@ -64,7 +68,7 @@ module.exports = {
       },
       // the file-loader emits files.
       {
-        test: /\.(woff(2)?|ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        test: /\.(woff(2)?|ttf|eot|svg|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader'
       }
     ]

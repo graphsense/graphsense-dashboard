@@ -48,8 +48,12 @@ export default class Rest {
     })
   }
   transactions (request) {
-    return json(this.baseUrl + '/' + request.type + '/' + request.id + '/transactions').then((result) => {
-      this.dispatcher.call('resultTransactions', null, {result})
+    let url =
+      this.baseUrl + '/' + request.type + '/' + request.id + '/transactions?' +
+      (request.nextPage ? 'page=' + request.nextPage : '') +
+      (request.pagesize ? '&pagesize=' + request.pagesize : '')
+    return json(url).then((result) => {
+      this.dispatcher.call('resultTransactions', null, {page: request.nextPage, result})
     })
   }
   egonet (type, id, isOutgoing, limit) {
