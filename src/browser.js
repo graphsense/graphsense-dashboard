@@ -33,7 +33,14 @@ export default class Browser {
       let last = this.content[this.content.length - 1]
       if (!(last instanceof Address)) return
       let total = last.data.noIncomingTxs + last.data.noOutgoingTxs
-      this.content.push(new TransactionsTable(this.dispatcher, request.id, request.type, total))
+      this.content.push(new TransactionsTable(this.dispatcher, total, request.id, request.type))
+      this.render()
+    })
+    this.dispatcher.on('initAddressesTable.browser', (request) => {
+      let last = this.content[this.content.length - 1]
+      if (!(last instanceof Cluster)) return
+      let total = last.data.noAddresses
+      this.content.push(new AddressesTable(this.dispatcher, total, request.id))
       this.render()
     })
 

@@ -49,7 +49,7 @@ export default class Rest {
   }
   transactions (request) {
     let url =
-      this.baseUrl + '/' + request.type + '/' + request.id + '/transactions?' +
+      this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return json(url).then((result) => {

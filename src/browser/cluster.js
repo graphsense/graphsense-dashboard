@@ -7,7 +7,7 @@ export default class Cluster extends Address {
     this.template = cluster
     this.options =
       [
-        {icon: 'at', optionText: 'Addresses', message: 'loadAddresses'},
+        {icon: 'at', optionText: 'Addresses', message: 'initAddressesTable'},
         {icon: 'tags', optionText: 'Tags', message: 'loadClusterTags'},
         {icon: 'plus', optionText: 'Add to graph', message: 'addNode'}
       ]

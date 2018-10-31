@@ -26,7 +26,10 @@ const dispatcher = dispatch(IS_DEV,
   'resultClusterAddresses',
   'initTransactionsTable',
   'loadTransactions',
-  'resultTransactions'
+  'resultTransactions',
+  'initAddressesTable',
+  'loadAddresses',
+  'resultAddresses'
 
 )
 const baseUrl = 'http://localhost:9000/btc'
