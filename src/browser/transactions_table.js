@@ -1,11 +1,10 @@
 import table from './transactions_table.html'
 import 'jquery'
 import 'datatables.net'
-import 'datatables.net-dt/css/jquery.dataTables.css'
-import 'datatables.net-dt/js/dataTables.dataTables.js'
 import 'datatables.net-scroller'
-import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
-import 'datatables.net-scroller-dt/js/scroller.dataTables.js'
+import {browserHeight, browserPadding} from '../globals.js'
+
+const rowHeight = 30
 
 export default class TransactionsTable {
   constructor (dispatcher, nodeId, nodeType, total) {
@@ -21,6 +20,7 @@ export default class TransactionsTable {
   }
   render () {
     this.root = document.createElement('div')
+    this.root.className = 'browser-component'
     this.root.innerHTML = table
     // DataTable Scroller needs DataTable to be present in the DOM
     // so wait a ms for it to be inserted upstream ... hackish!
@@ -29,11 +29,13 @@ export default class TransactionsTable {
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
-        scrollY: 200,
+        scrollY: browserHeight - rowHeight - 2 * browserPadding,
         searching: false,
         ordering: this.isSmall(),
         deferRender: true,
-        scroller: true,
+        scroller: {
+          rowHeight: rowHeight
+        },
         stateSave: false,
         serverSide: !this.isSmall(),
 

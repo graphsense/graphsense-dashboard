@@ -1,5 +1,7 @@
-import './style.css'
+import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
+import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
+import './style.css'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
 import Rest from './rest.js'
@@ -43,12 +45,14 @@ let layout = new Layout(dispatcher, browser, graph, config)
 document.body.append(layout.render())
 
 if (module.hot) {
-  module.hot.accept(['./browser.js', './browser/search.js', './browser/search.html', './browser/address.js', './browser/address.html'], () => {
+  module.hot.accept(['./browser.js', './browser/search.js', './browser/search.html', './browser/address.js', './browser/address.html', './browser/transactions_table.js', './browser/transactions_table.html'], () => {
     console.log('Updating browser module')
     dispatcher.on('.browser', null)
+    dispatcher.on('.transactions_table', null)
     browser = new Browser(dispatcher, store)
     layout.setBrowser(browser)
     dispatcher.replay('browser')
+    dispatcher.replay('transactions_table')
   })
   module.hot.accept(['./nodeGraph.js', './nodeGraph/layer.js', './nodeGraph/clusterNode.js'], () => {
     console.log('Updating graph module')

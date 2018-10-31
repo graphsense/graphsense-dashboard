@@ -1,4 +1,5 @@
 import layout from './layout/layout.html'
+import {browserHeight} from './globals.js'
 
 export default class Layout {
   constructor (dispatcher, browser, graph, config) {
@@ -25,6 +26,7 @@ export default class Layout {
     if (el) {
       el.innerHTML = ''
       el.appendChild(this.browser.render())
+      el.style.height = browserHeight + 'px'
     }
   }
   renderGraph () {

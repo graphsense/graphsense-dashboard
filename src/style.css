@@ -76,6 +76,9 @@
   @apply border-grey-light
 }
 
+.layout-browser {
+}
+
 .navbar {
   @apply layout-border bg-white border-r 
 }
@@ -100,11 +103,12 @@
 }
 
 .browser-component {
+  /* height set via globals.js */
   @apply layout-border p-1 border-r h-full
 }
 
-.browser-options-short {
-  @apply max-w-xs
+.browser-options-short .option-text {
+  display:none;
 }
 
 .browser-search-input {
@@ -143,3 +147,14 @@ svg .link {
   fill: none;
 }
 
+div.dataTables_info {
+  display: none;
+}
+
+table.dataTable thead th, table.dataTable thead td {
+  @apply border-grey-light  
+}
+
+.dataTables_wrapper.no-footer .dataTables_scrollBody {
+  border-bottom: 0;
+}
