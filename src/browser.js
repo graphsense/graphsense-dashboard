@@ -101,7 +101,7 @@ export default class Browser {
       let options = comp.renderOptions()
       if (!options) return
       let el = document.createElement('div')
-      el.className = 'h-full mx-2 my-1 ' + (c < this.content.length ? 'browser-options-short' : '')
+      el.className = 'browser-options ' + (c < this.content.length ? 'browser-options-short' : '')
       el.appendChild(options)
       data.appendChild(el)
     })

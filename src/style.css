@@ -107,6 +107,13 @@
   @apply layout-border p-1 border-r h-full
 }
 
+.browser-options {
+  @apply h-full px-2 py-1
+}
+
+.browser-options-short {
+  @apply layout-border border-r
+}
 .browser-options-short .option-text {
   display:none;
 }
