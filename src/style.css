@@ -125,25 +125,31 @@
   outline: none;
 }
 
-svg .addressNode rect{
+svg g.addressNode {
+  cursor: pointer;
+}
+
+svg g.addressNode rect{
   stroke: black;
   stroke-width: 1px;
-  cursor: pointer;
   @apply text-grey-light fill-current
 }
 
-svg .addressNode text {
+svg g.addressNode text {
   font-family: monospace;
 }
 
-svg .clusterNode rect{
+svg g.clusterNode {
+  cursor: pointer;
+}
+
+svg g.clusterNode rect{
   stroke-dasharray: 5;
   stroke: black;
-  cursor: pointer;
   @apply text-gs-light fill-current
 }
 
-svg .selected rect {
+svg g.selected rect {
   stroke: red;
   stroke-width: 4px;
 }
