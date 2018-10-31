@@ -3,6 +3,7 @@ import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
 import Search from './browser/search.js'
 import TransactionsTable from './browser/transactions_table.js'
+import AddressesTable from './browser/addresses_table.js'
 
 export default class Browser {
   constructor (dispatcher, store) {

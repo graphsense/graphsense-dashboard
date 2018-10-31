@@ -28,12 +28,13 @@ export default class Table {
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
-        scrollY: browserHeight - rowHeight - 2 * browserPadding,
+        scrollY: browserHeight - rowHeight - 4 * browserPadding,
         searching: false,
         ordering: this.isSmall(),
         deferRender: true,
         scroller: {
-          rowHeight: rowHeight
+          rowHeight: 'auto',
+          serverWait: 50
         },
         stateSave: false,
         serverSide: !this.isSmall(),
@@ -47,6 +48,7 @@ export default class Table {
     return null
   }
   ajax (request, drawCallback, settings, table) {
+    console.log('ajax request', request)
     if (table.isSmall()) {
       request.start = 0
       request.length = table.total
