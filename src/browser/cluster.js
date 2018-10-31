@@ -7,8 +7,6 @@ export default class Cluster extends Address {
     this.template = cluster
     this.options =
       [
-        {icon: 'sign-in-alt', optionText: 'Incoming transactions', message: 'loadIncomingTxs'},
-        {icon: 'sign-out-alt', optionText: 'Outgoing transactions', message: 'loadOutgoingTxs'},
         {icon: 'at', optionText: 'Addresses', message: 'loadAddresses'},
         {icon: 'tags', optionText: 'Tags', message: 'loadClusterTags'},
         {icon: 'plus', optionText: 'Add to graph', message: 'addNode'}
