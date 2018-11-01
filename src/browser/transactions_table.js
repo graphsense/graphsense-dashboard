@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class TransactionsTable extends Table {
-  constructor (dispatcher, total, nodeId, nodeType) {
-    super(dispatcher, total)
+  constructor (dispatcher, index, total, nodeId, nodeType) {
+    super(dispatcher, index, total)
     this.nodeId = nodeId
     this.nodeType = nodeType
     this.columns = [

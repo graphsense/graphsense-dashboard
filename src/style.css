@@ -88,6 +88,7 @@
 }
 
 .navbar {
+  width: 38px;
   @apply layout-border bg-white border-r shadow-right
 }
 
@@ -112,7 +113,7 @@
 
 .browser-component {
   /* height set via globals.js */
-  @apply layout-border p-1 border-r h-full
+  @apply layout-border p-1 border-r h-full overflow-hidden
 }
 
 .browser-options {

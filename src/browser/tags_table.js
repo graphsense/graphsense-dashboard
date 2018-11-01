@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, nodeId, nodeType) {
-    super(dispatcher, 5000)
+  constructor (dispatcher, index, nodeId, nodeType) {
+    super(dispatcher, index, 5000)
     this.nodeId = nodeId
     this.nodeType = nodeType
     this.columns = [

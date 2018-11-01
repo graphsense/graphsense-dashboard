@@ -24,37 +24,39 @@ export default class Browser {
     this.dispatcher.on('resultNode.browser', (response) => {
       if (!(this.content[0] instanceof Search)) return
       if (!this.content[0].loading.has(response.result.address)) return
-      this.content[0].loading.remove(response.result.address)
       let a = this.store.add(response.result)
-      this.content = this.content.slice(0, 1)
-      this.content[1] = new Address(this.dispatcher, a, 1)
+      this.destroyComponentsFrom(0)
+      this.content[0] = new Address(this.dispatcher, a, 0)
       this.render()
     })
 
     this.dispatcher.on('initTransactionsTable.browser', (request) => {
       if (request.index !== 0 && !request.index) return
-      let last = this.content[request.index]
-      if (!(last instanceof Address)) return
-      let total = last.data.noIncomingTxs + last.data.noOutgoingTxs
-      this.content = this.content.slice(0, request.index + 1)
-      this.content.push(new TransactionsTable(this.dispatcher, total, request.id, request.type))
+      let comp = this.content[request.index]
+      if (!(comp instanceof Address)) return
+      if (this.content[request.index + 1] instanceof TransactionsTable) return
+      let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
+      this.destroyComponentsFrom(request.index + 1)
+      this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type))
       this.render()
     })
     this.dispatcher.on('initAddressesTable.browser', (request) => {
       if (request.index !== 0 && !request.index) return
       let last = this.content[this.request.index]
       if (!(last instanceof Cluster)) return
+      if (this.content[request.index + 1] instanceof AddressesTable) return
       let total = last.data.noAddresses
-      this.content = this.content.slice(0, request.index + 1)
-      this.content.push(new AddressesTable(this.dispatcher, total, request.id))
+      this.destroyComponentsFrom(request.index + 1)
+      this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id))
       this.render()
     })
     this.dispatcher.on('initTagsTable.browser', (request) => {
       if (request.index !== 0 && !request.index) return
       let last = this.content[request.index]
       if (!(last instanceof Cluster) && !(last instanceof Address)) return
-      this.content = this.content.slice(0, request.index + 1)
-      this.content.push(new TagsTable(this.dispatcher, request.id, request.type))
+      if (this.content[request.index + 1] instanceof TagsTable) return
+      this.destroyComponentsFrom(request.index + 1)
+      this.content.push(new TagsTable(this.dispatcher, request.index + 1, request.id, request.type))
       this.render()
     })
 
@@ -62,10 +64,16 @@ export default class Browser {
     this.root.className = 'h-full'
     this.search()
   }
+  destroyComponentsFrom (index) {
+    this.content.forEach((content, i) => {
+      if (i >= index) content.destroy()
+    })
+    this.content = this.content.slice(0, index)
+  }
   search () {
     this.activeTab = 'search'
 
-    this.content = [ new Search(this.dispatcher) ]
+    this.content = [ new Search(this.dispatcher, 0) ]
   }
   address (addr) {
     let address = this.store.get('address', addr)

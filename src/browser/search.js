@@ -1,21 +1,16 @@
 import search from './search.html'
 import {set} from 'd3-collection'
+import BrowserComponent from './component.js'
 
 const limit = 100
 
-export default class Search {
-  constructor (dispatcher) {
+export default class Search extends BrowserComponent{
+  constructor (dispatcher, index) {
+    super(dispatcher, index)
     this.term = ''
-    this.dispatcher = dispatcher
     this.loading = set()
   }
   render () {
-    if(this.root) {
-      this.renderResult()
-      return this.root
-    }
-    this.root = document.createElement('div')
-    this.root.className = 'h-full'
     this.root.innerHTML = search
     this.input = this.root.querySelector('input')
     this.input.value = this.term

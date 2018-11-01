@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class AddressesTable extends Table {
-  constructor (dispatcher, total, clusterId) {
-    super(dispatcher, total)
+  constructor (dispatcher, index, total, clusterId) {
+    super(dispatcher, index, total)
     this.clusterId = clusterId
     this.columns = [
       { name: 'Address',

@@ -1,13 +1,11 @@
 import address from './address.html'
-import {replace} from '../template_utils'
 import moment from 'moment'
-import option from './option.html'
+import {replace} from '../template_utils'
+import BrowserComponent from './component.js'
 
-export default class Address {
+export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index) {
-    this.index = index
-    this.dispatcher = dispatcher
-    this.root = document.createElement('div')
+    super(dispatcher, index)
     this.data = data
     this.template = address
     this.options =
@@ -30,20 +28,6 @@ export default class Address {
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})
     return this.root
-  }
-  renderOptions () {
-    let ul = document.createElement('ul')
-    ul.className = 'list-reset'
-    this.options.forEach((optionData) => {
-      let li = document.createElement('li')
-      li.className = 'cursor-pointer py-1'
-      li.innerHTML = replace(option, optionData)
-      li.addEventListener('click', () => {
-        this.dispatcher.call(optionData.message, null, this.requestData())
-      })
-      ul.appendChild(li)
-    })
-    return ul
   }
   requestData () {
     return {id: this.data.address, type: 'address', index: this.index}

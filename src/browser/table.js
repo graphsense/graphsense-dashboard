@@ -3,24 +3,26 @@ import 'datatables.net'
 import 'datatables.net-scroller'
 import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
+import BrowserComponent from './component.js'
 
 const rowHeight = 30
 
-export default class Table {
-  constructor (dispatcher, total) {
-    this.dispatcher = dispatcher
+export default class Table extends BrowserComponent {
+  constructor (dispatcher, index, total) {
+    super(dispatcher, index)
     this.nextPage = null
     this.total = total
     this.data = []
     this.loading = null
     this._id = Math.random()
   }
+  resultEvent () {
+    return this.resultMessage + '.' + this._id
+  }
   isSmall () {
     return this.total < 5000
   }
   render () {
-    this.root = document.createElement('div')
-    this.root.className = 'browser-component'
     this.root.innerHTML = table
     let tr = this.root.querySelector('tr')
     let el = this.root.querySelector('th')
@@ -43,7 +45,8 @@ export default class Table {
         deferRender: true,
         scroller: {
           rowHeight: 'auto',
-          serverWait: 50
+          serverWait: 50,
+          loadingIndicator: true
         },
         stateSave: false,
         serverSide: !this.isSmall(),
@@ -81,8 +84,7 @@ export default class Table {
       return
     }
 
-    let resultEvent = table.resultMessage + '.' + table._id
-    table.dispatcher.on(resultEvent, (response) => {
+    table.dispatcher.on(table.resultEvent(), (response) => {
       if (!table.isSmall() && response.page !== table.nextPage) return
       table.data = table.data.concat(response.result[table.resultField])
       table.nextPage = response.result.nextPage
@@ -90,7 +92,7 @@ export default class Table {
       data.draw = table.loading.draw
       table.loading = null
       drawCallback(data)
-      table.dispatcher.on(resultEvent, null)
+      table.dispatcher.on(table.resultEvent(), null)
     })
     let r =
       {
@@ -100,5 +102,8 @@ export default class Table {
       }
     table.dispatcher.call(table.loadMessage, null, r)
     table.loading = request
+  }
+  destroy () {
+    this.dispatcher.on(this.resultEvent(), null)
   }
 }
