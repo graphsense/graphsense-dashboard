@@ -72,6 +72,14 @@
   @apply bg-grey;
 }
 
+.shadow-bottom {
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .1) 
+}
+
+.shadow-right {
+  box-shadow: 2px 0 4px 0 rgba(0, 0, 0, .1)
+}
+
 .layout-border {
   @apply border-grey-light
 }
@@ -80,7 +88,7 @@
 }
 
 .navbar {
-  @apply layout-border bg-white border-r 
+  @apply layout-border bg-white border-r shadow-right
 }
 
 .nav-btn {
