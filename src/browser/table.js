@@ -32,10 +32,11 @@ export default class Table extends BrowserComponent {
       tr.appendChild(el2)
     })
     tr.removeChild(el)
+    let that = this
     // DataTable Scroller needs DataTable to be present in the DOM
     // so wait a ms for it to be inserted upstream ... hackish!
     setTimeout(() => {
-      $(this.root).children().first().DataTable({
+      let table = $(this.root).children().first().DataTable({
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
@@ -52,6 +53,11 @@ export default class Table extends BrowserComponent {
         serverSide: !this.isSmall(),
 
         columns: this.columns
+      })
+      // using es5 'function' to have 'this' bound to the triggering element
+      $(this.root).on('click', 'tr', function () {
+        let row = table.row(this).data()
+        that.dispatcher.call(that.selectMessage, null, row)
       })
     }, 1)
     return this.root

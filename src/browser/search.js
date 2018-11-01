@@ -11,6 +11,10 @@ export default class Search extends BrowserComponent{
     this.loading = set()
   }
   render () {
+    if(this.term) {
+      this.renderResult()
+      return
+    }
     this.root.innerHTML = search
     this.input = this.root.querySelector('input')
     this.input.value = this.term

@@ -42,7 +42,7 @@ export default class Browser {
     })
     this.dispatcher.on('initAddressesTable.browser', (request) => {
       if (request.index !== 0 && !request.index) return
-      let last = this.content[this.request.index]
+      let last = this.content[request.index]
       if (!(last instanceof Cluster)) return
       if (this.content[request.index + 1] instanceof AddressesTable) return
       let total = last.data.noAddresses
@@ -57,6 +57,13 @@ export default class Browser {
       if (this.content[request.index + 1] instanceof TagsTable) return
       this.destroyComponentsFrom(request.index + 1)
       this.content.push(new TagsTable(this.dispatcher, request.index + 1, request.id, request.type))
+      this.render()
+    })
+    this.dispatcher.on('selectAddress.browser', (data) => {
+      console.log('selectAdress', data)
+      if (!data.address) return
+      this.store.add(data)
+      this.address(data.address)
       this.render()
     })
 
@@ -82,6 +89,7 @@ export default class Browser {
       return
     }
     this.activeTab = 'address'
+    this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0) ]
   }
   cluster (cluster) {
@@ -91,6 +99,7 @@ export default class Browser {
       return
     }
     this.activeTab = 'address'
+    this.destroyComponentsFrom(0)
     this.content = [ new Cluster(this.dispatcher, cluster, 0) ]
   }
   searchresult (result) {
