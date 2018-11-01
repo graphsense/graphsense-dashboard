@@ -4,7 +4,8 @@ import moment from 'moment'
 import option from './option.html'
 
 export default class Address {
-  constructor (dispatcher, data) {
+  constructor (dispatcher, data, index) {
+    this.index = index
     this.dispatcher = dispatcher
     this.root = document.createElement('div')
     this.data = data
@@ -12,7 +13,7 @@ export default class Address {
     this.options =
       [
         {icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable'},
-        {icon: 'tags', optionText: 'Tags', message: 'loadTags'},
+        {icon: 'tags', optionText: 'Tags', message: 'initTagsTable'},
         {icon: 'plus', optionText: 'Add to graph', message: 'addNode'}
       ]
   }
@@ -45,6 +46,6 @@ export default class Address {
     return ul
   }
   requestData () {
-    return {id: this.data.address, type: 'address'}
+    return {id: this.data.address, type: 'address', index: this.index}
   }
 }

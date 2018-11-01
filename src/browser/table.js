@@ -26,7 +26,7 @@ export default class Table {
     let el = this.root.querySelector('th')
     this.columns.forEach(({name}) => {
       let el2 = el.cloneNode()
-      el2.innerHTML = name
+      el2.innerHTML = name.replace(/ /g, '&nbsp;')
       tr.appendChild(el2)
     })
     tr.removeChild(el)
@@ -83,7 +83,7 @@ export default class Table {
 
     let resultEvent = table.resultMessage + '.' + table._id
     table.dispatcher.on(resultEvent, (response) => {
-      if (response.page !== table.nextPage) return
+      if (!table.isSmall() && response.page !== table.nextPage) return
       table.data = table.data.concat(response.result[table.resultField])
       table.nextPage = response.result.nextPage
       data.data = table.data.slice(table.loading.start, table.loading.start + table.loading.length)

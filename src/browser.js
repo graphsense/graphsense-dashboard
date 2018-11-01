@@ -4,6 +4,7 @@ import Cluster from './browser/cluster.js'
 import Search from './browser/search.js'
 import TransactionsTable from './browser/transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
+import TagsTable from './browser/tags_table.js'
 
 export default class Browser {
   constructor (dispatcher, store) {
@@ -26,22 +27,34 @@ export default class Browser {
       this.content[0].loading.remove(response.result.address)
       let a = this.store.add(response.result)
       this.content = this.content.slice(0, 1)
-      this.content[1] = new Address(this.dispatcher, a)
+      this.content[1] = new Address(this.dispatcher, a, 1)
       this.render()
     })
 
     this.dispatcher.on('initTransactionsTable.browser', (request) => {
-      let last = this.content[this.content.length - 1]
+      if (request.index !== 0 && !request.index) return
+      let last = this.content[request.index]
       if (!(last instanceof Address)) return
       let total = last.data.noIncomingTxs + last.data.noOutgoingTxs
+      this.content = this.content.slice(0, request.index + 1)
       this.content.push(new TransactionsTable(this.dispatcher, total, request.id, request.type))
       this.render()
     })
     this.dispatcher.on('initAddressesTable.browser', (request) => {
-      let last = this.content[this.content.length - 1]
+      if (request.index !== 0 && !request.index) return
+      let last = this.content[this.request.index]
       if (!(last instanceof Cluster)) return
       let total = last.data.noAddresses
+      this.content = this.content.slice(0, request.index + 1)
       this.content.push(new AddressesTable(this.dispatcher, total, request.id))
+      this.render()
+    })
+    this.dispatcher.on('initTagsTable.browser', (request) => {
+      if (request.index !== 0 && !request.index) return
+      let last = this.content[request.index]
+      if (!(last instanceof Cluster) && !(last instanceof Address)) return
+      this.content = this.content.slice(0, request.index + 1)
+      this.content.push(new TagsTable(this.dispatcher, request.id, request.type))
       this.render()
     })
 
@@ -61,7 +74,7 @@ export default class Browser {
       return
     }
     this.activeTab = 'address'
-    this.content = [ new Address(this.dispatcher, address) ]
+    this.content = [ new Address(this.dispatcher, address, 0) ]
   }
   cluster (cluster) {
     cluster = this.store.get('cluster', cluster)
@@ -70,7 +83,7 @@ export default class Browser {
       return
     }
     this.activeTab = 'address'
-    this.content = [ new Cluster(this.dispatcher, cluster) ]
+    this.content = [ new Cluster(this.dispatcher, cluster, 0) ]
   }
   searchresult (result) {
     if (this.activeTab !== 'search') return

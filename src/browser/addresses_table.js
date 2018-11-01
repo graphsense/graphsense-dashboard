@@ -8,10 +8,10 @@ export default class AddressesTable extends Table {
       { name: 'Address',
         data: 'address'
       },
-      { name: 'First&nbsp;usage',
+      { name: 'First usage',
         data: 'firstTx.timestamp'
       },
-      { name: 'Last&nbsp;usage',
+      { name: 'Last usage',
         data: 'lastTx.timestamp'
       },
       { name: 'Balance',

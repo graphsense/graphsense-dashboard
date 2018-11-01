@@ -14,6 +14,9 @@ export default class Rest {
     this.dispatcher.on('loadAddresses.rest', (request) => {
       this.addresses(request)
     })
+    this.dispatcher.on('loadTags.rest', (request) => {
+      this.tags(request)
+    })
     this.dispatcher.on('loadNode.rest', (request) => {
       this.node(request)
     })
@@ -66,6 +69,12 @@ export default class Rest {
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return json(url).then((result) => {
       this.dispatcher.call('resultAddresses', null, {page: request.nextPage, result})
+    })
+  }
+  tags (request) {
+    let url = this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/tags'
+    return json(url).then((result) => {
+      this.dispatcher.call('resultTags', null, {result: {tags: result}})
     })
   }
   egonet (type, id, isOutgoing, limit) {

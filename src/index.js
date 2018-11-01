@@ -16,7 +16,6 @@ const dispatcher = dispatch(IS_DEV,
   'addNode',
   'loadNode',
   'loadClusterForAddress',
-  'loadTags',
   'resultNode',
   'resultClusterForAddress',
   'selectNode',
@@ -29,7 +28,10 @@ const dispatcher = dispatch(IS_DEV,
   'resultTransactions',
   'initAddressesTable',
   'loadAddresses',
-  'resultAddresses'
+  'resultAddresses',
+  'initTagsTable',
+  'loadTags',
+  'resultTags'
 
 )
 const baseUrl = 'http://localhost:9000/btc'
@@ -48,7 +50,7 @@ let layout = new Layout(dispatcher, browser, graph, config)
 document.body.append(layout.render())
 
 if (module.hot) {
-  module.hot.accept(['./browser.js', './browser/search.js', './browser/search.html', './browser/address.js', './browser/address.html', './browser/transactions_table.js', './browser/transactions_table.html'], () => {
+  module.hot.accept(['./browser.js', './browser/search.js', './browser/search.html', './browser/address.js', './browser/address.html', './browser/transactions_table.js'], () => {
     console.log('Updating browser module')
     dispatcher.on('.browser', null)
     dispatcher.on('.transactions_table', null)
