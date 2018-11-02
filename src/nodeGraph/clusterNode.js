@@ -5,7 +5,6 @@ const minWidth = 160
 const padding = 10
 const addressHeight = 50
 const gap = padding
-const labelHeight = 20
 const addressMinWidth = minWidth - 2 * padding
 export default class ClusterNode extends GraphNode {
   constructor (cluster, layerId, labelType, graph) {
@@ -47,7 +46,7 @@ export default class ClusterNode extends GraphNode {
       g.append('text')
         .attr('x', padding)
         .attr('y', height - padding)
-        .style('font-size', labelHeight + 'px')
+        .style('font-size', this.labelHeight + 'px')
         .text(this.getLabel())
       if (this.graph.selectedNode === this) {
         this.select()
@@ -68,7 +67,7 @@ export default class ClusterNode extends GraphNode {
     })
   }
   getHeight () {
-    return this.nodes.size() * addressHeight + 2 * padding + labelHeight + gap
+    return this.nodes.size() * addressHeight + 2 * padding + this.labelHeight + gap
   }
   getLabel () {
     switch (this.labelType) {
@@ -79,5 +78,11 @@ export default class ClusterNode extends GraphNode {
       case 'tag':
         return this.cluster.getTag()
     }
+  }
+  select () {
+    this.root.select('g').classed('selected', true)
+  }
+  deselect () {
+    this.root.select('g').classed('selected', false)
   }
 }

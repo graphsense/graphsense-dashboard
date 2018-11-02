@@ -70,7 +70,7 @@ if (module.hot) {
     dispatcher.replay('browser')
     dispatcher.replay('transactions_table')
   })
-  module.hot.accept(['./nodeGraph.js', './nodeGraph/layer.js', './nodeGraph/clusterNode.js'], () => {
+  module.hot.accept(['./nodeGraph.js', './nodeGraph/layer.js', './nodeGraph/clusterNode.js', './nodeGraph/addressNode.js', './nodeGraph/graphNode.js'], () => {
     console.log('Updating graph module')
     dispatcher.on('.graph', null)
     graph = new NodeGraph(dispatcher, store)

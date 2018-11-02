@@ -2,7 +2,6 @@ import {map} from 'd3-collection'
 import GraphNode from './graphNode.js'
 
 const padding = 10
-const addressLabelHeight = 25
 
 export default class AddressNode extends GraphNode {
   constructor (address, layerId, labelType, graph) {
@@ -35,8 +34,8 @@ export default class AddressNode extends GraphNode {
 
     this.root.append('text')
       .attr('x', x + padding)
-      .attr('y', y + height / 2 + addressLabelHeight / 3)
-      .style('font-size', addressLabelHeight + 'px')
+      .attr('y', y + height / 2 + this.labelHeight / 3)
+      .style('font-size', this.labelHeight + 'px')
       .text(this.getLabel())
     if (this.graph.selectedNode === this) {
       this.select()
@@ -51,5 +50,11 @@ export default class AddressNode extends GraphNode {
       case 'tag':
         return this.address.getTag()
     }
+  }
+  select () {
+    this.root.classed('selected', true)
+  }
+  deselect () {
+    this.root.classed('selected', false)
   }
 }
