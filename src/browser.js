@@ -10,11 +10,9 @@ import TagsTable from './browser/tags_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 
 const historyPushState = (msg, data) => {
-  console.log('pushstate', msg, data)
   let newState = {message: msg, data: {fromHistory: true, ...data}}
   let mm = msg + '.browser'
   if (data.fromHistory) {
-    console.log('replaceing')
     history.replaceState(newState, mm)
   } else {
     history.pushState(newState, mm)
@@ -102,10 +100,8 @@ export default class Browser {
     })
 
     window.onpopstate = (e) => {
-      console.log(e)
-      console.log(history.state)
-      if (!history.state) return
-      this.dispatcher.call(history.state.message, null, history.state.data)
+      if (!e.state) return
+      this.dispatcher.call(e.state.message, null, e.state.data)
     }
 
     this.root = document.createElement('div')
