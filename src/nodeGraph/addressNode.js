@@ -1,12 +1,13 @@
 import {map} from 'd3-collection'
+import GraphNode from './graphNode.js'
 
 const padding = 10
 const addressLabelHeight = 25
 
-export default class AddressNode {
-  constructor (address, layerId, graph) {
+export default class AddressNode extends GraphNode {
+  constructor (address, layerId, labelType, graph) {
+    super(labelType, graph)
     this.address = address
-    this.graph = graph
     this.id = [address.address, layerId]
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
@@ -36,31 +37,19 @@ export default class AddressNode {
       .attr('x', x + padding)
       .attr('y', y + height / 2 + addressLabelHeight / 3)
       .style('font-size', addressLabelHeight + 'px')
-      .text(this.id[0].substring(0, 8))
+      .text(this.getLabel())
     if (this.graph.selectedNode === this) {
       this.select()
     }
   }
-  translate (x, y) {
-    this.x += x
-    this.y += y
-  }
-  select () {
-    this.root.classed('selected', true)
-  }
-  deselect () {
-    this.root.classed('selected', false)
-  }
-  getX () {
-    return this.x
-  }
-  getY () {
-    return this.y
-  }
-  getWidth () {
-    return this.width
-  }
-  getHeight () {
-    return this.height
+  getLabel () {
+    switch (this.labelType) {
+      case 'id':
+        return this.address.address.substring(0, 8)
+      case 'balance':
+        return this.address.totalReceived.satoshi - this.address.totalSpent.satoshi
+      case 'tag':
+        return this.address.getTag()
+    }
   }
 }

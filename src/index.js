@@ -36,12 +36,16 @@ const dispatcher = dispatch(IS_DEV,
   'resultTransaction',
   'selectAddress',
   'loadAddress',
-  'changeClusterLabel'
+  'changeClusterLabel',
+  'changeAddressLabel'
 
 )
 const baseUrl = 'http://localhost:9000/btc'
 
-const defaultLabelType = 'id'
+const defaultLabelType =
+  { clusterLabel: 'id',
+    addressLabel: 'id'
+  }
 
 let store = new Store()
 

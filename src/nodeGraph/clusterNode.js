@@ -1,4 +1,5 @@
 import {set, map} from 'd3-collection'
+import GraphNode from './graphNode.js'
 
 const minWidth = 160
 const padding = 10
@@ -6,16 +7,15 @@ const addressHeight = 50
 const gap = padding
 const labelHeight = 20
 const addressMinWidth = minWidth - 2 * padding
-export default class ClusterNode {
+export default class ClusterNode extends GraphNode {
   constructor (cluster, layerId, labelType, graph) {
+    super(labelType, graph)
     this.id = [cluster.cluster, layerId]
     this.cluster = cluster
-    this.graph = graph
     this.nodes = set()
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
     this.addressFilters = map()
-    this.labelType = labelType
   }
   add (nodeId) {
     this.nodes.add(nodeId)
@@ -61,36 +61,14 @@ export default class ClusterNode {
       cumY += addressHeight
     })
   }
-  rerenderLabel () {
-    this.root.select('text').text(this.getLabel())
-  }
   translate (x, y) {
-    this.x += x
-    this.y += y
+    super.translate(x, y)
     this.nodes.each((nodeId) => {
       this.graph.addressNodes.get([nodeId, this.id[1]]).translate(x, y)
     })
   }
-  select () {
-    this.root.select('g').classed('selected', true)
-  }
-  deselect () {
-    this.root.select('g').classed('selected', false)
-  }
-  getX () {
-    return this.x
-  }
-  getY () {
-    return this.y
-  }
-  getWidth () {
-    return this.width
-  }
   getHeight () {
     return this.nodes.size() * addressHeight + 2 * padding + labelHeight + gap
-  }
-  setLabelType (labelType) {
-    this.labelType = labelType
   }
   getLabel () {
     switch (this.labelType) {

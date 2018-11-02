@@ -94,7 +94,7 @@ export default class NodeGraph {
         address.cluster = id[0]
         let object = this.store.add(address)
         if (this.addressNodes.has([address, id[1]])) return
-        let addressNode = new AddressNode(object, id[1], this)
+        let addressNode = new AddressNode(object, id[1], this.labelType['addressLabel'], this)
         console.log('new AddressNode', addressNode)
         this.addressNodes.set(addressNode.id, addressNode)
         node.add(addressNode.id[0])
@@ -104,8 +104,15 @@ export default class NodeGraph {
       console.log(this)
     })
     this.dispatcher.on('changeClusterLabel', (labelType) => {
-      this.labelType = labelType
+      this.labelType['clusterLabel'] = labelType
       this.clusterNodes.each((node) => {
+        node.setLabelType(labelType)
+        node.rerenderLabel()
+      })
+    })
+    this.dispatcher.on('changeAddressLabel', (labelType) => {
+      this.labelType['addressLabel'] = labelType
+      this.addressNodes.each((node) => {
         node.setLabelType(labelType)
         node.rerenderLabel()
       })
@@ -142,18 +149,18 @@ export default class NodeGraph {
     let node
     if (object.address) {
       if (this.addressNodes.has([object.address, layerId])) return
-      let addressNode = new AddressNode(object, layerId, this)
+      let addressNode = new AddressNode(object, layerId, this.labelType['addressLabel'], this)
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster, layerId])
       if (!node) {
         let cluster = this.store.get('cluster', object.cluster)
-        node = new ClusterNode(cluster, layerId, this.labelType, this)
+        node = new ClusterNode(cluster, layerId, this.labelType['clusterLabel'], this)
       }
       node.add(addressNode.id[0])
     } else if (object.cluster) {
       if (this.clusterNodes.has([object.cluster, layerId])) return
-      node = new ClusterNode(object, layerId, this.labelType, this)
+      node = new ClusterNode(object, layerId, this.labelType['clusterLabel'], this)
     }
     this.clusterNodes.set(node.id, node)
 

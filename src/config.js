@@ -39,20 +39,8 @@ export default class Config {
     switch (this.view) {
       case 'graph':
         el.innerHTML = graphConfig
-        let select = el.querySelector('select#clusterLabel')
-        let i = 0
-        for (; i < select.options.length; i++) {
-          console.log(select.options[i].value)
-          console.log(this.labelType)
-          if (select.options[i].value === this.labelType) break
-        }
-        console.log('selectedIndex', i)
-        select.options.selectedIndex = i
-        select.addEventListener('change', (e) => {
-          let labelType = e.target.value
-          this.labelType = labelType
-          this.dispatcher.call('changeClusterLabel', null, labelType)
-        })
+        this.addSelectListener('clusterLabel', 'changeClusterLabel')
+        this.addSelectListener('addressLabel', 'changeAddressLabel')
         break
       case 'address':
         el.innerHTML = addressConfig
@@ -148,5 +136,19 @@ export default class Config {
   }
   applyAddressFilters () {
     this.dispatcher.call('applyAddressFilters', null, [this.node.id, this.node.addressFilters])
+  }
+  addSelectListener (id, message) {
+    let select = this.root.querySelector('select#' + id)
+    let i = 0
+    for (; i < select.options.length; i++) {
+      if (select.options[i].value === this.labelType[id]) break
+    }
+    console.log('selectedIndex', i)
+    select.options.selectedIndex = i
+    select.addEventListener('change', (e) => {
+      let labelType = e.target.value
+      this.labelType[id] = labelType
+      this.dispatcher.call(message, null, labelType)
+    })
   }
 }
