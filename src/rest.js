@@ -20,6 +20,9 @@ export default class Rest {
     this.dispatcher.on('loadNode.rest', (request) => {
       this.node(request)
     })
+    this.dispatcher.on('loadTransaction.rest', (request) => {
+      this.transaction(request)
+    })
     this.dispatcher.on('loadClusterForAddress.rest', (request) => {
       this.clusterForAddress(request)
     })
@@ -33,6 +36,7 @@ export default class Rest {
     })
   }
   search (str, limit) {
+    if (str.length < 5) return
     return json(this.baseUrl + '/search?q=' + encodeURIComponent(str) + '&limit=' + limit).then((result) => {
       this.dispatcher.call('searchresult', null, [result, str])
     })
@@ -88,6 +92,11 @@ export default class Rest {
     return json(`${this.baseUrl}/cluster/${id[0]}/addresses?limit=${limit}`).then((result) => {
       console.log(result)
       this.dispatcher.call('resultClusterAddresses', null, {id, result})
+    })
+  }
+  transaction (request) {
+    return json(`${this.baseUrl}/tx/${request.txHash}`).then((result) => {
+      this.dispatcher.call('resultTransaction', null, {request, result})
     })
   }
 }

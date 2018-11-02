@@ -1,14 +1,30 @@
+import {set} from 'd3-collection'
 import layout from './browser/layout.html'
 import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
+import Transaction from './browser/transaction.js'
 import Search from './browser/search.js'
 import TransactionsTable from './browser/transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
+import TransactionAddressesTable from './browser/transaction_addresses_table.js'
+
+const historyPushState = (msg, data) => {
+  console.log('pushstate', msg, data)
+  let newState = {message: msg, data: {fromHistory: true, ...data}}
+  let mm = msg + '.browser'
+  if (data.fromHistory) {
+    console.log('replaceing')
+    history.replaceState(newState, mm)
+  } else {
+    history.pushState(newState, mm)
+  }
+}
 
 export default class Browser {
   constructor (dispatcher, store) {
     this.store = store
+    this.loading = set()
     this.dispatcher = dispatcher
     this.dispatcher.on('searchresult.browser', (result) => {
       this.searchresult(result)
@@ -22,12 +38,24 @@ export default class Browser {
       this.render()
     })
     this.dispatcher.on('resultNode.browser', (response) => {
-      if (!(this.content[0] instanceof Search)) return
-      if (!this.content[0].loading.has(response.result.address)) return
+      let isSearch = this.content[0] instanceof Search
+      let isTransaction = this.content[0] instanceof Transaction
+      if (!isSearch && !isTransaction && !response.fromHistory) return
+      if (!response.fromHistory) {
+        if (isSearch && !this.content[0].loading.has(response.result.address)) return
+        if (isTransaction && !this.loading.has(response.result.address)) return
+      }
+
+      historyPushState('resultNode', response)
+      this.loading.remove(response.result.address)
       let a = this.store.add(response.result)
       this.destroyComponentsFrom(0)
       this.content[0] = new Address(this.dispatcher, a, 0)
       this.render()
+    })
+    this.dispatcher.on('loadAddress.browser', ({address}) => {
+      this.loading.add(address)
+      this.dispatcher.call('loadNode', null, {id: address, type: 'address'})
     })
 
     this.dispatcher.on('initTransactionsTable.browser', (request) => {
@@ -62,10 +90,23 @@ export default class Browser {
     this.dispatcher.on('selectAddress.browser', (data) => {
       console.log('selectAdress', data)
       if (!data.address) return
-      this.store.add(data)
-      this.address(data.address)
+      historyPushState('selectAddress', data)
+      this.address(data)
       this.render()
     })
+    this.dispatcher.on('resultTransaction.browser', (response) => {
+      console.log('resultTransaction', response.result)
+      historyPushState('resultTransaction', response)
+      this.transaction(response.result)
+      this.render()
+    })
+
+    window.onpopstate = (e) => {
+      console.log(e)
+      console.log(history.state)
+      if (!history.state) return
+      this.dispatcher.call(history.state.message, null, history.state.data)
+    }
 
     this.root = document.createElement('div')
     this.root.className = 'h-full'
@@ -82,15 +123,24 @@ export default class Browser {
 
     this.content = [ new Search(this.dispatcher, 0) ]
   }
-  address (addr) {
-    let address = this.store.get('address', addr)
+  address (addrOrObj) {
+    let address = typeof addrOrObject === 'string' ? this.store.get('address', addrOrObj) : addrOrObj
     if (!address) {
-      console.error(`browser: ${addr} not found`)
+      console.error(`browser: ${addrOrObj} not found`)
       return
     }
     this.activeTab = 'address'
     this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0) ]
+  }
+  transaction (tx) {
+    this.activeTab = 'transactions'
+    this.destroyComponentsFrom(0)
+    this.content = [
+      new Transaction(this.dispatcher, tx, 0),
+      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1),
+      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1)
+    ]
   }
   cluster (cluster) {
     cluster = this.store.get('cluster', cluster)
@@ -103,7 +153,7 @@ export default class Browser {
     this.content = [ new Cluster(this.dispatcher, cluster, 0) ]
   }
   searchresult (result) {
-    if (this.activeTab !== 'search') return
+    if (!(this.content[0] instanceof Search)) return
     console.log('searchresult', result)
     // assume search being the first in content
     let search = this.content[0]
