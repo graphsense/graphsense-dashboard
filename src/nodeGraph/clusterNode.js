@@ -18,6 +18,9 @@ export default class ClusterNode {
   add (nodeId) {
     this.nodes.add(nodeId)
   }
+  has (address) {
+    this.nodes.has([address, this.id[1]])
+  }
   render (root) {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
@@ -69,5 +72,17 @@ export default class ClusterNode {
   }
   deselect () {
     this.root.select('g').classed('selected', false)
+  }
+  getX () {
+    return this.x
+  }
+  getY () {
+    return this.y
+  }
+  getWidth () {
+    return this.width
+  }
+  getHeight () {
+    return this.height
   }
 }

@@ -51,4 +51,16 @@ export default class AddressNode {
   deselect () {
     this.root.classed('selected', false)
   }
+  getX () {
+    return this.x
+  }
+  getY () {
+    return this.y
+  }
+  getWidth () {
+    return this.width
+  }
+  getHeight () {
+    return this.height
+  }
 }

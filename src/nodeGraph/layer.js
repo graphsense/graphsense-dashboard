@@ -11,6 +11,9 @@ export default class Layer {
   add (nodeId) {
     this.nodes.add(nodeId)
   }
+  has (nodeId) {
+    return this.nodes.has(nodeId)
+  }
   render (root) {
     let cumY = 0
     this.nodes.each((nodeId) => {

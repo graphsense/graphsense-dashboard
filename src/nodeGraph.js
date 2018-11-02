@@ -110,7 +110,10 @@ export default class NodeGraph {
     this.adding.remove(object.address || object.cluster)
     let layerId
     if (!anchorNode) {
-      layerId = 0
+      layerId = this.additionLayerBySelection(object)
+      layerId = false
+      if (layerId === false) layerId = this.additionLayerBySearch(object)
+      layerId = layerId || 0
     } else {
       layerId = anchorNode[1] + (isOutgoing ? 1 : -1)
     }
@@ -149,6 +152,23 @@ export default class NodeGraph {
     this.clear()
     this.render()
   }
+  additionLayerBySelection (node) {
+    if (!node.address) return false
+    if (!(this.selectedNode instanceof ClusterNode)) return false
+    let cluster = this.store.get('cluster', this.selectedNode.id[0])
+    if (!cluster.addresses.has(node.address)) return false
+    return this.selectedNode.id[1]
+  }
+  additionLayerBySearch (node) {
+    console.log('search', node.cluster)
+    for (let i = 0; i < this.layers.length; i++) {
+      console.log('searching layer', this.layers[i])
+      if (this.layers[i].has(node.cluster)) {
+        return this.layers[i].id
+      }
+    }
+    return false
+  }
   clear () {
     this.root.node().innerHTML = ''
   }
@@ -181,8 +201,8 @@ export default class NodeGraph {
   }
   renderLinks () {
     const link = linkHorizontal()
-      .x(([node, isSource]) => isSource ? node.x + node.width : node.x)
-      .y(([node, isSource]) => node.y + node.height / 2)
+      .x(([node, isSource]) => isSource ? node.getX() + node.getWidth() : node.getX())
+      .y(([node, isSource]) => node.getY() + node.getHeight() / 2)
     for (let i = 0; i < this.layers.length; i++) {
       this.layers[i].nodes.each((clusterId1) => {
         let cluster1 = this.clusterNodes.get([clusterId1, this.layers[i].id])
