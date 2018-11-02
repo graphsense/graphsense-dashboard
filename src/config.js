@@ -7,10 +7,11 @@ import {replace} from './template_utils.js'
 import {firstToUpper} from './util.js'
 
 export default class Config {
-  constructor (dispatcher, graph) {
+  constructor (dispatcher, graph, labelType) {
     this.dispatcher = dispatcher
     this.root = document.createElement('div')
     this.root.className = 'h-full'
+    this.labelType = labelType
     this.view = 'graph'
     this.graph = graph
     this.dispatcher.on('selectNode.config', ([type, nodeId]) => {
@@ -29,10 +30,29 @@ export default class Config {
   }
   render () {
     this.root.innerHTML = layout
+    this.root.querySelector('button#navbar-config')
+      .addEventListener('click', () => {
+        this.view = 'graph'
+        this.render()
+      })
     let el = this.root.querySelector('#config')
     switch (this.view) {
       case 'graph':
         el.innerHTML = graphConfig
+        let select = el.querySelector('select#clusterLabel')
+        let i = 0
+        for (; i < select.options.length; i++) {
+          console.log(select.options[i].value)
+          console.log(this.labelType)
+          if (select.options[i].value === this.labelType) break
+        }
+        console.log('selectedIndex', i)
+        select.options.selectedIndex = i
+        select.addEventListener('change', (e) => {
+          let labelType = e.target.value
+          this.labelType = labelType
+          this.dispatcher.call('changeClusterLabel', null, labelType)
+        })
         break
       case 'address':
         el.innerHTML = addressConfig

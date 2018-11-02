@@ -7,7 +7,7 @@ const gap = padding
 const labelHeight = 20
 const addressMinWidth = minWidth - 2 * padding
 export default class ClusterNode {
-  constructor (cluster, layerId, graph) {
+  constructor (cluster, layerId, labelType, graph) {
     this.id = [cluster.cluster, layerId]
     this.cluster = cluster
     this.graph = graph
@@ -15,6 +15,7 @@ export default class ClusterNode {
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
     this.addressFilters = map()
+    this.labelType = labelType
   }
   add (nodeId) {
     this.nodes.add(nodeId)
@@ -30,8 +31,7 @@ export default class ClusterNode {
     console.log('render clusterNode', this.cluster)
     let cluster = this.cluster
     if (!cluster.mockup) {
-      let size = this.nodes.size()
-      this.height = size * addressHeight + 2 * padding + labelHeight + gap
+      let height = this.getHeight()
       this.width = minWidth
       let g = root.append('g')
         .classed('clusterNode', true)
@@ -43,12 +43,12 @@ export default class ClusterNode {
         .attr('x', 0)
         .attr('y', 0)
         .attr('width', minWidth)
-        .attr('height', this.height)
+        .attr('height', height)
       g.append('text')
         .attr('x', padding)
-        .attr('y', this.height - padding)
+        .attr('y', height - padding)
         .style('font-size', labelHeight + 'px')
-        .text(`${size} + ${cluster.noAddresses - size}`)
+        .text(this.getLabel())
       if (this.graph.selectedNode === this) {
         this.select()
       }
@@ -60,6 +60,9 @@ export default class ClusterNode {
       addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
       cumY += addressHeight
     })
+  }
+  rerenderLabel () {
+    this.root.select('text').text(this.getLabel())
   }
   translate (x, y) {
     this.x += x
@@ -84,6 +87,19 @@ export default class ClusterNode {
     return this.width
   }
   getHeight () {
-    return this.height
+    return this.nodes.size() * addressHeight + 2 * padding + labelHeight + gap
+  }
+  setLabelType (labelType) {
+    this.labelType = labelType
+  }
+  getLabel () {
+    switch (this.labelType) {
+      case 'noAddresses':
+        return this.cluster.noAddresses
+      case 'id':
+        return this.cluster.cluster
+      case 'tag':
+        return this.cluster.getTag()
+    }
   }
 }

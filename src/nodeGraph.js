@@ -9,9 +9,10 @@ import AddressNode from './nodeGraph/addressNode.js'
 const margin = 200
 
 export default class NodeGraph {
-  constructor (dispatcher, store) {
+  constructor (dispatcher, store, labelType) {
     this.dispatcher = dispatcher
     this.store = store
+    this.labelType = labelType
     this.clusterNodes = map()
     this.addressNodes = map()
     this.adding = set()
@@ -102,6 +103,13 @@ export default class NodeGraph {
       this.render()
       console.log(this)
     })
+    this.dispatcher.on('changeClusterLabel', (labelType) => {
+      this.labelType = labelType
+      this.clusterNodes.each((node) => {
+        node.setLabelType(labelType)
+        node.rerenderLabel()
+      })
+    })
   }
   findAddressNode (address, layerId) {
     return this.addressNodes.get([address, layerId])
@@ -140,12 +148,12 @@ export default class NodeGraph {
       node = this.clusterNodes.get([object.cluster, layerId])
       if (!node) {
         let cluster = this.store.get('cluster', object.cluster)
-        node = new ClusterNode(cluster, layerId, this)
+        node = new ClusterNode(cluster, layerId, this.labelType, this)
       }
       node.add(addressNode.id[0])
     } else if (object.cluster) {
       if (this.clusterNodes.has([object.cluster, layerId])) return
-      node = new ClusterNode(object, layerId, this)
+      node = new ClusterNode(object, layerId, this.labelType, this)
     }
     this.clusterNodes.set(node.id, node)
 

@@ -35,18 +35,21 @@ const dispatcher = dispatch(IS_DEV,
   'loadTransaction',
   'resultTransaction',
   'selectAddress',
-  'loadAddress'
+  'loadAddress',
+  'changeClusterLabel'
 
 )
 const baseUrl = 'http://localhost:9000/btc'
+
+const defaultLabelType = 'id'
 
 let store = new Store()
 
 let browser = new Browser(dispatcher, store)
 
-let graph = new NodeGraph(dispatcher, store)
+let graph = new NodeGraph(dispatcher, store, defaultLabelType)
 
-let config = new Config(dispatcher, graph)
+let config = new Config(dispatcher, graph, defaultLabelType)
 
 let rest = new Rest(dispatcher, baseUrl)
 
