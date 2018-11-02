@@ -139,12 +139,13 @@ export default class NodeGraph {
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster, layerId])
       if (!node) {
-        node = new ClusterNode(object.cluster, layerId, this)
+        let cluster = this.store.get('cluster', object.cluster)
+        node = new ClusterNode(cluster, layerId, this)
       }
       node.add(addressNode.id[0])
     } else if (object.cluster) {
       if (this.clusterNodes.has([object.cluster, layerId])) return
-      node = new ClusterNode(object.cluster, layerId, this)
+      node = new ClusterNode(object, layerId, this)
     }
     this.clusterNodes.set(node.id, node)
 

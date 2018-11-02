@@ -8,7 +8,8 @@ const labelHeight = 20
 const addressMinWidth = minWidth - 2 * padding
 export default class ClusterNode {
   constructor (cluster, layerId, graph) {
-    this.id = [cluster, layerId]
+    this.id = [cluster.cluster, layerId]
+    this.cluster = cluster
     this.graph = graph
     this.nodes = set()
     this.outgoingTxsFilters = map()
@@ -26,8 +27,8 @@ export default class ClusterNode {
     this.x = 0
     this.y = 0
     this.root = root
-    console.log('clusterNode', this.graph, this.id)
-    let cluster = this.graph.store.get('cluster', this.id[0])
+    console.log('render clusterNode', this.cluster)
+    let cluster = this.cluster
     if (!cluster.mockup) {
       let size = this.nodes.size()
       this.height = size * addressHeight + 2 * padding + labelHeight + gap
