@@ -124,7 +124,7 @@ export default class Browser {
     this.content = [ new Search(this.dispatcher, 0) ]
   }
   address (addrOrObj) {
-    let address = typeof addrOrObject === 'string' ? this.store.get('address', addrOrObj) : addrOrObj
+    let address = typeof addrOrObj === 'string' ? this.store.get('address', addrOrObj) : addrOrObj
     if (!address) {
       console.error(`browser: ${addrOrObj} not found`)
       return
