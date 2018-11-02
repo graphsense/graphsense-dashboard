@@ -43,7 +43,7 @@ const dispatcher = dispatch(IS_DEV,
 const baseUrl = 'http://localhost:9000/btc'
 
 const defaultLabelType =
-  { clusterLabel: 'id',
+  { clusterLabel: 'noAddresses',
     addressLabel: 'id'
   }
 
