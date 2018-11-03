@@ -78,7 +78,7 @@ export default class Rest {
   tags (request) {
     let url = this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/tags'
     return json(url).then((result) => {
-      this.dispatcher.call('resultTags', null, {result: {tags: result}})
+      this.dispatcher.call('resultTags', null, {result: {tags: result}, request})
     })
   }
   egonet (type, id, isOutgoing, limit) {
@@ -89,7 +89,7 @@ export default class Rest {
     })
   }
   clusterAddresses (id, limit) {
-    return json(`${this.baseUrl}/cluster/${id[0]}/addresses?limit=${limit}`).then((result) => {
+    return json(`${this.baseUrl}/cluster/${id[0]}/addresses?pagesize=${limit}`).then((result) => {
       console.log(result)
       this.dispatcher.call('resultClusterAddresses', null, {id, result})
     })

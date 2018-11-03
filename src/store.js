@@ -11,29 +11,36 @@ export default class Store {
   add (object) {
     let empty = {outgoing: set(), incoming: set()}
     if (object.address) {
-      let a = this.addresses.get(object.address) || empty
-      this.addresses.set(object.address, {...a, ...object})
+      let a = this.addresses.get(object.address)
+      if (!a) {
+        a = empty
+        this.addresses.set(object.address, a)
+      }
+      // merge new object into existing one
+      Object.keys(object).forEach(key => { a[key] = object[key] })
       if (object.cluster) {
         let c = this.clusters.get(object.cluster)
-        c.addresses.add(object.address)
+        if (c) {
+          c.addresses.add(object.address)
+        }
+      }
+      return a
+    } else if (object.cluster) {
+      let c = this.clusters.get(object.cluster)
+      if (!c) {
+        c = { addresses: set(), ...empty }
         this.clusters.set(object.cluster, c)
       }
-      return object
-    }
-    if (object.cluster) {
-      let c = this.clusters.get(object.cluster) || { addresses: set(), ...empty }
-      object = {...object, ...c}
+      // merge new object into existing one
+      Object.keys(object).forEach(key => { c[key] = object[key] })
       if (object.forAddress) {
-        object.addresses.add(object.forAddress)
+        c.addresses.add(object.forAddress)
         if (this.addresses.has(object.forAddress)) {
           let a = this.addresses.get(object.forAddress)
           a.cluster = object.cluster
-          this.addresses.set(a.address, a)
         }
       }
-      delete object.forAddress
-      this.clusters.set(object.cluster, object)
-      return object
+      return c
     }
   }
   get (type, key) {
