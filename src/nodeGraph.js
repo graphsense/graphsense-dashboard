@@ -109,7 +109,6 @@ export default class NodeGraph {
         }
         this.dispatcher.call('addNode', null, request)
       })
-      this.store.add(a)
     })
     this.dispatcher.on('resultClusterAddresses.graph', ({id, result}) => {
       let node = this.clusterNodes.get(id)
@@ -224,24 +223,32 @@ export default class NodeGraph {
         this.viewBox.y -= event.dy
         this.root.attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
       }))
-    this.renderLayers()
-    this.renderLinks()
+    let clusterShadowsRoot = this.root.append('g')
+    let clusterRoot = this.root.append('g')
+    let addressShadowsRoot = this.root.append('g')
+    let addressRoot = this.root.append('g')
+    let linksRoot = this.root.append('g')
+    this.renderLayers(clusterRoot, addressRoot)
+    this.renderLinks(linksRoot)
+    this.renderShadows(clusterShadowsRoot, addressShadowsRoot)
     return this.root.node()
   }
-  renderLayers () {
+  renderLayers (clusterRoot, addressRoot) {
     let cumX = 0
     this.layers.forEach((layer) => {
-      let g = this.root.append('g')
-      layer.render(g)
-      let box = g.node().getBBox()
+      let cRoot = clusterRoot.append('g')
+      let aRoot = addressRoot.append('g')
+      layer.render(cRoot, aRoot)
+      let box = cRoot.node().getBBox()
       let x = cumX - box.width / 2
       let y = box.height / -2
-      g.attr('transform', `translate(${x}, ${y})`)
+      cRoot.attr('transform', `translate(${x}, ${y})`)
+      aRoot.attr('transform', `translate(${x}, ${y})`)
       cumX = x + box.width + margin
       layer.translate(x, y)
     })
   }
-  renderLinks () {
+  renderLinks (root) {
     const link = linkHorizontal()
       .x(([node, isSource]) => isSource ? node.getX() + node.getWidth() : node.getX())
       .y(([node, isSource]) => node.getY() + node.getHeight() / 2)
@@ -249,18 +256,18 @@ export default class NodeGraph {
       this.layers[i].nodes.each((clusterId1) => {
         let cluster1 = this.clusterNodes.get([clusterId1, this.layers[i].id])
         let c1 = this.store.get('cluster', clusterId1)
-        this.linkToLayerCluster(link, this.layers[i + 1], c1.outgoing, cluster1, true)
-        this.linkToLayerCluster(link, this.layers[i - 1], c1.incoming, cluster1, false)
+        this.linkToLayerCluster(root, link, this.layers[i + 1], c1.outgoing, cluster1, true)
+        this.linkToLayerCluster(root, link, this.layers[i - 1], c1.incoming, cluster1, false)
         cluster1.nodes.each((addressId1) => {
           let address1 = this.addressNodes.get([addressId1, this.layers[i].id])
           let a1 = this.store.get('address', addressId1)
-          this.linkToLayer(link, this.layers[i + 1], a1.outgoing, address1, true)
-          this.linkToLayer(link, this.layers[i - 1], a1.incoming, address1, false)
+          this.linkToLayer(root, link, this.layers[i + 1], a1.outgoing, address1, true)
+          this.linkToLayer(root, link, this.layers[i - 1], a1.incoming, address1, false)
         })
       })
     }
   }
-  linkToLayer (link, layer, neighbors, source, isOutgoing) {
+  linkToLayer (root, link, layer, neighbors, source, isOutgoing) {
     if (layer) {
       layer.nodes.each((clusterId2) => {
         let cluster2 = this.clusterNodes.get([clusterId2, layer.id])
@@ -268,19 +275,44 @@ export default class NodeGraph {
           if (!neighbors.has(addressId2)) return
           let address2 = this.addressNodes.get([addressId2, layer.id])
           let path = link({source: [source, isOutgoing], target: [address2, !isOutgoing]})
-          this.root.append('path').classed('link', true).attr('d', path)
+          root.append('path').classed('link', true).attr('d', path)
         })
       })
     }
   }
-  linkToLayerCluster (link, layer, neighbors, source, isOutgoing) {
+  linkToLayerCluster (root, link, layer, neighbors, source, isOutgoing) {
     if (layer) {
       layer.nodes.each((clusterId2) => {
         if (!neighbors.has(clusterId2)) return
         let cluster2 = this.clusterNodes.get([clusterId2, layer.id])
         let path = link({source: [source, isOutgoing], target: [cluster2, !isOutgoing]})
-        this.root.append('path').classed('link', true).attr('d', path)
+        root.append('path').classed('link', true).attr('d', path)
       })
     }
+  }
+  renderShadows (clusterRoot, addressRoot) {
+    const link = linkHorizontal()
+      .x(([node, isSource]) => isSource ? node.getX() + node.getWidth() : node.getX())
+      .y(([node, isSource]) => node.getY() + node.getHeight() / 2)
+    // TODO use a data structure which stores and lists entries in sorted order to prevent this sorting
+    let sort = (node1, node2) => {
+      return node1.id[1] - node2.id[1]
+    }
+    this.linkShadows(addressRoot, link, this.addressNodes.values().sort(sort))
+    this.linkShadows(clusterRoot, link, this.clusterNodes.values().sort(sort))
+  }
+  linkShadows (root, link, nodes) {
+    nodes.forEach((node1) => {
+      for (let i = 0; i < nodes.length; i++) {
+        let node2 = nodes[i]
+        if (node1 === node2) continue
+        if (node1.id[0] !== node2.id[0]) continue
+        if (node1.id[1] >= node2.id[1]) continue
+        let path = link({source: [node1, true], target: [node2, false]})
+        root.append('path').classed('shadow', true).attr('d', path)
+        // stop iterating if a shadow to next layer was found
+        return
+      }
+    })
   }
 }

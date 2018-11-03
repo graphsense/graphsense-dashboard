@@ -27,7 +27,6 @@ export default class ClusterNode extends GraphNode {
     this.x = 0
     this.y = 0
     this.root = root
-    console.log('render clusterNode', this.cluster)
     let cluster = this.cluster
     if (!cluster.mockup) {
       let height = this.getHeight()
@@ -35,7 +34,6 @@ export default class ClusterNode extends GraphNode {
       let g = root.append('g')
         .classed('clusterNode', true)
         .on('click', () => {
-          console.log('click')
           this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
         })
       g.append('rect')
@@ -50,6 +48,8 @@ export default class ClusterNode extends GraphNode {
         this.select()
       }
     }
+  }
+  renderAddresses (root) {
     let cumY = padding
     this.nodes.each((addressId) => {
       let addressNode = this.graph.addressNodes.get([addressId, this.id[1]])

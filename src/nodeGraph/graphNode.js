@@ -13,7 +13,6 @@ export default class GraphNode {
       root.classed('label', true)
     }
     let label = this.getLabel()
-    console.log(root, label, label.length)
     let size
     if (label.length > this.numLetters) {
       if (label.length > this.numLetters * 2) {
@@ -25,7 +24,6 @@ export default class GraphNode {
     } else {
       size = this.labelHeight
     }
-    console.log('size', size)
     root.node().innerHTML = ''
     root.append('text')
       .style('font-size', size + 'px')

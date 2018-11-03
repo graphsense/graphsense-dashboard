@@ -173,6 +173,17 @@ svg .link {
   fill: none;
 }
 
+svg .shadow {
+  @apply text-gs-dark stroke-current;
+  opacity: 0.2;
+  stroke-width: 20px;
+  fill: none;
+}
+
+svg .shadow:hover {
+  opacity: 0.8;
+}
+
 div.dataTables_wrapper {
   position: relative;
 }
