@@ -42,12 +42,12 @@ export default class Rest {
     })
   }
   node (request) {
-    return json(`${this.baseUrl}/${request.type}/${request.id}`).then((result) => {
+    return json(`${this.baseUrl}/${request.type}_with_tags/${request.id}`).then((result) => {
       this.dispatcher.call('resultNode', null, {request, result})
     })
   }
   clusterForAddress (request) {
-    return json(this.baseUrl + '/address/' + request.id + '/cluster').then((result) => {
+    return json(this.baseUrl + '/address/' + request.id + '/cluster_with_tags').then((result) => {
       if (!result.cluster) {
         // seems there exist addresses without cluster ...
         // so mockup cluster with the address id

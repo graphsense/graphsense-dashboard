@@ -73,8 +73,8 @@ if (module.hot) {
   module.hot.accept(['./nodeGraph.js', './nodeGraph/layer.js', './nodeGraph/clusterNode.js', './nodeGraph/addressNode.js', './nodeGraph/graphNode.js'], () => {
     console.log('Updating graph module')
     dispatcher.on('.graph', null)
-    graph = new NodeGraph(dispatcher, store)
-    config = new Config(dispatcher, graph)
+    graph = new NodeGraph(dispatcher, store, defaultLabelType)
+    config = new Config(dispatcher, graph, defaultLabelType)
     layout.setGraph(graph)
     layout.setConfig(config)
     dispatcher.replay('graph')
@@ -82,7 +82,7 @@ if (module.hot) {
   module.hot.accept(['./config.js', './config/layout.html', './config/graph.html', './config/address.html', './config/cluster.html'], () => {
     console.log('Updating config module')
     dispatcher.on('.config', null)
-    config = new Config(dispatcher, graph)
+    config = new Config(dispatcher, graph, defaultLabelType)
     layout.setConfig(config)
     dispatcher.replay('config')
   })

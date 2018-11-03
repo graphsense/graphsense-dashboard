@@ -107,14 +107,14 @@ export default class NodeGraph {
       this.labelType['clusterLabel'] = labelType
       this.clusterNodes.each((node) => {
         node.setLabelType(labelType)
-        node.rerenderLabel()
+        node.renderLabel()
       })
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
       this.labelType['addressLabel'] = labelType
       this.addressNodes.each((node) => {
         node.setLabelType(labelType)
-        node.rerenderLabel()
+        node.renderLabel()
       })
     })
   }

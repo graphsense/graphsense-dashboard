@@ -2,7 +2,6 @@ import {map} from 'd3-collection'
 import GraphNode from './graphNode.js'
 
 const padding = 10
-
 export default class AddressNode extends GraphNode {
   constructor (address, layerId, labelType, graph) {
     super(labelType, graph)
@@ -32,11 +31,11 @@ export default class AddressNode extends GraphNode {
       .attr('rx', 10)
       .attr('ry', 10)
 
-    this.root.append('text')
-      .attr('x', x + padding)
-      .attr('y', y + height / 2 + this.labelHeight / 3)
-      .style('font-size', this.labelHeight + 'px')
-      .text(this.getLabel())
+    let h = this.y + this.height / 2 + this.labelHeight / 3
+    let label = this.root.append('g')
+      .attr('transform', `translate(${this.x + padding}, ${h})`)
+
+    this.renderLabel(label)
     if (this.graph.selectedNode === this) {
       this.select()
     }
@@ -48,7 +47,7 @@ export default class AddressNode extends GraphNode {
       case 'balance':
         return this.address.totalReceived.satoshi - this.address.totalSpent.satoshi
       case 'tag':
-        return this.address.getTag()
+        return this.getTag(this.address)
     }
   }
   select () {

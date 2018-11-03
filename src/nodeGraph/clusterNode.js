@@ -43,11 +43,9 @@ export default class ClusterNode extends GraphNode {
         .attr('y', 0)
         .attr('width', minWidth)
         .attr('height', height)
-      g.append('text')
-        .attr('x', padding)
-        .attr('y', height - padding)
-        .style('font-size', this.labelHeight + 'px')
-        .text(this.getLabel())
+      let label = g.append('g')
+        .attr('transform', `translate(${padding}, ${height - padding})`)
+      this.renderLabel(label)
       if (this.graph.selectedNode === this) {
         this.select()
       }
@@ -76,7 +74,7 @@ export default class ClusterNode extends GraphNode {
       case 'id':
         return this.cluster.cluster
       case 'tag':
-        return this.cluster.getTag()
+        return this.getTag(this.cluster)
     }
   }
   select () {

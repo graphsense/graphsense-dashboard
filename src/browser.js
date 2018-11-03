@@ -82,7 +82,7 @@ export default class Browser {
       if (!(last instanceof Cluster) && !(last instanceof Address)) return
       if (this.content[request.index + 1] instanceof TagsTable) return
       this.destroyComponentsFrom(request.index + 1)
-      this.content.push(new TagsTable(this.dispatcher, request.index + 1, request.id, request.type))
+      this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type))
       this.render()
     })
     this.dispatcher.on('selectAddress.browser', (data) => {

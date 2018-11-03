@@ -3,10 +3,33 @@ export default class GraphNode {
     this.labelType = labelType
     this.graph = graph
     this.labelHeight = 25
+    this.padding = 10
+    this.numLetters = 8
   }
-  rerenderLabel () {
+  renderLabel (root) {
+    if (!root) {
+      root = this.root.select('g.label')
+    } else {
+      root.classed('label', true)
+    }
     let label = this.getLabel()
-    this.root.select('text').text(label)
+    console.log(root, label, label.length)
+    let size
+    if (label.length > this.numLetters) {
+      if (label.length > this.numLetters * 2) {
+        size = this.labelHeight * 0.5
+        label = label.substring(0, this.numLetters * 2)
+      } else {
+        size = this.labelHeight * this.numLetters / label.length
+      }
+    } else {
+      size = this.labelHeight
+    }
+    console.log('size', size)
+    root.node().innerHTML = ''
+    root.append('text')
+      .style('font-size', size + 'px')
+      .text(label)
   }
   translate (x, y) {
     this.x += x
@@ -26,5 +49,14 @@ export default class GraphNode {
   }
   setLabelType (labelType) {
     this.labelType = labelType
+  }
+  getTag (object) {
+    if (object.userDefinedTags) {
+      return object.userDefinedTags[0] || ''
+    }
+    if (object.tags) {
+      return object.tags[0].tag || ''
+    }
+    return ''
   }
 }

@@ -158,6 +158,10 @@ svg g.clusterNode rect{
   @apply text-gs-light fill-current
 }
 
+svg g.clusterNode text {
+  font-family: monospace;
+}
+
 svg g.selected rect {
   stroke: red;
   stroke-width: 4px;
