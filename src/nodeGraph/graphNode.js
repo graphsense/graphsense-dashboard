@@ -54,6 +54,18 @@ export default class GraphNode {
     if (object.userDefinedTags) {
       return object.userDefinedTags[0] || ''
     }
-    return object?.tags[0]?.tag || ''
+    return this.findTag(object)?.tag || ''
+  }
+  getActorCategory(object) {
+    return this.findTag(object)?.actorCategory || ''
+  }
+  findTag (object) {
+    let tags = object?.tags || []
+    tags.sort((a,b) => {
+      return a - b
+    })
+    for(let i = 0; i < tags.length; i++ ){
+      if(tags[i].actorCategory) return tags[i]
+    }
   }
 }

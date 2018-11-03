@@ -48,6 +48,8 @@ export default class AddressNode extends GraphNode {
         return this.address.totalReceived.satoshi - this.address.totalSpent.satoshi + ''
       case 'tag':
         return this.getTag(this.address) + ''
+      case 'actorCategory':
+        return this.getActorCategory(this.address) + ''
     }
   }
   select () {

@@ -75,6 +75,8 @@ export default class ClusterNode extends GraphNode {
         return this.cluster.cluster
       case 'tag':
         return this.getTag(this.cluster)
+      case 'actorCategory':
+        return this.getActorCategory(this.cluster) + ''
     }
   }
   select () {
