@@ -43,11 +43,11 @@ export default class AddressNode extends GraphNode {
   getLabel () {
     switch (this.labelType) {
       case 'id':
-        return this.address.address.substring(0, 8)
+        return (this.address.address + '').substring(0, 8)
       case 'balance':
-        return this.address.totalReceived.satoshi - this.address.totalSpent.satoshi
+        return this.address.totalReceived.satoshi - this.address.totalSpent.satoshi + ''
       case 'tag':
-        return this.getTag(this.address)
+        return this.getTag(this.address) + ''
     }
   }
   select () {

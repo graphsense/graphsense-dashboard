@@ -54,9 +54,6 @@ export default class GraphNode {
     if (object.userDefinedTags) {
       return object.userDefinedTags[0] || ''
     }
-    if (object.tags) {
-      return object.tags[0].tag || ''
-    }
-    return ''
+    return object?.tags[0]?.tag || ''
   }
 }
