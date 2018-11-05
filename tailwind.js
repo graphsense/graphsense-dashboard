@@ -130,7 +130,9 @@ let colors = {
   'gs-dark': '#71a1a5',
   'gs-base': '#6bc2c2',
   'gs-light': '#c0e2e1',
-  'gs-lighter': '#d2eced'
+  'gs-lighter': '#d2eced',
+  'gs-red': '#cc6a42',
+  'gs-red-light': '#eeccbe'
 
 }
 

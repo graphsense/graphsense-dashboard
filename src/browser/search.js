@@ -44,6 +44,7 @@ export default class Search extends BrowserComponent{
   renderResult () {
     let ul = document.createElement('ol')
     ul.className = 'list-reset'
+    console.log('addresses', this.result)
     this.result?.addresses?.forEach((addr => {
       if(!addr.startsWith(this.term)) return
       let li = document.createElement('li')

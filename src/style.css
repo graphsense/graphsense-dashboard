@@ -185,6 +185,26 @@ svg g.addressExpand text {
   @apply text-grey-dark
 }
 
+svg path.expandHandle {
+  visibility: hidden;
+  cursor: pointer;
+  @apply text-gs-red fill-current
+}
+
+svg g.addressNode:hover + g.expandHandles > path{
+  visibility: visible;
+}
+
+svg g.clusterNode:hover + g.expandHandles > path{
+  visibility: visible;
+}
+
+svg path.expandHandle:hover {
+  visibility: visible;
+  stroke-width: 2px;
+  @apply text-gs-red stroke-current
+}
+
 svg .link {
   stroke: black;
   stroke-width: 2px;

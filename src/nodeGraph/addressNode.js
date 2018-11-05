@@ -1,4 +1,3 @@
-import {map} from 'd3-collection'
 import GraphNode from './graphNode.js'
 
 const padding = 10
@@ -7,11 +6,10 @@ export default class AddressNode extends GraphNode {
     super(labelType, graph)
     this.address = address
     this.id = [address.address, layerId]
-    this.outgoingTxsFilters = map()
-    this.incomingTxsFilters = map()
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
+    this.type = 'address'
   }
   render (root, x, y, height, width) {
     this.x = x
@@ -19,11 +17,13 @@ export default class AddressNode extends GraphNode {
     this.width = width
     this.height = height
     this.root = root
-    this.root.classed('addressNode', true)
+    let g = this.root
+      .append('g')
+      .classed('addressNode', true)
       .on('click', () => {
         this.graph.dispatcher.call('selectNode', null, ['address', this.id])
       })
-    this.root.append('rect')
+    g.append('rect')
       .attr('x', x)
       .attr('y', y)
       .attr('width', width)
@@ -32,10 +32,13 @@ export default class AddressNode extends GraphNode {
       .attr('ry', 10)
 
     let h = this.y + this.height / 2 + this.labelHeight / 3
-    let label = this.root.append('g')
+    let label = g.append('g')
       .attr('transform', `translate(${this.x + padding}, ${h})`)
 
     this.renderLabel(label)
+    let eg = this.root.append('g').classed('expandHandles', true)
+    this.renderExpand(eg, true)
+    this.renderExpand(eg, false)
     if (this.graph.selectedNode === this) {
       this.select()
     }

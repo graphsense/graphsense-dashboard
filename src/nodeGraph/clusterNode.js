@@ -15,10 +15,10 @@ export default class ClusterNode extends GraphNode {
     this.id = [cluster.cluster, layerId]
     this.cluster = cluster
     this.nodes = set()
-    this.outgoingTxsFilters = map()
-    this.incomingTxsFilters = map()
     this.addressFilters = map()
+    this.addressFilters.set('limit', 10)
     this.expandLimit = 10
+    this.type = 'cluster'
   }
   add (nodeId) {
     this.nodes.add(nodeId)
@@ -48,6 +48,9 @@ export default class ClusterNode extends GraphNode {
       let label = g.append('g')
         .attr('transform', `translate(${padding}, ${height - padding})`)
       this.renderLabel(label)
+      let eg = this.root.append('g').classed('expandHandles', true)
+      this.renderExpand(eg, true)
+      this.renderExpand(eg, false)
       if (this.graph.selectedNode === this) {
         this.select()
       }
@@ -61,13 +64,12 @@ export default class ClusterNode extends GraphNode {
       addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
       cumY += addressHeight
     })
+    if (this.cluster.mockup) return
     cumY += this.nodes.size() > 0 ? gap : 0
     let button = root.append('g')
       .classed('addressExpand', true)
       .on('click', (e) => {
-        let filters = map()
-        filters.set('limit', this.expandLimit)
-        this.graph.dispatcher.call('applyAddressFilters', null, [this.id, filters])
+        this.graph.dispatcher.call('applyAddressFilters', null, [this.id, this.addressFilters])
       })
     button.append('rect')
       .attr('x', padding)
