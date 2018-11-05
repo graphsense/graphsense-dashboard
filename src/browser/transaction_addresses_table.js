@@ -9,7 +9,9 @@ export default class TransactionAddressesTable extends Table {
       },
       { name: 'Value',
         data: 'value.satoshi',
-        render: this.formatCurrency
+        render: (value) => {
+          return this.formatCurrency(value)
+        }
       }
     ]
     this.data = addresses
