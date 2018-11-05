@@ -10,7 +10,10 @@ export default class TransactionsTable extends Table {
         data: 'txHash'
       },
       { name: 'Value',
-        data: 'value.satoshi'
+        data: 'value.satoshi',
+        render: (value) => {
+          return this.formatCurrency(value)
+        }
       },
       { name: 'Height',
         data: 'height'

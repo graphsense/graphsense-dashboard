@@ -1,3 +1,5 @@
+import {formatCurrency} from '../utils'
+
 export default class GraphNode {
   constructor (labelType, graph) {
     this.labelType = labelType
@@ -5,6 +7,7 @@ export default class GraphNode {
     this.labelHeight = 25
     this.padding = 10
     this.numLetters = 8
+    this.currency = 'btc'
   }
   renderLabel (root) {
     if (!root) {
@@ -65,5 +68,8 @@ export default class GraphNode {
     for(let i = 0; i < tags.length; i++ ){
       if(tags[i].actorCategory) return tags[i]
     }
+  }
+  formatCurrency (value) {
+    return formatCurrency(value, this.currency)
   }
 }

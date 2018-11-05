@@ -4,7 +4,7 @@ import addressConfig from './config/address.html'
 import clusterConfig from './config/cluster.html'
 import filter from './config/filter.html'
 import {replace} from './template_utils.js'
-import {firstToUpper} from './util.js'
+import {firstToUpper} from './utils.js'
 
 export default class Config {
   constructor (dispatcher, graph, labelType) {

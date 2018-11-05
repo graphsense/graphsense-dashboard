@@ -15,10 +15,16 @@ export default class AddressesTable extends Table {
         data: 'lastTx.timestamp'
       },
       { name: 'Balance',
-        data: 'balance.satoshi'
+        data: 'balance.satoshi',
+        render: (value) => {
+          return this.formatCurrency(value)
+        }
       },
       { name: 'Received',
-        data: 'totalReceived.satoshi'
+        data: 'totalReceived.satoshi',
+        render: (value) => {
+          return this.formatCurrency(value)
+        }
       }
     ]
     this.loadMessage = 'loadAddresses'

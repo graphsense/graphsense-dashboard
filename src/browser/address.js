@@ -23,8 +23,8 @@ export default class Address extends BrowserComponent {
       firstUsage: moment.unix(first).fromNow(),
       lastUsage: moment.unix(last).fromNow(),
       activityPeriod: moment.duration(duration).humanize(),
-      totalReceived: this.data.totalReceived.satoshi,
-      finalBalance: this.data.totalReceived.satoshi - this.data.totalSpent.satoshi
+      totalReceived: this.formatCurrency(this.data.totalReceived.satoshi),
+      finalBalance: this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})
     return this.root

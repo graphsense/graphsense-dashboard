@@ -1,5 +1,6 @@
 import {replace} from '../template_utils'
 import option from './option.html'
+import {formatCurrency} from '../utils'
 
 export default class BrowserComponent {
   constructor (dispatcher, index) {
@@ -7,6 +8,7 @@ export default class BrowserComponent {
     this.dispatcher = dispatcher
     this.root = document.createElement('div')
     this.root.className = 'browser-component'
+    this.currency = 'btc'
   }
   renderOptions () {
     let ul = document.createElement('ul')
@@ -23,5 +25,8 @@ export default class BrowserComponent {
     return ul
   }
   destroy () {
+  }
+  formatCurrency (value) {
+    return formatCurrency(value, this.currency)
   }
 }

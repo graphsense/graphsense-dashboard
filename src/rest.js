@@ -1,5 +1,5 @@
 import {json} from 'd3-fetch'
-import {firstToUpper} from './util.js'
+import {firstToUpper} from './utils.js'
 
 export default class Rest {
   constructor (dispatcher, baseUrl) {
