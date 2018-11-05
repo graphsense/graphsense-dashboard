@@ -6,6 +6,9 @@ const padding = 10
 const addressHeight = 50
 const gap = padding
 const addressMinWidth = minWidth - 2 * padding
+const buttonHeight = 25
+const buttonLabelHeight = 20
+
 export default class ClusterNode extends GraphNode {
   constructor (cluster, layerId, labelType, graph) {
     super(labelType, graph)
@@ -15,6 +18,7 @@ export default class ClusterNode extends GraphNode {
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
     this.addressFilters = map()
+    this.expandLimit = 10
   }
   add (nodeId) {
     this.nodes.add(nodeId)
@@ -57,6 +61,25 @@ export default class ClusterNode extends GraphNode {
       addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
       cumY += addressHeight
     })
+    cumY += this.nodes.size() > 0 ? gap : 0
+    let button = root.append('g')
+      .classed('addressExpand', true)
+      .on('click', (e) => {
+        let filters = map()
+        filters.set('limit', this.expandLimit)
+        this.graph.dispatcher.call('applyAddressFilters', null, [this.id, filters])
+      })
+    button.append('rect')
+      .attr('x', padding)
+      .attr('y', cumY)
+      .attr('width', addressMinWidth)
+      .attr('height', buttonHeight)
+      .attr('rx', 5)
+      .attr('ry', 5)
+    button.append('text')
+      .attr('x', padding * 2)
+      .attr('y', cumY + buttonHeight / 2 + buttonLabelHeight / 3)
+      .text(`+ Addresses`)
   }
   translate (x, y) {
     super.translate(x, y)
@@ -65,7 +88,10 @@ export default class ClusterNode extends GraphNode {
     })
   }
   getHeight () {
-    return this.nodes.size() * addressHeight + 2 * padding + this.labelHeight + gap
+    return this.nodes.size() * addressHeight +
+      2 * padding +
+      this.labelHeight + buttonHeight +
+      (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getLabel () {
     switch (this.labelType) {

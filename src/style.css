@@ -167,6 +167,24 @@ svg g.selected rect {
   stroke-width: 4px;
 }
 
+svg g.addressExpand {
+  cursor: pointer;
+}
+
+svg g.addressExpand rect {
+  stroke: grey;
+  stroke-width: 1px;
+  @apply text-grey-light fill-current
+}
+
+svg g.addressExpand:hover rect {
+  @apply text-grey-lightest fill-current
+}
+
+svg g.addressExpand text {
+  @apply text-grey-dark
+}
+
 svg .link {
   stroke: black;
   stroke-width: 2px;
