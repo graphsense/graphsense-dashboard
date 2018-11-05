@@ -23,7 +23,8 @@ export default class TagsTable extends Table {
         data: 'source'
       },
       { name: 'Timestamp',
-        data: 'timestamp'
+        data: 'timestamp',
+        render: this.formatTimestamp
       }
     ]
     this.loadMessage = 'loadTags'

@@ -19,7 +19,8 @@ export default class TransactionsTable extends Table {
         data: 'height'
       },
       { name: 'Timestamp',
-        data: 'timestamp'
+        data: 'timestamp',
+        render: this.formatTimestamp
       }
     ]
     this.loadMessage = 'loadTransactions'

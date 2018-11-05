@@ -1,6 +1,7 @@
 import {replace} from '../template_utils'
 import option from './option.html'
 import {formatCurrency} from '../utils'
+import moment from 'moment'
 
 export default class BrowserComponent {
   constructor (dispatcher, index) {
@@ -28,5 +29,8 @@ export default class BrowserComponent {
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)
+  }
+  formatTimestamp (timestamp) {
+    return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
   }
 }

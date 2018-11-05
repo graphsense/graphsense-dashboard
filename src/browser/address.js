@@ -20,8 +20,8 @@ export default class Address extends BrowserComponent {
     let last = this.data.lastTx.timestamp
     let duration = (last - first) * 1000
     let flat = {
-      firstUsage: moment.unix(first).fromNow(),
-      lastUsage: moment.unix(last).fromNow(),
+      firstUsage: this.formatTimestamp(first),
+      lastUsage: this.formatTimestamp(last),
       activityPeriod: moment.duration(duration).humanize(),
       totalReceived: this.formatCurrency(this.data.totalReceived.satoshi),
       finalBalance: this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)

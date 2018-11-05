@@ -9,10 +9,12 @@ export default class AddressesTable extends Table {
         data: 'address'
       },
       { name: 'First usage',
-        data: 'firstTx.timestamp'
+        data: 'firstTx.timestamp',
+        render: this.formatTimestamp
       },
       { name: 'Last usage',
-        data: 'lastTx.timestamp'
+        data: 'lastTx.timestamp',
+        render: this.formatTimestamp
       },
       { name: 'Balance',
         data: 'balance.satoshi',
