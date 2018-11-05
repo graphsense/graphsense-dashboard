@@ -211,6 +211,10 @@ table.dataTable thead th, table.dataTable thead td {
   @apply border-grey-light  
 }
 
+table.dataTable tbody tr {
+  cursor: pointer;
+}
+
 .dataTables_wrapper.no-footer .dataTables_scrollBody {
   border-bottom: 0;
 }
