@@ -2,11 +2,16 @@ import {create, event} from 'd3-selection'
 import {set, map} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
+import {zoom, zoomTransform} from 'd3-zoom'
 import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 
 const margin = 200
+const x = -300
+const y = -300
+const w = 600
+const h = 600
 
 export default class NodeGraph {
   constructor (dispatcher, store, labelType) {
@@ -17,12 +22,7 @@ export default class NodeGraph {
     this.addressNodes = map()
     this.adding = set()
     this.layers = []
-    this.viewBox = {
-      x: -300,
-      y: -300,
-      w: 600,
-      h: 600
-    }
+    this.viewBox = {x, y, w, h}
     this.dispatcher.on('addNode.graph', (request) => {
       let a = this.store.get(request.type, request.id)
       this.adding.add(request.id)
@@ -214,14 +214,32 @@ export default class NodeGraph {
     this.root.node().innerHTML = ''
   }
   render () {
+    let transform = {k: 1, x: 0, y: 0}
+    let tx = 0
+    let ty = 0
     this.root = this.root || create('svg')
       .classed('w-full h-full', true)
       .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .call(drag().on('drag', () => {
-        this.viewBox.x -= event.dx
-        this.viewBox.y -= event.dy
-        this.root.attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
+        tx -= event.dx / transform.k
+        ty -= event.dy / transform.k
+        let w_ = w / transform.k
+        let h_ = h / transform.k
+        let x_ = x + tx + (w - w_) / 2
+        let y_ = y + ty + (h - h_) / 2
+        this.root.attr('viewBox', (({x, y, w, h}) => `${x_} ${y_} ${w_} ${h_}`)(this.viewBox))
+      }))
+      .call(zoom().on('zoom', () => {
+      // store current zoom transform
+        transform.k = event.transform.k
+        transform.x = event.transform.x
+        transform.y = event.transform.y
+        let w_ = w / event.transform.k
+        let h_ = h / event.transform.k
+        let x_ = x + tx + (w - w_) / 2
+        let y_ = y + ty + (h - h_) / 2
+        this.root.attr('viewBox', `${x_} ${y_} ${w_} ${h_}`)
       }))
     let clusterShadowsRoot = this.root.append('g')
     let clusterRoot = this.root.append('g')
