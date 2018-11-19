@@ -3,15 +3,18 @@ import {set} from 'd3-collection'
 import BrowserComponent from './component.js'
 
 const limit = 100
+const prefixLength = 5
 
-export default class Search extends BrowserComponent{
+export default class Search extends BrowserComponent {
   constructor (dispatcher, index) {
     super(dispatcher, index)
     this.term = ''
+    this.resultTerm = ''
     this.loading = set()
+    this.result = {addresses: [], transactions: []}
   }
   render () {
-    if(this.term) {
+    if (this.term) {
       this.renderResult()
       return
     }
@@ -27,9 +30,16 @@ export default class Search extends BrowserComponent{
       })
     this.root.querySelector('input')
       .addEventListener('input', (e) => {
-        let len = this.result?.addresses?.length + 0
+        let len = this.result.addresses.length
         this.term = e.target.value
-        if(len !== 0 && len < limit && this.term.length >= this.resultTerm?.length + 0) {
+        console.log(len, this.term, this.term.length, this.resultTerm, this.resultTerm.length)
+        if (this.term.length < prefixLength) {
+          this.result.addresses = []
+          this.result.transactions = []
+          this.renderResult()
+          return
+        }
+        if (len !== 0 && len < limit && this.term.startsWith(this.resultTerm)) {
           this.renderResult()
           return
         }
@@ -45,17 +55,18 @@ export default class Search extends BrowserComponent{
     let ul = document.createElement('ol')
     ul.className = 'list-reset'
     console.log('addresses', this.result)
-    this.result?.addresses?.forEach((addr => {
-      if(!addr.startsWith(this.term)) return
+    if (!this.result || !this.result.addresses) return
+    this.result.addresses.forEach(addr => {
+      if (!addr.startsWith(this.term)) return
       let li = document.createElement('li')
       li.className = 'cursor-pointer'
       li.appendChild(document.createTextNode(addr))
       li.addEventListener('click', () => {
         this.loading.add(addr)
-        this.dispatcher.call('loadNode', null, {id : addr, type : 'address'})
+        this.dispatcher.call('loadNode', null, {id: addr, type: 'address'})
       })
       ul.appendChild(li)
-    }))
+    })
     let el = this.root.querySelector('#browser-search-result')
     el.innerHTML = ''
     el.appendChild(ul)
