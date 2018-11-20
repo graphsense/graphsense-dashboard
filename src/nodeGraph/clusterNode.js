@@ -27,28 +27,26 @@ export default class ClusterNode extends GraphNode {
     this.x = 0
     this.y = 0
     this.root = root
-    let cluster = this.cluster
-    if (!cluster.mockup) {
-      let height = this.getHeight()
-      let g = root.append('g')
-        .classed('clusterNode', true)
-        .on('click', () => {
-          this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
-        })
-      g.append('rect')
-        .attr('x', 0)
-        .attr('y', 0)
-        .attr('width', clusterWidth)
-        .attr('height', height)
-      let label = g.append('g')
-        .attr('transform', `translate(${padding}, ${height - padding})`)
-      this.renderLabel(label)
-      let eg = this.root.append('g').classed('expandHandles', true)
-      this.renderExpand(eg, true)
-      this.renderExpand(eg, false)
-      if (this.graph.selectedNode === this) {
-        this.select()
-      }
+    if (this.cluster.mockup) return
+    let height = this.getHeight()
+    let g = root.append('g')
+      .classed('clusterNode', true)
+      .on('click', () => {
+        this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
+      })
+    g.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', clusterWidth)
+      .attr('height', height)
+    let label = g.append('g')
+      .attr('transform', `translate(${padding}, ${height - padding})`)
+    this.renderLabel(label)
+    let eg = this.root.append('g').classed('expandHandles', true)
+    this.renderExpand(eg, true)
+    this.renderExpand(eg, false)
+    if (this.graph.selectedNode === this) {
+      this.select()
     }
   }
   renderAddresses (root) {
@@ -87,7 +85,7 @@ export default class ClusterNode extends GraphNode {
   getHeight () {
     return this.nodes.size() * addressHeight +
       2 * padding +
-      this.labelHeight + buttonHeight +
+      (this.cluster.mockup ? 0 : this.labelHeight + buttonHeight) +
       (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {

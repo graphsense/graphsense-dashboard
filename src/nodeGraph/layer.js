@@ -29,8 +29,8 @@ export default class Layer {
 
       // translate cluster node and its addresses
       node.translate(0, cumY)
-      let box = g.node().getBBox()
-      cumY += box.height + margin
+      let height = node.getHeight()
+      cumY += height + margin
     })
   }
   translate (x, y) {

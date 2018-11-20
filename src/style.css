@@ -169,6 +169,10 @@ svg g.clusterNode text {
   font-family: monospace;
 }
 
+svg g.clusterNode.mockup {
+  opacity: 0;
+}
+
 svg g.selected rect {
   stroke: red;
   stroke-width: 4px;
