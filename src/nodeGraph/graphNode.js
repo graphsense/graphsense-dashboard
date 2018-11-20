@@ -1,11 +1,14 @@
 import {formatCurrency} from '../utils'
 import {map} from 'd3-collection'
+import {event} from 'd3-selection'
 
 const padding = 10
 const clusterWidth = 190
 const expandHandleWidth = 15
 const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
+const removeHandleWidth = 15
+const removeHandlePadding = 5
 
 class GraphNode {
   constructor (labelType, graph) {
@@ -72,6 +75,29 @@ class GraphNode {
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
 
     g.attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${h / 2} )`)
+  }
+  renderRemove (root) {
+    let w = removeHandleWidth
+    let x = this.getWidth() - w - removeHandlePadding
+    let y = removeHandlePadding
+    let fontSize = removeHandleWidth
+    let g = root.append('g')
+      .classed('removeHandle', true)
+      .on('click', () => {
+        this.graph.dispatcher.call('removeNode', null, this.getId())
+        event.stopPropagation()
+      })
+    g.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', w)
+      .attr('height', w)
+    g.append('text')
+      .text('')
+      .attr('text-anchor', 'middle')
+      .attr('x', w / 2)
+      .attr('y', w / 2 + fontSize / 3)
+    g.attr('transform', `translate(${x}, ${y})`)
   }
   translate (x, y) {
     this.x += x

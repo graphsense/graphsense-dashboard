@@ -40,9 +40,10 @@ export default class ClusterNode extends GraphNode {
       .attr('width', clusterWidth)
       .attr('height', height)
     let label = g.append('g')
-      .attr('transform', `translate(${padding}, ${height - padding})`)
+      .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
     this.renderLabel(label)
     let eg = this.root.append('g').classed('expandHandles', true)
+    this.renderRemove(g)
     this.renderExpand(eg, true)
     this.renderExpand(eg, false)
     if (this.graph.selectedNode === this) {
@@ -50,7 +51,7 @@ export default class ClusterNode extends GraphNode {
     }
   }
   renderAddresses (root) {
-    let cumY = padding
+    let cumY = 2 * padding + this.labelHeight
     this.nodes.each((addressId) => {
       let addressNode = this.graph.addressNodes.get([addressId, this.id[1]])
       let g = root.append('g')
@@ -85,7 +86,7 @@ export default class ClusterNode extends GraphNode {
   getHeight () {
     return this.nodes.size() * addressHeight +
       2 * padding +
-      (this.cluster.mockup ? 0 : this.labelHeight + buttonHeight) +
+      (this.cluster.mockup ? 0 : this.labelHeight + buttonHeight + padding) +
       (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {
@@ -114,5 +115,8 @@ export default class ClusterNode extends GraphNode {
   }
   getInDegree () {
     return this.cluster.in_degree
+  }
+  getId () {
+    return this.cluster.cluster
   }
 }

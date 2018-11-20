@@ -37,7 +37,8 @@ const dispatcher = dispatch(IS_DEV,
   'selectAddress',
   'loadAddress',
   'changeClusterLabel',
-  'changeAddressLabel'
+  'changeAddressLabel',
+  'removeNode'
 
 )
 const baseUrl = 'http://localhost:9000/btc'

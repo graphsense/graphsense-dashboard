@@ -146,13 +146,13 @@ svg g.addressNode {
   cursor: pointer;
 }
 
-svg g.addressNode rect{
+svg g.addressNode > rect{
   stroke: black;
   stroke-width: 1px;
   @apply address-node-color fill-current
 }
 
-svg g.addressNode text {
+svg g.addressNode > text {
   font-family: monospace;
 }
 
@@ -160,12 +160,12 @@ svg g.clusterNode {
   cursor: pointer;
 }
 
-svg g.clusterNode rect{
+svg g.clusterNode > rect{
   stroke: black;
   @apply cluster-node-color fill-current
 }
 
-svg g.clusterNode text {
+svg g.clusterNode > text {
   font-family: monospace;
 }
 
@@ -173,9 +173,8 @@ svg g.clusterNode.mockup {
   opacity: 0;
 }
 
-svg g.selected rect {
-  stroke: red;
-  stroke-width: 4px;
+svg g.selected > rect {
+  @apply text-gs-red fill-current
 }
 
 svg g.addressExpand {
@@ -218,6 +217,26 @@ svg g.clusterNode + g.expandHandles path{
 
 svg g.expandHandle:hover path {
   @apply text-gs-red fill-current
+}
+
+svg g.removeHandle {
+  visibility: hidden;
+}
+
+svg g.removeHandle > rect {
+  @apply text-transparent fill-current
+}
+
+svg g.removeHandle > text {
+  font-family: FontAwesome;
+  @apply text-gs-red fill-current
+}
+
+svg g.addressNode:hover g.removeHandle {
+  visibility: visible;
+}
+svg g.clusterNode:hover g.removeHandle {
+  visibility: visible;
 }
 
 svg .link {
