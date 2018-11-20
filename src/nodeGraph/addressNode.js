@@ -1,4 +1,4 @@
-import GraphNode from './graphNode.js'
+import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
@@ -11,11 +11,10 @@ export default class AddressNode extends GraphNode {
     this.y = 0
     this.type = 'address'
   }
-  render (root, x, y, height, width) {
+  render (root, x, y) {
     this.x = x
     this.y = y
-    this.width = width
-    this.height = height
+    x = this.x
     this.root = root
     let g = this.root
       .append('g')
@@ -26,17 +25,16 @@ export default class AddressNode extends GraphNode {
     g.append('rect')
       .attr('x', x)
       .attr('y', y)
-      .attr('width', width)
-      .attr('height', height)
-      .attr('rx', 10)
-      .attr('ry', 10)
+      .attr('width', addressWidth)
+      .attr('height', addressHeight)
 
-    let h = this.y + this.height / 2 + this.labelHeight / 3
+    let h = this.y + addressHeight / 2 + this.labelHeight / 3
     let label = g.append('g')
-      .attr('transform', `translate(${this.x + padding}, ${h})`)
+      .attr('transform', `translate(${x + padding}, ${h})`)
 
     this.renderLabel(label)
     let eg = this.root.append('g').classed('expandHandles', true)
+      .attr('transform', `translate(${this.x}, ${this.y})`)
     this.renderExpand(eg, true)
     this.renderExpand(eg, false)
     if (this.graph.selectedNode === this) {
@@ -60,5 +58,17 @@ export default class AddressNode extends GraphNode {
   }
   deselect () {
     this.root.classed('selected', false)
+  }
+  getHeight () {
+    return addressHeight
+  }
+  getWidth () {
+    return addressWidth
+  }
+  getOutDegree () {
+    return this.address.out_degree
+  }
+  getInDegree () {
+    return this.address.in_degree
   }
 }

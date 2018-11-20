@@ -1,11 +1,7 @@
 import {set, map} from 'd3-collection'
-import GraphNode from './graphNode.js'
+import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
-const minWidth = 160
-const padding = 10
-const addressHeight = 50
 const gap = padding
-const addressMinWidth = minWidth - 2 * padding
 const buttonHeight = 25
 const buttonLabelHeight = 20
 
@@ -34,7 +30,6 @@ export default class ClusterNode extends GraphNode {
     let cluster = this.cluster
     if (!cluster.mockup) {
       let height = this.getHeight()
-      this.width = minWidth
       let g = root.append('g')
         .classed('clusterNode', true)
         .on('click', () => {
@@ -43,7 +38,7 @@ export default class ClusterNode extends GraphNode {
       g.append('rect')
         .attr('x', 0)
         .attr('y', 0)
-        .attr('width', minWidth)
+        .attr('width', clusterWidth)
         .attr('height', height)
       let label = g.append('g')
         .attr('transform', `translate(${padding}, ${height - padding})`)
@@ -61,8 +56,8 @@ export default class ClusterNode extends GraphNode {
     this.nodes.each((addressId) => {
       let addressNode = this.graph.addressNodes.get([addressId, this.id[1]])
       let g = root.append('g')
-      addressNode.render(g, padding, cumY, addressHeight, addressMinWidth)
-      cumY += addressHeight
+      addressNode.render(g, padding + expandHandleWidth, cumY)
+      cumY += addressNode.getHeight()
     })
     if (this.cluster.mockup) return
     cumY += this.nodes.size() > 0 ? gap : 0
@@ -74,7 +69,7 @@ export default class ClusterNode extends GraphNode {
     button.append('rect')
       .attr('x', padding)
       .attr('y', cumY)
-      .attr('width', addressMinWidth)
+      .attr('width', addressWidth)
       .attr('height', buttonHeight)
       .attr('rx', 5)
       .attr('ry', 5)
@@ -95,6 +90,9 @@ export default class ClusterNode extends GraphNode {
       this.labelHeight + buttonHeight +
       (this.nodes.size() > 0 ? 2 * gap : gap)
   }
+  getWidth () {
+    return clusterWidth
+  }
   getLabel () {
     switch (this.labelType) {
       case 'noAddresses':
@@ -112,5 +110,11 @@ export default class ClusterNode extends GraphNode {
   }
   deselect () {
     this.root.select('g').classed('selected', false)
+  }
+  getOutDegree () {
+    return this.cluster.out_degree
+  }
+  getInDegree () {
+    return this.cluster.in_degree
   }
 }

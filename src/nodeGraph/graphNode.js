@@ -1,12 +1,17 @@
 import {formatCurrency} from '../utils'
 import {map} from 'd3-collection'
 
-export default class GraphNode {
+const padding = 10
+const clusterWidth = 190
+const expandHandleWidth = 15
+const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
+const addressHeight = 50
+
+class GraphNode {
   constructor (labelType, graph) {
     this.labelType = labelType
     this.graph = graph
     this.labelHeight = 25
-    this.padding = 10
     this.numLetters = 8
     this.currency = 'btc'
     this.outgoingTxsFilters = map()
@@ -38,21 +43,16 @@ export default class GraphNode {
       .text(label)
   }
   renderExpand (root, isOutgoing) {
-    let len = 30
-    let b = len / 2
-    let a = Math.sqrt(len * len - b * b)
-    let shift = this.type === 'cluster' ? 0 : this.padding
-    let width = this.getWidth() + shift
-    let height = this.getHeight()
-    let x = isOutgoing ? width : shift
-    let y = height / 2 - b + shift
+    let width = this.getWidth()
+    let x = isOutgoing ? width : 0
+    let y = 0
     let r = isOutgoing ? 0 : 180
-    root.append('path')
+    let a = expandHandleWidth
+    let h = this.getHeight()
+    let c = h - a
+    let g = root.append('g')
       .classed('expandHandle', true)
-      .attr('d', `M0 0 L${a} ${b} L0 ${len} Z`)
-      .attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${b} )`)
       .on('click', () => {
-        console.log('click expand')
         let filters
         if (isOutgoing) {
           filters = this.outgoingTxsFilters
@@ -61,6 +61,17 @@ export default class GraphNode {
         }
         this.graph.dispatcher.call('applyTxFilters', null, [this.id, isOutgoing, this.type, filters])
       })
+    g.append('path')
+      .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
+    let fontSize = expandHandleWidth * 0.8
+    let fontX = (expandHandleWidth - fontSize)
+    g.append('text')
+      .text(isOutgoing ? this.getOutDegree() : this.getInDegree())
+      .attr('text-anchor', 'middle')
+      .attr('font-size', fontSize + 'px')
+      .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
+
+    g.attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${h / 2} )`)
   }
   translate (x, y) {
     this.x += x
@@ -72,11 +83,17 @@ export default class GraphNode {
   getY () {
     return this.y
   }
-  getWidth () {
-    return this.width
+  getXForLinks () {
+    return this.getX() - expandHandleWidth
   }
-  getHeight () {
-    return this.height
+  getYForLinks () {
+    return this.getY()
+  }
+  getHeightForLinks () {
+    return this.getHeight()
+  }
+  getWidthForLinks () {
+    return this.getWidth() + 2 * expandHandleWidth
   }
   setLabelType (labelType) {
     this.labelType = labelType
@@ -103,3 +120,5 @@ export default class GraphNode {
     return formatCurrency(value, this.currency)
   }
 }
+
+export {GraphNode, addressWidth, addressHeight, padding, clusterWidth, expandHandleWidth}

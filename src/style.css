@@ -134,6 +134,14 @@
   outline: none;
 }
 
+.address-node-color {
+  @apply text-grey-light
+}
+
+.cluster-node-color {
+  @apply text-gs-light
+}
+
 svg g.addressNode {
   cursor: pointer;
 }
@@ -141,7 +149,7 @@ svg g.addressNode {
 svg g.addressNode rect{
   stroke: black;
   stroke-width: 1px;
-  @apply text-grey-light fill-current
+  @apply address-node-color fill-current
 }
 
 svg g.addressNode text {
@@ -153,9 +161,8 @@ svg g.clusterNode {
 }
 
 svg g.clusterNode rect{
-  stroke-dasharray: 5;
   stroke: black;
-  @apply text-gs-light fill-current
+  @apply cluster-node-color fill-current
 }
 
 svg g.clusterNode text {
@@ -185,24 +192,28 @@ svg g.addressExpand text {
   @apply text-grey-dark
 }
 
-svg path.expandHandle {
-  visibility: hidden;
+svg g.expandHandles text {
+  @apply text-grey-dark fill-current
+}
+
+svg g.expandHandle {
   cursor: pointer;
+}
+
+svg g.expandHandle > path {
+  stroke-width: 1px;
+  stroke: black;
+}
+
+svg g.addressNode + g.expandHandles path{
+  @apply address-node-color fill-current 
+}
+svg g.clusterNode + g.expandHandles path{
+  @apply cluster-node-color fill-current
+}
+
+svg g.expandHandle:hover path {
   @apply text-gs-red fill-current
-}
-
-svg g.addressNode:hover + g.expandHandles > path{
-  visibility: visible;
-}
-
-svg g.clusterNode:hover + g.expandHandles > path{
-  visibility: visible;
-}
-
-svg path.expandHandle:hover {
-  visibility: visible;
-  stroke-width: 2px;
-  @apply text-gs-red stroke-current
 }
 
 svg .link {

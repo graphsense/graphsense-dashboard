@@ -268,8 +268,8 @@ export default class NodeGraph {
   }
   renderLinks (root) {
     const link = linkHorizontal()
-      .x(([node, isSource]) => isSource ? node.getX() + node.getWidth() : node.getX())
-      .y(([node, isSource]) => node.getY() + node.getHeight() / 2)
+      .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
+      .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
     for (let i = 0; i < this.layers.length; i++) {
       this.layers[i].nodes.each((clusterId1) => {
         let cluster1 = this.clusterNodes.get([clusterId1, this.layers[i].id])
@@ -310,8 +310,8 @@ export default class NodeGraph {
   }
   renderShadows (clusterRoot, addressRoot) {
     const link = linkHorizontal()
-      .x(([node, isSource]) => isSource ? node.getX() + node.getWidth() : node.getX())
-      .y(([node, isSource]) => node.getY() + node.getHeight() / 2)
+      .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
+      .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
     // TODO use a data structure which stores and lists entries in sorted order to prevent this sorting
     let sort = (node1, node2) => {
       return node1.id[1] - node2.id[1]
