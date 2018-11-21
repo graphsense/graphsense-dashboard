@@ -6,64 +6,92 @@ const buttonHeight = 25
 const buttonLabelHeight = 20
 
 export default class ClusterNode extends GraphNode {
-  constructor (cluster, layerId, labelType, graph) {
-    super(labelType, graph)
-    this.id = [cluster.cluster, layerId]
-    this.cluster = cluster
-    this.nodes = set()
+  constructor (dispatcher, cluster, layerId, labelType) {
+    super(dispatcher, labelType, cluster, layerId)
+    this.nodes = map()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)
     this.expandLimit = 10
     this.type = 'cluster'
   }
-  add (nodeId) {
-    this.nodes.add(nodeId)
+  add (node) {
+    if (!node.id) throw new Error('not a node', node)
+    this.nodes.set(node.id, node)
   }
   has (address) {
     this.nodes.has([address, this.id[1]])
   }
+  size () {
+    let c = 0
+    this.nodes.each((node) => {
+      // if (!node.address.removed) c++
+      c++
+    })
+    return c
+  }
   render (root) {
-    // absolute coords for linking, not meant for rendering of the node itself
-    this.x = 0
-    this.y = 0
-    this.root = root
-    if (this.cluster.mockup) return
-    let height = this.getHeight()
-    let g = root.append('g')
-      .classed('clusterNode', true)
-      .on('click', () => {
-        this.graph.dispatcher.call('selectNode', null, ['cluster', this.id])
-      })
-    g.append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', clusterWidth)
-      .attr('height', height)
-    let label = g.append('g')
-      .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
-    this.renderLabel(label)
-    let eg = this.root.append('g').classed('expandHandles', true)
-    this.renderRemove(g)
-    this.renderExpand(eg, true)
-    this.renderExpand(eg, false)
-    if (this.graph.selectedNode === this) {
-      this.select()
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    if (this.shouldUpdate() === true) {
+      this.root.node().innerHTML = ''
+      if (!this.data.mockup) {
+        let height = this.getHeight()
+        let g = this.root.append('g')
+          .classed('clusterNode', true)
+          .on('click', () => {
+            this.dispatcher('selectNode', ['cluster', this.id])
+          })
+        g.append('rect')
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('width', clusterWidth)
+          .attr('height', height)
+        let label = g.append('g')
+          .classed('label', true)
+          .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
+        this.renderLabel(label)
+        let eg = this.root.append('g').classed('expandHandles', true)
+        this.renderRemove(g)
+        this.renderExpand(eg, true)
+        this.renderExpand(eg, false)
+      }
+    } else {
+      if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
+        let label = this.root.select('g.label')
+        this.renderLabel(label)
+      }
+      if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
+        this.root.select('g').classed('selected', this.selected)
+      }
     }
+    super.render()
   }
   renderAddresses (root) {
+    if (!this.shouldUpdate()) {
+      this.nodes.each(addressNode => addressNode.render())
+      return
+    }
+    root.node().innerHTML = ''
     let cumY = 2 * padding + this.labelHeight
-    this.nodes.each((addressId) => {
-      let addressNode = this.graph.addressNodes.get([addressId, this.id[1]])
+    this.nodes.each((addressNode) => {
       let g = root.append('g')
-      addressNode.render(g, padding + expandHandleWidth, cumY)
+      addressNode.shouldUpdate(true)
+      // reset absolute coords
+      addressNode.x = 0
+      addressNode.y = 0
+      let x = padding + expandHandleWidth
+      let y = cumY
+      addressNode.render(g)
+      addressNode.translate(x, y)
+      g.attr('transform', `translate(${x}, ${y})`)
       cumY += addressNode.getHeight()
     })
-    if (this.cluster.mockup) return
-    cumY += this.nodes.size() > 0 ? gap : 0
+    if (this.data.mockup) return
+    cumY += this.size() > 0 ? gap : 0
     let button = root.append('g')
       .classed('addressExpand', true)
       .on('click', (e) => {
-        this.graph.dispatcher.call('applyAddressFilters', null, [this.id, this.addressFilters])
+        this.dispatcher('loadClusterAddresses', {id: this.id, limit: this.addressFilters.get('limit')})
       })
     button.append('rect')
       .attr('x', padding)
@@ -76,18 +104,19 @@ export default class ClusterNode extends GraphNode {
       .attr('x', padding * 2)
       .attr('y', cumY + buttonHeight / 2 + buttonLabelHeight / 3)
       .text(`+ Addresses`)
+    super.render()
   }
   translate (x, y) {
     super.translate(x, y)
-    this.nodes.each((nodeId) => {
-      this.graph.addressNodes.get([nodeId, this.id[1]]).translate(x, y)
+    this.nodes.each((node) => {
+      node.translate(x, y)
     })
   }
   getHeight () {
-    return this.nodes.size() * addressHeight +
+    return this.size() * addressHeight +
       2 * padding +
-      (this.cluster.mockup ? 0 : this.labelHeight + buttonHeight + padding) +
-      (this.nodes.size() > 0 ? 2 * gap : gap)
+      (this.data.mockup ? 0 : this.labelHeight + buttonHeight + padding) +
+      (this.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {
     return clusterWidth
@@ -95,28 +124,22 @@ export default class ClusterNode extends GraphNode {
   getLabel () {
     switch (this.labelType) {
       case 'noAddresses':
-        return this.cluster.noAddresses
+        return this.data.noAddresses
       case 'id':
-        return this.cluster.cluster
+        return this.data.id
       case 'tag':
-        return this.getTag(this.cluster)
+        return this.getTag(this.data)
       case 'actorCategory':
-        return this.getActorCategory(this.cluster) + ''
+        return this.getActorCategory(this.data) + ''
     }
   }
-  select () {
-    this.root.select('g').classed('selected', true)
-  }
-  deselect () {
-    this.root.select('g').classed('selected', false)
-  }
   getOutDegree () {
-    return this.cluster.out_degree
+    return this.data.out_degree
   }
   getInDegree () {
-    return this.cluster.in_degree
+    return this.data.in_degree
   }
   getId () {
-    return this.cluster.cluster
+    return this.data.cluster
   }
 }

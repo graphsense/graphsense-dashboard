@@ -69,9 +69,8 @@ Dispatch.prototype = dispatch.prototype = {
     }
     if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) args[i] = arguments[i + 2]
     if (!this._.hasOwnProperty(type)) throw new Error('unknown type: ' + type)
-    console.log('calling', type, args)
-    for (t = this._[type], i = 0, n = t.length; i < n; ++i) t[i].value.apply(that, args)
     add(this.history, type, that, Array.prototype.slice.call(arguments, 2))
+    for (t = this._[type], i = 0, n = t.length; i < n; ++i) t[i].value.apply(that, args)
   },
   apply: function (type, that, args) {
     var tt = parseTypename(type, this._)
@@ -89,9 +88,9 @@ Dispatch.prototype = dispatch.prototype = {
   replay: function (name) {
     var that = this
     this.replaying = true
-    console.log('history', this.history)
     this.history.forEach(function (h) {
-      that.apply(h.type + '.' + name, h.context, h.data)
+      console.log('historyEntry', h.type, h.data)
+      that.apply(h.type + (name ? '.' + name : ''), h.context, h.data)
     })
     this.replaying = false
   }

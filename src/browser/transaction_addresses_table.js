@@ -15,7 +15,7 @@ export default class TransactionAddressesTable extends Table {
       }
     ]
     this.data = addresses
-    this.selectMessage = 'loadAddress'
+    this.selectMessage = 'clickAddress'
   }
   isSmall () {
     return true

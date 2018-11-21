@@ -1,52 +1,49 @@
 import search from './search.html'
-import {set} from 'd3-collection'
 import BrowserComponent from './component.js'
-
-const limit = 100
-const prefixLength = 5
 
 export default class Search extends BrowserComponent {
   constructor (dispatcher, index) {
     super(dispatcher, index)
     this.term = ''
     this.resultTerm = ''
-    this.loading = set()
     this.result = {addresses: [], transactions: []}
   }
-  render () {
-    if (this.term) {
+  render (root) {
+    console.log('search', this.shouldUpdate())
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    if (!this.shouldUpdate()) return
+    if (this.shouldUpdate() === 'result') {
+      super.render()
       this.renderResult()
-      return
+      return this.root
     }
+    super.render()
+    console.log('full rerendering search')
     this.root.innerHTML = search
     this.input = this.root.querySelector('input')
     this.input.value = this.term
     this.root.querySelector('form')
       .addEventListener('submit', (e) => {
-        this.term = this.input.value
-        this.dispatcher.call('search', null, this.term)
-        e.returnValue = null
-        return false
       })
     this.root.querySelector('input')
       .addEventListener('input', (e) => {
-        let len = this.result.addresses.length
-        this.term = e.target.value
-        console.log(len, this.term, this.term.length, this.resultTerm, this.resultTerm.length)
-        if (this.term.length < prefixLength) {
-          this.result.addresses = []
-          this.result.transactions = []
-          this.renderResult()
-          return
-        }
-        if (len !== 0 && len < limit && this.term.startsWith(this.resultTerm)) {
-          this.renderResult()
-          return
-        }
-        this.dispatcher.call('search', null, [this.term, limit])
+        this.dispatcher('search', e.target.value)
       })
     this.renderResult()
     return this.root
+  }
+  setSearchTerm (term, prefixLength) {
+    this.term = term
+    this.shouldUpdate('result')
+    if (this.term.length < prefixLength) {
+      this.result.addresses = []
+      this.result.transactions = []
+    }
+  }
+  needsResults (limit, prefixLength) {
+    let len = this.result.addresses.length
+    return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
     return null
@@ -62,8 +59,7 @@ export default class Search extends BrowserComponent {
       li.className = 'cursor-pointer'
       li.appendChild(document.createTextNode(addr))
       li.addEventListener('click', () => {
-        this.loading.add(addr)
-        this.dispatcher.call('loadNode', null, {id: addr, type: 'address'})
+        this.dispatcher('clickSearchResult', {id: addr, type: 'address'})
       })
       ul.appendChild(li)
     })
@@ -71,8 +67,9 @@ export default class Search extends BrowserComponent {
     el.innerHTML = ''
     el.appendChild(ul)
   }
-  setResult ([result, term]) {
+  setResult (term, result) {
     this.result = {...result}
     this.resultTerm = term
+    this.shouldUpdate('result')
   }
 }

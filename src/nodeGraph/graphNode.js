@@ -1,6 +1,7 @@
 import {formatCurrency} from '../utils'
 import {map} from 'd3-collection'
 import {event} from 'd3-selection'
+import Component from '../component.js'
 
 const padding = 10
 const clusterWidth = 190
@@ -10,10 +11,13 @@ const addressHeight = 50
 const removeHandleWidth = 15
 const removeHandlePadding = 5
 
-class GraphNode {
-  constructor (labelType, graph) {
+class GraphNode extends Component {
+  constructor (dispatcher, labelType, data, layerId) {
+    super()
+    this.data = data
+    this.id = [this.data.id, layerId]
     this.labelType = labelType
-    this.graph = graph
+    this.dispatcher = dispatcher
     this.labelHeight = 25
     this.numLetters = 8
     this.currency = 'btc'
@@ -21,6 +25,9 @@ class GraphNode {
     this.incomingTxsFilters = map()
     this.outgoingTxsFilters.set('limit', 10)
     this.incomingTxsFilters.set('limit', 10)
+    // absolute coords for linking, not meant for rendering of the node itself
+    this.x = 0
+    this.y = 0
   }
   renderLabel (root) {
     if (!root) {
@@ -62,7 +69,7 @@ class GraphNode {
         } else {
           filters = this.incomingTxsFilters
         }
-        this.graph.dispatcher.call('applyTxFilters', null, [this.id, isOutgoing, this.type, filters])
+        this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.type, limit: filters.get('limit')})
       })
     g.append('path')
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
@@ -84,7 +91,7 @@ class GraphNode {
     let g = root.append('g')
       .classed('removeHandle', true)
       .on('click', () => {
-        this.graph.dispatcher.call('removeNode', null, this.getId())
+        this.dispatcher('removeNode', [this.type, this.getId()])
         event.stopPropagation()
       })
     g.append('rect')
@@ -123,6 +130,7 @@ class GraphNode {
   }
   setLabelType (labelType) {
     this.labelType = labelType
+    this.shouldUpdateLabel()
   }
   getTag (object) {
     if (object.userDefinedTags) {
@@ -144,6 +152,29 @@ class GraphNode {
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)
+  }
+  select () {
+    this.selected = true
+    if (this.shouldUpdate() === 'label') {
+      this.shouldUpdate('select+label')
+    } else if (!this.shouldUpdate()) {
+      this.shouldUpdate('select')
+    }
+  }
+  deselect () {
+    this.selected = false
+    if (this.shouldUpdate() === 'label') {
+      this.shouldUpdate('select+label')
+    } else if (!this.shouldUpdate()) {
+      this.shouldUpdate('select')
+    }
+  }
+  shouldUpdateLabel () {
+    if (this.shouldUpdate() === 'select') {
+      this.shouldUpdate('select+label')
+    } else if (!this.shouldUpdate()) {
+      this.shouldUpdate('label')
+    }
   }
 }
 

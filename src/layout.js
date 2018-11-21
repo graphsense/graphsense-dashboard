@@ -1,53 +1,47 @@
 import layout from './layout/layout.html'
+import Component from './component.js'
 import {browserHeight} from './globals.js'
 
-export default class Layout {
+export default class Layout extends Component {
   constructor (dispatcher, browser, graph, config) {
+    super()
     this.dispatcher = dispatcher
-    this.root = document.createElement('div')
     this.browser = browser
     this.graph = graph
     this.config = config
   }
   setBrowser (browser) {
     this.browser = browser
-    this.renderBrowser()
+    this.browser.shouldUpdate(true)
   }
   setGraph (graph) {
     this.graph = graph
-    this.renderGraph()
+    this.graph.shouldUpdate(true)
   }
   setConfig (config) {
     this.config = config
-    this.renderConfig()
+    this.config.shouldUpdate(true)
   }
-  renderBrowser () {
-    let el = this.root.querySelector('#layout-browser')
-    if (el) {
-      el.innerHTML = ''
-      el.appendChild(this.browser.render())
-      el.style.height = browserHeight + 'px'
+  render (root) {
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    let browserRoot = null
+    let graphRoot = null
+    let configRoot = null
+    if (this.shouldUpdate()) {
+      this.root.innerHTML = layout
+      this.browser.shouldUpdate(true)
+      this.graph.shouldUpdate(true)
+      this.config.shouldUpdate(true)
+      browserRoot = this.root.querySelector('#layout-browser')
+      graphRoot = this.root.querySelector('#layout-graph')
+      configRoot = this.root.querySelector('#layout-config')
+      browserRoot.style.height = browserHeight + 'px'
     }
-  }
-  renderGraph () {
-    let el = this.root.querySelector('#layout-graph')
-    if (el) {
-      el.innerHTML = ''
-      el.appendChild(this.graph.render())
-    }
-  }
-  renderConfig () {
-    let el = this.root.querySelector('#layout-config')
-    if (el) {
-      el.innerHTML = ''
-      el.appendChild(this.config.render())
-    }
-  }
-  render () {
-    this.root.innerHTML = layout
-    this.renderBrowser()
-    this.renderGraph()
-    this.renderConfig()
+    this.browser.render(browserRoot)
+    this.graph.render(graphRoot)
+    this.config.render(configRoot)
+    super.render()
     return this.root
   }
 }

@@ -30,7 +30,6 @@ export default class AddressesTable extends Table {
       }
     ]
     this.loadMessage = 'loadAddresses'
-    this.resultMessage = 'resultAddresses'
     this.resultField = 'addresses'
     this.selectMessage = 'selectAddress'
     this.loadParams = this.clusterId

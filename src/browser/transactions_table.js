@@ -24,9 +24,8 @@ export default class TransactionsTable extends Table {
       }
     ]
     this.loadMessage = 'loadTransactions'
-    this.resultMessage = 'resultTransactions'
     this.resultField = 'transactions'
-    this.selectMessage = 'loadTransaction'
+    this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
   }
   isSmall () {

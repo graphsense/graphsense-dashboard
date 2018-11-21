@@ -13,6 +13,6 @@ export default class Cluster extends Address {
       ]
   }
   requestData () {
-    return {id: this.data.cluster, type: 'cluster', index: this.index}
+    return {id: this.data.id, type: 'cluster', index: this.index}
   }
 }

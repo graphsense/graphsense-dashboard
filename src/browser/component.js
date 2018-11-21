@@ -1,14 +1,14 @@
-import {replace} from '../template_utils'
+import {replace} from '../template_utils.js'
 import option from './option.html'
-import {formatCurrency} from '../utils'
+import {formatCurrency} from '../utils.js'
 import moment from 'moment'
+import Component from '../component.js'
 
-export default class BrowserComponent {
+export default class BrowserComponent extends Component {
   constructor (dispatcher, index) {
+    super()
     this.index = index
     this.dispatcher = dispatcher
-    this.root = document.createElement('div')
-    this.root.className = 'browser-component'
     this.currency = 'btc'
   }
   renderOptions () {
@@ -19,7 +19,7 @@ export default class BrowserComponent {
       li.className = 'cursor-pointer py-1'
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
-        this.dispatcher.call(optionData.message, null, this.requestData())
+        this.dispatcher(optionData.message, {id: this.data.id, type: this.data.type, index: this.index})
       })
       ul.appendChild(li)
     })

@@ -14,15 +14,16 @@ export default class Table extends BrowserComponent {
     this.total = total
     this.data = []
     this.loading = null
-    this._id = Math.random()
-  }
-  resultEvent () {
-    return this.resultMessage + '.' + this._id
   }
   isSmall () {
     return this.total < 5000
   }
-  render () {
+  render (root) {
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    if (!this.shouldUpdate()) return this.root
+    console.log('render table')
+    super.render()
     this.root.innerHTML = table
     let tr = this.root.querySelector('tr')
     let el = this.root.querySelector('th')
@@ -35,31 +36,30 @@ export default class Table extends BrowserComponent {
     let that = this
     // DataTable Scroller needs DataTable to be present in the DOM
     // so wait a ms for it to be inserted upstream ... hackish!
-    setTimeout(() => {
-      let table = $(this.root).children().first().DataTable({
-        ajax: (request, drawCallback, settings) => {
-          this.ajax(request, drawCallback, settings, this)
-        },
-        scrollY: browserHeight - rowHeight - 4 * browserPadding,
-        searching: false,
-        ordering: this.isSmall(),
-        deferRender: true,
-        scroller: {
-          rowHeight: 'auto',
-          serverWait: 50,
-          loadingIndicator: true
-        },
-        stateSave: false,
-        serverSide: !this.isSmall(),
+    let tab = $(this.root).children().first().DataTable({
+      ajax: (request, drawCallback, settings) => {
+        this.ajax(request, drawCallback, settings, this)
+      },
+      scrollY: browserHeight - rowHeight - 4 * browserPadding,
+      searching: false,
+      ordering: this.isSmall(),
+      deferRender: true,
+      scroller: {
+        rowHeight: 'auto',
+        serverWait: 50,
+        loadingIndicator: true
+      },
+      stateSave: false,
+      serverSide: !this.isSmall(),
 
-        columns: this.columns
-      })
-      // using es5 'function' to have 'this' bound to the triggering element
-      $(this.root).on('click', 'tr', function () {
-        let row = table.row(this).data()
-        that.dispatcher.call(that.selectMessage, null, row)
-      })
-    }, 1)
+      columns: this.columns
+    })
+    // using es5 'function' to have 'this' bound to the triggering element
+    $(this.root).on('click', 'tr', function () {
+      let row = tab.row(this).data()
+      console.log('row', row)
+      that.dispatcher(that.selectMessage, row)
+    })
     return this.root
   }
   renderOptions () {
@@ -71,12 +71,12 @@ export default class Table extends BrowserComponent {
       request.start = 0
       request.length = table.total
     }
-    let data = {
-      draw: request.draw,
-      recordsTotal: table.total,
-      recordsFiltered: table.total
-    }
     if (request.start + request.length <= table.data.length) {
+      let data = {
+        draw: request.draw,
+        recordsTotal: table.total,
+        recordsFiltered: table.total
+      }
       // data from cache
       data.data = table.data.slice(request.start, request.start + request.length)
       drawCallback(data)
@@ -89,27 +89,28 @@ export default class Table extends BrowserComponent {
       }
       return
     }
-
-    table.dispatcher.on(table.resultEvent(), (response) => {
-      if (!table.isSmall() && response.page !== table.nextPage) return
-      table.data = table.data.concat(response.result[table.resultField])
-      table.nextPage = response.result.nextPage
-      data.data = table.data.slice(table.loading.start, table.loading.start + table.loading.length)
-      data.draw = table.loading.draw
-      table.loading = null
-      drawCallback(data)
-      table.dispatcher.on(table.resultEvent(), null)
-    })
     let r =
       {
         params: table.loadParams,
         nextPage: table.nextPage,
-        pagesize: request.length
+        pagesize: request.length,
+        draw: request.draw,
+        drawCallback: drawCallback
       }
-    table.dispatcher.call(table.loadMessage, null, r)
+    table.dispatcher(table.loadMessage, r)
     table.loading = request
   }
-  destroy () {
-    this.dispatcher.on(this.resultEvent(), null)
+  setResponse ({page, draw, drawCallback, result}) {
+    if (!this.isSmall() && page !== this.nextPage) return
+    this.data = this.data.concat(result[this.resultField])
+    this.nextPage = result.nextPage
+    let data = {
+      draw: draw,
+      recordsTotal: this.total,
+      recordsFiltered: this.total,
+      data: this.data.slice(this.loading.start, this.loading.start + this.loading.length)
+    }
+    this.loading = null
+    drawCallback(data)
   }
 }

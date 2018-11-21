@@ -5,30 +5,25 @@ import clusterConfig from './config/cluster.html'
 import filter from './config/filter.html'
 import {replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
+import Component from './component.js'
 
-export default class Config {
-  constructor (dispatcher, graph, labelType) {
+export default class Config extends Component {
+  constructor (dispatcher, labelType) {
+    super()
     this.dispatcher = dispatcher
-    this.root = document.createElement('div')
-    this.root.className = 'h-full'
     this.labelType = labelType
     this.view = 'graph'
-    this.graph = graph
-    this.dispatcher.on('selectNode.config', ([type, nodeId]) => {
-      console.log('selectNode.config', this.graph, nodeId)
-      this.view = type
-      let nodes
-      if (type === 'address') {
-        nodes = this.graph.addressNodes
-      } else {
-        nodes = this.graph.clusterNodes
-      }
-      this.node = nodes.get(nodeId)
-      console.log('node', type, this.node)
-      this.render()
-    })
   }
-  render () {
+  selectNode (node) {
+    console.log('selectNode.config', node)
+    this.view = node.data.type
+    this.node = node
+    this.shouldUpdate(true)
+  }
+  render (root) {
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    if (!this.shouldUpdate()) return this.root
     this.root.innerHTML = layout
     this.root.querySelector('button#navbar-config')
       .addEventListener('click', () => {
@@ -132,10 +127,10 @@ export default class Config {
     } else {
       filters = this.node.incomingTxsFilters
     }
-    this.dispatcher.call('applyTxFilters', null, [this.node.id, isOutgoing, this.view, filters])
+    this.dispatcher('loadEgonet', {id: this.node.id, isOutgoing, type: this.view, limit: filters.get('limit')})
   }
   applyAddressFilters () {
-    this.dispatcher.call('applyAddressFilters', null, [this.node.id, this.node.addressFilters])
+    this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
   addSelectListener (id, message) {
     let select = this.root.querySelector('select#' + id)
@@ -148,7 +143,7 @@ export default class Config {
     select.addEventListener('change', (e) => {
       let labelType = e.target.value
       this.labelType[id] = labelType
-      this.dispatcher.call(message, null, labelType)
+      this.dispatcher(message, labelType)
     })
   }
 }

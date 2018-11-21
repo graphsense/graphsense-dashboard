@@ -15,7 +15,10 @@ export default class Address extends BrowserComponent {
         {icon: 'plus', optionText: 'Add to graph', message: 'addNode'}
       ]
   }
-  render () {
+  render (root) {
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    super.render()
     let first = this.data.firstTx.timestamp
     let last = this.data.lastTx.timestamp
     let duration = (last - first) * 1000
@@ -30,6 +33,6 @@ export default class Address extends BrowserComponent {
     return this.root
   }
   requestData () {
-    return {id: this.data.address, type: 'address', index: this.index}
+    return {id: this.data.id, type: 'address', index: this.index}
   }
 }

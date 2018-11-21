@@ -10,34 +10,46 @@ export default class Store {
    */
   add (object) {
     let empty = {outgoing: set(), incoming: set()}
-    if (object.address) {
-      let a = this.addresses.get(object.address)
+    if (object.address || (object.id && object.type === 'address')) {
+      let a = this.addresses.get(object.address || object.id)
       if (!a) {
         a = empty
-        this.addresses.set(object.address, a)
+        a.id = object.address
+        a.type = 'address'
+        this.addresses.set(a.id, a)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { a[key] = object[key] })
-      if (object.cluster) {
-        let c = this.clusters.get(object.cluster)
-        if (c) {
-          c.addresses.add(object.address)
+      // remove unneeded address field (is now id)
+      delete a.address
+      if (object.toCluster) {
+        let c = this.clusters.get(object.toCluster)
+        if (!c) {
+          c = { addresses: map(), id: object.toCluster, type: 'cluster', ...empty }
+          this.clusters.set(object.toCluster, c)
         }
+        c.addresses.set(a.id, a)
+        a.cluster = c
       }
       return a
-    } else if (object.cluster) {
-      let c = this.clusters.get(object.cluster)
+    } else if (object.cluster || (object.id && object.type === 'cluster')) {
+      let c = this.clusters.get(object.cluster || object.id)
       if (!c) {
-        c = { addresses: set(), ...empty }
-        this.clusters.set(object.cluster, c)
+        c = { addresses: map(), ...empty }
+        c.id = object.cluster
+        c.type = 'cluster'
+        this.clusters.set(c.id, c)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { c[key] = object[key] })
+      // remove unneeded cluster field (is now id)
+      delete c.cluster
       if (object.forAddress) {
-        c.addresses.add(object.forAddress)
-        if (this.addresses.has(object.forAddress)) {
-          let a = this.addresses.get(object.forAddress)
-          a.cluster = object.cluster
+        let a = this.addresses.get(object.forAddress)
+        console.log('forAddress', object.forAddress, a)
+        if (a) {
+          c.addresses.set(object.forAddress, a)
+          a.cluster = c
         }
       }
       return c

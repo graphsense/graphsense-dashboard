@@ -152,7 +152,7 @@ svg g.addressNode > rect{
   @apply address-node-color fill-current
 }
 
-svg g.addressNode > text {
+svg g.addressNode text {
   font-family: monospace;
 }
 
@@ -165,7 +165,7 @@ svg g.clusterNode > rect{
   @apply cluster-node-color fill-current
 }
 
-svg g.clusterNode > text {
+svg g.clusterNode text {
   font-family: monospace;
 }
 

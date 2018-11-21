@@ -28,7 +28,6 @@ export default class TagsTable extends Table {
       }
     ]
     this.loadMessage = 'loadTags'
-    this.resultMessage = 'resultTags'
     this.resultField = 'tags'
     this.loadParams = [this.nodeId, this.nodeType]
   }

@@ -1,102 +1,58 @@
 import {json} from 'd3-fetch'
-import {firstToUpper} from './utils.js'
 
 export default class Rest {
-  constructor (dispatcher, baseUrl) {
-    this.dispatcher = dispatcher
+  constructor (baseUrl, prefixLength) {
     this.baseUrl = baseUrl
-    this.dispatcher.on('search.rest', ([str, limit]) => {
-      this.search(str, limit)
-    })
-    this.dispatcher.on('loadTransactions.rest', (request) => {
-      this.transactions(request)
-    })
-    this.dispatcher.on('loadAddresses.rest', (request) => {
-      this.addresses(request)
-    })
-    this.dispatcher.on('loadTags.rest', (request) => {
-      this.tags(request)
-    })
-    this.dispatcher.on('loadNode.rest', (request) => {
-      this.node(request)
-    })
-    this.dispatcher.on('loadTransaction.rest', (request) => {
-      this.transaction(request)
-    })
-    this.dispatcher.on('loadClusterForAddress.rest', (request) => {
-      this.clusterForAddress(request)
-    })
-    this.dispatcher.on('applyTxFilters.rest', ([id, isOutgoing, type, filters]) => {
-      if (!filters.has('limit')) return
-      this.egonet(type, id, isOutgoing, filters.get('limit'))
-    })
-    this.dispatcher.on('applyAddressFilters.rest', ([id, filters]) => {
-      if (!filters.has('limit')) return
-      this.clusterAddresses(id, filters.get('limit'))
-    })
+    this.prefixLength = prefixLength
+    this.json = json
+  }
+  disable () {
+    this.json = (url) => {
+      return Promise.resolve()
+    }
+  }
+  enable () {
+    this.json = json
   }
   search (str, limit) {
-    if (str.length < 5) return
-    return json(this.baseUrl + '/search?q=' + encodeURIComponent(str) + '&limit=' + limit).then((result) => {
-      this.dispatcher.call('searchresult', null, [result, str])
-    })
+    if (str.length < this.prefixLength) {
+      return Promise.resolve({addresses: []})
+    }
+    return this.json(this.baseUrl + '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
   node (request) {
-    return json(`${this.baseUrl}/${request.type}_with_tags/${request.id}`).then((result) => {
-      this.dispatcher.call('resultNode', null, {request, result})
-    })
+    return this.json(`${this.baseUrl}/${request.type}_with_tags/${request.id}`)
   }
-  clusterForAddress (request) {
-    return json(this.baseUrl + '/address/' + request.id + '/cluster_with_tags').then((result) => {
-      if (!result.cluster) {
-        // seems there exist addresses without cluster ...
-        // so mockup cluster with the address id
-        result.cluster = request.id
-        result.mockup = true
-      }
-      this.dispatcher.call('resultClusterForAddress', null, {request, result})
-    })
+  clusterForAddress (id) {
+    console.log('rest clusterForAddress', id)
+    return this.json(this.baseUrl + '/address/' + id + '/cluster_with_tags')
   }
   transactions (request) {
     let url =
       this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return json(url).then((result) => {
-      this.dispatcher.call('resultTransactions', null, {page: request.nextPage, result})
-    })
+    return this.json(url)
   }
   addresses (request) {
     let url =
       this.baseUrl + '/cluster/' + request.params + '/addresses?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return json(url).then((result) => {
-      this.dispatcher.call('resultAddresses', null, {page: request.nextPage, result})
-    })
+    return this.json(url)
   }
-  tags (request) {
-    let url = this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/tags'
-    return json(url).then((result) => {
-      this.dispatcher.call('resultTags', null, {result: {tags: result}, request})
-    })
+  tags ({id, type}) {
+    let url = this.baseUrl + '/' + type + '/' + id + '/tags'
+    return this.json(url)
   }
   egonet (type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
-    return json(`${this.baseUrl}/${type}/${id[0]}/egonet?limit=${limit}&direction=${dir}`).then((result) => {
-      console.log(result)
-      this.dispatcher.call('resultEgonet', null, {type, id, isOutgoing, result})
-    })
+    return this.json(`${this.baseUrl}/${type}/${id[0]}/egonet?limit=${limit}&direction=${dir}`)
   }
   clusterAddresses (id, limit) {
-    return json(`${this.baseUrl}/cluster/${id[0]}/addresses?pagesize=${limit}`).then((result) => {
-      console.log(result)
-      this.dispatcher.call('resultClusterAddresses', null, {id, result})
-    })
+    return this.json(`${this.baseUrl}/cluster/${id}/addresses?pagesize=${limit}`)
   }
-  transaction (request) {
-    return json(`${this.baseUrl}/tx/${request.txHash}`).then((result) => {
-      this.dispatcher.call('resultTransaction', null, {request, result})
-    })
+  transaction (txHash) {
+    return this.json(`${this.baseUrl}/tx/${txHash}`)
   }
 }

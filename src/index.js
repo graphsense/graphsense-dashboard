@@ -2,25 +2,26 @@ import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 import './style.css'
+import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
-import Rest from './rest.js'
-import Layout from './layout.js'
-import Store from './store.js'
-import NodeGraph from './nodeGraph.js'
-import Config from './config.js'
 
 const dispatcher = dispatch(IS_DEV,
+  'initSearch',
   'search',
   'searchresult',
+  'clickSearchResult',
+  'resultNodeForBrowser',
+  'resultTransactionForBrowser',
   'addNode',
+  'addNodeCont',
   'loadNode',
   'loadClusterForAddress',
   'resultNode',
   'resultClusterForAddress',
   'selectNode',
-  'applyTxFilters',
-  'applyAddressFilters',
+  'loadEgonet',
+  'loadClusterAddresses',
   'resultEgonet',
   'resultClusterAddresses',
   'initTransactionsTable',
@@ -32,64 +33,69 @@ const dispatcher = dispatch(IS_DEV,
   'initTagsTable',
   'loadTags',
   'resultTags',
-  'loadTransaction',
+  'clickTransaction',
   'resultTransaction',
   'selectAddress',
-  'loadAddress',
+  'clickAddress',
   'changeClusterLabel',
   'changeAddressLabel',
   'removeNode'
-
 )
-const baseUrl = 'http://localhost:9000/btc'
 
-const defaultLabelType =
-  { clusterLabel: 'noAddresses',
-    addressLabel: 'id'
-  }
+let debugHistory = [{type: 'clickSearchResult', context: null, data: [{id: '1Archive1n2C579dMsAu3iC6tWzuQJz8dN', type: 'address'}]}]
 
-let store = new Store()
+// dispatcher.history = debugHistory
 
-let browser = new Browser(dispatcher, store)
+let model = new Model(dispatcher)
+// model.replay()
 
-let graph = new NodeGraph(dispatcher, store, defaultLabelType)
-
-let config = new Config(dispatcher, graph, defaultLabelType)
-
-let rest = new Rest(dispatcher, baseUrl)
-
-let layout = new Layout(dispatcher, browser, graph, config)
-document.body.append(layout.render())
+model.render(document.body)
 
 if (module.hot) {
-  module.hot.accept(['./browser.js', './browser/search.js', './browser/search.html', './browser/address.js', './browser/address.html', './browser/transactions_table.js'], () => {
-    console.log('Updating browser module')
-    dispatcher.on('.browser', null)
-    dispatcher.on('.transactions_table', null)
-    browser = new Browser(dispatcher, store)
-    layout.setBrowser(browser)
-    dispatcher.replay('browser')
-    dispatcher.replay('transactions_table')
-  })
-  module.hot.accept(['./nodeGraph.js', './nodeGraph/layer.js', './nodeGraph/clusterNode.js', './nodeGraph/addressNode.js', './nodeGraph/graphNode.js'], () => {
-    console.log('Updating graph module')
-    dispatcher.on('.graph', null)
-    graph = new NodeGraph(dispatcher, store, defaultLabelType)
-    config = new Config(dispatcher, graph, defaultLabelType)
-    layout.setGraph(graph)
-    layout.setConfig(config)
-    dispatcher.replay('graph')
-  })
-  module.hot.accept(['./config.js', './config/layout.html', './config/graph.html', './config/address.html', './config/cluster.html'], () => {
-    console.log('Updating config module')
-    dispatcher.on('.config', null)
-    config = new Config(dispatcher, graph, defaultLabelType)
-    layout.setConfig(config)
-    dispatcher.replay('config')
-  })
-  module.hot.accept('./rest.js', () => {
-    console.log('Updating rest module')
-    rest = new Rest(dispatcher, baseUrl)
-    dispatcher.replay('rest')
+  module.hot.accept([
+    './browser.js',
+    './browser/address.html',
+    './browser/address.js',
+    './browser/addresses_table.js',
+    './browser/cluster.html',
+    './browser/cluster.js',
+    './browser/component.js',
+    './browser/layout.html',
+    './browser/option.html',
+    './browser/search.html',
+    './browser/search.js',
+    './browser/table.html',
+    './browser/table.js',
+    './browser/tags_table.js',
+    './browser/transaction.html',
+    './browser/transaction.js',
+    './browser/transaction_addresses_table.js',
+    './browser/transactions_table.js',
+    './nodeGraph.js',
+    './nodeGraph/addressNode.js',
+    './nodeGraph/clusterNode.js',
+    './nodeGraph/graphNode.js',
+    './nodeGraph/layer.js',
+    './config.js',
+    './config/address.html',
+    './config/cluster.html',
+    './config/filter.html',
+    './config/graph.html',
+    './config/layout.html',
+    './layout.js',
+    './layout/layout.html',
+    './component.js',
+    './model.js',
+    './rest.js',
+    './store.js',
+    './template_utils.js',
+    './utils.js'
+  ], () => {
+    // dispatcher.history = [debugHistory[0]]
+
+    model = new Model(dispatcher)
+    model.replay()
+    console.log('now render')
+    model.render(document.body)
   })
 }

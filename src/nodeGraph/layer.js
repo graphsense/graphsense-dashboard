@@ -1,41 +1,57 @@
-import {set} from 'd3-collection'
+import {map} from 'd3-collection'
+import Component from '../component.js'
 
 const margin = 20
 
-export default class Layer {
-  constructor (graph, id) {
+export default class Layer extends Component {
+  constructor (id) {
+    super()
     this.id = id
-    this.graph = graph
-    this.nodes = set()
+    this.nodes = map()
   }
-  add (nodeId) {
-    this.nodes.add(nodeId)
+  add (node) {
+    this.nodes.set(node.id, node)
   }
   has (nodeId) {
     return this.nodes.has(nodeId)
   }
   render (clusterRoot, addressRoot) {
+    if (clusterRoot) this.clusterRoot = clusterRoot
+    if (addressRoot) this.addressRoot = addressRoot
+    if (!this.clusterRoot) throw new Error('no clusterRoot defined')
+    if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
-    this.nodes.each((nodeId) => {
-      let node = this.graph.clusterNodes.get([nodeId, this.id])
+    this.nodes.each((node) => {
+      if (node.data.removed) return
       // render clusters
-      let g = clusterRoot.append('g')
-      node.render(g)
-      g.attr('transform', `translate(0, ${cumY})`)
-      // render addresses
-      let ag = addressRoot.append('g')
-      node.renderAddresses(ag)
-      ag.attr('transform', `translate(0, ${cumY})`)
+      if (this.shouldUpdate()) {
+        let g = this.clusterRoot.append('g')
+        node.shouldUpdate(true)
+        // reset absolute coords of node
+        node.x = 0
+        node.y = 0
+        node.render(g)
+        g.attr('transform', `translate(0, ${cumY})`)
+        // render addresses
+        let ag = this.addressRoot.append('g')
+        node.shouldUpdate(true)
+        node.renderAddresses(ag)
+        ag.attr('transform', `translate(0, ${cumY})`)
 
-      // translate cluster node and its addresses
-      node.translate(0, cumY)
-      let height = node.getHeight()
-      cumY += height + margin
+        // translate cluster node and its addresses
+        node.translate(0, cumY)
+        let height = node.getHeight()
+        cumY += height + margin
+      } else {
+        node.render()
+        node.renderAddresses()
+      }
     })
+    super.render()
   }
   translate (x, y) {
-    this.nodes.each((nodeId) => {
-      this.graph.clusterNodes.get([nodeId, this.id]).translate(x, y)
+    this.nodes.each((node) => {
+      node.translate(x, y)
     })
   }
 }
