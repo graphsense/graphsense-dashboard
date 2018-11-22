@@ -4,18 +4,21 @@ export default class Store {
   constructor () {
     this.addresses = map()
     this.clusters = map()
+    this.outgoingLinks = map()
   }
   /**
    * Adds an object to store if it does not exist
    */
   add (object) {
-    let empty = {outgoing: set(), incoming: set()}
+    let empty = {}
     if (object.address || (object.id && object.type === 'address')) {
       let a = this.addresses.get(object.address || object.id)
       if (!a) {
         a = empty
         a.id = object.address
         a.type = 'address'
+        let outgoing = this.initOutgoing(a.id)
+        a.outgoing = outgoing
         this.addresses.set(a.id, a)
       }
       // merge new object into existing one
@@ -39,6 +42,8 @@ export default class Store {
         c = { addresses: map(), ...empty }
         c.id = object.cluster
         c.type = 'cluster'
+        let outgoing = this.initOutgoing(c.id)
+        c.outgoing = outgoing
         this.clusters.set(c.id, c)
       }
       // merge new object into existing one
@@ -63,5 +68,19 @@ export default class Store {
       case 'cluster':
         return this.clusters.get(key)
     }
+  }
+  initOutgoing (id) {
+    if (typeof id !== 'string' && typeof id !== 'number') {
+      throw new Error('id is not string')
+    }
+    let outgoing = this.outgoingLinks.get(id)
+    if (!outgoing) {
+      outgoing = set()
+      this.outgoingLinks.set(id, outgoing)
+    }
+    return outgoing
+  }
+  linkOutgoing (source, target) {
+    this.initOutgoing(source).add(target)
   }
 }

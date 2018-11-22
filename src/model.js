@@ -20,6 +20,8 @@ const historyPushState = (msg, data) => {
   }
 }
 
+const degreeThreshold = 100
+
 let defaultLabelType =
       { clusterLabel: 'id',
         addressLabel: 'id'
@@ -66,9 +68,9 @@ export default class Model {
         let f = this.store.get(context.focusNode.type, context.focusNode.id)
         if (f) {
           if (context.focusNode.isOutgoing === true) {
-            f.outgoing.add(a.id)
+            this.store.linkOutgoing(f.id, a.id)
           } else if (context.focusNode.isOutgoing === false) {
-            a.outgoing.add(f.id)
+            this.store.linkOutgoing(a.id, f.id)
           }
         }
       }
@@ -170,7 +172,7 @@ export default class Model {
       }
       console.log('focusNode', focusNode, isOutgoing)
       if (isOutgoing !== null && focusNode) {
-        focusNode.outgoing.add(o.id)
+        this.store.linkOutgoing(focusNode.id, o.id)
       }
       this.browser.setResultNode(o)
     })
@@ -201,7 +203,7 @@ export default class Model {
         let o = this.store.add(result)
         if (anchor && anchor.isOutgoing === false) {
           // incoming neighbor node
-          o.outgoing.add(anchor.nodeId[0])
+          this.store.linkOutgoing(o.id, anchor.nodeId[0])
         }
         if (!this.graph.adding.has(o.id)) return
         console.log('cluster', o.cluster)
@@ -223,12 +225,56 @@ export default class Model {
         this.store.add({...resultCopy, forAddress: context.addressId})
         this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', anchor}})
       } else if (context.stage === 4 && context.id && context.type) {
+        let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
         let o = this.store.get(context.type, context.id)
-        this.graph.add(o, context.anchor)
+        if (context.type === 'cluster') {
+          this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'cluster'}})
+        } else if (context.type === 'address') {
+          this.call('excourseLoadDegree', {context: {backCall, id: o.cluster.id, type: 'cluster'}})
+        }
+      } else if (context.stage === 5 && context.id && context.type) {
+        let o = this.store.get(context.type, context.id)
         if (!o.tags) {
           this.rest.tags({id: o.id, type: o.type})
             .then(this.mapResult('resultTags', {id: o.id, type: o.type}))
         }
+        this.graph.add(o, context.anchor)
+      }
+    })
+    this.dispatcher.on('excourseLoadDegree', ({context, result}) => {
+      if (!context.stage) {
+        let o = this.store.get(context.type, context.id)
+        if (o.in_degree >= degreeThreshold) {
+          this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
+          return
+        }
+        this.rest.neighbors(o.id, o.type, false, degreeThreshold)
+          .then(this.mapResult('excourseLoadDegree', { ...context, stage: 2 }))
+      } else if (context.stage === 2) {
+        let o = this.store.get(context.type, context.id)
+        if (result && result.neighbors) {
+          // add the node in context to the outgoing set of incoming relations
+          result.neighbors.forEach((neighbor) => {
+            if (neighbor.nodeType !== o.type) return
+            this.store.linkOutgoing(neighbor.id, o.id)
+          })
+        }
+        if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
+          this.call(context.backCall.msg, context.backCall.data)
+          return
+        }
+        this.rest.neighbors(o.id, o.type, true, degreeThreshold)
+          .then(this.mapResult('excourseLoadDegree', {...context, stage: 3}))
+      } else if (context.stage === 3) {
+        let o = this.store.get(context.type, context.id)
+        if (result && result.neighbors) {
+          // add outgoing relations to the node in context
+          result.neighbors.forEach((neighbor) => {
+            if (neighbor.nodeType !== o.type) return
+            this.store.linkOutgoing(o.id, neighbor.id)
+          })
+        }
+        this.call(context.backCall.msg, context.backCall.data)
       }
     })
     this.dispatcher.on('resultTags', ({context, result}) => {
@@ -254,7 +300,7 @@ export default class Model {
           isOutgoing: context.isOutgoing
         }
         if (context.isOutgoing) {
-          a.outgoing.add(node.id)
+          this.store.linkOutgoing(a.id, node.id)
         }
         this.call('addNode', {id: node.id, type: node.nodeType, anchor})
       })
