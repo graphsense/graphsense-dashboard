@@ -9,6 +9,7 @@ import TransactionsTable from './browser/transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
+import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
 
 export default class Browser extends Component {
@@ -65,15 +66,19 @@ export default class Browser extends Component {
   }
   setResultNode (object) {
     console.log('setResultNode', object)
-    if (object.type !== 'address') return
     let isSearch = this.content[0] instanceof Search
     let isTransaction = this.content[0] instanceof Transaction
-    if (!isSearch && !isTransaction) return
+    let isNode = this.content[0] instanceof Address || this.content[0] instanceof Cluster
+    if (!isSearch && !isTransaction && !isNode) return
     if (!this.loading.has(object.id)) return
 
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
-    this.content[0] = new Address(this.dispatcher, object, 0)
+    if (object.type === 'address') {
+      this.content[0] = new Address(this.dispatcher, object, 0)
+    } else if (object.type === 'cluster') {
+      this.content[0] = new Cluster(this.dispatcher, object, 0)
+    }
     this.shouldUpdate(true)
   }
   setResponse (response) {
@@ -111,6 +116,19 @@ export default class Browser extends Component {
     console.log('last.data.tags', last)
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type))
 
+    this.shouldUpdate(true)
+  }
+  initNeighborsTable (request, isOutgoing) {
+    if (request.index !== 0 && !request.index) return
+    let last = this.content[request.index]
+    if (!(last instanceof Cluster) && !(last instanceof Address)) return
+    if (this.content[request.index + 1] instanceof NeighborsTable &&
+        this.content[request.index + 1].isOutgoing == isOutgoing
+    ) return
+
+    let total = isOutgoing ? last.data.out_degree : last.data.in_degree
+    this.destroyComponentsFrom(request.index + 1)
+    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing))
     this.shouldUpdate(true)
   }
   render (root) {

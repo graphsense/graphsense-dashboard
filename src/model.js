@@ -130,6 +130,33 @@ export default class Model {
     this.dispatcher.on('initTagsTable', (request) => {
       this.browser.initTagsTable(request)
     })
+    this.dispatcher.on('initIndegreeTable', (request) => {
+      this.browser.initNeighborsTable(request, false)
+    })
+    this.dispatcher.on('initOutdegreeTable', (request) => {
+      this.browser.initNeighborsTable(request, true)
+    })
+    this.dispatcher.on('loadNeighbors', ({params, nextPage, pagesize, drawCallback, draw}) => {
+      let id = params[0]
+      let type = params[1]
+      let isOutgoing = params[2]
+      this.rest.neighbors(id, type, isOutgoing)
+        .then(this.mapResult('resultNeighbors', {page: nextPage, draw, drawCallback}))
+    })
+    this.dispatcher.on('resultNeighbors', ({context, result}) => {
+      this.browser.setResponse({...context, result})
+    })
+    this.dispatcher.on('selectNeighbor', (data) => {
+      console.log('selectNeighbor', data)
+      if (!data.id || !data.nodeType) return
+      let o = this.store.get(data.nodeType, data.id)
+      if (!o) {
+        this.browser.loading.add(data.id)
+        this.rest.node({id: data.id, type: data.nodeType}).then(this.mapResult('resultNode'))
+        return
+      }
+      this.browser.setResultNode(o)
+    })
     this.dispatcher.on('selectAddress', (data) => {
       console.log('selectAdress', data)
       if (!data.address) return

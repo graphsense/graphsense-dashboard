@@ -55,4 +55,8 @@ export default class Rest {
   transaction (txHash) {
     return this.json(`${this.baseUrl}/tx/${txHash}`)
   }
+  neighbors (id, type, isOutgoing) {
+    let dir = isOutgoing ? 'out' : 'in'
+    return this.json(`${this.baseUrl}/${type}/${id}/neighbors?direction=${dir}`)
+  }
 }

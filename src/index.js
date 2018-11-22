@@ -39,7 +39,12 @@ const dispatcher = dispatch(IS_DEV,
   'clickAddress',
   'changeClusterLabel',
   'changeAddressLabel',
-  'removeNode'
+  'removeNode',
+  'initIndegreeTable',
+  'initOutdegreeTable',
+  'loadNeighbors',
+  'resultNeighbors',
+  'selectNeighbor'
 )
 
 let debugHistory = [{type: 'clickSearchResult', context: null, data: [{id: '1Archive1n2C579dMsAu3iC6tWzuQJz8dN', type: 'address'}]}]
