@@ -181,22 +181,12 @@ svg g.addressExpand {
   cursor: pointer;
 }
 
-svg g.addressExpand rect {
-  stroke: grey;
-  stroke-width: 1px;
-  @apply text-grey-light fill-current
-}
-
-svg g.addressExpand:hover rect {
-  @apply text-grey-lightest fill-current
-}
-
-svg g.addressExpand text {
-  @apply text-grey-dark
+svg g.addressExpand:hover text {
+  font-weight: bold;
 }
 
 svg g.expandHandles text {
-  @apply text-grey-dark fill-current
+  @apply text-black fill-current
 }
 
 svg g.expandHandle {
@@ -208,15 +198,15 @@ svg g.expandHandle > path {
   stroke: black;
 }
 
-svg g.addressNode + g.expandHandles path{
+svg g.addressNode > g.expandHandles path{
   @apply address-node-color fill-current 
 }
-svg g.clusterNode + g.expandHandles path{
+svg g.clusterNode > g.expandHandles path{
   @apply cluster-node-color fill-current
 }
 
-svg g.expandHandle:hover path {
-  @apply text-gs-red fill-current
+svg g.expandHandle:hover text {
+  font-weight: bold;
 }
 
 svg g.removeHandle {
@@ -229,7 +219,7 @@ svg g.removeHandle > rect {
 
 svg g.removeHandle > text {
   font-family: FontAwesome;
-  @apply text-gs-red fill-current
+  @apply text-black fill-current
 }
 
 svg g.addressNode:hover g.removeHandle {

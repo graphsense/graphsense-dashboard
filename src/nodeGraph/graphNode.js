@@ -12,7 +12,7 @@ const removeHandleWidth = 15
 const removeHandlePadding = 5
 
 class GraphNode extends Component {
-  constructor (dispatcher, labelType, data, layerId) {
+  constructor (dispatcher, labelType, data, layerId, colors) {
     super()
     this.data = data
     this.id = [this.data.id, layerId]
@@ -25,6 +25,7 @@ class GraphNode extends Component {
     this.incomingTxsFilters = map()
     this.outgoingTxsFilters.set('limit', 10)
     this.incomingTxsFilters.set('limit', 10)
+    this.colors = colors
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
@@ -140,6 +141,9 @@ class GraphNode extends Component {
     if (object.userDefinedTags) {
       return object.userDefinedTags[0] || ''
     }
+    if (this.data.tags && this.data.tags.length > 1) {
+      return this.data.tags.length + ' tags'
+    }
     return (this.findTag(object) || {}).tag || ''
   }
   getActorCategory (object) {
@@ -153,6 +157,53 @@ class GraphNode extends Component {
     for (let i = 0; i < tags.length; i++) {
       if (tags[i].actorCategory) return tags[i]
     }
+  }
+  getLabel () {
+    switch (this.labelType) {
+      case 'noAddresses':
+        return this.data.noAddresses
+      case 'id':
+        if (this.data.type === 'cluster') {
+          return this.data.id
+        } else if (this.data.type === 'address') {
+          return this.data.id.substring(0, 8)
+        }
+      case 'balance':
+        return this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
+      case 'tag':
+        return this.getTag(this.data)
+      case 'actorCategory':
+        return this.getActorCategory(this.data) + ''
+    }
+  }
+  coloring () {
+    switch (this.labelType) {
+      case 'noAddresses':
+        this.color = this.colors.range(this.data.noAddresses)
+        break
+      case 'tag':
+        let tag
+        if (!this.data.tags || this.data.tags.length === 0) {
+          tag = ''
+        } else if (this.data.tags.length > 1) {
+          tag = '_'
+        } else {
+          tag = this.getTag(this.data)
+        }
+        this.color = this.colors.tags(tag)
+        break
+      case 'id':
+      case 'actorCategory':
+        this.color = this.colors.categories(this.getActorCategory(this.data) + '')
+        break
+    }
+    console.log('color', this.color)
+    this.root
+      .select('.rect')
+      .style('color', this.color)
+    this.root
+      .selectAll('.expandHandle path')
+      .style('color', this.color)
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)

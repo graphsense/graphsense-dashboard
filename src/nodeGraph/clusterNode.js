@@ -3,17 +3,18 @@ import RMap from '../rmap.js'
 import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
 const gap = padding
-const buttonHeight = 25
-const buttonLabelHeight = 20
+const noAddressesLabelHeight = 16
+const paddingBottom = 7
 
 export default class ClusterNode extends GraphNode {
-  constructor (dispatcher, cluster, layerId, labelType) {
-    super(dispatcher, labelType, cluster, layerId)
+  constructor (dispatcher, cluster, layerId, labelType, colors) {
+    super(dispatcher, labelType, cluster, layerId, colors)
     this.nodes = new RMap()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)
     this.expandLimit = 10
     this.type = 'cluster'
+    this.numLetters = 11
   }
   add (node) {
     if (!node.id) throw new Error('not a node', node)
@@ -35,6 +36,7 @@ export default class ClusterNode extends GraphNode {
             this.dispatcher('selectNode', ['cluster', this.id])
           })
         g.append('rect')
+          .classed('rect', true)
           .attr('x', 0)
           .attr('y', 0)
           .attr('width', clusterWidth)
@@ -43,15 +45,17 @@ export default class ClusterNode extends GraphNode {
           .classed('label', true)
           .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
         this.renderLabel(label)
-        let eg = this.root.append('g').classed('expandHandles', true)
+        let eg = g.append('g').classed('expandHandles', true)
         this.renderRemove(g)
         this.renderExpand(eg, true)
         this.renderExpand(eg, false)
+        this.coloring()
       }
     } else {
       if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
         let label = this.root.select('g.label')
         this.renderLabel(label)
+        this.coloring()
       }
       if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
         this.root.select('g').classed('selected', this.selected)
@@ -86,17 +90,15 @@ export default class ClusterNode extends GraphNode {
       .on('click', (e) => {
         this.dispatcher('loadClusterAddresses', {id: this.id, limit: this.addressFilters.get('limit')})
       })
-    button.append('rect')
-      .attr('x', padding)
-      .attr('y', cumY)
-      .attr('width', addressWidth)
-      .attr('height', buttonHeight)
-      .attr('rx', 5)
-      .attr('ry', 5)
+    let h = this.getHeight()
+    let w = this.getWidth()
+    let lineY = h - paddingBottom - noAddressesLabelHeight
     button.append('text')
-      .attr('x', padding * 2)
-      .attr('y', cumY + buttonHeight / 2 + buttonLabelHeight / 3)
-      .text(`+ Addresses`)
+      .attr('text-anchor', 'middle')
+      .attr('x', w / 2)
+      .attr('y', h - paddingBottom)
+      .attr('font-size', noAddressesLabelHeight)
+      .text(this.data.noAddresses + ' addresses')
     super.render()
   }
   translate (x, y) {
@@ -108,23 +110,11 @@ export default class ClusterNode extends GraphNode {
   getHeight () {
     return this.nodes.size() * addressHeight +
       2 * padding +
-      (this.data.mockup ? 0 : this.labelHeight + buttonHeight + padding) +
+      (this.data.mockup ? 0 : this.labelHeight + noAddressesLabelHeight) +
       (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {
     return clusterWidth
-  }
-  getLabel () {
-    switch (this.labelType) {
-      case 'noAddresses':
-        return this.data.noAddresses
-      case 'id':
-        return this.data.id
-      case 'tag':
-        return this.getTag(this.data)
-      case 'actorCategory':
-        return this.getActorCategory(this.data) + ''
-    }
   }
   getOutDegree () {
     return this.data.out_degree

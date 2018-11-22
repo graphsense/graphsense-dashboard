@@ -1,5 +1,5 @@
 import {create, event} from 'd3-selection'
-import {set} from 'd3-collection'
+import {set, map} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
 import {zoom} from 'd3-zoom'
@@ -15,6 +15,17 @@ const y = -300
 const w = 600
 const h = 600
 
+const chromaStep = 36
+const saturation = 94 / 255 * 100
+const lightness = {
+  'cluster': 209 / 255 * 100,
+  'address': 230 / 255 * 100
+}
+const defaultColor = {
+  'cluster': `hsl(178, 0%, ${lightness['cluster']}%)`,
+  'address': `hsl(178, 0%, ${lightness['address']}%)`
+}
+
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType) {
     super()
@@ -25,6 +36,33 @@ export default class NodeGraph extends Component {
     this.adding = set()
     this.layers = []
     this.viewBox = {x, y, w, h}
+    this.colorMapCategories = map()
+    this.colorMapTags = map()
+    this.colorGen = (map, type) => {
+      return (k) => {
+        if (!k) return defaultColor[type]
+        k = 'k' + k
+        let chroma = map.get(k)
+        console.log('getColor', map, type, k, chroma)
+        if (chroma === undefined) {
+          chroma = map.size() * chromaStep
+          map.set(k, chroma)
+        }
+        return `hsl(${chroma}, ${saturation}%, ${lightness[type]}%)`
+      }
+    }
+    this.colors =
+      { 'cluster': {
+        categories: this.colorGen(this.colorMapCategories, 'cluster'),
+        tags: this.colorGen(this.colorMapTags, 'cluster'),
+        range: (v) => defaultColor['cluster']
+      },
+      'address': {
+        categories: this.colorGen(this.colorMapCategories, 'address'),
+        tags: this.colorGen(this.colorMapTags, 'address'),
+        range: (v) => defaultColor['address']
+      }
+      }
   }
   setResultNode (object) {
     let nodes
@@ -71,7 +109,7 @@ export default class NodeGraph extends Component {
     let cluster = this.clusterNodes.get(id)
     addresses.forEach((address) => {
       if (this.addressNodes.has([address.id, id[1]])) return
-      let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'])
+      let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'])
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       cluster.add(addressNode)
@@ -114,17 +152,17 @@ export default class NodeGraph extends Component {
     let node
     if (object.type === 'address') {
       if (this.addressNodes.has([object.address, layerId])) return
-      let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'])
+      let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'])
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId])
       if (!node) {
-        node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'])
+        node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'])
       }
       node.add(addressNode)
     } else if (object.type === 'cluster') {
       if (this.clusterNodes.has([object.cluster, layerId])) return
-      node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'])
+      node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'])
     } else {
       throw Error('unknown node type')
     }

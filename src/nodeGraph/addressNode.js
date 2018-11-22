@@ -2,8 +2,8 @@ import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
-  constructor (dispatcher, address, layerId, labelType) {
-    super(dispatcher, labelType, address, layerId)
+  constructor (dispatcher, address, layerId, labelType, colors) {
+    super(dispatcher, labelType, address, layerId, colors)
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
@@ -23,6 +23,7 @@ export default class AddressNode extends GraphNode {
           this.dispatcher('selectNode', ['address', this.id])
         })
       g.append('rect')
+        .classed('rect', true)
         .attr('x', x)
         .attr('y', y)
         .attr('width', addressWidth)
@@ -34,32 +35,22 @@ export default class AddressNode extends GraphNode {
         .attr('transform', `translate(${x + padding}, ${h})`)
 
       this.renderLabel(label)
-      let eg = this.root.append('g').classed('expandHandles', true)
+      let eg = g.append('g').classed('expandHandles', true)
       this.renderRemove(g)
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
+      this.coloring()
     } else {
       if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
         let label = this.root.select('g.label')
         this.renderLabel(label)
+        this.coloring()
       }
       if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
         this.root.select('g').classed('selected', this.selected)
       }
     }
     super.render()
-  }
-  getLabel () {
-    switch (this.labelType) {
-      case 'id':
-        return (this.data.id + '').substring(0, 8)
-      case 'balance':
-        return this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
-      case 'tag':
-        return this.getTag(this.data) + ''
-      case 'actorCategory':
-        return this.getActorCategory(this.data) + ''
-    }
   }
   getHeight () {
     return addressHeight
