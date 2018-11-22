@@ -22,6 +22,7 @@ export default class Store {
       Object.keys(object).forEach(key => { a[key] = object[key] })
       // remove unneeded address field (is now id)
       delete a.address
+      if (typeof object.cluster === 'string') object.toCluster = object.cluster
       if (object.toCluster) {
         let c = this.clusters.get(object.toCluster)
         if (!c) {

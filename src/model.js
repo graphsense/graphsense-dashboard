@@ -177,7 +177,9 @@ export default class Model {
     this.dispatcher.on('selectAddress', (data) => {
       console.log('selectAdress', data)
       if (!data.address) return
-      let a = this.store.add('address', data)
+      let a = this.store.add(data)
+      this.rest.node({id: data.address, type: 'address'})
+        .then(this.mapResult('resultNode'))
       // historyPushState('selectAddress', data)
       this.browser.setAddress(a)
     })
@@ -304,6 +306,7 @@ export default class Model {
     console.log('model render')
     console.log('graph', this.graph)
     console.log('store', this.store)
+    console.log('browser', this.browser)
     return this.layout.render(root)
   }
   replay () {
