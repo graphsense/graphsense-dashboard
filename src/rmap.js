@@ -8,9 +8,16 @@ export default class RMap {
     return this.map.set(k, v)
   }
   get (k) {
+    let v = this.map.get(k)
+    if (v && !v.removed) return v
+  }
+  getRemoved (k) {
     return this.map.get(k)
   }
   has (k) {
+    return !!this.get(k)
+  }
+  hasRemoved (k) {
     return this.map.has(k)
   }
   values () {

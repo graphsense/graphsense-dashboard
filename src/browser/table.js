@@ -93,22 +93,22 @@ export default class Table extends BrowserComponent {
       {
         params: table.loadParams,
         nextPage: table.nextPage,
-        pagesize: request.length,
-        draw: request.draw,
+        request: request,
         drawCallback: drawCallback
       }
     table.dispatcher(table.loadMessage, r)
     table.loading = request
   }
-  setResponse ({page, draw, drawCallback, result}) {
+  setResponse ({page, request, drawCallback, result}) {
     if (!this.isSmall() && page !== this.nextPage) return
     this.data = this.data.concat(result[this.resultField])
     this.nextPage = result.nextPage
+    let loading = this.loading || request
     let data = {
-      draw: draw,
+      draw: request.draw,
       recordsTotal: this.total,
       recordsFiltered: this.total,
-      data: this.data.slice(this.loading.start, this.loading.start + this.loading.length)
+      data: this.data.slice(loading.start, loading.start + loading.length)
     }
     this.loading = null
     drawCallback(data)

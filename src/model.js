@@ -62,6 +62,16 @@ export default class Model {
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
+      if (context && context.focusNode) {
+        let f = this.store.get(context.focusNode.type, context.focusNode.id)
+        if (f) {
+          if (context.focusNode.isOutgoing === true) {
+            f.outgoing.add(a.id)
+          } else if (context.focusNode.isOutgoing === false) {
+            a.outgoing.add(f.id)
+          }
+        }
+      }
       this.browser.setResultNode(a)
       this.graph.setResultNode(a)
     })
@@ -100,23 +110,23 @@ export default class Model {
       this.rest.transaction(txHash).then(this.mapResult('resultTransactionForBrowser'))
     })
 
-    this.dispatcher.on('loadAddresses', ({params, nextPage, pagesize, drawCallback, draw}) => {
-      this.rest.addresses({params, nextPage, pagesize})
-        .then(this.mapResult('resultAddresses', {page: nextPage, draw, drawCallback}))
+    this.dispatcher.on('loadAddresses', ({params, nextPage, request, drawCallback}) => {
+      this.rest.addresses({params, nextPage, pagesize: request.length})
+        .then(this.mapResult('resultAddresses', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultAddresses', ({context, result}) => {
       this.browser.setResponse({...context, result})
     })
-    this.dispatcher.on('loadTransactions', ({params, nextPage, pagesize, drawCallback, draw}) => {
-      this.rest.transactions({params, nextPage, pagesize})
-        .then(this.mapResult('resultTransactions', {page: nextPage, draw, drawCallback}))
+    this.dispatcher.on('loadTransactions', ({params, nextPage, request, drawCallback}) => {
+      this.rest.transactions({params, nextPage, pagesize: request.length})
+        .then(this.mapResult('resultTransactions', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultTransactions', ({context, result}) => {
       this.browser.setResponse({...context, result})
     })
-    this.dispatcher.on('loadTags', ({params, nextPage, pagesize, drawCallback, draw}) => {
-      this.rest.tags({params, nextPage, pagesize})
-        .then(this.mapResult('resultTags', {page: nextPage, draw, drawCallback}))
+    this.dispatcher.on('loadTags', ({params, nextPage, request, drawCallback}) => {
+      this.rest.tags({params, nextPage, pagesize: request.length})
+        .then(this.mapResult('resultTags', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultTags', ({context, result}) => {
       this.browser.setResponse({...context, result})
@@ -136,12 +146,12 @@ export default class Model {
     this.dispatcher.on('initOutdegreeTable', (request) => {
       this.browser.initNeighborsTable(request, true)
     })
-    this.dispatcher.on('loadNeighbors', ({params, nextPage, pagesize, drawCallback, draw}) => {
+    this.dispatcher.on('loadNeighbors', ({params, nextPage, request, drawCallback}) => {
       let id = params[0]
       let type = params[1]
       let isOutgoing = params[2]
-      this.rest.neighbors(id, type, isOutgoing)
-        .then(this.mapResult('resultNeighbors', {page: nextPage, draw, drawCallback}))
+      this.rest.neighbors(id, type, isOutgoing, request.length, nextPage)
+        .then(this.mapResult('resultNeighbors', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultNeighbors', ({context, result}) => {
       this.browser.setResponse({...context, result})
@@ -149,11 +159,18 @@ export default class Model {
     this.dispatcher.on('selectNeighbor', (data) => {
       console.log('selectNeighbor', data)
       if (!data.id || !data.nodeType) return
+      let focusNode = this.browser.getCurrentNode()
+      let isOutgoing = this.browser.isShowingOutgoingNeighbors()
       let o = this.store.get(data.nodeType, data.id)
       if (!o) {
         this.browser.loading.add(data.id)
-        this.rest.node({id: data.id, type: data.nodeType}).then(this.mapResult('resultNode'))
+        this.rest.node({id: data.id, type: data.nodeType})
+          .then(this.mapResult('resultNode', {focusNode: {id: focusNode.id, type: focusNode.type, isOutgoing: isOutgoing}}))
         return
+      }
+      console.log('focusNode', focusNode, isOutgoing)
+      if (isOutgoing !== null && focusNode) {
+        focusNode.outgoing.add(o.id)
       }
       this.browser.setResultNode(o)
     })

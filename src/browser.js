@@ -26,6 +26,19 @@ export default class Browser extends Component {
     })
     this.content = this.content.slice(0, index)
   }
+  isShowingOutgoingNeighbors () {
+    let last = this.content[this.content.length - 1]
+    if (last instanceof NeighborsTable) {
+      return last.isOutgoing
+    }
+    return null
+  }
+  getCurrentNode () {
+    if (this.content[0] instanceof Address || this.content[0] instanceof Cluster) {
+      return this.content[0].data
+    }
+    return null
+  }
   setSearch () {
     this.activeTab = 'search'
     this.destroyComponentsFrom(0)

@@ -102,7 +102,11 @@ export default class NodeGraph extends Component {
       if (anchor && anchor.isOutgoing === false) {
         this.layers.unshift(layer)
       } else {
-        this.layers.push(layer)
+        if (layerId >= 0) {
+          this.layers.push(layer)
+        } else {
+          this.layers.unshift(layer)
+        }
       }
     } else {
       layer = filtered[0]
@@ -154,10 +158,66 @@ export default class NodeGraph extends Component {
     return this.selectedNode.id[1]
   }
   additionLayerBySearch (node) {
-    console.log('search', node.cluster)
+    console.log('search', node)
+    if (this.selectedNode && this.selectedNode.data.outgoing.has(node.id)) {
+      console.log('select layer by selected node')
+      return this.selectedNode.id[1] + 1
+    }
+    if (this.selectedNode && node.outgoing.has(this.selectedNode.data.id)) {
+      console.log('select layer by selected node (incoming)')
+      return this.selectedNode.id[1] - 1
+    }
+
+    if (this.layers[0]) {
+      let nodes = this.layers[0].nodes.values()
+      for (let j = 0; j < nodes.length; j++) {
+        if (node.type === 'cluster' && node.outgoing.has(nodes[j].data.id)) {
+          console.log('select layer by incoming node', nodes[j])
+          return this.layers[0].id - 1
+        }
+        if (node.cluster && node.cluster.outgoing.has(nodes[j].data.id)) {
+          console.log('select layer by incoming node on cluster level', nodes[j])
+          return this.layers[0].id - 1
+        }
+        if (node.type === 'address') {
+          let addresses = nodes[j].nodes.values()
+          for (let k = 0; k < addresses.length; k++) {
+            if (node.outgoing.has(addresses[k].data.id)) {
+              console.log('select layer by incoming node on address level', addresses[k])
+              return this.layers[0].id - 1
+            }
+          }
+        }
+      }
+    }
+
+    for (let i = this.layers.length - 1; i >= 0; i--) {
+      let nodes = this.layers[i].nodes.values()
+      for (let j = 0; j < nodes.length; j++) {
+        let outgoing = nodes[j].data.outgoing
+        if (node.type === 'cluster' && outgoing.has(node.id)) {
+          console.log('select layer by outgoing node', nodes[j])
+          return this.layers[i].id + 1
+        }
+        if (node.cluster && outgoing.has(node.cluster.id)) {
+          console.log('select layer by outgoing node on cluster level', nodes[j])
+          return this.layers[i].id + 1
+        }
+        if (node.type === 'address') {
+          let addresses = nodes[j].nodes.values()
+          for (let k = 0; k < addresses.length; k++) {
+            if (addresses[k].data.outgoing.has(node.id)) {
+              console.log('select layer by outgoing node on address level', addresses[k])
+              return this.layers[i].id + 1
+            }
+          }
+        }
+      }
+    }
+    if (!node.cluster) return false
     for (let i = 0; i < this.layers.length; i++) {
-      console.log('searching layer', this.layers[i])
-      if (this.layers[i].has(node.cluster)) {
+      if (this.layers[i].has([node.cluster.id, this.layers[i].id])) {
+        console.log('select layer by cluster', this.layers[i])
         return this.layers[i].id
       }
     }
