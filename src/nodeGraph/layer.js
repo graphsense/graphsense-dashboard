@@ -1,5 +1,5 @@
-import {map} from 'd3-collection'
 import Component from '../component.js'
+import RMap from '../rmap.js'
 
 const margin = 20
 
@@ -7,7 +7,7 @@ export default class Layer extends Component {
   constructor (id) {
     super()
     this.id = id
-    this.nodes = map()
+    this.nodes = new RMap()
   }
   add (node) {
     this.nodes.set(node.id, node)
@@ -22,7 +22,7 @@ export default class Layer extends Component {
     if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
     this.nodes.each((node) => {
-      if (node.data.removed) return
+      console.log('render node removed', node.removed)
       // render clusters
       if (this.shouldUpdate()) {
         let g = this.clusterRoot.append('g')

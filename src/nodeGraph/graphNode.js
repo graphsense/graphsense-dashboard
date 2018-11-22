@@ -28,6 +28,10 @@ class GraphNode extends Component {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
+    this.removed = false
+  }
+  setRemoved (flag) {
+    this.removed = flag
   }
   renderLabel (root) {
     if (!root) {
@@ -91,7 +95,7 @@ class GraphNode extends Component {
     let g = root.append('g')
       .classed('removeHandle', true)
       .on('click', () => {
-        this.dispatcher('removeNode', [this.type, this.getId()])
+        this.dispatcher('removeNode', [this.type, this.id])
         event.stopPropagation()
       })
     g.append('rect')

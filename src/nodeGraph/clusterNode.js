@@ -1,4 +1,5 @@
-import {set, map} from 'd3-collection'
+import {map} from 'd3-collection'
+import RMap from '../rmap.js'
 import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
 const gap = padding
@@ -8,7 +9,7 @@ const buttonLabelHeight = 20
 export default class ClusterNode extends GraphNode {
   constructor (dispatcher, cluster, layerId, labelType) {
     super(dispatcher, labelType, cluster, layerId)
-    this.nodes = map()
+    this.nodes = new RMap()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)
     this.expandLimit = 10
@@ -20,14 +21,6 @@ export default class ClusterNode extends GraphNode {
   }
   has (address) {
     this.nodes.has([address, this.id[1]])
-  }
-  size () {
-    let c = 0
-    this.nodes.each((node) => {
-      // if (!node.address.removed) c++
-      c++
-    })
-    return c
   }
   render (root) {
     if (root) this.root = root
@@ -87,7 +80,7 @@ export default class ClusterNode extends GraphNode {
       cumY += addressNode.getHeight()
     })
     if (this.data.mockup) return
-    cumY += this.size() > 0 ? gap : 0
+    cumY += this.nodes.size() > 0 ? gap : 0
     let button = root.append('g')
       .classed('addressExpand', true)
       .on('click', (e) => {
@@ -113,10 +106,10 @@ export default class ClusterNode extends GraphNode {
     })
   }
   getHeight () {
-    return this.size() * addressHeight +
+    return this.nodes.size() * addressHeight +
       2 * padding +
       (this.data.mockup ? 0 : this.labelHeight + buttonHeight + padding) +
-      (this.size() > 0 ? 2 * gap : gap)
+      (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {
     return clusterWidth

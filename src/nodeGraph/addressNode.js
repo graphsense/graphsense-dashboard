@@ -35,6 +35,7 @@ export default class AddressNode extends GraphNode {
 
       this.renderLabel(label)
       let eg = this.root.append('g').classed('expandHandles', true)
+      this.renderRemove(g)
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
     } else {

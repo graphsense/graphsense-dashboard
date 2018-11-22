@@ -1,5 +1,5 @@
 import {create, event} from 'd3-selection'
-import {set, map} from 'd3-collection'
+import {set} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
 import {zoom} from 'd3-zoom'
@@ -7,6 +7,7 @@ import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
+import RMap from './rmap.js'
 
 const margin = 200
 const x = -300
@@ -19,8 +20,8 @@ export default class NodeGraph extends Component {
     super()
     this.dispatcher = dispatcher
     this.labelType = labelType
-    this.clusterNodes = map()
-    this.addressNodes = map()
+    this.clusterNodes = new RMap()
+    this.addressNodes = new RMap()
     this.adding = set()
     this.layers = []
     this.viewBox = {x, y, w, h}
@@ -129,9 +130,21 @@ export default class NodeGraph extends Component {
     this.shouldUpdate('layers')
   }
   remove (nodeType, nodeId) {
-    let node = this.store.get(nodeType, nodeId)
-    if (!node) return
-    node.removed = true
+    let nodes
+    if (nodeType === 'address') {
+      nodes = this.addressNodes
+    } else if (nodeType === 'cluster') {
+      nodes = this.clusterNodes
+    }
+    let node = nodes.get(nodeId)
+    node.setRemoved(true)
+    if (nodeType === 'address') {
+      let mockup = this.clusterNodes.get('mockup' + nodeId)
+      if (mockup) {
+        mockup.setRemoved(true)
+      }
+    }
+    this.shouldUpdate('layers')
   }
   additionLayerBySelection (addressId) {
     if (!addressId) return false
@@ -156,7 +169,7 @@ export default class NodeGraph extends Component {
     let transform = {k: 1, x: 0, y: 0}
     let tx = 0
     let ty = 0
-    let svg, clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
+    let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     console.log('graph should update', this.shouldUpdate())
     if (this.shouldUpdate() === true) {
       this.svg = create('svg')
@@ -210,11 +223,12 @@ export default class NodeGraph extends Component {
       clusterRoot.node().innerHTML = ''
       addressRoot.node().innerHTML = ''
       this.layers.forEach((layer) => {
+        if (layer.nodes.size() === 0) return
         layer.shouldUpdate(true)
         let cRoot = clusterRoot.append('g')
         let aRoot = addressRoot.append('g')
         layer.render(cRoot, aRoot)
-        let box = cRoot.node().getBBox()
+        let box = aRoot.node().getBBox()
         let x = cumX - box.width / 2
         let y = box.height / -2
         cRoot.attr('transform', `translate(${x}, ${y})`)
@@ -224,6 +238,7 @@ export default class NodeGraph extends Component {
       })
     } else {
       this.layers.forEach((layer) => {
+        if (layer.nodes.size() === 0) return
         layer.render()
       })
     }
@@ -274,6 +289,7 @@ export default class NodeGraph extends Component {
     let sort = (node1, node2) => {
       return node1.id[1] - node2.id[1]
     }
+    console.log('sorted', this.addressNodes, this.addressNodes.values())// .sort(sort))
     this.linkShadows(addressRoot, link, this.addressNodes.values().sort(sort))
     this.linkShadows(clusterRoot, link, this.clusterNodes.values().sort(sort))
   }
