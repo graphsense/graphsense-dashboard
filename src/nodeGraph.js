@@ -9,7 +9,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import RMap from './rmap.js'
 
-const margin = 200
+const margin = 300
 const x = -300
 const y = -300
 const w = 600
