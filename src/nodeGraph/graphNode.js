@@ -137,20 +137,20 @@ class GraphNode extends Component {
     this.labelType = labelType
     this.shouldUpdateLabel()
   }
-  getTag (object) {
-    if (object.userDefinedTags) {
-      return object.userDefinedTags[0] || ''
+  getTag () {
+    if (this.data.notes) {
+      return this.data.notes
     }
     if (this.data.tags && this.data.tags.length > 1) {
       return this.data.tags.length + ' tags'
     }
-    return (this.findTag(object) || {}).tag || ''
+    return (this.findTag() || {}).tag || ''
   }
-  getActorCategory (object) {
-    return (this.findTag(object) || {}).actorCategory || ''
+  getActorCategory () {
+    return (this.findTag() || {}).actorCategory || ''
   }
-  findTag (object) {
-    let tags = (object || {}).tags || []
+  findTag () {
+    let tags = (this.data || {}).tags || []
     tags.sort((a, b) => {
       return a - b
     })
@@ -171,7 +171,7 @@ class GraphNode extends Component {
       case 'balance':
         return this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
       case 'tag':
-        return this.getTag(this.data)
+        return this.getTag()
       case 'actorCategory':
         return this.getActorCategory(this.data) + ''
     }
@@ -183,7 +183,9 @@ class GraphNode extends Component {
         break
       case 'tag':
         let tag
-        if (!this.data.tags || this.data.tags.length === 0) {
+        if (this.data.notes) {
+          tag = '__'
+        } else if (!this.data.tags || this.data.tags.length === 0) {
           tag = ''
         } else if (this.data.tags.length > 1) {
           tag = '_'

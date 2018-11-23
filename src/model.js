@@ -336,6 +336,25 @@ export default class Model {
     this.dispatcher.on('removeNode', ([nodeType, nodeId]) => {
       this.graph.remove(nodeType, nodeId)
     })
+    this.dispatcher.on('inputNotes', ({id, type, note}) => {
+      let o = this.store.get(type, id)
+      o.notes = note
+      if (this.graph.labelType[type + 'Label'] !== 'tag') return
+      let nodes
+      if (type === 'address') {
+        nodes = this.graph.addressNodes
+      } else if (type === 'cluster') {
+        nodes = this.graph.clusterNodes
+      }
+      nodes.each((node) => {
+        if (node.data.id === id) {
+          node.shouldUpdate('label')
+        }
+      })
+    })
+    this.dispatcher.on('switchConfig', (type) => {
+      this.config.switchConfig(type)
+    })
     window.onpopstate = (e) => {
       return
       if (!e.state) return

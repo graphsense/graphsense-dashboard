@@ -280,3 +280,13 @@ table.dataTable tbody tr {
 .dataTables_wrapper.no-footer .dataTables_scrollBody {
   border-bottom: 0;
 }
+
+svg path.link:hover {
+  stroke: red;
+}
+
+textarea {
+  width : 99%;
+  height : 5em;
+  @apply border border-grey-light
+}

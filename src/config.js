@@ -20,6 +20,10 @@ export default class Config extends Component {
     this.node = node
     this.shouldUpdate(true)
   }
+  switchConfig (type) {
+    this.view = type
+    this.shouldUpdate(true)
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -27,8 +31,7 @@ export default class Config extends Component {
     this.root.innerHTML = layout
     this.root.querySelector('button#navbar-config')
       .addEventListener('click', () => {
-        this.view = 'graph'
-        this.render()
+        this.dispatcher('switchConfig', 'graph')
       })
     let el = this.root.querySelector('#config')
     switch (this.view) {
@@ -40,10 +43,12 @@ export default class Config extends Component {
       case 'address':
         el.innerHTML = addressConfig
         this.setupTxFilters(el)
+        this.setupNotes(el)
         break
       case 'cluster':
         el.innerHTML = clusterConfig
         this.setupTxFilters(el)
+        this.setupNotes(el)
         el.querySelector('#address-input select')
           .addEventListener('change', (e) => {
             this.node.addressFilters.set(e.target.value, null)
@@ -58,6 +63,7 @@ export default class Config extends Component {
           })
         break
     }
+    super.render()
     return this.root
   }
   setupTxFilters (el) {
@@ -144,6 +150,14 @@ export default class Config extends Component {
       let labelType = e.target.value
       this.labelType[id] = labelType
       this.dispatcher(message, labelType)
+    })
+  }
+  setupNotes (el) {
+    let input = el.querySelector('.notes textarea')
+    input.value = this.node.data.notes || ''
+    input.addEventListener('input', (e) => {
+      console.log('input', e.target.value)
+      this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, note: e.target.value})
     })
   }
 }
