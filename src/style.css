@@ -174,7 +174,13 @@ svg g.clusterNode.mockup {
 }
 
 svg g.selected > rect {
-  @apply text-gs-red fill-current
+  stroke: red;
+  stroke-width: 3px;
+}
+
+svg g.selected .expandHandle > path {
+  stroke: red;
+  stroke-width: 3px;
 }
 
 svg g.addressExpand {
