@@ -75,7 +75,7 @@ export default class Model {
         }
       }
       this.browser.setResultNode(a)
-      this.graph.setResultNode(a)
+      this.call('addNode', {id: a.id, type: a.type})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       // historyPushState('resultTransaction', response)
