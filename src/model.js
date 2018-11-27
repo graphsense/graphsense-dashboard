@@ -4,8 +4,9 @@ import Rest from './rest.js'
 import Layout from './layout.js'
 import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
+import Landingpage from './landingpage.js'
 
-const baseUrl = 'http://localhost:9000/btc'
+const baseUrl = 'http://localhost:9000'
 
 const searchlimit = 100
 const prefixLength = 5
@@ -32,35 +33,50 @@ export default class Model {
     this.dispatcher = dispatcher
     this.store = new Store()
     this.isReplaying = false
+    this.showLandingpage = true
 
     this.call = (message, data) => {
       if (this.isReplaying) {
         console.log('omit calling while replaying', message, data)
         return
       }
-      console.log('calling', message, data)
-      this.dispatcher.call(message, null, data)
-      this.render()
+      setTimeout(() => {
+        console.log('calling', message, data)
+        this.dispatcher.call(message, null, data)
+        this.render()
+      }, 1)
     }
 
     // VIEWS
     this.browser = new Browser(this.call)
     this.graph = new NodeGraph(this.call, defaultLabelType)
     this.config = new Config(this.call, defaultLabelType)
-    this.rest = new Rest(baseUrl, prefixLength)
+    let btc = new Rest(baseUrl + '/btc', prefixLength)
+    let ltc = new Rest(baseUrl + '/ltc', prefixLength)
+    this.keyspace = 'btc'
+    this.rest = (keyspace) => {
+      if (!keyspace) keyspace = this.keyspace
+      switch (keyspace) {
+        case 'btc':
+          return btc
+        case 'ltc':
+          return ltc
+      }
+    }
     this.layout = new Layout(this.call, this.browser, this.graph, this.config)
+    this.landingpage = new Landingpage(this.call)
 
     this.dispatcher.on('initSearch', () => {
       this.browser.setSearch()
     })
     this.dispatcher.on('search', (term) => {
       if (this.browser.setSearchTermAndNeedsResults(term, searchlimit, prefixLength)) {
-        this.rest.search(term, searchlimit).then(this.mapResult('searchresult', term))
+        this.rest().search(term, searchlimit).then(this.mapResult('searchresult', term))
       }
     })
     this.dispatcher.on('clickSearchResult', ({id, type}) => {
       this.browser.loading.add(id)
-      this.rest.node({id, type}).then(this.mapResult('resultNode'))
+      this.rest().node({id, type}).then(this.mapResult('resultNode'))
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
@@ -104,30 +120,30 @@ export default class Model {
     // user clicks address in transactions table
     this.dispatcher.on('clickAddress', ({address}) => {
       this.browser.loading.add(address)
-      this.rest.node({id: address, type: 'address'}).then(this.mapResult('resultNodeForBrowser'))
+      this.rest().node({id: address, type: 'address'}).then(this.mapResult('resultNodeForBrowser'))
     })
     // user clicks address in transactions table
     this.dispatcher.on('clickTransaction', ({txHash}) => {
       this.browser.loading.add(txHash)
-      this.rest.transaction(txHash).then(this.mapResult('resultTransactionForBrowser'))
+      this.rest().transaction(txHash).then(this.mapResult('resultTransactionForBrowser'))
     })
 
     this.dispatcher.on('loadAddresses', ({params, nextPage, request, drawCallback}) => {
-      this.rest.addresses({params, nextPage, pagesize: request.length})
+      this.rest().addresses({params, nextPage, pagesize: request.length})
         .then(this.mapResult('resultAddresses', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultAddresses', ({context, result}) => {
       this.browser.setResponse({...context, result})
     })
     this.dispatcher.on('loadTransactions', ({params, nextPage, request, drawCallback}) => {
-      this.rest.transactions({params, nextPage, pagesize: request.length})
+      this.rest().transactions({params, nextPage, pagesize: request.length})
         .then(this.mapResult('resultTransactions', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultTransactions', ({context, result}) => {
       this.browser.setResponse({...context, result})
     })
     this.dispatcher.on('loadTags', ({params, nextPage, request, drawCallback}) => {
-      this.rest.tags({params, nextPage, pagesize: request.length})
+      this.rest().tags({params, nextPage, pagesize: request.length})
         .then(this.mapResult('resultTags', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultTags', ({context, result}) => {
@@ -152,7 +168,7 @@ export default class Model {
       let id = params[0]
       let type = params[1]
       let isOutgoing = params[2]
-      this.rest.neighbors(id, type, isOutgoing, request.length, nextPage)
+      this.rest().neighbors(id, type, isOutgoing, request.length, nextPage)
         .then(this.mapResult('resultNeighbors', {page: nextPage, request, drawCallback}))
     })
     this.dispatcher.on('resultNeighbors', ({context, result}) => {
@@ -166,7 +182,7 @@ export default class Model {
       let o = this.store.get(data.nodeType, data.id)
       if (!o) {
         this.browser.loading.add(data.id)
-        this.rest.node({id: data.id, type: data.nodeType})
+        this.rest().node({id: data.id, type: data.nodeType})
           .then(this.mapResult('resultNode', {focusNode: {id: focusNode.id, type: focusNode.type, isOutgoing: isOutgoing}}))
         return
       }
@@ -180,7 +196,7 @@ export default class Model {
       console.log('selectAdress', data)
       if (!data.address) return
       let a = this.store.add(data)
-      this.rest.node({id: data.address, type: 'address'})
+      this.rest().node({id: data.address, type: 'address'})
         .then(this.mapResult('resultNode'))
       // historyPushState('selectAddress', data)
       this.browser.setAddress(a)
@@ -194,7 +210,7 @@ export default class Model {
       if (context.stage === 1 && context.type && context.id) {
         let a = this.store.get(context.type, context.id)
         if (!a) {
-          this.rest.node({type: context.type, id: context.id})
+          this.rest().node({type: context.type, id: context.id})
             .then(this.mapResult('addNodeCont', {stage: 2, anchor}))
         } else {
           this.call('addNodeCont', {context: {stage: 2, anchor}, result: a})
@@ -208,7 +224,7 @@ export default class Model {
         if (!this.graph.adding.has(o.id)) return
         console.log('cluster', o.cluster)
         if (o.type === 'address' && !o.cluster) {
-          this.rest.clusterForAddress(o.id)
+          this.rest().clusterForAddress(o.id)
             .then(this.mapResult('addNodeCont', {stage: 3, addressId: o.id, anchor}))
         } else {
           this.call('addNodeCont', {context: {stage: 4, id: o.id, type: o.type, anchor}})
@@ -235,7 +251,7 @@ export default class Model {
       } else if (context.stage === 5 && context.id && context.type) {
         let o = this.store.get(context.type, context.id)
         if (!o.tags) {
-          this.rest.tags({id: o.id, type: o.type})
+          this.rest().tags({id: o.id, type: o.type})
             .then(this.mapResult('resultTags', {id: o.id, type: o.type}))
         }
         this.graph.add(o, context.anchor)
@@ -248,7 +264,7 @@ export default class Model {
           this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
           return
         }
-        this.rest.neighbors(o.id, o.type, false, degreeThreshold)
+        this.rest().neighbors(o.id, o.type, false, degreeThreshold)
           .then(this.mapResult('excourseLoadDegree', { ...context, stage: 2 }))
       } else if (context.stage === 2) {
         let o = this.store.get(context.type, context.id)
@@ -263,7 +279,7 @@ export default class Model {
           this.call(context.backCall.msg, context.backCall.data)
           return
         }
-        this.rest.neighbors(o.id, o.type, true, degreeThreshold)
+        this.rest().neighbors(o.id, o.type, true, degreeThreshold)
           .then(this.mapResult('excourseLoadDegree', {...context, stage: 3}))
       } else if (context.stage === 3) {
         let o = this.store.get(context.type, context.id)
@@ -288,7 +304,7 @@ export default class Model {
       }
     })
     this.dispatcher.on('loadEgonet', ({id, type, isOutgoing, limit}) => {
-      this.rest.egonet(type, id, isOutgoing, limit).then(this.mapResult('resultEgonet', {id, type, isOutgoing}))
+      this.rest().egonet(type, id, isOutgoing, limit).then(this.mapResult('resultEgonet', {id, type, isOutgoing}))
     })
     this.dispatcher.on('resultEgonet', ({context, result}) => {
       let a = this.store.get(context.type, context.id[0])
@@ -306,7 +322,7 @@ export default class Model {
       })
     })
     this.dispatcher.on('loadClusterAddresses', ({id, limit}) => {
-      this.rest.clusterAddresses(id[0], limit).then(this.mapResult('resultClusterAddresses', id))
+      this.rest().clusterAddresses(id[0], limit).then(this.mapResult('resultClusterAddresses', id))
     })
     this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
       let id = context
@@ -316,12 +332,12 @@ export default class Model {
         let a = this.store.add(copy)
         addresses.push(a)
         if (!a.in_degree || !a.out_degree) {
-          this.rest.node({id: a.id, type: 'address'})
+          this.rest().node({id: a.id, type: 'address'})
             .then(this.mapResult('resultNode'))
         }
         if (!a.tags) {
           let request = {id: a.id, type: 'address'}
-          this.rest.tags(request)
+          this.rest().tags(request)
             .then(this.mapResult('resultTags', request))
         }
       })
@@ -355,6 +371,12 @@ export default class Model {
     this.dispatcher.on('switchConfig', (type) => {
       this.config.switchConfig(type)
     })
+    this.dispatcher.on('stats', (keyspace) => {
+      this.rest(keyspace).stats(keyspace).then(this.mapResult('receiveStats', keyspace))
+    })
+    this.dispatcher.on('receiveStats', ({context, result}) => {
+      this.landingpage.setStats(context, {...result})
+    })
     window.onpopstate = (e) => {
       return
       if (!e.state) return
@@ -368,19 +390,26 @@ export default class Model {
     return result => this.call(msg, {context, result})
   }
   render (root) {
+    if (root) this.root = root
+    if (!this.root) throw new Error('root not defined')
+    if (this.showLandingpage) {
+      return this.landingpage.render(this.root)
+    }
     console.log('model render')
     console.log('graph', this.graph)
     console.log('store', this.store)
     console.log('browser', this.browser)
-    return this.layout.render(root)
+    return this.layout.render(this.root)
   }
   replay () {
     // console.log('disable rest')
-    this.rest.disable()
+    this.rest('btc').disable()
+    this.rest('ltc').disable()
     console.log('replay')
     this.isReplaying = true
     this.dispatcher.replay()
     this.isReplaying = false
-    this.rest.enable()
+    this.rest('btc').enable()
+    this.rest('ltc').enable()
   }
 }

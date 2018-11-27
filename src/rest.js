@@ -1,4 +1,5 @@
 import {json} from 'd3-fetch'
+// import {json} from './mockup.js'
 
 export default class Rest {
   constructor (baseUrl, prefixLength) {
@@ -62,5 +63,8 @@ export default class Rest {
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(url)
+  }
+  stats (currency) {
+    return this.json(`${this.baseUrl}/statistics`)
   }
 }

@@ -68,7 +68,7 @@ module.exports = {
       },
       // the file-loader emits files.
       {
-        test: /\.(woff(2)?|ttf|eot|svg|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        test: /\.(woff(2)?|ttf|eot|svg|jpg|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         loader: 'file-loader'
       }
     ]

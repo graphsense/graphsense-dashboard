@@ -1,7 +1,9 @@
 import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
-import './style.css'
+import './style/Octarine-Bold/fonts.css'
+import './style/Octarine-Light/fonts.css'
+import './style/style.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
@@ -47,7 +49,9 @@ const dispatcher = dispatch(IS_DEV,
   'selectNeighbor',
   'excourseLoadDegree',
   'inputNotes',
-  'switchConfig'
+  'switchConfig',
+  'stats',
+  'receiveStats'
 )
 
 let debugHistory = [{type: 'clickSearchResult', context: null, data: [{id: '1Archive1n2C579dMsAu3iC6tWzuQJz8dN', type: 'address'}]}]
