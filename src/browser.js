@@ -61,10 +61,6 @@ export default class Browser extends Component {
   }
   setResultNode (object) {
     console.log('setResultNode', object)
-    let isTransaction = this.content[0] instanceof Transaction
-    let isNode = this.content[0] instanceof Address || this.content[0] instanceof Cluster
-    if (!isTransaction && !isNode) return
-    if (!this.loading.has(object.id)) return
 
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)

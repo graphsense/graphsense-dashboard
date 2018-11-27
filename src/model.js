@@ -70,13 +70,17 @@ export default class Model {
 
     this.dispatcher.on('search', (term) => {
       this.search.setSearchTerm(term, prefixLength)
-      if (this.search.needsResults(term, prefixLength)) {
+      if (this.search.needsResults(searchlimit, prefixLength)) {
         this.rest().search(term, searchlimit).then(this.mapResult('searchresult', term))
       }
     })
     this.dispatcher.on('clickSearchResult', ({id, type}) => {
       this.browser.loading.add(id)
-      this.showLandingpage = false
+      if(this.showLandingpage) {
+        this.showLandingpage = false
+        this.layout.shouldUpdate(true)
+      }
+      this.search.clear()
       this.rest().node({id, type}).then(this.mapResult('resultNode'))
     })
     this.dispatcher.on('resultNode', ({context, result}) => {

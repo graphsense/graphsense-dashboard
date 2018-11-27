@@ -2,13 +2,20 @@ import search from './search.html'
 import Component from '../component.js'
 import {addClass, removeClass} from '../template_utils.js'
 
+const empty = {addresses: [], transactions: []}
+
 export default class Search extends Component {
   constructor (dispatcher) {
     super()
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
-    this.result = {addresses: [], transactions: []}
+    this.result = empty
+  }
+  clear () {
+    this.result = empty
+    this.term = ''
+    this.shouldUpdate(true)
   }
   render (root) {
     if (root) this.root = root
@@ -76,6 +83,7 @@ export default class Search extends Component {
     el.appendChild(ul)
   }
   setResult (term, result) {
+    if (term !== this.term) return
     this.result = {...result}
     this.resultTerm = term
     this.shouldUpdate('result')

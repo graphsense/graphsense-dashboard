@@ -133,7 +133,8 @@
 
 .search-frame {
   width: 43ex;
-  @apply pr-1 white-shadow
+  position: relative;
+  @apply mr-1 white-shadow
 }
 
 .browser-search-input {
@@ -141,7 +142,13 @@
 }
 
 #browser-search-result {
-  @apply p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md
+  position: absolute;
+  z-index:200;
+  @apply w-full p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md
+}
+
+#browser-search-result li:hover {
+  @apply bg-gs-lighter
 }
 
 .browser-search-input:focus {
