@@ -3,7 +3,6 @@ import layout from './browser/layout.html'
 import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
 import Transaction from './browser/transaction.js'
-import Search from './browser/search.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
@@ -18,7 +17,6 @@ export default class Browser extends Component {
     this.loading = set()
     this.dispatcher = dispatcher
     this.content = []
-    this.setSearch()
   }
   destroyComponentsFrom (index) {
     this.content.forEach((content, i) => {
@@ -38,12 +36,6 @@ export default class Browser extends Component {
       return this.content[0].data
     }
     return null
-  }
-  setSearch () {
-    this.activeTab = 'search'
-    this.destroyComponentsFrom(0)
-    this.content = [ new Search(this.dispatcher, 0) ]
-    this.shouldUpdate(true)
   }
   setAddress (address) {
     this.activeTab = 'address'
@@ -67,22 +59,11 @@ export default class Browser extends Component {
     this.content = [ new Cluster(this.dispatcher, cluster, 0) ]
     this.shouldUpdate(true)
   }
-  setSearchresult (term, result) {
-    if (!(this.content[0] instanceof Search)) return
-    console.log('searchresult', term, result)
-    this.content[0].setResult(term, result)
-  }
-  setSearchTermAndNeedsResults (term, limit, prefixLength) {
-    if (!(this.content[0] instanceof Search)) return
-    this.content[0].setSearchTerm(term, prefixLength)
-    return this.content[0].needsResults(limit, prefixLength)
-  }
   setResultNode (object) {
     console.log('setResultNode', object)
-    let isSearch = this.content[0] instanceof Search
     let isTransaction = this.content[0] instanceof Transaction
     let isNode = this.content[0] instanceof Address || this.content[0] instanceof Cluster
-    if (!isSearch && !isTransaction && !isNode) return
+    if (!isTransaction && !isNode) return
     if (!this.loading.has(object.id)) return
 
     this.loading.remove(object.id)
@@ -151,10 +132,6 @@ export default class Browser extends Component {
     if (this.shouldUpdate() === true) {
       super.render()
       this.root.innerHTML = layout
-      this.root.querySelector('#browser-nav-search-button')
-        .addEventListener('click', () => {
-          this.dispatcher('initSearch')
-        })
       let data = this.root.querySelector('#browser-data')
       let c = 0
       this.content.forEach((comp) => {

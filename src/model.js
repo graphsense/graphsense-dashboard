@@ -1,4 +1,5 @@
 import Store from './store.js'
+import Search from './search/search.js'
 import Browser from './browser.js'
 import Rest from './rest.js'
 import Layout from './layout.js'
@@ -64,18 +65,18 @@ export default class Model {
       }
     }
     this.layout = new Layout(this.call, this.browser, this.graph, this.config)
-    this.landingpage = new Landingpage(this.call)
+    this.search = new Search(this.call)
+    this.landingpage = new Landingpage(this.call, this.search)
 
-    this.dispatcher.on('initSearch', () => {
-      this.browser.setSearch()
-    })
     this.dispatcher.on('search', (term) => {
-      if (this.browser.setSearchTermAndNeedsResults(term, searchlimit, prefixLength)) {
+      this.search.setSearchTerm(term, prefixLength)
+      if (this.search.needsResults(term, prefixLength)) {
         this.rest().search(term, searchlimit).then(this.mapResult('searchresult', term))
       }
     })
     this.dispatcher.on('clickSearchResult', ({id, type}) => {
       this.browser.loading.add(id)
+      this.showLandingpage = false
       this.rest().node({id, type}).then(this.mapResult('resultNode'))
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
@@ -98,7 +99,7 @@ export default class Model {
       this.browser.setTransaction(result)
     })
     this.dispatcher.on('searchresult', ({context, result}) => {
-      this.browser.setSearchresult(context, result)
+      this.search.setResult(context, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
       console.log('selectNode', type, nodeId)

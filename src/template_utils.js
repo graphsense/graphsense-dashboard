@@ -4,4 +4,16 @@ let replace = function (template, data) {
   }
   return template
 }
-export {replace}
+
+let addClass = function (el, cl) {
+  let classes = new Set(el.className.split(' '))
+  classes.add(cl)
+  el.className = [...classes].join(' ')
+}
+
+let removeClass = function (el, cl) {
+  let classes = new Set(el.className.split(' '))
+  classes.delete(cl)
+  el.className = [...classes].join(' ')
+}
+export {replace, addClass, removeClass}

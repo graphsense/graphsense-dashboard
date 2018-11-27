@@ -4,12 +4,14 @@ import Component from './component.js'
 import moment from 'moment'
 import numeral from 'numeral'
 import {replace} from './template_utils'
+import Search from './search/search.js'
 
 export default class Landingpage extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, search) {
     super()
     this.dispatcher = dispatcher
     this.stats = {}
+    this.search = search
   }
   setStats (keyspace, stats) {
     this.stats[keyspace] = stats
@@ -26,8 +28,13 @@ export default class Landingpage extends Component {
       this.dispatcher('stats', 'btc')
       this.dispatcher('stats', 'ltc')
       this.renderStats()
+      let searchRoot = this.root.querySelector('.splash .search')
+      this.search.shouldUpdate(true)
+      this.search.render(searchRoot)
     } else if (this.shouldUpdate() === 'stats') {
       this.renderStats()
+    } else {
+      this.search.render()
     }
     super.render()
     return this.root

@@ -127,9 +127,23 @@
   display:none;
 }
 
-.browser-search-input {
-  width: 35ex;
+.white-shadow {
+  box-shadow: 0 0 10px 0 rgba(255,255,255,0.5);
 }
+
+.search-frame {
+  width: 43ex;
+  @apply pr-1 white-shadow
+}
+
+.browser-search-input {
+  @apply w-full h-full p-2 pb-1 rounded-tl-sm
+}
+
+#browser-search-result {
+  @apply p-2 rounded-b-sm  bg-white font-mono flex-initial shadow
+}
+
 .browser-search-input:focus {
   outline: none;
 }

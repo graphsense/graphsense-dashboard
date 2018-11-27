@@ -1,15 +1,16 @@
 import search from './search.html'
-import BrowserComponent from './component.js'
+import Component from '../component.js'
+import {addClass, removeClass} from '../template_utils.js'
 
-export default class Search extends BrowserComponent {
-  constructor (dispatcher, index) {
-    super(dispatcher, index)
+export default class Search extends Component {
+  constructor (dispatcher) {
+    super()
+    this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
     this.result = {addresses: [], transactions: []}
   }
   render (root) {
-    console.log('search', this.shouldUpdate())
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return
@@ -49,11 +50,11 @@ export default class Search extends BrowserComponent {
     return null
   }
   renderResult () {
-    let ul = document.createElement('ol')
-    ul.className = 'list-reset'
     console.log('addresses', this.result)
     if (!this.result || !this.result.addresses) return
-    this.result.addresses.forEach(addr => {
+    let ul = document.createElement('ol')
+    ul.className = 'list-reset'
+    this.result.addresses.slice(0, 10).forEach(addr => {
       if (!addr.startsWith(this.term)) return
       let li = document.createElement('li')
       li.className = 'cursor-pointer'
@@ -64,6 +65,13 @@ export default class Search extends BrowserComponent {
       ul.appendChild(li)
     })
     let el = this.root.querySelector('#browser-search-result')
+    if (this.result.addresses.length > 0) {
+      addClass(el, 'block')
+      removeClass(el, 'hidden')
+    } else {
+      removeClass(el, 'block')
+      addClass(el, 'hidden')
+    }
     el.innerHTML = ''
     el.appendChild(ul)
   }
