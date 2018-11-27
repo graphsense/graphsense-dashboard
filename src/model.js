@@ -64,8 +64,8 @@ export default class Model {
           return ltc
       }
     }
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config)
     this.search = new Search(this.call)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
     this.landingpage = new Landingpage(this.call, this.search)
 
     this.dispatcher.on('search', (term) => {

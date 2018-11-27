@@ -141,7 +141,7 @@
 }
 
 #browser-search-result {
-  @apply p-2 rounded-b-sm  bg-white font-mono flex-initial shadow
+  @apply p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md
 }
 
 .browser-search-input:focus {

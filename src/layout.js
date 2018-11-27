@@ -3,12 +3,13 @@ import Component from './component.js'
 import {browserHeight} from './globals.js'
 
 export default class Layout extends Component {
-  constructor (dispatcher, browser, graph, config) {
+  constructor (dispatcher, browser, graph, config, search) {
     super()
     this.dispatcher = dispatcher
     this.browser = browser
     this.graph = graph
     this.config = config
+    this.search = search
   }
   setBrowser (browser) {
     this.browser = browser
@@ -28,19 +29,23 @@ export default class Layout extends Component {
     let browserRoot = null
     let graphRoot = null
     let configRoot = null
+    let searchRoot = null
     if (this.shouldUpdate()) {
       this.root.innerHTML = layout
       this.browser.shouldUpdate(true)
       this.graph.shouldUpdate(true)
       this.config.shouldUpdate(true)
+      this.search.shouldUpdate(true)
       browserRoot = this.root.querySelector('#layout-browser')
       graphRoot = this.root.querySelector('#layout-graph')
       configRoot = this.root.querySelector('#layout-config')
+      searchRoot = this.root.querySelector('#layout-search')
       browserRoot.style.height = browserHeight + 'px'
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
     this.config.render(configRoot)
+    this.search.render(searchRoot)
     super.render()
     return this.root
   }
