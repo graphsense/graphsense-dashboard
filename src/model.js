@@ -76,12 +76,15 @@ export default class Model {
     })
     this.dispatcher.on('clickSearchResult', ({id, type}) => {
       this.browser.loading.add(id)
-      if(this.showLandingpage) {
+      if (this.showLandingpage) {
         this.showLandingpage = false
         this.layout.shouldUpdate(true)
       }
       this.search.clear()
       this.rest().node({id, type}).then(this.mapResult('resultNode'))
+    })
+    this.dispatcher.on('blurSearch', () => {
+      this.search.clear()
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)

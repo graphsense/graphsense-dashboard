@@ -38,6 +38,10 @@ export default class Search extends Component {
       .addEventListener('input', (e) => {
         this.dispatcher('search', e.target.value)
       })
+    this.root.querySelector('input')
+      .addEventListener('blur', () => {
+        this.dispatcher('blurSearch')
+      })
     this.renderResult()
     return this.root
   }
