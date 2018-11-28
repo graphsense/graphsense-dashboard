@@ -349,29 +349,43 @@ export default class NodeGraph extends Component {
       .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
     for (let i = 0; i < this.layers.length; i++) {
       this.layers[i].nodes.each((c) => {
-        this.linkToLayerCluster(root, link, this.layers[i + 1], c.data.outgoing, c, true)
+        // stores links between neighbor clusters resulting from address links
+        let clusterLinksFromAddresses = set()
         c.nodes.each((a) => {
-          this.linkToLayer(root, link, this.layers[i + 1], a.data.outgoing, a, true)
+          this
+            .linkToLayer(root, link, this.layers[i + 1], a.data.outgoing, a, true)
+            .forEach(c => clusterLinksFromAddresses.add(c))
         })
+        this.linkToLayerCluster(root, link, this.layers[i + 1], c, clusterLinksFromAddresses)
       })
     }
   }
-  linkToLayer (root, link, layer, neighbors, source, isOutgoing) {
+  linkToLayer (root, link, layer, neighbors, sourceAddress, isOutgoing) {
+    let clusterLinks = []
     if (layer) {
       layer.nodes.each((cluster2) => {
+        let hasLinks = false
         cluster2.nodes.each((address2) => {
           if (!neighbors.has(address2.data.id)) return
-          let path = link({source: [source, isOutgoing], target: [address2, !isOutgoing]})
+          let path = link({source: [sourceAddress, isOutgoing], target: [address2, !isOutgoing]})
           root.append('path').classed('link', true).attr('d', path)
+          hasLinks = true
         })
+        if (hasLinks) {
+          clusterLinks.push(cluster2.data.id)
+        }
       })
     }
+    return clusterLinks
   }
-  linkToLayerCluster (root, link, layer, neighbors, source, isOutgoing) {
+  linkToLayerCluster (root, link, layer, source, clusterLinksFromAddresses) {
+    let neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((cluster2) => {
         if (!neighbors.has(cluster2.data.id)) return
-        let path = link({source: [source, isOutgoing], target: [cluster2, !isOutgoing]})
+        // skip cluster if contains in clusterLinksFromAddresses
+        if (clusterLinksFromAddresses.has(cluster2.data.id)) return
+        let path = link({source: [source, true], target: [cluster2, false]})
         root.append('path').classed('link', true).attr('d', path)
       })
     }
