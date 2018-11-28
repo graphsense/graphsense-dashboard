@@ -15,7 +15,10 @@ function _formatCurrency (n, c, d, t) {
 
 function formatBTC (satoshiValue, currencyCode) {
   let value = satoshiValue / 10000 / 10000
-  if (value > 0 && value < 0.0001) {
+  if (value === 0) {
+    return '0 ' + currencyCode.toUpperCase()
+  }
+  if (value < 0.0001) {
     return satoshiValue + ' s'
   }
   return _formatCurrency(value, 4) + ' ' + currencyCode.toUpperCase()
