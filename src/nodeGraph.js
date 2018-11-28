@@ -416,7 +416,6 @@ export default class NodeGraph extends Component {
     let sort = (node1, node2) => {
       return node1.id[1] - node2.id[1]
     }
-    console.log('sorted', this.addressNodes, this.addressNodes.values())// .sort(sort))
     this.linkShadows(addressRoot, link, this.addressNodes.values().sort(sort))
     this.linkShadows(clusterRoot, link, this.clusterNodes.values().sort(sort))
   }

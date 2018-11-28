@@ -21,7 +21,10 @@ export default class RMap {
     return this.map.has(k)
   }
   values () {
-    return this.map.values()// .filter(node => !node.removed)
+    return this.map.values().filter(node => !node.removed)
+  }
+  valuesWithRemoved () {
+    return this.map.values()
   }
   each (fun) {
     this.map.each(function (v) {
