@@ -111,6 +111,9 @@ class GraphNode extends Component {
       .attr('y', w / 2 + fontSize / 3)
     g.attr('transform', `translate(${x}, ${y})`)
   }
+  renderSelected () {
+    this.root.select('g').classed('selected', this.selected)
+  }
   translate (x, y) {
     this.x += x
     this.y += y
@@ -211,6 +214,7 @@ class GraphNode extends Component {
     return formatCurrency(value, this.currency)
   }
   select () {
+    if (this.selected) return
     this.selected = true
     if (this.shouldUpdate() === 'label') {
       this.shouldUpdate('select+label')
@@ -219,6 +223,7 @@ class GraphNode extends Component {
     }
   }
   deselect () {
+    if (!this.selected) return
     this.selected = false
     if (this.shouldUpdate() === 'label') {
       this.shouldUpdate('select+label')

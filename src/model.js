@@ -99,6 +99,7 @@ export default class Model {
         }
       }
       this.browser.setResultNode(a)
+      this.graph.selectNodeWhenLoaded([a.id, a.type])
       this.call('addNode', {id: a.id, type: a.type})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {

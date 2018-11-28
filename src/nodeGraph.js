@@ -64,6 +64,16 @@ export default class NodeGraph extends Component {
       }
       }
   }
+  selectNodeWhenLoaded ([id, type]) {
+    this.nextSelectedNode = {id, type}
+  }
+  selectNodeIfIsNextNode (node) {
+    if (!this.nextSelectedNode) return
+    if (this.nextSelectedNode.type !== node.data.type) return
+    if (this.nextSelectedNode.id !== node.data.id) return
+    this._selectNode(node)
+    this.nextSelectedNode = null
+  }
   setResultNode (object) {
     let nodes
     if (object.type === 'address') {
@@ -98,12 +108,15 @@ export default class NodeGraph extends Component {
     }
     let sel = nodes.get(nodeId)
     if (sel) {
-      sel.select()
-      if (this.selectedNode && this.selectedNode !== sel) {
-        this.selectedNode.deselect()
-      }
-      this.selectedNode = sel
+      this._selectNode(sel)
     }
+  }
+  _selectNode (sel) {
+    sel.select()
+    if (this.selectedNode && this.selectedNode !== sel) {
+      this.selectedNode.deselect()
+    }
+    this.selectedNode = sel
   }
   setResultClusterAddresses (id, addresses) {
     let cluster = this.clusterNodes.get(id)
@@ -153,6 +166,7 @@ export default class NodeGraph extends Component {
     if (object.type === 'address') {
       if (this.addressNodes.has([object.address, layerId])) return
       let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'])
+      this.selectNodeIfIsNextNode(addressNode)
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId])
@@ -163,6 +177,7 @@ export default class NodeGraph extends Component {
     } else if (object.type === 'cluster') {
       if (this.clusterNodes.has([object.cluster, layerId])) return
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'])
+      this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')
     }

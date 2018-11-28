@@ -40,6 +40,7 @@ export default class AddressNode extends GraphNode {
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
       this.coloring()
+      this.renderSelected()
     } else {
       if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
         let label = this.root.select('g.label')
@@ -47,7 +48,7 @@ export default class AddressNode extends GraphNode {
         this.coloring()
       }
       if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
-        this.root.select('g').classed('selected', this.selected)
+        this.renderSelected()
       }
     }
     super.render()
