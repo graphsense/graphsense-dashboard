@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class NeighborsTable extends Table {
-  constructor (dispatcher, index, total, id, type, isOutgoing, currency) {
-    super(dispatcher, index, total, currency)
+  constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace) {
+    super(dispatcher, index, total, currency, keyspace)
     this.isOutgoing = isOutgoing
     this.columns = [
       { name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,

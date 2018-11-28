@@ -3,17 +3,25 @@ import Component from '../component.js'
 import {addClass, removeClass} from '../template_utils.js'
 
 const empty = {addresses: [], transactions: []}
+const numShowResults = 10
 
 export default class Search extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, keyspaces) {
     super()
+    this.keyspaces = keyspaces
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
-    this.result = empty
+    this.clearResults()
+  }
+  clearResults () {
+    this.result = {}
+    for (let keyspace in this.keyspaces) {
+      this.result[keyspace] = empty
+    }
   }
   clear () {
-    this.result = empty
+    this.clearResults()
     this.term = ''
     this.shouldUpdate(true)
   }
@@ -50,12 +58,11 @@ export default class Search extends Component {
     this.term = term
     this.shouldUpdate('result')
     if (this.term.length < prefixLength) {
-      this.result.addresses = []
-      this.result.transactions = []
+      this.clearResults()
     }
   }
-  needsResults (limit, prefixLength) {
-    let len = this.result.addresses.length
+  needsResults (keyspace, limit, prefixLength) {
+    let len = this.result[keyspace].addresses.length
     return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
@@ -63,33 +70,48 @@ export default class Search extends Component {
   }
   renderResult () {
     console.log('addresses', this.result)
-    if (!this.result || !this.result.addresses) return
-    let ul = document.createElement('ol')
-    ul.className = 'list-reset'
-    this.result.addresses.slice(0, 10).forEach(addr => {
-      if (!addr.startsWith(this.term)) return
-      let li = document.createElement('li')
-      li.className = 'cursor-pointer'
-      li.appendChild(document.createTextNode(addr))
-      li.addEventListener('click', () => {
-        this.dispatcher('clickSearchResult', {id: addr, type: 'address'})
-      })
-      ul.appendChild(li)
-    })
     let el = this.root.querySelector('#browser-search-result')
-    if (this.result.addresses.length > 0) {
+    el.innerHTML = ''
+
+    let visible = false
+    for (let keyspace in this.keyspaces) {
+      visible = visible ||
+        this.result[keyspace].addresses.length > 0 ||
+        this.result[keyspace].transactions.length > 0
+      let ul = document.createElement('ol')
+      ul.className = 'list-reset'
+      let count = 0
+      this.result[keyspace].addresses.forEach(addr => {
+        if (!addr.startsWith(this.term)) return
+        if (count > numShowResults) return
+        count++
+        let li = document.createElement('li')
+        li.className = 'cursor-pointer'
+        li.appendChild(document.createTextNode(addr))
+        li.addEventListener('click', () => {
+          this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
+        })
+        ul.appendChild(li)
+      })
+      // if no results to render don't draw the title and the list at all
+      if (count === 0) continue
+      let title = document.createElement('div')
+      title.className = 'font-bold py-1'
+      title.appendChild(document.createTextNode(this.keyspaces[keyspace]))
+      el.appendChild(title)
+      el.appendChild(ul)
+    }
+    if (visible) {
       addClass(el, 'block')
       removeClass(el, 'hidden')
     } else {
       removeClass(el, 'block')
       addClass(el, 'hidden')
     }
-    el.innerHTML = ''
-    el.appendChild(ul)
   }
   setResult (term, result) {
     if (term !== this.term) return
-    this.result = {...result}
+    this.result[result.keyspace] = {...result}
     this.resultTerm = term
     this.shouldUpdate('result')
   }

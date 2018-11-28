@@ -13,8 +13,8 @@ export default class Landingpage extends Component {
     this.stats = {}
     this.search = search
   }
-  setStats (keyspace, stats) {
-    this.stats[keyspace] = stats
+  setStats (stats) {
+    this.stats[stats.keyspace] = stats
     this.shouldUpdate('stats')
   }
   render (root) {

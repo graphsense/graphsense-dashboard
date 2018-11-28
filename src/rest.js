@@ -2,10 +2,22 @@ import {json} from 'd3-fetch'
 // import {json} from './mockup.js'
 
 export default class Rest {
-  constructor (baseUrl, prefixLength) {
-    this.baseUrl = baseUrl
+  constructor (baseUrl, keyspace, prefixLength) {
+    this.keyspace = keyspace
+    this.baseUrl = baseUrl + '/' + keyspace
     this.prefixLength = prefixLength
-    this.json = json
+    this.json = this.remoteJson
+  }
+  remoteJson (url, field) {
+    return json(url).then(result => {
+      if (field) {
+        // result is an array
+        result[field].forEach(item => item.keyspace = this.keyspace)
+      } else {
+        result.keyspace = this.keyspace
+      }
+      return Promise.resolve(result)
+    })
   }
   disable () {
     this.json = (url) => {
@@ -13,7 +25,7 @@ export default class Rest {
     }
   }
   enable () {
-    this.json = json
+    this.json = this.remoteJson
   }
   search (str, limit) {
     if (str.length < this.prefixLength) {
@@ -33,25 +45,25 @@ export default class Rest {
       this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(url)
+    return this.json(url, 'transactions')
   }
   addresses (request) {
     let url =
       this.baseUrl + '/cluster/' + request.params + '/addresses?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(url)
+    return this.json(url, 'addresses')
   }
   tags ({id, type}) {
     let url = this.baseUrl + '/' + type + '/' + id + '/tags'
-    return this.json(url)
+    return this.json(url, 'tags')
   }
   egonet (type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
-    return this.json(`${this.baseUrl}/${type}/${id[0]}/egonet?limit=${limit}&direction=${dir}`)
+    return this.json(`${this.baseUrl}/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
   }
   clusterAddresses (id, limit) {
-    return this.json(`${this.baseUrl}/cluster/${id}/addresses?pagesize=${limit}`)
+    return this.json(`${this.baseUrl}/cluster/${id}/addresses?pagesize=${limit}`, 'addresses')
   }
   transaction (txHash) {
     return this.json(`${this.baseUrl}/tx/${txHash}`)
@@ -62,7 +74,7 @@ export default class Rest {
       `${this.baseUrl}/${type}/${id}/neighbors?direction=${dir}&` +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
-    return this.json(url)
+    return this.json(url, 'neighbors')
   }
   stats (currency) {
     return this.json(`${this.baseUrl}/statistics`)

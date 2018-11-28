@@ -19,7 +19,12 @@ export default class BrowserComponent extends Component {
       li.className = 'cursor-pointer py-1'
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
-        this.dispatcher(optionData.message, {id: this.data.id, type: this.data.type, index: this.index})
+        this.dispatcher(optionData.message,
+          { id: this.data.id,
+            type: this.data.type,
+            keyspace: this.data.keyspace,
+            index: this.index
+          })
       })
       ul.appendChild(li)
     })

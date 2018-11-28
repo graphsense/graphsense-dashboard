@@ -70,7 +70,7 @@ class GraphNode extends Component {
         } else {
           filters = this.incomingTxsFilters
         }
-        this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.type, limit: filters.get('limit')})
+        this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.data.type, limit: filters.get('limit'), keyspace: this.data.keyspace})
       })
     g.append('path')
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)

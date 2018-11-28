@@ -53,8 +53,8 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(0)
     this.content = [
       new Transaction(this.dispatcher, tx, 0, this.currency),
-      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1, this.currency),
-      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1, this.currency)
+      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1, this.currency, tx.keyspace),
+      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1, this.currency, tx.keyspace)
     ]
     this.shouldUpdate(true)
   }
@@ -86,20 +86,22 @@ export default class Browser extends Component {
     if (request.index !== 0 && !request.index) return
     let comp = this.content[request.index]
     if (!(comp instanceof Address)) return
+    let keyspace = comp.data.keyspace
     if (this.content[request.index + 1] instanceof TransactionsTable) return
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency))
+    this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
     this.shouldUpdate(true)
   }
   initAddressesTable (request) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     if (!(last instanceof Cluster)) return
+    let keyspace = last.data.keyspace
     if (this.content[request.index + 1] instanceof AddressesTable) return
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency))
+    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace))
     this.shouldUpdate(true)
   }
   initTagsTable (request) {
@@ -108,8 +110,8 @@ export default class Browser extends Component {
     if (!(last instanceof Cluster) && !(last instanceof Address)) return
     if (this.content[request.index + 1] instanceof TagsTable) return
     this.destroyComponentsFrom(request.index + 1)
-    console.log('last.data.tags', last)
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type))
+    let keyspace = last.data.keyspace
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, keyspace))
 
     this.shouldUpdate(true)
   }
@@ -121,9 +123,10 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing
     ) return
 
+    let keyspace = last.data.keyspace
     let total = isOutgoing ? last.data.out_degree : last.data.in_degree
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency))
+    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
     this.shouldUpdate(true)
   }
   render (root) {

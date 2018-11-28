@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class TransactionAddressesTable extends Table {
-  constructor (dispatcher, addresses, label, index, currency) {
-    super(dispatcher, index, addresses.length, currency)
+  constructor (dispatcher, addresses, label, index, currency, keyspace) {
+    super(dispatcher, index, addresses.length, currency, keyspace)
     this.columns = [
       { name: label,
         data: 'address'

@@ -88,7 +88,7 @@ export default class ClusterNode extends GraphNode {
     let button = root.append('g')
       .classed('addressExpand', true)
       .on('click', (e) => {
-        this.dispatcher('loadClusterAddresses', {id: this.id, limit: this.addressFilters.get('limit')})
+        this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
       })
     let h = this.getHeight()
     let w = this.getWidth()

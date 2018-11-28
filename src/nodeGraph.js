@@ -51,16 +51,17 @@ export default class NodeGraph extends Component {
       }
     }
     this.colors =
-      { 'cluster': {
-        categories: this.colorGen(this.colorMapCategories, 'cluster'),
-        tags: this.colorGen(this.colorMapTags, 'cluster'),
-        range: (v) => defaultColor['cluster']
-      },
-      'address': {
-        categories: this.colorGen(this.colorMapCategories, 'address'),
-        tags: this.colorGen(this.colorMapTags, 'address'),
-        range: (v) => defaultColor['address']
-      }
+      {
+        'cluster': {
+          categories: this.colorGen(this.colorMapCategories, 'cluster'),
+          tags: this.colorGen(this.colorMapTags, 'cluster'),
+          range: (v) => defaultColor['cluster']
+        },
+        'address': {
+          categories: this.colorGen(this.colorMapCategories, 'address'),
+          tags: this.colorGen(this.colorMapTags, 'address'),
+          range: (v) => defaultColor['address']
+        }
       }
   }
   selectNodeWhenLoaded ([id, type]) {

@@ -8,8 +8,9 @@ import BrowserComponent from './component.js'
 const rowHeight = 30
 
 export default class Table extends BrowserComponent {
-  constructor (dispatcher, index, total, currency) {
+  constructor (dispatcher, index, total, currency, keyspace) {
     super(dispatcher, index, currency)
+    this.keyspace = keyspace
     this.nextPage = null
     this.total = total
     this.data = []
@@ -91,6 +92,7 @@ export default class Table extends BrowserComponent {
     }
     let r =
       {
+        keyspace: table.keyspace,
         params: table.loadParams,
         nextPage: table.nextPage,
         request: request,
