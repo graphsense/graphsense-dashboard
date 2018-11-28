@@ -8,8 +8,8 @@ import BrowserComponent from './component.js'
 const rowHeight = 30
 
 export default class Table extends BrowserComponent {
-  constructor (dispatcher, index, total) {
-    super(dispatcher, index)
+  constructor (dispatcher, index, total, currency) {
+    super(dispatcher, index, currency)
     this.nextPage = null
     this.total = total
     this.data = []

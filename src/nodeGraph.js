@@ -26,8 +26,9 @@ const defaultColor = {
 }
 
 export default class NodeGraph extends Component {
-  constructor (dispatcher, labelType) {
+  constructor (dispatcher, labelType, currency) {
     super()
+    this.currency = currency
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.clusterNodes = map()
@@ -42,7 +43,6 @@ export default class NodeGraph extends Component {
         if (!k) return defaultColor[type]
         k = 'k' + k
         let chroma = map.get(k)
-        console.log('getColor', map, type, k, chroma)
         if (chroma === undefined) {
           chroma = map.size() * chromaStep
           map.set(k, chroma)
@@ -72,6 +72,10 @@ export default class NodeGraph extends Component {
     if (this.nextSelectedNode.id !== node.data.id) return
     this._selectNode(node)
     this.nextSelectedNode = null
+  }
+  setCurrency (currency) {
+    this.addressNodes.each(node => node.setCurrency(currency))
+    this.clusterNodes.each(node => node.setCurrency(currency))
   }
   setResultNode (object) {
     let nodes
@@ -121,7 +125,7 @@ export default class NodeGraph extends Component {
     let cluster = this.clusterNodes.get(id)
     addresses.forEach((address) => {
       if (this.addressNodes.has([address.id, id[1]])) return
-      let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'])
+      let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       cluster.add(addressNode)
@@ -164,18 +168,18 @@ export default class NodeGraph extends Component {
     let node
     if (object.type === 'address') {
       if (this.addressNodes.has([object.address, layerId])) return
-      let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'])
+      let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
       this.selectNodeIfIsNextNode(addressNode)
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId])
       if (!node) {
-        node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'])
+        node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       }
       node.add(addressNode)
     } else if (object.type === 'cluster') {
       if (this.clusterNodes.has([object.cluster, layerId])) return
-      node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'])
+      node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')

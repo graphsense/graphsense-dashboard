@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class AddressesTable extends Table {
-  constructor (dispatcher, index, total, clusterId) {
-    super(dispatcher, index, total)
+  constructor (dispatcher, index, total, clusterId, currency) {
+    super(dispatcher, index, total, currency)
     this.clusterId = clusterId
     this.columns = [
       { name: 'Address',
@@ -17,15 +17,15 @@ export default class AddressesTable extends Table {
         render: this.formatTimestamp
       },
       { name: 'Balance',
-        data: 'balance.satoshi',
+        data: 'balance',
         render: (value) => {
-          return this.formatCurrency(value)
+          return this.formatCurrency(value[this.currency])
         }
       },
       { name: 'Received',
-        data: 'totalReceived.satoshi',
+        data: 'totalReceived',
         render: (value) => {
-          return this.formatCurrency(value)
+          return this.formatCurrency(value[this.currency])
         }
       }
     ]

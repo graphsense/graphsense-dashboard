@@ -29,6 +29,8 @@ let defaultLabelType =
         addressLabel: 'id'
       }
 
+const defaultCurrency = 'satoshi'
+
 export default class Model {
   constructor (dispatcher) {
     this.dispatcher = dispatcher
@@ -49,9 +51,9 @@ export default class Model {
     }
 
     // VIEWS
-    this.browser = new Browser(this.call)
-    this.graph = new NodeGraph(this.call, defaultLabelType)
-    this.config = new Config(this.call, defaultLabelType)
+    this.browser = new Browser(this.call, defaultCurrency)
+    this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency)
+    this.config = new Config(this.call, defaultLabelType, defaultCurrency)
     let btc = new Rest(baseUrl + '/btc', prefixLength)
     let ltc = new Rest(baseUrl + '/ltc', prefixLength)
     this.keyspace = 'btc'
@@ -357,6 +359,11 @@ export default class Model {
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
       this.graph.setAddressLabel(labelType)
+    })
+    this.dispatcher.on('changeCurrency', (currency) => {
+      this.browser.setCurrency(currency)
+      this.graph.setCurrency(currency)
+      this.config.setCurrency(currency)
     })
     this.dispatcher.on('removeNode', ([nodeType, nodeId]) => {
       this.graph.remove(nodeType, nodeId)

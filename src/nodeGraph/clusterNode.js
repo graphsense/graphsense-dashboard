@@ -6,8 +6,8 @@ const noAddressesLabelHeight = 16
 const paddingBottom = 7
 
 export default class ClusterNode extends GraphNode {
-  constructor (dispatcher, cluster, layerId, labelType, colors) {
-    super(dispatcher, labelType, cluster, layerId, colors)
+  constructor (dispatcher, cluster, layerId, labelType, colors, currency) {
+    super(dispatcher, labelType, cluster, layerId, colors, currency)
     this.nodes = map()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)

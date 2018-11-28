@@ -4,8 +4,8 @@ import {replace} from '../template_utils'
 import BrowserComponent from './component.js'
 
 export default class Address extends BrowserComponent {
-  constructor (dispatcher, data, index) {
-    super(dispatcher, index)
+  constructor (dispatcher, data, index, currency) {
+    super(dispatcher, index, currency)
     this.data = data
     this.template = address
     this.options =
@@ -28,8 +28,8 @@ export default class Address extends BrowserComponent {
       firstUsage: this.formatTimestamp(first),
       lastUsage: this.formatTimestamp(last),
       activityPeriod: moment.duration(duration).humanize(),
-      totalReceived: this.formatCurrency(this.data.totalReceived.satoshi),
-      finalBalance: this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
+      totalReceived: this.formatCurrency(this.data.totalReceived[this.currency]),
+      finalBalance: this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency])
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})
     return this.root

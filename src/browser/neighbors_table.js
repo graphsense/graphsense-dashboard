@@ -1,23 +1,24 @@
 import Table from './table.js'
 
 export default class NeighborsTable extends Table {
-  constructor (dispatcher, index, total, id, type, isOutgoing) {
-    super(dispatcher, index, total)
+  constructor (dispatcher, index, total, id, type, isOutgoing, currency) {
+    super(dispatcher, index, total, currency)
     this.isOutgoing = isOutgoing
     this.columns = [
       { name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,
         data: 'id'
       },
       { name: 'Balance',
-        data: 'balance.satoshi',
+        data: 'balance',
         render: (value) => {
-          return this.formatCurrency(value)
+          return this.formatCurrency(value[this.currency])
         }
       },
       { name: 'Received',
-        data: 'totalReceived.satoshi',
+        data: 'received',
         render: (value) => {
-          return this.formatCurrency(value)
+          console.log('value', value)
+          return this.formatCurrency(value[this.currency])
         }
       },
       { name: 'No. Tx',

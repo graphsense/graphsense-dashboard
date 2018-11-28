@@ -5,11 +5,11 @@ import moment from 'moment'
 import Component from '../component.js'
 
 export default class BrowserComponent extends Component {
-  constructor (dispatcher, index) {
+  constructor (dispatcher, index, currency) {
     super()
     this.index = index
     this.dispatcher = dispatcher
-    this.currency = 'btc'
+    this.currency = currency
   }
   renderOptions () {
     let ul = document.createElement('ul')
@@ -32,5 +32,9 @@ export default class BrowserComponent extends Component {
   }
   formatTimestamp (timestamp) {
     return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
+  }
+  setCurrency (currency) {
+    this.currency = currency
+    this.shouldUpdate(true)
   }
 }

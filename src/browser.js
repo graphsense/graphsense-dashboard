@@ -12,8 +12,9 @@ import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
 
 export default class Browser extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, currency) {
     super()
+    this.currency = currency
     this.loading = set()
     this.dispatcher = dispatcher
     this.content = []
@@ -37,26 +38,30 @@ export default class Browser extends Component {
     }
     return null
   }
+  setCurrency (currency) {
+    this.currency = currency
+    this.content.forEach(comp => comp.setCurrency(currency))
+  }
   setAddress (address) {
     this.activeTab = 'address'
     this.destroyComponentsFrom(0)
-    this.content = [ new Address(this.dispatcher, address, 0) ]
+    this.content = [ new Address(this.dispatcher, address, 0, this.currency) ]
     this.shouldUpdate(true)
   }
   setTransaction (tx) {
     this.activeTab = 'transactions'
     this.destroyComponentsFrom(0)
     this.content = [
-      new Transaction(this.dispatcher, tx, 0),
-      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1),
-      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1)
+      new Transaction(this.dispatcher, tx, 0, this.currency),
+      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1, this.currency),
+      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1, this.currency)
     ]
     this.shouldUpdate(true)
   }
   setCluster (cluster) {
     this.activeTab = 'address'
     this.destroyComponentsFrom(0)
-    this.content = [ new Cluster(this.dispatcher, cluster, 0) ]
+    this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
     this.shouldUpdate(true)
   }
   setResultNode (object) {
@@ -65,9 +70,9 @@ export default class Browser extends Component {
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
-      this.content[0] = new Address(this.dispatcher, object, 0)
+      this.content[0] = new Address(this.dispatcher, object, 0, this.currency)
     } else if (object.type === 'cluster') {
-      this.content[0] = new Cluster(this.dispatcher, object, 0)
+      this.content[0] = new Cluster(this.dispatcher, object, 0, this.currency)
     }
     this.shouldUpdate(true)
   }
@@ -84,7 +89,7 @@ export default class Browser extends Component {
     if (this.content[request.index + 1] instanceof TransactionsTable) return
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type))
+    this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency))
     this.shouldUpdate(true)
   }
   initAddressesTable (request) {
@@ -94,7 +99,7 @@ export default class Browser extends Component {
     if (this.content[request.index + 1] instanceof AddressesTable) return
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id))
+    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency))
     this.shouldUpdate(true)
   }
   initTagsTable (request) {
@@ -118,7 +123,7 @@ export default class Browser extends Component {
 
     let total = isOutgoing ? last.data.out_degree : last.data.in_degree
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing))
+    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency))
     this.shouldUpdate(true)
   }
   render (root) {

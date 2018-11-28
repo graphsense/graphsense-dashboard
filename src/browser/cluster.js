@@ -2,8 +2,8 @@ import cluster from './cluster.html'
 import Address from './address.js'
 
 export default class Cluster extends Address {
-  constructor (dispatcher, data, index) {
-    super(dispatcher, data, index)
+  constructor (dispatcher, data, index, currency) {
+    super(dispatcher, data, index, currency)
     this.template = cluster
     this.options =
       [

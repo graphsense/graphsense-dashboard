@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class TransactionsTable extends Table {
-  constructor (dispatcher, index, total, nodeId, nodeType) {
-    super(dispatcher, index, total)
+  constructor (dispatcher, index, total, nodeId, nodeType, currency) {
+    super(dispatcher, index, total, currency)
     this.nodeId = nodeId
     this.nodeType = nodeType
     this.columns = [
@@ -10,9 +10,9 @@ export default class TransactionsTable extends Table {
         data: 'txHash'
       },
       { name: 'Value',
-        data: 'value.satoshi',
+        data: 'value',
         render: (value) => {
-          return this.formatCurrency(value)
+          return this.formatCurrency(value[this.currency])
         }
       },
       { name: 'Height',

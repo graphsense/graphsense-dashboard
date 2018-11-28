@@ -12,7 +12,7 @@ const removeHandleWidth = 15
 const removeHandlePadding = 5
 
 class GraphNode extends Component {
-  constructor (dispatcher, labelType, data, layerId, colors) {
+  constructor (dispatcher, labelType, data, layerId, colors, currency) {
     super()
     this.data = data
     this.id = [this.data.id, layerId]
@@ -20,7 +20,7 @@ class GraphNode extends Component {
     this.dispatcher = dispatcher
     this.labelHeight = 25
     this.numLetters = 8
-    this.currency = 'btc'
+    this.currency = currency
     this.outgoingTxsFilters = map()
     this.incomingTxsFilters = map()
     this.outgoingTxsFilters.set('limit', 10)
@@ -35,11 +35,7 @@ class GraphNode extends Component {
     this.removed = flag
   }
   renderLabel (root) {
-    if (!root) {
-      root = this.root.select('g.label')
-    } else {
-      root.classed('label', true)
-    }
+    if (this.data.mockup) return
     let label = this.getLabel()
     let size
     if (label.length > this.numLetters) {
@@ -172,7 +168,7 @@ class GraphNode extends Component {
           return this.data.id.substring(0, 8)
         }
       case 'balance':
-        return this.formatCurrency(this.data.totalReceived.satoshi - this.data.totalSpent.satoshi)
+        return this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency])
       case 'tag':
         return this.getTag()
       case 'actorCategory':
@@ -202,7 +198,6 @@ class GraphNode extends Component {
         this.color = this.colors.categories(this.getActorCategory(this.data) + '')
         break
     }
-    console.log('color', this.color)
     this.root
       .select('.rect')
       .style('color', this.color)
@@ -237,6 +232,10 @@ class GraphNode extends Component {
     } else if (!this.shouldUpdate()) {
       this.shouldUpdate('label')
     }
+  }
+  setCurrency (currency) {
+    this.currency = currency
+    this.shouldUpdate('label')
   }
 }
 

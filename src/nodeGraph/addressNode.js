@@ -2,8 +2,8 @@ import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
-  constructor (dispatcher, address, layerId, labelType, colors) {
-    super(dispatcher, labelType, address, layerId, colors)
+  constructor (dispatcher, address, layerId, labelType, colors, currency) {
+    super(dispatcher, labelType, address, layerId, colors, currency)
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
