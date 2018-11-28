@@ -40,7 +40,8 @@ export default class Search extends Component {
       })
     this.root.querySelector('input')
       .addEventListener('blur', () => {
-        this.dispatcher('blurSearch')
+        // wrap in timeout to let possible clicksearchresult event happen
+        setTimeout(() => this.dispatcher('blurSearch'), 200)
       })
     this.renderResult()
     return this.root
