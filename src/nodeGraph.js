@@ -168,7 +168,7 @@ export default class NodeGraph extends Component {
     }
     let node
     if (object.type === 'address') {
-      if (this.addressNodes.has([object.address, layerId])) return
+      if (this.addressNodes.has([object.id, layerId])) return
       let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
       this.selectNodeIfIsNextNode(addressNode)
       console.log('new AddressNode', addressNode)
@@ -179,7 +179,7 @@ export default class NodeGraph extends Component {
       }
       node.add(addressNode)
     } else if (object.type === 'cluster') {
-      if (this.clusterNodes.has([object.cluster, layerId])) return
+      if (this.clusterNodes.has([object.id, layerId])) return
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       this.selectNodeIfIsNextNode(node)
     } else {
