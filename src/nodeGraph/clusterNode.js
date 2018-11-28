@@ -1,5 +1,4 @@
 import {map} from 'd3-collection'
-import RMap from '../rmap.js'
 import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
 const gap = padding
@@ -9,7 +8,7 @@ const paddingBottom = 7
 export default class ClusterNode extends GraphNode {
   constructor (dispatcher, cluster, layerId, labelType, colors) {
     super(dispatcher, labelType, cluster, layerId, colors)
-    this.nodes = new RMap()
+    this.nodes = map()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)
     this.expandLimit = 10

@@ -1,5 +1,5 @@
 import Component from '../component.js'
-import RMap from '../rmap.js'
+import {map} from 'd3-collection'
 
 const margin = 20
 
@@ -7,7 +7,7 @@ export default class Layer extends Component {
   constructor (id) {
     super()
     this.id = id
-    this.nodes = new RMap()
+    this.nodes = map()
   }
   add (node) {
     this.nodes.set(node.id, node)

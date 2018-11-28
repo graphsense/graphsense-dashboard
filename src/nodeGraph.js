@@ -7,7 +7,6 @@ import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
-import RMap from './rmap.js'
 
 const margin = 300
 const x = -300
@@ -31,8 +30,8 @@ export default class NodeGraph extends Component {
     super()
     this.dispatcher = dispatcher
     this.labelType = labelType
-    this.clusterNodes = new RMap()
-    this.addressNodes = new RMap()
+    this.clusterNodes = map()
+    this.addressNodes = map()
     this.adding = set()
     this.layers = []
     this.viewBox = {x, y, w, h}
@@ -194,11 +193,22 @@ export default class NodeGraph extends Component {
       nodes = this.clusterNodes
     }
     let node = nodes.get(nodeId)
-    node.setRemoved(true)
+    nodes.remove(nodeId)
+    if (this.selectedNode === node) {
+      this.selectedNode = null
+    }
+    let layer = this.layers.filter(l => l.id === nodeId[1])[0]
+    console.log('remove layer', nodeId, layer)
     if (nodeType === 'address') {
-      let mockup = this.clusterNodes.get('mockup' + nodeId)
-      if (mockup) {
-        mockup.setRemoved(true)
+      this.clusterNodes.remove('mockup' + nodeId)
+      layer.nodes.each(cluster => {
+        cluster.nodes.remove(nodeId)
+      })
+    } else if (nodeType === 'cluster') {
+      node.nodes.each(node => this.addressNodes.remove(node.id))
+      layer.nodes.remove(nodeId)
+      if (layer.nodes.size() === 0) {
+        this.layers = this.layers.filter(l => l !== layer)
       }
     }
     this.shouldUpdate('layers')

@@ -40,4 +40,7 @@ export default class RMap {
     })
     return c
   }
+  delete (id) {
+    return this.map.delete(id)
+  }
 }
