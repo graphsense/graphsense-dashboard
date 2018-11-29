@@ -338,11 +338,11 @@ export default class Model {
       }
     })
     this.dispatcher.on('loadEgonet', ({id, type, keyspace, isOutgoing, limit}) => {
-      this.rest(keyspace).egonet(type, id[0], isOutgoing, limit).then(this.mapResult('resultEgonet', {id, type, isOutgoing}))
+      this.rest(keyspace).neighbors(id[0], type, isOutgoing, limit).then(this.mapResult('resultEgonet', {id, type, isOutgoing}))
     })
     this.dispatcher.on('resultEgonet', ({context, result}) => {
       let a = this.store.get(context.type, context.id[0])
-      result.nodes.forEach((node) => {
+      result.neighbors.forEach((node) => {
         if (node.id === context.id[0] || node.nodeType !== context.type) return
         let anchor = {
           nodeId: context.id,
