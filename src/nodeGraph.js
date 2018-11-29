@@ -1,5 +1,5 @@
 import {create, event} from 'd3-selection'
-import {scalePow, scaleLog} from 'd3-scale'
+import {scalePow} from 'd3-scale'
 import {set, map} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
@@ -8,6 +8,7 @@ import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
+import {formatCurrency} from './utils'
 
 const margin = 300
 const x = -300
@@ -29,11 +30,12 @@ const defaultColor = {
 const transactionsPixelRange = [1, 7]
 
 export default class NodeGraph extends Component {
-  constructor (dispatcher, labelType, currency) {
+  constructor (dispatcher, labelType, currency, txLabelType) {
     super()
     this.currency = currency
     this.dispatcher = dispatcher
     this.labelType = labelType
+    this.txLabelType = txLabelType
     this.clusterNodes = map()
     this.addressNodes = map()
     this.adding = set()
@@ -67,9 +69,7 @@ export default class NodeGraph extends Component {
         }
       }
     this.scaleTransactions = scalePow().range(transactionsPixelRange)
-  }
-  setNoTransactionsDomain (domain) {
-    this.scaleTransactions.domain(domain)
+    this.scaleValue = scalePow().range(transactionsPixelRange)
   }
   selectNodeWhenLoaded ([id, type]) {
     this.nextSelectedNode = {id, type}
@@ -82,9 +82,17 @@ export default class NodeGraph extends Component {
     this._selectNode(node)
     this.nextSelectedNode = null
   }
+  setTxLabel (type) {
+    this.txLabelType = type
+    this.shouldUpdate('links')
+  }
   setCurrency (currency) {
+    this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
     this.clusterNodes.each(node => node.setCurrency(currency))
+    if (this.txLabelType === 'estimatedValue') {
+      this.shouldUpdate('links')
+    }
   }
   setClusterLabel (labelType) {
     this.labelType['clusterLabel'] = labelType
@@ -374,25 +382,36 @@ export default class NodeGraph extends Component {
     }
   }
   renderLinks (root) {
-    if (!this.shouldUpdate()) return
+    if (this.shouldUpdate() !== true && this.shouldUpdate() !== 'layers' && this.shouldUpdate() !== 'links') return
     root.node().innerHTML = ''
     const link = linkHorizontal()
       .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
       .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
+
     for (let i = 0; i < this.layers.length; i++) {
+      // prepare the domain and links
+      let domain = [1 / 0, 0]
+      let clusterLinksFromAddresses = {}
       this.layers[i].nodes.each((c) => {
         // stores links between neighbor clusters resulting from address links
-        let clusterLinksFromAddresses = set()
+        clusterLinksFromAddresses[c.data.id] = set()
         c.nodes.each((a) => {
-          this
-            .linkToLayer(root, link, this.layers[i + 1], a.data.outgoing, a, true)
-            .forEach(c => clusterLinksFromAddresses.add(c))
+          this.prepareLinks(domain, this.layers[i + 1], a)
+            .forEach(cl => clusterLinksFromAddresses[c.data.id].add(cl))
         })
-        this.linkToLayerCluster(root, link, this.layers[i + 1], c, clusterLinksFromAddresses)
+        this.prepareClusterLinks(domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
+      })
+      // render links
+      this.layers[i].nodes.each((c) => {
+        c.nodes.each((a) => {
+          this.linkToLayer(root, link, domain, this.layers[i + 1], a)
+        })
+        this.linkToLayerCluster(root, link, domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
       })
     }
   }
-  linkToLayer (root, link, layer, neighbors, sourceAddress, isOutgoing) {
+  prepareLinks (domain, layer, address) {
+    let neighbors = address.data.outgoing
     let clusterLinks = []
     if (layer) {
       layer.nodes.each((cluster2) => {
@@ -400,7 +419,7 @@ export default class NodeGraph extends Component {
         cluster2.nodes.each((address2) => {
           let ntx = neighbors.get(address2.data.id)
           if (ntx === undefined) return
-          this.renderLink(root, link, sourceAddress, address2, ntx)
+          this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
           hasLinks = true
         })
         if (hasLinks) {
@@ -410,7 +429,7 @@ export default class NodeGraph extends Component {
     }
     return clusterLinks
   }
-  linkToLayerCluster (root, link, layer, source, clusterLinksFromAddresses) {
+  prepareClusterLinks (domain, layer, source, clusterLinksFromAddresses) {
     let neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((cluster2) => {
@@ -418,7 +437,35 @@ export default class NodeGraph extends Component {
         if (ntx === undefined) return
         // skip cluster if contains in clusterLinksFromAddresses
         if (clusterLinksFromAddresses.has(cluster2.data.id)) return
-        this.renderLink(root, link, source, cluster2, ntx)
+        this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
+      })
+    }
+  }
+  updateDomain (domain, value) {
+    domain[0] = Math.min(domain[0], value)
+    domain[1] = Math.max(domain[1], value)
+  }
+  linkToLayer (root, link, domain, layer, address) {
+    let neighbors = address.data.outgoing
+    if (layer) {
+      layer.nodes.each((cluster2) => {
+        cluster2.nodes.each((address2) => {
+          let ntx = neighbors.get(address2.data.id)
+          if (ntx === undefined) return
+          this.renderLink(root, link, domain, address, address2, ntx)
+        })
+      })
+    }
+  }
+  linkToLayerCluster (root, link, domain, layer, source, clusterLinksFromAddresses) {
+    let neighbors = source.data.outgoing
+    if (layer) {
+      layer.nodes.each((cluster2) => {
+        let ntx = neighbors.get(cluster2.data.id)
+        if (ntx === undefined) return
+        // skip cluster if contains in clusterLinksFromAddresses
+        if (clusterLinksFromAddresses.has(cluster2.data.id)) return
+        this.renderLink(root, link, domain, source, cluster2, ntx)
       })
     }
   }
@@ -450,13 +497,16 @@ export default class NodeGraph extends Component {
       }
     })
   }
-  renderLink (root, link, source, target, label) {
+  renderLink (root, link, domain, source, target, tx) {
+    let value, label
+    [value, label] = this.findValueAndLabel(tx)
+    let scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
     let path = link({source: [source, true], target: [target, false]})
     let g1 = root.append('g').classed('link', true)
     g1.append('path').attr('d', path)
       .classed('frame', true)
     g1.append('path').attr('d', path)
-      .style('stroke-width', this.scaleTransactions(label) + 'px')
+      .style('stroke-width', scale + 'px')
     let sourceX = source.getXForLinks() + source.getWidthForLinks()
     let sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     let targetX = target.getXForLinks()
@@ -493,5 +543,18 @@ export default class NodeGraph extends Component {
       .attr('height', height)
 
     f()
+  }
+  findValueAndLabel (tx) {
+    let value, label
+    if (this.txLabelType === 'estimatedValue') {
+      value = tx[this.txLabelType].satoshi
+      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency)
+    } else if (this.txLabelType === 'noTransactions') {
+      value = label = tx[this.txLabelType]
+    } else {
+      value = 0
+      label = '?'
+    }
+    return [value, label]
   }
 }

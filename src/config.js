@@ -8,11 +8,12 @@ import {firstToUpper} from './utils.js'
 import Component from './component.js'
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, currency) {
+  constructor (dispatcher, labelType, currency, txLabelType) {
     super()
     this.currency = currency
     this.dispatcher = dispatcher
     this.labelType = labelType
+    this.txLabelType = txLabelType
     this.view = 'graph'
   }
   selectNode (node) {
@@ -44,6 +45,7 @@ export default class Config extends Component {
         this.addSelectListener('currency', 'changeCurrency')
         this.addSelectListener('clusterLabel', 'changeClusterLabel')
         this.addSelectListener('addressLabel', 'changeAddressLabel')
+        this.addSelectListener('transactionLabel', 'changeTxLabel')
         break
       case 'address':
         el.innerHTML = addressConfig
@@ -147,15 +149,15 @@ export default class Config extends Component {
     let select = this.root.querySelector('select#' + id)
     let i = 0
     for (; i < select.options.length; i++) {
-      if (id !== 'currency' && select.options[i].value === this.labelType[id]) break
-      if (id === 'currency' && select.options[i].value === this.currency) break
+      let value = this.labelType[id]
+      if (id === 'currency') value = this.currency
+      if (id === 'transactionLabel') value = this.txLabelType
+      if (select.options[i].value === value) break
     }
     console.log('selectedIndex', i)
     select.options.selectedIndex = i
     select.addEventListener('change', (e) => {
-      let labelType = e.target.value
-      this.labelType[id] = labelType
-      this.dispatcher(message, labelType)
+      this.dispatcher(message, e.target.value)
     })
   }
   setupNotes (el) {
@@ -165,5 +167,14 @@ export default class Config extends Component {
       console.log('input', e.target.value)
       this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, note: e.target.value})
     })
+  }
+  setAddressLabel (labelType) {
+    this.labelType['address'] = labelType
+  }
+  setClusterLabel (labelType) {
+    this.labelType['cluster'] = labelType
+  }
+  setTxLabel (labelType) {
+    this.txLabelType = labelType
   }
 }

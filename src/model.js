@@ -31,6 +31,8 @@ let defaultLabelType =
 
 const defaultCurrency = 'satoshi'
 
+const defaultTxLabel = 'noTransactions'
+
 const keyspaces =
   {
     'btc': 'Bitcoin',
@@ -58,8 +60,8 @@ export default class Model {
 
     // VIEWS
     this.browser = new Browser(this.call, defaultCurrency)
-    this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency)
-    this.config = new Config(this.call, defaultLabelType, defaultCurrency)
+    this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     let btc = new Rest(baseUrl, 'btc', prefixLength)
     let ltc = new Rest(baseUrl, 'ltc', prefixLength)
     this.rest = (keyspace) => {
@@ -306,7 +308,7 @@ export default class Model {
           // add the node in context to the outgoing set of incoming relations
           result.neighbors.forEach((neighbor) => {
             if (neighbor.nodeType !== o.type) return
-            this.store.linkOutgoing(neighbor.id, o.id, neighbor.noTransactions)
+            this.store.linkOutgoing(neighbor.id, o.id, neighbor.noTransactions, neighbor.estimatedValue)
           })
         }
         if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
@@ -321,7 +323,7 @@ export default class Model {
           // add outgoing relations to the node in context
           result.neighbors.forEach((neighbor) => {
             if (neighbor.nodeType !== o.type) return
-            this.store.linkOutgoing(o.id, neighbor.id, neighbor.noTransactions)
+            this.store.linkOutgoing(o.id, neighbor.id, neighbor.noTransactions, neighbor.estimatedValue)
           })
         }
         this.call(context.backCall.msg, context.backCall.data)
@@ -349,8 +351,10 @@ export default class Model {
           nodeType: context.type,
           isOutgoing: context.isOutgoing
         }
-        if (context.isOutgoing) {
-          this.store.linkOutgoing(a.id, node.id, node.noTransactions)
+        if (context.isOutgoing === true) {
+          this.store.linkOutgoing(a.id, node.id, node.noTransactions, node.estimatedValue)
+        } else if (context.isOutgoing === false) {
+          this.store.linkOutgoing(node.id, a.id, node.noTransactions, node.estimatedValue)
         }
         this.call('addNode', {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
       })
@@ -374,15 +378,21 @@ export default class Model {
       this.graph.setResultClusterAddresses(id, addresses)
     })
     this.dispatcher.on('changeClusterLabel', (labelType) => {
+      this.browser.setClusterLabel(labelType)
       this.graph.setClusterLabel(labelType)
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
+      this.browser.setAddressLabel(labelType)
       this.graph.setAddressLabel(labelType)
     })
     this.dispatcher.on('changeCurrency', (currency) => {
       this.browser.setCurrency(currency)
       this.graph.setCurrency(currency)
       this.config.setCurrency(currency)
+    })
+    this.dispatcher.on('changeTxLabel', (type) => {
+      this.graph.setTxLabel(type)
+      this.config.setTxLabel(type)
     })
     this.dispatcher.on('removeNode', ([nodeType, nodeId]) => {
       this.graph.remove(nodeType, nodeId)
@@ -434,7 +444,6 @@ export default class Model {
     console.log('graph', this.graph)
     console.log('store', this.store)
     console.log('browser', this.browser)
-    this.graph.setNoTransactionsDomain(this.store.getTransactionsDomain())
     return this.layout.render(this.root)
   }
   replay () {

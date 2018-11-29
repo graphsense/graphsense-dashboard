@@ -5,8 +5,6 @@ export default class Store {
     this.addresses = map()
     this.clusters = map()
     this.outgoingLinks = map()
-    this.minNoTransactions = 1 / 0
-    this.maxNoTransactions = 0
   }
   /**
    * Adds an object to store if it does not exist
@@ -82,20 +80,15 @@ export default class Store {
     }
     return outgoing
   }
-  linkOutgoing (source, target, noTransactions) {
+  linkOutgoing (source, target, noTransactions, estimatedValue) {
     let outgoing = this.initOutgoing(source)
     let n = outgoing.get(target)
     if (n !== 0 && !n) {
-      outgoing.set(target, noTransactions)
-      if (noTransactions < this.minNoTransactions) {
-        this.minNoTransactions = noTransactions
+      if (!noTransactions && !estimatedValue) {
+        outgoing.set(target, null)
+        return
       }
-      if (noTransactions > this.maxNoTransactions) {
-        this.maxNoTransactions = noTransactions
-      }
+      outgoing.set(target, {noTransactions, estimatedValue})
     }
-  }
-  getTransactionsDomain () {
-    return [this.minNoTransactions, this.maxNoTransactions]
   }
 }

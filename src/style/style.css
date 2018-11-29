@@ -272,6 +272,7 @@ svg g.link text {
   fill: black;
   stroke-width: 0;
   cursor: default;
+  font-weight: bold;
 }
 
 svg g.link:hover * {
