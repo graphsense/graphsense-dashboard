@@ -306,7 +306,7 @@ export default class Model {
           // add the node in context to the outgoing set of incoming relations
           result.neighbors.forEach((neighbor) => {
             if (neighbor.nodeType !== o.type) return
-            this.store.linkOutgoing(neighbor.id, o.id)
+            this.store.linkOutgoing(neighbor.id, o.id, neighbor.noTransactions)
           })
         }
         if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
@@ -321,7 +321,7 @@ export default class Model {
           // add outgoing relations to the node in context
           result.neighbors.forEach((neighbor) => {
             if (neighbor.nodeType !== o.type) return
-            this.store.linkOutgoing(o.id, neighbor.id)
+            this.store.linkOutgoing(o.id, neighbor.id, neighbor.noTransactions)
           })
         }
         this.call(context.backCall.msg, context.backCall.data)
@@ -350,7 +350,7 @@ export default class Model {
           isOutgoing: context.isOutgoing
         }
         if (context.isOutgoing) {
-          this.store.linkOutgoing(a.id, node.id)
+          this.store.linkOutgoing(a.id, node.id, node.noTransactions)
         }
         this.call('addNode', {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
       })
@@ -434,6 +434,7 @@ export default class Model {
     console.log('graph', this.graph)
     console.log('store', this.store)
     console.log('browser', this.browser)
+    this.graph.setNoTransactionsDomain(this.store.getTransactionsDomain())
     return this.layout.render(this.root)
   }
   replay () {

@@ -256,10 +256,35 @@ svg g.clusterNode:hover g.removeHandle {
   visibility: visible;
 }
 
-svg .link {
+svg g.link path {
   stroke: black;
   stroke-width: 2px;
   fill: none;
+}
+
+svg g.link rect {
+  fill: rgba(255,255,255,0.8);
+  stroke-width: 0px;
+  stroke:black;
+}
+
+svg g.link text {
+  fill: black;
+  stroke-width: 0;
+  cursor: default;
+}
+
+svg g.link:hover * {
+  stroke: red;
+}
+
+svg g.link:hover text {
+  fill: red;
+}
+
+svg g.link path.frame {
+  stroke-width: 6px;
+  opacity: 0;
 }
 
 svg .shadow {
@@ -308,9 +333,6 @@ table.dataTable tbody tr {
   border-bottom: 0;
 }
 
-svg path.link:hover {
-  stroke: red;
-}
 
 textarea {
   width : 99%;

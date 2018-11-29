@@ -1,4 +1,5 @@
 import {create, event} from 'd3-selection'
+import {scalePow, scaleLog} from 'd3-scale'
 import {set, map} from 'd3-collection'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
@@ -24,6 +25,8 @@ const defaultColor = {
   'cluster': `hsl(178, 0%, ${lightness['cluster']}%)`,
   'address': `hsl(178, 0%, ${lightness['address']}%)`
 }
+
+const transactionsPixelRange = [1, 7]
 
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency) {
@@ -63,6 +66,10 @@ export default class NodeGraph extends Component {
           range: (v) => defaultColor['address']
         }
       }
+    this.scaleTransactions = scalePow().range(transactionsPixelRange)
+  }
+  setNoTransactionsDomain (domain) {
+    this.scaleTransactions.domain(domain)
   }
   selectNodeWhenLoaded ([id, type]) {
     this.nextSelectedNode = {id, type}
@@ -391,9 +398,9 @@ export default class NodeGraph extends Component {
       layer.nodes.each((cluster2) => {
         let hasLinks = false
         cluster2.nodes.each((address2) => {
-          if (!neighbors.has(address2.data.id)) return
-          let path = link({source: [sourceAddress, isOutgoing], target: [address2, !isOutgoing]})
-          root.append('path').classed('link', true).attr('d', path)
+          let ntx = neighbors.get(address2.data.id)
+          if (ntx === undefined) return
+          this.renderLink(root, link, sourceAddress, address2, ntx)
           hasLinks = true
         })
         if (hasLinks) {
@@ -407,11 +414,11 @@ export default class NodeGraph extends Component {
     let neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((cluster2) => {
-        if (!neighbors.has(cluster2.data.id)) return
+        let ntx = neighbors.get(cluster2.data.id)
+        if (ntx === undefined) return
         // skip cluster if contains in clusterLinksFromAddresses
         if (clusterLinksFromAddresses.has(cluster2.data.id)) return
-        let path = link({source: [source, true], target: [cluster2, false]})
-        root.append('path').classed('link', true).attr('d', path)
+        this.renderLink(root, link, source, cluster2, ntx)
       })
     }
   }
@@ -442,5 +449,49 @@ export default class NodeGraph extends Component {
         return
       }
     })
+  }
+  renderLink (root, link, source, target, label) {
+    let path = link({source: [source, true], target: [target, false]})
+    let g1 = root.append('g').classed('link', true)
+    g1.append('path').attr('d', path)
+      .classed('frame', true)
+    g1.append('path').attr('d', path)
+      .style('stroke-width', this.scaleTransactions(label) + 'px')
+    let sourceX = source.getXForLinks() + source.getWidthForLinks()
+    let sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
+    let targetX = target.getXForLinks()
+    let targetY = target.getYForLinks() + target.getHeightForLinks() / 2
+    let fontSize = 10
+    let x = (sourceX + targetX) / 2
+    let y = (sourceY + targetY) / 2 + fontSize / 3
+    let g2 = g1.append('g')
+
+    let f = () => {
+      return g2.append('text')
+        .attr('text-anchor', 'middle')
+        .text(label)
+        .style('font-size', fontSize)
+        .attr('x', x)
+        .attr('y', y)
+    }
+
+    let t = f()
+
+    let box = t.node().getBBox()
+
+    let width = box.width // (label + '').length * fontSize
+    let height = box.height // fontSize * 1.2
+
+    t.remove()
+
+    g2.append('rect')
+      .attr('rx', fontSize / 2)
+      .attr('ry', fontSize / 2)
+      .attr('x', x - width / 2)
+      .attr('y', y - height * 0.85)
+      .attr('width', width)
+      .attr('height', height)
+
+    f()
   }
 }
