@@ -30,6 +30,6 @@ export default class NeighborsTable extends Table {
     this.loadParams = [id, type, isOutgoing]
   }
   isSmall () {
-    return this.total < 200
+    return this.total < 2000
   }
 }

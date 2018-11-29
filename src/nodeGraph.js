@@ -68,28 +68,16 @@ export default class NodeGraph extends Component {
     this.nextSelectedNode = {id, type}
   }
   selectNodeIfIsNextNode (node) {
+    console.log('selectNodeIfIsNextNode', node, this.nextSelectedNode)
     if (!this.nextSelectedNode) return
     if (this.nextSelectedNode.type !== node.data.type) return
-    if (this.nextSelectedNode.id !== node.data.id) return
+    if (this.nextSelectedNode.id != node.data.id) return // eslint-disable-line eqeqeq
     this._selectNode(node)
     this.nextSelectedNode = null
   }
   setCurrency (currency) {
     this.addressNodes.each(node => node.setCurrency(currency))
     this.clusterNodes.each(node => node.setCurrency(currency))
-  }
-  setResultNode (object) {
-    let nodes
-    if (object.type === 'address') {
-      nodes = this.addressNodes
-    } else if (object.type === 'cluster') {
-      nodes = this.clusterNodes
-    }
-    nodes.each(node => {
-      if (node.data.id === object.id) {
-        node.shouldUpdate(true)
-      }
-    })
   }
   setClusterLabel (labelType) {
     this.labelType['clusterLabel'] = labelType
@@ -133,23 +121,21 @@ export default class NodeGraph extends Component {
     })
     this.shouldUpdate('layers')
   }
-  resultNode (object) {
-  }
   findAddressNode (address, layerId) {
     return this.addressNodes.get([address, layerId])
   }
   add (object, anchor) {
+    console.log('add', object, anchor)
     this.adding.remove(object.id)
     let layerId
     if (!anchor) {
       layerId = this.additionLayerBySelection(object.id)
-      layerId = false
       if (layerId === false) layerId = this.additionLayerBySearch(object)
       layerId = layerId || 0
     } else {
       layerId = anchor.nodeId[1] + (anchor.isOutgoing ? 1 : -1)
     }
-    console.log('add', object, layerId)
+    console.log('layer', layerId)
     let filtered = this.layers.filter(({id}) => id === layerId)
     let layer
     if (filtered.length === 0) {
@@ -168,8 +154,12 @@ export default class NodeGraph extends Component {
     }
     let node
     if (object.type === 'address') {
-      if (this.addressNodes.has([object.id, layerId])) return
-      let addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
+      let addressNode = this.addressNodes.get([object.id, layerId])
+      if (addressNode) {
+        this.selectNodeIfIsNextNode(addressNode)
+        return
+      }
+      addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
       this.selectNodeIfIsNextNode(addressNode)
       console.log('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
@@ -179,8 +169,13 @@ export default class NodeGraph extends Component {
       }
       node.add(addressNode)
     } else if (object.type === 'cluster') {
-      if (this.clusterNodes.has([object.id, layerId])) return
+      node = this.clusterNodes.get([object.id, layerId])
+      if (node) {
+        this.selectNodeIfIsNextNode(node)
+        return
+      }
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
+      console.log('new ClusterNode', node)
       this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')

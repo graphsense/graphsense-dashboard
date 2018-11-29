@@ -89,6 +89,7 @@ export default class Model {
         this.layout.shouldUpdate(true)
       }
       this.search.clear()
+      this.graph.selectNodeWhenLoaded([id, type])
       this.rest(keyspace).node({id, type}).then(this.mapResult('resultNode'))
     })
     this.dispatcher.on('blurSearch', () => {
@@ -106,9 +107,12 @@ export default class Model {
           }
         }
       }
+      let anchor
+      if (context && context.anchor) {
+        anchor = context.anchor
+      }
       this.browser.setResultNode(a)
-      this.graph.selectNodeWhenLoaded([a.id, a.type])
-      this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace})
+      this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       // historyPushState('resultTransaction', response)
@@ -137,6 +141,7 @@ export default class Model {
     // user clicks address in transactions table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
       this.browser.loading.add(address)
+      this.graph.selectNodeWhenLoaded([address, 'address'])
       this.rest(keyspace).node({id: address, type: 'address'}).then(this.mapResult('resultNode'))
     })
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
@@ -194,19 +199,29 @@ export default class Model {
       console.log('selectNeighbor', data)
       if (!data.id || !data.nodeType || !data.keyspace) return
       let focusNode = this.browser.getCurrentNode()
+      let anchorNode = this.graph.selectedNode
       let isOutgoing = this.browser.isShowingOutgoingNeighbors()
       let o = this.store.get(data.nodeType, data.id)
+      this.graph.selectNodeWhenLoaded([data.id, data.nodeType])
+      let context =
+        {
+          focusNode:
+            {
+              id: focusNode.id,
+              type: focusNode.type,
+              isOutgoing: isOutgoing
+            }
+        }
+      if (anchorNode) {
+        context['anchor'] = {nodeId: anchorNode.id, isOutgoing}
+      }
       if (!o) {
         this.browser.loading.add(data.id)
         this.rest(data.keyspace).node({id: data.id, type: data.nodeType})
-          .then(this.mapResult('resultNode', {focusNode: {id: focusNode.id, type: focusNode.type, isOutgoing: isOutgoing}}))
-        return
+          .then(this.mapResult('resultNode', context))
+      } else {
+        this.call('resultNode', {context, result: o })
       }
-      console.log('focusNode', focusNode, isOutgoing)
-      if (isOutgoing !== null && focusNode) {
-        this.store.linkOutgoing(focusNode.id, o.id)
-      }
-      this.browser.setResultNode(o)
     })
     this.dispatcher.on('selectAddress', (data) => {
       console.log('selectAdress', data)
@@ -215,6 +230,7 @@ export default class Model {
       this.rest(data.keyspace).node({id: data.address, type: 'address'})
         .then(this.mapResult('resultNode'))
       // historyPushState('selectAddress', data)
+      this.graph.selectNodeWhenLoaded([data.address, 'address'])
       this.browser.setAddress(a)
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {

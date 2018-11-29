@@ -59,6 +59,9 @@ export default class Table extends BrowserComponent {
     $(this.root).on('click', 'tr', function () {
       let row = tab.row(this).data()
       console.log('row', row)
+      if (!row.keyspace) {
+        row.keyspace = that.keyspace
+      }
       that.dispatcher(that.selectMessage, row)
     })
     return this.root
@@ -71,6 +74,7 @@ export default class Table extends BrowserComponent {
     if (table.isSmall()) {
       request.start = 0
       request.length = table.total
+      console.log('changing request length to ', table.total)
     }
     if (request.start + request.length <= table.data.length) {
       let data = {
