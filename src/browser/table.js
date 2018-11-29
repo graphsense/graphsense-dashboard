@@ -5,7 +5,7 @@ import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
 
-const rowHeight = 30
+const rowHeight = 35
 
 export default class Table extends BrowserComponent {
   constructor (dispatcher, index, total, currency, keyspace) {
@@ -35,10 +35,9 @@ export default class Table extends BrowserComponent {
     })
     tr.removeChild(el)
     let that = this
-    // DataTable Scroller needs DataTable to be present in the DOM
-    // so wait a ms for it to be inserted upstream ... hackish!
     let tab = $(this.root).children().first().DataTable({
       ajax: (request, drawCallback, settings) => {
+        console.log('ajax')
         this.ajax(request, drawCallback, settings, this)
       },
       scrollY: browserHeight - rowHeight - 4 * browserPadding,
@@ -46,9 +45,9 @@ export default class Table extends BrowserComponent {
       ordering: this.isSmall(),
       deferRender: true,
       scroller: {
-        rowHeight: 'auto',
-        serverWait: 50,
-        loadingIndicator: true
+        loadingIndicator: true,
+        displayBuffer: 100,
+        boundaryScale: 0
       },
       stateSave: false,
       serverSide: !this.isSmall(),
