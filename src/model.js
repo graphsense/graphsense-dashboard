@@ -349,10 +349,6 @@ export default class Model {
         let copy = {...address, toCluster: id[0]}
         let a = this.store.add(copy)
         addresses.push(a)
-        if (!a.in_degree || !a.out_degree) {
-          this.rest(a.keyspace).node({id: a.id, type: 'address'})
-            .then(this.mapResult('resultNode'))
-        }
         if (!a.tags) {
           let request = {id: a.id, type: 'address'}
           this.rest(a.keyspace).tags(request)
