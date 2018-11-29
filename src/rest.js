@@ -12,7 +12,11 @@ export default class Rest {
     return json(url).then(result => {
       if (field) {
         // result is an array
-        result[field].forEach(item => item.keyspace = this.keyspace)
+        if (!result[field] || !result[field].length) {
+          console.error(`${field} is not in result, calling ${url}`)
+        } else {
+          result[field].forEach(item => item.keyspace = this.keyspace)
+        }
       } else {
         result.keyspace = this.keyspace
       }
