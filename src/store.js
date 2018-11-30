@@ -80,7 +80,7 @@ export default class Store {
     }
     return outgoing
   }
-  linkOutgoing (source, target, noTransactions, estimatedValue) {
+  linkOutgoing (source, target, {noTransactions, estimatedValue, keyspace}) {
     let outgoing = this.initOutgoing(source)
     let n = outgoing.get(target)
     if (n !== 0 && !n) {
@@ -88,7 +88,7 @@ export default class Store {
         outgoing.set(target, null)
         return
       }
-      outgoing.set(target, {noTransactions, estimatedValue})
+      outgoing.set(target, {noTransactions, estimatedValue, keyspace})
     }
   }
 }

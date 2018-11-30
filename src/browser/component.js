@@ -32,8 +32,8 @@ export default class BrowserComponent extends Component {
   }
   destroy () {
   }
-  formatCurrency (value) {
-    return formatCurrency(value, this.currency)
+  formatCurrency (value, keyspace) {
+    return formatCurrency(value, this.currency, {keyspace})
   }
   formatTimestamp (timestamp) {
     return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')

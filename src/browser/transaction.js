@@ -20,8 +20,8 @@ export default class Transaction extends BrowserComponent {
     let flat = {
       txHash: this.data.txHash.substring(0, 32) + '...',
       timestamp: moment.unix(this.data.timestamp).fromNow(),
-      totalInput: this.formatCurrency(this.data.totalInput[this.currency]),
-      totalOutput: this.formatCurrency(this.data.totalOutput[this.currency])
+      totalInput: this.formatCurrency(this.data.totalInput[this.currency], keyspace),
+      totalOutput: this.formatCurrency(this.data.totalOutput[this.currency], keyspace)
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})
     return this.root

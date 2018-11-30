@@ -168,7 +168,7 @@ class GraphNode extends Component {
           return this.data.id.substring(0, 8)
         }
       case 'balance':
-        return this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency])
+        return this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency], this.data.keyspace)
       case 'tag':
         return this.getTag()
       case 'actorCategory':

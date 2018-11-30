@@ -10,7 +10,7 @@ export default class TransactionAddressesTable extends Table {
       { name: 'Value',
         data: 'value',
         render: (value) => {
-          return this.formatCurrency(value[this.currency])
+          return this.formatCurrency(value[this.currency], keyspace)
         }
       }
     ]

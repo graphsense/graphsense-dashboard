@@ -553,7 +553,7 @@ export default class NodeGraph extends Component {
     let value, label
     if (this.txLabelType === 'estimatedValue') {
       value = tx[this.txLabelType].satoshi
-      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency, true)
+      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency, {dontAppendCurrency: true, keyspace: tx.keyspace})
     } else if (this.txLabelType === 'noTransactions') {
       value = label = tx[this.txLabelType]
     } else {
