@@ -44,7 +44,7 @@ export default class Model {
     this.dispatcher = dispatcher
     this.store = new Store()
     this.isReplaying = false
-    this.showLandingpage = false
+    this.showLandingpage = true
 
     this.call = (message, data) => {
       if (this.isReplaying) {

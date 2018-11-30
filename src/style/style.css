@@ -368,7 +368,7 @@ textarea {
 .splash .tagline {
   font-family: Conv_Octarine-Light;
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-  @apply m-8 w-2/5 text-white text-3xl text-center;
+  @apply m-8 w-3/5 text-white text-3xl text-center;
 }
 
 body {
