@@ -65,12 +65,15 @@ export default class Model {
     this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     let btc = new Rest(baseUrl, 'btc', prefixLength)
     let ltc = new Rest(baseUrl, 'ltc', prefixLength)
+    let bch = new Rest(baseUrl, 'bch', prefixLength)
     this.rest = (keyspace) => {
       switch (keyspace) {
         case 'btc':
           return btc
         case 'ltc':
           return ltc
+        case 'bch':
+          return bch
         default :
           return new Rest(baseUrl, '', prefixLength)
       }
