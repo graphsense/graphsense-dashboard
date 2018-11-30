@@ -36,6 +36,14 @@ export default class Layout extends Component {
       this.graph.shouldUpdate(true)
       this.config.shouldUpdate(true)
       this.search.shouldUpdate(true)
+      let saveButton = this.root.querySelector('#navbar-save')
+      saveButton.addEventListener('click', () => {
+        this.dispatcher('save')
+      })
+      let loadButton = this.root.querySelector('#navbar-load')
+      loadButton.addEventListener('click', () => {
+        this.dispatcher('load')
+      })
       browserRoot = this.root.querySelector('#layout-browser')
       graphRoot = this.root.querySelector('#layout-graph')
       configRoot = this.root.querySelector('#layout-config')

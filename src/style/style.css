@@ -101,12 +101,10 @@ header img {
 }
 
 .navbar {
-  width: 38px;
-  @apply layout-border bg-white border-r shadow-right
 }
 
 .nav-btn {
-  @apply pt-2 pb-1 text-center w-full text-gs-dark
+  @apply p-2 text-center text-gs-dark
 }
 
 .prop-table {
