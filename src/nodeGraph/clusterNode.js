@@ -1,3 +1,4 @@
+import {event} from 'd3-selection'
 import {map} from 'd3-collection'
 import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
@@ -33,6 +34,11 @@ export default class ClusterNode extends GraphNode {
           .classed('clusterNode', true)
           .on('click', () => {
             this.dispatcher('selectNode', ['cluster', this.id])
+          })
+          .on('contextmenu', () => {
+            event.stopPropagation()
+            event.preventDefault()
+            this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
           })
         g.append('rect')
           .classed('rect', true)

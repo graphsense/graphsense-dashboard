@@ -138,7 +138,6 @@ export default class Model {
         node = this.graph.clusterNodes.get(nodeId)
       }
       this.graph.selectNode(type, nodeId)
-      this.config.selectNode(node)
     })
     // user clicks address in transactions table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
@@ -378,11 +377,11 @@ export default class Model {
       this.graph.setResultClusterAddresses(id, addresses)
     })
     this.dispatcher.on('changeClusterLabel', (labelType) => {
-      this.browser.setClusterLabel(labelType)
+      this.config.setClusterLabel(labelType)
       this.graph.setClusterLabel(labelType)
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
-      this.browser.setAddressLabel(labelType)
+      this.config.setAddressLabel(labelType)
       this.graph.setAddressLabel(labelType)
     })
     this.dispatcher.on('changeCurrency', (currency) => {
@@ -421,6 +420,17 @@ export default class Model {
     })
     this.dispatcher.on('receiveStats', ({context, result}) => {
       this.landingpage.setStats({...result})
+    })
+    this.dispatcher.on('contextmenu', ({x, y, node}) => {
+      if (!node) {
+        this.config.showGraphConfig(x, y)
+      } else {
+        this.config.showNodeConfig(x, y, node)
+        this.call('selectNode', [node.data.type, node.id])
+      }
+    })
+    this.dispatcher.on('hideContextmenu', () => {
+      this.config.hideMenu()
     })
     window.onpopstate = (e) => {
       return

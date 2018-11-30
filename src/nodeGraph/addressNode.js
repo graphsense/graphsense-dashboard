@@ -1,3 +1,4 @@
+import {event} from 'd3-selection'
 import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 
 const padding = 10
@@ -21,6 +22,11 @@ export default class AddressNode extends GraphNode {
         .classed('addressNode', true)
         .on('click', () => {
           this.dispatcher('selectNode', ['address', this.id])
+        })
+        .on('contextmenu', () => {
+          event.stopPropagation()
+          event.preventDefault()
+          this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
         })
       g.append('rect')
         .classed('rect', true)

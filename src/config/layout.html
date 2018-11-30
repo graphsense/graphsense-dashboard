@@ -1,8 +1,6 @@
-<div class="flex flex-row h-full">
-  <div class="navbar">
-    <button id="navbar-config" class="nav-btn"><i class="fas fa-cog text-lg"></i></button>
-    <button class="nav-btn"><i class="fas fa-save text-lg"></i></button>
-    <button class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
+<div id="config-frame" class="h-screen w-screen absolute z-50 pin">
+  <div id="config-box" class="absolute shadow-lg rounded bg-white border flex flex-col">
+    <div class="title w-full bg-gs-lighter p-2 font-bold mb-2">{{title}}</div>
+    <div id="config" class="p-2 flex-grow"></div>
   </div>
-  <div id="config" class="w-auto p-2"></div>
 </div>

@@ -13,26 +13,26 @@ function _formatCurrency (n, c, d, t) {
   return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '')
 }
 
-function formatBTC (satoshiValue, currencyCode, appendCurrency) {
+function formatBTC (satoshiValue, currencyCode, dontAppendCurrency) {
   let value = satoshiValue / 10000 / 10000
   if (value === 0) {
     return '0 ' + currencyCode.toUpperCase()
   }
   if (value < 0.0001) {
-    return satoshiValue + (appendCurrency ? ' s' : '')
+    return satoshiValue + (!dontAppendCurrency ? ' s' : '')
   }
-  return _formatCurrency(value, 4) + (appendCurrency ? ' ' + currencyCode.toUpperCase() : '')
+  return _formatCurrency(value, 4) + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
 }
 
-function formatFiat (value, currencyCode, appendCurrency) {
-  return _formatCurrency(value, 2) + (appendCurrency ? ' ' + currencyCode.toUpperCase() : '')
+function formatFiat (value, currencyCode, dontAppendCurrency) {
+  return _formatCurrency(value, 2) + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
 }
 
-function formatCurrency (value, currencyCode, appendCurrency) {
+function formatCurrency (value, currencyCode, dontAppendCurrency) {
   if (currencyCode === 'btc') {
-    return formatBTC(value, currencyCode, appendCurrency)
+    return formatBTC(value, currencyCode, dontAppendCurrency)
   } else {
-    return formatFiat(value, currencyCode, appendCurrency)
+    return formatFiat(value, currencyCode, dontAppendCurrency)
   }
 }
 

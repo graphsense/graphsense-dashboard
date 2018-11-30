@@ -1,11 +1,14 @@
+import {event} from 'd3-selection'
 import layout from './config/layout.html'
 import graphConfig from './config/graph.html'
-import addressConfig from './config/address.html'
-import clusterConfig from './config/cluster.html'
+import notes from './config/notes.html'
 import filter from './config/filter.html'
 import {replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
 import Component from './component.js'
+
+const menuWidth = 250
+const menuHeight = 300
 
 export default class Config extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
@@ -14,13 +17,7 @@ export default class Config extends Component {
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
-    this.view = 'graph'
-  }
-  selectNode (node) {
-    console.log('selectNode.config', node)
-    this.view = node.data.type
-    this.node = node
-    this.shouldUpdate(true)
+    this.view = null
   }
   switchConfig (type) {
     this.view = type
@@ -29,18 +26,65 @@ export default class Config extends Component {
   setCurrency (currency) {
     this.currency = currency
   }
+  showGraphConfig (x, y) {
+    this.setMenuPosition(x, y)
+    this.view = 'graph'
+    this.shouldUpdate(true)
+  }
+  showNodeConfig (x, y, node) {
+    this.setMenuPosition(x, y)
+    this.view = node.data.type
+    this.node = node
+    this.shouldUpdate(true)
+  }
+  setMenuPosition (x, y) {
+    let w = window
+    let d = document
+    let e = d.documentElement
+    let g = d.getElementsByTagName('body')[0]
+    let width = w.innerWidth || e.clientWidth || g.clientWidth
+    let height = w.innerHeight || e.clientHeight || g.clientHeight
+    if (x + menuWidth > width) x -= menuWidth
+    if (y + menuHeight > height) y -= menuWidth
+    this.menuX = x
+    this.menuY = y
+  }
+  hideMenu () {
+    this.view = null
+    this.shouldUpdate(true)
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
+    if (!this.view) {
+      this.root.innerHTML = ''
+      super.render()
+      return
+    }
     this.root.innerHTML = layout
-    this.root.querySelector('button#navbar-config')
-      .addEventListener('click', () => {
-        this.dispatcher('switchConfig', 'graph')
-      })
+    let frame = this.root.querySelector('#config-frame')
+    frame.addEventListener('click', (e) => {
+      this.dispatcher('hideContextmenu')
+    })
+    frame.addEventListener('contextmenu', (e) => {
+      e.stopPropagation()
+      e.preventDefault()
+      return false
+    })
+    let box = this.root.querySelector('#config-box')
+    box.style.width = menuWidth + 'px'
+    box.style.height = menuHeight + 'px'
+    box.style.left = this.menuX + 'px'
+    box.style.top = this.menuY + 'px'
+    box.addEventListener('click', (e) => {
+      e.stopPropagation()
+    })
     let el = this.root.querySelector('#config')
+    let title = ''
     switch (this.view) {
       case 'graph':
+        title = 'Graph configuration'
         el.innerHTML = graphConfig
         this.addSelectListener('currency', 'changeCurrency')
         this.addSelectListener('clusterLabel', 'changeClusterLabel')
@@ -48,56 +92,15 @@ export default class Config extends Component {
         this.addSelectListener('transactionLabel', 'changeTxLabel')
         break
       case 'address':
-        el.innerHTML = addressConfig
-        this.setupTxFilters(el)
-        this.setupNotes(el)
-        break
       case 'cluster':
-        el.innerHTML = clusterConfig
-        this.setupTxFilters(el)
+        title = 'Notes'
+        el.innerHTML = notes
         this.setupNotes(el)
-        el.querySelector('#address-input select')
-          .addEventListener('change', (e) => {
-            this.node.addressFilters.set(e.target.value, null)
-            this.render()
-          })
-        this.node.addressFilters.each((value, type) => {
-          this.addFilter('address-filters', type, value)
-        })
-        el.querySelector('#address-input button')
-          .addEventListener('click', () => {
-            this.applyAddressFilters()
-          })
         break
     }
+    this.root.querySelector('.title').innerHTML = title
     super.render()
     return this.root
-  }
-  setupTxFilters (el) {
-    el.querySelector('#outgoing-input select')
-      .addEventListener('change', (e) => {
-        this.node.outgoingTxsFilters.set(e.target.value, null)
-        this.render()
-      })
-    el.querySelector('#incoming-input select')
-      .addEventListener('change', (e) => {
-        this.node.incomingTxsFilters.set(e.target.value, null)
-        this.render()
-      })
-    this.node.outgoingTxsFilters.each((value, type) => {
-      this.addFilter('outgoing-filters', type, value)
-    })
-    this.node.incomingTxsFilters.each((value, type) => {
-      this.addFilter('incoming-filters', type, value)
-    })
-    el.querySelector('#outgoing-input button')
-      .addEventListener('click', () => {
-        this.applyTxFilters(true)
-      })
-    el.querySelector('#incoming-input button')
-      .addEventListener('click', () => {
-        this.applyTxFilters(false)
-      })
   }
   addFilter (id, type, value) {
     let filterSection = this.root.querySelector('#' + id)
@@ -161,7 +164,7 @@ export default class Config extends Component {
     })
   }
   setupNotes (el) {
-    let input = el.querySelector('.notes textarea')
+    let input = el.querySelector('textarea')
     input.value = this.node.data.notes || ''
     input.addEventListener('input', (e) => {
       console.log('input', e.target.value)

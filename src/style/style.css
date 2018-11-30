@@ -61,6 +61,10 @@
  * @import "utilities/skew-transforms";
  */
 
+html, body {
+  @apply font-sans
+}
+
 .btn {
   @apply font-normal py-1 px-2 border;
 }
@@ -163,6 +167,10 @@
   @apply text-gs-light
 }
 
+svg {
+  @apply font-sans
+}
+
 svg g.addressNode {
   cursor: pointer;
 }
@@ -174,7 +182,6 @@ svg g.addressNode > rect{
 }
 
 svg g.addressNode text {
-  font-family: monospace;
 }
 
 svg g.clusterNode {
@@ -187,7 +194,6 @@ svg g.clusterNode > rect{
 }
 
 svg g.clusterNode text {
-  font-family: monospace;
 }
 
 svg g.clusterNode.mockup {

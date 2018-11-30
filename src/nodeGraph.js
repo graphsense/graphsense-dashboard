@@ -13,7 +13,7 @@ import {formatCurrency} from './utils'
 const margin = 300
 const x = -300
 const y = -300
-const w = 600
+const w = 800
 const h = 600
 
 const chromaStep = 36
@@ -334,6 +334,11 @@ export default class NodeGraph extends Component {
           let y_ = y + ty + (h - h_) / 2
           this.svg.attr('viewBox', `${x_} ${y_} ${w_} ${h_}`)
         }))
+      this.svg.on('contextmenu', (e) => {
+        event.stopPropagation()
+        event.preventDefault()
+        this.dispatcher('contextmenu', {x: event.x, y: event.y})
+      })
       this.root.innerHTML = ''
       this.root.appendChild(this.svg.node())
       clusterShadowsRoot = this.svg.append('g').classed('clusterShadowsRoot', true)
@@ -548,7 +553,7 @@ export default class NodeGraph extends Component {
     let value, label
     if (this.txLabelType === 'estimatedValue') {
       value = tx[this.txLabelType].satoshi
-      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency)
+      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency, true)
     } else if (this.txLabelType === 'noTransactions') {
       value = label = tx[this.txLabelType]
     } else {

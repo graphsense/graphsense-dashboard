@@ -1,13 +1,13 @@
 <div class="h-screen flex flex-col">
-  <header class="p-2 h-16 w-full border-b layout-border shadow-bottom flex flex-row justify-between">
+  <header class="p-2 h-16 w-full border-b layout-border flex flex-row justify-between">
     <div class="text-left"> 
       <img class="h-full" src="./logo.svg"/>
     </div>
     <div id="layout-search"></div>
   </header>
-  <section id="layout-browser" class="layout-browser border-b layout-border w-full"></section>
+  <section id="layout-browser" class="layout-browser border-b layout-border w-full shadow-md z-30"></section>
   <section class="flex flex-auto">
-    <section id="layout-config" class="border-r layout-border w-1/5"></section>
-    <section id="layout-graph" class="w-4/5"></section>
+    <section id="layout-graph" class="w-full flex-auto"></section>
   </section>
 </div>
+<section id="layout-config"></section>
