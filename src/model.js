@@ -36,7 +36,8 @@ const defaultTxLabel = 'noTransactions'
 const keyspaces =
   {
     'btc': 'Bitcoin',
-    'ltc': 'Litecoin'
+    'ltc': 'Litecoin',
+    'bch': 'Bitcoin Cash'
   }
 
 export default class Model {
@@ -70,6 +71,8 @@ export default class Model {
           return btc
         case 'ltc':
           return ltc
+        default :
+          return new Rest(baseUrl, '', prefixLength)
       }
     }
     this.search = new Search(this.call, keyspaces)
@@ -419,8 +422,8 @@ export default class Model {
     this.dispatcher.on('switchConfig', (type) => {
       this.config.switchConfig(type)
     })
-    this.dispatcher.on('stats', (keyspace) => {
-      this.rest(keyspace).stats(keyspace).then(this.mapResult('receiveStats'))
+    this.dispatcher.on('stats', () => {
+      this.rest().stats().then(this.mapResult('receiveStats'))
     })
     this.dispatcher.on('receiveStats', ({context, result}) => {
       this.landingpage.setStats({...result})

@@ -4,7 +4,7 @@ import {json} from 'd3-fetch'
 export default class Rest {
   constructor (baseUrl, keyspace, prefixLength) {
     this.keyspace = keyspace
-    this.baseUrl = baseUrl + '/' + keyspace
+    this.baseUrl = baseUrl + (keyspace ? '/' + keyspace : '')
     this.prefixLength = prefixLength
     this.json = this.remoteJson
   }
@@ -80,7 +80,7 @@ export default class Rest {
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(url, 'neighbors')
   }
-  stats (currency) {
+  stats () {
     return this.json(`${this.baseUrl}`)
   }
 }

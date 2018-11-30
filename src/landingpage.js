@@ -14,7 +14,7 @@ export default class Landingpage extends Component {
     this.search = search
   }
   setStats (stats) {
-    this.stats[stats.keyspace] = stats
+    this.stats = stats
     this.shouldUpdate('stats')
   }
   render (root) {
@@ -24,9 +24,8 @@ export default class Landingpage extends Component {
       this.root.innerHTML = layout
       this.stats['btc'] = 'loading'
       this.stats['ltc'] = 'loading'
-      this.stats['bch'] = 'coming'
-      this.dispatcher('stats', 'btc')
-      this.dispatcher('stats', 'ltc')
+      this.stats['bch'] = 'loading'
+      this.dispatcher('stats')
       this.renderStats()
       let searchRoot = this.root.querySelector('.splash .search')
       this.search.shouldUpdate(true)
