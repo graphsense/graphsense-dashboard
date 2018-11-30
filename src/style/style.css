@@ -111,7 +111,7 @@ header img {
   @apply table border-collapse mx-2 my-1
 }
 .prop-row {
-  @apply border-b table-row 
+  @apply table-row 
 }
 
 .prop-key {
