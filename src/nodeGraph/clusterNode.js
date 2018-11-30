@@ -124,10 +124,10 @@ export default class ClusterNode extends GraphNode {
     return clusterWidth
   }
   getOutDegree () {
-    return this.data.out_degree
+    return this.data.outDegree
   }
   getInDegree () {
-    return this.data.in_degree
+    return this.data.inDegree
   }
   getId () {
     return this.data.cluster

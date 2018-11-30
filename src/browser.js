@@ -133,7 +133,7 @@ export default class Browser extends Component {
     ) return
 
     let keyspace = last.data.keyspace
-    let total = isOutgoing ? last.data.out_degree : last.data.in_degree
+    let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
     this.shouldUpdate(true)

@@ -67,10 +67,10 @@ export default class AddressNode extends GraphNode {
     return addressWidth
   }
   getOutDegree () {
-    return this.data.out_degree
+    return this.data.outDegree
   }
   getInDegree () {
-    return this.data.in_degree
+    return this.data.inDegree
   }
   getId () {
     return this.data.address

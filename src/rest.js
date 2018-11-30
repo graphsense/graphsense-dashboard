@@ -81,6 +81,6 @@ export default class Rest {
     return this.json(url, 'neighbors')
   }
   stats (currency) {
-    return this.json(`${this.baseUrl}/statistics`)
+    return this.json(`${this.baseUrl}`)
   }
 }

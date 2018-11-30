@@ -7,7 +7,7 @@ import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
 import Landingpage from './landingpage.js'
 
-const baseUrl = 'http://localhost:9000'
+const baseUrl = 'http://localhost:9001'
 
 const searchlimit = 100
 const prefixLength = 5
@@ -299,7 +299,7 @@ export default class Model {
       let keyspace = context.keyspace
       if (!context.stage) {
         let o = this.store.get(context.type, context.id)
-        if (o.in_degree >= degreeThreshold) {
+        if (o.inDegree >= degreeThreshold) {
           this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
           return
         }
@@ -314,7 +314,7 @@ export default class Model {
             this.store.linkOutgoing(neighbor.id, o.id, neighbor)
           })
         }
-        if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
+        if (o.outDegree >= degreeThreshold || o.outDegree === o.outgoing.size()) {
           this.call(context.backCall.msg, context.backCall.data)
           return
         }
