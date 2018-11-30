@@ -18,6 +18,11 @@ export default class Browser extends Component {
     this.loading = set()
     this.dispatcher = dispatcher
     this.content = []
+    this.visible = false
+  }
+  deselect () {
+    this.visible = false
+    this.shouldUpdate(true)
   }
   destroyComponentsFrom (index) {
     this.content.forEach((content, i) => {
@@ -44,12 +49,14 @@ export default class Browser extends Component {
   }
   setAddress (address) {
     this.activeTab = 'address'
+    this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0, this.currency) ]
     this.shouldUpdate(true)
   }
   setTransaction (tx) {
     this.activeTab = 'transactions'
+    this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [
       new Transaction(this.dispatcher, tx, 0, this.currency),
@@ -60,6 +67,7 @@ export default class Browser extends Component {
   }
   setCluster (cluster) {
     this.activeTab = 'address'
+    this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
     this.shouldUpdate(true)
@@ -67,6 +75,7 @@ export default class Browser extends Component {
   setResultNode (object) {
     console.log('setResultNode', object)
 
+    this.visible = true
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
@@ -138,6 +147,11 @@ export default class Browser extends Component {
       this.root.innerHTML = layout
       let data = this.root.querySelector('#browser-data')
       let c = 0
+      if (!this.visible) {
+        this.root.style.display = 'none'
+      } else {
+        this.root.style.display = 'block'
+      }
       this.content.forEach((comp) => {
         c += 1
         let compEl = document.createElement('div')

@@ -21,6 +21,7 @@ export default class AddressNode extends GraphNode {
         .append('g')
         .classed('addressNode', true)
         .on('click', () => {
+          event.stopPropagation()
           this.dispatcher('selectNode', ['address', this.id])
         })
         .on('contextmenu', () => {

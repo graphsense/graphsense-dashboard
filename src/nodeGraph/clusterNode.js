@@ -33,6 +33,7 @@ export default class ClusterNode extends GraphNode {
         let g = this.root.append('g')
           .classed('clusterNode', true)
           .on('click', () => {
+            event.stopPropagation()
             this.dispatcher('selectNode', ['cluster', this.id])
           })
           .on('contextmenu', () => {

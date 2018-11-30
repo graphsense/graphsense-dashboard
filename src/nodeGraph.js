@@ -71,6 +71,12 @@ export default class NodeGraph extends Component {
     this.scaleTransactions = scalePow().range(transactionsPixelRange)
     this.scaleValue = scalePow().range(transactionsPixelRange)
   }
+  deselect () {
+    if (!this.selectedNode) return
+    this.selectedNode.deselect()
+    this.selectedNode.shouldUpdate('select')
+    this.selectedNode = null
+  }
   selectNodeWhenLoaded ([id, type]) {
     this.nextSelectedNode = {id, type}
   }
@@ -338,6 +344,9 @@ export default class NodeGraph extends Component {
         event.stopPropagation()
         event.preventDefault()
         this.dispatcher('contextmenu', {x: event.x, y: event.y})
+      })
+      this.svg.on('click', () => {
+        this.dispatcher('deselect')
       })
       this.root.innerHTML = ''
       this.root.appendChild(this.svg.node())

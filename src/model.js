@@ -44,7 +44,7 @@ export default class Model {
     this.dispatcher = dispatcher
     this.store = new Store()
     this.isReplaying = false
-    this.showLandingpage = true
+    this.showLandingpage = false
 
     this.call = (message, data) => {
       if (this.isReplaying) {
@@ -144,6 +144,10 @@ export default class Model {
       this.browser.loading.add(address)
       this.graph.selectNodeWhenLoaded([address, 'address'])
       this.rest(keyspace).node({id: address, type: 'address'}).then(this.mapResult('resultNode'))
+    })
+    this.dispatcher.on('deselect', () => {
+      this.browser.deselect()
+      this.graph.deselect()
     })
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
       this.browser.loading.add(txHash)
