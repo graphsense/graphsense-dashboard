@@ -5,6 +5,7 @@
 {{ super() }}
 <script language='javascript'>
   var cluster_id = '{{cluster.cluster}}';
+  var currency = '{{currency}}';
 </script>
 {% endblock %}
 
@@ -27,13 +28,13 @@
 </tr>
 <tr>
   <td>First Usage</td>
-  <td><a href="{{ url_for('show_transaction', hash=cluster.firstTx.txHash) }}">
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.firstTx.txHash) }}">
   {{ cluster.firstTx.timestamp | format_time}}</a>
   </td>
 </tr>
 <tr>
   <td>Last Usage</td>
-  <td><a href="{{ url_for('show_transaction', hash=cluster.lastTx.txHash) }}">{{ cluster.lastTx.timestamp | format_time}}</a>
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.lastTx.txHash) }}">{{ cluster.lastTx.timestamp | format_time}}</a>
   </td>
 </tr>
 <tr>

@@ -49,7 +49,6 @@ def format_duration(start_end_tuple):
             activity = "%d hours %d minutes %d seconds" % (rd.hours,
                                                            rd.minutes,
                                                            rd.seconds)
-
     return activity
 
 
@@ -82,12 +81,12 @@ def index():
 @app.route('/query_term_suggestions')
 def query_term_suggestions():
     term_fragment = request.args.get('term_fragment')
+    currency = request.args.get('currency')
     max_suggestion_items = request.args.get('max_suggestion_items')
     if not max_suggestion_items.isdigit():
         raise ValueError("Invalid argument for parameter max_suggestion_items "
                          "(not a number).")
-    suggestions = storage.query_term_suggestions(term_fragment,
-                                                 max_suggestion_items)
+    suggestions = storage.query_term_suggestions(term_fragment, max_suggestion_items, currency)
     return render_template('partials/suggestion_dropdown_menu.html',
                            suggestions=suggestions)
 
@@ -95,58 +94,57 @@ def query_term_suggestions():
 @app.route('/search')
 def search():
     term = request.args.get('query')
+    currency = request.args.get('currency-selector')
     if term:
         if len(term) < 9 and term.isdigit():
-            return redirect(url_for('show_block', height_or_hash=term))
+            return redirect(url_for('show_block', currency=currency, height_or_hash=term))
         elif len(term) == 64:
-            return redirect(url_for('show_transaction', hash=term))
+            return redirect(url_for('show_transaction', currency=currency, hash=term))
         else:
             address = normalize_address(term)
             if address is None:
                 message = 'Couldn\'t find any match for "{}".'.format(term)
                 return render_template('error.html', message=message)
             else:
-                return redirect(url_for('show_address', address=address))
+                return redirect(url_for('show_address', currency=currency, address=address))
 
 
 # ADDRESS-related controllers
 
-@app.route('/address/<address>')
-def show_address(address):
-    address_details = storage.address(address)
+@app.route('/<currency>/address/<address>')
+def show_address(currency, address):
+    address_details = storage.address(address, currency=currency)
     if address_details is None:
         message = 'The address {} cannot be found ' \
                   'in the blockchain.'.format(address)
         return render_template('error.html', message=message)
     else:
-        return render_template('detail_address.html', address=address_details)
+        return render_template('detail_address.html', address=address_details, currency=currency)
 
 
-@app.route('/address/<address>/transactions.json')
-def retrieve_transactions(address):
-    transactions = storage.address_transactions(address, limit=2500)
+@app.route('/<currency>/address/<address>/transactions.json')
+def retrieve_transactions(currency, address):
+    transactions = storage.address_transactions(address, limit=2500, currency=currency)
     return jsonify(transactions)
 
 
-@app.route('/address/<address>/tags.json')
-def retrieve_address_tags(address):
-    tags = storage.address_tags(address)
+@app.route('/<currency>/address/<address>/tags.json')
+def retrieve_address_tags(currency, address):
+    tags = storage.address_tags(address, currency=currency)
     return jsonify(tags)
 
 
-@app.route('/address/<address>/egonet.json')
-def retrieve_address_egonet(address):
+@app.route('/<currency>/address/<address>/egonet.json')
+def retrieve_address_egonet(currency, address):
     direction = request.args.get('direction')
     limit = request.args.get('limit')
-
-    egonet = storage.address_egonet(address, direction, limit)
-
+    egonet = storage.address_egonet(address, currency, direction, limit)
     return jsonify(egonet)
 
 
-@app.route('/address/<address>/egonet/nodes.csv')
-def download_address_egonet_nodes(address):
-    egonet = storage.address_egonet(address, direction='all', limit=1000)
+@app.route('/<currency>/address/<address>/egonet/nodes.csv')
+def download_address_egonet_nodes(currency, address):
+    egonet = storage.address_egonet(address, currency, direction='all', limit=1000)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['address', 'balance', 'received'])
@@ -154,15 +152,13 @@ def download_address_egonet_nodes(address):
         writer.writerow([node['id'],
                          node['balance']['satoshi'],
                          node['received']['satoshi']])
-
     value = output.getvalue().strip('\r\n')
-
     return Response(value, mimetype='text/csv')
 
 
-@app.route('/address/<address>/egonet/edges.csv')
-def download_address_egonet_edges(address):
-    egonet = storage.address_egonet(address, direction='all', limit=1000)
+@app.route('/<currency>/address/<address>/egonet/edges.csv')
+def download_address_egonet_edges(currency, address):
+    egonet = storage.address_egonet(address, currency, direction='all', limit=1000)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['source', 'target', 'transactions', 'estimatedValue'])
@@ -173,7 +169,6 @@ def download_address_egonet_edges(address):
                          edge['transactions']])
 
     value = output.getvalue().strip('\r\n')
-
     return Response(value, mimetype='text/csv')
 
 
@@ -189,57 +184,56 @@ def normalize_address(term):
 
 # TRANSACTION-related controllers
 
-@app.route('/tx/<hash>')
-def show_transaction(hash):
-    tx = storage.transaction(hash)
+@app.route('/<currency>/tx/<hash>')
+def show_transaction(currency, hash):
+    tx = storage.transaction(hash, currency=currency)
     if tx is None:
         message = 'The transaction {} cannot be found ' \
                   'in the blockchain.'.format(hash)
         return render_template('error.html', message=message)
     else:
-        return render_template('detail_transaction.html', tx=tx)
+        return render_template('detail_transaction.html', tx=tx, currency=currency)
 
 
 # BLOCK-related controllers
 
-@app.route('/block/<height_or_hash>')
-def show_block(height_or_hash):
-    block = storage.block(height_or_hash)
-    return render_template('detail_block.html', block=block)
+@app.route('/<currency>/block/<height_or_hash>')
+def show_block(currency, height_or_hash):
+    block = storage.block(height_or_hash, currency=currency)
+    return render_template('detail_block.html', block=block, currency=currency)
 
 
-@app.route('/block/<height>/transactions.json')
-def retrieve_block_transactions(height):
-    transactions = storage.block_transactions(height)
+@app.route('/<currency>/block/<height>/transactions.json')
+def retrieve_block_transactions(currency, height):
+    transactions = storage.block_transactions(height, currency=currency)
     return jsonify(transactions)
 
 
 # CLUSTER-related controllers
 
-@app.route('/cluster/<cluster_id>')
-def show_cluster(cluster_id):
-    cluster_details = storage.cluster(cluster_id)
-    return render_template('detail_cluster.html', cluster=cluster_details)
+@app.route('/<currency>/cluster/<cluster_id>')
+def show_cluster(currency, cluster_id):
+    cluster_details = storage.cluster(cluster_id, currency=currency)
+    return render_template('detail_cluster.html', cluster=cluster_details, currency=currency)
 
 
-@app.route('/cluster/<cluster_id>/addresses.json')
-def retrieve_cluster_addresses(cluster_id):
-    addresses = storage.cluster_addresses(cluster_id, limit=2500)
+@app.route('/<currency>/cluster/<cluster_id>/addresses.json')
+def retrieve_cluster_addresses(currency, cluster_id):
+    addresses = storage.cluster_addresses(cluster_id, limit=2500, currency=currency)
     return jsonify(addresses)
 
 
-@app.route('/cluster/<cluster_id>/tags.json')
-def retrieve_cluster_tags(cluster_id):
-    tags = storage.cluster_tags(cluster_id)
+@app.route('/<currency>/cluster/<cluster_id>/tags.json')
+def retrieve_cluster_tags(currency, cluster_id):
+    tags = storage.cluster_tags(cluster_id, currency=currency)
     return jsonify(tags)
 
 
-@app.route('/cluster/<cluster_id>/egonet.json')
-def retrieve_cluster_egonet(cluster_id):
+@app.route('/<currency>/cluster/<cluster_id>/egonet.json')
+def retrieve_cluster_egonet(currency, cluster_id):
     direction = request.args.get('direction')
     limit = request.args.get('limit')
-
-    egonet = storage.cluster_egonet(cluster_id, direction, limit)
+    egonet = storage.cluster_egonet(cluster_id, currency, direction, limit)
 
     # temporary fix eliminates self references
     edges = []
@@ -251,25 +245,25 @@ def retrieve_cluster_egonet(cluster_id):
     return jsonify(egonet)
 
 
-@app.route('/cluster/<cluster_id>/egonet/nodes.csv')
-def download_cluster_egonet_nodes(cluster_id):
-    egonet = storage.cluster_egonet(cluster_id, direction='all', limit=500)
+@app.route('/<currency>/cluster/<cluster_id>/egonet/nodes.csv')
+def download_cluster_egonet_nodes(currency, cluster_id):
+    egonet = storage.cluster_egonet(cluster_id, currency, direction='all', limit=500)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['clusterId', 'balance', 'received'])
     for node in egonet['nodes']:
         writer.writerow([node['id'],
-                         node['balance']['satoshi'],
-                         node['received']['satoshi']])
+                         node['balance'],
+                         node['received']])
 
     value = output.getvalue().strip('\r\n')
 
     return Response(value, mimetype='text/csv')
 
 
-@app.route('/cluster/<cluster_id>/egonet/edges.csv')
-def download_cluster_egonet_edges(cluster_id):
-    egonet = storage.cluster_egonet(cluster_id, direction='all', limit=500)
+@app.route('/<currency>/cluster/<cluster_id>/egonet/edges.csv')
+def download_cluster_egonet_edges(currency, cluster_id):
+    egonet = storage.cluster_egonet(cluster_id, currency, direction='all', limit=500)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['source', 'target', 'transactions', 'estimatedValue'])

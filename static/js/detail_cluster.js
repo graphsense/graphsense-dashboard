@@ -21,7 +21,7 @@ jQuery( document ).ready(function() {
 
         show_cluster_graph = function() {
           if(d3.select("#graph-container").select("svg").empty()) {
-            var requestURI = $SCRIPT_ROOT + '/cluster/' + cluster_id + '/egonet.json';
+            var requestURI = $SCRIPT_ROOT + '/' + currency + '/cluster/' + cluster_id + '/egonet.json';
             $.getJSON(requestURI)
               .done(function( data ) {
                 // create graph control
@@ -40,7 +40,7 @@ jQuery( document ).ready(function() {
         },
 
         show_address_table = function() {
-          var request_uri = $SCRIPT_ROOT + '/cluster/' + cluster_id + '/addresses.json';
+          var request_uri = $SCRIPT_ROOT + '/' + currency + '/cluster/' + cluster_id + '/addresses.json';
           $('#addresses_table').DataTable( {
             retrieve: true,
             searching: false,
@@ -53,19 +53,19 @@ jQuery( document ).ready(function() {
               {
                 "data": "address",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/address/' + data + '">' + data + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/address/' + data + '">' + data + '</a>';
                 }
               },
               {
                 "data": "firstTx",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/tx/' + data.txHash + '">' + DateUtils.toDateTimeString(data.timestamp) + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/tx/' + data.txHash + '">' + DateUtils.toDateTimeString(data.timestamp) + '</a>';
                 }
               },
               {
                 "data": "lastTx",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/tx/' + data.txHash + '">' + DateUtils.toDateTimeString(data.timestamp) + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/tx/' + data.txHash + '">' + DateUtils.toDateTimeString(data.timestamp) + '</a>';
                 }
               },
               {
@@ -117,7 +117,7 @@ jQuery( document ).ready(function() {
 
 
         show_tags_table = function() {
-          var request_uri = $SCRIPT_ROOT + '/cluster/' + cluster_id + '/tags.json';
+          var request_uri = $SCRIPT_ROOT + '/' + currency + '/cluster/' + cluster_id + '/tags.json';
           $('#tag_table').DataTable( {
             retrieve: true,
             paging: true,
@@ -130,7 +130,7 @@ jQuery( document ).ready(function() {
               {
                 "data": "address",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/address/' + data + '">' + data + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/address/' + data + '">' + data + '</a>';
                 }
               },
               { "data": "tag"},
@@ -189,11 +189,11 @@ jQuery( document ).ready(function() {
     });
 
     events.subscribe('graphControl/edgeDownloadClicked', function() {
-        window.location.href = $SCRIPT_ROOT + '/cluster/' + cluster_id + '/egonet/edges.csv';
+        window.location.href = $SCRIPT_ROOT + '/' + currency + '/cluster/' + cluster_id + '/egonet/edges.csv';
     });
 
     events.subscribe('graphControl/nodeDownloadClicked', function() {
-        window.location.href = $SCRIPT_ROOT + '/cluster/' + cluster_id + '/egonet/nodes.csv';
+        window.location.href = $SCRIPT_ROOT + '/' + currency + '/cluster/' + cluster_id + '/egonet/nodes.csv';
     });
 
 });

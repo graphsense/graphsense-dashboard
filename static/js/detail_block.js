@@ -20,7 +20,7 @@ jQuery( document ).ready(function() {
         },
 
         show_transactions_table = function() {
-          var request_uri = $SCRIPT_ROOT + '/block/' + height + '/transactions.json';
+          var request_uri = $SCRIPT_ROOT + '/' + currency + '/block/' + height + '/transactions.json';
           $('#txs_table').DataTable( {
             retrieve: true,
             searching: false,
@@ -33,7 +33,7 @@ jQuery( document ).ready(function() {
                 "name": "tx_hash",
                 "data": "txHash",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/tx/' + data + '">' + data + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/tx/' + data + '">' + data + '</a>';
                 }
               },
               {

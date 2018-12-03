@@ -12,6 +12,7 @@
 {{ super() }}
 <script language='javascript'>
   var address_id = '{{address['address']}}';
+  var currency = '{{currency}}';
 </script>
 {% endblock %}
 
@@ -38,11 +39,11 @@
 </tr>
 <tr>
   <td>First Usage</td>
-  <td><a href="{{ url_for('show_transaction', hash=address['firstTx']['txHash']) }}">{{ address['firstTx']['timestamp'] | format_time}}</a></td>
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=address['firstTx']['tx_hash']) }}">{{ address['firstTx']['timestamp'] | format_time}}</a></td>
 </tr>
 <tr>
   <td>Last Usage</td>
-  <td><a href="{{ url_for('show_transaction', hash=address['lastTx']['txHash']) }}">{{ address['lastTx']['timestamp'] | format_time}}</a></td>
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=address['lastTx']['tx_hash']) }}">{{ address['lastTx']['timestamp'] | format_time}}</a></td>
 </tr>
 <tr>
   <td>Activity Period</td>
@@ -68,7 +69,7 @@
 {% if address.cluster %}
 <div id="cluster-summary" class="panel panel-default">
   <div class="panel-heading purple-background">
-    <a class="white-text" href="{{ url_for('show_cluster', cluster_id=address.cluster.cluster) }}">Address Cluster <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
+    <a class="white-text" href="{{ url_for('show_cluster', currency=currency, cluster_id=address.cluster.cluster) }}">Address Cluster <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
   </div>
   <table class="table">
     <tr>
@@ -84,13 +85,13 @@
     </tr>
     <tr>
       <td>First Usage</td>
-      <td><a href="{{ url_for('show_transaction', hash=address['cluster']['firstTx']['txHash']) }}">
+      <td><a href="{{ url_for('show_transaction', currency=currency, hash=address['cluster']['firstTx']['tx_hash']) }}">
       {{ address['cluster']['firstTx']['timestamp'] | format_time}}</a>
       </td>
     </tr>
     <tr>
       <td>Last Usage</td>
-      <td><a href="{{ url_for('show_transaction', hash=address['cluster']['lastTx']['txHash']) }}">{{ address['cluster']['lastTx']['timestamp'] | format_time}}</a>
+      <td><a href="{{ url_for('show_transaction', currency=currency, hash=address['cluster']['lastTx']['tx_hash']) }}">{{ address['cluster']['lastTx']['timestamp'] | format_time}}</a>
       </td>
     </tr>
     <tr>
