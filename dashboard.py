@@ -68,12 +68,13 @@ def tag_string(value):
     else:
         return '({} tags)'.format(len(value))
 
-# CONTROLLERS
 
+# CONTROLLERS
 
 @app.route('/')
 def index():
-    return render_template('landing_page.html')
+    statistics = storage.statistics()
+    return render_template('landing_page.html', statistics=statistics)
 
 
 # SEARCH-related controllers
@@ -191,7 +192,6 @@ def normalize_address(term):
 @app.route('/tx/<hash>')
 def show_transaction(hash):
     tx = storage.transaction(hash)
-    # print('---------------',hash,tx)
     if tx is None:
         message = 'The transaction {} cannot be found ' \
                   'in the blockchain.'.format(hash)

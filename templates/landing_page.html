@@ -21,10 +21,17 @@
         <form id="search-form" role="form" action="{{ url_for('search') }}" method="GET">
           <input type="hidden" id="selected-type" name="selected-type" value="none"/>
           <div class="input-group" style="width: 450px">
+          <span class="input-group-btn">
+            <select id="currency-selector" name="currency-selector" class="btn btn-success">
+              <option value="btc">BTC</option>
+              <option value="bch">BCH</option>
+              <option value="lct">LTC</option>
+            </select>
+          </span>
             <input name="query" id="query" placeholder="Address, Tag, Transaction, Block" type="text" class="form-control" autocomplete="off"/>
           <span class="input-group-btn">
                 <button type="submit" class="btn btn-success">Go!</button>
-              </span>
+          </span>
           </div>
           <div id="suggestion-dropdown-menu" class="input-group">
           </div>
@@ -33,6 +40,7 @@
     </div>
   </div>
 </div>
+{{ statistics.btc.no_addresses }}
 
 {% endblock %}
 

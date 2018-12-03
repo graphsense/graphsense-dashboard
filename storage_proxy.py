@@ -9,7 +9,7 @@ class Storage:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.url_base = 'http://{}:{}/btc/'.format(host, port) # TODO: test other currencies and replace btc with variable
+        self.url_base = 'http://{}:{}/'.format(host, port) # TODO: test other currencies and replace btc with variable
         self._session = requests.Session()
 
     # SEARCH data access
@@ -121,3 +121,8 @@ class Storage:
             res['nodes'][0]['balance'] = (stats['totalReceived']['satoshi'] -
                                           stats['totalSpent']['satoshi'])
         return res
+
+    def statistics(self):
+        res = self.retrieve('')
+        return res if res else dict()
+
