@@ -150,8 +150,8 @@ def download_address_egonet_nodes(currency, address):
     writer.writerow(['address', 'balance', 'received'])
     for node in egonet['nodes']:
         writer.writerow([node['id'],
-                         node['balance']['satoshi'],
-                         node['received']['satoshi']])
+                         node['balance'],
+                         node['received']])
     value = output.getvalue().strip('\r\n')
     return Response(value, mimetype='text/csv')
 
