@@ -52,11 +52,11 @@ export default class Landingpage extends Component {
       }
       let format = '0,000,000'
       let flat =
-        { lastUpdate: moment.unix(s.timestampLastBlock).fromNow(),
-          latestBlock: s.noBlocks - 1,
-          noAddresses: numeral(s.noAddresses).format(format),
-          noClusters: numeral(s.noClusters).format(format),
-          noTransactions: numeral(s.noTransactions).format(format)
+        { lastUpdate: moment.unix(s.timestamp).fromNow(),
+          latestBlock: s.no_blocks - 1,
+          noAddresses: numeral(s.no_addresses).format(format),
+          noClusters: numeral(s.no_clusters).format(format),
+          noTransactions: numeral(s.no_transactions).format(format)
         }
       el.innerHTML = replace(stats, flat)
     })
