@@ -73,8 +73,6 @@ export default class Config extends Component {
       return false
     })
     let box = this.root.querySelector('#config-box')
-    box.style.width = menuWidth + 'px'
-    box.style.height = menuHeight + 'px'
     box.style.left = this.menuX + 'px'
     box.style.top = this.menuY + 'px'
     box.addEventListener('click', (e) => {
