@@ -1,4 +1,4 @@
-import {map, set} from 'd3-collection'
+import {map} from 'd3-collection'
 
 export default class Store {
   constructor () {
@@ -80,15 +80,15 @@ export default class Store {
     }
     return outgoing
   }
-  linkOutgoing (source, target, {noTransactions, estimatedValue, keyspace}) {
+  linkOutgoing (source, target, data) {
     let outgoing = this.initOutgoing(source)
     let n = outgoing.get(target)
     if (n !== 0 && !n) {
-      if (!noTransactions && !estimatedValue) {
+      if (data && !data.noTransactions && !data.estimatedValue) {
         outgoing.set(target, null)
         return
       }
-      outgoing.set(target, {noTransactions, estimatedValue, keyspace})
+      outgoing.set(target, {...data})
     }
   }
 }
