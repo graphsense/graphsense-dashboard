@@ -7,13 +7,7 @@ import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
 import Landingpage from './landingpage.js'
 
-const baseUrl =
-// @if IS_DEV=false
-  '{{REST_ENDPOINT}}'
-// @endif
-// @if IS_DEV=true
-  'http://localhost:9000' //eslint-disable-line
-// @endif
+const baseUrl = REST_ENDPOINT
 
 const searchlimit = 100
 const prefixLength = 5

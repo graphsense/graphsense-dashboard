@@ -24,7 +24,8 @@ module.exports = env => {
       }),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
-        IS_DEV: IS_DEV
+        IS_DEV: IS_DEV,
+        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'http://localhost:9000\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',
