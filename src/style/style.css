@@ -65,15 +65,6 @@ html, body {
   @apply font-sans
 }
 
-header {
-  height: 79px;
-  max-height: 79px;
-}
-
-header img {
-  height: 33px;
-}
-
 .btn {
   @apply font-normal py-1 px-2 border;
 }
