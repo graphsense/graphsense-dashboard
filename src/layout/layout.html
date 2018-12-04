@@ -1,5 +1,6 @@
-<div class="h-screen" style="height: 5vh">
-  <header class="p-2 h-full w-full border-b layout-border flex flex-row justify-between">
+<div class="h-screen">
+  <div class="absolute pin-t pin-l w-full header-height shadow-md z-22"></div>
+  <header class="p-2 w-full border-b layout-border flex flex-row justify-between z-30 relative header-height bg-white">
     <div class="text-left w-1/3"> 
       <img class="h-full" src="./logo.svg"/>
     </div>
@@ -10,7 +11,7 @@
       <button id="navbar-load" class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
     </div>
   </header>
-  <section id="layout-browser" class="layout-browser border-b layout-border w-full shadow-md z-30"></section>
-  <section id="layout-graph" class="w-full"></section>
+  <section id="layout-graph" class="w-full z-20"></section>
 </div>
+<section id="layout-browser" class="absolute pin-l border layout-border bg-white shadow-md z-25 rounded-b"></section>
 <section id="layout-config"></section>

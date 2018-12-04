@@ -65,6 +65,18 @@ html, body {
   @apply font-sans
 }
 
+.header-height {
+  height: 5vh;
+}
+
+#layout-graph {
+  height: 95vh;
+}
+
+#layout-browser {
+  top: 5vh;
+}
+
 .btn {
   @apply font-normal py-1 px-2 border;
 }
@@ -86,9 +98,6 @@ html, body {
 
 .layout-border {
   @apply border-grey-light
-}
-
-.layout-browser {
 }
 
 .navbar {
