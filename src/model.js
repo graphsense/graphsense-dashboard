@@ -43,7 +43,8 @@ const keyspaces =
   {
     'btc': 'Bitcoin',
     'ltc': 'Litecoin',
-    'bch': 'Bitcoin Cash'
+    'bch': 'Bitcoin Cash',
+    'zec': 'Z-Cash'
   }
 
 export default class Model {
@@ -69,24 +70,19 @@ export default class Model {
     this.browser = new Browser(this.call, defaultCurrency)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
-    let btc = new Rest(baseUrl, 'btc', prefixLength)
-    let ltc = new Rest(baseUrl, 'ltc', prefixLength)
-    let bch = new Rest(baseUrl, 'bch', prefixLength)
+    let rest = {}
+    for (let key in keyspaces) {
+      rest[key] = new Rest(baseUrl, key, prefixLength)
+    }
     this.rest = (keyspace) => {
-      switch (keyspace) {
-        case 'btc':
-          return btc
-        case 'ltc':
-          return ltc
-        case 'bch':
-          return bch
-        default :
-          return new Rest(baseUrl, '', prefixLength)
+      if (!keyspaces[keyspace]) {
+        return new Rest(baseUrl, '', prefixLength)
       }
+      return rest[keyspace]
     }
     this.search = new Search(this.call, keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
-    this.landingpage = new Landingpage(this.call, this.search)
+    this.landingpage = new Landingpage(this.call, this.search, keyspaces)
 
     this.dispatcher.on('search', (term) => {
       this.search.setSearchTerm(term, prefixLength)

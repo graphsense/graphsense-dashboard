@@ -6,11 +6,12 @@ import numeral from 'numeral'
 import {replace} from './template_utils'
 
 export default class Landingpage extends Component {
-  constructor (dispatcher, search) {
+  constructor (dispatcher, search, keyspaces) {
     super()
     this.dispatcher = dispatcher
     this.stats = {}
     this.search = search
+    this.stats = {...keyspaces}
   }
   setStats (stats) {
     this.stats = stats
@@ -21,9 +22,9 @@ export default class Landingpage extends Component {
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate() === true) {
       this.root.innerHTML = layout
-      this.stats['btc'] = 'loading'
-      this.stats['ltc'] = 'loading'
-      this.stats['bch'] = 'loading'
+      for (let key in this.stats) {
+        this.stats[key] = 'loading'
+      }
       this.dispatcher('stats')
       this.renderStats()
       let searchRoot = this.root.querySelector('.splash .search')

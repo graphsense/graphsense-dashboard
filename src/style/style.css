@@ -436,7 +436,11 @@ svg.slash path {
   background-image: url("../layout/bitcoin-cash.svg");
 }
 
-.stats-table {
+.currency.zec {
+  background-image: url("../layout/zcash.svg");
+}
+
+stats-table {
   @apply table border-collapse 
 }
 .stats-row {
