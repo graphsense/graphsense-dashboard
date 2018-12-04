@@ -4,7 +4,6 @@ import Component from './component.js'
 import moment from 'moment'
 import numeral from 'numeral'
 import {replace} from './template_utils'
-import Search from './search/search.js'
 
 export default class Landingpage extends Component {
   constructor (dispatcher, search) {

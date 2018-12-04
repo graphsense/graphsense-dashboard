@@ -26,6 +26,8 @@ export default class Layout extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    // set overflow hidden to prevent window scrollbars
+    document.body.style.overflow = 'hidden'
     let browserRoot = null
     let graphRoot = null
     let configRoot = null

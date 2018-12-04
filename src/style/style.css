@@ -356,9 +356,11 @@ textarea {
 
 .splash {
   height: 50vw;
+  max-height: 600px;
   background-size: cover;
   background-image: url("../layout/background.jpg");
   background-position-x: 40%;
+  background-position-y: 60%;
   background-repeat: no-repeat;
   background-color: black;
   position: relative;
@@ -368,12 +370,11 @@ textarea {
 .splash .tagline {
   font-family: Conv_Octarine-Light;
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-  @apply m-8 w-3/5 text-white text-3xl text-center;
+  @apply m-8 w-3/5 text-white text-center;
 }
 
 body {
   height: 100vh;
-  overflow: hidden;
 }
 
 svg.slash {
@@ -399,7 +400,7 @@ svg.slash path {
 
 .supported-currencies h2 {
   font-family: Conv_Octarine-Bold;
-  @apply pt-2 pb-6 w-full text-center text-gs-base text-3xl;
+  @apply pt-4 pb-6 w-full text-center text-gs-base text-3xl;
 }
 
 .currencies {
@@ -411,7 +412,7 @@ svg.slash path {
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
-  @apply w-1/3 pb-4 px-10
+  @apply pb-4 px-10 mb-5
 }
 
 .currency h3 {
