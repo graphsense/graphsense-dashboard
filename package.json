@@ -30,6 +30,7 @@
     "noop-webpack-plugin": "^1.0.1",
     "numeral": "^2.0.6",
     "postcss-loader": "^3.0.0",
+    "preprocess-loader": "^0.3.0",
     "style-loader": "^0.23.0",
     "tailwindcss": "^0.6.6",
     "url-loader": "^1.1.1",
@@ -37,7 +38,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "./node_modules/.bin/webpack",
+    "build": "./node_modules/.bin/webpack --env.production",
     "babel": "./node_modules/.bin/babel src -d dist",
     "start": "webpack-dev-server"
   },

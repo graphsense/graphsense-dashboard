@@ -2,34 +2,24 @@
 
 Analyze and navigate through cryptocurrencies.
 
-## Installation
+## Development setup
 
-Install all dependencies
+Install all dependencies:
 
     npm install
 
-### Production setup
-
-* Set `IS_DEV` in `webpack.config.js` to `false`. 
-* Adapt `baseUrl` in `src/index.js`
-
-Then run
-
-    npm run build
-
-Deploy `dist`.
-
-### Development setup
-
-Clone [graphsense-REST-python](https://git-service.ait.ac.at/dil-graphsense/graphsense-REST-Python) and switch to branch `cors`.
-
-Having `docker` installed, run 
-
-    docker/build.sh
-    docker/start.sh
-
-In `webpack.config.js` set `IS_DEV` to `true`. Then run
+Run the development server:
 
     npm start
 
-to start the development server. Browse to `localhost:8080`.
+### Production setup
+
+Since this repository is not publicly available yet, the Docker image needs to be build locally. So you might transfer the source code to the target machine and build it there.
+
+Build the Docker image:
+
+    docker build -t graphsense-gui .
+
+Run it by passing it the URL of the [REST](https://github.com/graphsense/graphsense-REST) endpoint, e.g.: 
+
+    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-gui
