@@ -94,4 +94,25 @@ export default class Store {
       estimatedValue: data.estimatedValue
     })
   }
+  serialize () {
+    let addresses = []
+    this.addresses.each(address => {
+      let s = {...address}
+      s.cluster = s.cluster.id
+      delete s.outgoing
+      addresses.push(s)
+    })
+    let clusters = []
+    this.clusters.each(cluster => {
+      let s = {...cluster}
+      s.addresses = s.addresses.keys()
+      delete s.outgoing
+      clusters.push(s)
+    })
+    let alllinks = []
+    this.outgoingLinks.each((links, id) => {
+      alllinks.push([id, links.entries()])
+    })
+    return [addresses, clusters, alllinks]
+  }
 }

@@ -30,6 +30,14 @@ class GraphNode extends Component {
     this.x = 0
     this.y = 0
   }
+  serialize () {
+    return [
+      this.labelType,
+      this.currency,
+      this.x,
+      this.y
+    ]
+  }
   renderLabel (root) {
     if (this.data.mockup) return
     let label = this.getLabel()

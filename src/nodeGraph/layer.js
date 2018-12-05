@@ -9,6 +9,9 @@ export default class Layer extends Component {
     this.id = id
     this.nodes = map()
   }
+  serialize () {
+    return [this.id, this.nodes.keys()]
+  }
   add (node) {
     this.nodes.set(node.id, node)
   }

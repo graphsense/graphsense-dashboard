@@ -16,6 +16,10 @@ export default class ClusterNode extends GraphNode {
     this.type = 'cluster'
     this.numLetters = 11
   }
+  serialize () {
+    let s = super.serialize()
+    s.push(this.nodes.keys())
+  }
   add (node) {
     if (!node.id) throw new Error('not a node', node)
     this.nodes.set(node.id, node)

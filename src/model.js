@@ -6,6 +6,9 @@ import Layout from './layout.js'
 import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
 import Landingpage from './landingpage.js'
+import moment from 'moment'
+
+const VERSION = '0.4'
 
 const baseUrl = REST_ENDPOINT
 
@@ -444,11 +447,34 @@ export default class Model {
     this.dispatcher.on('hideContextmenu', () => {
       this.config.hideMenu()
     })
+    this.dispatcher.on('save', () => {
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss')
+      this.download(filename + '.gs', this.serialize())
+    })
     window.onpopstate = (e) => {
       return
       if (!e.state) return
       this.dispatcher.call(e.state.message, null, e.state.data)
     }
+  }
+  serialize () {
+    return JSON.stringify([
+      VERSION,
+      this.store.serialize(),
+      this.graph.serialize()
+    ])
+  }
+  download (filename, text) {
+    var element = document.createElement('a')
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+    element.setAttribute('download', filename)
+
+    element.style.display = 'none'
+    document.body.appendChild(element)
+
+    element.click()
+
+    document.body.removeChild(element)
   }
   mapResult (msg, context) {
     if (this.isReplaying) {

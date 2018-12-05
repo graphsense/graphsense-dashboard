@@ -68,8 +68,6 @@ export default class NodeGraph extends Component {
           range: (v) => defaultColor['address']
         }
       }
-    this.scaleTransactions = scalePow().range(transactionsPixelRange)
-    this.scaleValue = scalePow().range(transactionsPixelRange)
   }
   deselect () {
     if (!this.selectedNode) return
@@ -570,5 +568,27 @@ export default class NodeGraph extends Component {
       label = '?'
     }
     return [value, label]
+  }
+  serialize () {
+    let clusterNodes = []
+    this.clusterNodes.each(node => clusterNodes.push(node.serialize()))
+
+    let addressNodes = []
+    this.addressNodes.each(node => addressNodes.push(node.serialize()))
+
+    let layers = []
+    this.layers.forEach(layer => layers.push(layer.serialize()))
+
+    return [
+      this.currency,
+      this.labelType,
+      this.txLabelType,
+      this.viewBox,
+      clusterNodes,
+      addressNodes,
+      layers,
+      this.colorMapCategories.entries(),
+      this.colorMapTags.entries()
+    ]
   }
 }
