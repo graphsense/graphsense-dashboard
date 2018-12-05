@@ -10,6 +10,7 @@ import TagsTable from './browser/tags_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
+import {addClass, removeClass} from './template_utils.js'
 
 export default class Browser extends Component {
   constructor (dispatcher, currency) {
@@ -22,7 +23,7 @@ export default class Browser extends Component {
   }
   deselect () {
     this.visible = false
-    this.shouldUpdate(true)
+    this.shouldUpdate('visibility')
   }
   destroyComponentsFrom (index) {
     this.content.forEach((content, i) => {
@@ -52,7 +53,7 @@ export default class Browser extends Component {
     this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0, this.currency) ]
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   setTransaction (tx) {
     this.activeTab = 'transactions'
@@ -63,14 +64,14 @@ export default class Browser extends Component {
       new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1, this.currency, tx.keyspace),
       new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1, this.currency, tx.keyspace)
     ]
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   setCluster (cluster) {
     this.activeTab = 'address'
     this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   setResultNode (object) {
     console.log('setResultNode', object)
@@ -83,7 +84,7 @@ export default class Browser extends Component {
     } else if (object.type === 'cluster') {
       this.content[0] = new Cluster(this.dispatcher, object, 0, this.currency)
     }
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   setResponse (response) {
     this.content.forEach((comp) => {
@@ -100,7 +101,7 @@ export default class Browser extends Component {
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   initAddressesTable (request) {
     if (request.index !== 0 && !request.index) return
@@ -111,7 +112,7 @@ export default class Browser extends Component {
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace))
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   initTagsTable (request) {
     if (request.index !== 0 && !request.index) return
@@ -122,7 +123,7 @@ export default class Browser extends Component {
     let keyspace = last.data.keyspace
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, keyspace))
 
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   initNeighborsTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
@@ -136,39 +137,59 @@ export default class Browser extends Component {
     let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
-    this.shouldUpdate(true)
+    this.shouldUpdate('content')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     console.log('browser', this.shouldUpdate())
     if (this.shouldUpdate() === true) {
-      super.render()
       this.root.innerHTML = layout
-      let data = this.root.querySelector('#browser-data')
-      let c = 0
-      if (!this.visible) {
-        this.root.style.display = 'none'
-      } else {
-        this.root.style.display = 'block'
-      }
-      this.content.forEach((comp) => {
-        c += 1
-        let compEl = document.createElement('div')
-        compEl.className = 'browser-component'
-        data.appendChild(compEl)
-        comp.render(compEl)
-        let options = comp.renderOptions()
-        if (!options) return
-        let el = document.createElement('div')
-        el.className = 'browser-options ' + (c < this.content.length ? 'browser-options-short' : '')
-        el.appendChild(options)
-        data.appendChild(el)
-      })
+      this.renderVisibility()
+      this.renderContent()
+      super.render()
+      return this.root
+    }
+    if (this.shouldUpdate() === 'visibility') {
+      this.renderVisibility()
+      super.render()
+      return this.root
+    }
+    if (this.shouldUpdate() === 'content') {
+      this.renderVisibility()
+      this.renderContent()
+      super.render()
       return this.root
     }
     this.content.forEach(comp => comp.render())
     super.render()
     return this.root
+  }
+  renderVisibility () {
+    let frame = this.root
+    if (!this.visible) {
+      removeClass(frame, 'show-browser')
+    } else {
+      addClass(frame, 'show-browser')
+    }
+  }
+  renderContent () {
+    console.log('render content')
+    let data = this.root.querySelector('#browser-data')
+    data.innerHTML = ''
+    let c = 0
+    this.content.forEach((comp) => {
+      c += 1
+      let compEl = document.createElement('div')
+      compEl.className = 'browser-component'
+      data.appendChild(compEl)
+      comp.render(compEl)
+      let options = comp.renderOptions()
+      if (!options) return
+      let el = document.createElement('div')
+      el.className = 'browser-options ' + (c < this.content.length ? 'browser-options-short' : '')
+      el.appendChild(options)
+      data.appendChild(el)
+    })
   }
 }

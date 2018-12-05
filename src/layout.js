@@ -1,6 +1,5 @@
 import layout from './layout/layout.html'
 import Component from './component.js'
-import {browserHeight} from './globals.js'
 
 export default class Layout extends Component {
   constructor (dispatcher, browser, graph, config, search) {
@@ -50,7 +49,6 @@ export default class Layout extends Component {
       graphRoot = this.root.querySelector('#layout-graph')
       configRoot = this.root.querySelector('#layout-config')
       searchRoot = this.root.querySelector('#layout-search')
-      browserRoot.style.height = browserHeight + 'px'
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)

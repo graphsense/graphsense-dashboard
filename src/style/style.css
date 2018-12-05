@@ -74,6 +74,11 @@ html, body {
 }
 
 #layout-browser {
+  top: -20vh;
+  transition: top 0.5s;
+}
+
+#layout-browser.show-browser {
   top: 5vh;
 }
 
@@ -319,7 +324,7 @@ div.dataTables_wrapper {
 div.dataTables_wrapper div.dataTables_info {
   position: absolute;
   bottom: 1px;
-  z-index: 100;
+  z-index: 29;
   background: white;
   padding-top: 0;
   padding: 4px;
