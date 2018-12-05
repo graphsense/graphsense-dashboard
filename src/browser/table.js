@@ -5,7 +5,7 @@ import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
 
-const rowHeight = 35
+const rowHeight = 24
 
 export default class Table extends BrowserComponent {
   constructor (dispatcher, index, total, currency, keyspace) {
