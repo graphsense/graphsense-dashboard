@@ -15,7 +15,7 @@ export default class Store {
       let a = this.addresses.get(object.address || object.id)
       if (!a) {
         a = empty
-        a.id = object.address
+        a.id = object.address || object.id
         a.type = 'address'
         let outgoing = this.initOutgoing(a.id)
         a.outgoing = outgoing
@@ -40,7 +40,7 @@ export default class Store {
       let c = this.clusters.get(object.cluster || object.id)
       if (!c) {
         c = { addresses: map(), ...empty }
-        c.id = object.cluster
+        c.id = object.cluster || object.id
         c.type = 'cluster'
         let outgoing = this.initOutgoing(c.id)
         c.outgoing = outgoing
@@ -50,14 +50,15 @@ export default class Store {
       Object.keys(object).forEach(key => { c[key] = object[key] })
       // remove unneeded cluster field (is now id)
       delete c.cluster
-      if (object.forAddress) {
-        let a = this.addresses.get(object.forAddress)
-        console.log('forAddress', object.forAddress, a)
+      let addresses = object.forAddresses || []
+      addresses.forEach(address => {
+        let a = this.addresses.get(address)
+        console.log('forAddress', address, a)
         if (a) {
-          c.addresses.set(object.forAddress, a)
+          c.addresses.set(address, a)
           a.cluster = c
         }
-      }
+      })
       return c
     }
   }
@@ -70,6 +71,7 @@ export default class Store {
     }
   }
   initOutgoing (id) {
+    console.log('id', id)
     if (typeof id !== 'string' && typeof id !== 'number') {
       throw new Error('id is not string')
     }
@@ -114,5 +116,20 @@ export default class Store {
       alllinks.push([id, links.entries()])
     })
     return [addresses, clusters, alllinks]
+  }
+  deserialize ([addresses, clusters, alllinks]) {
+    addresses.forEach(address => {
+      this.add(address)
+    })
+    clusters.forEach(cluster => {
+      cluster.forAddresses = cluster.addresses
+      delete cluster.addresses
+      this.add(cluster)
+    })
+    alllinks.forEach(([id, links]) => {
+      links.forEach(({key, value}) => {
+        this.linkOutgoing(id, key, value)
+      })
+    })
   }
 }

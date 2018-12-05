@@ -47,9 +47,8 @@ const keyspaces =
 export default class Model {
   constructor (dispatcher) {
     this.dispatcher = dispatcher
-    this.store = new Store()
     this.isReplaying = false
-    this.showLandingpage = true
+    this.showLandingpage = false
 
     this.call = (message, data) => {
       if (this.isReplaying) {
@@ -63,25 +62,7 @@ export default class Model {
       }, 1)
     }
 
-    // VIEWS
-    this.browser = new Browser(this.call, defaultCurrency)
-    this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
-    this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
-    let rest = {}
-    this.searchTimeout = {}
-    for (let key in keyspaces) {
-      rest[key] = new Rest(baseUrl, key, prefixLength)
-      this.searchTimeout[key] = null
-    }
-    this.rest = (keyspace) => {
-      if (!keyspaces[keyspace]) {
-        return new Rest(baseUrl, '', prefixLength)
-      }
-      return rest[keyspace]
-    }
-    this.search = new Search(this.call, keyspaces)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
-    this.landingpage = new Landingpage(this.call, this.search, keyspaces)
+    this.createComponents()
 
     this.dispatcher.on('search', (term) => {
       this.search.setSearchTerm(term, prefixLength)
@@ -287,7 +268,7 @@ export default class Model {
           resultCopy.cluster = 'mockup' + context.addressId
           resultCopy.mockup = true
         }
-        this.store.add({...resultCopy, forAddress: context.addressId})
+        this.store.add({...resultCopy, forAddresses: [context.addressId]})
         this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}})
       } else if (context.stage === 4 && context.id && context.type) {
         let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
@@ -448,8 +429,16 @@ export default class Model {
       this.config.hideMenu()
     })
     this.dispatcher.on('save', () => {
+      if (this.isReplaying) return
       let filename = moment().format('YYYY-MM-DD HH-mm-ss')
       this.download(filename + '.gs', this.serialize())
+    })
+    this.dispatcher.on('load', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad()
+    })
+    this.dispatcher.on('loadFile', (data) => {
+      this.deserialize(data)
     })
     window.onpopstate = (e) => {
       return
@@ -457,12 +446,40 @@ export default class Model {
       this.dispatcher.call(e.state.message, null, e.state.data)
     }
   }
+  createComponents () {
+    this.store = new Store()
+    this.browser = new Browser(this.call, defaultCurrency)
+    this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    let rest = {}
+    this.searchTimeout = {}
+    for (let key in keyspaces) {
+      rest[key] = new Rest(baseUrl, key, prefixLength)
+      this.searchTimeout[key] = null
+    }
+    this.rest = (keyspace) => {
+      if (!keyspaces[keyspace]) {
+        return new Rest(baseUrl, '', prefixLength)
+      }
+      return rest[keyspace]
+    }
+    this.search = new Search(this.call, keyspaces)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
+    this.landingpage = new Landingpage(this.call, this.search, keyspaces)
+  }
   serialize () {
     return JSON.stringify([
       VERSION,
       this.store.serialize(),
       this.graph.serialize()
     ])
+  }
+  deserialize (blob) {
+    let data = JSON.parse(blob)
+    this.createComponents()
+    this.store.deserialize(data[1])
+    this.graph.deserialize(data[2], this.store)
+    this.layout.shouldUpdate(true)
   }
   download (filename, text) {
     var element = document.createElement('a')

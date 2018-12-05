@@ -1,6 +1,6 @@
 import {event} from 'd3-selection'
 import {map} from 'd3-collection'
-import {GraphNode, addressWidth, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
+import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 
 const gap = padding
 const noAddressesLabelHeight = 16
@@ -19,6 +19,13 @@ export default class ClusterNode extends GraphNode {
   serialize () {
     let s = super.serialize()
     s.push(this.nodes.keys())
+    return s
+  }
+  deserialize ([x, y, nodes], addressNodes) {
+    super.deserialize([x, y])
+    nodes.forEach(key => {
+      this.add(addressNodes.get(key))
+    })
   }
   add (node) {
     if (!node.id) throw new Error('not a node', node)
@@ -103,7 +110,6 @@ export default class ClusterNode extends GraphNode {
       })
     let h = this.getHeight()
     let w = this.getWidth()
-    let lineY = h - paddingBottom - noAddressesLabelHeight
     button.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', w / 2)

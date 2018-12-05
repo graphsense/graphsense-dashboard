@@ -571,10 +571,10 @@ export default class NodeGraph extends Component {
   }
   serialize () {
     let clusterNodes = []
-    this.clusterNodes.each(node => clusterNodes.push(node.serialize()))
+    this.clusterNodes.each(node => clusterNodes.push([node.id, node.serialize()]))
 
     let addressNodes = []
-    this.addressNodes.each(node => addressNodes.push(node.serialize()))
+    this.addressNodes.each(node => addressNodes.push([node.id, node.serialize()]))
 
     let layers = []
     this.layers.forEach(layer => layers.push(layer.serialize()))
@@ -590,5 +590,46 @@ export default class NodeGraph extends Component {
       this.colorMapCategories.entries(),
       this.colorMapTags.entries()
     ]
+  }
+  deserialize ([
+    currency,
+    labelType,
+    txLabelType,
+    viewBox,
+    clusterNodes,
+    addressNodes,
+    layers,
+    colorMapCategories,
+    colorMapTags
+  ], store) {
+    this.currency = currency
+    this.labelType = labelType
+    this.txLabelType = txLabelType
+    this.viewBox = viewBox
+    colorMapCategories.forEach(({key, value}) => {
+      this.colorMapCategories.set(key, value)
+    })
+    colorMapTags.forEach(({key, value}) => {
+      this.colorMapTags.set(key, value)
+    })
+    addressNodes.forEach(([nodeId, address]) => {
+      let data = store.get('address', nodeId[0])
+      let node = new AddressNode(this.dispatcher, data, nodeId[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
+      node.deserialize(address)
+      this.addressNodes.set(nodeId, node)
+    })
+    clusterNodes.forEach(([nodeId, cluster]) => {
+      let data = store.get('cluster', nodeId[0])
+      let node = new ClusterNode(this.dispatcher, data, nodeId[1], this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
+      node.deserialize(cluster, this.addressNodes)
+      this.clusterNodes.set(nodeId, node)
+    })
+    layers.forEach(([id, clusterKeys]) => {
+      let l = new Layer(id)
+      clusterKeys.forEach(key => {
+        l.add(this.clusterNodes.get(key))
+      })
+      this.layers.push(l)
+    })
   }
 }

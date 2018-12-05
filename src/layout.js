@@ -22,6 +22,9 @@ export default class Layout extends Component {
     this.config = config
     this.config.shouldUpdate(true)
   }
+  triggerFileLoad () {
+    this.root.querySelector('#file-loader').click()
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -44,6 +47,17 @@ export default class Layout extends Component {
       let loadButton = this.root.querySelector('#navbar-load')
       loadButton.addEventListener('click', () => {
         this.dispatcher('load')
+      })
+      let loader = this.root.querySelector('#file-loader')
+      loader.addEventListener('change', (e) => {
+        let input = e.target
+
+        let reader = new FileReader() //eslint-disable-line
+        reader.onload = () => {
+          let data = reader.result
+          this.dispatcher('loadFile', data)
+        }
+        reader.readAsText(input.files[0])
       })
       browserRoot = this.root.querySelector('#layout-browser')
       graphRoot = this.root.querySelector('#layout-graph')

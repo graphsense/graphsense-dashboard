@@ -59,6 +59,7 @@ const dispatcher = dispatch(IS_DEV,
   'hideContextmenu',
   'save',
   'load',
+  'loadFile',
   'deselect'
 )
 
