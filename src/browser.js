@@ -98,6 +98,7 @@ export default class Browser extends Component {
     if (!(comp instanceof Address)) return
     let keyspace = comp.data.keyspace
     if (this.content[request.index + 1] instanceof TransactionsTable) return
+    comp.setCurrentOption('initTransactionsTable')
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
@@ -109,6 +110,7 @@ export default class Browser extends Component {
     if (!(last instanceof Cluster)) return
     let keyspace = last.data.keyspace
     if (this.content[request.index + 1] instanceof AddressesTable) return
+    last.setCurrentOption('initAddressesTable')
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace))
@@ -119,6 +121,7 @@ export default class Browser extends Component {
     let last = this.content[request.index]
     if (!(last instanceof Cluster) && !(last instanceof Address)) return
     if (this.content[request.index + 1] instanceof TagsTable) return
+    last.setCurrentOption('initTagsTable')
     this.destroyComponentsFrom(request.index + 1)
     let keyspace = last.data.keyspace
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, keyspace))
@@ -133,6 +136,7 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing
     ) return
 
+    last.setCurrentOption(isOutgoing ? 'initOutdegreeTable' : 'initIndegreeTable')
     let keyspace = last.data.keyspace
     let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)

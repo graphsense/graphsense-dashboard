@@ -10,13 +10,19 @@ export default class BrowserComponent extends Component {
     this.index = index
     this.dispatcher = dispatcher
     this.currency = currency
+    this.currentOption = null
+  }
+  setCurrentOption (option) {
+    this.currentOption = option
+    this.shouldUpdate(true)
   }
   renderOptions () {
     let ul = document.createElement('ul')
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {
       let li = document.createElement('li')
-      li.className = 'cursor-pointer py-1'
+      li.className = 'cursor-pointer py-1 ' +
+        (this.currentOption === optionData.message ? 'option-active' : '')
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
         this.dispatcher(optionData.message,

@@ -136,6 +136,10 @@ html, body {
   @apply h-full px-1 py-1 bg-grey-lighter text-center
 }
 
+li.option-active i {
+  @apply text-gs-base
+}
+
 .browser-options-short {
   @apply layout-border border-r
 }
