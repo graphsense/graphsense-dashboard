@@ -4,6 +4,8 @@
 {% block header %}
 {{ super() }}
 <script language='javascript'>
+  var context = 'cluster';
+  var context_id = '{{cluster.cluster}}';
   var cluster_id = '{{cluster.cluster}}';
   var currency = '{{currency}}';
 </script>
@@ -65,8 +67,9 @@
 <!-- Tab panes -->
 <div class="tab-content">
 
+  <!-- Cluster Graph tab -->
   <div role="tabpanel" class="tab-pane active" id="cg_tab">
-    <div id="graph-control" class="row">
+    <div id="graph-control" class="row graph-top-buttons">
       {% include 'partials/graph_control.html' %}
     </div>
     <div id="graph-container" class="row">
@@ -74,6 +77,7 @@
     </div>
   </div>
 
+  <!-- Addresses Tab -->
   <div role="tabpanel" class="tab-pane" id="addresses_tab">
     <div class="table-responsive detail-table">
       <table id="addresses_table" class="table table-striped" cellspacing="0" width="100%">
@@ -94,22 +98,32 @@
       </div>
   </div>
 
+  <!-- Tags tab -->
   <div role="tabpanel" class="tab-pane" id="tag_tab">
-    <div class="table-responsive detail-table">
-      <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
-            <thead>
-                <tr>
-                    <th class="col-md-2">Address</th>
-                    <th class="col-md-2">Tag</th>
-                    <th class="col-md-2">Tag URI</th>
-                    <th class="col-md-1">Description</th>
-                    <th class="col-md-1">Actor Category</th>
-                    <th class="col-md-1">Source</th>
-                    <th class="col-md-1">Timestamp</th>
-                </tr>
-            </thead>
-        </table>
+
+    <div id="tag-download" class="row table-top-buttons">
+      {% include 'partials/tag_download.html' %}
+    </div>
+
+    <div class="row">
+      <div class="table-responsive detail-table col-md-12">
+        <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
+              <thead>
+                  <tr>
+                      <th class="col-md-2">Address</th>
+                      <th class="col-md-2">Tag</th>
+                      <th class="col-md-2">Tag URI</th>
+                      <th class="col-md-1">Description</th>
+                      <th class="col-md-1">Actor Category</th>
+                      <th class="col-md-1">Source</th>
+                      <th class="col-md-1">Timestamp</th>
+                  </tr>
+              </thead>
+          </table>
       </div>
+     <div class="row">
+
+
   </div>
 
 </div>
@@ -121,7 +135,6 @@
 <script src="{{ url_for('static', filename='js/graphviz/graphModel.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphLayout.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphControl.js') }}"></script>
-
-
+<script src="{{ url_for('static', filename='js/common/tagDownload.js') }}"></script>
 <script src="{{ url_for('static', filename='js/detail_cluster.js') }}"></script>
 {% endblock %}

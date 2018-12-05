@@ -5,8 +5,10 @@ jQuery( document ).ready(function() {
 
         clusterSummary = new SummaryBox('#cluster-summary', app),
 
+        tagDownload = new TagDownload('#tag-download-button'),
+
         tabs = ['#ag_tab', '#txs_tab', '#tag_tab'],
-f
+
         activate_tab_div = function(tab_id) {
           $(tab_id).addClass('active');
           for (var i=0; i < tabs.length; i++) {
@@ -152,7 +154,7 @@ f
           $('#tag_table').DataTable( {
             retrieve: true,
             paging: true,
-            searching: true,
+            searching: false,
             ajax: {
               url: request_uri,
               "dataSrc": ''

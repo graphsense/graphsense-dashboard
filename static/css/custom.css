@@ -113,10 +113,10 @@ footer {
   /*margin-left: 10px;*/
 }
 
-div#graph-control {
+/*div#graph-control {
   margin-top: 20px;
 }
-
+*/
 
 
 /* 5. FOOTER */
@@ -203,21 +203,26 @@ footer > .container-fluid {
   stroke: #e040fb;
 }
 
+.graph-top-buttons {
+  padding-top: 10px;
+  margin: 0px;
+}
+
+
 /* 8. TABLES */
 
 .detail-table {
   padding-top: 10px;
 }
 
-button[id^='custom-button-']{
-  margin: 5px;
+.table-top-buttons {
+  padding-top: 10px;
+  margin: 0px;
+  text-align: right;
 }
 
-/* datatables buttons container */
-div#trx-table-buttons {
-  padding-top: 10px;
-    margin: 0px;
-    text-align: right;
+button[id^='custom-button-']{
+  margin: 5px;
 }
 
 /* hide button texts of generated datatables buttons */

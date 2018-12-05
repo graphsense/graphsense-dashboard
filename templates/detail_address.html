@@ -11,6 +11,8 @@
 {% block header %}
 {{ super() }}
 <script language='javascript'>
+  var context = 'address';
+  var context_id = '{{address['address']}}';
   var address_id = '{{address['address']}}';
   var currency = '{{currency}}';
 </script>
@@ -127,8 +129,9 @@
 <!-- Tab panes -->
 <div class="tab-content">
 
+  <!-- Address Graph tab -->
   <div role="tabpanel" class="tab-pane active" id="ag_tab">
-    <div id="graph-control" class="row">
+    <div id="graph-control" class="row graph-top-buttons">
       {% include 'partials/graph_control.html' %}
     </div>
     <div id="graph-container" class="row">
@@ -136,9 +139,10 @@
     </div>
   </div>
 
+  <!-- Transactions tab -->
   <div role="tabpanel" class="tab-pane" id="txs_tab">
     <!-- data tables buttons container -->
-    <div id="trx-table-buttons"></div>
+    <div id="trx-table-buttons" class="row table-top-buttons"></div>
     <div class="row">
         <div class="table-responsive detail-table col-md-12">
           <table id="txs_table" class="table table-striped" cellspacing="0" width="100%">
@@ -157,9 +161,16 @@
     </div>
   </div>
 
+  <!-- Tags tab -->
   <div role="tabpanel" class="tab-pane" id="tag_tab">
-    <div class="table-responsive detail-table">
-      <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
+
+    <div id="tag-download" class="row table-top-buttons">
+      {% include 'partials/tag_download.html' %}
+    </div>
+
+    <div class="row">
+      <div class="table-responsive detail-table col-md-12">
+        <table id="tag_table" class="table table-striped" cellspacing="0" width="100%">
             <thead>
                 <tr>
                     <th class="col-md-2">Tag</th>
@@ -173,6 +184,8 @@
             </thead>
         </table>
       </div>
+    </div>
+  
   </div>
 
 </div>
@@ -184,6 +197,7 @@
 <script src="{{ url_for('static', filename='js/graphviz/graphControl.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphModel.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphLayout.js') }}"></script>
+<script src="{{ url_for('static', filename='js/common/tagDownload.js') }}"></script>
 <script src="{{ url_for('static', filename='js/detail_address.js') }}"></script>
 {% endblock %}
 

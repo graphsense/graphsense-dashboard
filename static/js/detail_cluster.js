@@ -4,6 +4,8 @@ jQuery( document ).ready(function() {
 
         clusterSummary = new SummaryBox('#summary', app),
 
+        tagDownload = new TagDownload('#tag-download-button'),        
+
         tabs = ['#cg_tab', '#addresses_tab', '#tag_tab'],
 
         activate_tab_div = function(tab_id) {
@@ -121,7 +123,7 @@ jQuery( document ).ready(function() {
           $('#tag_table').DataTable( {
             retrieve: true,
             paging: true,
-            searching: true,
+            searching: false,
             ajax: {
               url: request_uri,
               "dataSrc": ''
