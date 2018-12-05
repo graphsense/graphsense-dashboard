@@ -6,7 +6,7 @@ jQuery( document ).ready(function() {
         clusterSummary = new SummaryBox('#cluster-summary', app),
 
         tabs = ['#ag_tab', '#txs_tab', '#tag_tab'],
-
+f
         activate_tab_div = function(tab_id) {
           $(tab_id).addClass('active');
           for (var i=0; i < tabs.length; i++) {
@@ -58,16 +58,16 @@ jQuery( document ).ready(function() {
                 }
               },
               {
-                "name": "btc",
+                "name": currency,
                 "data": "value",
-                "visible": (app.getActiveCurrency() == 'btc'),
+                "visible": (app.getActiveCurrency() == currency),
                 "render": function(data, type, full, meta) {
                   if (data.satoshi >= 0) {
                     color = 'green-text';
                   } else {
                     color = 'red-text'
                   }
-                  span = '<span class=' + color + '>' + CurrencyUtils.formatCurrency(data.satoshi, 'btc') + '</span>';
+                  span = '<span class=' + color + '>' + CurrencyUtils.formatCurrency(data.satoshi, currency) + '</span>';
                   return span;
                 }
               },

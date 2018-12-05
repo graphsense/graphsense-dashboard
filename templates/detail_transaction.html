@@ -27,14 +27,14 @@
 <tr>
   <td>Total Value</td>
   <td>
-    {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd) }}
+    {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd, currency) }}
   </td>
 </tr>
 {% if tx.fee %}
 <tr>
   <td>Fee</td>
   <td>
-    {{ currency_value.render(tx.fee.satoshi, tx.fee.eur, tx.fee.usd) }}
+    {{ currency_value.render(tx.fee.satoshi, tx.fee.eur, tx.fee.usd, currency) }}
   </td>
 </tr>
 {% endif %}

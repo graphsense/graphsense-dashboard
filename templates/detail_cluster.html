@@ -44,13 +44,13 @@
 <tr>
   <td>Total Received</td>
   <td>
-    {{ currency_value.render(cluster.totalReceived.satoshi, cluster.totalReceived.eur, cluster.totalReceived.usd) }}
+    {{ currency_value.render(cluster.totalReceived.satoshi, cluster.totalReceived.eur, cluster.totalReceived.usd, currency) }}
   </td>
 </tr>
 <tr>
   <td>Final Balance</td>
   <td>
-    {{ currency_value.render(cluster.balance.satoshi, cluster.balance.eur, cluster.balance.usd)  }}
+    {{ currency_value.render(cluster.balance.satoshi, cluster.balance.eur, cluster.balance.usd, currency)  }}
   </td>
 </tr>
 {% endblock %}
@@ -82,10 +82,10 @@
                     <th class="col-md-2">Address</th>
                     <th class="col-md-2">First Usage</th>
                     <th class="col-md-2">Last Usage</th>
-                    <th class="col-md-2 currencyColumn btc">Received</th>
+                    <th class="col-md-2 currencyColumn {{currency}}">Received</th>
                     <th class="col-md-2 currencyColumn eur">Received</th>
                     <th class="col-md-2 currencyColumn usd">Received</th>
-                    <th class="col-md-2 currencyColumn btc">Balance</th>
+                    <th class="col-md-2 currencyColumn {{currency}}">Balance</th>
                     <th class="col-md-2 currencyColumn eur">Balance</th>
                     <th class="col-md-2 currencyColumn usd">Balance</th>
                 </tr>

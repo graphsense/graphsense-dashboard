@@ -52,13 +52,13 @@
 <tr>
   <td>Total Received</td>
   <td>
-    {{ currency_value.render(address.totalReceived.satoshi, address.totalReceived.eur, address.totalReceived.usd) }}
+    {{ currency_value.render(address.totalReceived.satoshi, address.totalReceived.eur, address.totalReceived.usd, currency) }}
   </td>
 </tr>
 <tr>
   <td>Final Balance</td>
   <td>
-    {{ currency_value.render(address.balance.satoshi, address.balance.eur, address.balance.usd) }}
+    {{ currency_value.render(address.balance.satoshi, address.balance.eur, address.balance.usd, currency) }}
   </td>
 </tr>
 {% endblock %}
@@ -101,13 +101,13 @@
     <tr>
       <td>Total Received</td>
       <td>
-        {{ currency_value.render(address.cluster.totalReceived.satoshi, address.cluster.totalReceived.eur, address.cluster.totalReceived.usd) }}
+        {{ currency_value.render(address.cluster.totalReceived.satoshi, address.cluster.totalReceived.eur, address.cluster.totalReceived.usd, currency) }}
       </td>
     </tr>
     <tr>
       <td>Final Balance</td>
       <td>
-        {{ currency_value.render(address.cluster.balance.satoshi, address.cluster.balance.eur, address.cluster.balance.usd) }}
+        {{ currency_value.render(address.cluster.balance.satoshi, address.cluster.balance.eur, address.cluster.balance.usd, currency) }}
       </td>
     </tr>
   </table>
@@ -145,7 +145,7 @@
                 <thead>
                     <tr>
                         <th class="col-md-5">Transaction</th>
-                        <th class="col-md-2 currencyColumn btc">Value</th>
+                        <th class="col-md-2 currencyColumn {{ currency }}">Value</th>
                         <th class="col-md-2 currencyColumn eur">Value</th>
                         <th class="col-md-2 currencyColumn usd">Value</th>
                         <th class="col-md-2">Height</th>
@@ -184,7 +184,6 @@
 <script src="{{ url_for('static', filename='js/graphviz/graphControl.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphModel.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graphviz/graphLayout.js') }}"></script>
-
 <script src="{{ url_for('static', filename='js/detail_address.js') }}"></script>
 {% endblock %}
 

@@ -70,9 +70,9 @@ jQuery( document ).ready(function() {
               },
               {
                 "data": "totalReceived.satoshi",
-                "visible": (app.getActiveCurrency() == 'btc'),
+                "visible": (app.getActiveCurrency() == currency),
                 "render": function(data, type, full, meta) {
-                  return CurrencyUtils.formatCurrency(data, 'btc')
+                  return CurrencyUtils.formatCurrency(data, currency)
                 }
               },
               {
@@ -91,9 +91,9 @@ jQuery( document ).ready(function() {
               },
               {
                 "data": "balance.satoshi",
-                "visible": (app.getActiveCurrency() == 'btc'),
+                "visible": (app.getActiveCurrency() == currency),
                 "render": function(data, type, full, meta) {
-                  return CurrencyUtils.formatCurrency(data, 'btc')
+                  return CurrencyUtils.formatCurrency(data, currency)
                 }
               },
               {

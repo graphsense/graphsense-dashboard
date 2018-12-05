@@ -32,7 +32,7 @@
             {% endif %}
             </td>
             <td class="col-md-4 text-right">
-              {{ currency_value.render(input.value.satoshi, input.value.eur, input.value.usd) }}
+              {{ currency_value.render(input.value.satoshi, input.value.eur, input.value.usd, currency) }}
             </td>
           </tr>
         {% endfor %}
@@ -51,7 +51,7 @@
             {% endif %}
           </td>
           <td class="col-md-4 text-right">
-            {{ currency_value.render(output.value.satoshi, output.value.eur, output.value.usd) }}
+            {{ currency_value.render(output.value.satoshi, output.value.eur, output.value.usd, currency) }}
           </td>
         </tr>
       {% endfor %}
@@ -62,7 +62,7 @@
     <td></td>
     <td class="text-right">
       <strong>
-        {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd) }}
+        {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd, currency) }}
       </strong>
     </td>
   </tr>

@@ -107,6 +107,9 @@ def search():
                 return render_template('error.html', message=message)
             else:
                 return redirect(url_for('show_address', currency=currency, address=address))
+    else:
+        message = 'Please provide a query term.'
+        return render_template('error.html', message=message)
 
 
 # ADDRESS-related controllers

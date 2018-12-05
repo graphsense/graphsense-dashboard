@@ -1,6 +1,8 @@
-var DEFAULT_CODE = 'btc';
+var DEFAULT_CODE = currency;
 
-var CURRENCY_CODES = ['btc', 'eur', 'usd'];
+window.console.log("somebody needs currency " + DEFAULT_CODE + " now")
+
+var CURRENCY_CODES = [DEFAULT_CODE, 'eur', 'usd'];
 
 var CurrencySelector = function(htmlElement){
 
@@ -16,6 +18,7 @@ var CurrencySelector = function(htmlElement){
                     activeCurrencyCode = localStorage.getItem("activeCurrencyCode");
                 }
                 if(activeCurrencyCode === null) {
+
                     activeCurrencyCode = DEFAULT_CODE;
                 }
             }
@@ -81,7 +84,7 @@ var CurrencyUtils = (function(){
     return {
 
         formatCurrency: function(value, currencyCode){
-            if(currencyCode == 'btc') {
+            if(currencyCode == DEFAULT_CODE) {
                 return formatBTC(value, currencyCode);
             } else {
                 return formatFiat(value, currencyCode);

@@ -28,7 +28,6 @@ function insertQueryTermSuggestionsMenu(termFragment) {
 }
 
 $( "#query" ).keyup(function() {
-    window.console.log("query keyup selectedCurrency: " + selectedCurrency);
     if( !($.isNumeric( $( "#query" ).val()) ) ) {
         if ($( "#query" ).val().length >= START_SUGGEST_CHAR_LEN) {
             insertQueryTermSuggestionsMenu($('#query').val());
@@ -41,7 +40,6 @@ $( "#query" ).keyup(function() {
 });
 
 $( "#query" ).focusin(function() {
-    window.console.log("query focusin selectedCurrency: " + selectedCurrency);
     if ($( "#query" ).val().length >= START_SUGGEST_CHAR_LEN) {
         insertQueryTermSuggestionsMenu($('#query').val());
     }
