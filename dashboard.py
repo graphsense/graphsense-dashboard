@@ -15,7 +15,6 @@ print('\nStarting Web application...')
 
 storage = Storage('localhost', 9000)
 
-
 # CONTEXT PROCESSORS
 
 @app.context_processor
@@ -67,6 +66,19 @@ def tag_string(value):
     else:
         return '({} tags)'.format(len(value))
 
+
+@app.template_filter()
+def format_underscore(value):
+    # Capitalize first letter of each word and replace "_" with " "
+    words = value.split('_')
+    if words[0] == 'no':
+        words[0] = 'no.'
+    return ' '.join(words).title()
+
+
+@app.template_filter()
+def format_number(value):
+    return "{:,}".format(value)
 
 # CONTROLLERS
 

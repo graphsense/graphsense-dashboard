@@ -58,23 +58,28 @@
 <div class="row top-buffer">
 
   <div class="container vertical-center">
-
     <div class="col-md-3">
-      <p>some stats</p>
+      <p><b>STATISTICS</b></p>
+        {% for stat in statistics['btc']%}
+          <p>
+          {{ stat | format_underscore }}
+          </p>
+        {% endfor %}
     </div>
-
-    <div class="col-md-3">
-      <p>some stats</p>
-    </div>
-
-    <div class="col-md-3">
-      <p>some stats</p>
-    </div>
-
-    <div class="col-md-3">
-      <p>some stats</p>
-    </div>
-
+    {% for coin in statistics %}
+        <div class="col-md-3">
+          <p align="right"><b>{{ coin.upper() }}</b></p>
+            {% for stat in statistics[coin]%}
+            <p align="right">
+              {% if stat == 'timestamp' %}
+                {{ statistics[coin][stat] | format_time }}
+              {% else%}
+                {{ statistics[coin][stat] | format_number}}
+              {% endif%}
+            {% endfor %}
+            </p>
+        </div>
+    {% endfor %}
   </div>
 
 <div>
