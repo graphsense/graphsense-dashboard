@@ -29,10 +29,6 @@ class GraphNode extends Component {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
-    this.removed = false
-  }
-  setRemoved (flag) {
-    this.removed = flag
   }
   renderLabel (root) {
     if (this.data.mockup) return
