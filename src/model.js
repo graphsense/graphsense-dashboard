@@ -65,8 +65,10 @@ export default class Model {
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     let rest = {}
+    this.searchTimeout = {}
     for (let key in keyspaces) {
       rest[key] = new Rest(baseUrl, key, prefixLength)
+      this.searchTimeout[key] = null
     }
     this.rest = (keyspace) => {
       if (!keyspaces[keyspace]) {
@@ -82,7 +84,10 @@ export default class Model {
       this.search.setSearchTerm(term, prefixLength)
       for (let keyspace in keyspaces) {
         if (this.search.needsResults(keyspace, searchlimit, prefixLength)) {
-          this.rest(keyspace).search(term, searchlimit).then(this.mapResult('searchresult', term))
+          if (this.searchTimeout[keyspace]) clearTimeout(this.searchTimeout[keyspace])
+          this.searchTimeout[keyspace] = setTimeout(() => {
+            this.rest(keyspace).search(term, searchlimit).then(this.mapResult('searchresult', term))
+          }, 250)
         }
       }
     })
