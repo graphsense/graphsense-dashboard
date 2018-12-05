@@ -11,13 +11,13 @@ export default class NeighborsTable extends Table {
       { name: 'Balance',
         data: 'balance',
         render: (value) => {
-          return this.formatCurrency(value, keyspace)
+          return this.formatCurrency(value[this.currency], keyspace)
         }
       },
       { name: 'Received',
         data: 'received',
         render: (value) => {
-          return this.formatCurrency(value, keyspace)
+          return this.formatCurrency(value[this.currency], keyspace)
         }
       },
       { name: 'No. Tx',
