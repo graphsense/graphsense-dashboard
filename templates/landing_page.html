@@ -8,45 +8,78 @@
 {% block content %}
 
 
-<div class="jumbotron splash-image vertical-center">
-  <div class="container">
-    <!-- title row -->
-    <div class="row white-text">
-      <div class="col-md-12">
-        <h1 class="text-center"><strong>Explore Bitcoin Transactions</strong></h1>
+<div class="row">
+
+  <div class="jumbotron splash-image vertical-center">
+
+    <div class="container">
+      <!-- title row -->
+      <div class="row white-text">
+        <div class="col-md-12">
+          <h1 class="text-center"><strong>Explore Bitcoin Transactions</strong></h1>
+        </div>
       </div>
-    </div>
-    <!-- search form (simple search) -->
-    <div class="row top-buffer">
-      <div class="col-md-6 col-md-offset-3">
-        <form id="search-form" role="form" action="{{ url_for('search') }}" method="GET">
-          <input type="hidden" id="selected-type" name="selected-type" value="none"/>
-          <div class="input-group" style="width: 450px">
-              <span class="input-group-btn">
-                  <select id="currency-selector" name="currency-selector" class="btn btn-success">
-                    {% for key in statistics%}
-                        {% if key == "btc" %}
-                            <option selected="selected" value="{{ key }}">{{ key.upper() }}</option>
-                        {% else %}
-                            <option value="{{ key }}">{{ key.upper() }}</option>
-                        {% endif %}
-                    {% endfor%}
-                  </select>
-              </span>
-            <input name="query" id="query" placeholder="Address, Tag, Transaction, Block" type="text" class="form-control" autocomplete="off"/>
-          <span class="input-group-btn">
-                <button type="submit" class="btn btn-success">Go!</button>
-          </span>
-          </div>
-          <div id="suggestion-dropdown-menu" class="input-group">
-          </div>
-        </form>
+      <!-- search form (simple search) -->
+      <div class="row top-buffer">
+        <div class="col-md-6 col-md-offset-3">
+          <form id="search-form" role="form" action="{{ url_for('search') }}" method="GET">
+            <input type="hidden" id="selected-type" name="selected-type" value="none"/>
+            <div class="input-group" style="width: 450px">
+                <span class="input-group-btn">
+                    <select id="currency-selector" name="currency-selector" class="btn btn-success">
+                      {% for key in statistics%}
+                          {% if key == "btc" %}
+                              <option selected="selected" value="{{ key }}">{{ key.upper() }}</option>
+                          {% else %}
+                              <option value="{{ key }}">{{ key.upper() }}</option>
+                          {% endif %}
+                      {% endfor%}
+                    </select>
+                </span>
+              <input name="query" id="query" placeholder="Address, Tag, Transaction, Block" type="text" class="form-control" autocomplete="off"/>
+            <span class="input-group-btn">
+                  <button type="submit" class="btn btn-success">Go!</button>
+            </span>
+            </div>
+            <div id="suggestion-dropdown-menu" class="input-group">
+            </div>
+          </form>
+        </div>
       </div>
+
     </div>
+
+
   </div>
+
+
 </div>
 
-{{ statistics }}
+<div class="row top-buffer">
+
+  <div class="container vertical-center">
+
+    <div class="col-md-3">
+      <p>some stats</p>
+    </div>
+
+    <div class="col-md-3">
+      <p>some stats</p>
+    </div>
+
+    <div class="col-md-3">
+      <p>some stats</p>
+    </div>
+
+    <div class="col-md-3">
+      <p>some stats</p>
+    </div>
+
+  </div>
+
+<div>
+
+
 
 {% endblock %}
 

@@ -93,7 +93,7 @@ footer {
 
 .splash-image {
   background: #ffffff url("/static/img/graphsense_background.jpg") no-repeat center top;
-  height: 500px;
+  height: 400px;
 }
 
 .jumbotron .container {
@@ -139,6 +139,10 @@ footer > .container-fluid {
 
 .top-buffer { margin-top: 60px; }
 
+
+div#currency_stats {
+  margin-top: 120px;   
+}
 
 
 /* 7. D3 GRAPH VISUALIZATION */
