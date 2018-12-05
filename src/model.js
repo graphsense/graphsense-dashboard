@@ -105,9 +105,9 @@ export default class Model {
         let f = this.store.get(context.focusNode.type, context.focusNode.id)
         if (f) {
           if (context.focusNode.isOutgoing === true) {
-            this.store.linkOutgoing(f.id, a.id)
+            this.store.linkOutgoing(f.id, a.id, context.focusNode.linkData)
           } else if (context.focusNode.isOutgoing === false) {
-            this.store.linkOutgoing(a.id, f.id)
+            this.store.linkOutgoing(a.id, f.id, context.focusNode.linkData)
           }
         }
       }
@@ -216,6 +216,7 @@ export default class Model {
             {
               id: focusNode.id,
               type: focusNode.type,
+              linkData: {...data},
               isOutgoing: isOutgoing
             }
         }

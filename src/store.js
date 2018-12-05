@@ -81,14 +81,17 @@ export default class Store {
     return outgoing
   }
   linkOutgoing (source, target, data) {
+    console.log('linkOutgoing', source, target, data)
     let outgoing = this.initOutgoing(source)
     let n = outgoing.get(target)
-    if (n !== 0 && !n) {
-      if (data && !data.noTransactions && !data.estimatedValue) {
-        outgoing.set(target, null)
-        return
-      }
-      outgoing.set(target, {...data})
+    if (!n && (!data || !data.noTransactions || !data.estimatedValue)) {
+      outgoing.set(target, null)
+      return
     }
+    if (!data) return
+    outgoing.set(target, {
+      noTransactions: data.noTransactions,
+      estimatedValue: data.estimatedValue
+    })
   }
 }
