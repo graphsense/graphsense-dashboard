@@ -113,14 +113,14 @@ html, body {
 }
 
 .prop-table {
-  @apply table border-collapse mx-2 my-1
+  @apply table border-collapse 
 }
 .prop-row {
   @apply table-row 
 }
 
 .prop-key {
-  @apply font-bold table-cell pr-2 pt-1
+  @apply font-bold table-cell pr-2 pb-1
 }
 
 .prop-value {
@@ -129,11 +129,11 @@ html, body {
 
 .browser-component {
   /* height set via globals.js */
-  @apply layout-border p-1 border-r h-full overflow-hidden
+  @apply layout-border p-2 border-r h-full overflow-hidden
 }
 
 .browser-options {
-  @apply h-full px-2 py-1
+  @apply h-full px-1 py-1 bg-grey-lighter text-center
 }
 
 .browser-options-short {
