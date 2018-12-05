@@ -30,13 +30,13 @@
 </tr>
 <tr>
   <td>First Usage</td>
-  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.firstTx.txHash) }}">
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.firstTx.tx_hash) }}">
   {{ cluster.firstTx.timestamp | format_time}}</a>
   </td>
 </tr>
 <tr>
   <td>Last Usage</td>
-  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.lastTx.txHash) }}">{{ cluster.lastTx.timestamp | format_time}}</a>
+  <td><a href="{{ url_for('show_transaction', currency=currency, hash=cluster.lastTx.tx_hash) }}">{{ cluster.lastTx.timestamp | format_time}}</a>
   </td>
 </tr>
 <tr>
