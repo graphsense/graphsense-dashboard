@@ -2,7 +2,6 @@ import transaction from './transaction.html'
 import moment from 'moment'
 import {replace} from '../template_utils'
 import BrowserComponent from './component.js'
-import {formatCurrency} from '../utils'
 
 export default class Transaction extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -20,8 +19,8 @@ export default class Transaction extends BrowserComponent {
     let flat = {
       txHash: this.data.txHash.substring(0, 32) + '...',
       timestamp: moment.unix(this.data.timestamp).fromNow(),
-      totalInput: this.formatCurrency(this.data.totalInput[this.currency], keyspace),
-      totalOutput: this.formatCurrency(this.data.totalOutput[this.currency], keyspace)
+      totalInput: this.formatCurrency(this.data.totalInput[this.currency], this.data.keyspace),
+      totalOutput: this.formatCurrency(this.data.totalOutput[this.currency], this.data.keyspace)
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})
     return this.root
