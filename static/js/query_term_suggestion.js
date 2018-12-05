@@ -49,6 +49,7 @@ $( "#query" ).focusin(function() {
 var e = document.getElementById("currency-selector");
 var selectedCurrency = e.options[e.selectedIndex].value;
 
+
 $('#currency-selector').change(function(){
     selectedCurrency = $(this).val()
 })

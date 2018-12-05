@@ -1,6 +1,5 @@
 var DEFAULT_CODE = currency;
 
-window.console.log("somebody needs currency " + DEFAULT_CODE + " now")
 
 var CURRENCY_CODES = [DEFAULT_CODE, 'eur', 'usd'];
 
@@ -16,9 +15,11 @@ var CurrencySelector = function(htmlElement){
             if(activeCurrencyCode === null) {
                 if(typeof(Storage) != "undefined") {
                     activeCurrencyCode = localStorage.getItem("activeCurrencyCode");
+                    if(activeCurrencyCode != 'usd' && activeCurrencyCode != 'eur'){
+                        activeCurrencyCode = DEFAULT_CODE;
+                    }
                 }
                 if(activeCurrencyCode === null) {
-
                     activeCurrencyCode = DEFAULT_CODE;
                 }
             }
@@ -84,8 +85,8 @@ var CurrencyUtils = (function(){
     return {
 
         formatCurrency: function(value, currencyCode){
-            if(currencyCode == DEFAULT_CODE) {
-                return formatBTC(value, currencyCode);
+            if(currencyCode != 'usd' && currencyCode != 'eur') {
+                return formatBTC(value, DEFAULT_CODE);
             } else {
                 return formatFiat(value, currencyCode);
             }
