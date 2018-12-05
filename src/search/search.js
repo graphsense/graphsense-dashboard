@@ -41,6 +41,14 @@ export default class Search extends Component {
     this.input.value = this.term
     this.root.querySelector('form')
       .addEventListener('submit', (e) => {
+        e.returnValue = false
+        for (let keyspace in this.result) {
+          if (this.result[keyspace].addresses.length > 0) {
+            this.dispatcher('clickSearchResult', {id: this.result[keyspace].addresses[0], type: 'address', keyspace})
+            return false
+          }
+        }
+        return false
       })
     this.root.querySelector('input')
       .addEventListener('input', (e) => {
