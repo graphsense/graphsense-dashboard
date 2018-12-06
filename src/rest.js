@@ -13,7 +13,7 @@ export default class Rest {
       if (field) {
         // result is an array
         if (!result[field] || !result[field].length) {
-          console.error(`${field} is not in result, calling ${url}`)
+          console.warn(`${field} is not in result, calling ${url}`)
         } else {
           result[field].forEach(item => item.keyspace = this.keyspace)
         }
