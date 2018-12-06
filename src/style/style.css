@@ -184,7 +184,7 @@ li.option-active i {
 }
 
 svg {
-  @apply font-sans
+  @apply font-sans bg-grey-lightest
 }
 
 svg g.addressNode {
