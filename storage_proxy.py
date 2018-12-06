@@ -15,11 +15,15 @@ class Storage:
     # SEARCH data access
 
     def retrieve(self, url, currency='', params=None):
-        r = self._session.get(self.url_base + currency + '/' + url, params=params)
+        r = self._session.get(self.url_base + currency + '/' + url,
+                              params=params)
         return r.json()
 
-    def query_term_suggestions(self, term_fragment, max_suggestion_items, currency):
-        return self.retrieve('search', currency, {'q': term_fragment, 'limit': max_suggestion_items})
+    def query_term_suggestions(self, term_fragment, max_suggestion_items,
+                               currency):
+        return self.retrieve('search', currency,
+                             {'q': term_fragment,
+                              'limit': max_suggestion_items})
 
     @staticmethod
     def enrich_with_fee(tx, coinbase):
@@ -43,13 +47,15 @@ class Storage:
 
     def address_transactions(self, address, currency, limit=500):
         params = {'limit': limit}
-        return self.retrieve('address/{}/transactions'.format(address), currency, params)
+        return self.retrieve('address/{}/transactions'.format(address),
+                             currency, params)
 
     def explicit_tags(self, address, currency):
         return self.retrieve('address/{}/tags'.format(address), currency)
 
     def implicit_tags(self, address, currency):
-        return self.retrieve('address/{}/implicitTags'.format(address), currency)
+        return self.retrieve('address/{}/implicitTags'.format(address),
+                             currency)
 
     def address_tags(self, address, currency):
         res = self.explicit_tags(address, currency)
@@ -69,7 +75,8 @@ class Storage:
         if limit is None:
             limit = '10'
         params = {'direction': direction, 'limit': limit}
-        res = self.retrieve('address/{}/egonet'.format(address), currency, params)
+        res = self.retrieve('address/{}/egonet'.format(address),
+                            currency, params)
         if direction == 'all':
             stats = self.retrieve('address/{}'.format(address), currency)
             res['nodes'][0]['received'] = stats['totalReceived']['satoshi']
@@ -103,7 +110,8 @@ class Storage:
 
     def cluster_addresses(self, cluster_id, currency, limit=500):
         params = {'limit': limit}
-        return self.retrieve('cluster/{}/addresses'.format(cluster_id), currency, params)
+        return self.retrieve('cluster/{}/addresses'.format(cluster_id),
+                             currency, params)
 
     def cluster_tags(self, cluster_id, currency):
         return self.retrieve('cluster/{}/tags'.format(cluster_id), currency)
@@ -114,7 +122,8 @@ class Storage:
         if limit is None:
             limit = '10'
         params = {'direction': direction, 'limit': limit}
-        res = self.retrieve('cluster/{}/egonet'.format(address), currency, params)
+        res = self.retrieve('cluster/{}/egonet'.format(address),
+                            currency, params)
         if direction == 'all':
             stats = self.retrieve('cluster/{}'.format(address), currency)
             res['nodes'][0]['received'] = stats['totalReceived']['satoshi']
@@ -125,4 +134,3 @@ class Storage:
     def statistics(self):
         res = self.retrieve('')
         return res if res else dict()
-
