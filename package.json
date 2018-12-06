@@ -10,7 +10,10 @@
     "datatables.net-dt": "^1.10.19",
     "datatables.net-scroller": "^1.5.1",
     "datatables.net-scroller-dt": "^1.5.1",
+    "file-saver": "^2.0.0",
     "jquery": "^3.3.1",
+    "js-base64": "^2.4.9",
+    "lzwcompress": "^0.4.0",
     "moment": "^2.22.2",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.2"

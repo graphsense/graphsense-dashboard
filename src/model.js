@@ -7,6 +7,9 @@ import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
 import Landingpage from './landingpage.js'
 import moment from 'moment'
+import FileSaver from 'file-saver'
+import {pack, unpack} from 'lzwcompress'
+import {Base64} from 'js-base64'
 
 const VERSION = '0.4'
 
@@ -467,31 +470,42 @@ export default class Model {
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
     this.landingpage = new Landingpage(this.call, this.search, keyspaces)
   }
+  compress (data) {
+    return new Uint32Array(
+      pack(
+        // convert to base64 (utf-16 safe)
+        Base64.encode(
+          JSON.stringify(data)
+        )
+      )
+    ).buffer
+  }
+  decompress (data) {
+    return JSON.parse(
+      Base64.decode(
+        unpack(
+          [...new Uint32Array(data)]
+        )
+      )
+    )
+  }
   serialize () {
-    return JSON.stringify([
+    return this.compress([
       VERSION,
       this.store.serialize(),
       this.graph.serialize()
     ])
   }
-  deserialize (blob) {
-    let data = JSON.parse(blob)
+  deserialize (buffer) {
+    let data = this.decompress(buffer)
     this.createComponents()
     this.store.deserialize(data[1])
     this.graph.deserialize(data[2], this.store)
     this.layout.shouldUpdate(true)
   }
-  download (filename, text) {
-    var element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
-    element.setAttribute('download', filename)
-
-    element.style.display = 'none'
-    document.body.appendChild(element)
-
-    element.click()
-
-    document.body.removeChild(element)
+  download (filename, buffer) {
+    var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line
+    FileSaver.saveAs(blob, filename)
   }
   mapResult (msg, context) {
     if (this.isReplaying) {

@@ -57,7 +57,7 @@ export default class Layout extends Component {
           let data = reader.result
           this.dispatcher('loadFile', data)
         }
-        reader.readAsText(input.files[0])
+        reader.readAsArrayBuffer(input.files[0])
       })
       browserRoot = this.root.querySelector('#layout-browser')
       graphRoot = this.root.querySelector('#layout-graph')
