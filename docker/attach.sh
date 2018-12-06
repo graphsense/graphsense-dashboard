@@ -1,1 +1,1 @@
-docker exec -ti dashboard bash
+docker exec -ti graphsense-dashboard bash

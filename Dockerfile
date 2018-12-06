@@ -1,20 +1,32 @@
-FROM debian:8
-LABEL maintainer=mihai.bartha@ait.ac.at
+FROM alpine:3.7
+LABEL maintainer="rainer.stuetz@ait.ac.at"
 
-################## BEGIN INSTALLATION ######################
-RUN apt-get update --fix-missing && \
-    apt-get install -y python3 python3-pip nginx upstart
-RUN pip3 install --upgrade pip
-RUN mkdir -p /srv/graphsense-dashboard
-ADD ./requirements.txt /srv/graphsense-dashboard
-RUN cd /srv/graphsense-dashboard; pip3 install -r requirements.txt
-ADD ./ /srv/graphsense-dashboard/
+RUN mkdir -p /srv/graphsense-dashboard/
+COPY requirements.txt /srv/graphsense-dashboard/
+
+RUN apk --no-cache --update add bash python3 uwsgi-python3 nginx supervisor && \
+    apk --no-cache --update --virtual build-dependendencies add \
+    gcc \
+    linux-headers \
+    musl-dev \
+    pcre-dev \
+    python3-dev && \
+    python3 -m ensurepip && \
+    rm -r /usr/lib/python*/ensurepip && \
+    rm /etc/nginx/conf.d/default.conf && \
+    pip3 install --upgrade pip setuptools && \
+    pip3 install -r /srv/graphsense-dashboard/requirements.txt && \
+    apk del build-dependendencies && \
+    rm -rf /root/.cache
+
+COPY conf/nginx.conf /etc/nginx/
+COPY conf/graphsense-dashboard.conf /etc/nginx/conf.d/graphsense-dashboard.conf
+COPY conf/supervisor-app.conf /etc/supervisor/conf.d/
+COPY conf/graphsense-dashboard.ini *.py /srv/graphsense-dashboard/
+COPY static /srv/graphsense-dashboard/static
+COPY templates /srv/graphsense-dashboard/templates
+
 # connect dashboard to docker bridge network
 RUN sed -ie 's/localhost/172.17.0.1/g' /srv/graphsense-dashboard/dashboard.py
-ADD ./uwsgi /etc/init.d/uwsgi
-ADD ./dashboard /etc/nginx/sites-available/dashboard
-RUN ln -s /etc/nginx/sites-available/dashboard /etc/nginx/sites-enabled
-RUN rm /etc/nginx/sites-enabled/default
 
-CMD /etc/init.d/uwsgi start && /etc/init.d/nginx start && bash
-##################### INSTALLATION END #####################
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisor-app.conf"]

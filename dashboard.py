@@ -15,6 +15,7 @@ print('\nStarting Web application...')
 
 storage = Storage('localhost', 9000)
 
+
 # CONTEXT PROCESSORS
 
 @app.context_processor
@@ -30,22 +31,22 @@ def format_duration(start_end_tuple):
     dt2 = datetime.datetime.fromtimestamp(start_end_tuple[1])
     rd = dateutil.relativedelta.relativedelta(dt2, dt1)
     if rd.seconds == 0:
-        activity = "Single transaction"
+        activity = 'Single transaction'
     else:
         if rd.years > 0:
-            activity = "%d years %d months %d days" % (rd.years,
+            activity = '%d years %d months %d days' % (rd.years,
                                                        rd.months,
                                                        rd.days)
         elif rd.months > 0:
-            activity = "%d months %d days %d hours" % (rd.months,
+            activity = '%d months %d days %d hours' % (rd.months,
                                                        rd.days,
                                                        rd.hours)
         elif rd.days > 0:
-            activity = "%d days %d hours %d minutes" % (rd.days,
+            activity = '%d days %d hours %d minutes' % (rd.days,
                                                         rd.hours,
                                                         rd.minutes)
         else:
-            activity = "%d hours %d minutes %d seconds" % (rd.hours,
+            activity = '%d hours %d minutes %d seconds' % (rd.hours,
                                                            rd.minutes,
                                                            rd.seconds)
     return activity
@@ -78,7 +79,8 @@ def format_underscore(value):
 
 @app.template_filter()
 def format_number(value):
-    return "{:,}".format(value)
+    return '{:,}'.format(value)
+
 
 # CONTROLLERS
 
@@ -96,9 +98,11 @@ def query_term_suggestions():
     currency = request.args.get('currency')
     max_suggestion_items = request.args.get('max_suggestion_items')
     if not max_suggestion_items.isdigit():
-        raise ValueError("Invalid argument for parameter max_suggestion_items "
-                         "(not a number).")
-    suggestions = storage.query_term_suggestions(term_fragment, max_suggestion_items, currency)
+        raise ValueError('Invalid argument for parameter max_suggestion_items '
+                         '(not a number).')
+    suggestions = storage.query_term_suggestions(term_fragment,
+                                                 max_suggestion_items,
+                                                 currency)
     return render_template('partials/suggestion_dropdown_menu.html',
                            suggestions=suggestions)
 
@@ -109,16 +113,19 @@ def search():
     currency = request.args.get('currency-selector')
     if term:
         if len(term) < 9 and term.isdigit():
-            return redirect(url_for('show_block', currency=currency, height_or_hash=term))
+            return redirect(url_for('show_block',
+                                    currency=currency, height_or_hash=term))
         elif len(term) == 64:
-            return redirect(url_for('show_transaction', currency=currency, hash=term))
+            return redirect(url_for('show_transaction',
+                                    currency=currency, hash=term))
         else:
             address = normalize_address(term)
             if address is None:
                 message = 'Couldn\'t find any match for "{}".'.format(term)
                 return render_template('error.html', message=message)
             else:
-                return redirect(url_for('show_address', currency=currency, address=address))
+                return redirect(url_for('show_address',
+                                        currency=currency, address=address))
     else:
         message = 'Please provide a query term.'
         return render_template('error.html', message=message)
@@ -134,12 +141,14 @@ def show_address(currency, address):
                   'in the blockchain.'.format(address)
         return render_template('error.html', message=message)
     else:
-        return render_template('detail_address.html', address=address_details, currency=currency)
+        return render_template('detail_address.html',
+                               address=address_details, currency=currency)
 
 
 @app.route('/<currency>/address/<address>/transactions.json')
 def retrieve_transactions(currency, address):
-    transactions = storage.address_transactions(address, limit=2500, currency=currency)
+    transactions = storage.address_transactions(address,
+                                                limit=2500, currency=currency)
     return jsonify(transactions)
 
 
@@ -148,13 +157,13 @@ def retrieve_address_tags(currency, address):
     tags = storage.address_tags(address, currency=currency)
     return jsonify(tags)
 
+
 @app.route('/<currency>/address/<address>/tags.csv')
 def download_address_tags(currency, address):
     tags = storage.address_tags(address, currency=currency)
     output = io.StringIO()
     writer = csv.writer(output, delimiter=',',
-                                quotechar='"',
-                                quoting=csv.QUOTE_ALL)
+                        quotechar='"', quoting=csv.QUOTE_ALL)
     writer.writerow(['address', 'comment', 'link', 'source'])
     for tag in tags:
         writer.writerow([tag['address'],
@@ -166,6 +175,7 @@ def download_address_tags(currency, address):
 
     return Response(value, mimetype='text/csv')
 
+
 @app.route('/<currency>/address/<address>/egonet.json')
 def retrieve_address_egonet(currency, address):
     direction = request.args.get('direction')
@@ -176,7 +186,8 @@ def retrieve_address_egonet(currency, address):
 
 @app.route('/<currency>/address/<address>/egonet/nodes.csv')
 def download_address_egonet_nodes(currency, address):
-    egonet = storage.address_egonet(address, currency, direction='all', limit=1000)
+    egonet = storage.address_egonet(address, currency,
+                                    direction='all', limit=1000)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['address', 'balance', 'received'])
@@ -190,7 +201,8 @@ def download_address_egonet_nodes(currency, address):
 
 @app.route('/<currency>/address/<address>/egonet/edges.csv')
 def download_address_egonet_edges(currency, address):
-    egonet = storage.address_egonet(address, currency, direction='all', limit=1000)
+    egonet = storage.address_egonet(address, currency,
+                                    direction='all', limit=1000)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['source', 'target', 'transactions', 'estimatedValue'])
@@ -224,7 +236,8 @@ def show_transaction(currency, hash):
                   'in the blockchain.'.format(hash)
         return render_template('error.html', message=message)
     else:
-        return render_template('detail_transaction.html', tx=tx, currency=currency)
+        return render_template('detail_transaction.html',
+                               tx=tx, currency=currency)
 
 
 # BLOCK-related controllers
@@ -232,7 +245,8 @@ def show_transaction(currency, hash):
 @app.route('/<currency>/block/<height_or_hash>')
 def show_block(currency, height_or_hash):
     block = storage.block(height_or_hash, currency=currency)
-    return render_template('detail_block.html', block=block, currency=currency)
+    return render_template('detail_block.html',
+                           block=block, currency=currency)
 
 
 @app.route('/<currency>/block/<height>/transactions.json')
@@ -246,12 +260,14 @@ def retrieve_block_transactions(currency, height):
 @app.route('/<currency>/cluster/<cluster_id>')
 def show_cluster(currency, cluster_id):
     cluster_details = storage.cluster(cluster_id, currency=currency)
-    return render_template('detail_cluster.html', cluster=cluster_details, currency=currency)
+    return render_template('detail_cluster.html',
+                           cluster=cluster_details, currency=currency)
 
 
 @app.route('/<currency>/cluster/<cluster_id>/addresses.json')
 def retrieve_cluster_addresses(currency, cluster_id):
-    addresses = storage.cluster_addresses(cluster_id, limit=2500, currency=currency)
+    addresses = storage.cluster_addresses(cluster_id,
+                                          limit=2500, currency=currency)
     return jsonify(addresses)
 
 
@@ -260,13 +276,13 @@ def retrieve_cluster_tags(currency, cluster_id):
     tags = storage.cluster_tags(cluster_id, currency=currency)
     return jsonify(tags)
 
+
 @app.route('/<currency>/cluster/<cluster_id>/tags.csv')
 def download_cluster_tags(currency, cluster_id):
     tags = storage.cluster_tags(cluster_id, currency=currency)
     output = io.StringIO()
     writer = csv.writer(output, delimiter=',',
-                                quotechar='"',
-                                quoting=csv.QUOTE_ALL)
+                        quotechar='"', quoting=csv.QUOTE_ALL)
     writer.writerow(['address', 'comment', 'link', 'source'])
     for tag in tags:
         writer.writerow([tag['address'],
@@ -277,6 +293,7 @@ def download_cluster_tags(currency, cluster_id):
     value = output.getvalue().strip('\r\n')
 
     return Response(value, mimetype='text/csv')
+
 
 @app.route('/<currency>/cluster/<cluster_id>/egonet.json')
 def retrieve_cluster_egonet(currency, cluster_id):
@@ -296,7 +313,8 @@ def retrieve_cluster_egonet(currency, cluster_id):
 
 @app.route('/<currency>/cluster/<cluster_id>/egonet/nodes.csv')
 def download_cluster_egonet_nodes(currency, cluster_id):
-    egonet = storage.cluster_egonet(cluster_id, currency, direction='all', limit=500)
+    egonet = storage.cluster_egonet(cluster_id, currency,
+                                    direction='all', limit=500)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['clusterId', 'balance', 'received'])
@@ -312,7 +330,8 @@ def download_cluster_egonet_nodes(currency, cluster_id):
 
 @app.route('/<currency>/cluster/<cluster_id>/egonet/edges.csv')
 def download_cluster_egonet_edges(currency, cluster_id):
-    egonet = storage.cluster_egonet(cluster_id, currency, direction='all', limit=500)
+    egonet = storage.cluster_egonet(cluster_id, currency,
+                                    direction='all', limit=500)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(['source', 'target', 'transactions', 'estimatedValue'])
