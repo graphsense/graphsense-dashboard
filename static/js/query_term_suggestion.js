@@ -34,7 +34,7 @@ $( "#query" ).keyup(function() {
             $('#dropdown').css("display", "inline");
         }
     } else {
-        window.console.log("Assuming block number entry, no suggestions.");
+        // window.console.log("Assuming block number entry, no suggestions.");
         $('#dropdown').css("display", "none");
     }
 });

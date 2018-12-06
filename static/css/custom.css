@@ -93,7 +93,7 @@ footer {
 
 .splash-image {
   background: #ffffff url("/static/img/graphsense_background.jpg") no-repeat center top;
-  height: 400px;
+  height: 500px;
 }
 
 .jumbotron .container {
@@ -108,15 +108,14 @@ footer {
   color: orange;
 }
 
+/*input#query_field {
+  width: 550px;
+}
+*/
 .panel table {
   font-size: 13px;
   /*margin-left: 10px;*/
 }
-
-/*div#graph-control {
-  margin-top: 20px;
-}
-*/
 
 
 /* 5. FOOTER */
@@ -138,6 +137,11 @@ footer > .container-fluid {
 }
 
 .top-buffer { margin-top: 60px; }
+
+.center_div{
+    margin: 0 auto;
+    width: 80% /* value of your choice which suits your alignment */
+}
 
 
 div#currency_stats {
@@ -238,7 +242,8 @@ a.buttons-copy span, a.buttons-print span, a.buttons-csv span {
 /* 9. DROPDOWN MENU */
 
 #dropdown {
-  width: 403px;
+  margin-left: 20px;
+  width: 600px;
 }
 
 #dropdown .dropdown-menu-category-item {
