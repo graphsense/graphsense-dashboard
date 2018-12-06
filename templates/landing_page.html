@@ -69,32 +69,20 @@
 <div class="row top-buffer">
 
   <div class="container vertical-center">
-    <div class="col-md-3">
-      <p><b>STATISTICS</b></p>
-        {% for stat in statistics['btc']%}
-          <p>
-          {{ stat | format_underscore }}
-          </p>
-        {% endfor %}
-    </div>
     {% for coin in statistics %}
-        <div class="col-md-3">
-          <p align="right"><b>{{ coin.upper() }}</b></p>
-            {% for stat in statistics[coin]%}
-            <p align="right">
-              {% if stat == 'timestamp' %}
-                {{ statistics[coin][stat] | format_time }}
-              {% else%}
-                {{ statistics[coin][stat] | format_number}}
-              {% endif%}
-            {% endfor %}
-            </p>
-        </div>
+        <div class="col-md-4 text-center">
+          <img src="{{ url_for('static', filename='img/' + coin + '.png') }}"/>
+          <span/>
+          <p class="currency-stats text-center text-muted">Blocks: {{statistics[coin].no_blocks | format_number}}</p>              
+          <p class="currency-stats text-center text-muted">Transactions: {{statistics[coin].no_transactions | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Addresses: {{statistics[coin].no_addresses | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Clusters: {{statistics[coin].no_clusters | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Last Update: {{statistics[coin].timestamp | format_date}}</p>
+        </div>          
     {% endfor %}
   </div>
 
 <div>
-
 
 
 {% endblock %}

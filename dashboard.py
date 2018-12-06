@@ -54,11 +54,15 @@ def format_duration(start_end_tuple):
 
 @app.template_filter()
 def format_time(numeric_string):
-    # TODO: refactor and handle in JS
     date_format = '%Y-%m-%d %H:%M:%S'
     time_as_date = datetime.datetime.utcfromtimestamp(int(numeric_string))
     return time_as_date.strftime(date_format)
 
+@app.template_filter()
+def format_date(numeric_string):
+    date_format = '%Y-%m-%d'
+    time_as_date = datetime.datetime.utcfromtimestamp(int(numeric_string))
+    return time_as_date.strftime(date_format)
 
 @app.template_filter()
 def tag_string(value):

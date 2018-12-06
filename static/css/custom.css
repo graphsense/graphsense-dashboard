@@ -108,14 +108,14 @@ footer {
   color: orange;
 }
 
-/*input#query_field {
-  width: 550px;
-}
-*/
 .panel table {
   font-size: 13px;
-  /*margin-left: 10px;*/
 }
+
+p.currency-stats {
+  margin-top: 15px;
+}
+
 
 
 /* 5. FOOTER */
