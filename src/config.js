@@ -1,14 +1,9 @@
-import {event} from 'd3-selection'
-import layout from './config/layout.html'
+import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
-import notes from './config/notes.html'
 import filter from './config/filter.html'
-import {replace} from './template_utils.js'
+import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
 import Component from './component.js'
-
-const menuWidth = 250
-const menuHeight = 300
 
 export default class Config extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
@@ -17,86 +12,31 @@ export default class Config extends Component {
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
-    this.view = null
+    this.visible = false
   }
-  switchConfig (type) {
-    this.view = type
+  toggleConfig () {
+    this.visible = !this.visible
     this.shouldUpdate(true)
   }
   setCurrency (currency) {
     this.currency = currency
   }
-  showGraphConfig (x, y) {
-    this.setMenuPosition(x, y)
-    this.view = 'graph'
-    this.shouldUpdate(true)
-  }
-  showNodeConfig (x, y, node) {
-    this.setMenuPosition(x, y)
-    this.view = node.data.type
-    this.node = node
-    this.shouldUpdate(true)
-  }
-  setMenuPosition (x, y) {
-    let w = window
-    let d = document
-    let e = d.documentElement
-    let g = d.getElementsByTagName('body')[0]
-    let width = w.innerWidth || e.clientWidth || g.clientWidth
-    let height = w.innerHeight || e.clientHeight || g.clientHeight
-    if (x + menuWidth > width) x -= menuWidth
-    if (y + menuHeight > height) y -= menuWidth
-    this.menuX = x
-    this.menuY = y
-  }
-  hideMenu () {
-    this.view = null
-    this.shouldUpdate(true)
-  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
-    if (!this.view) {
-      this.root.innerHTML = ''
-      super.render()
-      return
+    if (!this.visible) {
+      removeClass(this.root, 'show')
+    } else {
+      addClass(this.root, 'show')
     }
-    this.root.innerHTML = layout
-    let frame = this.root.querySelector('#config-frame')
-    frame.addEventListener('click', (e) => {
-      this.dispatcher('hideContextmenu')
-    })
-    frame.addEventListener('contextmenu', (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      return false
-    })
-    let box = this.root.querySelector('#config-box')
-    box.style.left = this.menuX + 'px'
-    box.style.top = this.menuY + 'px'
-    box.addEventListener('click', (e) => {
-      e.stopPropagation()
-    })
+    this.root.innerHTML = configLayout
     let el = this.root.querySelector('#config')
-    let title = ''
-    switch (this.view) {
-      case 'graph':
-        title = 'Graph configuration'
-        el.innerHTML = graphConfig
-        this.addSelectListener('currency', 'changeCurrency')
-        this.addSelectListener('clusterLabel', 'changeClusterLabel')
-        this.addSelectListener('addressLabel', 'changeAddressLabel')
-        this.addSelectListener('transactionLabel', 'changeTxLabel')
-        break
-      case 'address':
-      case 'cluster':
-        title = 'Notes'
-        el.innerHTML = notes
-        this.setupNotes(el)
-        break
-    }
-    this.root.querySelector('.title').innerHTML = title
+    el.innerHTML = graphConfig
+    this.addSelectListener('currency', 'changeCurrency')
+    this.addSelectListener('clusterLabel', 'changeClusterLabel')
+    this.addSelectListener('addressLabel', 'changeAddressLabel')
+    this.addSelectListener('transactionLabel', 'changeTxLabel')
     super.render()
     return this.root
   }
@@ -159,14 +99,6 @@ export default class Config extends Component {
     select.options.selectedIndex = i
     select.addEventListener('change', (e) => {
       this.dispatcher(message, e.target.value)
-    })
-  }
-  setupNotes (el) {
-    let input = el.querySelector('textarea')
-    input.value = this.node.data.notes || ''
-    input.addEventListener('input', (e) => {
-      console.log('input', e.target.value)
-      this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, note: e.target.value})
     })
   }
   setAddressLabel (labelType) {

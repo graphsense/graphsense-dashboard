@@ -338,11 +338,6 @@ export default class NodeGraph extends Component {
           let y_ = y + ty + (h - h_) / 2
           this.svg.attr('viewBox', `${x_} ${y_} ${w_} ${h_}`)
         }))
-      this.svg.on('contextmenu', (e) => {
-        event.stopPropagation()
-        event.preventDefault()
-        this.dispatcher('contextmenu', {x: event.x, y: event.y})
-      })
       this.svg.on('click', () => {
         this.dispatcher('deselect')
       })

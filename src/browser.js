@@ -172,9 +172,9 @@ export default class Browser extends Component {
   renderVisibility () {
     let frame = this.root
     if (!this.visible) {
-      removeClass(frame, 'show-browser')
+      removeClass(frame, 'show')
     } else {
-      addClass(frame, 'show-browser')
+      addClass(frame, 'show')
     }
   }
   renderContent () {

@@ -73,12 +73,12 @@ html, body {
   height: 95vh;
 }
 
-#layout-browser {
+#layout-browser, #layout-config {
   top: -30vh;
   transition: top 0.5s;
 }
 
-#layout-browser.show-browser {
+#layout-browser.show, #layout-config.show {
   top: 5vh;
 }
 

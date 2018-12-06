@@ -5,6 +5,7 @@ import Rest from './rest.js'
 import Layout from './layout.js'
 import NodeGraph from './nodeGraph.js'
 import Config from './config.js'
+import Menu from './menu.js'
 import Landingpage from './landingpage.js'
 import moment from 'moment'
 import FileSaver from 'file-saver'
@@ -411,8 +412,8 @@ export default class Model {
         }
       })
     })
-    this.dispatcher.on('switchConfig', (type) => {
-      this.config.switchConfig(type)
+    this.dispatcher.on('toggleConfig', () => {
+      this.config.toggleConfig()
     })
     this.dispatcher.on('stats', () => {
       this.rest().stats().then(this.mapResult('receiveStats'))
@@ -421,15 +422,11 @@ export default class Model {
       this.landingpage.setStats({...result})
     })
     this.dispatcher.on('contextmenu', ({x, y, node}) => {
-      if (!node) {
-        this.config.showGraphConfig(x, y)
-      } else {
-        this.config.showNodeConfig(x, y, node)
-        this.call('selectNode', [node.data.type, node.id])
-      }
+      this.menu.showNodeConfig(x, y, node)
+      this.call('selectNode', [node.data.type, node.id])
     })
     this.dispatcher.on('hideContextmenu', () => {
-      this.config.hideMenu()
+      this.menu.hideMenu()
     })
     this.dispatcher.on('save', () => {
       if (this.isReplaying) return
@@ -453,6 +450,7 @@ export default class Model {
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
     this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    this.menu = new Menu(this.call)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     let rest = {}
     this.searchTimeout = {}
@@ -467,7 +465,7 @@ export default class Model {
       return rest[keyspace]
     }
     this.search = new Search(this.call, keyspaces)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.search)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search)
     this.landingpage = new Landingpage(this.call, this.search, keyspaces)
   }
   compress (data) {
