@@ -1,7 +1,7 @@
 from dashboard import app as application
 import os
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     extra_dirs = ['templates', 'static']
     extra_files = extra_dirs[:]
     for extra_dir in extra_dirs:
