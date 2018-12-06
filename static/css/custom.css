@@ -258,6 +258,14 @@ a.buttons-copy span, a.buttons-print span, a.buttons-csv span {
 
 /* 10. SELECT BOXES */
 
+select#currency-selector {
+  width: 90px !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+}
+
 select#currency-switcher {
   margin: 10px;
   width: 100px !important;
