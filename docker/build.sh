@@ -1,1 +1,1 @@
-docker build -t dashboard .
+docker build -t graphsense-dashboard .
