@@ -148,6 +148,23 @@ def retrieve_address_tags(currency, address):
     tags = storage.address_tags(address, currency=currency)
     return jsonify(tags)
 
+@app.route('/<currency>/address/<address>/tags.csv')
+def download_address_tags(currency, address):
+    tags = storage.address_tags(address, currency=currency)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=',',
+                                quotechar='"',
+                                quoting=csv.QUOTE_ALL)
+    writer.writerow(['address', 'comment', 'link', 'source'])
+    for tag in tags:
+        writer.writerow([tag['address'],
+                         tag['tag'],
+                         tag['tagUri'],
+                         tag['source']])
+
+    value = output.getvalue().strip('\r\n')
+
+    return Response(value, mimetype='text/csv')
 
 @app.route('/<currency>/address/<address>/egonet.json')
 def retrieve_address_egonet(currency, address):
@@ -243,6 +260,23 @@ def retrieve_cluster_tags(currency, cluster_id):
     tags = storage.cluster_tags(cluster_id, currency=currency)
     return jsonify(tags)
 
+@app.route('/<currency>/cluster/<cluster_id>/tags.csv')
+def download_cluster_tags(currency, cluster_id):
+    tags = storage.cluster_tags(cluster_id, currency=currency)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=',',
+                                quotechar='"',
+                                quoting=csv.QUOTE_ALL)
+    writer.writerow(['address', 'comment', 'link', 'source'])
+    for tag in tags:
+        writer.writerow([tag['address'],
+                         tag['tag'],
+                         tag['tagUri'],
+                         tag['source']])
+
+    value = output.getvalue().strip('\r\n')
+
+    return Response(value, mimetype='text/csv')
 
 @app.route('/<currency>/cluster/<cluster_id>/egonet.json')
 def retrieve_cluster_egonet(currency, cluster_id):

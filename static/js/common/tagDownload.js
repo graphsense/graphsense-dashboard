@@ -11,6 +11,6 @@ var TagDownload = function(htmlElement) {
 
     events.subscribe('tagDownloadClicked', function() {
         console.log("tag downnload button clicked");
-        window.location.href = $SCRIPT_ROOT + '/' + currency + '/' + context + '/' + context_id + '/tags.json';
+        window.location.href = $SCRIPT_ROOT + '/' + currency + '/' + context + '/' + context_id + '/tags.csv';
     });
 }
