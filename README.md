@@ -12,11 +12,11 @@ on your system (port 9000).
 
 Test
 
-    http://localhost:9000/block/1000
+    http://localhost:9000/
 
 ### Development Setup
 
-Make sure Python 3.x is available on your system. Install the module
+Make sure Python 3 is available on your system. Install the module
 dependencies, e.g. via `pip`
 
     pip install -r requirements.txt
@@ -44,23 +44,13 @@ On Linux the IP address of the docker bridge network has to be 172.17.0.1:
     inet 172.17.0.1/16 scope global docker0
     ...
 
-otherwise the settings in `conf/application.conf`
-
-    play.filters.hosts {
-      # allow requests to docker bridge
-      allowed = ["172.17.0.1:9000"]
-    }
-
-in the [graphsense-REST][graphsense-REST] component needs to be adjusted.
-
-On a Mac you have to replace this line in the `Dockerfile`
+otherwise edit this line in the `Dockerfile`
 
     RUN sed -ie 's/localhost/172.17.0.1/g' /srv/graphsense-dashboard/dashboard.py
 
-to
+e.g., on macOS
 
     RUN sed -ie 's/localhost/docker.for.mac.localhost/g' /srv/graphsense-dashboard/dashboard.py
-
 
 Building the docker container:
 

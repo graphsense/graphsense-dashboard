@@ -5,6 +5,7 @@
 {{ super() }}
 <script language='javascript'>
   var tx_hash = '{{tx['hash']}}';
+  var currency = '{{currency}}';
 </script>
 {% endblock %}
 
@@ -21,19 +22,19 @@
 </tr>
 <tr>
   <td>Included in Block</td>
-  <td><a href="{{ url_for('show_block', height_or_hash=tx['height']) }}">{{ tx['height'] }}</a></td>
+  <td><a href="{{ url_for('show_block', currency=currency, height_or_hash=tx['height']) }}">{{ tx['height'] }}</a></td>
 </tr>
 <tr>
   <td>Total Value</td>
   <td>
-    {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd) }}
+    {{ currency_value.render(tx.totalValue.satoshi, tx.totalValue.eur, tx.totalValue.usd, currency) }}
   </td>
 </tr>
 {% if tx.fee %}
 <tr>
   <td>Fee</td>
   <td>
-    {{ currency_value.render(tx.fee.satoshi, tx.fee.eur, tx.fee.usd) }}
+    {{ currency_value.render(tx.fee.satoshi, tx.fee.eur, tx.fee.usd, currency) }}
   </td>
 </tr>
 {% endif %}
@@ -49,7 +50,7 @@
 <div class="tab-content">
   <div role="tabpanel" class="tab-pane active" id="currency_flows_tab">
     {% import 'macros/bc_flows.html' as bc_flows%}
-    {{ bc_flows.render(tx) }}
+    {{ bc_flows.render(tx, currency) }}
   </div>
 </div>
 {% endblock %}

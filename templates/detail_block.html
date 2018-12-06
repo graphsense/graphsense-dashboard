@@ -5,6 +5,7 @@
 {{ super() }}
 <script language='javascript'>
   var height = '{{block['height']}}';
+  var currency = '{{currency}}';
 </script>
 {% endblock %}
 
@@ -43,11 +44,11 @@
                 <tr>
                     <th class="col-md-4">Transaction</th>
                     <th class="col-md-2">No. Inputs</th>
-                    <th calls="col-md-2">No. Outputs</th>
-                    <th class="col-md-2 currencyColumn btc">Fee</th>
+                    <th class="col-md-2">No. Outputs</th>
+                    <th class="col-md-2 currencyColumn {{currency}}">Fee</th>
                     <th class="col-md-2 currencyColumn eur">Fee</th>
                     <th class="col-md-2 currencyColumn usd">Fee</th>
-                    <th class="col-md-2 currencyColumn btc">Total Value</th>
+                    <th class="col-md-2 currencyColumn {{currency}}">Total Value</th>
                     <th class="col-md-2 currencyColumn eur">Total Value</th>
                     <th class="col-md-2 currencyColumn usd">Total Value</th>
                 </tr>

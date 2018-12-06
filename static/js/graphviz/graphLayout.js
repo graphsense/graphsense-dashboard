@@ -50,8 +50,8 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
         linkLabelGroup = svg.append("g")
                             .attr("class", "linkLabels"),
 
-        getCurrencyValue = function(dataNode, currency) {
-            switch(currency) {
+        getCurrencyValue = function(dataNode, currency_symbol) {
+            switch(currency_symbol) {
                 case('eur'):
                     return(dataNode['eur']);
                 break;
@@ -60,13 +60,13 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
                     return(dataNode['usd']);
                 break;
 
-                case('btc'):
+                case(currency):
                     return(dataNode['satoshi']);
                 break;
             }
         },
 
-        getNodeValue = function(node, currency) {
+        getNodeValue = function(node, currency_local) {
             if(nodeValueType === "received") {
                 return node.received;
             } else if(nodeValueType === "balance") {
@@ -78,11 +78,11 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
 
         getNodeRadius = function(node) {
             var nodeRadiusScale = d3.scaleLog().clamp(true)
-                .domain([d3.min(graph.nodes, function(n) {return getNodeValue(n, 'btc') + 1;}),
-                         d3.max(graph.nodes, function(n) {return getNodeValue(n, 'btc') + 1;})])
+                .domain([d3.min(graph.nodes, function(n) {return getNodeValue(n, currency) + 1;}),
+                         d3.max(graph.nodes, function(n) {return getNodeValue(n, currency) + 1;})])
                 .range([minNodeRadius, maxNodeRadius]).base(2);
 
-            return nodeRadiusScale(getNodeValue(node, 'btc'));
+            return nodeRadiusScale(getNodeValue(node, currency));
 
         },
 
@@ -192,7 +192,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
 
             nodeEnter.append("a")
                 .attr("xlink:href", function(d) {
-                    return $SCRIPT_ROOT + '/' + d.nodeType + '/' + d.id;
+                    return $SCRIPT_ROOT + '/' + currency + '/' + d.nodeType + '/' + d.id;
                 })
                 .append("text")
                 .style("pointer-events", "all")
@@ -326,7 +326,7 @@ var ForceLayout = function(app, graphControl, targetElement, graph, requestURI) 
         markerClicked = function(node, incoming) {
             simulation.stop();
 
-            var requestURI = $SCRIPT_ROOT + '/' + node.nodeType + '/' + node.id + '/egonet.json';
+            var requestURI = $SCRIPT_ROOT + '/' + currency + '/' + node.nodeType + '/' + node.id + '/egonet.json';
 
             if(graph.collapseNode(node.id, incoming)) {
                 update();

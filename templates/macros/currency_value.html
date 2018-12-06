@@ -1,6 +1,6 @@
-{% macro render(btc_value, eur_value, usd_value) -%}
+{% macro render(btc_value, eur_value, usd_value, currency) -%}
 
-<span class="currency btc" style="display:none">{{ btc_value }}</span>
+<span class="currency {{ currency }}" style="display:none">{{ btc_value }}</span>
 <span class="currency eur" style="display:none">{{ eur_value }}</span>
 <span class="currency usd" style="display:none">{{ usd_value }}</span>
 

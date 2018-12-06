@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}GraphSense - Explore Digital Currency Transactions{% endblock %}
+{% block title %}GraphSense - Cryptocurrency Explorer{% endblock %}
 
 {% block header %}
 
@@ -7,32 +7,83 @@
 
 {% block content %}
 
-<div class="jumbotron splash-image vertical-center">
-  <div class="container">
-    <!-- title row -->
-    <div class="row white-text">
-      <div class="col-md-12">
-        <h1 class="text-center"><strong>Explore Bitcoin Transactions</strong></h1>
+
+<div class="row">
+
+  <div class="jumbotron splash-image vertical-center">
+
+    <div class="container">
+      <!-- title row -->
+      <div class="row white-text">
+        <div class="col-md-12">
+          <h1 class="text-center"><strong>Explore Cryptocurrency Transactions</strong></h1>
+        </div>
       </div>
-    </div>
-    <!-- search form (simple search) -->
-    <div class="row top-buffer">
-      <div class="col-md-6 col-md-offset-3">
-        <form id="search-form" role="form" action="{{ url_for('search') }}" method="GET">
-          <input type="hidden" id="selected-type" name="selected-type" value="none"/>
-          <div class="input-group" style="width: 450px">
-            <input name="query" id="query" placeholder="Address, Tag, Transaction, Block" type="text" class="form-control" autocomplete="off"/>
-          <span class="input-group-btn">
-                <button type="submit" class="btn btn-success">Go!</button>
-              </span>
+      <!-- search form (simple search) -->
+      <div class="row top-buffer">
+        <form id="search-form" class="form-horizontal" role="form" action="{{ url_for('search') }}" method="GET">
+  
+          <div class="row form-group">
+            <!-- Currency selector -->
+            <div class="col-md-1 col-md-offset-1">
+              <select id="currency-selector" name="currency-selector" class="form-control btn btn-success">
+                {% for key in statistics%}
+                    {% if key == "btc" %}
+                        <option selected="selected" value="{{ key }}">{{ key.upper() }}</option>
+                    {% else %}
+                        <option value="{{ key }}">{{ key.upper() }}</option>
+                    {% endif %}
+                {% endfor%}
+              </select>  
+            </div>
+            <!-- Search field and button input group-->
+            <div class="col-md-8">
+                <div class="input-group">
+                  <!-- Search Field -->
+                  <input name="query" id="query" placeholder="Address, Tag, Transaction, Block" type="text" class="form-control" autocomplete="off"/>
+                  <!-- Search Button -->
+                  <div class="input-group-btn">
+                    <button class="btn btn-success" type="submit">
+                      <i class="glyphicon glyphicon-search"></i>
+                    </button>
+                  </div>
+                </div>
+            </div>
+          </div> <!-- end of form group -->
+          
+          <div class="row">
+            <div id="suggestion-dropdown-menu" class="input-group col-md-8 col-md-offset-2">
+            </div>
           </div>
-          <div id="suggestion-dropdown-menu" class="input-group">
-          </div>
+
         </form>
       </div>
-    </div>
+    </div> <!-- end of container -->
+
+
   </div>
+
+
 </div>
+
+<div class="row top-buffer">
+
+  <div class="container vertical-center">
+    {% for coin in statistics %}
+        <div class="col-md-4 text-center">
+          <img src="{{ url_for('static', filename='img/' + coin + '.png') }}"/>
+          <span/>
+          <p class="currency-stats text-center text-muted">Blocks: {{statistics[coin].no_blocks | format_number}}</p>              
+          <p class="currency-stats text-center text-muted">Transactions: {{statistics[coin].no_transactions | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Addresses: {{statistics[coin].no_addresses | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Clusters: {{statistics[coin].no_clusters | format_number}}</p>
+          <p class="currency-stats text-center text-muted">Last Update: {{statistics[coin].timestamp | format_date}}</p>
+        </div>          
+    {% endfor %}
+  </div>
+
+<div>
+
 
 {% endblock %}
 

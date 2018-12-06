@@ -1,10 +1,11 @@
 jQuery( document ).ready(function() {
-
     var app = getGraphSenseApp(),
 
         addressSummary = new SummaryBox('#summary', app),
 
         clusterSummary = new SummaryBox('#cluster-summary', app),
+
+        tagDownload = new TagDownload('#tag-download-button'),
 
         tabs = ['#ag_tab', '#txs_tab', '#tag_tab'],
 
@@ -23,7 +24,7 @@ jQuery( document ).ready(function() {
 
         show_address_graph = function() {
           if(d3.select("#graph-container").select("svg").empty()) {
-            var requestURI = $SCRIPT_ROOT + '/address/' + address_id + '/egonet.json';
+            var requestURI = $SCRIPT_ROOT + '/' + currency + '/address/' + address_id + '/egonet.json';
             $.getJSON(requestURI)
               .done(function( data ) {
                 // create graph control
@@ -42,7 +43,7 @@ jQuery( document ).ready(function() {
         },
 
         show_transactions_table = function() {
-          var request_uri = $SCRIPT_ROOT + '/address/' + address_id + '/transactions.json';
+          var request_uri = $SCRIPT_ROOT + '/' + currency + '/address/' + address_id + '/transactions.json';
           var table = $('#txs_table').DataTable( {
             retrieve: true,
             searching: false,
@@ -55,20 +56,20 @@ jQuery( document ).ready(function() {
                 "name": "entitylink",
                 "data": "txHash",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/tx/' + data + '">' + data + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/tx/' + data + '">' + data + '</a>';
                 }
               },
               {
-                "name": "btc",
+                "name": currency,
                 "data": "value",
-                "visible": (app.getActiveCurrency() == 'btc'),
+                "visible": (app.getActiveCurrency() == currency),
                 "render": function(data, type, full, meta) {
                   if (data.satoshi >= 0) {
                     color = 'green-text';
                   } else {
                     color = 'red-text'
                   }
-                  span = '<span class=' + color + '>' + CurrencyUtils.formatCurrency(data.satoshi, 'btc') + '</span>';
+                  span = '<span class=' + color + '>' + CurrencyUtils.formatCurrency(data.satoshi, currency) + '</span>';
                   return span;
                 }
               },
@@ -105,7 +106,7 @@ jQuery( document ).ready(function() {
               {
                 "data": "height",
                 "render": function(data, type, full, meta) {
-                  return '<a href="' + $SCRIPT_ROOT + '/block/' + data + '">' + data + '</a>';
+                  return '<a href="' + $SCRIPT_ROOT + '/' + currency + '/block/' + data + '">' + data + '</a>';
                 }
               },
               {
@@ -149,11 +150,11 @@ jQuery( document ).ready(function() {
         },
 
         show_tags_table = function() {
-          var request_uri = $SCRIPT_ROOT + '/address/' + address_id + '/tags.json';
+          var request_uri = $SCRIPT_ROOT + '/' + currency + '/address/' + address_id + '/tags.json';
           $('#tag_table').DataTable( {
             retrieve: true,
             paging: true,
-            searching: true,
+            searching: false,
             ajax: {
               url: request_uri,
               "dataSrc": ''
@@ -217,11 +218,11 @@ jQuery( document ).ready(function() {
     });
 
     events.subscribe('graphControl/edgeDownloadClicked', function() {
-        window.location.href = $SCRIPT_ROOT + '/address/' + address_id + '/egonet/edges.csv';
+        window.location.href = $SCRIPT_ROOT + '/' + currency + '/address/' + address_id + '/egonet/edges.csv';
     });
 
     events.subscribe('graphControl/nodeDownloadClicked', function() {
-        window.location.href = $SCRIPT_ROOT + '/address/' + address_id + '/egonet/nodes.csv';
+        window.location.href = $SCRIPT_ROOT + '/' + currency + '/address/' + address_id + '/egonet/nodes.csv';
     });
 
 });
