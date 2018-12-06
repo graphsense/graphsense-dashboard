@@ -29,10 +29,11 @@ function formatFiat (value, currencyCode, {dontAppendCurrency}) {
 }
 
 function formatCurrency (value, currencyCode, options) {
+  let options_ = {dontAppendCurrency: false, keyspace: 'btc', ...options}
   if (currencyCode === 'satoshi') {
-    return formatBTC(value, currencyCode, options)
+    return formatBTC(value, currencyCode, options_)
   } else {
-    return formatFiat(value, currencyCode, options)
+    return formatFiat(value, currencyCode, options_)
   }
 }
 
