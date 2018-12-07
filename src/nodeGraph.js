@@ -29,6 +29,18 @@ const defaultColor = {
 
 const transactionsPixelRange = [1, 7]
 
+const predefinedCategories = {
+  'Darknet crawl': chromaStep * 1,
+  'Exchange': chromaStep * 2,
+  'Exchanges': chromaStep * 2,
+  'Gambling': chromaStep * 3,
+  'Miner': chromaStep * 4,
+  'Old/historic': chromaStep * 5,
+  'Organization': chromaStep * 6,
+  'Pools': chromaStep * 7,
+  'Services/others': chromaStep * 8
+}
+
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
     super()
@@ -41,7 +53,7 @@ export default class NodeGraph extends Component {
     this.adding = set()
     this.layers = []
     this.viewBox = {x, y, w, h}
-    this.colorMapCategories = map()
+    this.colorMapCategories = map(predefinedCategories)
     this.colorMapTags = map()
     this.colorGen = (map, type) => {
       return (k) => {
