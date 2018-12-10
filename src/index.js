@@ -61,7 +61,10 @@ const dispatcher = dispatch(IS_DEV,
   'save',
   'load',
   'loadFile',
-  'deselect'
+  'deselect',
+  'showLogs',
+  'moreLogs',
+  'hideLogs'
 )
 
 let debugHistory = [{type: 'clickSearchResult', context: null, data: [{id: '1Archive1n2C579dMsAu3iC6tWzuQJz8dN', type: 'address'}]}]
@@ -86,6 +89,8 @@ if (module.hot) {
     './browser/option.html',
     './search/search.html',
     './search/search.js',
+    './status/status.html',
+    './statusbar.js',
     './browser/table.html',
     './browser/table.js',
     './browser/tags_table.js',

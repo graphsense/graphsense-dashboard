@@ -499,6 +499,15 @@ export default class Model {
       this.statusbar.addMsg('loadedFile', filename)
       this.deserialize(data)
     })
+    this.dispatcher.on('showLogs', () => {
+      this.statusbar.show()
+    })
+    this.dispatcher.on('hideLogs', () => {
+      this.statusbar.hide()
+    })
+    this.dispatcher.on('moreLogs', () => {
+      this.statusbar.moreLogs()
+    })
     window.onpopstate = (e) => {
       return
       if (!e.state) return

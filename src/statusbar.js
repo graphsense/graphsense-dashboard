@@ -1,22 +1,117 @@
 import status from './status/status.html'
 import Component from './component.js'
+import {addClass, removeClass} from './template_utils.js'
+
+const logsDisplayLength = 100
 
 export default class Statusbar extends Component {
   constructor (dispatcher) {
     super()
     this.dispatcher = dispatcher
     this.messages = []
+    this.visible = false
+    this.logsDisplayLength = logsDisplayLength
+  }
+  show () {
+    if (!this.visible) {
+      this.visible = true
+      this.shouldUpdate('visibility')
+    }
+  }
+  hide () {
+    if (this.visible) {
+      this.visible = false
+      this.shouldUpdate('visibility')
+    }
   }
   add (msg) {
-    this.messages.unshift(msg)
-    this.shouldUpdate(true)
+    this.messages.push(msg)
+    this.shouldUpdate('add')
+  }
+  moreLogs () {
+    this.logsDisplayLength += logsDisplayLength
+    this.shouldUpdate('logs')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
+    if (this.shouldUpdate() === 'add') {
+      let i = this.messages.length - 1
+      this.renderLogs(this.messages[i], i)
+      console.log('render add')
+      super.render()
+      return
+    }
+    if (this.shouldUpdate() === 'logs') {
+      this.renderLogs()
+      super.render()
+      return
+    }
+    if (this.shouldUpdate() === 'visibility') {
+      this.renderVisibility()
+      super.render()
+      return
+    }
     this.root.innerHTML = status
-    this.root.querySelector('#status-message').innerHTML = this.messages[0] || '&nbsp'
+
+    this.root.querySelector('#hide').addEventListener('click', () => {
+      this.dispatcher('hideLogs')
+    })
+    this.root.querySelector('#show').addEventListener('click', () => {
+      this.dispatcher('showLogs')
+    })
+    // let closeButton = this.root.querySelector('.close')
+    // closeButton.addEventListener('click', () => {
+    // this.dispatcher('hideLogs')
+    // })
+    this.renderLogs()
+    this.renderVisibility()
+    super.render()
+  }
+  renderLogs (msg, index) {
+    let logs = this.root.querySelector('ul#log-messages')
+    if (this.messages.length > this.logsDisplayLength) {
+      // remove 'show more' button
+      logs.removeChild(logs.lastChild)
+    }
+    if (msg) {
+      this.renderLogMsg(logs, msg, index)
+    } else {
+      logs.innerHTML = ''
+      this.messages.slice(0, this.logsDisplayLength).forEach((msg, i) => {
+        this.renderLogMsg(logs, msg, i)
+      })
+    }
+    if (this.messages.length > this.logsDisplayLength) {
+      let more = document.createElement('li')
+      more.className = 'cursor-pointer text-gs-dark'
+      more.innerHTML = 'Show more ...'
+      more.addEventListener('click', () => {
+        this.dispatcher('moreLogs')
+      })
+      logs.appendChild(more)
+    }
+  }
+  renderLogMsg (root, msg, index) {
+    let el = document.createElement('li')
+    el.innerHTML = msg
+    if (root.lastChild && root.childNodes.length > this.logsDisplayLength) {
+      root.removeChild(root.lastChild)
+    }
+    if (root.firstChild) {
+      root.insertBefore(el, root.firstChild)
+    } else {
+      root.appendChild(el)
+    }
+  }
+  renderVisibility () {
+    console.log('render visiblity', this.messages)
+    if (!this.visible) {
+      removeClass(this.root, 'visible')
+    } else {
+      addClass(this.root, 'visible')
+    }
   }
   msg (type) {
     let args = Array.prototype.slice.call(arguments, 1)

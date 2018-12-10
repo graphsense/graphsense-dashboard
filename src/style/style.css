@@ -467,3 +467,33 @@ stats-table {
 .coming {
   @apply text-xl text-grey-dark pt-8
 }
+
+ul#log-messages {
+  height: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: height ease 0.5s;
+}
+
+ul#log-messages li {
+  @apply pb-1
+}
+
+#layout-status.visible ul#log-messages {
+  height : 15ex;
+  overflow-y: scroll;
+  @apply p-1
+}
+
+#layout-status #show {
+  display: block;
+}
+#layout-status #hide {
+  display: none;
+}
+#layout-status.visible #show {
+  display: none;
+}
+#layout-status.visible #hide {
+  display: block;
+}
