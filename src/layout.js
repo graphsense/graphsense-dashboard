@@ -2,7 +2,7 @@ import layout from './layout/layout.html'
 import Component from './component.js'
 
 export default class Layout extends Component {
-  constructor (dispatcher, browser, graph, config, menu, search) {
+  constructor (dispatcher, browser, graph, config, menu, search, status) {
     super()
     this.dispatcher = dispatcher
     this.browser = browser
@@ -10,6 +10,7 @@ export default class Layout extends Component {
     this.config = config
     this.menu = menu
     this.search = search
+    this.statusbar = status
   }
   triggerFileLoad () {
     this.root.querySelector('#file-loader').click()
@@ -24,6 +25,7 @@ export default class Layout extends Component {
     let configRoot = null
     let menuRoot = null
     let searchRoot = null
+    let statusRoot = null
     if (this.shouldUpdate()) {
       this.root.innerHTML = layout
       this.browser.shouldUpdate(true)
@@ -31,6 +33,7 @@ export default class Layout extends Component {
       this.config.shouldUpdate(true)
       this.menu.shouldUpdate(true)
       this.search.shouldUpdate(true)
+      this.statusbar.shouldUpdate(true)
       let saveButton = this.root.querySelector('#navbar-save')
       saveButton.addEventListener('click', () => {
         this.dispatcher('save')
@@ -48,9 +51,10 @@ export default class Layout extends Component {
         let input = e.target
 
         let reader = new FileReader() //eslint-disable-line
+        let filename = input.files[0].name
         reader.onload = () => {
           let data = reader.result
-          this.dispatcher('loadFile', data)
+          this.dispatcher('loadFile', [data, filename])
         }
         reader.readAsArrayBuffer(input.files[0])
       })
@@ -59,12 +63,14 @@ export default class Layout extends Component {
       configRoot = this.root.querySelector('#layout-config')
       menuRoot = this.root.querySelector('#layout-menu')
       searchRoot = this.root.querySelector('#layout-search')
+      statusRoot = this.root.querySelector('#layout-status')
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
     this.config.render(configRoot)
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
+    this.statusbar.render(statusRoot)
     super.render()
     return this.root
   }
