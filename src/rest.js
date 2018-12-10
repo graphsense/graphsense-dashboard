@@ -9,7 +9,7 @@ export default class Rest {
     this.json = this.remoteJson
   }
   remoteJson (url, field) {
-    return json(url).then(result => {
+    return json(url, { credentials: 'include' }).then(result => {
       if (field) {
         // result is an array
         if (!result[field] || !result[field].length) {
