@@ -48,10 +48,6 @@ module.exports = env => {
                 presets: ['@babel/preset-env'],
                 plugins: ['@babel/plugin-proposal-optional-chaining']
               }
-            },
-            {
-              loader: 'preprocess-loader',
-              options: {IS_DEV: IS_DEV}
             }
           ]
         },
