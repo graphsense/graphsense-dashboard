@@ -187,9 +187,9 @@ export default class Model {
     this.dispatcher.on('loadTags', ({keyspace, params, nextPage, request, drawCallback}) => {
       this.statusbar.addMsg('loading', 'tags')
       this.rest(keyspace).tags({params, nextPage, pagesize: request.length})
-        .then(this.mapResult('resultTags', {page: nextPage, request, drawCallback}))
+        .then(this.mapResult('resultTagsTable', {page: nextPage, request, drawCallback}))
     })
-    this.dispatcher.on('resultTags', ({context, result}) => {
+    this.dispatcher.on('resultTagsTable', ({context, result}) => {
       this.browser.setResponse({...context, result})
     })
     this.dispatcher.on('initTransactionsTable', (request) => {
@@ -368,7 +368,7 @@ export default class Model {
     this.dispatcher.on('resultTags', ({context, result}) => {
       let o = this.store.get(context.type, context.id)
       this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
-      o.tags = result.tags
+      o.tags = result.tags || []
       if (context.type === 'address' && this.graph.labelType['addressLabel'] === 'tag') {
         this.graph.addressNodes.each((node) => node.shouldUpdateLabel())
       }
