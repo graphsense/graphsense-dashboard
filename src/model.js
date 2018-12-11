@@ -53,7 +53,7 @@ export default class Model {
   constructor (dispatcher) {
     this.dispatcher = dispatcher
     this.isReplaying = false
-    this.showLandingpage = false
+    this.showLandingpage = true
 
     this.call = (message, data) => {
       if (this.isReplaying) {
@@ -105,7 +105,7 @@ export default class Model {
       this.search.clear()
       this.graph.selectNodeWhenLoaded([id, type])
       this.statusbar.addMsg('loading', type, id)
-      this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode')
+      this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', id)
     })
     this.dispatcher.on('blurSearch', () => {
       this.search.clear()
@@ -115,8 +115,19 @@ export default class Model {
         case 'searchresult':
           this.search.hideLoading()
           this.search.error(error.keyspace, error.message)
-          this.statusbar.addMsg('error', error)
+          // this.statusbar.addMsg('error', error)
           break
+        case 'resultNode':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultTransactionForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultEgonet':
+          this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
+          break
+        case 'resultClusterAddresses':
+          this.statusbar.removeLoading('addresses of cluster ' + context[0])
         default:
           this.statusbar.addMsg('error', error)
       }
@@ -172,7 +183,7 @@ export default class Model {
       this.browser.loading.add(address)
       this.statusbar.addLoading(address)
       this.graph.selectNodeWhenLoaded([address, 'address'])
-      this.mapResult(this.rest(keyspace).node({id: address, type: 'address'}), 'resultNode')
+      this.mapResult(this.rest(keyspace).node({id: address, type: 'address'}), 'resultNode', address)
     })
     this.dispatcher.on('deselect', () => {
       this.browser.deselect()
@@ -181,7 +192,7 @@ export default class Model {
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
       this.browser.loading.add(txHash)
       this.statusbar.addLoading(txHash)
-      this.mapResult(this.rest(keyspace).transaction(txHash), 'resultTransactionForBrowser')
+      this.mapResult(this.rest(keyspace).transaction(txHash), 'resultTransactionForBrowser', txHash)
     })
 
     this.dispatcher.on('loadAddresses', ({keyspace, params, nextPage, request, drawCallback}) => {
@@ -264,7 +275,7 @@ export default class Model {
       console.log('selectAdress', data)
       if (!data.address || !data.keyspace) return
       let a = this.store.add(data)
-      this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode')
+      this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode', data.address)
       // historyPushState('selectAddress', data)
       this.graph.selectNodeWhenLoaded([data.address, 'address'])
       this.browser.setAddress(a)

@@ -25,6 +25,9 @@ export default class Statusbar extends Component {
       this.update.add('all')
       return
     }
+    if (update === false) {
+      this.update.clear()
+    }
     this.update.add(update)
   }
   toggleErrorLogs () {
@@ -65,6 +68,24 @@ export default class Statusbar extends Component {
     if (!this.root) throw new Error('root not defined')
     let s = this.shouldUpdate()
     if (!s.size() === 0) return this.root
+    if (s.has('all')) {
+      this.root.innerHTML = status
+
+      this.root.querySelector('#hide').addEventListener('click', () => {
+        this.dispatcher('hideLogs')
+      })
+      this.root.querySelector('#show').addEventListener('click', () => {
+        this.dispatcher('showLogs')
+      })
+      this.root.querySelector('#errors').addEventListener('click', () => {
+        this.dispatcher('toggleErrorLogs')
+      })
+      this.renderLoading()
+      this.renderLogs()
+      this.renderVisibility()
+      this.shouldUpdate(false)
+      return
+    }
     if (s.has('loading')) {
       this.renderLoading()
       s.remove('loading')
@@ -83,22 +104,6 @@ export default class Statusbar extends Component {
       this.renderVisibility()
       s.remove('visibility')
     }
-    if (!s.has('all')) return
-    this.root.innerHTML = status
-
-    this.root.querySelector('#hide').addEventListener('click', () => {
-      this.dispatcher('hideLogs')
-    })
-    this.root.querySelector('#show').addEventListener('click', () => {
-      this.dispatcher('showLogs')
-    })
-    this.root.querySelector('#errors').addEventListener('click', () => {
-      this.dispatcher('toggleErrorLogs')
-    })
-    this.renderLoading()
-    this.renderLogs()
-    this.renderVisibility()
-    s.remove('all')
   }
   renderLoading () {
     let top = this.root.querySelector('#topmsg')
