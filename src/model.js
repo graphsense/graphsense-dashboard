@@ -517,6 +517,9 @@ export default class Model {
     this.dispatcher.on('moreLogs', () => {
       this.statusbar.moreLogs()
     })
+    this.dispatcher.on('toggleErrorLogs', () => {
+      this.statusbar.toggleErrorLogs()
+    })
     window.onpopstate = (e) => {
       return
       if (!e.state) return

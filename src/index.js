@@ -64,6 +64,7 @@ const dispatcher = dispatch(IS_DEV,
   'loadFile',
   'deselect',
   'showLogs',
+  'toggleErrorLogs',
   'moreLogs',
   'hideLogs'
 )

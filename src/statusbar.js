@@ -14,6 +14,8 @@ export default class Statusbar extends Component {
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
     this.update = set()
+    this.numErrors = 0
+    this.showErrorsLogs = false
   }
   shouldUpdate (update) {
     if (update === undefined) {
@@ -24,6 +26,11 @@ export default class Statusbar extends Component {
       return
     }
     this.update.add(update)
+  }
+  toggleErrorLogs () {
+    this.showErrorsLogs = !this.showErrorsLogs
+    if (this.showErrorsLogs) this.show()
+    this.shouldUpdate('logs')
   }
   show () {
     if (!this.visible) {
@@ -85,6 +92,9 @@ export default class Statusbar extends Component {
     this.root.querySelector('#show').addEventListener('click', () => {
       this.dispatcher('showLogs')
     })
+    this.root.querySelector('#errors').addEventListener('click', () => {
+      this.dispatcher('toggleErrorLogs')
+    })
     this.renderLoading()
     this.renderLogs()
     this.renderVisibility()
@@ -107,7 +117,15 @@ export default class Statusbar extends Component {
   }
   renderLogs (msg, index) {
     let logs = this.root.querySelector('ul#log-messages')
-    if (this.messages.length > this.logsDisplayLength) {
+    let messages = this.messages
+    let errorMsg = this.root.querySelector('#errorMsg')
+    if (this.showErrorsLogs) {
+      errorMsg.innerHTML = 'Errors only'
+      messages = messages.filter(msg => typeof msg !== 'string')
+    } else {
+      errorMsg.innerHTML = ''
+    }
+    if (messages.length > this.logsDisplayLength) {
       // remove 'show more' button
       logs.removeChild(logs.lastChild)
     }
@@ -115,11 +133,11 @@ export default class Statusbar extends Component {
       this.renderLogMsg(logs, msg, index)
     } else {
       logs.innerHTML = ''
-      this.messages.slice(0, this.logsDisplayLength).forEach((msg, i) => {
+      messages.slice(0, this.logsDisplayLength).forEach((msg, i) => {
         this.renderLogMsg(logs, msg, i)
       })
     }
-    if (this.messages.length > this.logsDisplayLength) {
+    if (messages.length > this.logsDisplayLength) {
       let more = document.createElement('li')
       more.className = 'cursor-pointer text-gs-dark'
       more.innerHTML = 'Show more ...'
@@ -127,6 +145,10 @@ export default class Statusbar extends Component {
         this.dispatcher('moreLogs')
       })
       logs.appendChild(more)
+    }
+    if (this.numErrors > 0) {
+      console.log('numErrors', this.numErrors)
+      removeClass(this.root.querySelector('#errors i'), 'hidden')
     }
   }
   renderLogMsg (root, msg, index) {
@@ -200,6 +222,7 @@ export default class Statusbar extends Component {
       case 'removeNode':
         return `Removed node of ${args[0]} ${args[1]}`
       case 'error':
+        this.numErrors++
         return {error: args[0]}
       default:
         console.warn('unhandled status message type', type)
