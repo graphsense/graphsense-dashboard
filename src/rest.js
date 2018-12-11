@@ -23,6 +23,7 @@ export default class Rest {
       return Promise.resolve(result)
     }, error => {
       error.keyspace = this.keyspace
+      error.requestURL = url
       return Promise.reject(error)
     })
   }

@@ -111,39 +111,43 @@ export default class Search extends Component {
     el.innerHTML = ''
 
     let visible = this.isLoading
+    let allErrors = true
     for (let keyspace in this.keyspaces) {
       visible = visible ||
         (typeof this.result[keyspace] === 'string') ||
         this.result[keyspace].addresses.length > 0 ||
         this.result[keyspace].transactions.length > 0
+      if (typeof this.result[keyspace] === 'string') {
+        continue
+      }
+      allErrors = false
+
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
       let count = 0
-      if (typeof this.result[keyspace] === 'string') {
-        addClass(ul, 'text-gs-red')
-        ul.innerHTML = this.result[keyspace]
-        console.log('print error', ul)
-      } else {
-        this.result[keyspace].addresses.forEach(addr => {
-          if (!addr.startsWith(this.term)) return
-          if (count > numShowResults) return
-          count++
-          let li = document.createElement('li')
-          li.className = 'cursor-pointer'
-          li.appendChild(document.createTextNode(addr))
-          li.addEventListener('click', () => {
-            this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
-          })
-          ul.appendChild(li)
+      this.result[keyspace].addresses.forEach(addr => {
+        if (!addr.startsWith(this.term)) return
+        if (count > numShowResults) return
+        count++
+        let li = document.createElement('li')
+        li.className = 'cursor-pointer'
+        li.appendChild(document.createTextNode(addr))
+        li.addEventListener('click', () => {
+          this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
         })
-      }
+        ul.appendChild(li)
+      })
       // if no results to render don't draw the title and the list at all
-      if (count === 0 && !(typeof this.result[keyspace] === 'string')) continue
+      if (count === 0) continue
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(this.keyspaces[keyspace]))
       el.appendChild(title)
       el.appendChild(ul)
+    }
+    if (allErrors) {
+      el.innerHTML = `Failed to fetch from any keyspaces`
+      addClass(el, 'text-gs-red')
     }
     console.log('isVisible', this.isLoading, visible)
     if (visible) {

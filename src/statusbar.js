@@ -131,7 +131,7 @@ export default class Statusbar extends Component {
   }
   renderLogMsg (root, msg, index) {
     let el = document.createElement('li')
-    el.innerHTML = msg
+    el.innerHTML = this.msgToString(msg)
     if (root.lastChild && root.childNodes.length > this.logsDisplayLength) {
       root.removeChild(root.lastChild)
     }
@@ -139,6 +139,14 @@ export default class Statusbar extends Component {
       root.insertBefore(el, root.firstChild)
     } else {
       root.appendChild(el)
+    }
+  }
+  msgToString (msg) {
+    if (typeof msg === 'string') {
+      return msg
+    }
+    if (msg.error) {
+      return `<span class="text-gs-red">Error requesting ${msg.error.requestURL}: ${msg.error.message}`
     }
   }
   renderVisibility () {
@@ -191,6 +199,8 @@ export default class Statusbar extends Component {
         return `Loaded ${args[1]} addresses for cluster ${args[0]}`
       case 'removeNode':
         return `Removed node of ${args[0]} ${args[1]}`
+      case 'error':
+        return {error: args[0]}
       default:
         console.warn('unhandled status message type', type)
     }

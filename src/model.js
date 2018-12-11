@@ -90,7 +90,7 @@ export default class Model {
           if (this.searchTimeout[keyspace]) clearTimeout(this.searchTimeout[keyspace])
           this.search.showLoading()
           this.searchTimeout[keyspace] = setTimeout(() => {
-            this.mapResult(this.rest(keyspace).search(term, searchlimit), 'searchresult', 'searchError', term)
+            this.mapResult(this.rest(keyspace).search(term, searchlimit), 'searchresult', term)
           }, 250)
         }
       }
@@ -105,13 +105,21 @@ export default class Model {
       this.search.clear()
       this.graph.selectNodeWhenLoaded([id, type])
       this.statusbar.addMsg('loading', type, id)
-      this.rest(keyspace).node({id, type}).then(this.mapResult('resultNode'))
+      this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode')
     })
     this.dispatcher.on('blurSearch', () => {
       this.search.clear()
     })
-    this.dispatcher.on('searchError', ({context, error}) => {
-      this.search.error(error.keyspace, error.message)
+    this.dispatcher.on('fetchError', ({context, msg, error}) => {
+      switch (msg) {
+        case 'searchresult':
+          this.search.hideLoading()
+          this.search.error(error.keyspace, error.message)
+          this.statusbar.addMsg('error', error)
+          break
+        default:
+          this.statusbar.addMsg('error', error)
+      }
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
@@ -164,7 +172,7 @@ export default class Model {
       this.browser.loading.add(address)
       this.statusbar.addLoading(address)
       this.graph.selectNodeWhenLoaded([address, 'address'])
-      this.rest(keyspace).node({id: address, type: 'address'}).then(this.mapResult('resultNode'))
+      this.mapResult(this.rest(keyspace).node({id: address, type: 'address'}), 'resultNode')
     })
     this.dispatcher.on('deselect', () => {
       this.browser.deselect()
@@ -173,13 +181,12 @@ export default class Model {
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
       this.browser.loading.add(txHash)
       this.statusbar.addLoading(txHash)
-      this.rest(keyspace).transaction(txHash).then(this.mapResult('resultTransactionForBrowser'))
+      this.mapResult(this.rest(keyspace).transaction(txHash), 'resultTransactionForBrowser')
     })
 
     this.dispatcher.on('loadAddresses', ({keyspace, params, nextPage, request, drawCallback}) => {
       this.statusbar.addMsg('loading', 'addresses')
-      this.rest(keyspace).addresses({params, nextPage, pagesize: request.length})
-        .then(this.mapResult('resultAddresses', {page: nextPage, request, drawCallback}))
+      this.mapResult(this.rest(keyspace).addresses({params, nextPage, pagesize: request.length}), 'resultAddresses', {page: nextPage, request, drawCallback})
     })
     this.dispatcher.on('resultAddresses', ({context, result}) => {
       this.statusbar.addMsg('loaded', 'addresses')
@@ -187,8 +194,7 @@ export default class Model {
     })
     this.dispatcher.on('loadTransactions', ({keyspace, params, nextPage, request, drawCallback}) => {
       this.statusbar.addMsg('loading', 'transactions')
-      this.rest(keyspace).transactions({params, nextPage, pagesize: request.length})
-        .then(this.mapResult('resultTransactions', {page: nextPage, request, drawCallback}))
+      this.mapResult(this.rest(keyspace).transactions({params, nextPage, pagesize: request.length}), 'resultTransactions', {page: nextPage, request, drawCallback})
     })
     this.dispatcher.on('resultTransactions', ({context, result}) => {
       this.statusbar.addMsg('loaded', 'transactions')
@@ -196,8 +202,7 @@ export default class Model {
     })
     this.dispatcher.on('loadTags', ({keyspace, params, nextPage, request, drawCallback}) => {
       this.statusbar.addMsg('loading', 'tags')
-      this.rest(keyspace).tags({params, nextPage, pagesize: request.length})
-        .then(this.mapResult('resultTagsTable', {page: nextPage, request, drawCallback}))
+      this.mapResult(this.rest(keyspace).tags({params, nextPage, pagesize: request.length}), 'resultTagsTable', {page: nextPage, request, drawCallback})
     })
     this.dispatcher.on('resultTagsTable', ({context, result}) => {
       this.browser.setResponse({...context, result})
@@ -221,8 +226,7 @@ export default class Model {
       let id = params[0]
       let type = params[1]
       let isOutgoing = params[2]
-      this.rest(keyspace).neighbors(id, type, isOutgoing, request.length, nextPage)
-        .then(this.mapResult('resultNeighbors', {page: nextPage, request, drawCallback}))
+      this.mapResult(this.rest(keyspace).neighbors(id, type, isOutgoing, request.length, nextPage), 'resultNeighbors', {page: nextPage, request, drawCallback})
     })
     this.dispatcher.on('resultNeighbors', ({context, result}) => {
       this.browser.setResponse({...context, result})
@@ -251,8 +255,7 @@ export default class Model {
       if (!o) {
         this.browser.loading.add(data.id)
         this.statusbar.addLoading(data.id)
-        this.rest(data.keyspace).node({id: data.id, type: data.nodeType})
-          .then(this.mapResult('resultNode', context))
+        this.mapResult(this.rest(data.keyspace).node({id: data.id, type: data.nodeType}), 'resultNode', context)
       } else {
         this.call('resultNode', {context, result: o })
       }
@@ -261,8 +264,7 @@ export default class Model {
       console.log('selectAdress', data)
       if (!data.address || !data.keyspace) return
       let a = this.store.add(data)
-      this.rest(data.keyspace).node({id: data.address, type: 'address'})
-        .then(this.mapResult('resultNode'))
+      this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode')
       // historyPushState('selectAddress', data)
       this.graph.selectNodeWhenLoaded([data.address, 'address'])
       this.browser.setAddress(a)
@@ -279,8 +281,7 @@ export default class Model {
         let a = this.store.get(context.type, context.id)
         if (!a) {
           this.statusbar.addMsg('loading', context.type, context.id)
-          this.rest(keyspace).node({type: context.type, id: context.id})
-            .then(this.mapResult('addNodeCont', {stage: 2, keyspace, anchor}))
+          this.mapResult(this.rest(keyspace).node({type: context.type, id: context.id}), 'addNodeCont', {stage: 2, keyspace, anchor})
         } else {
           this.call('addNodeCont', {context: {stage: 2, keyspace, anchor}, result: a})
         }
@@ -295,8 +296,7 @@ export default class Model {
         console.log('cluster', o.cluster)
         if (o.type === 'address' && !o.cluster) {
           this.statusbar.addMsg('loadingClusterFor', o.id)
-          this.rest(keyspace).clusterForAddress(o.id)
-            .then(this.mapResult('addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor}))
+          this.mapResult(this.rest(keyspace).clusterForAddress(o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
         } else {
           this.call('addNodeCont', {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
         }
@@ -330,8 +330,7 @@ export default class Model {
         let o = this.store.get(context.type, context.id)
         if (!o.tags) {
           this.statusbar.addMsg('loadingTagsFor', o.type, o.id)
-          this.rest(keyspace).tags({id: o.id, type: o.type})
-            .then(this.mapResult('resultTags', {id: o.id, type: o.type}))
+          this.mapResult(this.rest(keyspace).tags({id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type})
         }
         this.graph.add(o, context.anchor)
         this.statusbar.removeLoading(o.id)
@@ -346,8 +345,7 @@ export default class Model {
           return
         }
         this.statusbar.addMsg('loadingNeighbors', o.id, o.type, false)
-        this.rest(keyspace).neighbors(o.id, o.type, false, degreeThreshold)
-          .then(this.mapResult('excourseLoadDegree', { ...context, stage: 2 }))
+        this.mapResult(this.rest(keyspace).neighbors(o.id, o.type, false, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 2 })
       } else if (context.stage === 2) {
         this.statusbar.addMsg('loadedNeighbors', context.id, context.type, false)
         let o = this.store.get(context.type, context.id)
@@ -363,8 +361,7 @@ export default class Model {
           return
         }
         this.statusbar.addMsg('loadingNeighbors', o.id, o.type, true)
-        this.rest(keyspace).neighbors(o.id, o.type, true, degreeThreshold)
-          .then(this.mapResult('excourseLoadDegree', {...context, stage: 3}))
+        this.mapResult(this.rest(keyspace).neighbors(o.id, o.type, true, degreeThreshold), 'excourseLoadDegree', {...context, stage: 3})
       } else if (context.stage === 3) {
         let o = this.store.get(context.type, context.id)
         this.statusbar.addMsg('loadedNeighbors', context.id, context.type, true)
@@ -391,7 +388,7 @@ export default class Model {
     })
     this.dispatcher.on('loadEgonet', ({id, type, keyspace, isOutgoing, limit}) => {
       this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
-      this.rest(keyspace).neighbors(id[0], type, isOutgoing, limit).then(this.mapResult('resultEgonet', {id, type, isOutgoing}))
+      this.mapResult(this.rest(keyspace).neighbors(id[0], type, isOutgoing, limit), 'resultEgonet', {id, type, isOutgoing})
     })
     this.dispatcher.on('resultEgonet', ({context, result}) => {
       let a = this.store.get(context.type, context.id[0])
@@ -413,7 +410,7 @@ export default class Model {
     })
     this.dispatcher.on('loadClusterAddresses', ({id, keyspace, limit}) => {
       this.statusbar.addMsg('loadingClusterAddresses', id, limit)
-      this.rest(keyspace).clusterAddresses(id[0], limit).then(this.mapResult('resultClusterAddresses', id))
+      this.mapResult(this.rest(keyspace).clusterAddresses(id[0], limit), 'resultClusterAddresses', id)
     })
     this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
       let id = context
@@ -424,8 +421,7 @@ export default class Model {
         addresses.push(a)
         if (!a.tags) {
           let request = {id: a.id, type: 'address'}
-          this.rest(a.keyspace).tags(request)
-            .then(this.mapResult('resultTags', request))
+          this.mapResult(this.rest(a.keyspace).tags(request), 'resultTags', request)
         }
       })
       this.statusbar.addMsg('loadedClusterAddresses', id, addresses.length)
@@ -472,7 +468,7 @@ export default class Model {
       this.config.toggleConfig()
     })
     this.dispatcher.on('stats', () => {
-      this.rest().stats().then(this.mapResult('receiveStats'))
+      this.mapResult(this.rest().stats(), 'receiveStats')
     })
     this.dispatcher.on('receiveStats', ({context, result}) => {
       this.landingpage.setStats({...result})
@@ -574,12 +570,12 @@ export default class Model {
     var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line
     FileSaver.saveAs(blob, filename)
   }
-  mapResult (promise, msg, errMsg, context) {
+  mapResult (promise, msg, context) {
     let onSuccess = result => {
       this.call(msg, {context, result})
     }
     let onReject = error => {
-      this.call(errMsg, {context, error})
+      this.call('fetchError', {context, msg, error})
     }
     if (this.isReplaying) {
       onSuccess = () => {}
