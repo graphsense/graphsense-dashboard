@@ -1,6 +1,8 @@
 import {json} from 'd3-fetch'
 // import {json} from './mockup.js'
 
+const options = {} // { credentials: 'include' }
+
 export default class Rest {
   constructor (baseUrl, keyspace, prefixLength) {
     this.keyspace = keyspace
@@ -9,7 +11,7 @@ export default class Rest {
     this.json = this.remoteJson
   }
   remoteJson (url, field) {
-    return json(url, { credentials: 'include' }).then(result => {
+    return json(url, options).then(result => {
       if (field) {
         // result is an array
         if (!result[field] || !result[field].length) {
