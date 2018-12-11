@@ -11,6 +11,8 @@ const addressHeight = 50
 const removeHandleWidth = 15
 const removeHandlePadding = 5
 
+const closePath = 'M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z'
+
 class GraphNode extends Component {
   constructor (dispatcher, labelType, data, layerId, colors, currency) {
     super()
@@ -106,9 +108,9 @@ class GraphNode extends Component {
       .attr('y', 0)
       .attr('width', w)
       .attr('height', w)
-    g.append('text')
-      .text('')
-      .attr('text-anchor', 'middle')
+    g.append('path')
+      .attr('d', closePath)
+      .attr('transform', 'scale(0.028)')
       .attr('x', w / 2)
       .attr('y', w / 2 + fontSize / 3)
     g.attr('transform', `translate(${x}, ${y})`)
