@@ -1,3 +1,4 @@
+import {set} from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
@@ -9,8 +10,20 @@ export default class Statusbar extends Component {
     super()
     this.dispatcher = dispatcher
     this.messages = []
+    this.loading = set()
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
+    this.update = set()
+  }
+  shouldUpdate (update) {
+    if (update === undefined) {
+      return this.update
+    }
+    if (update === true) {
+      this.update.add('all')
+      return
+    }
+    this.update.add(update)
   }
   show () {
     if (!this.visible) {
@@ -32,27 +45,38 @@ export default class Statusbar extends Component {
     this.logsDisplayLength += logsDisplayLength
     this.shouldUpdate('logs')
   }
+  addLoading (id) {
+    this.loading.add(id)
+    this.shouldUpdate('loading')
+  }
+  removeLoading (id) {
+    this.loading.remove(id)
+    this.shouldUpdate('loading')
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (!this.shouldUpdate()) return this.root
-    if (this.shouldUpdate() === 'add') {
+    let s = this.shouldUpdate()
+    if (!s.size() === 0) return this.root
+    if (s.has('loading')) {
+      this.renderLoading()
+      s.remove('loading')
+    }
+    if (s.has('add')) {
       let i = this.messages.length - 1
       this.renderLogs(this.messages[i], i)
       console.log('render add')
-      super.render()
-      return
+      s.remove('add')
     }
-    if (this.shouldUpdate() === 'logs') {
+    if (s.has('logs')) {
       this.renderLogs()
-      super.render()
-      return
+      s.remove('logs')
     }
-    if (this.shouldUpdate() === 'visibility') {
+    if (s.has('visibility')) {
       this.renderVisibility()
-      super.render()
-      return
+      s.remove('visibility')
     }
+    if (!s.has('all')) return
     this.root.innerHTML = status
 
     this.root.querySelector('#hide').addEventListener('click', () => {
@@ -61,13 +85,25 @@ export default class Statusbar extends Component {
     this.root.querySelector('#show').addEventListener('click', () => {
       this.dispatcher('showLogs')
     })
-    // let closeButton = this.root.querySelector('.close')
-    // closeButton.addEventListener('click', () => {
-    // this.dispatcher('hideLogs')
-    // })
+    this.renderLoading()
     this.renderLogs()
     this.renderVisibility()
-    super.render()
+    s.remove('all')
+  }
+  renderLoading () {
+    let top = this.root.querySelector('#topmsg')
+    if (this.loading.size() === 0) {
+      removeClass(this.root, 'loading')
+      if (top) top.innerHTML = ''
+      return
+    }
+    addClass(this.root, 'loading')
+    let msg = 'Loading '
+    let v = this.loading.values()
+    msg += v.slice(0, 3).join(', ')
+    msg += v.length > 3 ? ` + ${v.length - 3}` : ''
+    msg += ' ...'
+    top.innerHTML = msg
   }
   renderLogs (msg, index) {
     let logs = this.root.querySelector('ul#log-messages')

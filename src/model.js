@@ -95,6 +95,7 @@ export default class Model {
     })
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace}) => {
       this.browser.loading.add(id)
+      this.statusbar.addLoading(id)
       if (this.showLandingpage) {
         this.showLandingpage = false
         this.layout.shouldUpdate(true)
@@ -124,6 +125,7 @@ export default class Model {
         anchor = context.anchor
       }
       this.browser.setResultNode(a)
+      this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
     })
@@ -154,6 +156,7 @@ export default class Model {
     // user clicks address in transactions table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
       this.browser.loading.add(address)
+      this.statusbar.addLoading(address)
       this.graph.selectNodeWhenLoaded([address, 'address'])
       this.rest(keyspace).node({id: address, type: 'address'}).then(this.mapResult('resultNode'))
     })
@@ -163,6 +166,7 @@ export default class Model {
     })
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
       this.browser.loading.add(txHash)
+      this.statusbar.addLoading(txHash)
       this.rest(keyspace).transaction(txHash).then(this.mapResult('resultTransactionForBrowser'))
     })
 
@@ -240,6 +244,7 @@ export default class Model {
       }
       if (!o) {
         this.browser.loading.add(data.id)
+        this.statusbar.addLoading(data.id)
         this.rest(data.keyspace).node({id: data.id, type: data.nodeType})
           .then(this.mapResult('resultNode', context))
       } else {
@@ -258,6 +263,7 @@ export default class Model {
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {
       this.graph.adding.add(id)
+      this.statusbar.addLoading(id)
       this.call('addNodeCont', {context: {stage: 1, id, type, keyspace, anchor}, result: null})
     })
     this.dispatcher.on('addNodeCont', ({context, result}) => {
@@ -322,6 +328,7 @@ export default class Model {
             .then(this.mapResult('resultTags', {id: o.id, type: o.type}))
         }
         this.graph.add(o, context.anchor)
+        this.statusbar.removeLoading(o.id)
       }
     })
     this.dispatcher.on('excourseLoadDegree', ({context, result}) => {

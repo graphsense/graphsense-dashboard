@@ -497,3 +497,11 @@ ul#log-messages li {
 #layout-status.visible #hide {
   display: block;
 }
+
+#layout-status #indicator {
+  display: none;
+}
+
+#layout-status.loading #indicator {
+  display: inline;
+}

@@ -72,7 +72,7 @@ module.exports = env => {
         },
         // the file-loader emits files.
         {
-          test: /\.(woff(2)?|ttf|eot|svg|jpg|png)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+          test: /\.(woff(2)?|ttf|eot|svg|jpg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           loader: 'file-loader'
         }
       ]
