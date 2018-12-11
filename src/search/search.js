@@ -25,6 +25,29 @@ export default class Search extends Component {
     this.term = ''
     this.shouldUpdate(true)
   }
+  showLoading () {
+    console.log('showLoading')
+    if (!this.isLoading) {
+      this.isLoading = true
+      this.shouldUpdate('result')
+    }
+  }
+  hideLoading () {
+    console.log('hideLoading')
+    if (this.isLoading) {
+      this.isLoading = false
+      this.shouldUpdate('result')
+    }
+  }
+  renderLoading () {
+    if (this.isLoading) {
+      // removeClass(this.root.querySelector('#browser-search-result'), 'hidden')
+      this.root.querySelector('#indicator').style.display = 'inline'
+    } else {
+      // addClass(this.root.querySelector('#browser-search-result'), 'hidden')
+      this.root.querySelector('#indicator').style.display = 'none'
+    }
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -70,6 +93,7 @@ export default class Search extends Component {
     }
   }
   needsResults (keyspace, limit, prefixLength) {
+    if (this.term.length < prefixLength) return false
     let len = this.result[keyspace].addresses.length
     return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
   }
@@ -78,10 +102,11 @@ export default class Search extends Component {
   }
   renderResult () {
     console.log('addresses', this.result)
-    let el = this.root.querySelector('#browser-search-result')
+    let frame = this.root.querySelector('#browser-search-result')
+    let el = frame.querySelector('#result')
     el.innerHTML = ''
 
-    let visible = false
+    let visible = this.isLoading
     for (let keyspace in this.keyspaces) {
       visible = visible ||
         this.result[keyspace].addresses.length > 0 ||
@@ -109,13 +134,15 @@ export default class Search extends Component {
       el.appendChild(title)
       el.appendChild(ul)
     }
+    console.log('isVisible', this.isLoading, visible)
     if (visible) {
-      addClass(el, 'block')
-      removeClass(el, 'hidden')
+      addClass(frame, 'block')
+      removeClass(frame, 'hidden')
     } else {
-      removeClass(el, 'block')
-      addClass(el, 'hidden')
+      removeClass(frame, 'block')
+      addClass(frame, 'hidden')
     }
+    this.renderLoading()
   }
   setResult (term, result) {
     if (term !== this.term) return

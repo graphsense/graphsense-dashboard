@@ -84,9 +84,11 @@ export default class Model {
 
     this.dispatcher.on('search', (term) => {
       this.search.setSearchTerm(term, prefixLength)
+      this.search.hideLoading()
       for (let keyspace in keyspaces) {
         if (this.search.needsResults(keyspace, searchlimit, prefixLength)) {
           if (this.searchTimeout[keyspace]) clearTimeout(this.searchTimeout[keyspace])
+          this.search.showLoading()
           this.searchTimeout[keyspace] = setTimeout(() => {
             this.rest(keyspace).search(term, searchlimit).then(this.mapResult('searchresult', term))
           }, 250)
@@ -135,6 +137,7 @@ export default class Model {
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
     })
     this.dispatcher.on('searchresult', ({context, result}) => {
+      this.search.hideLoading()
       this.search.setResult(context, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
