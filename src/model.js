@@ -387,12 +387,14 @@ export default class Model {
       }
     })
     this.dispatcher.on('loadEgonet', ({id, type, keyspace, isOutgoing, limit}) => {
+      this.statusbar.addLoading(`neighbors of ${type} ${id[0]}`)
       this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
       this.mapResult(this.rest(keyspace).neighbors(id[0], type, isOutgoing, limit), 'resultEgonet', {id, type, isOutgoing})
     })
     this.dispatcher.on('resultEgonet', ({context, result}) => {
       let a = this.store.get(context.type, context.id[0])
       this.statusbar.addMsg('loadedNeighbors', context.id[0], context.type, context.isOutgoing)
+      this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
       result.neighbors.forEach((node) => {
         if (node.id === context.id[0] || node.nodeType !== context.type) return
         let anchor = {
@@ -410,11 +412,13 @@ export default class Model {
     })
     this.dispatcher.on('loadClusterAddresses', ({id, keyspace, limit}) => {
       this.statusbar.addMsg('loadingClusterAddresses', id, limit)
+      this.statusbar.addLoading('addresses of cluster ' + id[0])
       this.mapResult(this.rest(keyspace).clusterAddresses(id[0], limit), 'resultClusterAddresses', id)
     })
     this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
       let id = context
       let addresses = []
+      this.statusbar.removeLoading('addresses of cluster ' + id[0])
       result.addresses.forEach((address) => {
         let copy = {...address, toCluster: id[0]}
         let a = this.store.add(copy)
