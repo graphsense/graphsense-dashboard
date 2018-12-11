@@ -145,8 +145,8 @@ export default class Model {
         }
       }
       let anchor
-      if (context && context.anchor) {
-        anchor = context.anchor
+      if (context && context.anchorNode) {
+        anchor = context.anchorNode
       }
       this.browser.setResultNode(a)
       this.statusbar.removeLoading(a.id)
@@ -261,7 +261,7 @@ export default class Model {
             }
         }
       if (anchorNode) {
-        context['anchor'] = {nodeId: anchorNode.id, isOutgoing}
+        context['anchorNode'] = {nodeId: anchorNode.id, isOutgoing}
       }
       if (!o) {
         this.browser.loading.add(data.id)
