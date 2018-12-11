@@ -25,6 +25,10 @@ export default class Search extends Component {
     this.term = ''
     this.shouldUpdate(true)
   }
+  error (keyspace, msg) {
+    this.result[keyspace] = msg
+    this.shouldUpdate('result')
+  }
   showLoading () {
     console.log('showLoading')
     if (!this.isLoading) {
@@ -109,25 +113,32 @@ export default class Search extends Component {
     let visible = this.isLoading
     for (let keyspace in this.keyspaces) {
       visible = visible ||
+        (typeof this.result[keyspace] === 'string') ||
         this.result[keyspace].addresses.length > 0 ||
         this.result[keyspace].transactions.length > 0
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
       let count = 0
-      this.result[keyspace].addresses.forEach(addr => {
-        if (!addr.startsWith(this.term)) return
-        if (count > numShowResults) return
-        count++
-        let li = document.createElement('li')
-        li.className = 'cursor-pointer'
-        li.appendChild(document.createTextNode(addr))
-        li.addEventListener('click', () => {
-          this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
+      if (typeof this.result[keyspace] === 'string') {
+        addClass(ul, 'text-gs-red')
+        ul.innerHTML = this.result[keyspace]
+        console.log('print error', ul)
+      } else {
+        this.result[keyspace].addresses.forEach(addr => {
+          if (!addr.startsWith(this.term)) return
+          if (count > numShowResults) return
+          count++
+          let li = document.createElement('li')
+          li.className = 'cursor-pointer'
+          li.appendChild(document.createTextNode(addr))
+          li.addEventListener('click', () => {
+            this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
+          })
+          ul.appendChild(li)
         })
-        ul.appendChild(li)
-      })
+      }
       // if no results to render don't draw the title and the list at all
-      if (count === 0) continue
+      if (count === 0 && !(typeof this.result[keyspace] === 'string')) continue
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(this.keyspaces[keyspace]))

@@ -21,6 +21,9 @@ export default class Rest {
         result.keyspace = this.keyspace
       }
       return Promise.resolve(result)
+    }, error => {
+      error.keyspace = this.keyspace
+      return Promise.reject(error)
     })
   }
   disable () {

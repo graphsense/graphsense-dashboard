@@ -90,7 +90,7 @@ export default class Model {
           if (this.searchTimeout[keyspace]) clearTimeout(this.searchTimeout[keyspace])
           this.search.showLoading()
           this.searchTimeout[keyspace] = setTimeout(() => {
-            this.rest(keyspace).search(term, searchlimit).then(this.mapResult('searchresult', term))
+            this.mapResult(this.rest(keyspace).search(term, searchlimit), 'searchresult', 'searchError', term)
           }, 250)
         }
       }
@@ -109,6 +109,9 @@ export default class Model {
     })
     this.dispatcher.on('blurSearch', () => {
       this.search.clear()
+    })
+    this.dispatcher.on('searchError', ({context, error}) => {
+      this.search.error(error.keyspace, error.message)
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
@@ -571,11 +574,18 @@ export default class Model {
     var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line
     FileSaver.saveAs(blob, filename)
   }
-  mapResult (msg, context) {
-    if (this.isReplaying) {
-      return () => {}
+  mapResult (promise, msg, errMsg, context) {
+    let onSuccess = result => {
+      this.call(msg, {context, result})
     }
-    return result => this.call(msg, {context, result})
+    let onReject = error => {
+      this.call(errMsg, {context, error})
+    }
+    if (this.isReplaying) {
+      onSuccess = () => {}
+      onReject = () => {}
+    }
+    return promise.then(onSuccess, onReject)
   }
   render (root) {
     if (root) this.root = root
