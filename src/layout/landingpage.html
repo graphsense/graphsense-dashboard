@@ -1,4 +1,4 @@
-<div class="splash">
+<header class="splash">
   <div class="logo">
     <img alt="GRAPHSENSE" src="./logo-without-icon.svg"/>
   </div>
@@ -10,10 +10,10 @@
   <svg class="slash" viewbox="0 0 1 1" preserveaspectratio="none">
     <path d="M 0 1 L 1 0, 1 1 Z"></path>
   </svg>
-</div>
-<section class="supported-currencies">
+</header>
+<section class="supported-currencies mt-6">
   <h2>Supported currencies</h2>
-  <div class="currencies container flex flex-wrap justify-center mx-auto">
+  <div class="container flex flex-wrap justify-center mx-auto">
     <div class="currency ltc w-full md:w-1/2 lg:w-1/3 xl:w-1/4">
       <h3>Litecoin</h3>
       <div class="statistics">
@@ -36,3 +36,7 @@
     </div>
   </div>
 </section>
+<footer class="flex flex-row justify-between p-4 mt-6 text-sm w-full text-grey-dark splash-footer">
+  <div>© graphsense.info, {{currentYear}}</div>
+  <div>Version {{version}}</div>
+</footer>

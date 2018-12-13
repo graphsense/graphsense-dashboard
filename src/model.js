@@ -12,8 +12,7 @@ import moment from 'moment'
 import FileSaver from 'file-saver'
 import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
-
-const VERSION = '0.4'
+import {VERSION} from './globals.js'
 
 const baseUrl = REST_ENDPOINT
 

@@ -4,6 +4,7 @@ import Component from './component.js'
 import moment from 'moment'
 import numeral from 'numeral'
 import {replace} from './template_utils'
+import {VERSION} from './globals.js'
 
 export default class Landingpage extends Component {
   constructor (dispatcher, search, keyspaces) {
@@ -21,7 +22,7 @@ export default class Landingpage extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate() === true) {
-      this.root.innerHTML = layout
+      this.root.innerHTML = replace(layout, {version: VERSION, currentYear: moment().year()})
       for (let key in this.stats) {
         this.stats[key] = 'loading'
       }
