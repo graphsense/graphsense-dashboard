@@ -23,6 +23,7 @@ export default class Search extends Component {
   clear () {
     this.clearResults()
     this.term = ''
+    this.isLoading = false
     this.shouldUpdate(true)
   }
   error (keyspace, msg) {
