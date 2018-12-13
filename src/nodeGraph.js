@@ -16,29 +16,36 @@ const y = -300
 const w = 800
 const h = 600
 
-const chromaStep = 36
-const saturation = 94 / 255 * 100
+const hsl2rgb = (h, s, l) => {
+  h = h % 360
+  s = s * 100 + '%'
+  l = l * 100 + '%'
+  return `hsl(${h}, ${s}, ${l})`
+}
+
+const chromaStep = 80
+const saturation = 94 / 255
 const lightness = {
-  'cluster': 209 / 255 * 100,
-  'address': 230 / 255 * 100
+  'cluster': 209 / 255,
+  'address': 230 / 255
 }
 const defaultColor = {
-  'cluster': `hsl(178, 0%, ${lightness['cluster']}%)`,
-  'address': `hsl(178, 0%, ${lightness['address']}%)`
+  'cluster': hsl2rgb(178, 0, lightness['cluster']),
+  'address': hsl2rgb(178, 0, lightness['address'])
 }
 
 const transactionsPixelRange = [1, 7]
 
 const predefinedCategories = {
-  'Darknet crawl': chromaStep * 1,
-  'Exchange': chromaStep * 2,
-  'Exchanges': chromaStep * 2,
-  'Gambling': chromaStep * 3,
-  'Miner': chromaStep * 4,
-  'Old/historic': chromaStep * 5,
-  'Organization': chromaStep * 6,
-  'Pools': chromaStep * 7,
-  'Services/others': chromaStep * 8
+  'Darknet crawl': chromaStep * 0,
+  'Exchange': chromaStep * 1,
+  'Exchanges': chromaStep * 1,
+  'Gambling': chromaStep * 2,
+  'Miner': chromaStep * 3,
+  'Old/historic': chromaStep * 4,
+  'Organization': chromaStep * 5,
+  'Pools': chromaStep * 6,
+  'Services/others': chromaStep * 7
 }
 
 export default class NodeGraph extends Component {
@@ -64,7 +71,7 @@ export default class NodeGraph extends Component {
           chroma = map.size() * chromaStep
           map.set(k, chroma)
         }
-        return `hsl(${chroma}, ${saturation}%, ${lightness[type]}%)`
+        return hsl2rgb(chroma, saturation, lightness[type])
       }
     }
     this.colors =

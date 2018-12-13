@@ -151,18 +151,18 @@ class GraphNode extends Component {
     if (this.data.tags && this.data.tags.length > 1) {
       return this.data.tags.length + ' tags'
     }
-    return (this.findTag() || {}).tag || ''
+    return this.findTag('tag') || ''
   }
   getActorCategory () {
-    return (this.findTag() || {}).actorCategory || ''
+    return this.findTag('actorCategory') || ''
   }
-  findTag () {
+  findTag (field) {
     let tags = (this.data || {}).tags || []
     tags.sort((a, b) => {
-      return a - b
+      return a.timestamp - b.timestamp
     })
     for (let i = 0; i < tags.length; i++) {
-      if (tags[i].actorCategory) return tags[i]
+      if (tags[i][field]) return tags[i][field]
     }
   }
   getLabel () {
@@ -175,12 +175,13 @@ class GraphNode extends Component {
         } else if (this.data.type === 'address') {
           return this.data.id.substring(0, 8)
         }
+        break
       case 'balance':
         return this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency], this.data.keyspace)
       case 'tag':
         return this.getTag()
       case 'actorCategory':
-        return this.getActorCategory(this.data) + ''
+        return this.getActorCategory()
     }
   }
   coloring () {
@@ -203,7 +204,7 @@ class GraphNode extends Component {
         break
       case 'id':
       case 'actorCategory':
-        this.color = this.colors.categories(this.getActorCategory(this.data) + '')
+        this.color = this.colors.categories(this.getActorCategory())
         break
     }
     this.root
