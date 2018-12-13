@@ -390,11 +390,14 @@ svg.slash {
   height: 5vw;
   position: absolute;
   bottom: 0;
+  background-color: transparent;
   @apply w-screen;
 }
 
 svg.slash path {
   fill: white;
+  stroke: white;
+  stroke-width: 0;
 }
 
 .splash .logo {
