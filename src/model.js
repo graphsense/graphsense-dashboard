@@ -45,7 +45,7 @@ const keyspaces =
     'btc': 'Bitcoin',
     'ltc': 'Litecoin',
     'bch': 'Bitcoin Cash',
-    'zec': 'Z-Cash'
+    'zec': 'Zcash'
   }
 
 export default class Model {
