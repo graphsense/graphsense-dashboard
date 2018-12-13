@@ -66,7 +66,9 @@ html, body {
 }
 
 .header-height {
-  height: 5vh;
+  height: 49px;
+  max-height: 49px;
+  min-height: 49px;
 }
 
 #layout-graph {
