@@ -23,7 +23,7 @@ const hsl2rgb = (h, s, l) => {
   return `hsl(${h}, ${s}, ${l})`
 }
 
-const chromaStep = 80
+const chromaStep = 67
 const saturation = 94 / 255
 const lightness = {
   'cluster': 209 / 255,
@@ -71,6 +71,7 @@ export default class NodeGraph extends Component {
           chroma = map.size() * chromaStep
           map.set(k, chroma)
         }
+        console.log('colorGen', type, k, chroma)
         return hsl2rgb(chroma, saturation, lightness[type])
       }
     }

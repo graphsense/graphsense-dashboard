@@ -185,9 +185,10 @@ class GraphNode extends Component {
     }
   }
   coloring () {
+    let color
     switch (this.labelType) {
       case 'noAddresses':
-        this.color = this.colors.range(this.data.noAddresses)
+        color = this.colors.range(this.data.noAddresses)
         break
       case 'tag':
         let tag
@@ -200,19 +201,19 @@ class GraphNode extends Component {
         } else {
           tag = this.getTag(this.data)
         }
-        this.color = this.colors.tags(tag)
+        color = this.colors.tags(tag)
         break
       case 'id':
       case 'actorCategory':
-        this.color = this.colors.categories(this.getActorCategory())
+        color = this.colors.categories(this.getActorCategory())
         break
     }
     this.root
       .select('.rect')
-      .style('color', this.color)
+      .style('color', color)
     this.root
       .selectAll('.expandHandle path')
-      .style('color', this.color)
+      .style('color', color)
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)
