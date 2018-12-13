@@ -74,12 +74,15 @@ html, body {
 }
 
 #layout-browser, #layout-config {
-  top: -30vh;
-  transition: top 0.5s;
+  top: -40vh;
+  opacity: 0;
+  transition: top 0.5s, opacity step-end 0.5s;
 }
 
 #layout-browser.show, #layout-config.show {
   top: 5vh;
+  opacity: 1;
+  transition: top 0.5s, opacity step-start 0.5s;
 }
 
 .btn {
