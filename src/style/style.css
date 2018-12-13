@@ -72,17 +72,17 @@ html, body {
 }
 
 #layout-graph {
-  height: 95vh;
+  height: calc(100vh - 49px);
 }
 
 #layout-browser, #layout-config {
-  top: -40vh;
+  top: -300px;
   opacity: 0;
   transition: top 0.5s, opacity step-end 0.5s;
 }
 
 #layout-browser.show, #layout-config.show {
-  top: 5vh;
+  top: 49px;
   opacity: 1;
   transition: top 0.5s, opacity step-start 0.5s;
 }
