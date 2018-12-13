@@ -365,6 +365,7 @@ textarea {
 
 .splash {
   height: 50vw;
+  min-height: 320px;
   max-height: 600px;
   background-size: cover;
   background-image: url("../layout/background.jpg");
@@ -383,7 +384,6 @@ textarea {
 .splash .tagline {
   font-family: Conv_Octarine-Light;
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-  @apply m-8 w-3/5 text-white text-center;
 }
 
 body {
@@ -405,7 +405,6 @@ svg.slash path {
 
 .splash .logo {
   filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
-  @apply w-2/5
 }
 
 .splash .logo img {
