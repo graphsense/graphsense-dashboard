@@ -99,7 +99,7 @@ export default class Search extends Component {
   }
   needsResults (keyspace, limit, prefixLength) {
     if (this.term.length < prefixLength) return false
-    let len = this.result[keyspace].addresses.length
+    let len = (this.result[keyspace].addresses || []).length
     return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
