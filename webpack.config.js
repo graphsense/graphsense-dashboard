@@ -16,6 +16,8 @@ let landingpage = fs.readFileSync('./src/pages/landingpage.html', 'utf-8')
 let footer = hb.compile(fs.readFileSync('./src/pages/footer.html', 'utf-8'))
 footer = footer({version: VERSION})
 
+const DEV_REST_ENDPOINT = 'http://localhost:9000'
+
 module.exports = env => {
   let IS_DEV = !env || !env.production
 
@@ -54,7 +56,7 @@ module.exports = env => {
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
-        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'http://localhost:9000\'',
+        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\''
       }),
       new webpack.ProvidePlugin({
