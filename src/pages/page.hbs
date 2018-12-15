@@ -3,7 +3,11 @@
   <head>
     <meta charset="utf-8"/>
     <title>{{htmlWebpackPlugin.options.title}}</title>
-    <link href="/{{htmlWebpackPlugin.options.main}}.css" rel="stylesheet"></head>
+    {{!-- css variable is filled by static.js --}}
+    {{!-- for landingpage the css is injected by HtmlWebpackPlugin --}}
+    {{#each css }}
+    <link href="{{file}}" rel="stylesheet">
+    {{/each}}
   </head>
   <body>
     <div class="flex flex-col h-full">

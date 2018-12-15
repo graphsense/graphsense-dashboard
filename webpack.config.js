@@ -78,7 +78,7 @@ module.exports = env => {
         }
       }) : noop(),
       new MiniCssExtractPlugin({
-        filename: '[name].css',
+        filename: '[name].css?[hash]',
         chunkFilename: '[id].css'
       })
     ],

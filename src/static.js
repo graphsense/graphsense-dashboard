@@ -20,12 +20,14 @@ module.exports = function render (locals) {
       break
   }
   locals.page = `<div class="container mx-auto px-4 flex-grow mt-8">${locals.page}</div>`
-  console.log('title', locals.title)
   locals.header = utils.replace(header, {title: locals.title})
+  const assets = Object.keys(locals.webpackStats.compilation.assets)
+  const css = assets.filter(value => value.match(/\.css\?/)).map(file => { return {file} })
   let options = {
     htmlWebpackPlugin: {
       options: locals
-    }
+    },
+    css: css
   }
   return locals.template(options)
 }
