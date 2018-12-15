@@ -7,7 +7,10 @@ export default class TransactionsTable extends Table {
     this.nodeType = nodeType
     this.columns = [
       { name: 'Transaction',
-        data: 'txHash'
+        data: 'txHash',
+        render: (value) => {
+          return this.truncateValue(value)
+        }
       },
       { name: 'Value',
         data: 'value',
