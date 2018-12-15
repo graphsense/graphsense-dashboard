@@ -25,7 +25,7 @@ module.exports = env => {
   let IS_DEV = !env || !env.production
 
   let output = {
-    filename: '[name].js',
+    filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
   }
 
