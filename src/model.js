@@ -163,6 +163,7 @@ export default class Model {
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       // historyPushState('resultTransaction', response)
       this.browser.setTransaction(result)
+      this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
     })
     this.dispatcher.on('searchresult', ({context, result}) => {
