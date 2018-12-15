@@ -12,7 +12,6 @@ import moment from 'moment'
 import FileSaver from 'file-saver'
 import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
-import {VERSION} from './globals.js'
 
 const baseUrl = REST_ENDPOINT
 
@@ -571,7 +570,7 @@ export default class Model {
   }
   serialize () {
     return this.compress([
-      VERSION,
+      VERSION,  // eslint-disable-line
       this.store.serialize(),
       this.graph.serialize()
     ])
