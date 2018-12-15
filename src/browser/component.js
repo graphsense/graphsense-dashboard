@@ -38,8 +38,11 @@ export default class BrowserComponent extends Component {
   }
   destroy () {
   }
-  formatCurrency (value, keyspace) {
-    return formatCurrency(value, this.currency, {keyspace})
+  formatCurrency (value, keyspace, colorful) {
+    let c = formatCurrency(value, this.currency, {keyspace})
+    if (!colorful) return c
+    let cl = value < 0 ? 'text-gs-red' : (value > 0 ? 'text-gs-base' : '')
+    return `<span class="${cl}">${c}</span>`
   }
   formatTimestamp (timestamp) {
     return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
