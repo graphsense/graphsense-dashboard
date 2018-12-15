@@ -47,6 +47,15 @@ const keyspaces =
     'zec': 'Zcash'
   }
 
+const fromURL = (url) => {
+  let a = url.split('#!')[1]
+  if (!a) return
+  a = a.split('/')
+  if (['terms', 'privacy', 'about'].indexOf(a[0]) !== -1) {
+    return ['showPage', a[0]]
+  }
+}
+
 export default class Model {
   constructor (dispatcher) {
     this.dispatcher = dispatcher
@@ -537,6 +546,11 @@ export default class Model {
       return
       if (!e.state) return
       this.dispatcher.call(e.state.message, null, e.state.data)
+    }
+    window.onhashchange = (e) => {
+      let msg, data
+      [msg, data] = fromURL(e.newURL)
+      this.call(msg, data)
     }
   }
   createComponents () {

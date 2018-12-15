@@ -1,4 +1,5 @@
 const path = require('path')
+const glob = require('glob-all')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const noop = require('noop-webpack-plugin')
@@ -7,16 +8,18 @@ const StaticSiteGeneratorPlugin = require('static-site-generator-webpack-plugin'
 const hb = require('handlebars')
 const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const PurgecssPlugin = require('purgecss-webpack-plugin')
 
 const VERSION = '0.4'
+const DEV_REST_ENDPOINT = 'http://localhost:9000'
 
 // compose pre-rendered landing page
-let template = hb.compile(fs.readFileSync('./src/pages/page.hbs', 'utf-8'))
-let landingpage = fs.readFileSync('./src/pages/landingpage.html', 'utf-8')
-let footer = hb.compile(fs.readFileSync('./src/pages/footer.html', 'utf-8'))
+let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'page.hbs'), 'utf-8'))
+let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'landingpage.html'), 'utf-8')
+let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'footer.html'), 'utf-8'))
 footer = footer({version: VERSION})
 
-const DEV_REST_ENDPOINT = 'http://localhost:9000'
+const src = path.join(__dirname, 'src')
 
 module.exports = env => {
   let IS_DEV = !env || !env.production
@@ -80,7 +83,33 @@ module.exports = env => {
       new MiniCssExtractPlugin({
         filename: '[name].css?[hash]',
         chunkFilename: '[id].css'
-      })
+      }),
+      !IS_DEV ? new PurgecssPlugin({
+        paths: glob.sync([
+          path.join(src, '**', '*.js'),
+          path.join(src, '**', '*.html'),
+          path.join(src, '**', '*.hbs')
+        ], {nodir: true}),
+        extractors: [
+          {
+            extractor: class {
+              static extract (content) {
+                return content.match(/[A-Za-z0-9-_:\/]+/g) || []
+              }
+            },
+            extensions: ['html', 'js', 'hbs']
+          }
+        ],
+        whitelistPatternsChildren: [
+          /DTS/,
+          /dataTables/,
+          /dataTable/,
+          /fa-exchange/,
+          /fa-at/,
+          /fa-sign/,
+          /fa-tags/
+        ]
+      }) : noop()
     ],
     output: output,
     module: {
@@ -114,7 +143,7 @@ module.exports = env => {
           test: /\.css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            'css-loader',
+            {loader: 'css-loader', options: { importLoaders: 1 } },
             'postcss-loader'
           ]
         },

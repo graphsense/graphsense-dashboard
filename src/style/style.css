@@ -474,7 +474,7 @@ svg.slash path {
   background-image: url("../pages/zcash.svg");
 }
 
-stats-table {
+.stats-table {
   @apply table border-collapse 
 }
 .stats-row {
