@@ -60,9 +60,7 @@ export default class Browser extends Component {
     this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [
-      new Transaction(this.dispatcher, tx, 0, this.currency),
-      new TransactionAddressesTable(this.dispatcher, tx.inputs, 'Inputs', 1, this.currency, tx.keyspace),
-      new TransactionAddressesTable(this.dispatcher, tx.outputs, 'Outputs', 1, this.currency, tx.keyspace)
+      new Transaction(this.dispatcher, tx, 0, this.currency)
     ]
     this.shouldUpdate('content')
   }
@@ -141,6 +139,21 @@ export default class Browser extends Component {
     let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
+    this.shouldUpdate('content')
+  }
+  initTxAddressesTable (request, isOutgoing) {
+    if (request.index !== 0 && !request.index) return
+    let last = this.content[request.index]
+    if (!(last instanceof Transaction)) return
+    if (this.content[request.index + 1] instanceof TransactionAddressesTable &&
+        this.content[request.index + 1].isOutgoing == isOutgoing
+    ) return
+
+    last.setCurrentOption(isOutgoing ? 'initTxOutputsTable' : 'initTxInputsTable')
+    let keyspace = last.data.keyspace
+    let total = isOutgoing ? last.data.outputs.length : last.data.inputs.length
+    this.destroyComponentsFrom(request.index + 1)
+    this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace))
     this.shouldUpdate('content')
   }
   render (root) {

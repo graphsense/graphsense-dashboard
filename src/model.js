@@ -240,6 +240,12 @@ export default class Model {
     this.dispatcher.on('initOutdegreeTable', (request) => {
       this.browser.initNeighborsTable(request, true)
     })
+    this.dispatcher.on('initTxInputsTable', (request) => {
+      this.browser.initTxAddressesTable(request, false)
+    })
+    this.dispatcher.on('initTxOutputsTable', (request) => {
+      this.browser.initTxAddressesTable(request, true)
+    })
     this.dispatcher.on('loadNeighbors', ({keyspace, params, nextPage, request, drawCallback}) => {
       let id = params[0]
       let type = params[1]

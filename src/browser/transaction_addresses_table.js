@@ -1,7 +1,9 @@
 import Table from './table.js'
 
 export default class TransactionAddressesTable extends Table {
-  constructor (dispatcher, addresses, label, index, currency, keyspace) {
+  constructor (dispatcher, data, isOutgoing, index, currency, keyspace) {
+    let addresses = isOutgoing ? data.outputs : data.inputs
+    let label = isOutgoing ? 'Output addresses' : 'Input addresses'
     super(dispatcher, index, addresses.length, currency, keyspace)
     this.columns = [
       { name: label,
