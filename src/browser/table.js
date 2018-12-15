@@ -118,4 +118,7 @@ export default class Table extends BrowserComponent {
     this.loading = null
     drawCallback(data)
   }
+  truncateValue (value) {
+    return `<span title="${value}">${value.substr(0, 20)}...</span>`
+  }
 }

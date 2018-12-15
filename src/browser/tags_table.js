@@ -8,19 +8,25 @@ export default class TagsTable extends Table {
     this.nodeType = nodeType
     this.columns = [
       { name: 'Tag',
-        data: 'tag'
-      },
-      { name: 'Tag URI',
-        data: 'tagUri'
+        data: 'tag',
+        render: (value, type, row) => {
+          return `<a href="${row['tagUri']}" target=_blank>${value}</a>`
+        }
       },
       { name: 'Description',
-        data: 'description'
+        data: 'description',
+        render: (value) => {
+          return this.truncateValue(value)
+        }
       },
       { name: 'Actor Category',
         data: 'actorCategory'
       },
       { name: 'Source',
-        data: 'source'
+        data: 'source',
+        render: (value) => {
+          return this.truncateValue(value)
+        }
       },
       { name: 'Timestamp',
         data: 'timestamp',
