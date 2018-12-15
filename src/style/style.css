@@ -373,7 +373,7 @@ textarea {
   min-height: 320px;
   max-height: 600px;
   background-size: cover;
-  background-image: url("../layout/background.jpg");
+  background-image: url("../pages/background.jpg");
   background-position-x: 40%;
   background-position-y: 60%;
   background-repeat: no-repeat;
@@ -391,9 +391,28 @@ textarea {
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
 }
 
+a[href] {
+  @apply text-gs-dark no-underline
+}
+
+a[href]:hover {
+  @apply text-gs-base underline
+}
+
 body {
   height: 100vh;
   overflow-x: hidden;
+}
+
+.page-header {
+  max-width: 1920px;
+  height: 200px;
+  background-image: url("../pages/background-flipped.jpg");
+  background-size: auto;
+  background-position-y: 37%;
+  background-repeat: no-repeat;
+  background-color: black;
+  @apply text-gs-light
 }
 
 svg.slash {
@@ -440,19 +459,19 @@ svg.slash path {
 }
 
 .currency.btc {
-  background-image: url("../layout/bitcoin.svg");
+  background-image: url("../pages/bitcoin.svg");
 }
 
 .currency.ltc {
-  background-image: url("../layout/litecoin.svg");
+  background-image: url("../pages/litecoin.svg");
 }
 
 .currency.bch {
-  background-image: url("../layout/bitcoin-cash.svg");
+  background-image: url("../pages/bitcoin-cash.svg");
 }
 
 .currency.zec {
-  background-image: url("../layout/zcash.svg");
+  background-image: url("../pages/zcash.svg");
 }
 
 stats-table {

@@ -3,14 +3,38 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const noop = require('noop-webpack-plugin')
 const webpack = require('webpack')
+const StaticSiteGeneratorPlugin = require('static-site-generator-webpack-plugin')
+const hb = require('handlebars')
+const fs = require('fs')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+
+const VERSION = '0.4'
+
+// compose pre-rendered landing page
+let template = hb.compile(fs.readFileSync('./src/pages/page.hbs', 'utf-8'))
+let landingpage = fs.readFileSync('./src/pages/landingpage.html', 'utf-8')
+let footer = hb.compile(fs.readFileSync('./src/pages/footer.html', 'utf-8'))
+footer = footer({version: VERSION})
 
 module.exports = env => {
   let IS_DEV = !env || !env.production
+
+  let output = {
+    filename: '[name].js',
+    path: path.resolve(__dirname, 'dist')
+  }
+
+  if (!IS_DEV) {
+    output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
+    output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
+  }
+
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
   return {
     mode: IS_DEV ? 'development' : 'production',
     entry: {
-      app: './src/index.js'
+      static: './src/static.js',
+      main: './src/index.js'
     },
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {
@@ -20,7 +44,12 @@ module.exports = env => {
     plugins: [
       new CleanWebpackPlugin(['dist']),
       new HtmlWebpackPlugin({
-        title: 'Development'
+        title: 'GraphSense App',
+        excludeChunks: ['static'],
+        template: './src/pages/page.hbs',
+        page: landingpage,
+        footer: footer,
+        main: 'main'
       }),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
@@ -30,12 +59,27 @@ module.exports = env => {
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery'
+      }),
+      !IS_DEV ? new StaticSiteGeneratorPlugin({
+        paths: [
+          '/terms.html',
+          '/privacy.html',
+          '/about.html'
+        ],
+        entry: 'static', // refers to entry.static
+        locals: {
+          template: template,
+          footer: footer,
+          main: 'main',
+          header: true
+        }
+      }) : noop(),
+      new MiniCssExtractPlugin({
+        filename: '[name].css',
+        chunkFilename: '[id].css'
       })
     ],
-    output: {
-      filename: 'bundle.js',
-      path: path.resolve(__dirname, 'dist')
-    },
+    output: output,
     module: {
       rules: [
         {
@@ -54,7 +98,7 @@ module.exports = env => {
         {
           test: /\.css$/,
           use: [
-            'style-loader',
+            MiniCssExtractPlugin.loader,
             'css-loader',
             'postcss-loader'
           ]
@@ -74,6 +118,10 @@ module.exports = env => {
         {
           test: /\.(woff(2)?|ttf|eot|svg|jpg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           loader: 'file-loader'
+        },
+        {
+          test: /\.hbs$/,
+          loader: 'handlebars-loader'
         }
       ]
     },

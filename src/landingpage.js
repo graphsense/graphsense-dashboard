@@ -1,5 +1,6 @@
-import layout from './layout/landingpage.html'
-import stats from './layout/stats.html'
+import layout from './pages/landingpage.html'
+import footer from './pages/footer.html'
+import stats from './pages/stats.html'
 import Component from './component.js'
 import moment from 'moment'
 import numeral from 'numeral'
@@ -22,7 +23,7 @@ export default class Landingpage extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate() === true) {
-      this.root.innerHTML = replace(layout, {version: VERSION, currentYear: moment().year()})
+      this.root.innerHTML = layout + replace(footer, {version: VERSION})
       for (let key in this.stats) {
         this.stats[key] = 'loading'
       }
