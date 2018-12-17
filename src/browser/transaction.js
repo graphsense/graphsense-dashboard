@@ -28,6 +28,6 @@ export default class Transaction extends BrowserComponent {
     return this.root
   }
   requestData () {
-    return {id: this.data.address, type: 'address', index: this.index}
+    return {...super.requestData(), id: this.data.address, type: 'address'}
   }
 }

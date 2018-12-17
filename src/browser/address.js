@@ -35,6 +35,6 @@ export default class Address extends BrowserComponent {
     return this.root
   }
   requestData () {
-    return {id: this.data.id, type: 'address', index: this.index}
+    return {...super.requestData(), id: this.data.id, type: this.data.type}
   }
 }

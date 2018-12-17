@@ -51,4 +51,7 @@ export default class BrowserComponent extends Component {
     this.currency = currency
     this.shouldUpdate(true)
   }
+  requestData () {
+    return {index: this.index}
+  }
 }

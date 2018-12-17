@@ -18,14 +18,11 @@ const baseUrl = REST_ENDPOINT
 const searchlimit = 100
 const prefixLength = 5
 
-const historyPushState = (msg, data) => {
-  let newState = {message: msg, data: {fromHistory: true, ...data}}
-  let mm = msg + '.browser'
-  if (data.fromHistory) {
-    history.replaceState(newState, mm)
-  } else {
-    history.pushState(newState, mm)
-  }
+const historyPushState = (keyspace, type, id) => {
+  let s = window.history.state
+  if(s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line
+  let url = '#!' + [keyspace, type, id].join('/')
+  window.history.replaceState({keyspace, type, id}, null, url)
 }
 
 const degreeThreshold = 100
@@ -48,12 +45,19 @@ const keyspaces =
   }
 
 const fromURL = (url) => {
-  let a = url.split('#!')[1]
-  if (!a) return
-  a = a.split('/')
-  if (['terms', 'privacy', 'about'].indexOf(a[0]) !== -1) {
-    return ['showPage', a[0]]
+  let hash = url.split('#!')[1]
+  if (!hash) return
+  let id, type, keyspace
+  [keyspace, type, id] = hash.split('/')
+  if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
+    console.error(`invalid keyspace ${keyspace}`)
+    return
   }
+  if (type !== 'address' && type !== 'cluster' && type !== 'transaction') {
+    console.error(`invalid type ${type}`)
+    return
+  }
+  return {keyspace, id, type}
 }
 
 export default class Model {
@@ -156,6 +160,7 @@ export default class Model {
         anchor = context.anchorNode
       }
       this.browser.setResultNode(a)
+      historyPushState(a.keyspace, a.type, a.id)
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
@@ -163,6 +168,7 @@ export default class Model {
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       // historyPushState('resultTransaction', response)
       this.browser.setTransaction(result)
+      historyPushState(result.keyspace, 'transaction', result.txHash)
       this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
     })
@@ -176,6 +182,7 @@ export default class Model {
       if (!o) {
         throw new Error(`selectNode: ${nodeId} of type ${type} not found in store`)
       }
+      historyPushState(o.keyspace, o.type, o.id)
       let node
       if (type === 'address') {
         this.browser.setAddress(o)
@@ -549,15 +556,22 @@ export default class Model {
     this.dispatcher.on('toggleErrorLogs', () => {
       this.statusbar.toggleErrorLogs()
     })
-    window.onpopstate = (e) => {
-      return
-      if (!e.state) return
-      this.dispatcher.call(e.state.message, null, e.state.data)
-    }
     window.onhashchange = (e) => {
-      let msg, data
-      [msg, data] = fromURL(e.newURL)
-      this.call(msg, data)
+      console.log('hashchange', e)
+      let params = fromURL(e.newURL)
+      if (!params) return
+      this.paramsToCall(params)
+    }
+    let initParams = fromURL(window.location.href)
+    if (initParams) {
+      this.paramsToCall(initParams)
+    }
+  }
+  paramsToCall ({id, type, keyspace}) {
+    if (type === 'cluster' || type === 'address') {
+      this.call('clickSearchResult', {id, type, keyspace})
+    } else if (type === 'transaction') {
+      this.call('clickTransaction', {txHash: id, keyspace})
     }
   }
   createComponents () {

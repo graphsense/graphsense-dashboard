@@ -13,7 +13,4 @@ export default class Cluster extends Address {
         {icon: 'tags', optionText: 'Tags', message: 'initTagsTable'}
       ]
   }
-  requestData () {
-    return {id: this.data.id, type: 'cluster', index: this.index}
-  }
 }
