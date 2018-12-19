@@ -18,6 +18,10 @@ Then start the development server:
 
 Point your browser to `localhost:8080`.
 
+### A note on static pages
+
+Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
+
 ## Production setup
 
 Build the Docker image:
@@ -27,3 +31,11 @@ Build the Docker image:
 Run it by passing it the URL of the [graphsense-REST](https://github.com/graphsense/graphsense-REST) service, e.g.: 
 
     docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-gui
+
+## Build official website
+
+The official website consists of static pages without the app. In order to build it run:
+
+    npm run build
+
+Then deploy the contents of `official/`. It contains the static content without any JS files.

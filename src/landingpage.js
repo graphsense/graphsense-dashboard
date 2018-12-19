@@ -1,4 +1,5 @@
 import layout from './pages/landingpage.html'
+import header from './pages/boldheader.html'
 import footer from './pages/footer.html'
 import stats from './pages/stats.html'
 import Component from './component.js'
@@ -22,7 +23,10 @@ export default class Landingpage extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate() === true) {
-      this.root.innerHTML = layout + replace(footer, {version: VERSION}) //eslint-disable-line
+      this.root.innerHTML =
+        '<div class="' + STATICPAGE_CLASSES + '">' //eslint-disable-line
+        + header + layout + replace(footer, {version: VERSION}) + //eslint-disable-line
+        '</div>'
       for (let key in this.stats) {
         this.stats[key] = 'loading'
       }

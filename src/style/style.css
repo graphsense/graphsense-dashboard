@@ -493,6 +493,22 @@ svg.slash path {
   @apply text-xl text-grey-dark pt-8
 }
 
+.static-page h2 {
+  @apply mb-4 mt-6
+}
+
+.static-page p {
+  @apply mb-3 mt-2
+}
+
+.static-page pre {
+  @apply p-4 shadow-md border border-grey-light overflow-auto
+}
+
+.static-page img.example {
+  @apply my-2 shadow-md
+}
+
 ul#log-messages {
   height: 0;
   padding: 0;

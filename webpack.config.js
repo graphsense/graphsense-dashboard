@@ -9,14 +9,20 @@ const hb = require('handlebars')
 const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const VERSION = '0.4'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
 
+// to be injected in static and dynamic pages
+const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
+
 // compose pre-rendered landing page
 let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'page.hbs'), 'utf-8'))
+let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'boldheader.html'), 'utf-8'))
 let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'landingpage.html'), 'utf-8')
 let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'footer.html'), 'utf-8'))
+boldheader = boldheader({action: ''})
 footer = footer({version: VERSION})
 
 const src = path.join(__dirname, 'src')
@@ -52,15 +58,20 @@ module.exports = env => {
         title: 'GraphSense App',
         excludeChunks: ['static'],
         template: './src/pages/page.hbs',
+        header: boldheader,
         page: landingpage,
         footer: footer,
-        main: 'main'
+        staticpage_classes: STATICPAGE_CLASSES
       }),
+      new CopyWebpackPlugin([{
+        from: './src/pages/logo-without-icon.svg'
+      }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
-        VERSION: '\'' + VERSION + '\''
+        VERSION: '\'' + VERSION + '\'',
+        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',
@@ -70,14 +81,14 @@ module.exports = env => {
         paths: [
           '/terms.html',
           '/privacy.html',
-          '/about.html'
+          '/about.html',
+          '/officialpage.html'
         ],
         entry: 'static', // refers to entry.static
         locals: {
           template: template,
           footer: footer,
-          main: 'main',
-          header: true
+          staticpage_classes: STATICPAGE_CLASSES
         }
       }) : noop(),
       new MiniCssExtractPlugin({
@@ -107,7 +118,8 @@ module.exports = env => {
           /fa-exchange/,
           /fa-at/,
           /fa-sign/,
-          /fa-tags/
+          /fa-tags/,
+          /min-h-full/
         ]
       }) : noop()
     ],
@@ -160,7 +172,7 @@ module.exports = env => {
         },
         // the file-loader emits files.
         {
-          test: /\.(woff(2)?|ttf|eot|svg|jpg|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+          test: /\.(woff(2)?|ttf|eot|svg|jpe?g|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           loader: 'file-loader'
         },
         {
