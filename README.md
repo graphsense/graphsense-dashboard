@@ -22,6 +22,8 @@ Point your browser to `localhost:8080`.
 
 Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
 
+Static pages are located in `src/pages/static`.
+
 ## Production setup
 
 Build the Docker image:
@@ -34,7 +36,9 @@ Run it by passing it the URL of the [graphsense-REST](https://github.com/graphse
 
 ## Build official website
 
-The official website consists of static pages without the app. In order to build it run:
+The official website consists of static pages without the app. Edit its contents at `src/pages/static/officialpage.html`.
+
+In order to build it run:
 
     npm run build
 

@@ -18,10 +18,10 @@ const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
 
 // compose pre-rendered landing page
-let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'page.hbs'), 'utf-8'))
-let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'boldheader.html'), 'utf-8'))
-let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'landingpage.html'), 'utf-8')
-let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'footer.html'), 'utf-8'))
+let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
+let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'boldheader.html'), 'utf-8'))
+let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.html'), 'utf-8')
+let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.html'), 'utf-8'))
 boldheader = boldheader({action: ''})
 footer = footer({version: VERSION})
 
@@ -57,14 +57,14 @@ module.exports = env => {
       new HtmlWebpackPlugin({
         title: 'GraphSense App',
         excludeChunks: ['static'],
-        template: './src/pages/page.hbs',
+        template: './src/pages/static/page.hbs',
         header: boldheader,
         page: landingpage,
         footer: footer,
         staticpage_classes: STATICPAGE_CLASSES
       }),
       new CopyWebpackPlugin([{
-        from: './src/pages/logo-without-icon.svg'
+        from: './src/pages/static/logo-without-icon.svg'
       }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({

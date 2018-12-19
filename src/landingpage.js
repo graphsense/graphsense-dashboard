@@ -1,6 +1,6 @@
-import layout from './pages/landingpage.html'
-import header from './pages/boldheader.html'
-import footer from './pages/footer.html'
+import statistics from './pages/statistics.html'
+import header from './pages/static/boldheader.html'
+import footer from './pages/static/footer.html'
 import stats from './pages/stats.html'
 import Component from './component.js'
 import moment from 'moment'
@@ -25,7 +25,7 @@ export default class Landingpage extends Component {
     if (this.shouldUpdate() === true) {
       this.root.innerHTML =
         '<div class="' + STATICPAGE_CLASSES + '">' //eslint-disable-line
-        + header + layout + replace(footer, {version: VERSION}) + //eslint-disable-line
+        + header + statistics + replace(footer, {version: VERSION}) + //eslint-disable-line
         '</div>'
       for (let key in this.stats) {
         this.stats[key] = 'loading'

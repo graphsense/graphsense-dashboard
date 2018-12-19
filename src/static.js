@@ -1,9 +1,9 @@
-const terms = require('./pages/terms.html')
-const privacy = require('./pages/privacy.html')
-const about = require('./pages/about.html')
-const slimheader = require('./pages/slimheader.html')
-const boldheader = require('./pages/boldheader.html')
-const officialpage = require('./pages/officialpage.html')
+const terms = require('./pages/static/terms.html')
+const privacy = require('./pages/static/privacy.html')
+const about = require('./pages/static/about.html')
+const slimheader = require('./pages/static/slimheader.html')
+const boldheader = require('./pages/static/boldheader.html')
+const officialpage = require('./pages/static/officialpage.html')
 const utils = require('./template_utils.js')
 
 module.exports = function render (locals) {
