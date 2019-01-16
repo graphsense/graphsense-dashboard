@@ -5,6 +5,8 @@ import {addClass, removeClass} from '../template_utils.js'
 const empty = {addresses: [], transactions: []}
 const numShowResults = 10
 
+const byPrefix = term => addr => addr.startsWith(term)
+
 export default class Search extends Component {
   constructor (dispatcher, keyspaces) {
     super()
@@ -72,7 +74,8 @@ export default class Search extends Component {
         e.returnValue = false
         for (let keyspace in this.result) {
           if (this.result[keyspace].addresses.length > 0) {
-            this.dispatcher('clickSearchResult', {id: this.result[keyspace].addresses[0], type: 'address', keyspace})
+            let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
+            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
             return false
           }
         }
@@ -105,6 +108,7 @@ export default class Search extends Component {
   renderOptions () {
     return null
   }
+
   renderResult () {
     console.log('addresses', this.result)
     let frame = this.root.querySelector('#browser-search-result')
@@ -126,18 +130,19 @@ export default class Search extends Component {
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
       let count = 0
-      this.result[keyspace].addresses.forEach(addr => {
-        if (!addr.startsWith(this.term)) return
-        if (count > numShowResults) return
-        count++
-        let li = document.createElement('li')
-        li.className = 'cursor-pointer'
-        li.appendChild(document.createTextNode(addr))
-        li.addEventListener('click', () => {
-          this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
+      this.result[keyspace].addresses
+        .filter(byPrefix(this.term))
+        .forEach(addr => {
+          if (count > numShowResults) return
+          count++
+          let li = document.createElement('li')
+          li.className = 'cursor-pointer'
+          li.appendChild(document.createTextNode(addr))
+          li.addEventListener('click', () => {
+            this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
+          })
+          ul.appendChild(li)
         })
-        ul.appendChild(li)
-      })
       // if no results to render don't draw the title and the list at all
       if (count === 0) continue
       let title = document.createElement('div')
