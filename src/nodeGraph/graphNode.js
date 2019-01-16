@@ -2,6 +2,9 @@ import {formatCurrency} from '../utils'
 import {map} from 'd3-collection'
 import {event} from 'd3-selection'
 import Component from '../component.js'
+import Logger from '../logger.js'
+
+const logger = Logger.create('GraphNode') // eslint-disable-line
 
 const padding = 10
 const clusterWidth = 190
@@ -144,6 +147,11 @@ class GraphNode extends Component {
     this.labelType = labelType
     this.shouldUpdateLabel()
   }
+  getName () {
+    if (this.data.type === 'cluster') return this.data.id
+    if (this.data.type === 'address') return this.data.id.substring(0, 8)
+    return ''
+  }
   getTag () {
     if (this.data.notes) {
       return this.data.notes
@@ -170,16 +178,11 @@ class GraphNode extends Component {
       case 'noAddresses':
         return this.data.noAddresses
       case 'id':
-        if (this.data.type === 'cluster') {
-          return this.data.id
-        } else if (this.data.type === 'address') {
-          return this.data.id.substring(0, 8)
-        }
-        break
+        return this.getName()
       case 'balance':
         return this.formatCurrency(this.data.totalReceived[this.currency] - this.data.totalSpent[this.currency], this.data.keyspace)
       case 'tag':
-        return this.getTag()
+        return this.getTag() || this.getName()
       case 'actorCategory':
         return this.getActorCategory()
     }
