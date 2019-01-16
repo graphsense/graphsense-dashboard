@@ -58,6 +58,9 @@ export default class Layout extends Component {
         }
         reader.readAsArrayBuffer(input.files[0])
       })
+      this.root.querySelector('#layout-logo').addEventListener('click', () => {
+        this.dispatcher('gohome')
+      })
       browserRoot = this.root.querySelector('#layout-browser')
       graphRoot = this.root.querySelector('#layout-graph')
       configRoot = this.root.querySelector('#layout-config')

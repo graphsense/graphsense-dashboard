@@ -24,7 +24,7 @@ const prefixLength = 5
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if(s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line
-  let url = '#!' + [keyspace, type, id].join('/')
+  let url = keyspace && type && id ? '#!' + [keyspace, type, id].join('/') : '/'
   window.history.replaceState({keyspace, type, id}, null, url)
 }
 
@@ -559,6 +559,14 @@ export default class Model {
     })
     this.dispatcher.on('toggleErrorLogs', () => {
       this.statusbar.toggleErrorLogs()
+    })
+    this.dispatcher.on('gohome', () => {
+      logger.debug('going home')
+      this.showLandingpage = true
+      historyPushState()
+      this.landingpage.shouldUpdate(true)
+      this.layout.shouldUpdate(true)
+      this.render()
     })
     window.onhashchange = (e) => {
       logger.debug('hashchange', e)
