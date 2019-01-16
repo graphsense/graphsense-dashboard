@@ -21,7 +21,7 @@ function formatBTC (satoshiValue, currencyCode, {dontAppendCurrency, keyspace}) 
   if (value < 0.0001) {
     return satoshiValue + (!dontAppendCurrency ? ' s' : '')
   }
-  return _formatCurrency(value, 4) + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
+  return _formatCurrency(value, 4, ',', '.') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
 
 function formatFiat (value, currencyCode, {dontAppendCurrency}) {

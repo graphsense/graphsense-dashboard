@@ -7,6 +7,10 @@ import './style/style.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
+import '../node_modules/numeral/locales/de.js'
+import numeral from 'numeral'
+
+numeral.locale('de')
 
 const dispatcher = dispatch(IS_DEV,
   'initSearch',
