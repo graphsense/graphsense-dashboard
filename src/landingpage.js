@@ -57,7 +57,7 @@ export default class Landingpage extends Component {
       }
       let format = '0,000,000'
       let flat =
-        { lastUpdate: moment.unix(s.timestamp).fromNow(),
+        { lastUpdate: moment.unix(s.timestamp).format('DD.MM.YYYY HH:mm').replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           noAddresses: numeral(s.no_addresses).format(format),
           noClusters: numeral(s.no_clusters).format(format),
