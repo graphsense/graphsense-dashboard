@@ -38,7 +38,7 @@ export default class Table extends BrowserComponent {
     })
     tr.removeChild(el)
     let that = this
-    let tab = $(this.root).children().first().DataTable({
+    let tab = this.table = $(this.root).children().first().DataTable({
       ajax: (request, drawCallback, settings) => {
         this.ajax(request, drawCallback, settings, this)
       },
@@ -59,6 +59,7 @@ export default class Table extends BrowserComponent {
     // using es5 'function' to have 'this' bound to the triggering element
     $(this.root).on('click', 'tr', function () {
       let row = tab.row(this).data()
+      if (!row) return
       logger.debug('row', row)
       if (!row.keyspace) {
         row.keyspace = that.keyspace
@@ -77,10 +78,13 @@ export default class Table extends BrowserComponent {
       request.length = table.total
     }
     if (request.start + request.length <= table.data.length) {
+      // HACK: The table shall only be scrollable to the currently loaded data.
+      // Add +1 so DataTables triggers loading more data when scrolling to the end.
+      let total = Math.min(table.total, table.data.length + 1)
       let data = {
         draw: request.draw,
-        recordsTotal: table.total,
-        recordsFiltered: table.total
+        recordsTotal: total,
+        recordsFiltered: total
       }
       // data from cache
       data.data = table.data.slice(request.start, request.start + request.length)
@@ -110,10 +114,13 @@ export default class Table extends BrowserComponent {
     this.data = this.data.concat(result[this.resultField])
     this.nextPage = result.nextPage
     let loading = this.loading || request
+    // HACK: The table shall only be scrollable to the currently loaded data.
+    // Add +1 so DataTables triggers loading more data when scrolling to the end.
+    let total = Math.min(this.total, this.data.length + 1)
     let data = {
       draw: request.draw,
-      recordsTotal: this.total,
-      recordsFiltered: this.total,
+      recordsTotal: total,
+      recordsFiltered: total,
       data: this.data.slice(loading.start, loading.start + loading.length)
     }
     this.loading = null
