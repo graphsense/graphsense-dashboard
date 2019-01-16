@@ -32,7 +32,4 @@ export default class TransactionsTable extends Table {
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
   }
-  isSmall () {
-    return this.total < 200
-  }
 }
