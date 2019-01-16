@@ -8,23 +8,20 @@ export default class TransactionsTable extends Table {
     this.columns = [
       { name: 'Transaction',
         data: 'txHash',
-        render: (value) => {
-          return this.truncateValue(value)
-        }
+        render: this.formatValue(this.truncateValue)
       },
       { name: 'Value',
         data: 'value',
         className: 'text-right',
-        render: (value) => {
-          return this.formatCurrency(value[this.currency], keyspace, true)
-        }
+        render: (value, type) =>
+          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       { name: 'Height',
         data: 'height'
       },
       { name: 'Timestamp',
         data: 'timestamp',
-        render: this.formatTimestamp
+        render: this.formatValue(this.formatTimestamp)
       }
     ]
     this.loadMessage = 'loadTransactions'

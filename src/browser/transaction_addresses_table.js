@@ -12,9 +12,8 @@ export default class TransactionAddressesTable extends Table {
       { name: 'Value',
         data: 'value',
         className: 'text-right',
-        render: (value) => {
-          return this.formatCurrency(value[this.currency], keyspace)
-        }
+        render: (value, type) =>
+          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       }
     ]
     this.data = addresses

@@ -131,4 +131,10 @@ export default class Table extends BrowserComponent {
   truncateValue (value) {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
   }
+  formatValue (func) {
+    return (value, type) => {
+      if (type === 'display') return func(value)
+      return value
+    }
+  }
 }
