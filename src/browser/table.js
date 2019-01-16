@@ -53,8 +53,10 @@ export default class Table extends BrowserComponent {
       },
       stateSave: false,
       serverSide: !this.isSmall(),
-
-      columns: this.columns
+      columns: this.columns,
+      language: {
+        info: `Showing _START_ to _END_ of ${this.total} entries`
+      }
     })
     // using es5 'function' to have 'this' bound to the triggering element
     $(this.root).on('click', 'tr', function () {
