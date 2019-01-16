@@ -566,6 +566,18 @@ export default class Model {
       if (!params) return
       this.paramsToCall(params)
     }
+    window.addEventListener('beforeunload', function (evt) {
+      if (!this.showLandingpage) {
+        let message = 'You are about to leave the site. Your work will be lost. Sure?'
+        if (typeof evt === 'undefined') {
+          evt = window.event
+        }
+        if (evt) {
+          evt.returnValue = message
+        }
+        return message
+      }
+    })
     let initParams = fromURL(window.location.href)
     if (initParams) {
       this.paramsToCall(initParams)
