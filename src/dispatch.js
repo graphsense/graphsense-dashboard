@@ -64,7 +64,6 @@ Dispatch.prototype = dispatch.prototype = {
   },
   call: function (type, that) {
     if (this.replaying) {
-      console.log(`omit call ${type} while replaying`)
       return
     }
     if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) args[i] = arguments[i + 2]
@@ -89,7 +88,6 @@ Dispatch.prototype = dispatch.prototype = {
     var that = this
     this.replaying = true
     this.history.forEach(function (h) {
-      console.log('historyEntry', h.type, h.data)
       that.apply(h.type + (name ? '.' + name : ''), h.context, h.data)
     })
     this.replaying = false

@@ -4,6 +4,9 @@ import 'datatables.net-scroller'
 import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
+import Logger from '../logger.js'
+
+const logger = Logger.create('BrowserTable') // eslint-disable-line
 
 const rowHeight = 24
 
@@ -23,7 +26,7 @@ export default class Table extends BrowserComponent {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
-    console.log('render table')
+    logger.debug('render table')
     super.render()
     this.root.innerHTML = table
     let tr = this.root.querySelector('tr')
@@ -37,7 +40,6 @@ export default class Table extends BrowserComponent {
     let that = this
     let tab = $(this.root).children().first().DataTable({
       ajax: (request, drawCallback, settings) => {
-        console.log('ajax')
         this.ajax(request, drawCallback, settings, this)
       },
       scrollY: browserHeight - rowHeight - 4 * browserPadding,
@@ -57,7 +59,7 @@ export default class Table extends BrowserComponent {
     // using es5 'function' to have 'this' bound to the triggering element
     $(this.root).on('click', 'tr', function () {
       let row = tab.row(this).data()
-      console.log('row', row)
+      logger.debug('row', row)
       if (!row.keyspace) {
         row.keyspace = that.keyspace
       }
@@ -69,11 +71,10 @@ export default class Table extends BrowserComponent {
     return null
   }
   ajax (request, drawCallback, settings, table) {
-    console.log('ajax request', request)
+    logger.debug('ajax request', request)
     if (table.isSmall()) {
       request.start = 0
       request.length = table.total
-      console.log('changing request length to ', table.total)
     }
     if (request.start + request.length <= table.data.length) {
       let data = {

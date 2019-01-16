@@ -12,6 +12,9 @@ import moment from 'moment'
 import FileSaver from 'file-saver'
 import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
+import Logger from './logger.js'
+
+const logger = Logger.create('Model') // eslint-disable-line
 
 const baseUrl = REST_ENDPOINT
 
@@ -50,11 +53,11 @@ const fromURL = (url) => {
   let id, type, keyspace
   [keyspace, type, id] = hash.split('/')
   if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
-    console.error(`invalid keyspace ${keyspace}`)
+    logger.error(`invalid keyspace ${keyspace}`)
     return
   }
   if (type !== 'address' && type !== 'cluster' && type !== 'transaction') {
-    console.error(`invalid type ${type}`)
+    logger.error(`invalid type ${type}`)
     return
   }
   return {keyspace, id, type}
@@ -68,11 +71,12 @@ export default class Model {
 
     this.call = (message, data) => {
       if (this.isReplaying) {
-        console.log('omit calling while replaying', message, data)
+        logger.debug('omit calling while replaying', message, data)
         return
       }
       setTimeout(() => {
-        console.log('calling', message, data)
+        console.log('calling')
+        logger.debug('calling', message, data)
         this.dispatcher.call(message, null, data)
         this.render()
       }, 1)
@@ -177,7 +181,7 @@ export default class Model {
       this.search.setResult(context, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
-      console.log('selectNode', type, nodeId)
+      logger.debug('selectNode', type, nodeId)
       let o = this.store.get(type, nodeId[0])
       if (!o) {
         throw new Error(`selectNode: ${nodeId} of type ${type} not found in store`)
@@ -264,7 +268,7 @@ export default class Model {
       this.browser.setResponse({...context, result})
     })
     this.dispatcher.on('selectNeighbor', (data) => {
-      console.log('selectNeighbor', data)
+      logger.debug('selectNeighbor', data)
       if (!data.id || !data.nodeType || !data.keyspace) return
       let focusNode = this.browser.getCurrentNode()
       let anchorNode = this.graph.selectedNode
@@ -293,7 +297,7 @@ export default class Model {
       }
     })
     this.dispatcher.on('selectAddress', (data) => {
-      console.log('selectAdress', data)
+      logger.debug('selectAdress', data)
       if (!data.address || !data.keyspace) return
       let a = this.store.add(data)
       this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode', data.address)
@@ -325,7 +329,7 @@ export default class Model {
           this.store.linkOutgoing(o.id, anchor.nodeId[0])
         }
         if (!this.graph.adding.has(o.id)) return
-        console.log('cluster', o.cluster)
+        logger.debug('cluster', o.cluster)
         if (o.type === 'address' && !o.cluster) {
           this.statusbar.addMsg('loadingClusterFor', o.id)
           this.mapResult(this.rest(keyspace).clusterForAddress(o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
@@ -557,7 +561,7 @@ export default class Model {
       this.statusbar.toggleErrorLogs()
     })
     window.onhashchange = (e) => {
-      console.log('hashchange', e)
+      logger.debug('hashchange', e)
       let params = fromURL(e.newURL)
       if (!params) return
       this.paramsToCall(params)
@@ -640,18 +644,13 @@ export default class Model {
     if (this.showLandingpage) {
       return this.landingpage.render(this.root)
     }
-    console.log('model render')
-    console.log('graph', this.graph)
-    console.log('store', this.store)
-    console.log('browser', this.browser)
-    console.log('status', this.statusbar)
+    logger.debug('model render')
     return this.layout.render(this.root)
   }
   replay () {
-    // console.log('disable rest')
     this.rest('btc').disable()
     this.rest('ltc').disable()
-    console.log('replay')
+    logger.debug('replay')
     this.isReplaying = true
     this.dispatcher.replay()
     this.isReplaying = false

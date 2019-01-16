@@ -1,4 +1,7 @@
 import {map} from 'd3-collection'
+import Logger from './logger.js'
+
+const logger = Logger.create('Store') // eslint-disable-line
 
 export default class Store {
   constructor () {
@@ -53,7 +56,7 @@ export default class Store {
       let addresses = object.forAddresses || []
       addresses.forEach(address => {
         let a = this.addresses.get(address)
-        console.log('forAddress', address, a)
+        logger.debug('forAddress', address, a)
         if (a) {
           c.addresses.set(address, a)
           a.cluster = c
@@ -71,7 +74,7 @@ export default class Store {
     }
   }
   initOutgoing (id) {
-    console.log('id', id)
+    logger.debug('id', id)
     if (typeof id !== 'string' && typeof id !== 'number') {
       throw new Error('id is not string')
     }
@@ -83,7 +86,7 @@ export default class Store {
     return outgoing
   }
   linkOutgoing (source, target, data) {
-    console.log('linkOutgoing', source, target, data)
+    logger.debug('linkOutgoing', source, target, data)
     let outgoing = this.initOutgoing(source)
     let n = outgoing.get(target)
     if (!n && (!data || !data.noTransactions || !data.estimatedValue)) {

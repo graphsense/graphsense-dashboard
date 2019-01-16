@@ -9,6 +9,9 @@ import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
+import Logger from './logger.js'
+
+const logger = Logger.create('NodeGraph') // eslint-disable-line
 
 const margin = 300
 const x = -300
@@ -71,7 +74,7 @@ export default class NodeGraph extends Component {
           chroma = map.size() * chromaStep
           map.set(k, chroma)
         }
-        console.log('colorGen', type, k, chroma)
+        logger.debug('colorGen', type, k, chroma)
         return hsl2rgb(chroma, saturation, lightness[type])
       }
     }
@@ -99,7 +102,7 @@ export default class NodeGraph extends Component {
     this.nextSelectedNode = {id, type}
   }
   selectNodeIfIsNextNode (node) {
-    console.log('selectNodeIfIsNextNode', node, this.nextSelectedNode)
+    logger.debug('selectNodeIfIsNextNode', node, this.nextSelectedNode)
     if (!this.nextSelectedNode) return
     if (this.nextSelectedNode.type !== node.data.type) return
     if (this.nextSelectedNode.id != node.data.id) return // eslint-disable-line eqeqeq
@@ -154,7 +157,7 @@ export default class NodeGraph extends Component {
     addresses.forEach((address) => {
       if (this.addressNodes.has([address.id, id[1]])) return
       let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
-      console.log('new AddressNode', addressNode)
+      logger.debug('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       cluster.add(addressNode)
     })
@@ -164,7 +167,7 @@ export default class NodeGraph extends Component {
     return this.addressNodes.get([address, layerId])
   }
   add (object, anchor) {
-    console.log('add', object, anchor)
+    logger.debug('add', object, anchor)
     this.adding.remove(object.id)
     let layerIds
     if (!anchor) {
@@ -177,7 +180,7 @@ export default class NodeGraph extends Component {
     if (!layerIds.length) {
       layerIds = [layerIds]
     }
-    console.log('layerIds', layerIds)
+    logger.debug('layerIds', layerIds)
     layerIds.forEach(layerId => {
       this.addLayer(layerId, object, anchor)
     })
@@ -209,7 +212,7 @@ export default class NodeGraph extends Component {
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
       this.selectNodeIfIsNextNode(addressNode)
-      console.log('new AddressNode', addressNode)
+      logger.debug('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId])
       if (!node) {
@@ -223,7 +226,7 @@ export default class NodeGraph extends Component {
         return
       }
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
-      console.log('new ClusterNode', node)
+      logger.debug('new ClusterNode', node)
       this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')
@@ -245,7 +248,7 @@ export default class NodeGraph extends Component {
       this.selectedNode = null
     }
     let layer = this.layers.filter(l => l.id === nodeId[1])[0]
-    console.log('remove layer', nodeId, layer)
+    logger.debug('remove layer', nodeId, layer)
     if (nodeType === 'address') {
       this.clusterNodes.remove('mockup' + nodeId)
       layer.nodes.each(cluster => {
@@ -268,14 +271,14 @@ export default class NodeGraph extends Component {
     return this.selectedNode.id[1]
   }
   additionLayerBySearch (node) {
-    console.log('search', node)
+    logger.debug('search', node)
     let ids = set()
     if (this.selectedNode && this.selectedNode.data.outgoing.has(node.id)) {
-      console.log('select layer by selected node', this.selectedNode.id[1] + 1)
+      logger.debug('select layer by selected node', this.selectedNode.id[1] + 1)
       ids.add(this.selectedNode.id[1] + 1)
     }
     if (this.selectedNode && node.outgoing.has(this.selectedNode.data.id)) {
-      console.log('select layer by selected node (incoming)', this.selectedNode.id[1] - 1)
+      logger.debug('select layer by selected node (incoming)', this.selectedNode.id[1] - 1)
       ids.add(this.selectedNode.id[1] - 1)
     }
 
@@ -283,18 +286,18 @@ export default class NodeGraph extends Component {
       let nodes = this.layers[0].nodes.values()
       for (let j = 0; j < nodes.length; j++) {
         if (node.type === 'cluster' && node.outgoing.has(nodes[j].data.id)) {
-          console.log('select layer by incoming node', nodes[j], this.layers[0].id - 1)
+          logger.debug('select layer by incoming node', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
         if (node.cluster && node.cluster.outgoing.has(nodes[j].data.id)) {
-          console.log('select layer by incoming node on cluster level', nodes[j], this.layers[0].id - 1)
+          logger.debug('select layer by incoming node on cluster level', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
         if (node.type === 'address') {
           let addresses = nodes[j].nodes.values()
           for (let k = 0; k < addresses.length; k++) {
             if (node.outgoing.has(addresses[k].data.id)) {
-              console.log('select layer by incoming node on address level', addresses[k], this.layers[0].id - 1)
+              logger.debug('select layer by incoming node on address level', addresses[k], this.layers[0].id - 1)
               ids.add(this.layers[0].id - 1)
             }
           }
@@ -307,18 +310,18 @@ export default class NodeGraph extends Component {
       for (let j = 0; j < nodes.length; j++) {
         let outgoing = nodes[j].data.outgoing
         if (node.type === 'cluster' && outgoing.has(node.id)) {
-          console.log('select layer by outgoing node', nodes[j], this.layers[i].id + 1)
+          logger.debug('select layer by outgoing node', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
         if (node.cluster && outgoing.has(node.cluster.id)) {
-          console.log('select layer by outgoing node on cluster level', nodes[j], this.layers[i].id + 1)
+          logger.debug('select layer by outgoing node on cluster level', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
         if (node.type === 'address') {
           let addresses = nodes[j].nodes.values()
           for (let k = 0; k < addresses.length; k++) {
             if (addresses[k].data.outgoing.has(node.id)) {
-              console.log('select layer by outgoing node on address level', addresses[k], this.layers[i].id + 1)
+              logger.debug('select layer by outgoing node on address level', addresses[k], this.layers[i].id + 1)
               ids.add(this.layers[i].id + 1)
             }
           }
@@ -328,7 +331,7 @@ export default class NodeGraph extends Component {
     if (!node.cluster) return false
     for (let i = 0; i < this.layers.length; i++) {
       if (this.layers[i].has([node.cluster.id, this.layers[i].id])) {
-        console.log('select layer by cluster', this.layers[i], this.layers[i].id)
+        logger.debug('select layer by cluster', this.layers[i], this.layers[i].id)
         ids.add(this.layers[i].id)
       }
     }
@@ -342,7 +345,7 @@ export default class NodeGraph extends Component {
     let tx = 0
     let ty = 0
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
-    console.log('graph should update', this.shouldUpdate())
+    logger.debug('graph should update', this.shouldUpdate())
     if (this.shouldUpdate() === true) {
       this.svg = create('svg')
         .classed('w-full h-full', true)

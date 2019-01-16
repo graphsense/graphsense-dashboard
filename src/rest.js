@@ -1,5 +1,8 @@
 import {json} from 'd3-fetch'
 // import {json} from './mockup.js'
+import Logger from './logger.js'
+
+const logger = Logger.create('Rest') // eslint-disable-line
 
 const options = {} // { credentials: 'include' }
 
@@ -15,7 +18,7 @@ export default class Rest {
       if (field) {
         // result is an array
         if (!result[field] || !result[field].length) {
-          console.warn(`${field} is not in result, calling ${url}`)
+          logger.warn(`${field} is not in result, calling ${url}`)
         } else {
           result[field].forEach(item => item.keyspace = this.keyspace)
         }
@@ -47,7 +50,7 @@ export default class Rest {
     return this.json(`${this.baseUrl}/${request.type}_with_tags/${request.id}`)
   }
   clusterForAddress (id) {
-    console.log('rest clusterForAddress', id)
+    logger.debug('rest clusterForAddress', id)
     return this.json(this.baseUrl + '/address/' + id + '/cluster_with_tags')
   }
   transactions (request) {

@@ -4,6 +4,9 @@ import filter from './config/filter.html'
 import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
 import Component from './component.js'
+import Logger from './logger.js'
+
+const logger = Logger.create('Config') // eslint-disable-line
 
 export default class Config extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
@@ -95,7 +98,6 @@ export default class Config extends Component {
       if (id === 'transactionLabel') value = this.txLabelType
       if (select.options[i].value === value) break
     }
-    console.log('selectedIndex', i)
     select.options.selectedIndex = i
     select.addEventListener('change', (e) => {
       this.dispatcher(message, e.target.value)

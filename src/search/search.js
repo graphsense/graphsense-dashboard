@@ -1,6 +1,9 @@
 import search from './search.html'
 import Component from '../component.js'
 import {addClass, removeClass} from '../template_utils.js'
+import Logger from '../logger.js'
+
+const logger = Logger.create('Search') // eslint-disable-line
 
 const empty = {addresses: [], transactions: []}
 const numShowResults = 10
@@ -33,14 +36,12 @@ export default class Search extends Component {
     this.shouldUpdate('result')
   }
   showLoading () {
-    console.log('showLoading')
     if (!this.isLoading) {
       this.isLoading = true
       this.shouldUpdate('result')
     }
   }
   hideLoading () {
-    console.log('hideLoading')
     if (this.isLoading) {
       this.isLoading = false
       this.shouldUpdate('result')
@@ -65,7 +66,6 @@ export default class Search extends Component {
       return this.root
     }
     super.render()
-    console.log('full rerendering search')
     this.root.innerHTML = search
     this.input = this.root.querySelector('input')
     this.input.value = this.term
@@ -110,7 +110,7 @@ export default class Search extends Component {
   }
 
   renderResult () {
-    console.log('addresses', this.result)
+    logger.debug('addresses', this.result)
     let frame = this.root.querySelector('#browser-search-result')
     let el = frame.querySelector('#result')
     el.innerHTML = ''
@@ -155,7 +155,7 @@ export default class Search extends Component {
       el.innerHTML = `Failed to fetch from any keyspaces`
       addClass(el, 'text-gs-red')
     }
-    console.log('isVisible', this.isLoading, visible)
+    logger.debug('isVisible', this.isLoading, visible)
     if (visible) {
       addClass(frame, 'block')
       removeClass(frame, 'hidden')

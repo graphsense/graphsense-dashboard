@@ -2,6 +2,9 @@ import {set} from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
+import Logger from './logger.js'
+
+const logger = Logger.create('Statusbar') // eslint-disable-line
 
 const logsDisplayLength = 100
 
@@ -93,7 +96,6 @@ export default class Statusbar extends Component {
     if (s.has('add')) {
       let i = this.messages.length - 1
       this.renderLogs(this.messages[i], i)
-      console.log('render add')
       s.remove('add')
     }
     if (s.has('logs')) {
@@ -152,7 +154,6 @@ export default class Statusbar extends Component {
       logs.appendChild(more)
     }
     if (this.numErrors > 0) {
-      console.log('numErrors', this.numErrors)
       removeClass(this.root.querySelector('#errors i'), 'hidden')
     }
   }
@@ -177,7 +178,6 @@ export default class Statusbar extends Component {
     }
   }
   renderVisibility () {
-    console.log('render visiblity', this.messages)
     if (!this.visible) {
       removeClass(this.root, 'visible')
     } else {
@@ -186,7 +186,7 @@ export default class Statusbar extends Component {
   }
   msg (type) {
     let args = Array.prototype.slice.call(arguments, 1)
-    console.log('msg', type, args)
+    logger.debug('msg', type, args)
     switch (type) {
       case 'loading' :
         return `Loading ${args[0]} ${args[1] || ''} ...`
@@ -204,11 +204,11 @@ export default class Statusbar extends Component {
         return `Saved to file ${args[0]}`
       case 'loadFile':
         let filename = args[0]
-        console.log('loadfile msg', filename)
+        logger.debug('loadfile msg', filename)
         return `Loading file ${filename} ...`
       case 'loadedFile':
         let filename_ = args[0]
-        console.log('loadedfile msg', filename_)
+        logger.debug('loadedfile msg', filename_)
         return `Loaded file ${filename_}`
       case 'loadingClusterFor':
         return `Loading cluster for ${args[0]}`
@@ -230,7 +230,7 @@ export default class Statusbar extends Component {
         this.numErrors++
         return {error: args[0]}
       default:
-        console.warn('unhandled status message type', type)
+        logger.warn('unhandled status message type', type)
     }
   }
   addMsg () {

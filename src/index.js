@@ -1,3 +1,4 @@
+import {configure, LogLevel, getLogger} from '@log4js2/core'
 import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
@@ -9,6 +10,9 @@ import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
 import '../node_modules/numeral/locales/de.js'
 import numeral from 'numeral'
+import Logger from './logger.js'
+
+Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line
 
 numeral.locale('de')
 
@@ -130,7 +134,6 @@ if (module.hot) {
 
     model = new Model(dispatcher)
     model.replay()
-    console.log('now render')
     model.render(document.body)
   })
 }

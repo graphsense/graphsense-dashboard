@@ -25,7 +25,6 @@ export default class Layer extends Component {
     if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
     this.nodes.each((node) => {
-      console.log('render node removed', node.removed)
       // render clusters
       if (this.shouldUpdate()) {
         let g = this.clusterRoot.append('g')

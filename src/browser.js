@@ -11,6 +11,9 @@ import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
+import Logger from './logger.js'
+
+const logger = Logger.create('Browser') // eslint-disable-line
 
 export default class Browser extends Component {
   constructor (dispatcher, currency) {
@@ -72,7 +75,7 @@ export default class Browser extends Component {
     this.shouldUpdate('content')
   }
   setResultNode (object) {
-    console.log('setResultNode', object)
+    logger.debug('setResultNode', object)
 
     this.visible = true
     this.loading.remove(object.id)
@@ -159,7 +162,6 @@ export default class Browser extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    console.log('browser', this.shouldUpdate())
     if (this.shouldUpdate() === true) {
       this.root.innerHTML = layout
       this.renderVisibility()
@@ -191,7 +193,6 @@ export default class Browser extends Component {
     }
   }
   renderContent () {
-    console.log('render content')
     let data = this.root.querySelector('#browser-data')
     data.innerHTML = ''
     let c = 0

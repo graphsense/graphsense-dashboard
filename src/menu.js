@@ -1,6 +1,9 @@
 import menuLayout from './config/menu.html'
 import notes from './config/notes.html'
 import Component from './component.js'
+import Logger from './logger.js'
+
+const logger = Logger.create('Menu') // eslint-disable-line
 
 const menuWidth = 250
 const menuHeight = 300
@@ -33,7 +36,7 @@ export default class Menu extends Component {
     this.shouldUpdate(true)
   }
   render (root) {
-    console.log('render menu')
+    logger.debug('render menu')
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
@@ -70,7 +73,6 @@ export default class Menu extends Component {
     let input = el.querySelector('textarea')
     input.value = this.node.data.notes || ''
     input.addEventListener('input', (e) => {
-      console.log('input', e.target.value)
       this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, note: e.target.value})
     })
   }
