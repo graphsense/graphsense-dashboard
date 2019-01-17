@@ -3,6 +3,7 @@ import {map} from 'd3-collection'
 import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
+import numeral from 'numeral'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line
 
@@ -88,7 +89,7 @@ class GraphNode extends Component {
     let fontSize = expandHandleWidth * 0.8
     let fontX = (expandHandleWidth - fontSize)
     g.append('text')
-      .text(isOutgoing ? this.getOutDegree() : this.getInDegree())
+      .text(numeral(isOutgoing ? this.getOutDegree() : this.getInDegree()).format('1,000'))
       .attr('text-anchor', 'middle')
       .attr('font-size', fontSize + 'px')
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
@@ -249,6 +250,12 @@ class GraphNode extends Component {
   setCurrency (currency) {
     this.currency = currency
     this.shouldUpdate('label')
+  }
+  getOutDegree () {
+    return this.data.outDegree
+  }
+  getInDegree () {
+    return this.data.inDegree
   }
 }
 

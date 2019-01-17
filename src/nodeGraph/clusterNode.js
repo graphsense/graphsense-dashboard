@@ -1,6 +1,7 @@
 import {event} from 'd3-selection'
 import {map} from 'd3-collection'
 import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
+import numeral from 'numeral'
 
 const gap = padding
 const noAddressesLabelHeight = 16
@@ -115,7 +116,7 @@ export default class ClusterNode extends GraphNode {
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
-      .text(this.data.noAddresses + ' addresses')
+      .text(numeral(this.data.noAddresses).format('0,000') + ' addresses')
     super.render()
   }
   translate (x, y) {
@@ -132,12 +133,6 @@ export default class ClusterNode extends GraphNode {
   }
   getWidth () {
     return clusterWidth
-  }
-  getOutDegree () {
-    return this.data.outDegree
-  }
-  getInDegree () {
-    return this.data.inDegree
   }
   getId () {
     return this.data.cluster

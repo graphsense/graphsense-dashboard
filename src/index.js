@@ -8,11 +8,17 @@ import './style/style.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import Browser from './browser.js'
-import '../node_modules/numeral/locales/de.js'
 import numeral from 'numeral'
 import Logger from './logger.js'
 
 Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line
+
+numeral.register('locale', 'de', {
+  delimiters: {
+    thousands: '.',
+    decimal: ','
+  }
+})
 
 numeral.locale('de')
 
