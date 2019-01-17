@@ -404,7 +404,6 @@ export default class NodeGraph extends Component {
     return this.root
   }
   renderLayers (clusterRoot, addressRoot) {
-    let cumX = 0
     if (this.shouldUpdate() === true || this.shouldUpdate() === 'layers') {
       clusterRoot.node().innerHTML = ''
       addressRoot.node().innerHTML = ''
@@ -415,11 +414,10 @@ export default class NodeGraph extends Component {
         let aRoot = addressRoot.append('g')
         layer.render(cRoot, aRoot)
         let box = aRoot.node().getBBox()
-        let x = cumX - box.width / 2
+        let x = layer.id * (box.width + margin)
         let y = box.height / -2
         cRoot.attr('transform', `translate(${x}, ${y})`)
         aRoot.attr('transform', `translate(${x}, ${y})`)
-        cumX = x + box.width + margin
         layer.translate(x, y)
       })
     } else {
