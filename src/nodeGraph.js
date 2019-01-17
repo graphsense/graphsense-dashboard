@@ -551,7 +551,7 @@ export default class NodeGraph extends Component {
     let sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     let targetX = target.getXForLinks()
     let targetY = target.getYForLinks() + target.getHeightForLinks() / 2
-    let fontSize = 10
+    let fontSize = 12
     let x = (sourceX + targetX) / 2
     let y = (sourceY + targetY) / 2 + fontSize / 3
     let g2 = g1.append('g')
