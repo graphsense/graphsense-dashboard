@@ -374,7 +374,15 @@ export default class NodeGraph extends Component {
       this.svg.on('click', () => {
         this.dispatcher('deselect')
       })
-      this.root.innerHTML = ''
+      let markerHeight = transactionsPixelRange[1]
+      this.arrowSummit = markerHeight
+      this.svg.node().innerHTML = '<defs>' +
+        (['black', 'red'].map(color =>
+          `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
+           `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
+         '</marker>'
+        )) +
+        '</defs>'
       this.root.appendChild(this.svg.node())
       clusterShadowsRoot = this.svg.append('g').classed('clusterShadowsRoot', true)
       clusterRoot = this.svg.append('g').classed('clusterRoot', true)
@@ -425,8 +433,8 @@ export default class NodeGraph extends Component {
     if (this.shouldUpdate() !== true && this.shouldUpdate() !== 'layers' && this.shouldUpdate() !== 'links') return
     root.node().innerHTML = ''
     const link = linkHorizontal()
-      .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
-      .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
+      .x(([node, isSource, scale]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks() - this.arrowSummit)
+      .y(([node, isSource, scale]) => node.getYForLinks() + node.getHeightForLinks() / 2)
 
     for (let i = 0; i < this.layers.length; i++) {
       // prepare the domain and links
@@ -541,7 +549,7 @@ export default class NodeGraph extends Component {
     let value, label
     [value, label] = this.findValueAndLabel(tx)
     let scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
-    let path = link({source: [source, true], target: [target, false]})
+    let path = link({source: [source, true, scale], target: [target, false, scale]})
     let g1 = root.append('g').classed('link', true)
     g1.append('path').attr('d', path)
       .classed('frame', true)
@@ -549,7 +557,7 @@ export default class NodeGraph extends Component {
       .style('stroke-width', scale + 'px')
     let sourceX = source.getXForLinks() + source.getWidthForLinks()
     let sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
-    let targetX = target.getXForLinks()
+    let targetX = target.getXForLinks() - this.arrowSummit
     let targetY = target.getYForLinks() + target.getHeightForLinks() / 2
     let fontSize = 12
     let x = (sourceX + targetX) / 2

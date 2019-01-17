@@ -287,6 +287,7 @@ svg g.link path {
   stroke: black;
   stroke-width: 2px;
   fill: none;
+  marker-end:url('#arrow1-black');
 }
 
 svg g.link rect {
@@ -304,6 +305,9 @@ svg g.link text {
 
 svg g.link:hover * {
   stroke: red;
+}
+svg g.link:hover path {
+  marker-end: url('#arrow1-red');
 }
 
 svg g.link:hover text {
