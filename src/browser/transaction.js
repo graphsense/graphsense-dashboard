@@ -19,7 +19,7 @@ export default class Transaction extends BrowserComponent {
     if (!this.root) throw new Error('root not defined')
     super.render()
     let flat = {
-      txHash: this.data.txHash.substring(0, 32) + '...',
+      txHash: this.data.txHash,
       timestamp: moment.unix(this.data.timestamp).fromNow(),
       totalInput: this.formatCurrency(this.data.totalInput[this.currency], this.data.keyspace),
       totalOutput: this.formatCurrency(this.data.totalOutput[this.currency], this.data.keyspace)
