@@ -11,7 +11,7 @@ import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
 
-const logger = Logger.create('NodeGraph') // eslint-disable-line
+const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
 const margin = 300
 const x = -300
@@ -187,7 +187,7 @@ export default class NodeGraph extends Component {
     this.shouldUpdate('layers')
   }
   addLayer (layerId, object, anchor) {
-    let filtered = this.layers.filter(({id}) => id == layerId) // eslint-disable-line
+    let filtered = this.layers.filter(({id}) => id == layerId) // eslint-disable-line eqeqeq
     let layer
     if (filtered.length === 0) {
       layer = new Layer(layerId)

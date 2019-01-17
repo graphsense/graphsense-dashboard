@@ -1,4 +1,4 @@
-import 'jquery'
+import $ from 'jquery'
 import 'datatables.net'
 import 'datatables.net-scroller'
 import {browserHeight, browserPadding} from '../globals.js'
@@ -6,7 +6,7 @@ import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
 
-const logger = Logger.create('BrowserTable') // eslint-disable-line
+const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-vars
 
 const rowHeight = 24
 

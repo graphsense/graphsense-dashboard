@@ -14,16 +14,16 @@ import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
 import Logger from './logger.js'
 
-const logger = Logger.create('Model') // eslint-disable-line
+const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
-const baseUrl = REST_ENDPOINT
+const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
 const searchlimit = 100
 const prefixLength = 5
 
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
-  if(s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line
+  if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
   let url = keyspace && type && id ? '#!' + [keyspace, type, id].join('/') : '/'
   window.history.replaceState({keyspace, type, id}, null, url)
 }
@@ -143,6 +143,7 @@ export default class Model {
           break
         case 'resultClusterAddresses':
           this.statusbar.removeLoading('addresses of cluster ' + context[0])
+          break
         default:
           this.statusbar.addMsg('error', error)
       }
@@ -187,13 +188,10 @@ export default class Model {
         throw new Error(`selectNode: ${nodeId} of type ${type} not found in store`)
       }
       historyPushState(o.keyspace, o.type, o.id)
-      let node
       if (type === 'address') {
         this.browser.setAddress(o)
-        node = this.graph.addressNodes.get(nodeId)
       } else if (type === 'cluster') {
         this.browser.setCluster(o)
-        node = this.graph.clusterNodes.get(nodeId)
       }
       this.graph.selectNode(type, nodeId)
     })
@@ -293,7 +291,7 @@ export default class Model {
         this.statusbar.addLoading(data.id)
         this.mapResult(this.rest(data.keyspace).node({id: data.id, type: data.nodeType}), 'resultNode', context)
       } else {
-        this.call('resultNode', {context, result: o })
+        this.call('resultNode', { context, result: o })
       }
     })
     this.dispatcher.on('selectAddress', (data) => {
@@ -629,7 +627,7 @@ export default class Model {
   }
   serialize () {
     return this.compress([
-      VERSION,  // eslint-disable-line
+      VERSION,  // eslint-disable-line no-undef
       this.store.serialize(),
       this.graph.serialize()
     ])
@@ -642,7 +640,7 @@ export default class Model {
     this.layout.shouldUpdate(true)
   }
   download (filename, buffer) {
-    var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line
+    var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line no-undef
     FileSaver.saveAs(blob, filename)
   }
   mapResult (promise, msg, context) {

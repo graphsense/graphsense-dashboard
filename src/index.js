@@ -1,4 +1,3 @@
-import {configure, LogLevel, getLogger} from '@log4js2/core'
 import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
@@ -7,11 +6,10 @@ import './style/Octarine-Light/fonts.css'
 import './style/style.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
-import Browser from './browser.js'
 import numeral from 'numeral'
 import Logger from './logger.js'
 
-Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line
+Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line no-undef
 
 numeral.register('locale', 'de', {
   delimiters: {
@@ -22,7 +20,7 @@ numeral.register('locale', 'de', {
 
 numeral.locale('de')
 
-const dispatcher = dispatch(IS_DEV,
+const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'initSearch',
   'search',
   'searchresult',
@@ -86,12 +84,7 @@ const dispatcher = dispatch(IS_DEV,
   'gohome'
 )
 
-let debugHistory = [{type: 'clickSearchResult', context: null, data: [{id: '1Archive1n2C579dMsAu3iC6tWzuQJz8dN', type: 'address'}]}]
-
-// dispatcher.history = debugHistory
-
 let model = new Model(dispatcher)
-// model.replay()
 
 model.render(document.body)
 

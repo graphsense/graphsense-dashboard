@@ -3,7 +3,7 @@ import Component from '../component.js'
 import {addClass, removeClass} from '../template_utils.js'
 import Logger from '../logger.js'
 
-const logger = Logger.create('Search') // eslint-disable-line
+const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
 const empty = {addresses: [], transactions: []}
 const numShowResults = 10

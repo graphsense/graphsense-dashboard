@@ -2,7 +2,7 @@ import {json} from 'd3-fetch'
 // import {json} from './mockup.js'
 import Logger from './logger.js'
 
-const logger = Logger.create('Rest') // eslint-disable-line
+const logger = Logger.create('Rest')
 
 const options = {} // { credentials: 'include' }
 
@@ -20,7 +20,7 @@ export default class Rest {
         if (!result[field] || !result[field].length) {
           logger.warn(`${field} is not in result, calling ${url}`)
         } else {
-          result[field].forEach(item => item.keyspace = this.keyspace)
+          result[field].forEach(item => { item.keyspace = this.keyspace })
         }
       } else {
         result.keyspace = this.keyspace

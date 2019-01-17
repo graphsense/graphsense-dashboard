@@ -1,7 +1,7 @@
 import {map} from 'd3-collection'
 import Logger from './logger.js'
 
-const logger = Logger.create('Store') // eslint-disable-line
+const logger = Logger.create('Store') // eslint-disable-line no-unused-vars
 
 export default class Store {
   constructor () {

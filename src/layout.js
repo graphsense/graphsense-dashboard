@@ -50,7 +50,7 @@ export default class Layout extends Component {
       loader.addEventListener('change', (e) => {
         let input = e.target
 
-        let reader = new FileReader() //eslint-disable-line
+        let reader = new FileReader() // eslint-disable-line no-undef
         let filename = input.files[0].name
         reader.onload = () => {
           let data = reader.result

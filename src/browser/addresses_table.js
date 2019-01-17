@@ -19,13 +19,13 @@ export default class AddressesTable extends Table {
       { name: 'Balance',
         data: 'balance',
         className: 'text-right',
-        render: (value, type) => 
+        render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       { name: 'Received',
         data: 'totalReceived',
         className: 'text-right',
-        render: (value, type) => 
+        render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       }
     ]

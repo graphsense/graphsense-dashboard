@@ -4,7 +4,7 @@ import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
 import Logger from './logger.js'
 
-const logger = Logger.create('Statusbar') // eslint-disable-line
+const logger = Logger.create('Statusbar') // eslint-disable-line no-unused-vars
 
 const logsDisplayLength = 100
 

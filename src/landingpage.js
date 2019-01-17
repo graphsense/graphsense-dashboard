@@ -24,8 +24,8 @@ export default class Landingpage extends Component {
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate() === true) {
       this.root.innerHTML =
-        '<div class="' + STATICPAGE_CLASSES + '">' //eslint-disable-line
-        + header + statistics + replace(footer, {version: VERSION}) + //eslint-disable-line
+        '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
+        header + statistics + replace(footer, {version: VERSION}) + // eslint-disable-line no-undef
         '</div>'
       for (let key in this.stats) {
         this.stats[key] = 'loading'

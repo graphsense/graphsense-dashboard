@@ -5,7 +5,7 @@ import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
 
-const logger = Logger.create('GraphNode') // eslint-disable-line
+const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
 const clusterWidth = 190

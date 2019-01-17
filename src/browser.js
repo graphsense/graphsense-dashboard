@@ -13,7 +13,7 @@ import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
 import Logger from './logger.js'
 
-const logger = Logger.create('Browser') // eslint-disable-line
+const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
 export default class Browser extends Component {
   constructor (dispatcher, currency) {
@@ -134,7 +134,7 @@ export default class Browser extends Component {
     let last = this.content[request.index]
     if (!(last instanceof Cluster) && !(last instanceof Address)) return
     if (this.content[request.index + 1] instanceof NeighborsTable &&
-        this.content[request.index + 1].isOutgoing == isOutgoing
+        this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) return
 
     last.setCurrentOption(isOutgoing ? 'initOutdegreeTable' : 'initIndegreeTable')
@@ -149,12 +149,11 @@ export default class Browser extends Component {
     let last = this.content[request.index]
     if (!(last instanceof Transaction)) return
     if (this.content[request.index + 1] instanceof TransactionAddressesTable &&
-        this.content[request.index + 1].isOutgoing == isOutgoing
+        this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) return
 
     last.setCurrentOption(isOutgoing ? 'initTxOutputsTable' : 'initTxInputsTable')
     let keyspace = last.data.keyspace
-    let total = isOutgoing ? last.data.outputs.length : last.data.inputs.length
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace))
     this.shouldUpdate('content')
