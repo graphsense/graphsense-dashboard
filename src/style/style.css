@@ -396,11 +396,11 @@ textarea {
 }
 
 a[href] {
-  @apply text-gs-dark no-underline
+  @apply text-black underline
 }
 
 a[href]:hover {
-  @apply text-gs-base underline
+  @apply text-black no-underline
 }
 
 body {
