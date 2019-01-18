@@ -185,7 +185,7 @@ class GraphNode extends Component {
       case 'tag':
         return this.getTag() || this.getName()
       case 'actorCategory':
-        return this.getActorCategory()
+        return this.getActorCategory() || this.getName()
     }
   }
   coloring () {
