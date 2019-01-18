@@ -573,6 +573,7 @@ export default class Model {
       this.paramsToCall(params)
     }
     window.addEventListener('beforeunload', function (evt) {
+      if (IS_DEV) return // eslint-disable-line no-undef
       if (!this.showLandingpage) {
         let message = 'You are about to leave the site. Your work will be lost. Sure?'
         if (typeof evt === 'undefined') {
@@ -627,7 +628,7 @@ export default class Model {
   }
   serialize () {
     return this.compress([
-      VERSION,  // eslint-disable-line no-undef
+      VERSION, // eslint-disable-line no-undef
       this.store.serialize(),
       this.graph.serialize()
     ])
@@ -640,7 +641,7 @@ export default class Model {
     this.layout.shouldUpdate(true)
   }
   download (filename, buffer) {
-    var blob = new Blob([buffer], {type: "application/octet-stream"}) // eslint-disable-line no-undef
+    var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef
     FileSaver.saveAs(blob, filename)
   }
   mapResult (promise, msg, context) {
