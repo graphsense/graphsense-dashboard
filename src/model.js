@@ -25,6 +25,10 @@ const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
   let url = keyspace && type && id ? '#!' + [keyspace, type, id].join('/') : '/'
+  if (url === '/') {
+    window.history.pushState({keyspace, type, id}, null, url)
+    return
+  }
   window.history.replaceState({keyspace, type, id}, null, url)
 }
 
@@ -49,9 +53,11 @@ const keyspaces =
 
 const fromURL = (url) => {
   let hash = url.split('#!')[1]
-  if (!hash) return
-  let id, type, keyspace
-  [keyspace, type, id] = hash.split('/')
+  if (!hash) return {id: '', type: '', keyspace: ''} // go home
+  let split = hash.split('/')
+  let id = split[2]
+  let type = split[1]
+  let keyspace = split[0]
   if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
     logger.error(`invalid keyspace ${keyspace}`)
     return
@@ -75,7 +81,6 @@ export default class Model {
         return
       }
       setTimeout(() => {
-        console.log('calling')
         logger.debug('calling', message, data)
         this.dispatcher.call(message, null, data)
         this.render()
@@ -567,14 +572,15 @@ export default class Model {
       this.render()
     })
     window.onhashchange = (e) => {
-      logger.debug('hashchange', e)
       let params = fromURL(e.newURL)
+      logger.debug('hashchange', e, params)
       if (!params) return
       this.paramsToCall(params)
     }
+    let that = this
     window.addEventListener('beforeunload', function (evt) {
       if (IS_DEV) return // eslint-disable-line no-undef
-      if (!this.showLandingpage) {
+      if (!that.showLandingpage) {
         let message = 'You are about to leave the site. Your work will be lost. Sure?'
         if (typeof evt === 'undefined') {
           evt = window.event
@@ -586,7 +592,7 @@ export default class Model {
       }
     })
     let initParams = fromURL(window.location.href)
-    if (initParams) {
+    if (initParams.id) {
       this.paramsToCall(initParams)
     }
   }
@@ -595,6 +601,8 @@ export default class Model {
       this.call('clickSearchResult', {id, type, keyspace})
     } else if (type === 'transaction') {
       this.call('clickTransaction', {txHash: id, keyspace})
+    } else {
+      this.call('gohome')
     }
   }
   createComponents () {
