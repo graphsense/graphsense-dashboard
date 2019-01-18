@@ -19,6 +19,12 @@ export default {
           let args = formatArgs([...arguments])
           console.error.apply(null, args)
         }
+      },
+      warn: function (string, object) {
+        if (logLevel <= ERROR) {
+          let args = formatArgs([...arguments])
+          console.warn.apply(null, args)
+        }
       }
     }
   },
