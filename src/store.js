@@ -33,6 +33,8 @@ export default class Store {
         let c = this.clusters.get(object.toCluster)
         if (!c) {
           c = { addresses: map(), id: object.toCluster, type: 'cluster', ...empty }
+          let outgoing = this.initOutgoing(c.id)
+          c.outgoing = outgoing
           this.clusters.set(object.toCluster, c)
         }
         c.addresses.set(a.id, a)
@@ -74,7 +76,6 @@ export default class Store {
     }
   }
   initOutgoing (id) {
-    logger.debug('id', id)
     if (typeof id !== 'string' && typeof id !== 'number') {
       throw new Error('id is not string')
     }
@@ -121,18 +122,18 @@ export default class Store {
     return [addresses, clusters, alllinks]
   }
   deserialize ([addresses, clusters, alllinks]) {
-    addresses.forEach(address => {
-      this.add(address)
+    alllinks.forEach(([id, links]) => {
+      links.forEach(({key, value}) => {
+        this.linkOutgoing(id, key, value)
+      })
     })
     clusters.forEach(cluster => {
       cluster.forAddresses = cluster.addresses
       delete cluster.addresses
       this.add(cluster)
     })
-    alllinks.forEach(([id, links]) => {
-      links.forEach(({key, value}) => {
-        this.linkOutgoing(id, key, value)
-      })
+    addresses.forEach(address => {
+      this.add(address)
     })
   }
 }
