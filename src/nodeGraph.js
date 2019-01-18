@@ -341,60 +341,55 @@ export default class NodeGraph extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let transform = {k: 1, x: 0, y: 0}
-    let tx = 0
-    let ty = 0
+    let transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
     if (this.shouldUpdate() === true) {
-      this.svg = create('svg')
+      let svg = create('svg')
         .classed('w-full h-full', true)
         .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .call(drag().on('drag', () => {
-          tx -= event.dx / transform.k
-          ty -= event.dy / transform.k
-          let w_ = w / transform.k
-          let h_ = h / transform.k
-          let x_ = x + tx + (w - w_) / 2
-          let y_ = y + ty + (h - h_) / 2
-          this.svg.attr('viewBox', (({x, y, w, h}) => `${x_} ${y_} ${w_} ${h_}`)(this.viewBox))
+          transform.dx += event.dx
+          transform.dy += event.dy
+          let x = transform.x + transform.dx * transform.k
+          let y = transform.y + transform.dy * transform.k
+          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${transform.k})`)
         }))
         .call(zoom().on('zoom', () => {
-        // store current zoom transform
           transform.k = event.transform.k
           transform.x = event.transform.x
           transform.y = event.transform.y
-          let w_ = w / event.transform.k
-          let h_ = h / event.transform.k
-          let x_ = x + tx + (w - w_) / 2
-          let y_ = y + ty + (h - h_) / 2
-          this.svg.attr('viewBox', `${x_} ${y_} ${w_} ${h_}`)
+          let x = transform.x + transform.dx * transform.k
+          let y = transform.y + transform.dy * transform.k
+          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${transform.k})`)
         }))
-      this.svg.on('click', () => {
-        this.dispatcher('deselect')
-      })
       let markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
-      this.svg.node().innerHTML = '<defs>' +
+      svg.node().innerHTML = '<defs>' +
         (['black', 'red'].map(color =>
           `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
            `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
          '</marker>'
         )) +
         '</defs>'
-      this.root.appendChild(this.svg.node())
-      clusterShadowsRoot = this.svg.append('g').classed('clusterShadowsRoot', true)
-      clusterRoot = this.svg.append('g').classed('clusterRoot', true)
-      addressShadowsRoot = this.svg.append('g').classed('addressShadowsRoot', true)
-      linksRoot = this.svg.append('g').classed('linksRoot', true)
-      addressRoot = this.svg.append('g').classed('addressRoot', true)
+      this.graphRoot = svg.append('g')
+      this.graphRoot.on('click', () => {
+        this.dispatcher('deselect')
+      })
+      this.root.appendChild(svg.node())
+
+      clusterShadowsRoot = this.graphRoot.append('g').classed('clusterShadowsRoot', true)
+      clusterRoot = this.graphRoot.append('g').classed('clusterRoot', true)
+      addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
+      linksRoot = this.graphRoot.append('g').classed('linksRoot', true)
+      addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
     } else {
-      clusterShadowsRoot = this.svg.select('g.clusterShadowsRoot')
-      addressShadowsRoot = this.svg.select('g.addressShadowsRoot')
-      linksRoot = this.svg.select('g.linksRoot')
-      clusterRoot = this.svg.select('g.clusterRoot')
-      addressRoot = this.svg.select('g.addressRoot')
+      clusterShadowsRoot = this.graphRoot.select('g.clusterShadowsRoot')
+      addressShadowsRoot = this.graphRoot.select('g.addressShadowsRoot')
+      linksRoot = this.graphRoot.select('g.linksRoot')
+      clusterRoot = this.graphRoot.select('g.clusterRoot')
+      addressRoot = this.graphRoot.select('g.addressRoot')
     }
     // render in this order
     this.renderLayers(clusterRoot, addressRoot)
