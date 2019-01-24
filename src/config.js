@@ -112,4 +112,20 @@ export default class Config extends Component {
   setTxLabel (labelType) {
     this.txLabelType = labelType
   }
+  serialize () {
+    return [
+      this.currency,
+      this.labelType,
+      this.txLabelType
+    ]
+  }
+  deserialize ([
+    currency,
+    labelType,
+    txLabelType
+  ]) {
+    this.currency = currency
+    this.labelType = labelType
+    this.txLabelType = txLabelType
+  }
 }

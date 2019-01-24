@@ -638,7 +638,8 @@ export default class Model {
     return this.compress([
       VERSION, // eslint-disable-line no-undef
       this.store.serialize(),
-      this.graph.serialize()
+      this.graph.serialize(),
+      this.config.serialize()
     ])
   }
   deserialize (buffer) {
@@ -646,6 +647,7 @@ export default class Model {
     this.createComponents()
     this.store.deserialize(data[1])
     this.graph.deserialize(data[2], this.store)
+    this.config.deserialize(data[3])
     this.layout.shouldUpdate(true)
   }
   download (filename, buffer) {
