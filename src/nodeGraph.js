@@ -68,7 +68,6 @@ export default class NodeGraph extends Component {
     this.colorGen = (map, type) => {
       return (k) => {
         if (!k) return defaultColor[type]
-        k = 'k' + k
         let chroma = map.get(k)
         if (chroma === undefined) {
           chroma = map.size() * chromaStep
