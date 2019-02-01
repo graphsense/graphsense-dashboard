@@ -1,0 +1,103 @@
+<div class="container">
+  
+  <p>GraphSense is an open source platform for analyzing cryptocurrency transaction ledgers. At the moment,
+    it supports analysis of <a href="https://bitcoin.org/en/">Bitcoin</a>, <a href="https://www.bitcoincash.org/">Bitcoin Cash</a>, <a href="https://litecoin.com/en/">Litecoin</a>, and <a href="https://z.cash/">Zcash</a> transactions.</p>
+
+  <h2>Features</h2>
+
+  <ul>
+
+    <li>
+      <p><strong>Address Clustering</strong>: GraphSense partitions the set of addresses observed in a cryptocurrency
+  ecosystem into maximal subsets (clusters) that are likely to be controlled by the same real-world actor.</p>
+    </li>
+
+    <li>
+      <p><strong>Network Abstractions</strong>: GraphSense computes two forms of network abstractions from the underlying blockchain: the address graph, which connects addresses via transactions, and the cluster graph, which connects address clusters.</p>
+    </li>
+
+    <li>
+      <p><strong>Microscopic Analysis</strong>: with the GraphSense dashboard users can inspect transactions and trace currency flows by navigating along the transaction graph abstractions.</p>
+    </li>
+
+    <li>
+      <p><strong>Macroscopic Analysis</strong>: by directly accessing the underlying, pre-computed database it is possible to map real-world phenomena (e.g., Ransomware) onto network abstractions and run subsequent analytics tasks.</p>
+    </li>
+
+    <li>
+      <p><strong>Pre-computed statistics</strong>: GraphSense pre-computes statistics and supports interactive analysis without major delays.</p> 
+    </li>
+
+    <li>
+      <p><strong>BlockSci integration</strong>: GraphSense uses <a href="https://github.com/citp/BlockSci">BlockSci</a> for parsing blockchains and obtaining exchange rates.</p> 
+    </li>
+
+    <li>
+      <p><strong>Horizontal Scalability</strong>: cryptocurrency blockchains <a href="https://blockchain.info/charts/blocks-size?timespan=all">are growing</a> and new currencies <a href="https://coinmarketcap.com/">appear on the horizon</a>. GraphSense should be future-proof, because it is built on <a href="https://spark.apache.org/">Apache Spark</a> and <a href="http://cassandra.apache.org/">Cassandra</a> for horizontal scalability.</p>
+    </li>
+
+  </ul>
+
+  <h2 id="technical-architecture">Technical Architecture</h2>
+
+  <p>GraphSense is built on scalable and distributed cluster technology and therefore requires a number of software components. They must be setup and/or executed in the following order:</p>
+
+  <ul>
+    <li>
+      <p><a href="https://github.com/graphsense/btc-client">btc-client</a>, <a href="https://github.com/graphsense/bch-client">bch-client</a>, <a href="https://github.com/graphsense/ltc-client">ltc-client</a>, <a href="https://github.com/graphsense/zec-client">zec-client</a>: docker containers encapsulating the most-recent cryptocurrency client versions</p>
+    </li>
+    <li>
+      <p><a href="https://github.com/graphsense/graphsense-blocksci">graphsense-blocksci</a>: a dockerized component to synchronize BlockSci data to Apache Cassandra</p>
+    </li>
+    <li>
+      <p><a href="https://github.com/graphsense/graphsense-transformation">graphsense-transformation</a>: an Apache Spark ETL pipeline for computing statistics and network representations from raw blockchain data stored in Cassandra</p>
+    </li>
+    <li>
+      <p><a href="https://github.com/graphsense/graphsense-REST">graphsense-REST</a>: an API for retrieving data from the underlying Cassandra store</p>
+    </li>
+    <li>
+      <p><a href="https://github.com/graphsense/graphsense-dashboard">graphsense-dashboard</a>: a user-interface allowing search, inspection, and traversal of cryptocurrency entities</p>
+    </li>
+  </ul>
+
+  <h2 id="example">Example</h2>
+
+  <p>The following screenshot shows details about an example Bitcoin address.</p>
+
+  <p><img class="example" src="./screenshot_dashboard.jpeg" alt="screenshot"></p>
+
+  <h2 id="publications">Publications</h2>
+
+  <p>Some more technical details about GraphSense are described <a href="http://ceur-ws.org/Vol-1695/paper20.pdf">here</a>; please cite as:</p>
+
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@inproceedings{Haslhofer:2016a,
+      title={O Bitcoin Where Art Thou? Insight into Large-Scale Transaction Graphs.},
+      author={Haslhofer, Bernhard and Karl, Roman and Filtz, Erwin},
+      booktitle={SEMANTiCS (Posters, Demos)},
+      year={2016}
+  }
+  </code></pre></div></div>
+
+  <p>So far, GraphSense has been used for computing statistics in the following
+  scientific papers:</p>
+
+  <p>Paquet-Clouston, M., Haslhofer, B., & Dupont, B.
+  <strong>Ransomware payments in the bitcoin ecosystem.</strong>
+  17th annual workshop on the economics of information security (WEIS 2018).
+  <a href="http://arxiv.org/abs/1804.04080">(pdf)</a></p>
+
+  <p>Filtz, E., Polleres, A., Karl, R., Haslhofer, B.:
+  <strong>Evolution of the Bitcoin Address Graph - An Exploratory Longitudinal Study.</strong>
+  International Data Science Conference (DSC 2017), Salzburg, Austria, 2017.
+  <a href="https://aic.ai.wu.ac.at/~polleres/publications/filtz-etal-2017IDSC.pdf">(pdf)</a></p>
+
+  <h2 id="contributors">Contributors</h2>
+
+  <ul>
+    <li><a href="http://bernhardhaslhofer.info/">Bernhard Haslhofer</a></li>
+    <li>Rainer Stütz</li>
+    <li>Mihai Bartha</li>
+    <li>Roman Karl</li>
+    <li><a href="https://matteoromiti.github.io/">Matteo Romiti</a></li>
+  </ul>
+</div>

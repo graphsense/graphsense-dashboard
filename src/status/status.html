@@ -1,0 +1,16 @@
+<div id="frame" class="w-full relative text-xs text-grey-dark">
+  <div id="bar" class="w-full bg-grey-lighter pl-2 py-1 flex flex-row items-center justify-between">
+    <div class="flex-grow flex flex-row items-center h-4">
+      <img id="indicator" src="loading.gif" class="h-full"/>
+      <span id="topmsg" class="px-1"></span>
+    </div>
+    <div id="hide" class="px-1 text-gs-dark cursor-pointer">Hide logs</div>
+    <div id="show" class="px-1 text-gs-dark cursor-pointer">Show logs</div>
+    <div id="errors" class="cursor-pointer flex flex-row items-center text-gs-red">
+      <i class="fas fa-exclamation-triangle hidden"></i>
+      <div id="errorMsg" class="pl-1"></div>
+    </div>
+  </div>
+  <ul id="log-messages" class="w-full">
+  </ul>
+</div>

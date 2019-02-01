@@ -2,72 +2,44 @@
 
 A Web dashboard for interactive cryptocurrency analysis.
 
-`graphsense-dashboard` provides a Docker container running a [Flask][flask]
-web application, which is deployed through uWSGI and [nginx][nginx].
+## Development setup
 
-## Prerequisites
+You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
+the package manager for JavaScript.
 
-Make sure [graphsense-REST][graphsense-REST] is installed and running
-on your system (port 9000).
+In order to install all dependencies run from the root of this repository:
 
-Test
+    npm install
 
-    http://localhost:9000/
+Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
+[graphsense-REST][graphsense-rest] service.
 
-### Development Setup
+Then start the development server:
 
-Make sure Python 3 is available on your system. Install the module
-dependencies, e.g. via `pip`
+    npm start
 
-    pip install -r requirements.txt
+Point your browser to `localhost:8080`.
 
-To start the dashboard in development mode use
+### A note on static pages
 
-    export FLASK_APP=dashboard.py
-    flask run
+Static pages are not generated in development mode. The reason is that
+Webpack's development server does not work well with the static-site-generator
+plugin.
 
-Open the dashboard in a web browser at http://localhost:5000
+Static pages are located in `src/pages/static`.
 
-### Deployment with Docker
+## Production setup
 
-A Docker image is provided, to deploy the web app via [nginx][nginx] and uWSGI.
+Build the Docker image:
 
-Install [Docker][docker], e.g. on Debian/Ubuntu based systems
+    docker build -t graphsense-dashboard .
 
-    sudo apt install docker.io
+Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
+service, e.g.: 
 
-On Linux the IP address of the docker bridge network has to be 172.17.0.1:
-
-    > ip addr show docker0
-    docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:b7:68:a5:fb brd ff:ff:ff:ff:ff:ff
-    inet 172.17.0.1/16 scope global docker0
-    ...
-
-otherwise edit this line in the `Dockerfile`
-
-    RUN sed -ie 's/localhost/172.17.0.1/g' /srv/graphsense-dashboard/dashboard.py
-
-e.g., on macOS
-
-    RUN sed -ie 's/localhost/docker.for.mac.localhost/g' /srv/graphsense-dashboard/dashboard.py
-
-Building the docker container:
-
-    ./docker/build.sh
-
-Starting the container:
-
-    ./docker/start.sh
-
-Attaching to the container:
-
-    ./docker/attach.sh
-
-To view the dashboard open a web browser at http://localhost:8000
+    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-dashboard
 
 
-[docker]: https://www.docker.com/
-[flask]: http://flask.pocoo.org/
-[nginx]: https://nginx.org/en/
-[graphsense-REST]: https://github.com/graphsense/graphsense-REST
+[nodejs]: https://nodejs.org
+[npm]: https://www.npmjs.com
+[graphsense-rest]: https://github.com/graphsense/graphsense-rest
