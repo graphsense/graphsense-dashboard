@@ -1,16 +1,18 @@
-# GraphSense GUI
+# GraphSense Dashboard
 
-Analyze and navigate through cryptocurrencies.
+A Web dashboard for interactive cryptocurrency analysis.
 
 ## Development setup
 
-You need to have [NodeJS](https://nodejs.org) installed. It comes with [NPM](https://www.npmjs.com), the package manager for JavaScript.
+You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
+the package manager for JavaScript.
 
 In order to install all dependencies run from the root of this repository:
 
     npm install
 
-Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development [graphsense-REST](https://github.com/graphsense/graphsense-REST) service.
+Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
+[graphsense-REST][graphsense-rest] service.
 
 Then start the development server:
 
@@ -20,7 +22,9 @@ Point your browser to `localhost:8080`.
 
 ### A note on static pages
 
-Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
+Static pages are not generated in development mode. The reason is that
+Webpack's development server does not work well with the static-site-generator
+plugin.
 
 Static pages are located in `src/pages/static`.
 
@@ -28,18 +32,14 @@ Static pages are located in `src/pages/static`.
 
 Build the Docker image:
 
-    docker build -t graphsense-gui .
+    docker build -t graphsense-dashboard .
 
-Run it by passing it the URL of the [graphsense-REST](https://github.com/graphsense/graphsense-REST) service, e.g.: 
+Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
+service, e.g.: 
 
-    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-gui
+    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-dashboard
 
-## Build official website
 
-The official website consists of static pages without the app. Edit its contents at `src/pages/static/officialpage.html`.
-
-In order to build it run:
-
-    npm run build
-
-Then deploy the contents of `official/`. It contains the static content without any JS files.
+[nodejs]: https://nodejs.org
+[npm]: https://www.npmjs.com
+[graphsense-rest]: https://github.com/graphsense/graphsense-rest
