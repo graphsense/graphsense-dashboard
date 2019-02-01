@@ -11,7 +11,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
-const VERSION = '0.4'
+const VERSION = '0.4.0'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
 
 // to be injected in static and dynamic pages
