@@ -9,9 +9,8 @@ import Logger from './logger.js'
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, currency, txLabelType) {
+  constructor (dispatcher, labelType, txLabelType) {
     super()
-    this.currency = currency
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
@@ -20,9 +19,6 @@ export default class Config extends Component {
   toggleConfig () {
     this.visible = !this.visible
     this.shouldUpdate(true)
-  }
-  setCurrency (currency) {
-    this.currency = currency
   }
   render (root) {
     if (root) this.root = root
@@ -36,7 +32,6 @@ export default class Config extends Component {
     this.root.innerHTML = configLayout
     let el = this.root.querySelector('#config')
     el.innerHTML = graphConfig
-    this.addSelectListener('currency', 'changeCurrency')
     this.addSelectListener('clusterLabel', 'changeClusterLabel')
     this.addSelectListener('addressLabel', 'changeAddressLabel')
     this.addSelectListener('transactionLabel', 'changeTxLabel')
@@ -94,7 +89,6 @@ export default class Config extends Component {
     let i = 0
     for (; i < select.options.length; i++) {
       let value = this.labelType[id]
-      if (id === 'currency') value = this.currency
       if (id === 'transactionLabel') value = this.txLabelType
       if (select.options[i].value === value) break
     }
@@ -114,17 +108,14 @@ export default class Config extends Component {
   }
   serialize () {
     return [
-      this.currency,
       this.labelType,
       this.txLabelType
     ]
   }
   deserialize ([
-    currency,
     labelType,
     txLabelType
   ]) {
-    this.currency = currency
     this.labelType = labelType
     this.txLabelType = txLabelType
   }

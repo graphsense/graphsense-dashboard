@@ -1,9 +1,11 @@
 import layout from './layout/layout.html'
 import Component from './component.js'
+import currency from './layout/currency.html'
 
 export default class Layout extends Component {
-  constructor (dispatcher, browser, graph, config, menu, search, status) {
+  constructor (dispatcher, browser, graph, config, menu, search, status, currency) {
     super()
+    this.currency = currency
     this.dispatcher = dispatcher
     this.browser = browser
     this.graph = graph
@@ -11,9 +13,14 @@ export default class Layout extends Component {
     this.menu = menu
     this.search = search
     this.statusbar = status
+    this.currencyRoot = null
   }
   triggerFileLoad () {
     this.root.querySelector('#file-loader').click()
+  }
+  setCurrency (currency) {
+    this.currency = currency
+    this.shouldUpdate('currency')
   }
   render (root) {
     if (root) this.root = root
@@ -26,7 +33,7 @@ export default class Layout extends Component {
     let menuRoot = null
     let searchRoot = null
     let statusRoot = null
-    if (this.shouldUpdate()) {
+    if (this.shouldUpdate() === true) {
       this.root.innerHTML = layout
       this.browser.shouldUpdate(true)
       this.graph.shouldUpdate(true)
@@ -67,6 +74,7 @@ export default class Layout extends Component {
       menuRoot = this.root.querySelector('#layout-menu')
       searchRoot = this.root.querySelector('#layout-search')
       statusRoot = this.root.querySelector('#layout-status')
+      this.currencyRoot = this.root.querySelector('#layout-currency-config')
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
@@ -74,7 +82,27 @@ export default class Layout extends Component {
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
     this.statusbar.render(statusRoot)
+    this.renderCurrency()
     super.render()
     return this.root
+  }
+  renderCurrency () {
+    if (this.shouldUpdate() !== true && this.shouldUpdate() !== 'currency') return
+    this.currencyRoot.innerHTML = currency
+    let select = this.currencyRoot.querySelector('select')
+    let i = 0
+    for (; i < select.options.length; i++) {
+      if (select.options[i].value === this.currency) break
+    }
+    select.options.selectedIndex = i
+    select.addEventListener('change', (e) => {
+      this.dispatcher('changeCurrency', e.target.value)
+    })
+  }
+  serialize () {
+    return this.currency
+  }
+  deserialize (currency) {
+    this.currency = currency
   }
 }

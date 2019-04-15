@@ -481,7 +481,7 @@ export default class Model {
     this.dispatcher.on('changeCurrency', (currency) => {
       this.browser.setCurrency(currency)
       this.graph.setCurrency(currency)
-      this.config.setCurrency(currency)
+      this.layout.setCurrency(currency)
     })
     this.dispatcher.on('changeTxLabel', (type) => {
       this.graph.setTxLabel(type)
@@ -608,11 +608,11 @@ export default class Model {
   createComponents () {
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
-    this.config = new Config(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    this.config = new Config(this.call, defaultLabelType, defaultTxLabel)
     this.menu = new Menu(this.call)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.search = new Search(this.call, keyspaces)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.landingpage = new Landingpage(this.call, this.search, keyspaces)
   }
   compress (data) {
@@ -639,7 +639,8 @@ export default class Model {
       VERSION, // eslint-disable-line no-undef
       this.store.serialize(),
       this.graph.serialize(),
-      this.config.serialize()
+      this.config.serialize(),
+      this.layout.serialize()
     ])
   }
   deserialize (buffer) {
@@ -648,6 +649,7 @@ export default class Model {
     this.store.deserialize(data[1])
     this.graph.deserialize(data[2], this.store)
     this.config.deserialize(data[3])
+    this.layout.deserialize(data[4])
     this.layout.shouldUpdate(true)
   }
   download (filename, buffer) {

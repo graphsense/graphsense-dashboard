@@ -117,6 +117,10 @@ html, body {
   @apply p-2 text-center text-gs-dark
 }
 
+select {
+  @apply rounded-sm shadow bg-grey-light
+}
+
 .prop-table {
   @apply table border-collapse 
 }
