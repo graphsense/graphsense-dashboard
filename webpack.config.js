@@ -37,15 +37,16 @@ module.exports = env => {
 
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
-    output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
   }
+  output['globalObject'] = 'self' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
 
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
   return {
     mode: IS_DEV ? 'development' : 'production',
     entry: {
       static: './src/static.js',
-      main: './src/index.js'
+      main: './src/index.js',
+      sw: './src/sw.js'
     },
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {

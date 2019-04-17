@@ -1,5 +1,4 @@
 import {json} from 'd3-fetch'
-// import {json} from './mockup.js'
 import Logger from './logger.js'
 
 const logger = Logger.create('Rest')
