@@ -41,6 +41,10 @@ export default class Layout extends Component {
       this.menu.shouldUpdate(true)
       this.search.shouldUpdate(true)
       this.statusbar.shouldUpdate(true)
+      let newButton = this.root.querySelector('#navbar-new')
+      newButton.addEventListener('click', () => {
+        this.dispatcher('new')
+      })
       let saveButton = this.root.querySelector('#navbar-save')
       saveButton.addEventListener('click', () => {
         this.dispatcher('save')

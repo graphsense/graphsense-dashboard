@@ -309,6 +309,7 @@ export default class Model {
       this.browser.setAddress(a)
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {
+      this.isDirty = true
       this.graph.adding.add(id)
       this.statusbar.addLoading(id)
       this.call('addNodeCont', {context: {stage: 1, id, type, keyspace, anchor}, result: null})
@@ -523,6 +524,11 @@ export default class Model {
     this.dispatcher.on('hideContextmenu', () => {
       this.menu.hideMenu()
     })
+    this.dispatcher.on('new', () => {
+      if (this.isReplaying) return
+      if (!this.promptUnsavedWork('start a new graph')) return
+      this.createComponents()
+    })
     this.dispatcher.on('save', (stage) => {
       if (this.isReplaying) return
       if (!stage) {
@@ -537,7 +543,9 @@ export default class Model {
     })
     this.dispatcher.on('load', () => {
       if (this.isReplaying) return
-      this.layout.triggerFileLoad()
+      if (this.promptUnsavedWork('load another file')) {
+        this.layout.triggerFileLoad()
+      }
     })
     this.dispatcher.on('loadFile', (params) => {
       let data = params[0]
@@ -596,6 +604,10 @@ export default class Model {
       this.paramsToCall(initParams)
     }
   }
+  promptUnsavedWork (msg) {
+    if (!this.isDirty) return true
+    return confirm('You have unsaved changes. Do you really want to ' + msg + '?') // eslint-disable-line no-undef
+  }
   paramsToCall ({id, type, keyspace}) {
     if (type === 'cluster' || type === 'address') {
       this.call('clickSearchResult', {id, type, keyspace})
@@ -606,6 +618,7 @@ export default class Model {
     }
   }
   createComponents () {
+    this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
     this.config = new Config(this.call, defaultLabelType, defaultTxLabel)

@@ -81,7 +81,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleErrorLogs',
   'moreLogs',
   'hideLogs',
-  'gohome'
+  'gohome',
+  'new'
 )
 
 let model = new Model(dispatcher)
