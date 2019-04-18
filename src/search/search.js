@@ -154,6 +154,8 @@ export default class Search extends Component {
     if (allErrors) {
       el.innerHTML = `Failed to fetch from any keyspaces`
       addClass(el, 'text-gs-red')
+    } else {
+      removeClass(el, 'text-gs-red')
     }
     logger.debug('isVisible', this.isLoading, visible)
     if (visible) {
