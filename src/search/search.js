@@ -22,7 +22,7 @@ export default class Search extends Component {
   clearResults () {
     this.result = {}
     for (let keyspace in this.keyspaces) {
-      this.result[keyspace] = empty
+      this.result[keyspace] = {...empty}
     }
   }
   clear () {
@@ -32,7 +32,7 @@ export default class Search extends Component {
     this.shouldUpdate(true)
   }
   error (keyspace, msg) {
-    this.result[keyspace] = msg
+    this.result[keyspace].error = msg
     this.shouldUpdate('result')
   }
   showLoading () {
@@ -67,29 +67,46 @@ export default class Search extends Component {
     }
     super.render()
     this.root.innerHTML = search
-    this.input = this.root.querySelector('input')
+    this.input = this.root.querySelector('textarea')
     this.input.value = this.term
-    this.root.querySelector('form')
-      .addEventListener('submit', (e) => {
-        e.returnValue = false
-        for (let keyspace in this.result) {
-          if (this.result[keyspace].addresses.length > 0) {
-            let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
-            return false
-          }
+    this.form = this.root.querySelector('form')
+    this.form.addEventListener('submit', (e) => {
+      e.returnValue = false
+      e.preventDefault()
+      for (let keyspace in this.result) {
+        if (this.result[keyspace].addresses.length > 0) {
+          let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
+          this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
+          return false
         }
-        return false
+      }
+      this.term.split('\n').forEach((address) => {
+        for (let keyspace in this.keyspaces) {
+          this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace})
+        }
       })
-    this.root.querySelector('input')
-      .addEventListener('input', (e) => {
-        this.dispatcher('search', e.target.value)
-      })
-    this.root.querySelector('input')
-      .addEventListener('blur', () => {
-        // wrap in timeout to let possible clicksearchresult event happen
-        setTimeout(() => this.dispatcher('blurSearch'), 200)
-      })
+      return false
+    })
+    this.input.addEventListener('keypress', (e) => {
+      if (e.key !== 'Enter') return
+      e.preventDefault()
+      this.form.querySelector('button[type=\'submit\']').click()
+    })
+    this.input.addEventListener('input', (e) => {
+      let value = e.target.value
+      this.dispatcher('search', value)
+      let lines = value.split('\n')
+      console.log(lines)
+      if (lines.length === 1) {
+        this.input.style.height = '100%'
+        return
+      }
+      this.input.style.height = (lines.length + 1) * 1.13 + 'em'
+    })
+    this.input.addEventListener('blur', () => {
+      // wrap in timeout to let possible clicksearchresult event happen
+      setTimeout(() => this.dispatcher('blurSearch'), 200)
+    })
     this.renderResult()
     return this.root
   }
@@ -100,7 +117,11 @@ export default class Search extends Component {
       this.clearResults()
     }
   }
+  isMultiline () {
+    return this.term.indexOf('\n') !== -1
+  }
   needsResults (keyspace, limit, prefixLength) {
+    if (this.isMultiline()) return false
     if (this.term.length < prefixLength) return false
     let len = (this.result[keyspace].addresses || []).length
     return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
@@ -119,10 +140,10 @@ export default class Search extends Component {
     let allErrors = true
     for (let keyspace in this.keyspaces) {
       visible = visible ||
-        (typeof this.result[keyspace] === 'string') ||
+        this.result[keyspace].error ||
         this.result[keyspace].addresses.length > 0 ||
         this.result[keyspace].transactions.length > 0
-      if (typeof this.result[keyspace] === 'string') {
+      if (this.result[keyspace].error) {
         continue
       }
       allErrors = false
@@ -169,7 +190,10 @@ export default class Search extends Component {
   }
   setResult (term, result) {
     if (term !== this.term) return
-    this.result[result.keyspace] = {...result}
+    this.result[result.keyspace] = {
+      addresses: result.addresses,
+      transactions: result.transactions
+    }
     this.resultTerm = term
     this.shouldUpdate('result')
   }
