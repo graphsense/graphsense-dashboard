@@ -134,9 +134,13 @@ export default class Model {
         this.layout.setUpdate(true)
       }
       this.search.clear()
-      this.graph.selectNodeWhenLoaded([id, type])
+      if (type === 'address') {
+        this.graph.selectNodeWhenLoaded([id, type])
+        this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', id)
+      } else if (type === 'transaction') {
+        this.mapResult(this.rest(keyspace).transaction(id), 'resultTransactionForBrowser', id)
+      }
       this.statusbar.addMsg('loading', type, id)
-      this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', id)
     })
     this.dispatcher.on('blurSearch', () => {
       this.search.clear()

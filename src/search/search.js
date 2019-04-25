@@ -76,6 +76,11 @@ export default class Search extends Component {
             this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
             return false
           }
+          if (this.result[keyspace].transactions.length > 0) {
+            let transactions = this.result[keyspace].transactions.filter(byPrefix(this.term))
+            this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace})
+            return false
+          }
         }
         this.term.split('\n').forEach((address) => {
           for (let keyspace in this.keyspaces) {
@@ -133,8 +138,9 @@ export default class Search extends Component {
   needsResults (keyspace, limit, prefixLength) {
     if (this.isMultiline()) return false
     if (this.term.length < prefixLength) return false
-    let len = (this.result[keyspace].addresses || []).length
-    return !(len !== 0 && len < limit && this.term.startsWith(this.resultTerm))
+    let alen = this.result[keyspace].addresses.length
+    let tlen = this.result[keyspace].transactions.length
+    return !(((alen !== 0 && alen < limit) || (tlen !== 0 && tlen < limit)) && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
     return null
@@ -149,33 +155,40 @@ export default class Search extends Component {
     let visible = this.isLoading
     let allErrors = true
     for (let keyspace in this.keyspaces) {
-      visible = visible ||
+      let addresses = this.result[keyspace].addresses
+        .filter(byPrefix(this.term))
+        .slice(0, numShowResults)
+
+      let transactions = this.result[keyspace].transactions
+        .filter(byPrefix(this.term))
+        .slice(0, numShowResults)
+
+      let keyspaceVisible =
         this.result[keyspace].error ||
-        this.result[keyspace].addresses.length > 0 ||
-        this.result[keyspace].transactions.length > 0
+        addresses.length > 0 ||
+        transactions.length > 0
+      visible = visible || keyspaceVisible
       if (this.result[keyspace].error) {
         continue
       }
+      // if no results to render don't draw the title and the list at all
+      if (!keyspaceVisible) continue
+
       allErrors = false
 
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
-      let count = 0
-      this.result[keyspace].addresses
-        .filter(byPrefix(this.term))
-        .forEach(addr => {
-          if (count > numShowResults) return
-          count++
-          let li = document.createElement('li')
-          li.className = 'cursor-pointer'
-          li.appendChild(document.createTextNode(addr))
-          li.addEventListener('click', () => {
-            this.dispatcher('clickSearchResult', {id: addr, type: 'address', keyspace})
-          })
-          ul.appendChild(li)
+      let searchLine = (type, icon) => (id) => {
+        let li = document.createElement('li')
+        li.className = 'cursor-pointer'
+        li.innerHTML = `<i class="fas fa-${icon} pr-1 text-grey text-sm"></i>${id}`
+        li.addEventListener('click', () => {
+          this.dispatcher('clickSearchResult', {id, type, keyspace})
         })
-      // if no results to render don't draw the title and the list at all
-      if (count === 0) continue
+        ul.appendChild(li)
+      }
+      addresses.forEach(searchLine('address', 'at'))
+      transactions.forEach(searchLine('transaction', 'exchange-alt'))
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(this.keyspaces[keyspace]))

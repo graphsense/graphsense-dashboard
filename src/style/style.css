@@ -166,7 +166,7 @@ li.option-active i {
 }
 
 .search-frame {
-  width: 43ex;
+  width: 45ex;
   position: relative;
   @apply mr-1 white-shadow
 }
@@ -178,7 +178,13 @@ li.option-active i {
 #browser-search-result {
   position: absolute;
   z-index:200;
-  @apply w-full p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md
+  @apply w-full p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md;
+}
+
+#browser-search-result li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 #browser-search-result li:hover {
