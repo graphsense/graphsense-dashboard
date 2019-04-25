@@ -20,58 +20,44 @@ export default class Statusbar extends Component {
     this.numErrors = 0
     this.showErrorsLogs = false
   }
-  shouldUpdate (update) {
-    if (update === undefined) {
-      return this.update
-    }
-    if (update === true) {
-      this.update.add('all')
-      return
-    }
-    if (update === false) {
-      this.update.clear()
-    }
-    this.update.add(update)
-  }
   toggleErrorLogs () {
     this.showErrorsLogs = !this.showErrorsLogs
     if (this.showErrorsLogs) this.show()
-    this.shouldUpdate('logs')
+    this.setUpdate('logs')
   }
   show () {
     if (!this.visible) {
       this.visible = true
-      this.shouldUpdate('visibility')
+      this.setUpdate('visibility')
     }
   }
   hide () {
     if (this.visible) {
       this.visible = false
-      this.shouldUpdate('visibility')
+      this.setUpdate('visibility')
     }
   }
   add (msg) {
     this.messages.push(msg)
-    this.shouldUpdate('add')
+    this.setUpdate('add')
   }
   moreLogs () {
     this.logsDisplayLength += logsDisplayLength
-    this.shouldUpdate('logs')
+    this.setUpdate('logs')
   }
   addLoading (id) {
     this.loading.add(id)
-    this.shouldUpdate('loading')
+    this.setUpdate('loading')
   }
   removeLoading (id) {
     this.loading.remove(id)
-    this.shouldUpdate('loading')
+    this.setUpdate('loading')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let s = this.shouldUpdate()
-    if (!s.size() === 0) return this.root
-    if (s.has('all')) {
+    if (!this.shouldUpdate()) return this.root
+    if (this.shouldUpdate(true)) {
       this.root.innerHTML = status
 
       this.root.querySelector('#hide').addEventListener('click', () => {
@@ -86,26 +72,23 @@ export default class Statusbar extends Component {
       this.renderLoading()
       this.renderLogs()
       this.renderVisibility()
-      this.shouldUpdate(false)
+      super.render()
       return
     }
-    if (s.has('loading')) {
+    if (this.shouldUpdate('loading')) {
       this.renderLoading()
-      s.remove('loading')
     }
-    if (s.has('add')) {
+    if (this.shouldUpdate('add')) {
       let i = this.messages.length - 1
       this.renderLogs(this.messages[i], i)
-      s.remove('add')
     }
-    if (s.has('logs')) {
+    if (this.shouldUpdate('logs')) {
       this.renderLogs()
-      s.remove('logs')
     }
-    if (s.has('visibility')) {
+    if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
-      s.remove('visibility')
     }
+    super.render()
   }
   renderLoading () {
     let top = this.root.querySelector('#topmsg')

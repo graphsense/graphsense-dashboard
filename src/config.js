@@ -18,7 +18,7 @@ export default class Config extends Component {
   }
   toggleConfig () {
     this.visible = !this.visible
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   render (root) {
     if (root) this.root = root

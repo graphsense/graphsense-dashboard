@@ -13,7 +13,7 @@ export default class AddressNode extends GraphNode {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       this.root.node().innerHTML = ''
       let x = 0
       let y = 0
@@ -49,12 +49,12 @@ export default class AddressNode extends GraphNode {
       this.coloring()
       this.renderSelected()
     } else {
-      if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('label')) {
         let label = this.root.select('g.label')
         this.renderLabel(label)
         this.coloring()
       }
-      if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('select')) {
         this.renderSelected()
       }
     }

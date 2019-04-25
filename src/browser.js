@@ -26,7 +26,7 @@ export default class Browser extends Component {
   }
   deselect () {
     this.visible = false
-    this.shouldUpdate('visibility')
+    this.setUpdate('visibility')
   }
   destroyComponentsFrom (index) {
     this.content.forEach((content, i) => {
@@ -56,7 +56,7 @@ export default class Browser extends Component {
     this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0, this.currency) ]
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   setTransaction (tx) {
     this.activeTab = 'transactions'
@@ -65,14 +65,14 @@ export default class Browser extends Component {
     this.content = [
       new Transaction(this.dispatcher, tx, 0, this.currency)
     ]
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   setCluster (cluster) {
     this.activeTab = 'address'
     this.visible = true
     this.destroyComponentsFrom(0)
     this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   setResultNode (object) {
     logger.debug('setResultNode', object)
@@ -85,7 +85,7 @@ export default class Browser extends Component {
     } else if (object.type === 'cluster') {
       this.content[0] = new Cluster(this.dispatcher, object, 0, this.currency)
     }
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   setResponse (response) {
     this.content.forEach((comp) => {
@@ -103,7 +103,7 @@ export default class Browser extends Component {
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   initAddressesTable (request) {
     if (request.index !== 0 && !request.index) return
@@ -115,7 +115,7 @@ export default class Browser extends Component {
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace))
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   initTagsTable (request) {
     if (request.index !== 0 && !request.index) return
@@ -127,7 +127,7 @@ export default class Browser extends Component {
     let keyspace = last.data.keyspace
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, keyspace))
 
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   initNeighborsTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
@@ -142,7 +142,7 @@ export default class Browser extends Component {
     let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   initTxAddressesTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
@@ -156,24 +156,25 @@ export default class Browser extends Component {
     let keyspace = last.data.keyspace
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace))
-    this.shouldUpdate('content')
+    this.setUpdate('content')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate() === true) {
+    logger.debug('shouldupdate', this.shouldUpdate())
+    if (this.shouldUpdate(true)) {
       this.root.innerHTML = layout
       this.renderVisibility()
       this.renderContent()
       super.render()
       return this.root
     }
-    if (this.shouldUpdate() === 'visibility') {
+    if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
       super.render()
       return this.root
     }
-    if (this.shouldUpdate() === 'content') {
+    if (this.shouldUpdate('content')) {
       this.renderVisibility()
       this.renderContent()
       super.render()

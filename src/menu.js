@@ -17,7 +17,7 @@ export default class Menu extends Component {
     this.setMenuPosition(x, y)
     this.view = node.data.type
     this.node = node
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   setMenuPosition (x, y) {
     let w = window
@@ -33,7 +33,7 @@ export default class Menu extends Component {
   }
   hideMenu () {
     this.view = null
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   render (root) {
     logger.debug('render menu')

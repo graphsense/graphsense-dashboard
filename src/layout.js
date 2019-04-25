@@ -20,7 +20,7 @@ export default class Layout extends Component {
   }
   setCurrency (currency) {
     this.currency = currency
-    this.shouldUpdate('currency')
+    this.setUpdate('currency')
   }
   render (root) {
     if (root) this.root = root
@@ -33,14 +33,14 @@ export default class Layout extends Component {
     let menuRoot = null
     let searchRoot = null
     let statusRoot = null
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       this.root.innerHTML = layout
-      this.browser.shouldUpdate(true)
-      this.graph.shouldUpdate(true)
-      this.config.shouldUpdate(true)
-      this.menu.shouldUpdate(true)
-      this.search.shouldUpdate(true)
-      this.statusbar.shouldUpdate(true)
+      this.browser.setUpdate(true)
+      this.graph.setUpdate(true)
+      this.config.setUpdate(true)
+      this.menu.setUpdate(true)
+      this.search.setUpdate(true)
+      this.statusbar.setUpdate(true)
       let newButton = this.root.querySelector('#navbar-new')
       newButton.addEventListener('click', () => {
         this.dispatcher('new')
@@ -91,7 +91,7 @@ export default class Layout extends Component {
     return this.root
   }
   renderCurrency () {
-    if (this.shouldUpdate() !== true && this.shouldUpdate() !== 'currency') return
+    if (!this.shouldUpdate(true) && !this.shouldUpdate('currency')) return
     this.currencyRoot.innerHTML = currency
     let select = this.currencyRoot.querySelector('select')
     let i = 0

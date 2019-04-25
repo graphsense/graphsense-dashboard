@@ -21,6 +21,10 @@ const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 const searchlimit = 100
 const prefixLength = 5
 
+// synchronous messages
+// get handled by model in current rendering frame
+const syncMessages = ['search']
+
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
@@ -80,11 +84,18 @@ export default class Model {
         logger.debug('omit calling while replaying', message, data)
         return
       }
-      setTimeout(() => {
+
+      let fun = () => {
         logger.debug('calling', message, data)
         this.dispatcher.call(message, null, data)
         this.render()
-      }, 1)
+      }
+
+      if (syncMessages.indexOf(message) !== -1) {
+        fun()
+      } else {
+        setTimeout(fun, 1)
+      }
     }
 
     this.statusbar = new Statusbar(this.call)
@@ -120,7 +131,7 @@ export default class Model {
       this.statusbar.addLoading(id)
       if (this.showLandingpage) {
         this.showLandingpage = false
-        this.layout.shouldUpdate(true)
+        this.layout.setUpdate(true)
       }
       this.search.clear()
       this.graph.selectNodeWhenLoaded([id, type])
@@ -420,10 +431,10 @@ export default class Model {
       this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
       o.tags = result.tags || []
       if (context.type === 'address' && this.graph.labelType['addressLabel'] === 'tag') {
-        this.graph.addressNodes.each((node) => node.shouldUpdateLabel())
+        this.graph.addressNodes.each((node) => node.setUpdate('label'))
       }
       if (context.type === 'cluster' && this.graph.labelType['clusterLabel'] === 'tag') {
-        this.graph.clusterNodes.each((node) => node.shouldUpdateLabel())
+        this.graph.clusterNodes.each((node) => node.setUpdate('label'))
       }
     })
     this.dispatcher.on('loadEgonet', ({id, type, keyspace, isOutgoing, limit}) => {
@@ -504,7 +515,7 @@ export default class Model {
       }
       nodes.each((node) => {
         if (node.data.id === id) {
-          node.shouldUpdate('label')
+          node.setUpdate('label')
         }
       })
     })
@@ -575,8 +586,8 @@ export default class Model {
       logger.debug('going home')
       this.showLandingpage = true
       historyPushState()
-      this.landingpage.shouldUpdate(true)
-      this.layout.shouldUpdate(true)
+      this.landingpage.setUpdate(true)
+      this.layout.setUpdate(true)
       this.render()
     })
     window.onhashchange = (e) => {
@@ -663,7 +674,7 @@ export default class Model {
     this.graph.deserialize(data[2], this.store)
     this.config.deserialize(data[3])
     this.layout.deserialize(data[4])
-    this.layout.shouldUpdate(true)
+    this.layout.setUpdate(true)
   }
   download (filename, buffer) {
     var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef

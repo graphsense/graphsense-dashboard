@@ -38,7 +38,7 @@ export default class ClusterNode extends GraphNode {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       this.root.node().innerHTML = ''
       if (!this.data.mockup) {
         let height = this.getHeight()
@@ -71,12 +71,12 @@ export default class ClusterNode extends GraphNode {
         this.renderSelected()
       }
     } else {
-      if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('label')) {
         let label = this.root.select('g.label')
         this.renderLabel(label)
         this.coloring()
       }
-      if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('select')) {
         this.renderSelected()
       }
     }
@@ -91,7 +91,7 @@ export default class ClusterNode extends GraphNode {
     let cumY = 2 * padding + this.labelHeight
     this.nodes.each((addressNode) => {
       let g = root.append('g')
-      addressNode.shouldUpdate(true)
+      addressNode.setUpdate(true)
       // reset absolute coords
       addressNode.x = 0
       addressNode.y = 0

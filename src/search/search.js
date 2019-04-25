@@ -29,22 +29,22 @@ export default class Search extends Component {
     this.clearResults()
     this.term = ''
     this.isLoading = false
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   error (keyspace, msg) {
     this.result[keyspace].error = msg
-    this.shouldUpdate('result')
+    this.setUpdate('result')
   }
   showLoading () {
     if (!this.isLoading) {
       this.isLoading = true
-      this.shouldUpdate('result')
+      this.setUpdate('result')
     }
   }
   hideLoading () {
     if (this.isLoading) {
       this.isLoading = false
-      this.shouldUpdate('result')
+      this.setUpdate('result')
     }
   }
   renderLoading () {
@@ -60,59 +60,69 @@ export default class Search extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return
-    if (this.shouldUpdate() === 'result') {
+    logger.debug('shouldupdate', this.shouldUpdate('term'))
+    if (this.shouldUpdate(true)) {
       super.render()
+      this.root.innerHTML = search
+      this.input = this.root.querySelector('textarea')
+      this.renderTerm()
+      this.form = this.root.querySelector('form')
+      this.form.addEventListener('submit', (e) => {
+        e.returnValue = false
+        e.preventDefault()
+        for (let keyspace in this.result) {
+          if (this.result[keyspace].addresses.length > 0) {
+            let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
+            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
+            return false
+          }
+        }
+        this.term.split('\n').forEach((address) => {
+          for (let keyspace in this.keyspaces) {
+            this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace})
+          }
+        })
+        return false
+      })
+      this.input.addEventListener('keypress', (e) => {
+        if (e.key !== 'Enter') return
+        e.preventDefault()
+        this.form.querySelector('button[type=\'submit\']').click()
+      })
+      this.input.addEventListener('input', (e) => {
+        this.dispatcher('search', e.target.value)
+      })
+      this.input.addEventListener('blur', () => {
+      // wrap in timeout to let possible clicksearchresult event happen
+        setTimeout(() => this.dispatcher('blurSearch'), 200)
+      })
       this.renderResult()
       return this.root
     }
+    if (this.shouldUpdate('result')) {
+      this.renderResult()
+    }
+    if (this.shouldUpdate('term')) {
+      this.renderTerm()
+    }
     super.render()
-    this.root.innerHTML = search
-    this.input = this.root.querySelector('textarea')
-    this.input.value = this.term
-    this.form = this.root.querySelector('form')
-    this.form.addEventListener('submit', (e) => {
-      e.returnValue = false
-      e.preventDefault()
-      for (let keyspace in this.result) {
-        if (this.result[keyspace].addresses.length > 0) {
-          let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
-          this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
-          return false
-        }
-      }
-      this.term.split('\n').forEach((address) => {
-        for (let keyspace in this.keyspaces) {
-          this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace})
-        }
-      })
-      return false
-    })
-    this.input.addEventListener('keypress', (e) => {
-      if (e.key !== 'Enter') return
-      e.preventDefault()
-      this.form.querySelector('button[type=\'submit\']').click()
-    })
-    this.input.addEventListener('input', (e) => {
-      let value = e.target.value
-      this.dispatcher('search', value)
-      let lines = value.split('\n')
-      console.log(lines)
-      if (lines.length === 1) {
-        this.input.style.height = '100%'
-        return
-      }
-      this.input.style.height = (lines.length + 1) * 1.13 + 'em'
-    })
-    this.input.addEventListener('blur', () => {
-      // wrap in timeout to let possible clicksearchresult event happen
-      setTimeout(() => this.dispatcher('blurSearch'), 200)
-    })
-    this.renderResult()
     return this.root
   }
+  renderTerm () {
+    logger.debug('renderTerm')
+    if (!this.input) return
+    this.input.value = this.term
+    let lines = this.term.split('\n')
+    if (lines.length === 1) {
+      this.input.style.height = '100%'
+      return
+    }
+    this.input.style.height = (lines.length + 1) * 1.13 + 'em'
+  }
   setSearchTerm (term, prefixLength) {
-    this.term = term
-    this.shouldUpdate('result')
+    this.term = term.split('\n').filter(line => line).join('\n')
+    this.setUpdate('result')
+    this.setUpdate('term')
     if (this.term.length < prefixLength) {
       this.clearResults()
     }
@@ -195,6 +205,6 @@ export default class Search extends Component {
       transactions: result.transactions
     }
     this.resultTerm = term
-    this.shouldUpdate('result')
+    this.setUpdate('result')
   }
 }

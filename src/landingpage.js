@@ -17,12 +17,12 @@ export default class Landingpage extends Component {
   }
   setStats (stats) {
     this.stats = stats
-    this.shouldUpdate('stats')
+    this.setUpdate('stats')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       this.root.innerHTML =
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + statistics + replace(footer, {version: VERSION}) + // eslint-disable-line no-undef
@@ -33,9 +33,9 @@ export default class Landingpage extends Component {
       this.dispatcher('stats')
       this.renderStats()
       let searchRoot = this.root.querySelector('.splash .search')
-      this.search.shouldUpdate(true)
+      this.search.setUpdate(true)
       this.search.render(searchRoot)
-    } else if (this.shouldUpdate() === 'stats') {
+    } else if (this.shouldUpdate('stats')) {
       this.renderStats()
     } else {
       this.search.render()

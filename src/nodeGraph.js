@@ -94,7 +94,7 @@ export default class NodeGraph extends Component {
   deselect () {
     if (!this.selectedNode) return
     this.selectedNode.deselect()
-    this.selectedNode.shouldUpdate('select')
+    this.selectedNode.setUpdate('select')
     this.selectedNode = null
   }
   selectNodeWhenLoaded ([id, type]) {
@@ -110,14 +110,14 @@ export default class NodeGraph extends Component {
   }
   setTxLabel (type) {
     this.txLabelType = type
-    this.shouldUpdate('links')
+    this.setUpdate('links')
   }
   setCurrency (currency) {
     this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
     this.clusterNodes.each(node => node.setCurrency(currency))
     if (this.txLabelType === 'estimatedValue') {
-      this.shouldUpdate('links')
+      this.setUpdate('links')
     }
   }
   setClusterLabel (labelType) {
@@ -160,7 +160,7 @@ export default class NodeGraph extends Component {
       this.addressNodes.set(addressNode.id, addressNode)
       cluster.add(addressNode)
     })
-    this.shouldUpdate('layers')
+    this.setUpdate('layers')
   }
   findAddressNode (address, layerId) {
     return this.addressNodes.get([address, layerId])
@@ -183,7 +183,7 @@ export default class NodeGraph extends Component {
     layerIds.forEach(layerId => {
       this.addLayer(layerId, object, anchor)
     })
-    this.shouldUpdate('layers')
+    this.setUpdate('layers')
   }
   addLayer (layerId, object, anchor) {
     let filtered = this.layers.filter(({id}) => id == layerId) // eslint-disable-line eqeqeq
@@ -260,7 +260,7 @@ export default class NodeGraph extends Component {
         this.layers = this.layers.filter(l => l !== layer)
       }
     }
-    this.shouldUpdate('layers')
+    this.setUpdate('layers')
   }
   additionLayerBySelection (addressId) {
     if (!addressId) return false
@@ -343,7 +343,7 @@ export default class NodeGraph extends Component {
     let transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       let svg = create('svg')
         .classed('w-full h-full', true)
         .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
@@ -398,12 +398,12 @@ export default class NodeGraph extends Component {
     return this.root
   }
   renderLayers (clusterRoot, addressRoot) {
-    if (this.shouldUpdate() === true || this.shouldUpdate() === 'layers') {
+    if (this.shouldUpdate('layers')) {
       clusterRoot.node().innerHTML = ''
       addressRoot.node().innerHTML = ''
       this.layers.forEach((layer) => {
         if (layer.nodes.size() === 0) return
-        layer.shouldUpdate(true)
+        layer.setUpdate(true)
         let cRoot = clusterRoot.append('g')
         let aRoot = addressRoot.append('g')
         layer.render(cRoot, aRoot)
@@ -422,7 +422,7 @@ export default class NodeGraph extends Component {
     }
   }
   renderLinks (root) {
-    if (this.shouldUpdate() !== true && this.shouldUpdate() !== 'layers' && this.shouldUpdate() !== 'links') return
+    if (!this.shouldUpdate('layers') && !this.shouldUpdate('links')) return
     root.node().innerHTML = ''
     const link = linkHorizontal()
       .x(([node, isSource, scale]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks() - this.arrowSummit)

@@ -146,7 +146,7 @@ class GraphNode extends Component {
   }
   setLabelType (labelType) {
     this.labelType = labelType
-    this.shouldUpdateLabel()
+    this.setUpdate('label')
   }
   getName () {
     if (this.data.type === 'cluster') return this.data.id
@@ -225,31 +225,16 @@ class GraphNode extends Component {
   select () {
     if (this.selected) return
     this.selected = true
-    if (this.shouldUpdate() === 'label') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('select')
-    }
+    this.setUpdate('select')
   }
   deselect () {
     if (!this.selected) return
     this.selected = false
-    if (this.shouldUpdate() === 'label') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('select')
-    }
-  }
-  shouldUpdateLabel () {
-    if (this.shouldUpdate() === 'select') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('label')
-    }
+    this.setUpdate('select')
   }
   setCurrency (currency) {
     this.currency = currency
-    this.shouldUpdate('label')
+    this.setUpdate('label')
   }
   getOutDegree () {
     return this.data.outDegree

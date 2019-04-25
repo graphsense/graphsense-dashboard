@@ -14,7 +14,7 @@ export default class BrowserComponent extends Component {
   }
   setCurrentOption (option) {
     this.currentOption = option
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   renderOptions () {
     let ul = document.createElement('ul')
@@ -49,7 +49,7 @@ export default class BrowserComponent extends Component {
   }
   setCurrency (currency) {
     this.currency = currency
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   requestData () {
     return {index: this.index}

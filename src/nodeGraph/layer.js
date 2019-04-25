@@ -28,7 +28,7 @@ export default class Layer extends Component {
       // render clusters
       if (this.shouldUpdate()) {
         let g = this.clusterRoot.append('g')
-        node.shouldUpdate(true)
+        node.setUpdate(true)
         // reset absolute coords of node
         node.x = 0
         node.y = 0
@@ -36,7 +36,7 @@ export default class Layer extends Component {
         g.attr('transform', `translate(0, ${cumY})`)
         // render addresses
         let ag = this.addressRoot.append('g')
-        node.shouldUpdate(true)
+        node.setUpdate(true)
         node.renderAddresses(ag)
         ag.attr('transform', `translate(0, ${cumY})`)
 
