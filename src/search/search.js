@@ -6,7 +6,7 @@ import Logger from '../logger.js'
 const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
 const empty = {addresses: [], transactions: []}
-const numShowResults = 10
+const numShowResults = 7
 
 const byPrefix = term => addr => addr.startsWith(term)
 
@@ -18,6 +18,9 @@ export default class Search extends Component {
     this.term = ''
     this.resultTerm = ''
     this.clearResults()
+  }
+  setStats (stats) {
+    this.stats = stats
   }
   clearResults () {
     this.result = {}
@@ -79,6 +82,11 @@ export default class Search extends Component {
           if (this.result[keyspace].transactions.length > 0) {
             let transactions = this.result[keyspace].transactions.filter(byPrefix(this.term))
             this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace})
+            return false
+          }
+          let blocks = this.blocklist(3, keyspace, this.term)
+          if (blocks.length > 0) {
+            this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace})
             return false
           }
         }
@@ -163,10 +171,13 @@ export default class Search extends Component {
         .filter(byPrefix(this.term))
         .slice(0, numShowResults)
 
+      let blocks = this.blocklist(3, keyspace, this.term)
+
       let keyspaceVisible =
         this.result[keyspace].error ||
         addresses.length > 0 ||
-        transactions.length > 0
+        transactions.length > 0 ||
+        blocks.length > 0
       visible = visible || keyspaceVisible
       if (this.result[keyspace].error) {
         continue
@@ -189,6 +200,7 @@ export default class Search extends Component {
       }
       addresses.forEach(searchLine('address', 'at'))
       transactions.forEach(searchLine('transaction', 'exchange-alt'))
+      blocks.forEach(searchLine('block', 'cube'))
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(this.keyspaces[keyspace]))
@@ -219,5 +231,25 @@ export default class Search extends Component {
     }
     this.resultTerm = term
     this.setUpdate('result')
+  }
+  blocklist (limit, keyspace, prefix) {
+    if (!this.stats || !this.stats[keyspace]) return []
+    prefix = prefix * 1
+    if (typeof prefix !== 'number') return []
+    if (prefix <= 0) return []
+    let e = 8 - Math.trunc(Math.log10(prefix))
+    logger.debug('e', Math.log10(prefix))
+    let i = 0
+    let list = []
+    for (;e >= 0 && i < limit; e--) {
+      let p = Math.pow(10, e)
+      let min = prefix * p
+      let max = Math.min(this.stats[keyspace].no_blocks, (prefix + 1) * p)
+      for (let j = max - 1; j >= min && i < limit; j--) {
+        list.push(j)
+        i++
+      }
+    }
+    return list
   }
 }

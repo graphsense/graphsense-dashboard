@@ -139,6 +139,8 @@ export default class Model {
         this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
         this.mapResult(this.rest(keyspace).transaction(id), 'resultTransactionForBrowser', id)
+      } else if (type === 'block') {
+        this.mapResult(this.rest(keyspace).block(id), 'resultBlockForBrowser', id)
       }
       this.statusbar.addMsg('loading', type, id)
     })
@@ -156,6 +158,9 @@ export default class Model {
           this.statusbar.removeLoading(context)
           break
         case 'resultTransactionForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultBlockForBrowser':
           this.statusbar.removeLoading(context)
           break
         case 'resultEgonet':
@@ -196,6 +201,12 @@ export default class Model {
       historyPushState(result.keyspace, 'transaction', result.txHash)
       this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
+    })
+    this.dispatcher.on('resultBlockForBrowser', ({result}) => {
+      this.browser.setBlock(result)
+      historyPushState(result.keyspace, 'block', result.height)
+      this.statusbar.removeLoading(result.height)
+      this.statusbar.addMsg('loaded', 'block', result.height)
     })
     this.dispatcher.on('searchresult', ({context, result}) => {
       this.search.hideLoading()
@@ -257,6 +268,9 @@ export default class Model {
     })
     this.dispatcher.on('initTransactionsTable', (request) => {
       this.browser.initTransactionsTable(request)
+    })
+    this.dispatcher.on('initBlockTransactionsTable', (request) => {
+      this.browser.initBlockTransactionsTable(request)
     })
     this.dispatcher.on('initAddressesTable', (request) => {
       this.browser.initAddressesTable(request)
@@ -531,6 +545,7 @@ export default class Model {
     })
     this.dispatcher.on('receiveStats', ({context, result}) => {
       this.landingpage.setStats({...result})
+      this.search.setStats({...result})
     })
     this.dispatcher.on('contextmenu', ({x, y, node}) => {
       this.menu.showNodeConfig(x, y, node)

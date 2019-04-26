@@ -25,12 +25,7 @@ export default class BrowserComponent extends Component {
         (this.currentOption === optionData.message ? 'option-active' : '')
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
-        this.dispatcher(optionData.message,
-          { id: this.data.id,
-            type: this.data.type,
-            keyspace: this.data.keyspace,
-            index: this.index
-          })
+        this.dispatcher(optionData.message, this.requestData())
       })
       ul.appendChild(li)
     })

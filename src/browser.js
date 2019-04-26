@@ -3,8 +3,10 @@ import layout from './browser/layout.html'
 import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
 import Transaction from './browser/transaction.js'
+import Block from './browser/block.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
+import BlockTransactionsTable from './browser/block_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
@@ -67,6 +69,15 @@ export default class Browser extends Component {
     ]
     this.setUpdate('content')
   }
+  setBlock (block) {
+    this.activeTab = 'block'
+    this.visible = true
+    this.destroyComponentsFrom(0)
+    this.content = [
+      new Block(this.dispatcher, block, 0, this.currency)
+    ]
+    this.setUpdate('content')
+  }
   setCluster (cluster) {
     this.activeTab = 'address'
     this.visible = true
@@ -103,6 +114,17 @@ export default class Browser extends Component {
     let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
+    this.setUpdate('content')
+  }
+  initBlockTransactionsTable (request) {
+    if (request.index !== 0 && !request.index) return
+    let comp = this.content[request.index]
+    if (!(comp instanceof Block)) return
+    let keyspace = comp.data.keyspace
+    if (this.content[request.index + 1] instanceof TransactionsTable) return
+    comp.setCurrentOption('initBlockTransactionsTable')
+    this.destroyComponentsFrom(request.index + 1)
+    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.noTransactions, request.id, this.currency, keyspace))
     this.setUpdate('content')
   }
   initAddressesTable (request) {

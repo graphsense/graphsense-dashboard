@@ -57,7 +57,7 @@ export default class Rest {
       this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(url, 'transactions')
+    return this.json(url, request.params[1] === 'block' ? 'txs' : 'transactions')
   }
   addresses (request) {
     let url =
@@ -79,6 +79,9 @@ export default class Rest {
   }
   transaction (txHash) {
     return this.json(`${this.baseUrl}/tx/${txHash}`)
+  }
+  block (height) {
+    return this.json(`${this.baseUrl}/block/${height}`)
   }
   neighbors (id, type, isOutgoing, pagesize, nextPage) {
     let dir = isOutgoing ? 'out' : 'in'
