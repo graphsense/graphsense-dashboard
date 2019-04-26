@@ -23,6 +23,7 @@ export default class Landingpage extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate(true)) {
+      document.body.style.overflow = 'hidden scroll'
       this.root.innerHTML =
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + statistics + replace(footer, {version: VERSION}) + // eslint-disable-line no-undef
