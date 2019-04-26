@@ -19,7 +19,7 @@ export default class Block extends BrowserComponent {
     super.render()
     let flat = {
       height: this.data.height,
-      timestamp: moment.unix(this.data.timestamp).fromNow(),
+      timestamp: this.formatTimestampWithAgo(this.data.timestamp),
       blockhash: this.data.blockHash,
       noTransactions: this.data.noTransactions,
       keyspace: this.data.keyspace.toUpperCase()

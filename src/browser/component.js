@@ -42,6 +42,12 @@ export default class BrowserComponent extends Component {
   formatTimestamp (timestamp) {
     return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
   }
+  formatTimestampWithAgo (timestamp) {
+    return this.formatTimestamp(timestamp) + ' <span class="text-grey-dark">(' + this.formatAgo(timestamp) + ')</span>'
+  }
+  formatAgo (timestamp) {
+    return moment.unix(timestamp).fromNow()
+  }
   setCurrency (currency) {
     this.currency = currency
     this.setUpdate(true)

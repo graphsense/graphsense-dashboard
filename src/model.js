@@ -55,6 +55,8 @@ const keyspaces =
     'zec': 'Zcash'
   }
 
+const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block']
+
 const fromURL = (url) => {
   let hash = url.split('#!')[1]
   if (!hash) return {id: '', type: '', keyspace: ''} // go home
@@ -66,7 +68,7 @@ const fromURL = (url) => {
     logger.error(`invalid keyspace ${keyspace}`)
     return
   }
-  if (type !== 'address' && type !== 'cluster' && type !== 'transaction') {
+  if (allowedUrlTypes.indexOf(type) === -1) {
     logger.error(`invalid type ${type}`)
     return
   }
@@ -241,6 +243,11 @@ export default class Model {
       this.browser.loading.add(txHash)
       this.statusbar.addLoading(txHash)
       this.mapResult(this.rest(keyspace).transaction(txHash), 'resultTransactionForBrowser', txHash)
+    })
+    this.dispatcher.on('clickBlock', ({height, keyspace}) => {
+      this.browser.loading.add(height)
+      this.statusbar.addLoading(height)
+      this.mapResult(this.rest(keyspace).block(height), 'resultBlockForBrowser', height)
     })
 
     this.dispatcher.on('loadAddresses', ({keyspace, params, nextPage, request, drawCallback}) => {
@@ -639,13 +646,7 @@ export default class Model {
     return confirm('You have unsaved changes. Do you really want to ' + msg + '?') // eslint-disable-line no-undef
   }
   paramsToCall ({id, type, keyspace}) {
-    if (type === 'cluster' || type === 'address') {
-      this.call('clickSearchResult', {id, type, keyspace})
-    } else if (type === 'transaction') {
-      this.call('clickTransaction', {txHash: id, keyspace})
-    } else {
-      this.call('gohome')
-    }
+    this.call('clickSearchResult', {id, type, keyspace})
   }
   createComponents () {
     this.isDirty = false

@@ -53,6 +53,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultTags',
   'resultTagsTable',
   'clickTransaction',
+  'clickBlock',
   'resultTransaction',
   'selectAddress',
   'clickAddress',
