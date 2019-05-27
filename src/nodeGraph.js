@@ -176,7 +176,7 @@ export default class NodeGraph extends Component {
     } else {
       layerIds = anchor.nodeId[1] + (anchor.isOutgoing ? 1 : -1)
     }
-    if (!layerIds.length) {
+    if (!Array.isArray(layerIds)) {
       layerIds = [layerIds]
     }
     logger.debug('layerIds', layerIds)

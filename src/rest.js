@@ -16,8 +16,8 @@ export default class Rest {
     return json(url, options).then(result => {
       if (field) {
         // result is an array
-        if (!result[field] || !result[field].length) {
-          logger.warn(`${field} is not in result, calling ${url}`)
+        if (!Array.isArray(result[field])) {
+          logger.warn(`${field} is not in result or not an array, calling ${url}`)
         } else {
           result[field].forEach(item => { item.keyspace = this.keyspace })
         }
