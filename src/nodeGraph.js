@@ -408,7 +408,7 @@ export default class NodeGraph extends Component {
         let cRoot = clusterRoot.append('g')
         let aRoot = addressRoot.append('g')
         layer.render(cRoot, aRoot)
-        let box = aRoot.node().getBBox()
+        let box = cRoot.node().getBBox()
         let x = layer.id * (box.width + margin)
         let y = box.height / -2
         cRoot.attr('transform', `translate(${x}, ${y})`)
