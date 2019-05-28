@@ -191,6 +191,10 @@ export default class Model {
       if (context && context.anchorNode) {
         anchor = context.anchorNode
       }
+      if (this.browser.loading.has(a.id)) {
+        this.browser.setResultNode(a)
+        historyPushState(a.keyspace, a.type, a.id)
+      }
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
