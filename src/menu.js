@@ -73,7 +73,7 @@ export default class Menu extends Component {
     let input = el.querySelector('textarea')
     input.value = this.node.data.notes || ''
     input.addEventListener('input', (e) => {
-      this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, note: e.target.value})
+      this.dispatcher('inputNotes', {id: this.node.data.id, type: this.node.data.type, keyspace: this.node.data.keyspace, note: e.target.value})
     })
   }
 }

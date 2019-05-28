@@ -21,7 +21,7 @@ class GraphNode extends Component {
   constructor (dispatcher, labelType, data, layerId, colors, currency) {
     super()
     this.data = data
-    this.id = [this.data.id, layerId]
+    this.id = [this.data.id, layerId, this.data.keyspace]
     this.labelType = labelType
     this.dispatcher = dispatcher
     this.labelHeight = 25

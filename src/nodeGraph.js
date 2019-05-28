@@ -97,13 +97,14 @@ export default class NodeGraph extends Component {
     this.selectedNode.setUpdate('select')
     this.selectedNode = null
   }
-  selectNodeWhenLoaded ([id, type]) {
-    this.nextSelectedNode = {id, type}
+  selectNodeWhenLoaded ([id, type, keyspace]) {
+    this.nextSelectedNode = {id, type, keyspace}
   }
   selectNodeIfIsNextNode (node) {
     logger.debug('selectNodeIfIsNextNode', node, this.nextSelectedNode)
     if (!this.nextSelectedNode) return
     if (this.nextSelectedNode.type !== node.data.type) return
+    if (this.nextSelectedNode.keyspace !== node.data.keyspace) return
     if (this.nextSelectedNode.id != node.data.id) return // eslint-disable-line eqeqeq
     this._selectNode(node)
     this.nextSelectedNode = null
@@ -154,7 +155,7 @@ export default class NodeGraph extends Component {
   setResultClusterAddresses (id, addresses) {
     let cluster = this.clusterNodes.get(id)
     addresses.forEach((address) => {
-      if (this.addressNodes.has([address.id, id[1]])) return
+      if (this.addressNodes.has([address.id, id[1], address.keyspace])) return
       let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       logger.debug('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
@@ -204,7 +205,7 @@ export default class NodeGraph extends Component {
     }
     let node
     if (object.type === 'address') {
-      let addressNode = this.addressNodes.get([object.id, layerId])
+      let addressNode = this.addressNodes.get([object.id, layerId, object.keyspace])
       if (addressNode) {
         this.selectNodeIfIsNextNode(addressNode)
         return
@@ -213,13 +214,13 @@ export default class NodeGraph extends Component {
       this.selectNodeIfIsNextNode(addressNode)
       logger.debug('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
-      node = this.clusterNodes.get([object.cluster.id, layerId])
+      node = this.clusterNodes.get([object.cluster.id, layerId, object.cluster.keyspace])
       if (!node) {
         node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       }
       node.add(addressNode)
     } else if (object.type === 'cluster') {
-      node = this.clusterNodes.get([object.id, layerId])
+      node = this.clusterNodes.get([object.id, layerId, object.keyspace])
       if (node) {
         this.selectNodeIfIsNextNode(node)
         return
@@ -640,14 +641,14 @@ export default class NodeGraph extends Component {
     colorMapTags.forEach(({key, value}) => {
       this.colorMapTags.set(key, value)
     })
-    addressNodes.forEach(([nodeId, address]) => {
-      let data = store.get('address', nodeId[0])
+    addressNodes.forEach(([nodeId, address, keyspace]) => {
+      let data = store.get(keyspace, 'address', nodeId[0])
       let node = new AddressNode(this.dispatcher, data, nodeId[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       node.deserialize(address)
       this.addressNodes.set(nodeId, node)
     })
-    clusterNodes.forEach(([nodeId, cluster]) => {
-      let data = store.get('cluster', nodeId[0])
+    clusterNodes.forEach(([nodeId, cluster, keyspace]) => {
+      let data = store.get(keyspace, 'cluster', nodeId[0])
       let node = new ClusterNode(this.dispatcher, data, nodeId[1], this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       node.deserialize(cluster, this.addressNodes)
       this.clusterNodes.set(nodeId, node)
