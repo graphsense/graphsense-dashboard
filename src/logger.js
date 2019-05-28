@@ -8,6 +8,15 @@ export default {
       return args
     }
     return {
+      debugObject: function (string, object) {
+        if (logLevel > DEBUG) return
+        let str = ''
+        for (let key in object) {
+          str += key + ': ' + (typeof object[key] === 'string' || typeof object[key] === 'number' ? object[key] : '<not a string>') + '\n'
+        }
+        let args = formatArgs([string, str])
+        console.log.apply(null, args)
+      },
       debug: function (string, object) {
         if (logLevel <= DEBUG) {
           let args = formatArgs([...arguments])

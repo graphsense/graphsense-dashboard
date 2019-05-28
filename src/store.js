@@ -53,7 +53,7 @@ export default class Store {
       Object.keys(object).forEach(key => { a[key] = object[key] })
       // remove unneeded address field (is now id)
       delete a.address
-      if (typeof object.cluster === 'string') object.toCluster = object.cluster
+      if (typeof object.cluster === 'string' || typeof object.cluster === 'number' ) object.toCluster = object.cluster
       if (object.toCluster) {
         let cidPrefixed = prefix(object.keyspace, object.toCluster)
         let c = this.clusters.get(cidPrefixed)

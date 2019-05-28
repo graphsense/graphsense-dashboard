@@ -191,8 +191,6 @@ export default class Model {
       if (context && context.anchorNode) {
         anchor = context.anchorNode
       }
-      this.browser.setResultNode(a)
-      historyPushState(a.keyspace, a.type, a.id)
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
@@ -230,14 +228,8 @@ export default class Model {
     })
     // user clicks address in transactions table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
-      this.browser.loading.add(address)
       this.statusbar.addLoading(address)
-      this.graph.selectNodeWhenLoaded([address, 'address', keyspace])
       this.mapResult(this.rest(keyspace).node({id: address, type: 'address'}), 'resultNode', address)
-    })
-    this.dispatcher.on('addNodeFromTable', ({id, type, keyspace}) => {
-      this.statusbar.addLoading(id)
-      this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', {addNodeFromTable: true})
     })
     this.dispatcher.on('deselect', () => {
       this.browser.deselect()
@@ -317,7 +309,6 @@ export default class Model {
       let anchorNode = this.graph.selectedNode
       let isOutgoing = this.browser.isShowingOutgoingNeighbors()
       let o = this.store.get(data.keyspace, data.nodeType, data.id)
-      this.graph.selectNodeWhenLoaded([data.id, data.nodeType, data.keyspace])
       let context =
         {
           focusNode:
@@ -333,7 +324,6 @@ export default class Model {
         context['anchorNode'] = {nodeId: anchorNode.id, isOutgoing}
       }
       if (!o) {
-        this.browser.loading.add(data.id)
         this.statusbar.addLoading(data.id)
         this.mapResult(this.rest(data.keyspace).node({id: data.id, type: data.nodeType}), 'resultNode', context)
       } else {
@@ -345,9 +335,6 @@ export default class Model {
       if (!data.address || !data.keyspace) return
       let a = this.store.add(data)
       this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode', data.address)
-      // historyPushState('selectAddress', data)
-      this.graph.selectNodeWhenLoaded([data.address, 'address', data.keyspace])
-      this.browser.setAddress(a)
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {
       this.isDirty = true
@@ -726,6 +713,7 @@ export default class Model {
       return this.landingpage.render(this.root)
     }
     logger.debug('model render')
+    logger.debug('model', this)
     return this.layout.render(this.root)
   }
   replay () {
