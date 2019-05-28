@@ -136,7 +136,7 @@ export default class Model {
         this.layout.setUpdate(true)
       }
       this.search.clear()
-      if (type === 'address') {
+      if (type === 'address' || type === 'cluster') {
         this.graph.selectNodeWhenLoaded([id, type, keyspace])
         this.mapResult(this.rest(keyspace).node({id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
