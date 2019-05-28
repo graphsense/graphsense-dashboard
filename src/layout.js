@@ -106,7 +106,7 @@ export default class Layout extends Component {
   serialize () {
     return this.currency
   }
-  deserialize (currency) {
+  deserialize (version, currency) {
     this.currency = currency
   }
 }

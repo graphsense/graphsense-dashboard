@@ -620,7 +620,7 @@ export default class NodeGraph extends Component {
       this.colorMapTags.entries()
     ]
   }
-  deserialize ([
+  deserialize (version, [
     currency,
     labelType,
     txLabelType,
@@ -641,21 +641,39 @@ export default class NodeGraph extends Component {
     colorMapTags.forEach(({key, value}) => {
       this.colorMapTags.set(key, value)
     })
-    addressNodes.forEach(([nodeId, address, keyspace]) => {
-      let data = store.get(keyspace, 'address', nodeId[0])
+    addressNodes.forEach(([nodeId, address]) => {
+      if (version === '0.4.0') {
+        let found = store.find(nodeId[0], 'address')
+        if (!found) return
+        nodeId[2] = found.keyspace
+      }
+      let data = store.get(nodeId[2], 'address', nodeId[0])
       let node = new AddressNode(this.dispatcher, data, nodeId[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       node.deserialize(address)
-      this.addressNodes.set(nodeId, node)
+      this.addressNodes.set(node.id, node)
     })
-    clusterNodes.forEach(([nodeId, cluster, keyspace]) => {
-      let data = store.get(keyspace, 'cluster', nodeId[0])
+    clusterNodes.forEach(([nodeId, cluster]) => {
+      if (version === '0.4.0') {
+        let found = store.find(nodeId[0], 'cluster')
+        if (!found) return
+        nodeId[2] = found.keyspace
+      }
+      let data = store.get(nodeId[2], 'cluster', nodeId[0])
       let node = new ClusterNode(this.dispatcher, data, nodeId[1], this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
-      node.deserialize(cluster, this.addressNodes)
-      this.clusterNodes.set(nodeId, node)
+      node.deserialize(version, cluster, this.addressNodes)
+      this.clusterNodes.set(node.id, node)
     })
     layers.forEach(([id, clusterKeys]) => {
       let l = new Layer(id)
       clusterKeys.forEach(key => {
+        if (version === '0.4.0') {
+          let found = null
+          this.clusterNodes.each(node => {
+            if (!found && ([node.id[0], node.id[1]]).join(',') === key) found = node
+          })
+          if (!found) return
+          key = found.id
+        }
         l.add(this.clusterNodes.get(key))
       })
       this.layers.push(l)

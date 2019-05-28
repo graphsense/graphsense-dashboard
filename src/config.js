@@ -112,7 +112,7 @@ export default class Config extends Component {
       this.txLabelType
     ]
   }
-  deserialize ([
+  deserialize (version, [
     labelType,
     txLabelType
   ]) {

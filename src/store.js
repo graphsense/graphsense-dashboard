@@ -53,7 +53,7 @@ export default class Store {
       Object.keys(object).forEach(key => { a[key] = object[key] })
       // remove unneeded address field (is now id)
       delete a.address
-      if (typeof object.cluster === 'string' || typeof object.cluster === 'number' ) object.toCluster = object.cluster
+      if (typeof object.cluster === 'string' || typeof object.cluster === 'number') object.toCluster = object.cluster
       if (object.toCluster) {
         let cidPrefixed = prefix(object.keyspace, object.toCluster)
         let c = this.clusters.get(cidPrefixed)
@@ -94,12 +94,32 @@ export default class Store {
     }
   }
   get (keyspace, type, key) {
-    switch (type) {
-      case 'address':
-        return this.addresses.get(prefix(keyspace, key))
-      case 'cluster':
-        return this.clusters.get(prefix(keyspace, key))
+    let store = null
+    if (type === 'address') {
+      store = this.addresses
+    } else if (type === 'cluster') {
+      store = this.clusters
     }
+    if (!store) {
+      logger.error('unknown type ' + type)
+      return
+    }
+    return store.get(prefix(keyspace, key))
+  }
+  find (key, type) {
+    let found = null
+    let findIt = node => {
+      if (!found && node.id == key) found = node // eslint-disable-line eqeqeq
+    }
+    if (type === 'address') {
+      this.addresses.each(findIt)
+    } else if (type === 'cluster') {
+      this.clusters.each(findIt)
+    } else {
+      this.addresses.each(findIt)
+      if (!found) this.clusters.each(findIt)
+    }
+    return found
   }
   initOutgoing (id, keyspace) {
     if (typeof id !== 'string' && typeof id !== 'number') {
@@ -147,13 +167,7 @@ export default class Store {
     })
     return [addresses, clusters, alllinks]
   }
-  deserialize ([addresses, clusters, alllinks]) {
-    alllinks.forEach(([id, links]) => {
-      links.forEach(({key, value}) => {
-        let sp = unprefix(id)
-        this.linkOutgoing(sp[1], key, sp[0], value)
-      })
-    })
+  deserialize (version, [addresses, clusters, alllinks]) {
     clusters.forEach(cluster => {
       cluster.forAddresses = cluster.addresses
       delete cluster.addresses
@@ -161,6 +175,20 @@ export default class Store {
     })
     addresses.forEach(address => {
       this.add(address)
+    })
+    alllinks.forEach(([id, links]) => {
+      let sp = []
+      if (version === '0.4.0') {
+        let found = this.find(id)
+        if (!found) return
+        sp[0] = found.keyspace
+        sp[1] = id
+      } else {
+        sp = unprefix(id)
+      }
+      links.forEach(({key, value}) => {
+        this.linkOutgoing(sp[1], key, sp[0], value)
+      })
     })
   }
 }

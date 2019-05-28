@@ -689,10 +689,10 @@ export default class Model {
   deserialize (buffer) {
     let data = this.decompress(buffer)
     this.createComponents()
-    this.store.deserialize(data[1])
-    this.graph.deserialize(data[2], this.store)
-    this.config.deserialize(data[3])
-    this.layout.deserialize(data[4])
+    this.store.deserialize(data[0], data[1])
+    this.graph.deserialize(data[0], data[2], this.store)
+    this.config.deserialize(data[0], data[3])
+    this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
   }
   download (filename, buffer) {

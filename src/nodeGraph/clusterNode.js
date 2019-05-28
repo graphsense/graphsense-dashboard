@@ -22,9 +22,12 @@ export default class ClusterNode extends GraphNode {
     s.push(this.nodes.keys())
     return s
   }
-  deserialize ([x, y, nodes], addressNodes) {
+  deserialize (version, [x, y, nodes], addressNodes) {
     super.deserialize([x, y])
     nodes.forEach(key => {
+      if (version === '0.4.0') {
+        key += ',' + this.data.keyspace
+      }
       this.add(addressNodes.get(key))
     })
   }
