@@ -333,7 +333,6 @@ export default class Model {
     this.dispatcher.on('selectAddress', (data) => {
       logger.debug('selectAdress', data)
       if (!data.address || !data.keyspace) return
-      let a = this.store.add(data)
       this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode', data.address)
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {
@@ -446,13 +445,16 @@ export default class Model {
     this.dispatcher.on('resultTags', ({context, result}) => {
       let o = this.store.get(context.keyspace, context.type, context.id)
       this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
-      o.tags = result.tags || []
-      if (context.type === 'address' && this.graph.labelType['addressLabel'] === 'tag') {
-        this.graph.addressNodes.each((node) => node.setUpdate('label'))
+      o.tags = result || []
+      let nodes = null
+      if (context.type === 'address') {
+        nodes = this.graph.addressNodes
       }
-      if (context.type === 'cluster' && this.graph.labelType['clusterLabel'] === 'tag') {
-        this.graph.clusterNodes.each((node) => node.setUpdate('label'))
+      if (context.type === 'cluster') {
+        nodes = this.graph.clusterNodes
       }
+      if (!nodes) return
+      nodes.each((node) => { if (node.id[0] == context.id) node.setUpdate(true) }) // eslint-disable-line eqeqeq
     })
     this.dispatcher.on('loadEgonet', ({id, type, keyspace, isOutgoing, limit}) => {
       this.statusbar.addLoading(`neighbors of ${type} ${id[0]}`)
