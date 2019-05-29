@@ -21,10 +21,10 @@ export default class ClusterNode extends GraphNode {
   menu () {
     return super.menu([
       {
-        title: 'Expand',
-        action: () => {
-          this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
-        },
+        title: () => this.nodes.empty() ? 'Expand' : 'Collapse',
+        action: () => this.nodes.empty()
+          ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
+          : this.dispatcher('removeClusterAddresses', this.id),
         position: 50
       }
     ])

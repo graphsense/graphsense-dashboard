@@ -489,6 +489,9 @@ export default class Model {
       this.statusbar.addLoading('addresses of cluster ' + id[0])
       this.mapResult(this.rest(keyspace).clusterAddresses(id[0], limit), 'resultClusterAddresses', {id, keyspace})
     })
+    this.dispatcher.on('removeClusterAddresses', id => {
+      this.graph.removeClusterAddresses(id)
+    })
     this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
       let id = context && context.id
       let keyspace = context && context.keyspace

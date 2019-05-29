@@ -236,6 +236,7 @@ export default class NodeGraph extends Component {
     layer.add(node)
   }
   remove (nodeType, nodeId) {
+    logger.debug('remove', nodeType, nodeId)
     let nodes
     if (nodeType === 'address') {
       nodes = this.addressNodes
@@ -262,6 +263,11 @@ export default class NodeGraph extends Component {
       }
     }
     this.setUpdate('layers')
+  }
+  removeClusterAddresses (id) {
+    let cluster = this.clusterNodes.get(id)
+    if (!cluster) return
+    cluster.nodes.each((address) => this.remove('address', address.id))
   }
   additionLayerBySelection (addressId) {
     if (!addressId) return false
