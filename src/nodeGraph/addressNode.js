@@ -1,5 +1,6 @@
 import {event} from 'd3-selection'
 import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
+import contextMenu from 'd3-context-menu'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
@@ -24,11 +25,7 @@ export default class AddressNode extends GraphNode {
           event.stopPropagation()
           this.dispatcher('selectNode', ['address', this.id])
         })
-        .on('contextmenu', () => {
-          event.stopPropagation()
-          event.preventDefault()
-          this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
-        })
+        .on('contextmenu', contextMenu(this.menu()))
       g.append('rect')
         .classed('rect', true)
         .attr('x', x)
@@ -43,7 +40,6 @@ export default class AddressNode extends GraphNode {
 
       this.renderLabel(label)
       let eg = g.append('g').classed('expandHandles', true)
-      this.renderRemove(g)
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
       this.coloring()

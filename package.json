@@ -6,6 +6,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "d3": "^5.7.0",
+    "d3-context-menu": "^1.1.1",
     "datatables.net": "^1.10.19",
     "datatables.net-dt": "^1.10.19",
     "datatables.net-scroller": "^1.5.1",

@@ -36,6 +36,24 @@ class GraphNode extends Component {
     this.x = 0
     this.y = 0
   }
+  menu (subClassItems = []) {
+    return subClassItems.concat([
+      {
+        title: 'Add note',
+        action: () => {
+          this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
+        },
+        position: 1
+      },
+      {
+        title: 'Remove',
+        action: () => {
+          this.dispatcher('removeNode', [this.type, this.id])
+        },
+        position: 100
+      }
+    ]).sort((i1, i2) => i1.position - i2.position)
+  }
   serialize () {
     return [
       this.x,
@@ -95,29 +113,6 @@ class GraphNode extends Component {
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
 
     g.attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${h / 2} )`)
-  }
-  renderRemove (root) {
-    let w = removeHandleWidth
-    let x = this.getWidth() - w - removeHandlePadding
-    let y = removeHandlePadding
-    let fontSize = removeHandleWidth
-    let g = root.append('g')
-      .classed('removeHandle', true)
-      .on('click', () => {
-        this.dispatcher('removeNode', [this.type, this.id])
-        event.stopPropagation()
-      })
-    g.append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', w)
-      .attr('height', w)
-    g.append('path')
-      .attr('d', closePath)
-      .attr('transform', 'scale(0.028)')
-      .attr('x', w / 2)
-      .attr('y', w / 2 + fontSize / 3)
-    g.attr('transform', `translate(${x}, ${y})`)
   }
   renderSelected () {
     this.root.select('g').classed('selected', this.selected)

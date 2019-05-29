@@ -250,10 +250,6 @@ svg g.addressExpand {
   cursor: pointer;
 }
 
-svg g.addressExpand:hover text {
-  font-weight: bold;
-}
-
 svg g.expandHandles text {
   @apply text-black fill-current
 }

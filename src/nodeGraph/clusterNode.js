@@ -2,6 +2,7 @@ import {event} from 'd3-selection'
 import {map} from 'd3-collection'
 import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 import numeral from 'numeral'
+import contextMenu from 'd3-context-menu'
 
 const gap = padding
 const noAddressesLabelHeight = 16
@@ -16,6 +17,17 @@ export default class ClusterNode extends GraphNode {
     this.expandLimit = 10
     this.type = 'cluster'
     this.numLetters = 11
+  }
+  menu () {
+    return super.menu([
+      {
+        title: 'Expand',
+        action: () => {
+          this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
+        },
+        position: 50
+      }
+    ])
   }
   serialize () {
     let s = super.serialize()
@@ -45,17 +57,14 @@ export default class ClusterNode extends GraphNode {
       this.root.node().innerHTML = ''
       if (!this.data.mockup) {
         let height = this.getHeight()
-        let g = this.root.append('g')
+        let g = this.root
+          .append('g')
           .classed('clusterNode', true)
           .on('click', () => {
             event.stopPropagation()
             this.dispatcher('selectNode', ['cluster', this.id])
           })
-          .on('contextmenu', () => {
-            event.stopPropagation()
-            event.preventDefault()
-            this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
-          })
+          .on('contextmenu', contextMenu(this.menu()))
         g.append('rect')
           .classed('rect', true)
           .attr('x', 0)
@@ -67,7 +76,6 @@ export default class ClusterNode extends GraphNode {
           .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
         this.renderLabel(label)
         let eg = g.append('g').classed('expandHandles', true)
-        this.renderRemove(g)
         this.renderExpand(eg, true)
         this.renderExpand(eg, false)
         this.coloring()
@@ -109,9 +117,6 @@ export default class ClusterNode extends GraphNode {
     cumY += this.nodes.size() > 0 ? gap : 0
     let button = root.append('g')
       .classed('addressExpand', true)
-      .on('click', (e) => {
-        this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
-      })
     let h = this.getHeight()
     let w = this.getWidth()
     button.append('text')
