@@ -114,17 +114,19 @@ export default class ClusterNode extends GraphNode {
       cumY += addressNode.getHeight()
     })
     if (this.data.mockup) return
-    cumY += this.nodes.size() > 0 ? gap : 0
+    let size = this.nodes.size()
+    cumY += size > 0 ? gap : 0
     let button = root.append('g')
       .classed('addressExpand', true)
     let h = this.getHeight()
     let w = this.getWidth()
+    let num = (n) => numeral(n).format('0,000')
     button.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
-      .text(numeral(this.data.noAddresses).format('0,000') + ' addresses')
+      .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' addresses')
     super.render()
   }
   translate (x, y) {
