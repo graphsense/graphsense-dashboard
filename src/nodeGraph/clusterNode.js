@@ -7,6 +7,7 @@ import contextMenu from 'd3-context-menu'
 const gap = padding
 const noAddressesLabelHeight = 16
 const paddingBottom = 7
+const noExpandableAddresses = 16
 
 export default class ClusterNode extends GraphNode {
   constructor (dispatcher, cluster, layerId, labelType, colors, currency) {
@@ -18,12 +19,16 @@ export default class ClusterNode extends GraphNode {
     this.type = 'cluster'
     this.numLetters = 11
   }
+  expandable () {
+    return this.data.noAddresses < noExpandableAddresses
+  }
   menu () {
     return super.menu([
       {
-        title: () => this.nodes.empty() ? 'Expand' : 'Collapse',
+        title: () => this.expandable() && this.nodes.empty() ? 'Expand' : (!this.nodes.empty() ? 'Collapse' : 'Expand'),
+        disabled: () => !this.expandable(),
         action: () => this.nodes.empty()
-          ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.addressFilters.get('limit')})
+          ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
           : this.dispatcher('removeClusterAddresses', this.id),
         position: 50
       }
