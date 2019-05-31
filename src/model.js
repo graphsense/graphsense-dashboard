@@ -618,6 +618,9 @@ export default class Model {
       this.layout.setUpdate(true)
       this.render()
     })
+    this.dispatcher.on('sortClusterAddresses', ({cluster, property}) => {
+      this.graph.sortClusterAddresses(cluster, property)
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)

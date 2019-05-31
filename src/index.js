@@ -87,7 +87,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'moreLogs',
   'hideLogs',
   'gohome',
-  'new'
+  'new',
+  'sortClusterAddresses'
 )
 
 let model = new Model(dispatcher)

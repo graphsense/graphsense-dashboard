@@ -3,11 +3,20 @@ import {map} from 'd3-collection'
 import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
 import numeral from 'numeral'
 import contextMenu from 'd3-context-menu'
+import Logger from '../logger.js'
+
+const logger = Logger.create('ClusterNode') // eslint-disable-line no-unused-vars
 
 const gap = padding
 const noAddressesLabelHeight = 16
 const paddingBottom = 7
 const noExpandableAddresses = 16
+
+const sort = (getValue) => (n1, n2) => {
+  let v1 = getValue(n1.data)
+  let v2 = getValue(n2.data)
+  return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0)
+}
 
 export default class ClusterNode extends GraphNode {
   constructor (dispatcher, cluster, layerId, labelType, colors, currency) {
@@ -18,19 +27,59 @@ export default class ClusterNode extends GraphNode {
     this.expandLimit = 10
     this.type = 'cluster'
     this.numLetters = 11
+    this.sortAddressesProperty = 'id'
+  }
+  sortAddresses (property) {
+    this.sortAddressesProperty = property
   }
   expandable () {
     return this.data.noAddresses < noExpandableAddresses
   }
   menu () {
     return super.menu([
-      {
-        title: () => this.expandable() && this.nodes.empty() ? 'Expand' : (!this.nodes.empty() ? 'Collapse' : 'Expand'),
+      { title: () => this.expandable() && this.nodes.empty() ? 'Expand' : (!this.nodes.empty() ? 'Collapse' : 'Expand'),
         disabled: () => !this.expandable(),
         action: () => this.nodes.empty()
           ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
           : this.dispatcher('removeClusterAddresses', this.id),
         position: 50
+      },
+      { title: 'Sort addresses by',
+        position: 60,
+        children: [
+          { title: 'Final balance',
+            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.totalReceived.satoshi - data.totalSpent.satoshi})
+          },
+          { title: 'Total received',
+            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.totalReceived.satoshi})
+          },
+          { title: 'No. neighbors',
+            children: [
+              { title: 'Incoming',
+                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.inDegree})
+              },
+              { title: 'Outgoing',
+                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.outDegree})
+              }
+            ]
+          },
+          { title: 'No. transactions',
+            children: [
+              { title: 'Incoming',
+                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.noIncomingTxs})
+              },
+              { title: 'Outgoing',
+                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.noOutgoingTxs})
+              }
+            ]
+          },
+          { title: 'First usage',
+            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.firstTx.timestamp})
+          },
+          { title: 'Last usage',
+            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.lastTx.timestamp})
+          }
+        ]
       }
     ])
   }
@@ -105,19 +154,22 @@ export default class ClusterNode extends GraphNode {
     }
     root.node().innerHTML = ''
     let cumY = 2 * padding + this.labelHeight
-    this.nodes.each((addressNode) => {
-      let g = root.append('g')
-      addressNode.setUpdate(true)
-      // reset absolute coords
-      addressNode.x = 0
-      addressNode.y = 0
-      let x = padding + expandHandleWidth
-      let y = cumY
-      addressNode.render(g)
-      addressNode.translate(x, y)
-      g.attr('transform', `translate(${x}, ${y})`)
-      cumY += addressNode.getHeight()
-    })
+    this.nodes
+      .values()
+      .sort(sort(this.sortAddressesProperty))
+      .forEach((addressNode) => {
+        let g = root.append('g')
+        addressNode.setUpdate(true)
+        // reset absolute coords
+        addressNode.x = 0
+        addressNode.y = 0
+        let x = padding + expandHandleWidth
+        let y = cumY
+        addressNode.render(g)
+        addressNode.translate(x, y)
+        g.attr('transform', `translate(${x}, ${y})`)
+        cumY += addressNode.getHeight()
+      })
     if (this.data.mockup) return
     let size = this.nodes.size()
     cumY += size > 0 ? gap : 0

@@ -43,7 +43,7 @@ class GraphNode extends Component {
         action: () => {
           this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
         },
-        position: 1
+        position: 90
       },
       {
         title: 'Remove',

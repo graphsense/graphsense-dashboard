@@ -91,6 +91,13 @@ export default class NodeGraph extends Component {
         }
       }
   }
+  sortClusterAddresses (id, property) {
+    let cluster = this.clusterNodes.get(id)
+    logger.debug('sort addresses cluster', cluster)
+    if (!cluster) return
+    cluster.sortAddresses(property)
+    this.setUpdate('layers')
+  }
   deselect () {
     if (!this.selectedNode) return
     this.selectedNode.deselect()
