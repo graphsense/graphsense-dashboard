@@ -27,24 +27,26 @@ export default class ClusterNode extends GraphNode {
     this.expandLimit = 10
     this.type = 'cluster'
     this.numLetters = 11
-    this.sortAddressesProperty = 'id'
+    this.sortAddressesProperty = data => data.id
   }
-  sortAddresses (property) {
-    this.sortAddressesProperty = property
+  sortAddresses (getValue) {
+    this.sortAddressesProperty = getValue
   }
   expandable () {
     return this.data.noAddresses < noExpandableAddresses
   }
   menu () {
-    return super.menu([
-      { title: () => this.expandable() && this.nodes.empty() ? 'Expand' : (!this.nodes.empty() ? 'Collapse' : 'Expand'),
-        disabled: () => !this.expandable(),
+    let items = []
+    if (this.expandable()) {
+      items.push({ title: () => this.nodes.empty() ? 'Expand' : 'Collapse',
         action: () => this.nodes.empty()
           ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
           : this.dispatcher('removeClusterAddresses', this.id),
         position: 50
-      },
-      { title: 'Sort addresses by',
+      })
+    }
+    if (this.nodes.size() > 1) {
+      items.push({ title: 'Sort addresses by',
         position: 60,
         children: [
           { title: 'Final balance',
@@ -80,8 +82,9 @@ export default class ClusterNode extends GraphNode {
             action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.lastTx.timestamp})
           }
         ]
-      }
-    ])
+      })
+    }
+    return super.menu(items)
   }
   serialize () {
     let s = super.serialize()
