@@ -48,6 +48,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'loadTransactions',
   'resultTransactions',
   'initAddressesTable',
+  'initAddressesTableWithCluster',
   'loadAddresses',
   'resultAddresses',
   'initTagsTable',

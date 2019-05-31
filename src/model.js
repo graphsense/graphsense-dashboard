@@ -282,6 +282,12 @@ export default class Model {
     this.dispatcher.on('initAddressesTable', (request) => {
       this.browser.initAddressesTable(request)
     })
+    this.dispatcher.on('initAddressesTableWithCluster', ({id, keyspace}) => {
+      let cluster = this.store.get(keyspace, 'cluster', id)
+      if (!cluster) return
+      this.browser.setCluster(cluster)
+      this.browser.initAddressesTable({index: 0, id, type: 'cluster'})
+    })
     this.dispatcher.on('initTagsTable', (request) => {
       this.browser.initTagsTable(request)
     })

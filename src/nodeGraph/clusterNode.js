@@ -37,13 +37,19 @@ export default class ClusterNode extends GraphNode {
   }
   menu () {
     let items = []
-    if (this.expandable()) {
+    if (this.expandable() || !this.nodes.empty()) {
       items.push({ title: () => this.nodes.empty() ? 'Expand' : 'Collapse',
         action: () => this.nodes.empty()
           ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
           : this.dispatcher('removeClusterAddresses', this.id),
         position: 50
       })
+    } else {
+      items.push(
+        { title: 'Show address table',
+          action: () => this.dispatcher('initAddressesTableWithCluster', {id: this.data.id, keyspace: this.data.keyspace, type: 'cluster'}),
+          position: 50
+        })
     }
     if (this.nodes.size() > 1) {
       items.push({ title: 'Sort addresses by',
