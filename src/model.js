@@ -297,6 +297,16 @@ export default class Model {
     this.dispatcher.on('initOutdegreeTable', (request) => {
       this.browser.initNeighborsTable(request, true)
     })
+    this.dispatcher.on('initNeighborsTableWithNode', ({id, keyspace, type, isOutgoing}) => {
+      let node = this.store.get(keyspace, type, id)
+      if (!node) return
+      if (type === 'address') {
+        this.browser.setAddress(node)
+      } else if (type === 'cluster') {
+        this.browser.setCluster(node)
+      }
+      this.browser.initNeighborsTable({id, keyspace, type, index: 0}, isOutgoing)
+    })
     this.dispatcher.on('initTxInputsTable', (request) => {
       this.browser.initTxAddressesTable(request, false)
     })

@@ -14,6 +14,7 @@ const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
 const removeHandleWidth = 15
 const removeHandlePadding = 5
+const noExpandableNeighbors = 16
 
 const closePath = 'M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z'
 
@@ -35,6 +36,17 @@ class GraphNode extends Component {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
+  }
+  expandableNeighbors (isOutgoing) {
+    return this.getDegree(isOutgoing) < noExpandableNeighbors
+  }
+  expandCollapseNeighborsOrShowTable (isOutgoing) {
+    if (this.expandableNeighbors(isOutgoing)) {
+      let limit = this.getDegree(isOutgoing)
+      this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.data.type, limit, keyspace: this.data.keyspace})
+    } else {
+      this.dispatcher('initNeighborsTableWithNode', {id: this.data.id, isOutgoing, type: this.data.type, keyspace: this.data.keyspace})
+    }
   }
   menu (subClassItems = []) {
     return subClassItems.concat([
@@ -94,20 +106,15 @@ class GraphNode extends Component {
     let g = root.append('g')
       .classed('expandHandle', true)
       .on('click', () => {
-        let filters
-        if (isOutgoing) {
-          filters = this.outgoingTxsFilters
-        } else {
-          filters = this.incomingTxsFilters
-        }
-        this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.data.type, limit: filters.get('limit'), keyspace: this.data.keyspace})
+        event.stopPropagation()
+        this.expandCollapseNeighborsOrShowTable(isOutgoing)
       })
     g.append('path')
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
     let fontSize = expandHandleWidth * 0.8
     let fontX = (expandHandleWidth - fontSize)
     g.append('text')
-      .text(numeral(isOutgoing ? this.getOutDegree() : this.getInDegree()).format('1,000'))
+      .text(numeral(this.getDegree(isOutgoing)).format('1,000'))
       .attr('text-anchor', 'middle')
       .attr('font-size', fontSize + 'px')
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
@@ -230,6 +237,9 @@ class GraphNode extends Component {
   setCurrency (currency) {
     this.currency = currency
     this.setUpdate('label')
+  }
+  getDegree (isOutgoing) {
+    return isOutgoing ? this.getOutDegree() : this.getInDegree()
   }
   getOutDegree () {
     return this.data.outDegree

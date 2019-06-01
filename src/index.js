@@ -67,6 +67,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'removeNode',
   'initIndegreeTable',
   'initOutdegreeTable',
+  'initNeighborsTableWithNode',
   'initTxInputsTable',
   'initTxOutputsTable',
   'loadNeighbors',
