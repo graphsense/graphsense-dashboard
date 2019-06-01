@@ -5,6 +5,7 @@ import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
+import numeral from 'numeral'
 
 const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-vars
 
@@ -38,6 +39,7 @@ export default class Table extends BrowserComponent {
     })
     tr.removeChild(el)
     let that = this
+    let total = numeral(this.total).format('1,000')
     let tab = this.table = $(this.root).children().first().DataTable({
       ajax: (request, drawCallback, settings) => {
         this.ajax(request, drawCallback, settings, this)
@@ -55,7 +57,7 @@ export default class Table extends BrowserComponent {
       serverSide: !this.isSmall(),
       columns: this.columns,
       language: {
-        info: `Showing _START_ to _END_ of ${this.total} entries`
+        info: `Showing _START_ to _END_ of ${total} entries`
       }
     })
     // using es5 'function' to have 'this' bound to the triggering element
