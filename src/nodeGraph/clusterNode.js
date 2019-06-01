@@ -35,22 +35,31 @@ export default class ClusterNode extends GraphNode {
   expandable () {
     return this.data.noAddresses < noExpandableAddresses
   }
+  isExpand () {
+    return this.expandable() && this.nodes.size() < this.data.noAddresses
+  }
+  isCollapse () {
+    return this.expandable() && this.nodes.size() === this.data.noAddresses
+  }
+  expandCollapseOrShowAddressTable () {
+    if (this.isExpand()) {
+      this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
+    } else if (this.isCollapse()) {
+      this.dispatcher('removeClusterAddresses', this.id)
+    } else {
+      this.dispatcher('initAddressesTableWithCluster', {id: this.data.id, keyspace: this.data.keyspace, type: 'cluster'})
+    }
+  }
+  expandCollapseOrShowAddressTableTitle () {
+    return this.isExpand() ? 'Expand' : (this.isCollapse() ? 'Collapse' : 'Show address table')
+  }
   menu () {
     let items = []
-    if (this.expandable() || !this.nodes.empty()) {
-      items.push({ title: () => this.nodes.empty() ? 'Expand' : 'Collapse',
-        action: () => this.nodes.empty()
-          ? this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
-          : this.dispatcher('removeClusterAddresses', this.id),
+    items.push(
+      { title: () => this.expandCollapseOrShowAddressTableTitle(),
+        action: () => this.expandCollapseOrShowAddressTable(),
         position: 50
       })
-    } else {
-      items.push(
-        { title: 'Show address table',
-          action: () => this.dispatcher('initAddressesTableWithCluster', {id: this.data.id, keyspace: this.data.keyspace, type: 'cluster'}),
-          position: 50
-        })
-    }
     if (this.nodes.size() > 1) {
       items.push({ title: 'Sort addresses by',
         position: 60,
@@ -192,7 +201,12 @@ export default class ClusterNode extends GraphNode {
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
+      .attr('title', this.expandCollapseOrShowAddressTableTitle())
       .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' addresses')
+      .on('click', () => {
+        event.stopPropagation()
+        this.expandCollapseOrShowAddressTable()
+      })
     super.render()
   }
   translate (x, y) {
