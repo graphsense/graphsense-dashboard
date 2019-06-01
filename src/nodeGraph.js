@@ -10,6 +10,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
+import {clusterWidth} from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -63,6 +64,7 @@ export default class NodeGraph extends Component {
     this.adding = set()
     this.layers = []
     this.viewBox = {x, y, w, h}
+    this.transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     this.colorMapCategories = map(predefinedCategories)
     this.colorMapTags = map()
     this.colorGen = (map, type) => {
@@ -90,6 +92,18 @@ export default class NodeGraph extends Component {
           range: (v) => defaultColor['address']
         }
       }
+  }
+  dragNode (id, type, dx, dy) {
+    let nodes = null
+    if (type === 'cluster') {
+      nodes = this.clusterNodes
+    }
+    if (!nodes) return
+    let cluster = nodes.get(id)
+    if (!cluster) return
+    let dx2 = dx / this.transform.k
+    cluster.dx += dx2
+    this.setUpdate('layers')
   }
   sortClusterAddresses (id, property) {
     let cluster = this.clusterNodes.get(id)
@@ -193,10 +207,12 @@ export default class NodeGraph extends Component {
     })
     this.setUpdate('layers')
   }
+  findLayer (layerId) {
+    return this.layers.filter(({id}) => id == layerId)[0] // eslint-disable-line eqeqeq
+  }
   addLayer (layerId, object, anchor) {
-    let filtered = this.layers.filter(({id}) => id == layerId) // eslint-disable-line eqeqeq
-    let layer
-    if (filtered.length === 0) {
+    let layer = this.findLayer(layerId)
+    if (!layer) {
       layer = new Layer(layerId)
       if (anchor && anchor.isOutgoing === false) {
         this.layers.unshift(layer)
@@ -207,8 +223,6 @@ export default class NodeGraph extends Component {
           this.layers.unshift(layer)
         }
       }
-    } else {
-      layer = filtered[0]
     }
     let node
     if (object.type === 'address') {
@@ -354,7 +368,6 @@ export default class NodeGraph extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
     if (this.shouldUpdate(true)) {
@@ -363,19 +376,19 @@ export default class NodeGraph extends Component {
         .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .call(drag().on('drag', () => {
-          transform.dx += event.dx
-          transform.dy += event.dy
-          let x = transform.x + transform.dx * transform.k
-          let y = transform.y + transform.dy * transform.k
-          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${transform.k})`)
+          this.transform.dx += event.dx
+          this.transform.dy += event.dy
+          let x = this.transform.x + this.transform.dx * this.transform.k
+          let y = this.transform.y + this.transform.dy * this.transform.k
+          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
         }))
         .call(zoom().on('zoom', () => {
-          transform.k = event.transform.k
-          transform.x = event.transform.x
-          transform.y = event.transform.y
-          let x = transform.x + transform.dx * transform.k
-          let y = transform.y + transform.dy * transform.k
-          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${transform.k})`)
+          this.transform.k = event.transform.k
+          this.transform.x = event.transform.x
+          this.transform.y = event.transform.y
+          let x = this.transform.x + this.transform.dx * this.transform.k
+          let y = this.transform.y + this.transform.dy * this.transform.k
+          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
         }))
       let markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
@@ -411,23 +424,25 @@ export default class NodeGraph extends Component {
     super.render()
     return this.root
   }
-  renderLayers (clusterRoot, addressRoot) {
+  renderLayers (clusterRoot, addressRoot, transform) {
     if (this.shouldUpdate('layers')) {
       clusterRoot.node().innerHTML = ''
       addressRoot.node().innerHTML = ''
-      this.layers.forEach((layer) => {
-        if (layer.nodes.size() === 0) return
-        layer.setUpdate(true)
-        let cRoot = clusterRoot.append('g')
-        let aRoot = addressRoot.append('g')
-        layer.render(cRoot, aRoot)
-        let box = cRoot.node().getBBox()
-        let x = layer.id * (box.width + margin)
-        let y = box.height / -2
-        cRoot.attr('transform', `translate(${x}, ${y})`)
-        aRoot.attr('transform', `translate(${x}, ${y})`)
-        layer.translate(x, y)
-      })
+      this.layers
+        .forEach((layer) => {
+          if (layer.nodes.size() === 0) return
+          layer.setUpdate(true)
+          let cRoot = clusterRoot.append('g')
+          let aRoot = addressRoot.append('g')
+          layer.render(cRoot, aRoot)
+          let box = cRoot.node().getBBox()
+          let w = clusterWidth + margin
+          let x = layer.id * w
+          let y = box.height / -2
+          cRoot.attr('transform', `translate(${x}, ${y})`)
+          aRoot.attr('transform', `translate(${x}, ${y})`)
+          layer.translate(x, y)
+        })
     } else {
       this.layers.forEach((layer) => {
         if (layer.nodes.size() === 0) return

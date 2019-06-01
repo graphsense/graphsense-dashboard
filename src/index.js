@@ -90,7 +90,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'hideLogs',
   'gohome',
   'new',
-  'sortClusterAddresses'
+  'sortClusterAddresses',
+  'dragNode'
 )
 
 let model = new Model(dispatcher)

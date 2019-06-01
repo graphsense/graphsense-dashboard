@@ -4,11 +4,11 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
+import {clusterWidth} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
-const clusterWidth = 190
 const expandHandleWidth = 15
 const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
@@ -32,6 +32,8 @@ class GraphNode extends Component {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
+    this.dx = 0
+    this.dy = 0
   }
   expandableNeighbors (isOutgoing) {
     return this.getDegree(isOutgoing) < noExpandableNeighbors

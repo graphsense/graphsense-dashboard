@@ -4,6 +4,7 @@ import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from
 import numeral from 'numeral'
 import contextMenu from 'd3-context-menu'
 import Logger from '../logger.js'
+import {drag} from 'd3-drag'
 
 const logger = Logger.create('ClusterNode') // eslint-disable-line no-unused-vars
 
@@ -137,10 +138,13 @@ export default class ClusterNode extends GraphNode {
             this.dispatcher('selectNode', ['cluster', this.id])
           })
           .on('contextmenu', contextMenu(this.menu()))
+          .call(drag()
+            .on('drag', () => {
+              if (Math.abs(event.dx) > 10 || Math.abs(event.dy) > 10) return
+              this.dispatcher('dragNode', {id: this.id, type: 'cluster', dx: event.dx, dy: event.dy})
+            }))
         g.append('rect')
           .classed('rect', true)
-          .attr('x', 0)
-          .attr('y', 0)
           .attr('width', clusterWidth)
           .attr('height', height)
         let label = g.append('g')
@@ -184,7 +188,7 @@ export default class ClusterNode extends GraphNode {
         let x = padding + expandHandleWidth
         let y = cumY
         addressNode.render(g)
-        addressNode.translate(x, y)
+        addressNode.translate(x + this.dx, y + this.dy)
         g.attr('transform', `translate(${x}, ${y})`)
         cumY += addressNode.getHeight()
       })

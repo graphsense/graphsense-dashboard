@@ -30,15 +30,15 @@ export default class Layer extends Component {
         let g = this.clusterRoot.append('g')
         node.setUpdate(true)
         // reset absolute coords of node
-        node.x = 0
-        node.y = 0
+        node.x = node.dx
+        node.y = node.dy
         node.render(g)
-        g.attr('transform', `translate(0, ${cumY})`)
+        g.attr('transform', `translate(${node.dx}, ${cumY})`)
         // render addresses
         let ag = this.addressRoot.append('g')
         node.setUpdate(true)
         node.renderAddresses(ag)
-        ag.attr('transform', `translate(0, ${cumY})`)
+        ag.attr('transform', `translate(${node.dx}, ${cumY})`)
 
         // translate cluster node and its addresses
         node.translate(0, cumY)
