@@ -115,6 +115,20 @@ export default class NodeGraph extends Component {
         }
       }
   }
+  getNode (id, type) {
+    let nodes
+    if (type === 'address') {
+      nodes = this.addressNodes
+    } else if (type === 'cluster') {
+      nodes = this.clusterNodes
+    }
+    return nodes.get(id)
+  }
+  searchingNeighbors (id, type, isOutgoing, state) {
+    let node = this.getNode(id, type)
+    if (!node) return
+    node.searchingNeighbors(isOutgoing, state)
+  }
   dragNode (id, type, dx, dy) {
     let nodes = null
     if (type === 'cluster') {
@@ -177,16 +191,9 @@ export default class NodeGraph extends Component {
     })
   }
   selectNode (type, nodeId) {
-    let nodes
-    if (type === 'address') {
-      nodes = this.addressNodes
-    } else if (type === 'cluster') {
-      nodes = this.clusterNodes
-    }
-    let sel = nodes.get(nodeId)
-    if (sel) {
-      this._selectNode(sel)
-    }
+    let sel = this.getNode(nodeId, type)
+    if (!sel) return
+    this._selectNode(sel)
   }
   _selectNode (sel) {
     sel.select()
@@ -224,10 +231,12 @@ export default class NodeGraph extends Component {
       layerIds = [layerIds]
     }
     logger.debug('layerIds', layerIds)
+    let node
     layerIds.forEach(layerId => {
-      this.addLayer(layerId, object, anchor)
+      node = this.addLayer(layerId, object, anchor)
     })
     this.setUpdate('layers')
+    return node
   }
   findLayer (layerId) {
     return this.layers.filter(({id}) => id == layerId)[0] // eslint-disable-line eqeqeq
@@ -251,7 +260,7 @@ export default class NodeGraph extends Component {
       let addressNode = this.addressNodes.get([object.id, layerId, object.keyspace])
       if (addressNode) {
         this.selectNodeIfIsNextNode(addressNode)
-        return
+        return node
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
       this.selectNodeIfIsNextNode(addressNode)
@@ -266,7 +275,7 @@ export default class NodeGraph extends Component {
       node = this.clusterNodes.get([object.id, layerId, object.keyspace])
       if (node) {
         this.selectNodeIfIsNextNode(node)
-        return
+        return node
       }
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       logger.debug('new ClusterNode', node)
@@ -277,6 +286,7 @@ export default class NodeGraph extends Component {
     this.clusterNodes.set(node.id, node)
 
     layer.add(node)
+    return node
   }
   remove (nodeType, nodeId) {
     logger.debug('remove', nodeType, nodeId)

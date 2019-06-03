@@ -47,7 +47,7 @@ const defaultCurrency = 'satoshi'
 
 const defaultTxLabel = 'noTransactions'
 
-const defaultSearchDepth = 1
+const defaultSearchDepth = 2
 
 const defaultSearchBreadth = 16
 
@@ -446,6 +446,7 @@ export default class Model {
             if (neighbor.nodeType !== o.type) return
             this.store.linkOutgoing(neighbor.id, o.id, neighbor.keyspace, neighbor)
           })
+          // this.storeRelations(result.neighbors, o, o.keyspace, false)
         }
         if (o.outDegree >= degreeThreshold || o.outDegree === o.outgoing.size()) {
           this.call(context.backCall.msg, context.backCall.data)
@@ -462,6 +463,7 @@ export default class Model {
             if (neighbor.nodeType !== o.type) return
             this.store.linkOutgoing(o.id, neighbor.id, o.keyspace, neighbor)
           })
+          // this.storeRelations(result.neighbors, o, o.keyspace, true)
         }
         this.call(context.backCall.msg, context.backCall.data)
       }
@@ -651,7 +653,36 @@ export default class Model {
       this.config.setSearchBreadth(value)
     })
     this.dispatcher.on('searchNeighbors', ({id, type, isOutgoing, params}) => {
+      this.graph.searchingNeighbors(id, type, isOutgoing, true)
+      this.mapResult(this.rest(id[2]).searchNeighbors(id[0], type, isOutgoing, params, this.config.searchDepth, this.config.searchBreadth), 'resultSearchNeighbors', {id, type, isOutgoing})
+    })
+    this.dispatcher.on('resultSearchNeighbors', ({result, context}) => {
+      this.graph.searchingNeighbors(context.id, context.type, context.isOutgoing, false)
+      let add = (anchor, paths) => {
+        if (!paths) return
+        paths.forEach(path => {
+          logger.debug('path', path)
+          path[0].node.keyspace = result.keyspace
 
+          // store relations
+          let node = this.store.add(path[0].node)
+          let src = context.isOutgoing ? anchor.nodeId[0] : node.id
+          let dst = context.isOutgoing ? node.id : anchor.nodeId[0]
+          this.store.linkOutgoing(src, dst, result.keyspace, path[0].relation)
+
+          // fetch all relations
+          let backCall = {msg: 'redrawGraph', data: null}
+          this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
+
+          let parent = this.graph.add(node, anchor)
+          logger.debug('parent', parent)
+          add({nodeId: parent.id, isOutgoing: context.isOutgoing}, path[1])
+        })
+      }
+      add({nodeId: context.id, isOutgoing: context.isOutgoing}, result.paths)
+    })
+    this.dispatcher.on('redrawGraph', () => {
+      this.graph.setUpdate('layers')
     })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
@@ -677,6 +708,14 @@ export default class Model {
     if (initParams.id) {
       this.paramsToCall(initParams)
     }
+  }
+  storeRelations (relations, anchor, keyspace, isOutgoing) {
+    relations.forEach((relation) => {
+      if (relation.nodeType !== anchor.type) return
+      let src = isOutgoing ? relation.id : anchor.id
+      let dst = isOutgoing ? anchor.id : relation.id
+      this.store.linkOutgoing(src, dst, keyspace, relation)
+    })
   }
   promptUnsavedWork (msg) {
     if (!this.isDirty) return true

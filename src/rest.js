@@ -94,4 +94,10 @@ export default class Rest {
   stats () {
     return this.json(`${this.baseUrl}`)
   }
+  searchNeighbors (id, type, isOutgoing, params, searchDepth, searchBreadth) {
+    let dir = isOutgoing ? 'out' : 'in'
+    let url =
+      `${this.baseUrl}/${type}/${id}/search/${dir}/${params.category}?depth=${searchDepth}&breadth=${searchBreadth}`
+    return this.json(url)
+  }
 }

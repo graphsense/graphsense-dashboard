@@ -35,6 +35,8 @@ class GraphNode extends Component {
     this.y = 0
     this.dx = 0
     this.dy = 0
+    this.searchingNeighborsIn = false
+    this.searchingNeighborsOut = false
   }
   expandableNeighbors (isOutgoing) {
     return this.getDegree(isOutgoing) < noExpandableNeighbors
@@ -67,14 +69,28 @@ class GraphNode extends Component {
   }
   neighborsMenu (isOutgoing) {
     return [
-      { title: 'Search',
-        children: categories.map(category => (
-          { title: category,
-            action: () => this.dispatcher('searchNeighbors', {id: this.id, type: this.type, isOutgoing, params: {category}})
-          }
-        ))
-      }
+      (isOutgoing ? this.searchingNeighborsOut : this.searchingNeighborsIn)
+        ? { title: 'Searching ...',
+          disabled: true,
+          action: () => {}
+        }
+        : { title: 'Search',
+          children: categories.map(category => (
+            { title: category,
+              action: () => this.dispatcher('searchNeighbors', {id: this.id, type: this.type, isOutgoing, params: {category}})
+            }
+          ))
+        }
     ]
+  }
+  searchingNeighbors (isOutgoing, state) {
+    if (isOutgoing) {
+      this.searchingNeighborsOut = state
+    } else {
+      this.searchingNeighborsIn = state
+    }
+    logger.debug('searchingNeighbors', this.searchingNeighborsIn, this.searchingNeighborsOut)
+    this.setUpdate(true)
   }
   serialize () {
     return [

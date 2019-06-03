@@ -94,7 +94,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'dragNode',
   'changeSearchDepth',
   'changeSearchBreadth',
-  'searchNeighbors'
+  'searchNeighbors',
+  'resultSearchNeighbors',
+  'redrawGraph'
 )
 
 let model = new Model(dispatcher)
