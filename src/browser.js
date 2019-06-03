@@ -56,6 +56,7 @@ export default class Browser extends Component {
   setAddress (address) {
     this.activeTab = 'address'
     this.visible = true
+    if (this.content[0] instanceof Address && this.content[0].data.id === address.id) return
     this.destroyComponentsFrom(0)
     this.content = [ new Address(this.dispatcher, address, 0, this.currency) ]
     this.setUpdate('content')
@@ -81,6 +82,7 @@ export default class Browser extends Component {
   setCluster (cluster) {
     this.activeTab = 'address'
     this.visible = true
+    if (this.content[0] instanceof Cluster && this.content[0].data.id === cluster.id) return
     this.destroyComponentsFrom(0)
     this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
     this.setUpdate('content')

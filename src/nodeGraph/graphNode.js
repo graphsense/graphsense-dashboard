@@ -132,7 +132,6 @@ class GraphNode extends Component {
     let g = root.append('g')
       .classed('expandHandle', true)
       .on('click', () => {
-        event.stopPropagation()
         this.expandCollapseNeighborsOrShowTable(isOutgoing)
       })
       .on('contextmenu', contextMenu(this.neighborsMenu(isOutgoing)))
