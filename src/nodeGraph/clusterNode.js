@@ -209,6 +209,7 @@ export default class ClusterNode extends GraphNode {
       .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' addresses')
       .on('click', () => {
         event.stopPropagation()
+        this.dispatcher('selectNode', ['cluster', this.id])
         this.expandCollapseOrShowAddressTable()
       })
     super.render()
