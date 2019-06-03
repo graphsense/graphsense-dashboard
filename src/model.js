@@ -650,6 +650,9 @@ export default class Model {
     this.dispatcher.on('changeSearchBreadth', value => {
       this.config.setSearchBreadth(value)
     })
+    this.dispatcher.on('searchNeighbors', ({id, type, isOutgoing, params}) => {
+
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)

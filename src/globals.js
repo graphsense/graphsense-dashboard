@@ -2,4 +2,16 @@ const browserHeight = 220
 const browserPadding = 1
 const clusterWidth = 190
 
-export {browserHeight, browserPadding, clusterWidth}
+const categories = [
+  'Darknet crawl',
+  'Exchange',
+  'Exchanges',
+  'Gambling',
+  'Miner',
+  'Old/historic',
+  'Organization',
+  'Pools',
+  'Services/others'
+]
+
+export {browserHeight, browserPadding, clusterWidth, categories}

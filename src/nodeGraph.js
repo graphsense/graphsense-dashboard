@@ -10,7 +10,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
-import {clusterWidth} from './globals.js'
+import {clusterWidth, categories} from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -40,17 +40,39 @@ const defaultColor = {
 
 const transactionsPixelRange = [1, 7]
 
-const predefinedCategories = {
-  'Darknet crawl': chromaStep * 0,
-  'Exchange': chromaStep * 1,
-  'Exchanges': chromaStep * 1,
-  'Gambling': chromaStep * 2,
-  'Miner': chromaStep * 3,
-  'Old/historic': chromaStep * 4,
-  'Organization': chromaStep * 5,
-  'Pools': chromaStep * 6,
-  'Services/others': chromaStep * 7
-}
+const predefinedCategories =
+  categories.reduce((obj, category) => {
+    switch (category) {
+      case 'Darknet crawl':
+        obj[category] = chromaStep * 0
+        break
+      case 'Exchange':
+        obj[category] = chromaStep * 1
+        break
+      case 'Exchanges':
+        obj[category] = chromaStep * 1
+        break
+      case 'Gambling':
+        obj[category] = chromaStep * 2
+        break
+      case 'Miner':
+        obj[category] = chromaStep * 3
+        break
+      case 'Old/historic':
+        obj[category] = chromaStep * 4
+        break
+      case 'Organization':
+        obj[category] = chromaStep * 5
+        break
+      case 'Pools':
+        obj[category] = chromaStep * 6
+        break
+      case 'Services/others':
+        obj[category] = chromaStep * 7
+        break
+    }
+    return obj
+  }, {})
 
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {

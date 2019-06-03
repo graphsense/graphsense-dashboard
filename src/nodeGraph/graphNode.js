@@ -4,7 +4,8 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth} from '../globals.js'
+import {clusterWidth, categories} from '../globals.js'
+import contextMenu from 'd3-context-menu'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -64,6 +65,17 @@ class GraphNode extends Component {
       }
     ]).sort((i1, i2) => i1.position - i2.position)
   }
+  neighborsMenu (isOutgoing) {
+    return [
+      { title: 'Search',
+        children: categories.map(category => (
+          { title: category,
+            action: () => this.dispatcher('searchNeighbors', {id: this.id, type: this.type, isOutgoing, params: {category}})
+          }
+        ))
+      }
+    ]
+  }
   serialize () {
     return [
       this.x,
@@ -107,6 +119,7 @@ class GraphNode extends Component {
         event.stopPropagation()
         this.expandCollapseNeighborsOrShowTable(isOutgoing)
       })
+      .on('contextmenu', contextMenu(this.neighborsMenu(isOutgoing)))
     g.append('path')
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
     let fontSize = expandHandleWidth * 0.8
