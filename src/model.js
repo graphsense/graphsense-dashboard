@@ -654,14 +654,27 @@ export default class Model {
     })
     this.dispatcher.on('searchNeighbors', ({id, type, isOutgoing, params}) => {
       this.graph.searchingNeighbors(id, type, isOutgoing, true)
-      this.mapResult(this.rest(id[2]).searchNeighbors(id[0], type, isOutgoing, params, this.config.searchDepth, this.config.searchBreadth), 'resultSearchNeighbors', {id, type, isOutgoing})
+      let search = {
+        id,
+        type,
+        isOutgoing,
+        params,
+        depth: this.config.searchDepth,
+        breadth: this.config.searchBreadth
+      }
+      this.statusbar.addSearching(search)
+      this.mapResult(this.rest(id[2]).searchNeighbors(id[0], type, isOutgoing, params, this.config.searchDepth, this.config.searchBreadth), 'resultSearchNeighbors', search)
     })
     this.dispatcher.on('resultSearchNeighbors', ({result, context}) => {
       this.graph.searchingNeighbors(context.id, context.type, context.isOutgoing, false)
+      this.statusbar.removeSearching(context)
+      let count = 0
       let add = (anchor, paths) => {
-        if (!paths) return
+        if (!paths) {
+          count++
+          return
+        }
         paths.forEach(path => {
-          logger.debug('path', path)
           path[0].node.keyspace = result.keyspace
 
           // store relations
@@ -675,11 +688,11 @@ export default class Model {
           this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
           let parent = this.graph.add(node, anchor)
-          logger.debug('parent', parent)
           add({nodeId: parent.id, isOutgoing: context.isOutgoing}, path[1])
         })
       }
       add({nodeId: context.id, isOutgoing: context.isOutgoing}, result.paths)
+      this.statusbar.addMsg('searchResult', count, context.params.category)
     })
     this.dispatcher.on('redrawGraph', () => {
       this.graph.setUpdate('layers')

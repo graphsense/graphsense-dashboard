@@ -1,4 +1,4 @@
-import {set} from 'd3-collection'
+import {set, map} from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
@@ -14,6 +14,7 @@ export default class Statusbar extends Component {
     this.dispatcher = dispatcher
     this.messages = []
     this.loading = set()
+    this.searching = map()
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
     this.update = set()
@@ -51,6 +52,14 @@ export default class Statusbar extends Component {
   }
   removeLoading (id) {
     this.loading.remove(id)
+    this.setUpdate('loading')
+  }
+  addSearching (search) {
+    this.searching.set(String(search.id) + String(search.isOutgoing), search)
+    this.setUpdate('loading')
+  }
+  removeSearching (search) {
+    this.searching.remove(String(search.id) + String(search.isOutgoing))
     this.setUpdate('loading')
   }
   render (root) {
@@ -92,18 +101,24 @@ export default class Statusbar extends Component {
   }
   renderLoading () {
     let top = this.root.querySelector('#topmsg')
-    if (this.loading.size() === 0) {
+    if (this.loading.size() > 0) {
+      addClass(this.root, 'loading')
+      let msg = 'Loading '
+      let v = this.loading.values()
+      msg += v.slice(0, 3).join(', ')
+      msg += v.length > 3 ? ` + ${v.length - 3}` : ''
+      msg += ' ...'
+      top.innerHTML = msg
+    } else if (this.searching.size() > 0) {
+      addClass(this.root, 'loading')
+      let search = this.searching.values()[0]
+      let outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
+      let msg = `Searching for ${outgoing} ${search.params.category} neighbors of ${search.type} ${search.id[0]} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
+      top.innerHTML = msg
+    } else {
       removeClass(this.root, 'loading')
       if (top) top.innerHTML = ''
-      return
     }
-    addClass(this.root, 'loading')
-    let msg = 'Loading '
-    let v = this.loading.values()
-    msg += v.slice(0, 3).join(', ')
-    msg += v.length > 3 ? ` + ${v.length - 3}` : ''
-    msg += ' ...'
-    top.innerHTML = msg
   }
   renderLogs (msg, index) {
     let logs = this.root.querySelector('ul#log-messages')
@@ -209,6 +224,8 @@ export default class Statusbar extends Component {
         return `Loaded ${args[1]} addresses for cluster ${args[0]}`
       case 'removeNode':
         return `Removed node of ${args[0]} ${args[1]}`
+      case 'searchResult':
+        return `Found ${args[0]} paths to ${args[1]} nodes`
       case 'error':
         this.numErrors++
         return {error: args[0]}
