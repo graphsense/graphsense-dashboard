@@ -47,6 +47,10 @@ const defaultCurrency = 'satoshi'
 
 const defaultTxLabel = 'noTransactions'
 
+const defaultSearchDepth = 1
+
+const defaultSearchBreadth = 16
+
 const keyspaces =
   {
     'btc': 'Bitcoin',
@@ -640,6 +644,12 @@ export default class Model {
     this.dispatcher.on('dragNode', ({id, type, dx, dy}) => {
       this.graph.dragNode(id, type, dx, dy)
     })
+    this.dispatcher.on('changeSearchDepth', value => {
+      this.config.setSearchDepth(value)
+    })
+    this.dispatcher.on('changeSearchBreadth', value => {
+      this.config.setSearchBreadth(value)
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)
@@ -676,7 +686,7 @@ export default class Model {
     this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
-    this.config = new Config(this.call, defaultLabelType, defaultTxLabel)
+    this.config = new Config(this.call, defaultLabelType, defaultTxLabel, defaultSearchDepth, defaultSearchBreadth)
     this.menu = new Menu(this.call)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.search = new Search(this.call, keyspaces)

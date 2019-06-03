@@ -117,8 +117,8 @@ html, body {
   @apply p-2 text-center text-gs-dark
 }
 
-select {
-  @apply rounded-sm shadow bg-grey-light
+select, input {
+  @apply rounded-sm shadow bg-grey-light px-1 pt-1;
 }
 
 .prop-table {

@@ -91,7 +91,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'gohome',
   'new',
   'sortClusterAddresses',
-  'dragNode'
+  'dragNode',
+  'changeSearchDepth',
+  'changeSearchBreadth'
 )
 
 let model = new Model(dispatcher)

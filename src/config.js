@@ -9,12 +9,14 @@ import Logger from './logger.js'
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, txLabelType) {
+  constructor (dispatcher, labelType, txLabelType, searchDepth, searchBreadth) {
     super()
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
+    this.searchDepth = searchDepth
+    this.searchBreadth = searchBreadth
   }
   toggleConfig () {
     this.visible = !this.visible
@@ -32,9 +34,11 @@ export default class Config extends Component {
     this.root.innerHTML = configLayout
     let el = this.root.querySelector('#config')
     el.innerHTML = graphConfig
-    this.addSelectListener('clusterLabel', 'changeClusterLabel')
-    this.addSelectListener('addressLabel', 'changeAddressLabel')
-    this.addSelectListener('transactionLabel', 'changeTxLabel')
+    this.renderSelect('clusterLabel', 'changeClusterLabel')
+    this.renderSelect('addressLabel', 'changeAddressLabel')
+    this.renderSelect('transactionLabel', 'changeTxLabel')
+    this.renderInput('searchDepth', 'changeSearchDepth', this.searchDepth)
+    this.renderInput('searchBreadth', 'changeSearchBreadth', this.searchBreadth)
     super.render()
     return this.root
   }
@@ -84,7 +88,7 @@ export default class Config extends Component {
   applyAddressFilters () {
     this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
-  addSelectListener (id, message) {
+  renderSelect (id, message) {
     let select = this.root.querySelector('select#' + id)
     let i = 0
     for (; i < select.options.length; i++) {
@@ -97,6 +101,13 @@ export default class Config extends Component {
       this.dispatcher(message, e.target.value)
     })
   }
+  renderInput (id, message, value) {
+    let input = this.root.querySelector('input#' + id)
+    input.value = value
+    input.addEventListener('change', (e) => {
+      this.dispatcher(message, e.target.value)
+    })
+  }
   setAddressLabel (labelType) {
     this.labelType['address'] = labelType
   }
@@ -106,17 +117,24 @@ export default class Config extends Component {
   setTxLabel (labelType) {
     this.txLabelType = labelType
   }
+  setSearchDepth (d) {
+    this.searchDepth = d
+  }
+  setSearchBreadth (d) {
+    this.searchBreadth = d
+  }
   serialize () {
     return [
       this.labelType,
-      this.txLabelType
+      this.txLabelType,
+      this.searchDepth,
+      this.searchBreadth
     ]
   }
-  deserialize (version, [
-    labelType,
-    txLabelType
-  ]) {
-    this.labelType = labelType
-    this.txLabelType = txLabelType
+  deserialize (version, values) {
+    this.labelType = values[0]
+    this.txLabelType = values[1]
+    this.searchDepth = values[2]
+    this.searchBreadth = values[3]
   }
 }
