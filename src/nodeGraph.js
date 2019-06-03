@@ -432,7 +432,7 @@ export default class NodeGraph extends Component {
         )) +
         '</defs>'
       this.graphRoot = svg.append('g')
-      this.graphRoot.on('click', () => {
+      svg.on('click', () => {
         this.dispatcher('deselect')
       })
       this.root.appendChild(svg.node())
