@@ -133,6 +133,7 @@ export default class ClusterNode extends GraphNode {
         let g = this.root
           .append('g')
           .classed('clusterNode', true)
+          .attr('transform', `translate(${this.dx}, ${this.dy})`)
           .on('click', () => {
             event.stopPropagation()
             this.dispatcher('selectNode', ['cluster', this.id])
@@ -141,7 +142,10 @@ export default class ClusterNode extends GraphNode {
           .call(drag()
             .on('drag', () => {
               if (Math.abs(event.dx) > 10 || Math.abs(event.dy) > 10) return
-              this.dispatcher('dragNode', {id: this.id, type: 'cluster', dx: event.dx, dy: event.dy})
+              this.dispatcher('dragNode', {id: this.id, type: this.type, dx: event.dx, dy: event.dy})
+            })
+            .on('end', () => {
+              this.dispatcher('dragNodeEnd', {id: this.id, type: this.type})
             }))
         g.append('rect')
           .classed('rect', true)

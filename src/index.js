@@ -92,6 +92,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'new',
   'sortClusterAddresses',
   'dragNode',
+  'dragNodeEnd',
   'changeSearchDepth',
   'changeSearchBreadth',
   'searchNeighbors',

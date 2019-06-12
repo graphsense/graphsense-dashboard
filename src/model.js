@@ -646,6 +646,9 @@ export default class Model {
     this.dispatcher.on('dragNode', ({id, type, dx, dy}) => {
       this.graph.dragNode(id, type, dx, dy)
     })
+    this.dispatcher.on('dragNodeEnd', ({id, type}) => {
+      this.graph.dragNodeEnd(id, type)
+    })
     this.dispatcher.on('changeSearchDepth', value => {
       this.config.setSearchDepth(value)
     })

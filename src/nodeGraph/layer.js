@@ -18,6 +18,13 @@ export default class Layer extends Component {
   has (nodeId) {
     return this.nodes.has(nodeId)
   }
+  getHeight () {
+    let height = 0
+    this.nodes.each(node => {
+      height += node.getHeight()
+    })
+    return height
+  }
   render (clusterRoot, addressRoot) {
     if (clusterRoot) this.clusterRoot = clusterRoot
     if (addressRoot) this.addressRoot = addressRoot
@@ -30,15 +37,15 @@ export default class Layer extends Component {
         let g = this.clusterRoot.append('g')
         node.setUpdate(true)
         // reset absolute coords of node
-        node.x = node.dx
-        node.y = node.dy
+        node.x = 0
+        node.y = 0
         node.render(g)
-        g.attr('transform', `translate(${node.dx}, ${cumY})`)
+        g.attr('transform', `translate(0, ${cumY})`)
         // render addresses
         let ag = this.addressRoot.append('g')
         node.setUpdate(true)
         node.renderAddresses(ag)
-        ag.attr('transform', `translate(${node.dx}, ${cumY})`)
+        ag.attr('transform', `translate(${node.dx}, ${cumY + node.dy})`)
 
         // translate cluster node and its addresses
         node.translate(0, cumY)

@@ -1,6 +1,7 @@
 import {event} from 'd3-selection'
 import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 import contextMenu from 'd3-context-menu'
+import {drag} from 'd3-drag'
 
 const padding = 10
 export default class AddressNode extends GraphNode {

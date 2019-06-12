@@ -10,7 +10,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
-import {clusterWidth, categories} from './globals.js'
+import {clusterWidth, categories, expandHandleWidth} from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -130,16 +130,49 @@ export default class NodeGraph extends Component {
     node.searchingNeighbors(isOutgoing, state)
   }
   dragNode (id, type, dx, dy) {
-    let nodes = null
-    if (type === 'cluster') {
-      nodes = this.clusterNodes
-    }
-    if (!nodes) return
-    let cluster = nodes.get(id)
+    let layer = this.findLayer(id[1])
+    if (!layer) return
+    let cluster = layer.nodes.get(id)
     if (!cluster) return
-    let dx2 = dx / this.transform.k
-    cluster.dx += dx2
+
+    dx /= this.transform.k
+    dy /= this.transform.k
+
+    cluster.ddx += dx
+    cluster.ddy += dy
+
+    if (cluster.ddx - 2 * expandHandleWidth < margin / -2) return
+    if (cluster.ddx + 2 * expandHandleWidth > margin / 2) return
+
+    let nodes = layer.nodes.values()
+    let x = cluster.x + cluster.ddx - expandHandleWidth
+    let y = cluster.y + cluster.ddy
+    let cw = cluster.getWidthForLinks()
+    let ch = cluster.getHeightForLinks()
+    for (let i = 0; i < nodes.length; i++) {
+      let sister = nodes[i]
+      if (sister === cluster) continue
+      let sx = sister.getXForLinks()
+      let sy = sister.getYForLinks()
+      let sw = sister.getWidthForLinks()
+      let sh = sister.getHeightForLinks()
+      if (((x + cw >= sx && x + cw <= sx + sw) ||
+          (x >= sx && x <= sx + sw)
+      ) &&
+          ((y + ch >= sy && y + ch <= sy + sh) ||
+          (y >= sy && y <= sy + sh)
+          )
+      ) return
+    }
+    cluster.dx = cluster.ddx
+    cluster.dy = cluster.ddy
     this.setUpdate('layers')
+  }
+  dragNodeEnd (id, type) {
+    let cluster = this.clusterNodes.get(id)
+    if (!cluster) return
+    cluster.ddx = cluster.dx
+    cluster.ddy = cluster.dy
   }
   sortClusterAddresses (id, property) {
     let cluster = this.clusterNodes.get(id)
@@ -467,10 +500,16 @@ export default class NodeGraph extends Component {
           let cRoot = clusterRoot.append('g')
           let aRoot = addressRoot.append('g')
           layer.render(cRoot, aRoot)
-          let box = cRoot.node().getBBox()
+          // let first = layer.getFirst()
+          // box.height += first.dy
+          // let last = layer.getLast()
+          // if (last !== first) {
+          // box.height -= last.dy
+          // }
+          let layerHeight = layer.getHeight()
           let w = clusterWidth + margin
           let x = layer.id * w
-          let y = box.height / -2
+          let y = layerHeight / -2
           cRoot.attr('transform', `translate(${x}, ${y})`)
           aRoot.attr('transform', `translate(${x}, ${y})`)
           layer.translate(x, y)

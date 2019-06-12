@@ -1,6 +1,7 @@
 const browserHeight = 220
 const browserPadding = 1
 const clusterWidth = 190
+const expandHandleWidth = 15
 
 const categories = [
   'Darknet crawl',
@@ -14,4 +15,4 @@ const categories = [
   'Services/others'
 ]
 
-export {browserHeight, browserPadding, clusterWidth, categories}
+export {browserHeight, browserPadding, clusterWidth, categories, expandHandleWidth}

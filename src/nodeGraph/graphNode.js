@@ -4,16 +4,15 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth, categories} from '../globals.js'
+import {clusterWidth, categories, expandHandleWidth} from '../globals.js'
 import contextMenu from 'd3-context-menu'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
-const expandHandleWidth = 15
 const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
-const noExpandableNeighbors = 16
+const noExpandableNeighbors = 19
 
 class GraphNode extends Component {
   constructor (dispatcher, labelType, data, layerId, colors, currency) {
@@ -35,6 +34,8 @@ class GraphNode extends Component {
     this.y = 0
     this.dx = 0
     this.dy = 0
+    this.ddx = 0
+    this.ddy = 0
     this.searchingNeighborsIn = false
     this.searchingNeighborsOut = false
   }
@@ -155,10 +156,10 @@ class GraphNode extends Component {
     this.y += y
   }
   getX () {
-    return this.x
+    return this.x + this.dx
   }
   getY () {
-    return this.y
+    return this.y + this.dy
   }
   getXForLinks () {
     return this.getX() - expandHandleWidth
