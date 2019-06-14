@@ -25,6 +25,18 @@ const prefixLength = 5
 // get handled by model in current rendering frame
 const syncMessages = ['search']
 
+// messages that change the graph
+const dirtyMessages = [
+  'clickSearchResult',
+  'addNode',
+  'addNodeCont',
+  'resultNode',
+  'resultClusterAddresses',
+  'resultEgonet',
+  'removeNode',
+  'resultSearchNeighbors'
+]
+
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
@@ -79,12 +91,16 @@ const fromURL = (url) => {
   return {keyspace, id, type}
 }
 
+// time to wait after a dirty message before creating a snapshot
+const idleTimeToSnapshot = 2000
+
 export default class Model {
   constructor (dispatcher) {
     this.dispatcher = dispatcher
     this.isReplaying = false
     this.showLandingpage = true
 
+    this.snapshotTimeout = null
     this.call = (message, data) => {
       if (this.isReplaying) {
         logger.debug('omit calling while replaying', message, data)
@@ -94,7 +110,18 @@ export default class Model {
       let fun = () => {
         logger.debug('calling', message, data)
         this.dispatcher.call(message, null, data)
+        if (dirtyMessages.indexOf(message) === -1) {
+          this.render()
+          return
+        }
+        this.dispatcher.call('disableUndoRedo')
         this.render()
+
+        if (this.snapshotTimeout) clearTimeout(this.snapshotTimeout)
+        this.snapshotTimeout = setTimeout(() => {
+          this.call('createSnapshot')
+          this.snapshotTimeout = null
+        }, idleTimeToSnapshot)
       }
 
       if (syncMessages.indexOf(message) !== -1) {
@@ -700,6 +727,25 @@ export default class Model {
     this.dispatcher.on('redrawGraph', () => {
       this.graph.setUpdate('layers')
     })
+    this.dispatcher.on('createSnapshot', () => {
+      this.graph.createSnapshot()
+      this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
+      this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
+    })
+    this.dispatcher.on('undo', () => {
+      this.graph.loadPreviousSnapshot(this.store)
+      this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
+      this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
+    })
+    this.dispatcher.on('redo', () => {
+      this.graph.loadNextSnapshot(this.store)
+      this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
+      this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
+    })
+    this.dispatcher.on('disableUndoRedo', () => {
+      this.layout.disableButton('undo', true)
+      this.layout.disableButton('redo', true)
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)
@@ -749,6 +795,8 @@ export default class Model {
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.search = new Search(this.call, keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
+    this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
+    this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     this.landingpage = new Landingpage(this.call, this.search, keyspaces)
   }
   compress (data) {

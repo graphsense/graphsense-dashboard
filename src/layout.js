@@ -1,6 +1,8 @@
 import layout from './layout/layout.html'
 import Component from './component.js'
 import currency from './layout/currency.html'
+import {addClass, removeClass} from './template_utils.js'
+import {select} from 'd3-selection'
 
 export default class Layout extends Component {
   constructor (dispatcher, browser, graph, config, menu, search, status, currency) {
@@ -14,6 +16,7 @@ export default class Layout extends Component {
     this.search = search
     this.statusbar = status
     this.currencyRoot = null
+    this.disabled = {}
   }
   triggerFileLoad () {
     this.root.querySelector('#file-loader').click()
@@ -21,6 +24,10 @@ export default class Layout extends Component {
   setCurrency (currency) {
     this.currency = currency
     this.setUpdate('currency')
+  }
+  disableButton (name, disable) {
+    this.disabled[name] = disable
+    this.setUpdate('buttons')
   }
   render (root) {
     if (root) this.root = root
@@ -41,34 +48,7 @@ export default class Layout extends Component {
       this.menu.setUpdate(true)
       this.search.setUpdate(true)
       this.statusbar.setUpdate(true)
-      let newButton = this.root.querySelector('#navbar-new')
-      newButton.addEventListener('click', () => {
-        this.dispatcher('new')
-      })
-      let saveButton = this.root.querySelector('#navbar-save')
-      saveButton.addEventListener('click', () => {
-        this.dispatcher('save')
-      })
-      let loadButton = this.root.querySelector('#navbar-load')
-      loadButton.addEventListener('click', () => {
-        this.dispatcher('load')
-      })
-      let configButton = this.root.querySelector('#navbar-config')
-      configButton.addEventListener('click', () => {
-        this.dispatcher('toggleConfig')
-      })
-      let loader = this.root.querySelector('#file-loader')
-      loader.addEventListener('change', (e) => {
-        let input = e.target
-
-        let reader = new FileReader() // eslint-disable-line no-undef
-        let filename = input.files[0].name
-        reader.onload = () => {
-          let data = reader.result
-          this.dispatcher('loadFile', [data, filename])
-        }
-        reader.readAsArrayBuffer(input.files[0])
-      })
+      this.renderButtons()
       this.root.querySelector('#layout-logo').addEventListener('click', () => {
         this.dispatcher('gohome')
       })
@@ -79,6 +59,8 @@ export default class Layout extends Component {
       searchRoot = this.root.querySelector('#layout-search')
       statusRoot = this.root.querySelector('#layout-status')
       this.currencyRoot = this.root.querySelector('#layout-currency-config')
+    } else if (this.shouldUpdate('buttons')) {
+      this.renderButtons()
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
@@ -89,6 +71,38 @@ export default class Layout extends Component {
     this.renderCurrency()
     super.render()
     return this.root
+  }
+  renderButtons () {
+    let navbarButtons =
+        [ ['new', 'new'],
+          ['save', 'save'],
+          ['load', 'load'],
+          ['config', 'toggleConfig'],
+          ['undo', 'undo'],
+          ['redo', 'redo']
+        ]
+    navbarButtons.forEach(([name, msg]) => {
+      let el = select('#navbar-' + name)
+      el.on('click', null)
+      if (this.disabled[name]) {
+        addClass(el.node(), 'disabled')
+      } else {
+        removeClass(el.node(), 'disabled')
+        el.on('click', () => this.dispatcher(msg))
+      }
+    })
+    let loader = this.root.querySelector('#file-loader')
+    loader.addEventListener('change', (e) => {
+      let input = e.target
+
+      let reader = new FileReader() // eslint-disable-line no-undef
+      let filename = input.files[0].name
+      reader.onload = () => {
+        let data = reader.result
+        this.dispatcher('loadFile', [data, filename])
+      }
+      reader.readAsArrayBuffer(input.files[0])
+    })
   }
   renderCurrency () {
     if (!this.shouldUpdate(true) && !this.shouldUpdate('currency')) return

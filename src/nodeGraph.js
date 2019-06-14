@@ -74,6 +74,8 @@ const predefinedCategories =
     return obj
   }, {})
 
+const maxNumSnapshots = 4
+
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
     super()
@@ -114,6 +116,50 @@ export default class NodeGraph extends Component {
           range: (v) => defaultColor['address']
         }
       }
+    this.snapshots = []
+    this.currentSnapshotIndex = -1
+    // initialize with true to allow initial snapshot
+    this.dirty = true
+    this.createSnapshot()
+  }
+  createSnapshot () {
+    // don't create snapshot if nothing has changed
+    if (!this.dirty) return
+    // don't create snapshot if there are more nodes to come
+    if (!this.adding.empty()) return
+    this.snapshots = this.snapshots.slice(0, this.currentSnapshotIndex + 1)
+    this.snapshots.push(this.serializeGraph())
+    this.dirty = false
+    if (this.snapshots.length > maxNumSnapshots) {
+      this.snapshots.shift()
+      return
+    }
+    this.currentSnapshotIndex++
+  }
+  loadNextSnapshot (store) {
+    let s = this.snapshots[this.currentSnapshotIndex + 1]
+    if (!s) return
+    this.currentSnapshotIndex++
+    this.loadSnapshot(store, s)
+  }
+  loadPreviousSnapshot (store) {
+    let s = this.snapshots[this.currentSnapshotIndex - 1]
+    if (!s) return
+    this.currentSnapshotIndex--
+    this.loadSnapshot(store, s)
+  }
+  loadSnapshot (store, s) {
+    this.addressNodes.clear()
+    this.clusterNodes.clear()
+    this.layers = []
+    this.deserializeGraph(null, store, s[0], s[1], s[2])
+    this.setUpdate('layers')
+  }
+  thereAreMorePreviousSnapshots () {
+    return !!this.snapshots[this.currentSnapshotIndex - 1]
+  }
+  thereAreMoreNextSnapshots () {
+    return !!this.snapshots[this.currentSnapshotIndex + 1]
   }
   getNode (id, type) {
     let nodes
@@ -173,6 +219,7 @@ export default class NodeGraph extends Component {
     if (!cluster) return
     cluster.ddx = cluster.dx
     cluster.ddy = cluster.dy
+    this.dirty = true
   }
   sortClusterAddresses (id, property) {
     let cluster = this.clusterNodes.get(id)
@@ -243,6 +290,7 @@ export default class NodeGraph extends Component {
       logger.debug('new AddressNode', addressNode)
       this.addressNodes.set(addressNode.id, addressNode)
       cluster.add(addressNode)
+      this.dirty = true
     })
     this.setUpdate('layers')
   }
@@ -317,6 +365,7 @@ export default class NodeGraph extends Component {
       throw Error('unknown node type')
     }
     this.clusterNodes.set(node.id, node)
+    this.dirty = true
 
     layer.add(node)
     return node
@@ -697,7 +746,7 @@ export default class NodeGraph extends Component {
     }
     return [value, label]
   }
-  serialize () {
+  serializeGraph () {
     let clusterNodes = []
     this.clusterNodes.each(node => clusterNodes.push([node.id, node.serialize()]))
 
@@ -706,6 +755,12 @@ export default class NodeGraph extends Component {
 
     let layers = []
     this.layers.forEach(layer => layers.push(layer.serialize()))
+    return [clusterNodes, addressNodes, layers]
+  }
+  serialize () {
+    let clusterNodes, addressNodes, layers
+
+    [clusterNodes, addressNodes, layers] = this.serializeGraph()
 
     return [
       this.currency,
@@ -719,27 +774,7 @@ export default class NodeGraph extends Component {
       this.colorMapTags.entries()
     ]
   }
-  deserialize (version, [
-    currency,
-    labelType,
-    txLabelType,
-    viewBox,
-    clusterNodes,
-    addressNodes,
-    layers,
-    colorMapCategories,
-    colorMapTags
-  ], store) {
-    this.currency = currency
-    this.labelType = labelType
-    this.txLabelType = txLabelType
-    this.viewBox = viewBox
-    colorMapCategories.forEach(({key, value}) => {
-      this.colorMapCategories.set(key, value)
-    })
-    colorMapTags.forEach(({key, value}) => {
-      this.colorMapTags.set(key, value)
-    })
+  deserializeGraph (version, store, clusterNodes, addressNodes, layers) {
     addressNodes.forEach(([nodeId, address]) => {
       if (version === '0.4.0') {
         let found = store.find(nodeId[0], 'address')
@@ -777,5 +812,28 @@ export default class NodeGraph extends Component {
       })
       this.layers.push(l)
     })
+  }
+  deserialize (version, [
+    currency,
+    labelType,
+    txLabelType,
+    viewBox,
+    clusterNodes,
+    addressNodes,
+    layers,
+    colorMapCategories,
+    colorMapTags
+  ], store) {
+    this.currency = currency
+    this.labelType = labelType
+    this.txLabelType = txLabelType
+    this.viewBox = viewBox
+    colorMapCategories.forEach(({key, value}) => {
+      this.colorMapCategories.set(key, value)
+    })
+    colorMapTags.forEach(({key, value}) => {
+      this.colorMapTags.set(key, value)
+    })
+    this.deserializeGraph(version, store, clusterNodes, addressNodes, layers)
   }
 }

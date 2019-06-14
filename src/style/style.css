@@ -114,7 +114,15 @@ html, body {
 }
 
 .nav-btn {
-  @apply p-2 text-center text-gs-dark
+  @apply p-2 text-center text-gs-dark;
+}
+
+.nav-btn.disabled {
+  @apply text-gs-light cursor-not-allowed;
+}
+
+.nav-btn:focus {
+  outline: 0;
 }
 
 select, input {

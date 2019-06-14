@@ -97,7 +97,11 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'changeSearchBreadth',
   'searchNeighbors',
   'resultSearchNeighbors',
-  'redrawGraph'
+  'redrawGraph',
+  'createSnapshot',
+  'undo',
+  'redo',
+  'disableUndoRedo'
 )
 
 let model = new Model(dispatcher)
