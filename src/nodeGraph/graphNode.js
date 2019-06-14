@@ -96,12 +96,16 @@ class GraphNode extends Component {
   serialize () {
     return [
       this.x,
-      this.y
+      this.y,
+      this.dx,
+      this.dy
     ]
   }
-  deserialize ([x, y]) {
+  deserialize ([x, y, dx, dy]) {
     this.x = x
     this.y = y
+    this.dx = this.ddx = dx
+    this.dy = this.ddy = dy
   }
   renderLabel (root) {
     if (this.data.mockup) return

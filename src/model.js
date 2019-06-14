@@ -34,7 +34,8 @@ const dirtyMessages = [
   'resultClusterAddresses',
   'resultEgonet',
   'removeNode',
-  'resultSearchNeighbors'
+  'resultSearchNeighbors',
+  'dragNodeEnd'
 ]
 
 const historyPushState = (keyspace, type, id) => {
