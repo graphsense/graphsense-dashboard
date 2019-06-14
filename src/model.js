@@ -115,6 +115,7 @@ export default class Model {
           this.render()
           return
         }
+        this.isDirty = true
         this.dispatcher.call('disableUndoRedo')
         this.render()
 
@@ -388,7 +389,6 @@ export default class Model {
       this.mapResult(this.rest(data.keyspace).node({id: data.address, type: 'address'}), 'resultNode', data.address)
     })
     this.dispatcher.on('addNode', ({id, type, keyspace, anchor}) => {
-      this.isDirty = true
       this.graph.adding.add(id)
       this.statusbar.addLoading(id)
       this.call('addNodeCont', {context: {stage: 1, id, type, keyspace, anchor}, result: null})
