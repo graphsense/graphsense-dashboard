@@ -13,6 +13,15 @@ export default class Layer extends Component {
     return [this.id, this.nodes.keys()]
   }
   add (node) {
+    // calc dy so new node does not overlap with existing, moved nodes
+    let [maxY, cumY] = this.nodes.values().reduce(([maxY, cumY], node) => {
+      cumY += node.getHeight() + margin
+      maxY = Math.max(maxY, cumY + node.dy)
+      return [maxY, cumY]
+    }, [0, 0])
+    if (maxY > cumY) {
+      node.setDY(maxY - cumY)
+    }
     this.nodes.set(node.id, node)
   }
   has (nodeId) {
@@ -49,8 +58,7 @@ export default class Layer extends Component {
 
         // translate cluster node and its addresses
         node.translate(0, cumY)
-        let height = node.getHeight()
-        cumY += height + margin
+        cumY += node.getHeight() + margin
       } else {
         node.render()
         node.renderAddresses()

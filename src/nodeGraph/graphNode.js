@@ -159,6 +159,9 @@ class GraphNode extends Component {
     this.x += x
     this.y += y
   }
+  setDY (dy) {
+    this.dy = this.ddy = dy
+  }
   getX () {
     return this.x + this.dx
   }
