@@ -30,6 +30,8 @@ const src = path.join(__dirname, 'src')
 module.exports = env => {
   let IS_DEV = !env || !env.production
 
+  let JWT_TOKEN = env && env.token
+
   let output = {
     filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
@@ -72,7 +74,8 @@ module.exports = env => {
         IS_DEV: IS_DEV,
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
-        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
+        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
+        JWT_TOKEN: '\'' + JWT_TOKEN + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',

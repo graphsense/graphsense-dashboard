@@ -8,7 +8,8 @@ const options = {
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NjA1MjIxNjEsIm5iZiI6MTU2MDUyMjE2MSwianRpIjoiZDYwNjc2ODItZjkzYy00Zjc0LWI0YjMtOTEwNjE2YjBiOThkIiwiaWRlbnRpdHkiOiJhZG1pbiIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.2oAHvgQ-XiS3g1UgRKNkwDbxkxhfUU0-tjMM3LnN2ZI'
+    // never expiring token
+    'Authorization': 'Bearer ' + JWT_TOKEN // eslint-disable-line no-undef
   }
 }
 
