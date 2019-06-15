@@ -10,7 +10,10 @@ export default class TagsTable extends Table {
       { name: 'Tag',
         data: 'tag',
         render: (value, type, row) => {
-          return `<a href="${row['tagUri']}" target=_blank>${value}</a>`
+          if (row['tagUri'].startsWith('http')) {
+            return `<a href="${row['tagUri']}" target=_blank>${value}</a>`
+          }
+          return value
         }
       },
       { name: 'Description',
