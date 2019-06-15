@@ -3,33 +3,44 @@ import Logger from './logger.js'
 
 const logger = Logger.create('Rest')
 
-const options = {} // { credentials: 'include' }
+const options = {
+  credentials: 'include',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1NjA1MjIxNjEsIm5iZiI6MTU2MDUyMjE2MSwianRpIjoiZDYwNjc2ODItZjkzYy00Zjc0LWI0YjMtOTEwNjE2YjBiOThkIiwiaWRlbnRpdHkiOiJhZG1pbiIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyJ9.2oAHvgQ-XiS3g1UgRKNkwDbxkxhfUU0-tjMM3LnN2ZI'
+  }
+}
 
 export default class Rest {
-  constructor (baseUrl, keyspace, prefixLength) {
-    this.keyspace = keyspace
-    this.baseUrl = baseUrl + (keyspace ? '/' + keyspace : '')
+  constructor (baseUrl, prefixLength) {
+    this.baseUrl = baseUrl
     this.prefixLength = prefixLength
     this.json = this.remoteJson
   }
-  remoteJson (url, field) {
-    return json(url, options).then(result => {
-      if (field) {
+  remoteJson (keyspace, url, field) {
+    url = this.baseUrl + (keyspace ? '/' + keyspace : '') + '/' + url
+    return json(url, options)
+      .catch(err => {
+        logger.debug('err', err)
+      })
+      .then(result => {
+        if (field) {
         // result is an array
-        if (!Array.isArray(result[field])) {
-          logger.warn(`${field} is not in result or not an array, calling ${url}`)
+          if (!Array.isArray(result[field])) {
+            logger.warn(`${field} is not in result or not an array, calling ${url}`)
+          } else {
+            result[field].forEach(item => { item.keyspace = keyspace })
+          }
         } else {
-          result[field].forEach(item => { item.keyspace = this.keyspace })
+          result.keyspace = keyspace
         }
-      } else {
-        result.keyspace = this.keyspace
-      }
-      return Promise.resolve(result)
-    }, error => {
-      error.keyspace = this.keyspace
-      error.requestURL = url
-      return Promise.reject(error)
-    })
+        return Promise.resolve(result)
+      }, error => {
+        error.keyspace = keyspace
+        error.requestURL = url
+        return Promise.reject(error)
+      })
   }
   disable () {
     this.json = (url) => {
@@ -39,65 +50,65 @@ export default class Rest {
   enable () {
     this.json = this.remoteJson
   }
-  search (str, limit) {
+  search (keyspace, str, limit) {
     if (str.length < this.prefixLength) {
       return Promise.resolve({addresses: []})
     }
-    return this.json(this.baseUrl + '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
+    return this.json(keyspace, '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
-  node (request) {
-    return this.json(`${this.baseUrl}/${request.type}_with_tags/${request.id}`)
+  node (keyspace, request) {
+    return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
   }
-  clusterForAddress (id) {
+  clusterForAddress (keyspace, id) {
     logger.debug('rest clusterForAddress', id)
-    return this.json(this.baseUrl + '/address/' + id + '/cluster_with_tags')
+    return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
   }
-  transactions (request) {
+  transactions (keyspace, request) {
     let url =
-      this.baseUrl + '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
+       '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(url, request.params[1] === 'block' ? 'txs' : 'transactions')
+    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'transactions')
   }
-  addresses (request) {
+  addresses (keyspace, request) {
     let url =
-      this.baseUrl + '/cluster/' + request.params + '/addresses?' +
+       '/cluster/' + request.params + '/addresses?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(url, 'addresses')
+    return this.json(keyspace, url, 'addresses')
   }
-  tags ({id, type}) {
-    let url = this.baseUrl + '/' + type + '/' + id + '/tags'
-    return this.json(url, 'tags')
+  tags (keyspace, {id, type}) {
+    let url = '/' + type + '/' + id + '/tags'
+    return this.json(keyspace, url, 'tags')
   }
-  egonet (type, id, isOutgoing, limit) {
+  egonet (keyspace, type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
-    return this.json(`${this.baseUrl}/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
+    return this.json(keyspace, `/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
   }
-  clusterAddresses (id, limit) {
-    return this.json(`${this.baseUrl}/cluster/${id}/addresses?pagesize=${limit}`, 'addresses')
+  clusterAddresses (keyspace, id, limit) {
+    return this.json(keyspace, `/cluster/${id}/addresses?pagesize=${limit}`, 'addresses')
   }
-  transaction (txHash) {
-    return this.json(`${this.baseUrl}/tx/${txHash}`)
+  transaction (keyspace, txHash) {
+    return this.json(keyspace, `/tx/${txHash}`)
   }
-  block (height) {
-    return this.json(`${this.baseUrl}/block/${height}`)
+  block (keyspace, height) {
+    return this.json(keyspace, `/block/${height}`)
   }
-  neighbors (id, type, isOutgoing, pagesize, nextPage) {
+  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage) {
     let dir = isOutgoing ? 'out' : 'in'
     let url =
-      `${this.baseUrl}/${type}/${id}/neighbors?direction=${dir}&` +
+      `/${type}/${id}/neighbors?direction=${dir}&` +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
-    return this.json(url, 'neighbors')
+    return this.json(keyspace, url, 'neighbors')
   }
   stats () {
-    return this.json(`${this.baseUrl}`)
+    return this.json(null, '')
   }
-  searchNeighbors (id, type, isOutgoing, params, searchDepth, searchBreadth) {
+  searchNeighbors (keyspace, id, type, isOutgoing, params, searchDepth, searchBreadth) {
     let dir = isOutgoing ? 'out' : 'in'
     let url =
-      `${this.baseUrl}/${type}/${id}/search/${dir}/${params.category}?depth=${searchDepth}&breadth=${searchBreadth}`
-    return this.json(url)
+      `/${type}/${id}/search/${dir}/${params.category}?depth=${searchDepth}&breadth=${searchBreadth}`
+    return this.json(keyspace, url)
   }
 }
