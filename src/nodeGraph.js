@@ -383,8 +383,9 @@ export default class NodeGraph extends Component {
     if (this.selectedNode === node) {
       this.selectedNode = null
     }
-    let layer = this.layers.filter(l => l.id === nodeId[1])[0]
+    let layer = this.findLayer(nodeId[1])
     logger.debug('remove layer', nodeId, layer)
+    if (!layer) return
     if (nodeType === 'address') {
       this.clusterNodes.remove('mockup' + nodeId)
       layer.nodes.each(cluster => {
