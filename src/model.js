@@ -698,21 +698,21 @@ export default class Model {
           count++
           return
         }
-        paths.forEach(path => {
-          path[0].node.keyspace = result.keyspace
+        paths.forEach(pathnode => {
+          pathnode.node.keyspace = result.keyspace
 
           // store relations
-          let node = this.store.add(path[0].node)
+          let node = this.store.add(pathnode.node)
           let src = context.isOutgoing ? anchor.nodeId[0] : node.id
           let dst = context.isOutgoing ? node.id : anchor.nodeId[0]
-          this.store.linkOutgoing(src, dst, result.keyspace, path[0].relation)
+          this.store.linkOutgoing(src, dst, result.keyspace, pathnode.relation)
 
           // fetch all relations
           let backCall = {msg: 'redrawGraph', data: null}
           this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
           let parent = this.graph.add(node, anchor)
-          add({nodeId: parent.id, isOutgoing: context.isOutgoing}, path[1])
+          add({nodeId: parent.id, isOutgoing: context.isOutgoing}, pathnode.paths)
         })
       }
       add({nodeId: context.id, isOutgoing: context.isOutgoing}, result.paths)
