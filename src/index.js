@@ -102,7 +102,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'createSnapshot',
   'undo',
   'redo',
-  'disableUndoRedo'
+  'disableUndoRedo',
+  'toggleSearchTable'
 )
 
 let model = new Model(dispatcher)

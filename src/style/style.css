@@ -384,6 +384,24 @@ table.dataTable tbody tr {
   border-bottom: 0;
 }
 
+.searchwidth {
+  width: 21em;
+}
+
+.dataTables_wrapper .dataTables_filter {
+  text-align:left;
+  float: left;
+  margin-bottom: 5px;
+  margin-left: 4px;
+  background-color: white;
+  position: absolute;
+  z-index: 100;
+  width: 20em;
+}
+
+.dataTables_wrapper .dataTables_filter label {
+  font-weight: bold;
+}
 
 textarea {
   width : 99%;

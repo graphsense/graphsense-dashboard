@@ -19,6 +19,7 @@ export default class Table extends BrowserComponent {
     this.total = total
     this.data = []
     this.loading = null
+    this.searchable = false
   }
   isSmall () {
     return this.total < 5000
@@ -33,9 +34,21 @@ export default class Table extends BrowserComponent {
     this.root.innerHTML = table
     let tr = this.root.querySelector('tr')
     let el = this.root.querySelector('th')
-    this.columns.forEach(({name}) => {
+    this.columns.forEach((column, i) => {
       let el2 = el.cloneNode()
-      el2.innerHTML = name.replace(/ /g, '&nbsp;')
+      column.searchable = i === 0
+      if (i === 0) {
+        if (this.isSmall()) {
+          let sw = this.searchable ? 'searchwidth' : ''
+          el2.innerHTML = '<div id="firstColumn" class="flex justify-between mr-1 ' + sw + '"><span class="flex-grow mr-2">' + column.name + '</span><i class="fas fa-search text-grey"></i></div>'
+          el2.querySelector('i').addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.dispatcher('toggleSearchTable')
+          })
+        }
+      } else {
+        el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
+      }
       tr.appendChild(el2)
     })
     tr.removeChild(el)
@@ -46,7 +59,9 @@ export default class Table extends BrowserComponent {
         this.ajax(request, drawCallback, settings, this)
       },
       scrollY: browserHeight - rowHeight - 4 * browserPadding,
-      searching: false,
+      searching: this.searchable,
+      search: { smart: false },
+      dom: 'fti',
       ordering: this.isSmall(),
       order: this.order,
       deferRender: true,
@@ -76,6 +91,10 @@ export default class Table extends BrowserComponent {
       this.order = this.table.order()
     })
     return this.root
+  }
+  toggleSearch () {
+    this.searchable = !this.searchable
+    this.setUpdate(true)
   }
   renderOptions () {
     return null

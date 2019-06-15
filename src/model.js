@@ -750,6 +750,9 @@ export default class Model {
       this.layout.disableButton('undo', true)
       this.layout.disableButton('redo', true)
     })
+    this.dispatcher.on('toggleSearchTable', () => {
+      this.browser.toggleSearchTable()
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)

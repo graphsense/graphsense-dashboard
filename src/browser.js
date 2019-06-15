@@ -36,6 +36,10 @@ export default class Browser extends Component {
     })
     this.content = this.content.slice(0, index)
   }
+  toggleSearchTable () {
+    if (!(this.content[1] instanceof Table)) return
+    this.content[1].toggleSearch()
+  }
   isShowingOutgoingNeighbors () {
     let last = this.content[this.content.length - 1]
     if (last instanceof NeighborsTable) {
