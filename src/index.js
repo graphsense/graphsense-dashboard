@@ -30,6 +30,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'fetchError',
   'resultNodeForBrowser',
   'resultTransactionForBrowser',
+  'resultTagForBrowser',
   'resultBlockForBrowser',
   'addNode',
   'addNodeCont',

@@ -167,6 +167,8 @@ export default class Model {
         this.mapResult(this.rest.node(keyspace, {id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
         this.mapResult(this.rest.transaction(keyspace, id), 'resultTransactionForBrowser', id)
+      } else if (type === 'tag') {
+        this.mapResult(this.rest.tag(keyspace, id), 'resultTagForBrowser', id)
       } else if (type === 'block') {
         this.mapResult(this.rest.block(keyspace, id), 'resultBlockForBrowser', id)
       }
@@ -189,6 +191,9 @@ export default class Model {
           this.statusbar.removeLoading(context)
           break
         case 'resultBlockForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultTagForBrowser':
           this.statusbar.removeLoading(context)
           break
         case 'resultEgonet':
@@ -226,11 +231,16 @@ export default class Model {
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
-      // historyPushState('resultTransaction', response)
       this.browser.setTransaction(result)
       historyPushState(result.keyspace, 'transaction', result.txHash)
       this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
+    })
+    this.dispatcher.on('resultTagForBrowser', ({result}) => {
+      this.browser.setTag(result)
+      historyPushState(result.keyspace, 'tag', result.id)
+      this.statusbar.removeLoading(result.id)
+      this.statusbar.addMsg('loaded', 'tag', result.id)
     })
     this.dispatcher.on('resultBlockForBrowser', ({result}) => {
       this.browser.setBlock(result)

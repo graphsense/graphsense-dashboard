@@ -5,7 +5,7 @@ import Logger from '../logger.js'
 
 const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
-const empty = {addresses: [], transactions: []}
+const empty = {addresses: [], transactions: [], tags: []}
 const numShowResults = 7
 
 const byPrefix = term => addr => addr.startsWith(term)
@@ -84,6 +84,11 @@ export default class Search extends Component {
             this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace})
             return false
           }
+          if (this.result[keyspace].tags.length > 0) {
+            let tags = this.result[keyspace].tags.filter(byPrefix(this.term))
+            this.dispatcher('clickSearchResult', {id: tags[0], type: 'tag', keyspace})
+            return false
+          }
           let blocks = this.blocklist(3, keyspace, this.term)
           if (blocks.length > 0) {
             this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace})
@@ -148,7 +153,8 @@ export default class Search extends Component {
     if (this.term.length < prefixLength) return false
     let alen = this.result[keyspace].addresses.length
     let tlen = this.result[keyspace].transactions.length
-    return !(((alen !== 0 && alen < limit) || (tlen !== 0 && tlen < limit)) && this.term.startsWith(this.resultTerm))
+    let talen = this.result[keyspace].tags.length
+    return !(((alen !== 0 && alen < limit) || (tlen !== 0 && tlen < limit) || (talen !== 0 && talen < limit)) && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
     return null
@@ -171,12 +177,17 @@ export default class Search extends Component {
         .filter(byPrefix(this.term))
         .slice(0, numShowResults)
 
+      let tags = this.result[keyspace].tags
+        .filter(byPrefix(this.term))
+        .slice(0, numShowResults)
+
       let blocks = this.blocklist(3, keyspace, this.term)
 
       let keyspaceVisible =
         this.result[keyspace].error ||
         addresses.length > 0 ||
         transactions.length > 0 ||
+        tags.length > 0 ||
         blocks.length > 0
       visible = visible || keyspaceVisible
       if (this.result[keyspace].error) {
@@ -200,6 +211,7 @@ export default class Search extends Component {
       }
       addresses.forEach(searchLine('address', 'at'))
       transactions.forEach(searchLine('transaction', 'exchange-alt'))
+      tags.forEach(searchLine('tag', 'tag'))
       blocks.forEach(searchLine('block', 'cube'))
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
@@ -226,8 +238,9 @@ export default class Search extends Component {
   setResult (term, result) {
     if (term !== this.term) return
     this.result[result.keyspace] = {
-      addresses: result.addresses,
-      transactions: result.transactions
+      addresses: result.addresses || [],
+      transactions: result.transactions || [],
+      tags: result.tags || []
     }
     this.resultTerm = term
     this.setUpdate('result')

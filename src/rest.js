@@ -22,9 +22,6 @@ export default class Rest {
   remoteJson (keyspace, url, field) {
     url = this.baseUrl + (keyspace ? '/' + keyspace : '') + '/' + url
     return json(url, options)
-      .catch(err => {
-        logger.debug('err', err)
-      })
       .then(result => {
         if (field) {
         // result is an array
@@ -56,6 +53,9 @@ export default class Rest {
       return Promise.resolve({addresses: []})
     }
     return this.json(keyspace, '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
+  }
+  searchTags (keyspace, str, limit) {
+    return this.json(keyspace, '/search_tags?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
   node (keyspace, request) {
     return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
@@ -94,6 +94,9 @@ export default class Rest {
   }
   block (keyspace, height) {
     return this.json(keyspace, `/block/${height}`)
+  }
+  tag (keyspace, id) {
+    return Promise.reject(new Error('tag endpoint not implemented'))
   }
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage) {
     let dir = isOutgoing ? 'out' : 'in'
