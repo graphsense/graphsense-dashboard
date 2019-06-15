@@ -26,6 +26,7 @@ export default class Table extends BrowserComponent {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    logger.debug('shouldupdate', this.shouldUpdate())
     if (!this.shouldUpdate()) return this.root
     logger.debug('render table')
     super.render()
@@ -47,6 +48,7 @@ export default class Table extends BrowserComponent {
       scrollY: browserHeight - rowHeight - 4 * browserPadding,
       searching: false,
       ordering: this.isSmall(),
+      order: this.order,
       deferRender: true,
       scroller: {
         loadingIndicator: true,
@@ -69,6 +71,9 @@ export default class Table extends BrowserComponent {
         row.keyspace = that.keyspace
       }
       that.dispatcher(that.selectMessage, row)
+    })
+    this.table.on('order.dt', () => {
+      this.order = this.table.order()
     })
     return this.root
   }
