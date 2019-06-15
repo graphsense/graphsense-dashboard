@@ -104,7 +104,7 @@ export default class Rest {
     return this.json(keyspace, url, 'neighbors')
   }
   stats () {
-    return this.json(null, '')
+    return this.json(null, '/stats')
   }
   searchNeighbors (keyspace, id, type, isOutgoing, params, searchDepth, searchBreadth) {
     let dir = isOutgoing ? 'out' : 'in'
