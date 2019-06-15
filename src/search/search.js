@@ -237,19 +237,9 @@ export default class Search extends Component {
     prefix = prefix * 1
     if (typeof prefix !== 'number') return []
     if (prefix <= 0) return []
-    let e = 8 - Math.trunc(Math.log10(prefix))
-    logger.debug('e', Math.log10(prefix))
-    let i = 0
-    let list = []
-    for (;e >= 0 && i < limit; e--) {
-      let p = Math.pow(10, e)
-      let min = prefix * p
-      let max = Math.min(this.stats[keyspace].no_blocks, (prefix + 1) * p)
-      for (let j = max - 1; j >= min && i < limit; j--) {
-        list.push(j)
-        i++
-      }
+    if (prefix < this.stats[keyspace].no_blocks) {
+      return [prefix]
     }
-    return list
+    return []
   }
 }
