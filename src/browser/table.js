@@ -59,7 +59,7 @@ export default class Table extends BrowserComponent {
       serverSide: !this.isSmall(),
       columns: this.columns,
       language: {
-        info: `Showing _START_ to _END_ of ${total} entries`
+        info: `Showing _START_ to _END_ of ${total} entries` + (!this.isSmall() ? ' <span class="text-gs-red">(sorting/filtering disabled)</span>' : '')
       }
     })
     // using es5 'function' to have 'this' bound to the triggering element
