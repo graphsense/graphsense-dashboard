@@ -87,7 +87,6 @@ export default class NodeGraph extends Component {
     this.addressNodes = map()
     this.adding = set()
     this.layers = []
-    this.viewBox = {x, y, w, h}
     this.transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     this.colorMapCategories = map(predefinedCategories)
     this.colorMapTags = map()
@@ -485,25 +484,26 @@ export default class NodeGraph extends Component {
     if (!this.root) throw new Error('root not defined')
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
+    let transformGraph = () => {
+      let x = this.transform.x + this.transform.dx * this.transform.k
+      let y = this.transform.y + this.transform.dy * this.transform.k
+      this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
+    }
     if (this.shouldUpdate(true)) {
       let svg = create('svg')
         .classed('w-full h-full', true)
-        .attr('viewBox', (({x, y, w, h}) => `${x} ${y} ${w} ${h}`)(this.viewBox))
+        .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .call(drag().on('drag', () => {
           this.transform.dx += event.dx
           this.transform.dy += event.dy
-          let x = this.transform.x + this.transform.dx * this.transform.k
-          let y = this.transform.y + this.transform.dy * this.transform.k
-          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
+          transformGraph()
         }))
         .call(zoom().on('zoom', () => {
           this.transform.k = event.transform.k
           this.transform.x = event.transform.x
           this.transform.y = event.transform.y
-          let x = this.transform.x + this.transform.dx * this.transform.k
-          let y = this.transform.y + this.transform.dy * this.transform.k
-          this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
+          transformGraph()
         }))
       let markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
@@ -515,6 +515,7 @@ export default class NodeGraph extends Component {
         )) +
         '</defs>'
       this.graphRoot = svg.append('g')
+      transformGraph()
       svg.on('click', () => {
         this.dispatcher('deselect')
       })
@@ -767,7 +768,7 @@ export default class NodeGraph extends Component {
       this.currency,
       this.labelType,
       this.txLabelType,
-      this.viewBox,
+      this.transform,
       clusterNodes,
       addressNodes,
       layers,
@@ -818,7 +819,7 @@ export default class NodeGraph extends Component {
     currency,
     labelType,
     txLabelType,
-    viewBox,
+    transform,
     clusterNodes,
     addressNodes,
     layers,
@@ -828,7 +829,7 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.labelType = labelType
     this.txLabelType = txLabelType
-    this.viewBox = viewBox
+    this.transform = transform
     colorMapCategories.forEach(({key, value}) => {
       this.colorMapCategories.set(key, value)
     })
