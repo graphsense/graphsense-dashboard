@@ -479,6 +479,9 @@ export default class NodeGraph extends Component {
     if (ids.size() === 0) return false
     return ids.values()
   }
+  getSvg () {
+    return this.root.innerHTML
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -491,9 +494,10 @@ export default class NodeGraph extends Component {
     }
     if (this.shouldUpdate(true)) {
       let svg = create('svg')
-        .classed('w-full h-full', true)
+        .classed('w-full h-full graph', true)
         .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid meet')
+        .attr('xmlns', 'http://www.w3.org/2000/svg')
         .call(drag().on('drag', () => {
           this.transform.dx += event.dx
           this.transform.dy += event.dy
@@ -512,7 +516,7 @@ export default class NodeGraph extends Component {
           `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
            `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
          '</marker>'
-        )) +
+        )).join('') +
         '</defs>'
       this.graphRoot = svg.append('g')
       transformGraph()
@@ -695,9 +699,15 @@ export default class NodeGraph extends Component {
     let path = link({source: [source, true, scale], target: [target, false, scale]})
     let g1 = root.append('g').classed('link', true)
     g1.append('path').attr('d', path)
-      .classed('frame', true)
+      .classed('linkPathFrame', true)
+      .style('stroke-width', '6px')
+      .style('opacity', 0)
     g1.append('path').attr('d', path)
+      .classed('linkPath', true)
       .style('stroke-width', scale + 'px')
+      .style('fill', 'none')
+      .style('stroke', 'black')
+      .style('marker-end', 'url(#arrow1-black)')
     let sourceX = source.getXForLinks() + source.getWidthForLinks()
     let sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     let targetX = target.getXForLinks() - this.arrowSummit
@@ -709,6 +719,7 @@ export default class NodeGraph extends Component {
 
     let f = () => {
       return g2.append('text')
+        .classed('linkText', true)
         .attr('text-anchor', 'middle')
         .text(label)
         .style('font-size', fontSize)
@@ -726,6 +737,7 @@ export default class NodeGraph extends Component {
     t.remove()
 
     g2.append('rect')
+      .classed('linkRect', true)
       .attr('rx', fontSize / 2)
       .attr('ry', fontSize / 2)
       .attr('x', x - width / 2)

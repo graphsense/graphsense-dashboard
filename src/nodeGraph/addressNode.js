@@ -1,7 +1,6 @@
 import {event} from 'd3-selection'
 import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
 import contextMenu from 'd3-context-menu'
-import {drag} from 'd3-drag'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
@@ -28,7 +27,7 @@ export default class AddressNode extends GraphNode {
         })
         .on('contextmenu', contextMenu(this.menu()))
       g.append('rect')
-        .classed('rect', true)
+        .classed('addressNodeRect', true)
         .attr('x', x)
         .attr('y', y)
         .attr('width', addressWidth)
@@ -40,7 +39,7 @@ export default class AddressNode extends GraphNode {
         .attr('transform', `translate(${x + padding}, ${h})`)
 
       this.renderLabel(label)
-      let eg = g.append('g').classed('expandHandles', true)
+      let eg = g.append('g')
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
       this.coloring()

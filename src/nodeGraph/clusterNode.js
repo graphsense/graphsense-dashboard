@@ -148,7 +148,7 @@ export default class ClusterNode extends GraphNode {
               this.dispatcher('dragNodeEnd', {id: this.id, type: this.type})
             }))
         g.append('rect')
-          .classed('rect', true)
+          .classed('clusterNodeRect', true)
           .attr('width', clusterWidth)
           .attr('height', height)
         let label = g.append('g')

@@ -141,6 +141,7 @@ class GraphNode extends Component {
       })
       .on('contextmenu', contextMenu(this.neighborsMenu(isOutgoing)))
     g.append('path')
+      .classed('expandHandlePath', true)
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
     let fontSize = expandHandleWidth * 0.8
     let fontX = (expandHandleWidth - fontSize)
@@ -249,11 +250,15 @@ class GraphNode extends Component {
         break
     }
     this.root
-      .select('.rect')
-      .style('color', color)
+      .select('.addressNodeRect,.clusterNodeRect')
+      .style('fill', color)
+      .style('stroke', 'black')
+      .style('stroke-width', '1px')
     this.root
-      .selectAll('.expandHandle path')
-      .style('color', color)
+      .selectAll('.expandHandlePath')
+      .style('fill', color)
+      .style('stroke', 'black')
+      .style('stroke-width', '1px')
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)

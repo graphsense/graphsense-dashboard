@@ -13,6 +13,7 @@ import FileSaver from 'file-saver'
 import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
 import Logger from './logger.js'
+import {map} from 'd3-collection'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -632,6 +633,35 @@ export default class Model {
       let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.serialize())
+    })
+    this.dispatcher.on('exportSvg', () => {
+      if (this.isReplaying) return
+      let classMap = map()
+      let rules = document.styleSheets[0].cssRules
+      for (let i = 0; i < rules.length; i++) {
+        let selectorText = rules[i].selectorText
+        let cssText = rules[i].cssText
+        if (!selectorText || !selectorText.startsWith('svg')) continue
+        let s = selectorText.replace('.', '').replace('svg', '').trim()
+        classMap.set(s, cssText.split('{')[1].replace('}', ''))
+      }
+      let svg = this.graph.getSvg()
+      // replace classes by inline styles
+      svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
+        logger.debug('classes', classes)
+        let repl = classes.split(' ')
+          .map(cls => classMap.get(cls) || '')
+          .join('')
+        logger.debug('repl', repl)
+        if (repl.trim() === '') return ''
+        return 'style="' + repl.replace(/"/g, '\'').replace('"', '\'') + '"'
+      })
+      // replace double quotes and quot (which was created by innerHTML)
+      svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
+      // merge double style definitions
+      svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
+      this.download(filename, svg)
     })
     this.dispatcher.on('load', () => {
       if (this.isReplaying) return

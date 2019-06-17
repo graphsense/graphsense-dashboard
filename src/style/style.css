@@ -203,143 +203,92 @@ li.option-active i {
   outline: none;
 }
 
-.address-node-color {
-  @apply text-grey-light
-}
-
-.cluster-node-color {
-  @apply text-gs-light
-}
-
-svg {
+svg.graph {
   @apply font-sans bg-grey-lightest
 }
 
-svg g.addressNode {
+svg .addressNode {
   cursor: pointer;
 }
 
-svg g.addressNode > rect{
-  stroke: black;
-  stroke-width: 1px;
-  @apply address-node-color fill-current
+svg .addressNodeRect{
+  /* defined inline to allow for export in svg file */
 }
 
-svg g.addressNode text {
-}
-
-svg g.clusterNode {
+svg .clusterNode {
   cursor: pointer;
 }
 
-svg g.clusterNode > rect{
-  stroke: black;
-  @apply cluster-node-color fill-current
+svg .clusterNodeRect{
+  /* defined inline to allow for export in svg file */
 }
 
-svg g.clusterNode text {
+svg .selected > rect {
+  stroke: red !important;
+  stroke-width: 3px !important;
 }
 
-svg g.clusterNode.mockup {
-  opacity: 0;
+svg .expandHandlePath {
+  /* defined inline to allow for export in svg file */
 }
 
-svg g.selected > rect {
-  stroke: red;
-  stroke-width: 3px;
+svg .selected .expandHandle > path {
+  stroke: red !important;
+  stroke-width: 3px !important;
 }
 
-svg g.selected .expandHandle > path {
-  stroke: red;
-  stroke-width: 3px;
-}
-
-svg g.addressExpand {
+svg .addressExpand {
   cursor: pointer;
 }
 
-svg g.expandHandles text {
+svg .expandHandleText {
   @apply text-black fill-current
 }
 
-svg g.expandHandle {
+svg .expandHandle {
   cursor: pointer;
 }
 
-svg g.expandHandle > path {
-  stroke-width: 1px;
-  stroke: black;
-}
-
-svg g.addressNode > g.expandHandles path{
-  @apply address-node-color fill-current 
-}
-svg g.clusterNode > g.expandHandles path{
-  @apply cluster-node-color fill-current
-}
-
-svg g.expandHandle:hover text {
+svg .expandHandleText:hover text {
   font-weight: bold;
 }
 
-svg g.removeHandle {
-  visibility: hidden;
-}
-
-svg g.removeHandle > rect {
-  @apply text-transparent fill-current
-}
-
-svg g.removeHandle > text {
-  font-family: FontAwesome;
-  @apply text-black fill-current
-}
-
-svg g.addressNode:hover g.removeHandle {
-  visibility: visible;
-}
-svg g.clusterNode:hover g.removeHandle {
-  visibility: visible;
-}
-
-svg g.link path {
-  stroke: black;
-  stroke-width: 2px;
-  fill: none;
-  marker-end:url('#arrow1-black');
-}
-
-svg g.link rect {
-  fill: rgba(255,255,255,0.8);
+svg .linkRect {
+  fill: rgb(255,255,255);
+  opacity: 0.8;
   stroke-width: 0px;
   stroke:black;
 }
 
-svg g.link text {
+svg .linkText {
   fill: black;
   stroke-width: 0;
   cursor: default;
   font-weight: bold;
 }
 
-svg g.link:hover * {
-  stroke: red;
-}
-svg g.link:hover path {
-  marker-end: url('#arrow1-red');
+svg .linkPath {
+  /* defined inline to allow for export in svg file */
 }
 
-svg g.link:hover text {
+svg .linkPathFrame {
+  /* defined inline to allow for export in svg file */
+}
+
+svg .link:hover * {
+  stroke: red !important;
+}
+svg .link:hover path {
+  marker-end: url(#arrow1-red);
+}
+
+svg .link:hover text {
   fill: red;
 }
 
-svg g.link path.frame {
-  stroke-width: 6px;
-  opacity: 0;
-}
-
 svg .shadow {
-  @apply text-gs-dark stroke-current;
+  @apply text-gs-dark;
+  stroke: #71a1a5; /* gs-dark, defined plain to allow for export in svg file*/
   opacity: 0.2;
   stroke-width: 20px;
   fill: none;
@@ -348,7 +297,6 @@ svg .shadow {
 svg .shadow:hover {
   opacity: 0.8;
 }
-
 div.dataTables_wrapper {
   position: relative;
 }

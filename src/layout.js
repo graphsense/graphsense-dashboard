@@ -77,6 +77,7 @@ export default class Layout extends Component {
         [ ['new', 'new'],
           ['save', 'save'],
           ['load', 'load'],
+          ['export', 'exportSvg'],
           ['config', 'toggleConfig'],
           ['undo', 'undo'],
           ['redo', 'redo']
