@@ -28,6 +28,10 @@ export default class Config extends Component {
     this.visible = this.visible === 'legend' ? null : 'legend'
     this.setUpdate(true)
   }
+  hide () {
+    this.visible = null
+    this.setUpdate(true)
+  }
   setCategoryColors (colors) {
     this.categoryColors = colors
   }

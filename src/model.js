@@ -274,6 +274,7 @@ export default class Model {
     })
     this.dispatcher.on('deselect', () => {
       this.browser.deselect()
+      this.config.hide()
       this.graph.deselect()
     })
     this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
