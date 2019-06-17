@@ -1,5 +1,6 @@
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
+import legendItem from './config/legendItem.html'
 import filter from './config/filter.html'
 import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
@@ -17,10 +18,18 @@ export default class Config extends Component {
     this.visible = false
     this.searchDepth = searchDepth
     this.searchBreadth = searchBreadth
+    this.categoryColors = {}
   }
   toggleConfig () {
-    this.visible = !this.visible
+    this.visible = this.visible === 'config' ? null : 'config'
     this.setUpdate(true)
+  }
+  toggleLegend () {
+    this.visible = this.visible === 'legend' ? null : 'legend'
+    this.setUpdate(true)
+  }
+  setCategoryColors (colors) {
+    this.categoryColors = colors
   }
   render (root) {
     if (root) this.root = root
@@ -28,17 +37,29 @@ export default class Config extends Component {
     if (!this.shouldUpdate()) return this.root
     if (!this.visible) {
       removeClass(this.root, 'show')
-    } else {
-      addClass(this.root, 'show')
+      super.render()
+      return this.root
     }
+    addClass(this.root, 'show')
     this.root.innerHTML = configLayout
-    let el = this.root.querySelector('#config')
-    el.innerHTML = graphConfig
-    this.renderSelect('clusterLabel', 'changeClusterLabel')
-    this.renderSelect('addressLabel', 'changeAddressLabel')
-    this.renderSelect('transactionLabel', 'changeTxLabel')
-    this.renderInput('searchDepth', 'changeSearchDepth', this.searchDepth)
-    this.renderInput('searchBreadth', 'changeSearchBreadth', this.searchBreadth)
+    let el = this.root.querySelector('#dropdown')
+    if (this.visible === 'config') {
+      el.innerHTML = graphConfig
+      this.renderSelect('clusterLabel', 'changeClusterLabel')
+      this.renderSelect('addressLabel', 'changeAddressLabel')
+      this.renderSelect('transactionLabel', 'changeTxLabel')
+      this.renderInput('searchDepth', 'changeSearchDepth', this.searchDepth)
+      this.renderInput('searchBreadth', 'changeSearchBreadth', this.searchBreadth)
+    } else if (this.visible === 'legend') {
+      for (let name in this.categoryColors) {
+        let itemEl = document.createElement('div')
+        itemEl.className = 'flex items-center'
+        itemEl.innerHTML = legendItem
+        itemEl.querySelector('.legendColor').style.backgroundColor = this.categoryColors[name]
+        itemEl.querySelector('.legendItem').innerHTML = name
+        el.appendChild(itemEl)
+      }
+    }
     super.render()
     return this.root
   }

@@ -783,6 +783,10 @@ export default class Model {
     this.dispatcher.on('toggleSearchTable', () => {
       this.browser.toggleSearchTable()
     })
+    this.dispatcher.on('toggleLegend', () => {
+      this.config.setCategoryColors(this.graph.getCategoryColors())
+      this.config.toggleLegend()
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)

@@ -76,6 +76,10 @@ const predefinedCategories =
 
 const maxNumSnapshots = 4
 
+const createColor = (chroma, type) => {
+  return hsl2rgb(chroma, saturation, lightness[type])
+}
+
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
     super()
@@ -99,7 +103,7 @@ export default class NodeGraph extends Component {
           map.set(k, chroma)
         }
         logger.debug('colorGen', type, k, chroma)
-        return hsl2rgb(chroma, saturation, lightness[type])
+        return createColor(chroma, type)
       }
     }
     this.colors =
@@ -120,6 +124,13 @@ export default class NodeGraph extends Component {
     // initialize with true to allow initial snapshot
     this.dirty = true
     this.createSnapshot()
+  }
+  getCategoryColors () {
+    let colors = {...predefinedCategories}
+    for (let cat in colors) {
+      colors[cat] = createColor(colors[cat], 'cluster')
+    }
+    return colors
   }
   createSnapshot () {
     // don't create snapshot if nothing has changed
