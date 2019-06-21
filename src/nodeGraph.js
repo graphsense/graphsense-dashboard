@@ -47,8 +47,6 @@ const predefinedCategories =
         obj[category] = chromaStep * 0
         break
       case 'Exchange':
-        obj[category] = chromaStep * 1
-        break
       case 'Exchanges':
         obj[category] = chromaStep * 1
         break
@@ -126,9 +124,10 @@ export default class NodeGraph extends Component {
     this.createSnapshot()
   }
   getCategoryColors () {
-    let colors = {...predefinedCategories}
-    for (let cat in colors) {
-      colors[cat] = createColor(colors[cat], 'cluster')
+    let colors = {}
+    for (let cat in predefinedCategories) {
+      if (cat === 'Exchanges') continue
+      colors[cat] = createColor(predefinedCategories[cat], 'cluster')
     }
     return colors
   }
