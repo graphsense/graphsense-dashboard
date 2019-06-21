@@ -376,7 +376,11 @@ export default class NodeGraph extends Component {
     this.clusterNodes.set(node.id, node)
     this.dirty = true
 
-    layer.add(node)
+    let anchorLayer = anchor && this.findLayer(anchor.nodeId[1])
+
+    let addToTop = anchorLayer && anchorLayer.isNodeInUpperHalf(anchor.nodeId)
+
+    layer.add(node, addToTop)
     return node
   }
   remove (nodeType, nodeId) {
@@ -402,9 +406,11 @@ export default class NodeGraph extends Component {
       })
     } else if (nodeType === 'cluster') {
       node.nodes.each(node => this.addressNodes.remove(node.id))
-      layer.nodes.remove(nodeId)
+      this.clusterNodes.remove(nodeId)
       if (layer.nodes.size() === 0) {
         this.layers = this.layers.filter(l => l !== layer)
+      } else {
+        layer.remove(nodeId)
       }
     }
     this.setUpdate('layers')
