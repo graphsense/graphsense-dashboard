@@ -12,7 +12,7 @@ const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 const padding = 10
 const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
-const noExpandableNeighbors = 19
+const noExpandableNeighbors = 25
 
 class GraphNode extends Component {
   constructor (dispatcher, labelType, data, layerId, colors, currency) {
