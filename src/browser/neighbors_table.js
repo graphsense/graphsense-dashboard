@@ -29,7 +29,7 @@ export default class NeighborsTable extends Table {
     this.selectMessage = 'selectNeighbor'
     this.loadParams = [id, type, isOutgoing]
   }
-  isSmall () {
-    return this.total < 2000
+  smallThreshold () {
+    return 2000
   }
 }

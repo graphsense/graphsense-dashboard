@@ -34,7 +34,7 @@ export default class AddressesTable extends Table {
     this.selectMessage = 'selectAddress'
     this.loadParams = this.clusterId
   }
-  isSmall () {
-    return this.total < 200
+  smallThreshold () {
+    return 200
   }
 }
