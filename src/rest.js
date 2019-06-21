@@ -112,7 +112,7 @@ export default class Rest {
   searchNeighbors (keyspace, id, type, isOutgoing, params, searchDepth, searchBreadth) {
     let dir = isOutgoing ? 'out' : 'in'
     let url =
-      `/${type}/${id}/search/${dir}/${params.category}?depth=${searchDepth}&breadth=${searchBreadth}`
+      `/${type}/${id}/search?direction=${dir}&category=${params.category}&depth=${searchDepth}&breadth=${searchBreadth}`
     return this.json(keyspace, url)
   }
 }
