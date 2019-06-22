@@ -17,6 +17,7 @@ export default class BrowserComponent extends Component {
     this.setUpdate(true)
   }
   renderOptions () {
+    if (!this.options) return
     let ul = document.createElement('ul')
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {

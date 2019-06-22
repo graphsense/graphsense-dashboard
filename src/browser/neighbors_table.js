@@ -28,8 +28,20 @@ export default class NeighborsTable extends Table {
     this.resultField = 'neighbors'
     this.selectMessage = 'selectNeighbor'
     this.loadParams = [id, type, isOutgoing]
+    this.options =
+      [
+        this.downloadOption()
+      ]
   }
   smallThreshold () {
     return 2000
+  }
+  getParams () {
+    return {
+      id: this.loadParams[0],
+      type: this.loadParams[1],
+      isOutgoing: this.loadParams[2],
+      keyspace: this.keyspace
+    }
   }
 }

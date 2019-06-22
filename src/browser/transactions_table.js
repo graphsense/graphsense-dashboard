@@ -29,4 +29,11 @@ export default class TransactionsTable extends Table {
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
   }
+  getParams () {
+    return {
+      id: this.loadParams[0],
+      type: this.loadParams[1],
+      keyspace: this.keyspace
+    }
+  }
 }

@@ -97,9 +97,6 @@ export default class Table extends BrowserComponent {
     this.searchable = !this.searchable
     this.setUpdate(true)
   }
-  renderOptions () {
-    return null
-  }
   ajax (request, drawCallback, settings, table) {
     logger.debug('ajax request', request)
     if (table.isSmall()) {
@@ -163,5 +160,8 @@ export default class Table extends BrowserComponent {
       if (type === 'display') return func(value)
       return value
     }
+  }
+  downloadOption () {
+    return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
   }
 }

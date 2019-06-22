@@ -20,7 +20,7 @@ export default class Rest {
     this.json = this.remoteJson
   }
   remoteJson (keyspace, url, field) {
-    url = this.baseUrl + (keyspace ? '/' + keyspace : '') + '/' + url
+    url = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
     return json(url, options)
       .then(result => {
         if (field) {
@@ -39,6 +39,12 @@ export default class Rest {
         error.requestURL = url
         return Promise.reject(error)
       })
+  }
+  keyspaceUrl (keyspace) {
+    return this.baseUrl + (keyspace ? '/' + keyspace : '')
+  }
+  csvUrl (keyspace, url) {
+    return this.keyspaceUrl(keyspace) + url + '.csv'
   }
   disable () {
     this.json = (url) => {
@@ -64,22 +70,26 @@ export default class Rest {
     logger.debug('rest clusterForAddress', id)
     return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
   }
-  transactions (keyspace, request) {
+  transactions (keyspace, request, csvUrl) {
     let url =
-       '/' + request.params[1] + '/' + request.params[0] + '/transactions?' +
+       '/' + request.params[1] + '/' + request.params[0] + '/transactions'
+    if (csvUrl) return this.csvUrl(keyspace, url)
+    url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'transactions')
   }
-  addresses (keyspace, request) {
-    let url =
-       '/cluster/' + request.params + '/addresses?' +
+  addresses (keyspace, request, csvUrl) {
+    let url = '/cluster/' + request.params + '/addresses'
+    if (csvUrl) return this.csvUrl(keyspace, url)
+    url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, 'addresses')
   }
-  tags (keyspace, {id, type}) {
+  tags (keyspace, {id, type}, csvUrl) {
     let url = '/' + type + '/' + id + '/tags'
+    if (csvUrl) return this.csvUrl(keyspace, url)
     return this.json(keyspace, url, 'tags')
   }
   egonet (keyspace, type, id, isOutgoing, limit) {
@@ -98,10 +108,13 @@ export default class Rest {
   tag (keyspace, id) {
     return Promise.reject(new Error('tag endpoint not implemented'))
   }
-  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage) {
+  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csvUrl) {
     let dir = isOutgoing ? 'out' : 'in'
-    let url =
-      `/${type}/${id}/neighbors?direction=${dir}&` +
+    let url = `/${type}/${id}/neighbors`
+    if (csvUrl) url += '.csv'
+    url += `?direction=${dir}`
+    if (csvUrl) return this.csvUrl(keyspace, url)
+    url += '&' +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')

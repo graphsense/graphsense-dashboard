@@ -155,7 +155,7 @@ export default class Browser extends Component {
     last.setCurrentOption('initTagsTable')
     this.destroyComponentsFrom(request.index + 1)
     let keyspace = last.data.keyspace
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, keyspace))
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, this.currency, keyspace))
 
     this.setUpdate('content')
   }
@@ -226,6 +226,7 @@ export default class Browser extends Component {
     let data = this.root.querySelector('#browser-data')
     data.innerHTML = ''
     let c = 0
+    logger.debug('renderContent', this.content)
     this.content.forEach((comp) => {
       c += 1
       let compEl = document.createElement('div')

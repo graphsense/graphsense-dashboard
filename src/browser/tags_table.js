@@ -1,8 +1,8 @@
 import Table from './table.js'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, data, nodeId, nodeType, keyspace) {
-    super(dispatcher, index, data.length, keyspace)
+  constructor (dispatcher, index, data, nodeId, nodeType, currency, keyspace) {
+    super(dispatcher, index, data.length, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.nodeType = nodeType
@@ -39,8 +39,19 @@ export default class TagsTable extends Table {
     this.loadMessage = 'loadTags'
     this.resultField = 'tags'
     this.loadParams = [this.nodeId, this.nodeType]
+    this.options =
+      [
+        this.downloadOption()
+      ]
   }
   isSmall () {
     return true
+  }
+  getParams () {
+    return {
+      id: this.loadParams[0],
+      type: this.loadParams[1],
+      keyspace: this.keyspace
+    }
   }
 }

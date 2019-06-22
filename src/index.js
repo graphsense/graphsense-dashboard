@@ -105,7 +105,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'disableUndoRedo',
   'toggleSearchTable',
   'exportSvg',
-  'toggleLegend'
+  'toggleLegend',
+  'downloadTable'
 )
 
 let model = new Model(dispatcher)
