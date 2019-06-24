@@ -11,9 +11,6 @@ import Search from './search/search.js'
 
 const logger = Logger.create('Menu') // eslint-disable-line
 
-const menuWidth = 250
-const menuHeight = 300
-
 const defaultCriterion = 'category'
 const defaultParams = () => ({category: null, addresses: []})
 const defaultDepth = 2
@@ -27,7 +24,8 @@ export default class Menu extends Component {
     this.view = {}
   }
   showNodeDialog (x, y, params) {
-    this.setMenuPosition(x, y)
+    let menuWidth = 250
+    let menuHeight = 300
     if (params.dialog === 'note') {
       this.view = {viewType: 'node', node: params.node}
     } else if (params.dialog === 'search') {
@@ -41,10 +39,13 @@ export default class Menu extends Component {
         depth: defaultDepth,
         breadth: defaultBreadth
       }
+      menuWidth = 400
+      menuHeight = 400
     }
+    this.setMenuPosition(x, y, menuWidth, menuHeight)
     this.setUpdate(true)
   }
-  setMenuPosition (x, y) {
+  setMenuPosition (x, y, menuWidth, menuHeight) {
     let w = window
     let d = document
     let e = d.documentElement

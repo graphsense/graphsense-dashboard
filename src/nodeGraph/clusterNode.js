@@ -56,6 +56,7 @@ export default class ClusterNode extends GraphNode {
   }
   menu () {
     let items = []
+    let searchNeighborsDialog = isOutgoing => this.dispatcher('searchNeighborsDialog', {x: event.x - 120, y: event.y - 50, id: this.id, type: this.type, isOutgoing})
     items.push(
       { title: () => this.expandCollapseOrShowAddressTableTitle(),
         action: () => this.expandCollapseOrShowAddressTable(),
@@ -103,10 +104,10 @@ export default class ClusterNode extends GraphNode {
       { title: 'Search',
         children: [
           { title: 'Incoming',
-            action: () => this.dispatcher('searchNeighborsDialog', {x: event.x, y: event.y, id: this.id, type: this.type, isOutgoing: false})
+            action: () => searchNeighborsDialog(false)
           },
           { title: 'Outgoing',
-            action: () => this.dispatcher('searchNeighborsDialog', {x: event.x, y: event.y, id: this.id, type: this.type, isOutgoing: true})
+            action: () => searchNeighborsDialog(true)
           }
         ]
 
