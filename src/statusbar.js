@@ -115,7 +115,7 @@ export default class Statusbar extends Component {
       let outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
       let crit = ''
       if (search.params.category) crit = `category ${search.params.category}`
-      if (search.params.ids) crit = 'ids ' + search.params.ids.join(',')
+      if (search.params.addresses.length > 0) crit = 'addresses ' + search.params.addresses.join(',')
       let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
       top.innerHTML = msg
     } else {

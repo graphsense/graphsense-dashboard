@@ -1,7 +1,8 @@
 import search from './search.html'
 import Component from '../component.js'
-import {addClass, removeClass} from '../template_utils.js'
+import {replace, addClass, removeClass} from '../template_utils.js'
 import Logger from '../logger.js'
+import {firstToUpper} from '../utils.js'
 
 const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
@@ -11,13 +12,19 @@ const numShowResults = 7
 const byPrefix = term => addr => addr.startsWith(term)
 
 export default class Search extends Component {
-  constructor (dispatcher, keyspaces) {
+  constructor (dispatcher, keyspaces, types, isInDialog = false) {
     super()
     this.keyspaces = keyspaces
+    this.types = types || Object.keys(empty).concat(['blocks'])
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
+    this.isInDialog = isInDialog
     this.clearResults()
+    this.timeout = {}
+    for (let key in keyspaces) {
+      this.timeout[key] = null
+    }
   }
   setStats (stats) {
     this.stats = stats
@@ -59,14 +66,25 @@ export default class Search extends Component {
       this.root.querySelector('#indicator').style.display = 'none'
     }
   }
+  typesToPlaceholder () {
+    return firstToUpper(this.types.map(type => {
+      switch (type) {
+        case 'addresses' : return 'addresses'
+        case 'transactions' : return 'transaction'
+        case 'blocks' : return 'block'
+        case 'tags' : return 'tag'
+      }
+    }).join(', '))
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return
-    logger.debug('shouldupdate', this.shouldUpdate('term'))
     if (this.shouldUpdate(true)) {
       super.render()
-      this.root.innerHTML = search
+      let placeholder = this.typesToPlaceholder()
+      logger.debug('placeholder', placeholder)
+      this.root.innerHTML = replace(search, {placeholder})
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
       this.form = this.root.querySelector('form')
@@ -74,30 +92,30 @@ export default class Search extends Component {
         e.returnValue = false
         e.preventDefault()
         for (let keyspace in this.result) {
-          if (this.result[keyspace].addresses.length > 0) {
+          if (this.types.indexOf('addresses') !== -1 && this.result[keyspace].addresses.length > 0) {
             let addresses = this.result[keyspace].addresses.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace})
+            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace, isInDialog: this.isInDialog})
             return false
           }
-          if (this.result[keyspace].transactions.length > 0) {
+          if (this.types.indexOf('transactions') !== -1 && this.result[keyspace].transactions.length > 0) {
             let transactions = this.result[keyspace].transactions.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace})
+            this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace, isInDialog: this.isInDialog})
             return false
           }
-          if (this.result[keyspace].tags.length > 0) {
+          if (this.types.indexOf('tags') !== -1 && this.result[keyspace].tags.length > 0) {
             let tags = this.result[keyspace].tags.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: tags[0], type: 'tag', keyspace})
+            this.dispatcher('clickSearchResult', {id: tags[0], type: 'tag', keyspace, isInDialog: this.isInDialog})
             return false
           }
           let blocks = this.blocklist(3, keyspace, this.term)
-          if (blocks.length > 0) {
-            this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace})
+          if (this.types.indexOf('blocks') !== -1 && blocks.length > 0) {
+            this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace, isInDialog: this.isInDialog})
             return false
           }
         }
         this.term.split('\n').forEach((address) => {
           for (let keyspace in this.keyspaces) {
-            this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace})
+            this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace, isInDialog: this.isInDialog})
           }
         })
         return false
@@ -108,7 +126,12 @@ export default class Search extends Component {
         this.form.querySelector('button[type=\'submit\']').click()
       })
       this.input.addEventListener('input', (e) => {
-        this.dispatcher('search', e.target.value)
+        this.dispatcher('search', {
+          term: e.target.value,
+          types: this.types,
+          keyspaces: this.keyspaces,
+          isInDialog: this.isInDialog
+        })
       })
       this.input.addEventListener('blur', () => {
       // wrap in timeout to let possible clicksearchresult event happen
@@ -127,7 +150,6 @@ export default class Search extends Component {
     return this.root
   }
   renderTerm () {
-    logger.debug('renderTerm')
     if (!this.input) return
     this.input.value = this.term
     let lines = this.term.split('\n')
@@ -161,7 +183,6 @@ export default class Search extends Component {
   }
 
   renderResult () {
-    logger.debug('addresses', this.result)
     let frame = this.root.querySelector('#browser-search-result')
     let el = frame.querySelector('#result')
     el.innerHTML = ''
@@ -205,7 +226,7 @@ export default class Search extends Component {
         li.className = 'cursor-pointer'
         li.innerHTML = `<i class="fas fa-${icon} pr-1 text-grey text-sm"></i>${id}`
         li.addEventListener('click', () => {
-          this.dispatcher('clickSearchResult', {id, type, keyspace})
+          this.dispatcher('clickSearchResult', {id, type, keyspace, isInDialog: this.isInDialog})
         })
         ul.appendChild(li)
       }
@@ -225,7 +246,6 @@ export default class Search extends Component {
     } else {
       removeClass(el, 'text-gs-red')
     }
-    logger.debug('isVisible', this.isLoading, visible)
     if (visible) {
       addClass(frame, 'block')
       removeClass(frame, 'hidden')

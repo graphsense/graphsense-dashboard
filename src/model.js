@@ -139,27 +139,33 @@ export default class Model {
     }
 
     this.statusbar = new Statusbar(this.call)
-    this.searchTimeout = {}
-    for (let key in keyspaces) {
-      this.searchTimeout[key] = null
-    }
     this.rest = new Rest(baseUrl, prefixLength)
     this.createComponents()
 
-    this.dispatcher.on('search', (term) => {
-      this.search.setSearchTerm(term, prefixLength)
-      this.search.hideLoading()
+    this.dispatcher.on('search', ({term, types, keyspaces, isInDialog}) => {
+      let search = isInDialog ? this.menu.search : this.search
+      if (!search) return
+      search.setSearchTerm(term, prefixLength)
+      search.hideLoading()
       for (let keyspace in keyspaces) {
-        if (this.search.needsResults(keyspace, searchlimit, prefixLength)) {
-          if (this.searchTimeout[keyspace]) clearTimeout(this.searchTimeout[keyspace])
-          this.search.showLoading()
-          this.searchTimeout[keyspace] = setTimeout(() => {
-            this.mapResult(this.rest.search(keyspace, term, searchlimit), 'searchresult', term)
+        if (search.needsResults(keyspace, searchlimit, prefixLength)) {
+          if (search.timeout[keyspace]) clearTimeout(search.timeout[keyspace])
+          search.showLoading()
+          search.timeout[keyspace] = setTimeout(() => {
+            if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
+              this.mapResult(this.rest.search(keyspace, term, searchlimit), 'searchresult', {term, isInDialog})
+            }
           }, 250)
         }
       }
     })
-    this.dispatcher.on('clickSearchResult', ({id, type, keyspace}) => {
+    this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
+      if (isInDialog) {
+        if (!this.menu.search) return
+        this.menu.addSearchAddress(id)
+        this.menu.search.clear()
+        return
+      }
       this.browser.loading.add(id)
       this.statusbar.addLoading(id)
       if (this.showLandingpage) {
@@ -179,14 +185,18 @@ export default class Model {
       }
       this.statusbar.addMsg('loading', type, id)
     })
-    this.dispatcher.on('blurSearch', () => {
-      this.search.clear()
+    this.dispatcher.on('blurSearch', (isInDialog) => {
+      let search = isInDialog ? this.menu.search : this.search
+      if (!search) return
+      search.clear()
     })
     this.dispatcher.on('fetchError', ({context, msg, error}) => {
       switch (msg) {
         case 'searchresult':
-          this.search.hideLoading()
-          this.search.error(error.keyspace, error.message)
+          let search = context && context.isInDialog ? this.menu.search : this.search
+          if (!search) return
+          search.hideLoading()
+          search.error(error.keyspace, error.message)
           // this.statusbar.addMsg('error', error)
           break
         case 'resultNode':
@@ -254,8 +264,10 @@ export default class Model {
       this.statusbar.addMsg('loaded', 'block', result.height)
     })
     this.dispatcher.on('searchresult', ({context, result}) => {
-      this.search.hideLoading()
-      this.search.setResult(context, result)
+      let search = context.isInDialog ? this.menu.search : this.search
+      if (!search) return
+      search.hideLoading()
+      search.setResult(context.term, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
       logger.debug('selectNode', type, nodeId)
@@ -623,6 +635,9 @@ export default class Model {
       this.menu.showNodeDialog(x, y, {dialog: 'search', id, type, isOutgoing})
       this.call('selectNode', [type, id])
     })
+    this.dispatcher.on('changeSearchCriterion', criterion => {
+      this.menu.setSearchCriterion(criterion)
+    })
     this.dispatcher.on('changeSearchCategory', category => {
       this.menu.setSearchCategory(category)
     })
@@ -723,10 +738,10 @@ export default class Model {
       this.graph.dragNodeEnd(id, type)
     })
     this.dispatcher.on('changeSearchDepth', value => {
-      this.config.setSearchDepth(value)
+      this.menu.setSearchDepth(value)
     })
     this.dispatcher.on('changeSearchBreadth', value => {
-      this.config.setSearchBreadth(value)
+      this.menu.setSearchBreadth(value)
     })
     this.dispatcher.on('searchNeighbors', params => {
       logger.debug('search params', params)
@@ -756,6 +771,13 @@ export default class Model {
           this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
           let parent = this.graph.add(node, anchor)
+          // link addresses to cluster and add them (if any returned due of 'addresses' search criterion)
+          pathnode.matchingAddresses.forEach(address => {
+            address.cluster = pathnode.node.cluster
+            let a = this.store.add(address)
+            // anchor the address to its cluster
+            this.graph.add(a, {nodeId: parent.id, nodeType: 'cluster'})
+          })
           add({nodeId: parent.id, isOutgoing: context.isOutgoing}, pathnode.paths)
         })
       }
@@ -867,7 +889,7 @@ export default class Model {
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
     this.config = new Config(this.call, defaultLabelType, defaultTxLabel, defaultSearchDepth, defaultSearchBreadth)
-    this.menu = new Menu(this.call)
+    this.menu = new Menu(this.call, keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.search = new Search(this.call, keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)

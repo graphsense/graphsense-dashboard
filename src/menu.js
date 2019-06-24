@@ -4,8 +4,10 @@ import Component from './component.js'
 import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
+import addressesForm from './config/addressesForm.html'
 import {categories} from './globals.js'
-import {replace} from './template_utils.js'
+import {replace, addClass} from './template_utils.js'
+import Search from './search/search.js'
 
 const logger = Logger.create('Menu') // eslint-disable-line
 
@@ -13,14 +15,16 @@ const menuWidth = 250
 const menuHeight = 300
 
 const defaultCriterion = 'category'
-const defaultParams = {category: categories[0]}
+const defaultParams = () => ({category: null, addresses: []})
 const defaultDepth = 2
 const defaultBreadth = 20
 
 export default class Menu extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, keyspaces) {
     super()
     this.dispatcher = dispatcher
+    this.keyspaces = keyspaces
+    this.view = {}
   }
   showNodeDialog (x, y, params) {
     this.setMenuPosition(x, y)
@@ -33,7 +37,7 @@ export default class Menu extends Component {
         type: params.type,
         isOutgoing: params.isOutgoing,
         criterion: defaultCriterion,
-        params: defaultParams,
+        params: defaultParams(),
         depth: defaultDepth,
         breadth: defaultBreadth
       }
@@ -53,15 +57,17 @@ export default class Menu extends Component {
     this.menuY = y
   }
   hideMenu () {
-    this.view = null
+    this.view = {}
     this.setUpdate(true)
   }
   render (root) {
-    logger.debug('render menu')
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (!this.shouldUpdate()) return this.root
-    if (!this.view) {
+    if (!this.shouldUpdate()) {
+      if (this.search) this.search.render()
+      return this.root
+    }
+    if (!this.view.viewType) {
       this.root.innerHTML = ''
       super.render()
       return
@@ -103,6 +109,13 @@ export default class Menu extends Component {
     super.render()
     return this.root
   }
+  renderInput (id, message, value) {
+    let input = this.root.querySelector('input#' + id)
+    input.value = value
+    input.addEventListener('input', (e) => {
+      this.dispatcher(message, e.target.value)
+    })
+  }
   setupNotes (el) {
     let node = this.view.node
     let input = el.querySelector('textarea')
@@ -112,15 +125,12 @@ export default class Menu extends Component {
     })
   }
   setupSearch (el) {
+    el.querySelector('.criterion').addEventListener('change', e => {
+      this.dispatcher('changeSearchCriterion', e.target.value)
+    })
+    this.renderInput('searchDepth', 'changeSearchDepth', this.view.depth)
+    this.renderInput('searchBreadth', 'changeSearchBreadth', this.view.breadth)
     let form = el.querySelector('.searchValue')
-    let searchParams = {
-      id: this.view.id,
-      type: this.view.type,
-      isOutgoing: this.view.isOutgoing,
-      depth: this.view.depth,
-      breadth: this.view.breadth,
-      params: this.view.params
-    }
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
       let input = form.querySelector('select')
@@ -136,14 +146,63 @@ export default class Menu extends Component {
       input.addEventListener('change', (e) => {
         this.dispatcher('changeSearchCategory', e.target.value)
       })
+      el.querySelector('input[value="category"]').setAttribute('checked', 'checked')
+      el.querySelector('input[value="addresses"]').removeAttribute('checked')
+    } else if (this.view.criterion === 'addresses') {
+      form.innerHTML = addressesForm
+      let searchinput = form.querySelector('.searchinput')
+      let keyspaces = {}
+      let keyspace = this.view.id[2]
+      keyspaces[keyspace] = this.keyspaces[keyspace]
+      this.search = new Search(this.dispatcher, keyspaces, ['addresses'], true)
+      this.search.render(searchinput)
+      let searchAddresses = form.querySelector('.searchaddresses')
+      this.view.params.addresses.forEach(address => {
+        let li = document.createElement('li')
+        li.innerHTML = address
+        searchAddresses.appendChild(li)
+      })
+      el.querySelector('input[value="addresses"]').setAttribute('checked', 'checked')
+      el.querySelector('input[value="category"]').removeAttribute('checked')
     }
-    el.querySelector('input[type="button"]').addEventListener('click', () => {
-      this.dispatcher('searchNeighbors', searchParams)
-    })
+    let button = el.querySelector('input[type="button"]')
+    if (this.view.params.category || this.view.params.addresses.length > 0) {
+      button.addEventListener('click', () => {
+        this.dispatcher('searchNeighbors', {
+          id: this.view.id,
+          type: this.view.type,
+          isOutgoing: this.view.isOutgoing,
+          depth: this.view.depth,
+          breadth: this.view.breadth,
+          params: this.view.params
+        })
+      })
+    } else {
+      addClass(button, 'disabled')
+    }
+  }
+  setSearchCriterion (criterion) {
+    if (this.view.viewType !== 'search') return
+    this.view.criterion = criterion
+    this.view.params = defaultParams()
+    this.setUpdate(true)
   }
   setSearchCategory (category) {
     if (this.view.viewType !== 'search' || this.view.criterion !== 'category') return
     this.view.params.category = category
+    this.setUpdate(true)
+  }
+  setSearchDepth (d) {
+    if (this.view.viewType !== 'search') return
+    this.view.depth = d
+  }
+  setSearchBreadth (d) {
+    if (this.view.viewType !== 'search') return
+    this.view.breadth = d
+  }
+  addSearchAddress (address) {
+    if (this.view.viewType !== 'search' || this.view.criterion !== 'addresses') return
+    this.view.params.addresses.push(address)
     this.setUpdate(true)
   }
 }

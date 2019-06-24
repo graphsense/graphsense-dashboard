@@ -314,7 +314,10 @@ export default class NodeGraph extends Component {
       layerIds = this.additionLayerBySelection(object.id)
       if (layerIds === false) layerIds = this.additionLayerBySearch(object)
       layerIds = layerIds || 0
+    } else if (anchor.nodeType === 'cluster' && object.type === 'address') {
+      layerIds = anchor.nodeId[1]
     } else {
+      // TODO is this safe? Are layer ids consecutive?
       layerIds = anchor.nodeId[1] + (anchor.isOutgoing ? 1 : -1)
     }
     if (!Array.isArray(layerIds)) {

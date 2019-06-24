@@ -108,7 +108,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'exportSvg',
   'toggleLegend',
   'downloadTable',
-  'changeSearchCategory'
+  'changeSearchCategory',
+  'changeSearchCriterion'
 )
 
 let model = new Model(dispatcher)

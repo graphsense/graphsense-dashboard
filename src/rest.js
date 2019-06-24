@@ -129,11 +129,20 @@ export default class Rest {
     let searchCrit = ''
     if (params.category) {
       searchCrit = `category=${params.category}`
-    } else if (params.ids) {
-      searchCrit = 'ids=' + params.ids.join(',')
+    } else if (params.addresses) {
+      searchCrit = 'addresses=' + params.addresses.join(',')
     }
     let url =
       `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}`
-    return this.json(keyspace, url)
+    let addKeyspace = (node) => {
+      if (!node.paths) { return node }
+      (node.paths || []).forEach(path => {
+        path.node.keyspace = keyspace
+        path.matchingAddresses.forEach(address => { address.keyspace = keyspace })
+        addKeyspace(path)
+      })
+      return node
+    }
+    return this.json(keyspace, url).then(addKeyspace)
   }
 }

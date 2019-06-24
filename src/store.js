@@ -35,10 +35,14 @@ export default class Store {
       id = object.cluster ? object.cluster : object.id
       type = 'cluster'
     } else {
-      logger.error('invalid object ' + object)
+      logger.error('invalid object, cannot determine type', object)
       return
     }
-    if (object.keyspace && id) idPrefixed = prefix(object.keyspace, id)
+    if (!object.keyspace) {
+      logger.error('invalid object, no keyspace/currency', object)
+      return
+    }
+    idPrefixed = prefix(object.keyspace, id)
     if (idPrefixed && type === 'address') {
       let a = this.addresses.get(idPrefixed)
       if (!a) {
@@ -133,7 +137,6 @@ export default class Store {
     return outgoing
   }
   linkOutgoing (source, target, keyspace, data) {
-    logger.debug('linkOutgoing', source, target, keyspace, data)
     let outgoing = this.initOutgoing(source, keyspace)
     let n = outgoing.get(target)
     if (!n && (!data || !data.noTransactions || !data.estimatedValue)) {
