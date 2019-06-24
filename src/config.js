@@ -10,14 +10,12 @@ import Logger from './logger.js'
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, txLabelType, searchDepth, searchBreadth) {
+  constructor (dispatcher, labelType, txLabelType) {
     super()
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
-    this.searchDepth = searchDepth
-    this.searchBreadth = searchBreadth
     this.categoryColors = {}
   }
   toggleConfig () {
@@ -52,8 +50,6 @@ export default class Config extends Component {
       this.renderSelect('clusterLabel', 'changeClusterLabel')
       this.renderSelect('addressLabel', 'changeAddressLabel')
       this.renderSelect('transactionLabel', 'changeTxLabel')
-      this.renderInput('searchDepth', 'changeSearchDepth', this.searchDepth)
-      this.renderInput('searchBreadth', 'changeSearchBreadth', this.searchBreadth)
     } else if (this.visible === 'legend') {
       for (let name in this.categoryColors) {
         let itemEl = document.createElement('div')
@@ -142,24 +138,14 @@ export default class Config extends Component {
   setTxLabel (labelType) {
     this.txLabelType = labelType
   }
-  setSearchDepth (d) {
-    this.searchDepth = d
-  }
-  setSearchBreadth (d) {
-    this.searchBreadth = d
-  }
   serialize () {
     return [
       this.labelType,
-      this.txLabelType,
-      this.searchDepth,
-      this.searchBreadth
+      this.txLabelType
     ]
   }
   deserialize (version, values) {
     this.labelType = values[0]
     this.txLabelType = values[1]
-    this.searchDepth = values[2]
-    this.searchBreadth = values[3]
   }
 }

@@ -1,0 +1,24 @@
+<h2 class="text-base">Criterion</h2>
+<div class="flex p-2">
+  <div class="flex-grow flex pr-2">
+    <input type="radio" value="byCategory" name="searchType" checked/>
+    <div class="pl-2">by category</div>
+  </div>
+  <div class="flex-grow flex">
+    <input type="radio" value="byAddress" name="searchType"/>
+    <div class="pl-2">by address</div>
+  </div>
+</div>
+<div class="searchValue"></div>
+<h2 class="text-base">Depth</h2>
+<div class="p-2">
+  <input type="number" class="w-12" min="1" step="1" id="searchDepth" value="{{searchDepth}}"/>
+</div>
+
+<h2 class="text-base">Breadth</h2>
+<div class="p-2">
+  <input type="number" class="w-12" min="1" step="1" id="searchBreadth" value="{{searchBreadth}}"/>
+</div>
+<div class="p-2">
+  <input type="button" class="w-full btn btn-primary" value="Search"/>
+</div>

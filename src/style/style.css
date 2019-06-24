@@ -88,14 +88,14 @@ html, body {
 }
 
 .btn {
-  @apply font-normal py-1 px-2 border;
+  @apply font-bold py-1 px-2 border rounded-sm cursor-pointer;
 }
 
 .btn-primary {
-  @apply bg-white text-black;
+  @apply bg-white text-gs-dark;
 }
 .btn-primary:hover {
-  @apply bg-grey;
+  @apply bg-gs-lighter;
 }
 
 .shadow-bottom {

@@ -97,9 +97,21 @@ export default class ClusterNode extends GraphNode {
           { title: 'Last usage',
             action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.lastTx.timestamp})
           }
-        ]
-      })
+        ]})
     }
+    items.push(
+      { title: 'Search',
+        children: [
+          { title: 'Incoming',
+            action: () => this.dispatcher('searchNeighborsDialog', {x: event.x, y: event.y, id: this.id, type: this.type, isOutgoing: false})
+          },
+          { title: 'Outgoing',
+            action: () => this.dispatcher('searchNeighborsDialog', {x: event.x, y: event.y, id: this.id, type: this.type, isOutgoing: true})
+          }
+        ]
+
+      }
+    )
     return super.menu(items)
   }
   serialize () {

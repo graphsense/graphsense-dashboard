@@ -615,9 +615,16 @@ export default class Model {
       this.landingpage.setStats({...result})
       this.search.setStats({...result})
     })
-    this.dispatcher.on('contextmenu', ({x, y, node}) => {
-      this.menu.showNodeConfig(x, y, node)
+    this.dispatcher.on('noteDialog', ({x, y, node}) => {
+      this.menu.showNodeDialog(x, y, {dialog: 'note', node})
       this.call('selectNode', [node.data.type, node.id])
+    })
+    this.dispatcher.on('searchNeighborsDialog', ({x, y, id, type, isOutgoing}) => {
+      this.menu.showNodeDialog(x, y, {dialog: 'search', id, type, isOutgoing})
+      this.call('selectNode', [type, id])
+    })
+    this.dispatcher.on('changeSearchCategory', category => {
+      this.menu.setSearchCategory(category)
     })
     this.dispatcher.on('hideContextmenu', () => {
       this.menu.hideMenu()
@@ -721,21 +728,13 @@ export default class Model {
     this.dispatcher.on('changeSearchBreadth', value => {
       this.config.setSearchBreadth(value)
     })
-    this.dispatcher.on('searchNeighbors', ({id, type, isOutgoing, params}) => {
-      this.graph.searchingNeighbors(id, type, isOutgoing, true)
-      let search = {
-        id,
-        type,
-        isOutgoing,
-        params,
-        depth: this.config.searchDepth,
-        breadth: this.config.searchBreadth
-      }
-      this.statusbar.addSearching(search)
-      this.mapResult(this.rest.searchNeighbors(id[2], id[0], type, isOutgoing, params, this.config.searchDepth, this.config.searchBreadth), 'resultSearchNeighbors', search)
+    this.dispatcher.on('searchNeighbors', params => {
+      logger.debug('search params', params)
+      this.statusbar.addSearching(params)
+      this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
+      this.menu.hideMenu()
     })
     this.dispatcher.on('resultSearchNeighbors', ({result, context}) => {
-      this.graph.searchingNeighbors(context.id, context.type, context.isOutgoing, false)
       this.statusbar.removeSearching(context)
       let count = 0
       let add = (anchor, paths) => {

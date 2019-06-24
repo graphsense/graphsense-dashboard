@@ -122,10 +122,18 @@ export default class Rest {
   stats () {
     return this.json(null, '/stats')
   }
-  searchNeighbors (keyspace, id, type, isOutgoing, params, searchDepth, searchBreadth) {
+  searchNeighbors ({id, type, isOutgoing, depth, breadth, params}) {
     let dir = isOutgoing ? 'out' : 'in'
+    let keyspace = id[2]
+    id = id[0]
+    let searchCrit = ''
+    if (params.category) {
+      searchCrit = `category=${params.category}`
+    } else if (params.ids) {
+      searchCrit = 'ids=' + params.ids.join(',')
+    }
     let url =
-      `/${type}/${id}/search?direction=${dir}&category=${params.category}&depth=${searchDepth}&breadth=${searchBreadth}`
+      `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}`
     return this.json(keyspace, url)
   }
 }

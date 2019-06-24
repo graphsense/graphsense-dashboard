@@ -79,7 +79,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleConfig',
   'stats',
   'receiveStats',
-  'contextmenu',
+  'noteDialog',
   'hideContextmenu',
   'save',
   'load',
@@ -96,6 +96,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'dragNodeEnd',
   'changeSearchDepth',
   'changeSearchBreadth',
+  'searchNeighborsDialog',
   'searchNeighbors',
   'resultSearchNeighbors',
   'redrawGraph',
@@ -106,7 +107,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleSearchTable',
   'exportSvg',
   'toggleLegend',
-  'downloadTable'
+  'downloadTable',
+  'changeSearchCategory'
 )
 
 let model = new Model(dispatcher)

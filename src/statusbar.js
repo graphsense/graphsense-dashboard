@@ -113,7 +113,10 @@ export default class Statusbar extends Component {
       addClass(this.root, 'loading')
       let search = this.searching.values()[0]
       let outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
-      let msg = `Searching for ${outgoing} ${search.params.category} neighbors of ${search.type} ${search.id[0]} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
+      let crit = ''
+      if (search.params.category) crit = `category ${search.params.category}`
+      if (search.params.ids) crit = 'ids ' + search.params.ids.join(',')
+      let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')

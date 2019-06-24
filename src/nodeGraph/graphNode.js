@@ -4,8 +4,7 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth, categories, expandHandleWidth} from '../globals.js'
-import contextMenu from 'd3-context-menu'
+import {clusterWidth, expandHandleWidth} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -55,7 +54,7 @@ class GraphNode extends Component {
       {
         title: 'Add note',
         action: () => {
-          this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
+          this.dispatcher('noteDialog', {x: event.x, y: event.y, node: this})
         },
         position: 90
       },
@@ -70,18 +69,6 @@ class GraphNode extends Component {
   }
   neighborsMenu (isOutgoing) {
     return [
-      (isOutgoing ? this.searchingNeighborsOut : this.searchingNeighborsIn)
-        ? { title: 'Searching ...',
-          disabled: true,
-          action: () => {}
-        }
-        : { title: 'Search',
-          children: categories.map(category => (
-            { title: category,
-              action: () => this.dispatcher('searchNeighbors', {id: this.id, type: this.type, isOutgoing, params: {category}})
-            }
-          ))
-        }
     ]
   }
   searchingNeighbors (isOutgoing, state) {
@@ -139,7 +126,6 @@ class GraphNode extends Component {
       .on('click', () => {
         this.expandCollapseNeighborsOrShowTable(isOutgoing)
       })
-      .on('contextmenu', contextMenu(this.neighborsMenu(isOutgoing)))
     g.append('path')
       .classed('expandHandlePath', true)
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
