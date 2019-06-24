@@ -10,28 +10,16 @@ export default class TagsTable extends Table {
       { name: 'Tag',
         data: 'tag',
         render: (value, type, row) => {
-          if (row['tagUri'].startsWith('http')) {
-            return `<a href="${row['tagUri']}" target=_blank>${value}</a>`
+          if (row['source'].startsWith('http')) {
+            return `<a href="${row['source']}" target=_blank>${value}</a>`
           }
           return value
-        }
-      },
-      { name: 'Description',
-        data: 'description',
-        render: (value) => {
-          return this.truncateValue(value)
         }
       },
       { name: 'Actor Category',
         data: 'actorCategory'
       },
-      { name: 'Source',
-        data: 'source',
-        render: (value) => {
-          return this.truncateValue(value)
-        }
-      },
-      { name: 'Timestamp',
+      { name: 'Last modified',
         data: 'timestamp',
         render: this.formatTimestamp
       }
