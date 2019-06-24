@@ -5,7 +5,6 @@ const expandHandleWidth = 15
 
 const categories = [
   'Darknet crawl',
-  'Exchange',
   'Exchanges',
   'Gambling',
   'Miner',

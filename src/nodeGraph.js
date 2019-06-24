@@ -46,7 +46,6 @@ const predefinedCategories =
       case 'Darknet crawl':
         obj[category] = chromaStep * 0
         break
-      case 'Exchange':
       case 'Exchanges':
         obj[category] = chromaStep * 1
         break
@@ -126,7 +125,6 @@ export default class NodeGraph extends Component {
   getCategoryColors () {
     let colors = {}
     for (let cat in predefinedCategories) {
-      if (cat === 'Exchanges') continue
       colors[cat] = createColor(predefinedCategories[cat], 'cluster')
     }
     return colors
