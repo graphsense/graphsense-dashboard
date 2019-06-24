@@ -604,7 +604,6 @@ export default class Model {
     this.dispatcher.on('inputNotes', ({id, type, keyspace, note}) => {
       let o = this.store.get(keyspace, type, id)
       o.notes = note
-      if (this.graph.labelType[type + 'Label'] !== 'tag') return
       let nodes
       if (type === 'address') {
         nodes = this.graph.addressNodes

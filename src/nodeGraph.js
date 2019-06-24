@@ -1,6 +1,8 @@
 import {create, event} from 'd3-selection'
-import {scalePow} from 'd3-scale'
+import {scalePow, scaleOrdinal} from 'd3-scale'
 import {set, map} from 'd3-collection'
+import {schemeCategory10} from 'd3-scale-chromatic'
+import {hsl} from 'd3-color'
 import {linkHorizontal} from 'd3-shape'
 import {drag} from 'd3-drag'
 import {zoom} from 'd3-zoom'
@@ -27,55 +29,30 @@ const hsl2rgb = (h, s, l) => {
   return `hsl(${h}, ${s}, ${l})`
 }
 
-const chromaStep = 67
-const saturation = 94 / 255
 const lightness = {
-  'cluster': 209 / 255,
-  'address': 230 / 255
+  'cluster': 0.75,
+  'address': 0.88
 }
 const defaultColor = {
-  'cluster': hsl2rgb(178, 0, lightness['cluster']),
-  'address': hsl2rgb(178, 0, lightness['address'])
+  'cluster': hsl2rgb(178, 0, 0.95),
+  'address': hsl2rgb(178, 0, 1)
 }
 
 const transactionsPixelRange = [1, 7]
 
-const predefinedCategories =
-  categories.reduce((obj, category) => {
-    switch (category) {
-      case 'Darknet crawl':
-        obj[category] = chromaStep * 0
-        break
-      case 'Exchanges':
-        obj[category] = chromaStep * 1
-        break
-      case 'Gambling':
-        obj[category] = chromaStep * 2
-        break
-      case 'Miner':
-        obj[category] = chromaStep * 3
-        break
-      case 'Old/historic':
-        obj[category] = chromaStep * 4
-        break
-      case 'Organization':
-        obj[category] = chromaStep * 5
-        break
-      case 'Pools':
-        obj[category] = chromaStep * 6
-        break
-      case 'Services/others':
-        obj[category] = chromaStep * 7
-        break
-    }
+const colorScale = scaleOrdinal(schemeCategory10)
+const predefinedCategories = (() => {
+  return categories.reduce((obj, category, i) => {
+    let c = hsl(colorScale(i))
+    c.s -= 0.1
+    obj[category] = c
     return obj
   }, {})
+})()
+
+logger.debug('predefined', predefinedCategories)
 
 const maxNumSnapshots = 4
-
-const createColor = (chroma, type) => {
-  return hsl2rgb(chroma, saturation, lightness[type])
-}
 
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
@@ -94,13 +71,15 @@ export default class NodeGraph extends Component {
     this.colorGen = (map, type) => {
       return (k) => {
         if (!k) return defaultColor[type]
-        let chroma = map.get(k)
-        if (chroma === undefined) {
-          chroma = map.size() * chromaStep
-          map.set(k, chroma)
+        let color = map.get(k)
+        if (color === undefined) {
+          color = colorScale(map.size())
+          map.set(k, color)
         }
-        logger.debug('colorGen', type, k, chroma)
-        return createColor(chroma, type)
+        logger.debug('colorGen', type, k, color)
+        let c = hsl(color)
+        c.l = lightness[type]
+        return c
       }
     }
     this.colors =
@@ -123,11 +102,7 @@ export default class NodeGraph extends Component {
     this.createSnapshot()
   }
   getCategoryColors () {
-    let colors = {}
-    for (let cat in predefinedCategories) {
-      colors[cat] = createColor(predefinedCategories[cat], 'cluster')
-    }
-    return colors
+    return {...predefinedCategories}
   }
   createSnapshot () {
     // don't create snapshot if nothing has changed

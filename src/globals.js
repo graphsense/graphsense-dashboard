@@ -3,6 +3,8 @@ const browserPadding = 1
 const clusterWidth = 190
 const expandHandleWidth = 15
 
+const moreThan1TagCategory = 'More than 1 tag'
+
 const categories = [
   'Darknet crawl',
   'Exchanges',
@@ -11,7 +13,8 @@ const categories = [
   'Old/historic',
   'Organization',
   'Pools',
-  'Services/others'
+  'Services/others',
+  moreThan1TagCategory
 ]
 
-export {browserHeight, browserPadding, clusterWidth, categories, expandHandleWidth}
+export {browserHeight, browserPadding, clusterWidth, categories, expandHandleWidth, moreThan1TagCategory}

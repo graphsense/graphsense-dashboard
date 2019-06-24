@@ -4,7 +4,7 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth, expandHandleWidth} from '../globals.js'
+import {clusterWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -186,7 +186,16 @@ class GraphNode extends Component {
     return this.findTag('tag') || ''
   }
   getActorCategory () {
-    return this.findTag('actorCategory') || ''
+    let tags = (this.data || {}).tags || []
+    let categories = {}
+    tags.forEach(tag => {
+      categories[tag['actorCategory']] = (categories[tag['actorCategory']] || 0) + 1
+    })
+    let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]
+    if (entry) return entry[0]
+  }
+  getNote () {
+    return this.data.notes
   }
   findTag (field) {
     let tags = (this.data || {}).tags || []
@@ -202,7 +211,7 @@ class GraphNode extends Component {
       case 'noAddresses':
         return this.data.noAddresses
       case 'id':
-        return this.getName()
+        return this.getNote() || this.getName()
       case 'balance':
         return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
       case 'tag':
@@ -212,29 +221,15 @@ class GraphNode extends Component {
     }
   }
   coloring () {
-    let color
-    switch (this.labelType) {
-      case 'noAddresses':
-        color = this.colors.range(this.data.noAddresses)
-        break
-      case 'tag':
-        let tag
-        if (this.data.notes) {
-          tag = '__'
-        } else if (!this.data.tags || this.data.tags.length === 0) {
-          tag = ''
-        } else if (this.data.tags.length > 1) {
-          tag = '_'
-        } else {
-          tag = this.getTag(this.data)
-        }
-        color = this.colors.tags(tag)
-        break
-      case 'id':
-      case 'actorCategory':
-        color = this.colors.categories(this.getActorCategory())
-        break
+    let tag
+    if (!this.data.tags || this.data.tags.length === 0) {
+      tag = ''
+    } else if (this.data.tags.length > 1) {
+      tag = moreThan1TagCategory
+    } else {
+      tag = this.getActorCategory()
     }
+    let color = this.colors.categories(tag)
     this.root
       .select('.addressNodeRect,.clusterNodeRect')
       .style('fill', color)
