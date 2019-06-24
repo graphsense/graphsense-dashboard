@@ -15,6 +15,7 @@ export default class Layer extends Component {
     return [this.id, this.nodes.keys()]
   }
   add (node, addToTop = false) {
+    if (this.nodes.has(node.id)) return
     // calc dy so new node does not overlap with existing, moved nodes
     let [maxY, cumY] = this.nodes.values().reduce(([maxY, cumY], node) => {
       cumY += node.getHeight() + margin
