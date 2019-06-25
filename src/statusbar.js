@@ -21,6 +21,10 @@ export default class Statusbar extends Component {
     this.numErrors = 0
     this.showErrorsLogs = false
   }
+  showTooltip (type) {
+    this.tooltip = type
+    this.setUpdate('tooltip')
+  }
   toggleErrorLogs () {
     this.showErrorsLogs = !this.showErrorsLogs
     if (this.showErrorsLogs) this.show()
@@ -94,10 +98,32 @@ export default class Statusbar extends Component {
     if (this.shouldUpdate('logs')) {
       this.renderLogs()
     }
+    if (this.shouldUpdate('tooltip')) {
+      this.renderTooltip()
+    }
     if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
     }
     super.render()
+  }
+  renderTooltip () {
+    if (this.loading.size() > 0) return
+    let top = this.root.querySelector('#topmsg')
+    let tip = this.makeTooltip(this.tooltip)
+    top.innerHTML = tip
+  }
+  makeTooltip (type) {
+    switch (type) {
+      case 'cluster':
+        return 'A cluster represents an entity dealing with one or more addresses.'
+      case 'address':
+        return 'An address which can receive and spend coins.'
+      case 'link':
+        return 'A link indicates that there exist one or more transactions between the nodes. Flow is always from left to right.'
+      case 'shadow':
+        return 'A shadow link connects identical addresses and clusters'
+    }
+    return ''
   }
   renderLoading () {
     let top = this.root.querySelector('#topmsg')

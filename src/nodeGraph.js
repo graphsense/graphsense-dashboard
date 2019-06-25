@@ -774,6 +774,8 @@ export default class NodeGraph extends Component {
         if (node1.id[1] >= node2.id[1]) continue
         let path = link({source: [node1, true], target: [node2, false]})
         root.append('path').classed('shadow', true).attr('d', path)
+          .on('mouseover', () => this.dispatcher('tooltip', 'shadow'))
+          .on('mouseout', () => this.dispatcher('hideTooltip'))
         // stop iterating if a shadow to next layer was found
         return
       }
@@ -785,6 +787,8 @@ export default class NodeGraph extends Component {
     let scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
     let path = link({source: [source, true, scale], target: [target, false, scale]})
     let g1 = root.append('g').classed('link', true)
+      .on('mouseover', () => this.dispatcher('tooltip', 'link'))
+      .on('mouseout', () => this.dispatcher('hideTooltip'))
     g1.append('path').attr('d', path)
       .classed('linkPathFrame', true)
       .style('stroke-width', '6px')

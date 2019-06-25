@@ -112,7 +112,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'downloadTable',
   'changeSearchCategory',
   'changeSearchCriterion',
-  'addAllToGraph'
+  'addAllToGraph',
+  'tooltip',
+  'hideTooltip'
 )
 
 let model = new Model(dispatcher)

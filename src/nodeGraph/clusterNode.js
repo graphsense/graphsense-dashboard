@@ -152,6 +152,8 @@ export default class ClusterNode extends GraphNode {
             this.dispatcher('selectNode', ['cluster', this.id])
           })
           .on('contextmenu', contextMenu(this.menu()))
+          .on('mouseover', () => this.dispatcher('tooltip', 'cluster'))
+          .on('mouseout', () => this.dispatcher('hideTooltip'))
           .call(drag()
             .on('drag', () => {
               if (Math.abs(event.dx) > 10 || Math.abs(event.dy) > 10) return

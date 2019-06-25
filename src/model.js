@@ -897,6 +897,12 @@ export default class Model {
         this.call(table.selectMessage, row)
       })
     })
+    this.dispatcher.on('tooltip', (type) => {
+      this.statusbar.showTooltip(type)
+    })
+    this.dispatcher.on('hideTooltip', (type) => {
+      this.statusbar.showTooltip('')
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)
