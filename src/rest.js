@@ -87,7 +87,10 @@ export default class Rest {
   tags (keyspace, {id, type}, csvUrl) {
     let url = '/' + type + '/' + id + '/tags'
     if (csvUrl) return this.csvUrl(keyspace, url)
-    return this.json(keyspace, url)
+    return this.json(keyspace, url).then(tags => tags.map(tag => {
+      tag.keyspace = tag.currency.toLowerCase()
+      return tag
+    }))
   }
   egonet (keyspace, type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'

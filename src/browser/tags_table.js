@@ -33,7 +33,7 @@ export default class TagsTable extends Table {
       }
     ]
     this.loadMessage = 'loadTags'
-    this.selectMessage = 'clickAddress'
+    this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType]
     this.options =

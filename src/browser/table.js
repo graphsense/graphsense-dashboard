@@ -79,14 +79,22 @@ export default class Table extends BrowserComponent {
       }
     })
     // using es5 'function' to have 'this' bound to the triggering element
-    $(this.root).on('click', 'tr', function () {
-      let row = tab.row(this).data()
-      if (!row) return
+    $(this.root).on('click', 'td', function (e) {
+      if (!that.selectMessage) return
+      let cell = tab.cell(this)
+      if (!cell) return
+      let index = cell.index()
+      let row = tab.row(index.row).data()
       logger.debug('row', row)
       if (!row.keyspace) {
         row.keyspace = that.keyspace
       }
-      that.dispatcher(that.selectMessage, row)
+      let msgs = that.selectMessage
+      if (!Array.isArray(msgs)) {
+        msgs = [msgs]
+      }
+      if (!msgs[index.column]) return
+      that.dispatcher(msgs[index.column], row)
     })
     this.table.on('order.dt', () => {
       this.order = this.table.order()

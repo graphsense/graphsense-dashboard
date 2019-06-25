@@ -315,10 +315,15 @@ export default class Model {
       }
       this.graph.selectNode(type, nodeId)
     })
-    // user clicks address in transactions table
+    // user clicks address in a table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
       this.statusbar.addLoading(address)
       this.mapResult(this.rest.node(keyspace, {id: address, type: 'address'}), 'resultNode', address)
+    })
+    // user clicks label in a table
+    this.dispatcher.on('clickLabel', ({label, keyspace}) => {
+      this.statusbar.addLoading(label)
+      this.mapResult(this.rest.label(label), 'resultLabelForBrowser', label)
     })
     this.dispatcher.on('deselect', () => {
       this.browser.deselect()

@@ -62,6 +62,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultTransaction',
   'selectAddress',
   'clickAddress',
+  'clickLabel',
   'changeCurrency',
   'changeClusterLabel',
   'changeAddressLabel',
