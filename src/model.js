@@ -886,6 +886,17 @@ export default class Model {
         a.click()
       }
     })
+    this.dispatcher.on('addAllToGraph', () => {
+      let table = this.browser.content[1]
+      if (!table) return
+      table.data.forEach(row => {
+        if (!row.keyspace) {
+          if (row.currency) row.keyspace = row.currency.toLowerCase()
+          else row.keyspace = table.keyspace
+        }
+        this.call(table.selectMessage, row)
+      })
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)

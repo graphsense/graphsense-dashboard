@@ -111,7 +111,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleLegend',
   'downloadTable',
   'changeSearchCategory',
-  'changeSearchCriterion'
+  'changeSearchCriterion',
+  'addAllToGraph'
 )
 
 let model = new Model(dispatcher)

@@ -1,4 +1,5 @@
 import Table from './table.js'
+import {maxAddableNodes} from '../globals.js'
 
 export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
@@ -33,6 +34,7 @@ export default class NeighborsTable extends Table {
       [
         this.downloadOption()
       ]
+    if (total < maxAddableNodes) this.options.push(this.addAllOption())
   }
   smallThreshold () {
     return 2000

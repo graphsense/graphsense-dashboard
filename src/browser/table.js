@@ -187,6 +187,9 @@ export default class Table extends BrowserComponent {
   downloadOption () {
     return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
   }
+  addAllOption () {
+    return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}
+  }
   formatIsInGraph (nodeIsInGraph, type, keyspace) {
     return (value, t) => {
       if (t === 'display') {

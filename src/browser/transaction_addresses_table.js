@@ -1,4 +1,5 @@
 import Table from './table.js'
+import {maxAddableNodes} from '../globals.js'
 
 export default class TransactionAddressesTable extends Table {
   constructor (dispatcher, data, isOutgoing, index, currency, keyspace, nodeIsInGraph) {
@@ -19,6 +20,8 @@ export default class TransactionAddressesTable extends Table {
     ]
     this.data = addresses
     this.selectMessage = 'clickAddress'
+    this.options = []
+    if (addresses.length < maxAddableNodes) this.options.push(this.addAllOption())
   }
   isSmall () {
     return true
