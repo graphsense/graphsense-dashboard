@@ -4,8 +4,7 @@ import {set, map} from 'd3-collection'
 import {schemeCategory10} from 'd3-scale-chromatic'
 import {hsl} from 'd3-color'
 import {linkHorizontal} from 'd3-shape'
-import {drag} from 'd3-drag'
-import {zoom} from 'd3-zoom'
+import {zoom, zoomIdentity} from 'd3-zoom'
 import Layer from './nodeGraph/layer.js'
 import ClusterNode from './nodeGraph/clusterNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
@@ -229,6 +228,43 @@ export default class NodeGraph extends Component {
     if (this.nextSelectedNode.id != node.data.id) return // eslint-disable-line eqeqeq
     this._selectNode(node)
     this.nextSelectedNode = null
+    this.zoomToNodes = true
+  }
+  zoomToHighlightedNodes () {
+    if (!this.zoomToNodes) return
+    logger.debug('highlighted', this.highlightedNodes)
+    if (this.highlightedNodes.length === 0) return
+    let x1 = Infinity
+    let y1 = Infinity
+    let x2 = -Infinity
+    let y2 = -Infinity
+    this.highlightedNodes.forEach(node => {
+      x1 = Math.min(x1, node.getXForLinks())
+      y1 = Math.min(y1, node.getYForLinks())
+      x2 = Math.max(x2, node.getXForLinks() + node.getWidthForLinks())
+      y2 = Math.max(y2, node.getYForLinks() + node.getHeightForLinks())
+    })
+    let dx = (x2 - x1)
+    let dy = (y2 - y1)
+    x1 -= dx * 0.3
+    x2 += dx * 0
+    y1 -= dy * 0.1
+    y2 += dy * 0.1
+    let k = w / Math.max(w, (x2 - x1))
+    let x = (x2 + x1) / -2
+    let y = (y2 + y1) / -2
+    let transform = zoomIdentity.scale(k).translate(x, y)
+    /*
+    TODO make transition duration depend on distance of transforms
+    let vx = x * k - this.transform.x * this.transform.k
+    let vy = y * k - this.transform.y * this.transform.k
+    let len = Math.sqrt(vx * vx + vy * vy)
+    logger.debug('len', len)
+    let duration = len / 200 * 1000
+    */
+    let duration = 1000
+    this.svg.transition().duration(duration).call(this.zoom.transform, transform)
+    this.zoomToNodes = false
   }
   setTxLabel (type) {
     this.txLabelType = type
@@ -278,6 +314,7 @@ export default class NodeGraph extends Component {
         this.highlightedNodes.push(node)
       }
     })
+    logger.debug('highlighted in select', this.highlightedNodes)
     this.selectedNode = sel
   }
   setResultClusterAddresses (id, addresses) {
@@ -345,9 +382,9 @@ export default class NodeGraph extends Component {
         return node
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
+      this.addressNodes.set(addressNode.id, addressNode)
       this.selectNodeIfIsNextNode(addressNode)
       logger.debug('new AddressNode', addressNode)
-      this.addressNodes.set(addressNode.id, addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId, object.cluster.keyspace])
       if (!node) {
         node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
@@ -360,12 +397,12 @@ export default class NodeGraph extends Component {
         return node
       }
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
+      this.clusterNodes.set(node.id, node)
       logger.debug('new ClusterNode', node)
       this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')
     }
-    this.clusterNodes.set(node.id, node)
     this.dirty = true
 
     let anchorLayer = anchor && this.findLayer(anchor.nodeId[1])
@@ -496,22 +533,18 @@ export default class NodeGraph extends Component {
     let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
     let transformGraph = () => {
-      let x = this.transform.x + this.transform.dx * this.transform.k
-      let y = this.transform.y + this.transform.dy * this.transform.k
+      let x = this.transform.x
+      let y = this.transform.y
       this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
     }
     if (this.shouldUpdate(true)) {
-      let svg = create('svg')
+      this.zoom = zoom()
+      this.svg = create('svg')
         .classed('w-full h-full graph', true)
         .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .call(drag().on('drag', () => {
-          this.transform.dx += event.dx
-          this.transform.dy += event.dy
-          transformGraph()
-        }))
-        .call(zoom().on('zoom', () => {
+        .call(this.zoom.on('zoom', () => {
           this.transform.k = event.transform.k
           this.transform.x = event.transform.x
           this.transform.y = event.transform.y
@@ -519,19 +552,19 @@ export default class NodeGraph extends Component {
         }))
       let markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
-      svg.node().innerHTML = '<defs>' +
+      this.svg.node().innerHTML = '<defs>' +
         (['black', 'red'].map(color =>
           `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
            `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
          '</marker>'
         )).join('') +
         '</defs>'
-      this.graphRoot = svg.append('g')
+      this.graphRoot = this.svg.append('g')
       transformGraph()
-      svg.on('click', () => {
+      this.svg.on('click', () => {
         this.dispatcher('deselect')
       })
-      this.root.appendChild(svg.node())
+      this.root.appendChild(this.svg.node())
 
       clusterShadowsRoot = this.graphRoot.append('g').classed('clusterShadowsRoot', true)
       clusterRoot = this.graphRoot.append('g').classed('clusterRoot', true)
@@ -549,6 +582,7 @@ export default class NodeGraph extends Component {
     this.renderLayers(clusterRoot, addressRoot)
     this.renderLinks(linksRoot)
     this.renderShadows(clusterShadowsRoot, addressShadowsRoot)
+    this.zoomToHighlightedNodes()
     super.render()
     return this.root
   }
