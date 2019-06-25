@@ -1,12 +1,13 @@
 import Table from './table.js'
 
 export default class AddressesTable extends Table {
-  constructor (dispatcher, index, total, clusterId, currency, keyspace) {
+  constructor (dispatcher, index, total, clusterId, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
     this.clusterId = clusterId
     this.columns = [
       { name: 'Address',
-        data: 'address'
+        data: 'address',
+        render: this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)
       },
       { name: 'First usage',
         data: 'firstTx.timestamp',

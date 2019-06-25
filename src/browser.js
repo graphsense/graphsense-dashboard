@@ -54,6 +54,9 @@ export default class Browser extends Component {
     }
     return null
   }
+  setNodeChecker (func) {
+    this.nodeChecker = func
+  }
   setCurrency (currency) {
     this.currency = currency
     this.content.forEach(comp => comp.setCurrency(currency))
@@ -153,7 +156,7 @@ export default class Browser extends Component {
     last.setCurrentOption('initAddressesTable')
     let total = last.data.noAddresses
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace))
+    this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace, this.nodeChecker))
     this.setUpdate('content')
   }
   initTagsTable (request) {
@@ -166,7 +169,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     let keyspace = last.data.keyspace
     let total = fromLabel ? last.data.address_count : last.data.tags.length
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace))
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker))
 
     this.setUpdate('content')
   }
@@ -182,7 +185,7 @@ export default class Browser extends Component {
     let keyspace = last.data.keyspace
     let total = isOutgoing ? last.data.outDegree : last.data.inDegree
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace))
+    this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace, this.nodeChecker))
     this.setUpdate('content')
   }
   initTxAddressesTable (request, isOutgoing) {
@@ -196,7 +199,7 @@ export default class Browser extends Component {
     last.setCurrentOption(isOutgoing ? 'initTxOutputsTable' : 'initTxInputsTable')
     let keyspace = last.data.keyspace
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace))
+    this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace, this.nodeChecker))
     this.setUpdate('content')
   }
   render (root) {
@@ -220,6 +223,14 @@ export default class Browser extends Component {
       this.renderVisibility()
       super.render()
       return this.root
+    }
+    if (this.shouldUpdate('tables_with_addresses')) {
+      this.content.filter(comp =>
+        comp instanceof AddressesTable ||
+        comp instanceof TagsTable ||
+        comp instanceof NeighborsTable ||
+        comp instanceof TransactionAddressesTable
+      ).map(comp => comp.setUpdate('nodecheck'))
     }
     this.content.forEach(comp => comp.render())
     super.render()

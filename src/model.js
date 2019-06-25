@@ -510,6 +510,7 @@ export default class Model {
           this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keypspace: o.keyspace})
         }
         this.graph.add(o, context.anchor)
+        this.browser.setUpdate('tables_with_addresses')
         this.statusbar.removeLoading(o.id)
       }
     })
@@ -599,6 +600,7 @@ export default class Model {
     })
     this.dispatcher.on('removeClusterAddresses', id => {
       this.graph.removeClusterAddresses(id)
+      this.browser.setUpdate('tables_with_addresses')
     })
     this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
       let id = context && context.id
@@ -616,6 +618,7 @@ export default class Model {
       })
       this.statusbar.addMsg('loadedClusterAddresses', id, addresses.length)
       this.graph.setResultClusterAddresses(id, addresses)
+      this.browser.setUpdate('tables_with_addresses')
     })
     this.dispatcher.on('changeClusterLabel', (labelType) => {
       this.config.setClusterLabel(labelType)
@@ -637,6 +640,7 @@ export default class Model {
     this.dispatcher.on('removeNode', ([nodeType, nodeId]) => {
       this.statusbar.addMsg('removeNode', nodeType, nodeId[0])
       this.graph.remove(nodeType, nodeId)
+      this.browser.setUpdate('tables_with_addresses')
     })
     this.dispatcher.on('inputNotes', ({id, type, keyspace, note}) => {
       let o = this.store.get(keyspace, type, id)
@@ -820,6 +824,7 @@ export default class Model {
       }
       add({nodeId: context.id, isOutgoing: context.isOutgoing}, result.paths)
       this.statusbar.addMsg('searchResult', count, context.params.category)
+      this.browser.setUpdate('tables_with_addresses')
     })
     this.dispatcher.on('redrawGraph', () => {
       this.graph.setUpdate('layers')
@@ -928,6 +933,7 @@ export default class Model {
     this.config = new Config(this.call, defaultLabelType, defaultTxLabel, defaultSearchDepth, defaultSearchBreadth)
     this.menu = new Menu(this.call, keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
+    this.browser.setNodeChecker(this.graph.getNodeChecker())
     this.search = new Search(this.call, keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())

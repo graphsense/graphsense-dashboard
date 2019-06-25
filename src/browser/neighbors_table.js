@@ -1,12 +1,13 @@
 import Table from './table.js'
 
 export default class NeighborsTable extends Table {
-  constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace) {
+  constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
     this.isOutgoing = isOutgoing
     this.columns = [
       { name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,
-        data: 'id'
+        data: 'id',
+        render: this.formatIsInGraph(nodeIsInGraph, type, keyspace)
       },
       { name: 'Balance',
         data: 'balance',

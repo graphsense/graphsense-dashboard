@@ -1,14 +1,18 @@
 import Table from './table.js'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace) {
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.nodeType = nodeType
     this.columns = [
       { name: 'Address',
-        data: 'address'
+        data: 'address',
+        render: (value, type, row) => {
+          let keyspace = row['currency'].toLowerCase()
+          return this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type)
+        }
       },
       { name: 'Label',
         data: 'label'

@@ -30,76 +30,84 @@ export default class Table extends BrowserComponent {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    logger.debug('shouldupdate', this.shouldUpdate())
+    logger.debug('shouldupdate', this.update)
     if (!this.shouldUpdate()) return this.root
-    logger.debug('render table')
-    super.render()
-    this.root.innerHTML = table
-    let tr = this.root.querySelector('tr')
-    let el = this.root.querySelector('th')
-    this.columns.forEach((column, i) => {
-      let el2 = el.cloneNode()
-      column.searchable = i === 0
-      if (i === 0 && this.isSmall()) {
-        let sw = this.searchable ? 'searchwidth' : ''
-        el2.innerHTML = '<div id="firstColumn" class="flex justify-between mr-1 ' + sw + '"><span class="flex-grow mr-2">' + column.name + '</span><i class="fas fa-search text-grey"></i></div>'
-        el2.querySelector('i').addEventListener('click', (e) => {
-          e.stopPropagation()
-          this.dispatcher('toggleSearchTable')
-        })
-      } else {
-        el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
-      }
-      tr.appendChild(el2)
-    })
-    tr.removeChild(el)
-    let that = this
-    let total = numeral(this.total).format('1,000')
-    let tab = this.table = $(this.root).children().first().DataTable({
-      ajax: (request, drawCallback, settings) => {
-        this.ajax(request, drawCallback, settings, this)
-      },
-      scrollY: browserHeight - rowHeight - 4 * browserPadding,
-      searching: this.searchable,
-      search: { smart: false },
-      dom: 'fti',
-      ordering: this.isSmall(),
-      order: this.order,
-      deferRender: true,
-      scroller: {
-        loadingIndicator: true,
-        displayBuffer: 100,
-        boundaryScale: 0
-      },
-      stateSave: false,
-      serverSide: !this.isSmall(),
-      columns: this.columns,
-      language: {
-        info: `Showing _START_ to _END_ of ${total} entries` + (!this.isSmall() ? ' <span class="text-gs-red">(sorting/filtering disabled)</span>' : '')
-      }
-    })
-    // using es5 'function' to have 'this' bound to the triggering element
-    $(this.root).on('click', 'td', function (e) {
-      if (!that.selectMessage) return
-      let cell = tab.cell(this)
-      if (!cell) return
-      let index = cell.index()
-      let row = tab.row(index.row).data()
-      logger.debug('row', row)
-      if (!row.keyspace) {
-        row.keyspace = that.keyspace
-      }
-      let msgs = that.selectMessage
-      if (!Array.isArray(msgs)) {
-        msgs = [msgs]
-      }
-      if (!msgs[index.column]) return
-      that.dispatcher(msgs[index.column], row)
-    })
-    this.table.on('order.dt', () => {
-      this.order = this.table.order()
-    })
-    return this.root
+    if (this.shouldUpdate(true)) {
+      logger.debug('render table')
+      super.render()
+      this.root.innerHTML = table
+      let tr = this.root.querySelector('tr')
+      let el = this.root.querySelector('th')
+      this.columns.forEach((column, i) => {
+        let el2 = el.cloneNode()
+        column.searchable = i === 0
+        if (i === 0 && this.isSmall()) {
+          let sw = this.searchable ? 'searchwidth' : ''
+          el2.innerHTML = '<div id="firstColumn" class="flex justify-between mr-1 ' + sw + '"><span class="flex-grow mr-2">' + column.name + '</span><i class="fas fa-search text-grey"></i></div>'
+          el2.querySelector('i').addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.dispatcher('toggleSearchTable')
+          })
+        } else {
+          el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
+        }
+        tr.appendChild(el2)
+      })
+      tr.removeChild(el)
+      let that = this
+      let total = numeral(this.total).format('1,000')
+      let tab = this.table = $(this.root).children().first().DataTable({
+        ajax: (request, drawCallback, settings) => {
+          this.ajax(request, drawCallback, settings, this)
+        },
+        scrollY: browserHeight - rowHeight - 4 * browserPadding,
+        searching: this.searchable,
+        search: { smart: false },
+        dom: 'fti',
+        ordering: this.isSmall(),
+        order: this.order,
+        deferRender: true,
+        scroller: {
+          loadingIndicator: true,
+          displayBuffer: 20,
+          boundaryScale: 0
+        },
+        stateSave: false,
+        serverSide: !this.isSmall(),
+        columns: this.columns,
+        language: {
+          info: `Showing _START_ to _END_ of ${total} entries` + (!this.isSmall() ? ' <span class="text-gs-red">(sorting/filtering disabled)</span>' : '')
+        }
+      })
+      // using es5 'function' to have 'this' bound to the triggering element
+      this.table.on('click', 'td', function (e) {
+        if (!that.selectMessage) return
+        let cell = tab.cell(this)
+        if (!cell) return
+        let index = cell.index()
+        logger.debug('index', index)
+        let row = tab.row(index.row).data()
+        logger.debug('row', row)
+        if (!row.keyspace) {
+          row.keyspace = that.keyspace
+        }
+        let msgs = that.selectMessage
+        if (!Array.isArray(msgs)) {
+          msgs = [msgs]
+        }
+        if (!msgs[index.column]) return
+        that.dispatcher(msgs[index.column], row)
+      })
+      this.table.on('order.dt', () => {
+        this.order = this.table.order()
+      })
+      return this.root
+    }
+    if (this.shouldUpdate('nodecheck')) {
+      logger.debug('redraw table')
+      this.table.rows().invalidate('data').draw('page')
+      super.render()
+    }
   }
   toggleSearch () {
     this.searchable = !this.searchable
@@ -178,5 +186,16 @@ export default class Table extends BrowserComponent {
   }
   downloadOption () {
     return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
+  }
+  formatIsInGraph (nodeIsInGraph, type, keyspace) {
+    return (value, t) => {
+      if (t === 'display') {
+        if (nodeIsInGraph(value, type, keyspace)) {
+          return '<i class="fas fa-check text-xs mr-1"></i>' + value
+        }
+        return value
+      }
+      return value
+    }
   }
 }

@@ -60,8 +60,11 @@ export default class NodeGraph extends Component {
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
+    // nodes of the graph
     this.clusterNodes = map()
     this.addressNodes = map()
+    // ids of addresses/clusters present in graph
+    this.references = {address: map(), cluster: map()}
     this.adding = set()
     this.selectedNode = null
     this.highlightedNodes = []
@@ -101,6 +104,49 @@ export default class NodeGraph extends Component {
     // initialize with true to allow initial snapshot
     this.dirty = true
     this.createSnapshot()
+  }
+  setNodes (node, type) {
+    let nodes
+    if (type === 'cluster') {
+      nodes = this.clusterNodes
+    } else if (type === 'address') {
+      nodes = this.addressNodes
+    }
+    nodes.set(node.id, node)
+    let id = [node.id[0], node.id[2]]
+    let refCount = this.references[type].get(id) || 0
+    this.references[type].set(id, refCount + 1)
+  }
+  removeFromNodes (nodeId, type) {
+    let nodes
+    if (type === 'cluster') {
+      nodes = this.clusterNodes
+    } else if (type === 'address') {
+      nodes = this.addressNodes
+    }
+    nodes.remove(nodeId)
+    let id = [nodeId[0], nodeId[2]]
+    let refCount = this.references[type].get(id)
+    if (refCount === 1) {
+      this.references[type].remove(id)
+    } else {
+      this.references[type].set(id, refCount - 1)
+    }
+  }
+  setAddressNodes (node) {
+    this.setNodes(node, 'address')
+  }
+  setClusterNodes (node) {
+    this.setNodes(node, 'cluster')
+  }
+  removeAddressNode (nodeId) {
+    this.removeFromNodes(nodeId, 'address')
+  }
+  removeClusterNode (nodeId) {
+    this.removeFromNodes(nodeId, 'cluster')
+  }
+  getNodeChecker () {
+    return (id, type, keyspace) => this.references[type].has([id, keyspace])
   }
   getCategoryColors () {
     return {...predefinedCategories}
@@ -323,7 +369,7 @@ export default class NodeGraph extends Component {
       if (this.addressNodes.has([address.id, id[1], address.keyspace])) return
       let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       logger.debug('new AddressNode', addressNode)
-      this.addressNodes.set(addressNode.id, addressNode)
+      this.setAddressNodes(addressNode)
       cluster.add(addressNode)
       this.dirty = true
     })
@@ -382,7 +428,7 @@ export default class NodeGraph extends Component {
         return node
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType['addressLabel'], this.colors['address'], this.currency)
-      this.addressNodes.set(addressNode.id, addressNode)
+      this.setAddressNodes(addressNode)
       this.selectNodeIfIsNextNode(addressNode)
       logger.debug('new AddressNode', addressNode)
       node = this.clusterNodes.get([object.cluster.id, layerId, object.cluster.keyspace])
@@ -390,6 +436,7 @@ export default class NodeGraph extends Component {
         node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       }
       node.add(addressNode)
+      this.setClusterNodes(node)
     } else if (object.type === 'cluster') {
       node = this.clusterNodes.get([object.id, layerId, object.keyspace])
       if (node) {
@@ -397,7 +444,7 @@ export default class NodeGraph extends Component {
         return node
       }
       node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
-      this.clusterNodes.set(node.id, node)
+      this.setClusterNodes(node)
       logger.debug('new ClusterNode', node)
       this.selectNodeIfIsNextNode(node)
     } else {
@@ -414,14 +461,12 @@ export default class NodeGraph extends Component {
   }
   remove (nodeType, nodeId) {
     logger.debug('remove', nodeType, nodeId)
-    let nodes
+    let node = this.getNode(nodeId, nodeType)
     if (nodeType === 'address') {
-      nodes = this.addressNodes
+      this.removeAddressNode(nodeId)
     } else if (nodeType === 'cluster') {
-      nodes = this.clusterNodes
+      this.removeClusterNode(nodeId)
     }
-    let node = nodes.get(nodeId)
-    nodes.remove(nodeId)
     if (this.selectedNode === node) {
       this.selectedNode = null
     }
@@ -434,7 +479,7 @@ export default class NodeGraph extends Component {
         cluster.nodes.remove(nodeId)
       })
     } else if (nodeType === 'cluster') {
-      node.nodes.each(node => this.addressNodes.remove(node.id))
+      node.nodes.each(node => this.removeAddressNode(node.id))
       this.clusterNodes.remove(nodeId)
       if (layer.nodes.size() === 0) {
         this.layers = this.layers.filter(l => l !== layer)
@@ -840,7 +885,7 @@ export default class NodeGraph extends Component {
       let data = store.get(nodeId[2], 'address', nodeId[0])
       let node = new AddressNode(this.dispatcher, data, nodeId[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       node.deserialize(address)
-      this.addressNodes.set(node.id, node)
+      this.setAddressNodes(node)
     })
     clusterNodes.forEach(([nodeId, cluster]) => {
       if (version === '0.4.0') {
@@ -851,7 +896,7 @@ export default class NodeGraph extends Component {
       let data = store.get(nodeId[2], 'cluster', nodeId[0])
       let node = new ClusterNode(this.dispatcher, data, nodeId[1], this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
       node.deserialize(version, cluster, this.addressNodes)
-      this.clusterNodes.set(node.id, node)
+      this.setClusterNodes(node)
     })
     layers.forEach(([id, clusterKeys]) => {
       let l = new Layer(id)
