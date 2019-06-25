@@ -137,7 +137,8 @@ export default class Table extends BrowserComponent {
   }
   setResponse ({page, request, drawCallback, result}) {
     if (!this.isSmall() && page !== this.nextPage) return
-    this.data = this.data.concat(result[this.resultField])
+    this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
+    logger.debug('data', this.data)
     this.nextPage = result.nextPage
     let loading = this.loading || request
     // HACK: The table shall only be scrollable to the currently loaded data.
@@ -154,6 +155,12 @@ export default class Table extends BrowserComponent {
   }
   truncateValue (value) {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
+  }
+  formatLink (value) {
+    if (value.startsWith('http')) {
+      return `<a onClick="event.stopPropagation()" href="${value}" target=_blank>${this.truncateValue(value)}</a>`
+    }
+    return value
   }
   formatValue (func) {
     return (value, type) => {

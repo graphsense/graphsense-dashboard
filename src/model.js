@@ -25,6 +25,7 @@ const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
 const searchlimit = 100
 const prefixLength = 5
+const labelPrefixLength = 3
 
 // synchronous messages
 // get handled by model in current rendering frame
@@ -46,7 +47,10 @@ const dirtyMessages = [
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
-  let url = keyspace && type && id ? '#!' + [keyspace, type, id].join('/') : '/'
+  let url = '/'
+  if (type && id) {
+    url = '#!' + (keyspace ? keyspace + '/' : '') + [type, id].join('/')
+  }
   if (url === '/') {
     window.history.pushState({keyspace, type, id}, null, url)
     return
@@ -77,7 +81,7 @@ const keyspaces =
     'zec': 'Zcash'
   }
 
-const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block']
+const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block', 'label']
 
 const fromURL = (url) => {
   let hash = url.split('#!')[1]
@@ -86,7 +90,11 @@ const fromURL = (url) => {
   let id = split[2]
   let type = split[1]
   let keyspace = split[0]
-  if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
+  if (split[0] === 'label') {
+    keyspace = null
+    type = split[0]
+    id = split[1]
+  } else if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
     logger.error(`invalid keyspace ${keyspace}`)
     return
   }
@@ -114,7 +122,7 @@ export default class Model {
       }
 
       let fun = () => {
-        logger.debug('calling', message, data)
+        logger.boldDebug('calling', message, data)
         this.dispatcher.call(message, null, data)
         if (dirtyMessages.indexOf(message) === -1) {
           this.render()
@@ -145,7 +153,7 @@ export default class Model {
     this.dispatcher.on('search', ({term, types, keyspaces, isInDialog}) => {
       let search = isInDialog ? this.menu.search : this.search
       if (!search) return
-      search.setSearchTerm(term, prefixLength)
+      search.setSearchTerm(term, labelPrefixLength)
       search.hideLoading()
       for (let keyspace in keyspaces) {
         if (search.needsResults(keyspace, searchlimit, prefixLength)) {
@@ -158,10 +166,19 @@ export default class Model {
           }, 250)
         }
       }
+      if (search.needsLabelResults(searchlimit, labelPrefixLength)) {
+        if (search.timeoutLabels) clearTimeout(search.timeoutLabels)
+        search.showLoading()
+        search.timeoutLabels = setTimeout(() => {
+          if (types.indexOf('labels') !== -1) {
+            this.mapResult(this.rest.searchLabels(term, searchlimit), 'searchresultLabels', {term, isInDialog})
+          }
+        }, 250)
+      }
     })
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
       if (isInDialog) {
-        if (!this.menu.search) return
+        if (!this.menu.search || type !== 'address') return
         this.menu.addSearchAddress(id)
         this.menu.search.clear()
         return
@@ -178,8 +195,8 @@ export default class Model {
         this.mapResult(this.rest.node(keyspace, {id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
         this.mapResult(this.rest.transaction(keyspace, id), 'resultTransactionForBrowser', id)
-      } else if (type === 'tag') {
-        this.mapResult(this.rest.tag(keyspace, id), 'resultTagForBrowser', id)
+      } else if (type === 'label') {
+        this.mapResult(this.rest.label(id), 'resultLabelForBrowser', id)
       } else if (type === 'block') {
         this.mapResult(this.rest.block(keyspace, id), 'resultBlockForBrowser', id)
       }
@@ -199,6 +216,13 @@ export default class Model {
           search.error(error.keyspace, error.message)
           // this.statusbar.addMsg('error', error)
           break
+        case 'searchresultLabels':
+          search = context && context.isInDialog ? this.menu.search : this.search
+          if (!search) return
+          search.hideLoading()
+          search.errorLabels(error.message)
+          // this.statusbar.addMsg('error', error)
+          break
         case 'resultNode':
           this.statusbar.removeLoading(context)
           break
@@ -208,7 +232,7 @@ export default class Model {
         case 'resultBlockForBrowser':
           this.statusbar.removeLoading(context)
           break
-        case 'resultTagForBrowser':
+        case 'resultLabelForBrowser':
           this.statusbar.removeLoading(context)
           break
         case 'resultEgonet':
@@ -251,11 +275,12 @@ export default class Model {
       this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
     })
-    this.dispatcher.on('resultTagForBrowser', ({result}) => {
-      this.browser.setTag(result)
-      historyPushState(result.keyspace, 'tag', result.id)
-      this.statusbar.removeLoading(result.id)
-      this.statusbar.addMsg('loaded', 'tag', result.id)
+    this.dispatcher.on('resultLabelForBrowser', ({result}) => {
+      this.browser.setLabel(result)
+      historyPushState(null, 'label', result.label)
+      this.statusbar.removeLoading(result.label)
+      this.statusbar.addMsg('loaded', 'label', result.label)
+      this.call('initTagsTable', {id: result.label, type: 'label', index: 0})
     })
     this.dispatcher.on('resultBlockForBrowser', ({result}) => {
       this.browser.setBlock(result)
@@ -268,6 +293,13 @@ export default class Model {
       if (!search) return
       search.hideLoading()
       search.setResult(context.term, result)
+    })
+    this.dispatcher.on('searchresultLabels', ({context, result}) => {
+      let search = context.isInDialog ? this.menu.search : this.search
+      logger.debug('search', search)
+      if (!search) return
+      search.hideLoading()
+      search.setResultLabels(context.term, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
       logger.debug('selectNode', type, nodeId)
@@ -322,7 +354,7 @@ export default class Model {
     })
     this.dispatcher.on('loadTags', ({keyspace, params, nextPage, request, drawCallback}) => {
       this.statusbar.addMsg('loading', 'tags')
-      this.mapResult(this.rest.tags(keyspace, {params, nextPage, pagesize: request.length}), 'resultTagsTable', {page: nextPage, request, drawCallback})
+      this.mapResult(this.rest.tags(keyspace, {id: params[0], type: params[1], nextPage, pagesize: request.length}), 'resultTagsTable', {page: nextPage, request, drawCallback})
     })
     this.dispatcher.on('resultTagsTable', ({context, result}) => {
       this.browser.setResponse({...context, result})
@@ -723,6 +755,7 @@ export default class Model {
       logger.debug('going home')
       this.showLandingpage = true
       historyPushState()
+      this.browser.destroyComponentsFrom(0)
       this.landingpage.setUpdate(true)
       this.layout.setUpdate(true)
       this.render()

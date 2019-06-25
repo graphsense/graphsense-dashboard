@@ -2,6 +2,7 @@ import {set} from 'd3-collection'
 import layout from './browser/layout.html'
 import Address from './browser/address.js'
 import Cluster from './browser/cluster.js'
+import Label from './browser/label.js'
 import Transaction from './browser/transaction.js'
 import Block from './browser/block.js'
 import Table from './browser/table.js'
@@ -56,6 +57,14 @@ export default class Browser extends Component {
   setCurrency (currency) {
     this.currency = currency
     this.content.forEach(comp => comp.setCurrency(currency))
+  }
+  setLabel (label) {
+    this.visible = true
+    this.setUpdate('visibility')
+    if (this.content[0] instanceof Label && this.content[0].data.label === label.label) return
+    this.destroyComponentsFrom(0)
+    this.content = [ new Label(this.dispatcher, label, 0, this.currency) ]
+    this.setUpdate('content')
   }
   setAddress (address) {
     this.activeTab = 'address'
@@ -150,12 +159,14 @@ export default class Browser extends Component {
   initTagsTable (request) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
-    if (!(last instanceof Cluster) && !(last instanceof Address)) return
+    let fromLabel = last instanceof Label
+    if (!(last instanceof Cluster) && !(last instanceof Address) && !(fromLabel)) return
     if (this.content[request.index + 1] instanceof TagsTable) return
     last.setCurrentOption('initTagsTable')
     this.destroyComponentsFrom(request.index + 1)
     let keyspace = last.data.keyspace
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, last.data.tags, request.id, request.type, this.currency, keyspace))
+    let total = fromLabel ? last.data.address_count : last.data.tags.length
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace))
 
     this.setUpdate('content')
   }
@@ -191,7 +202,7 @@ export default class Browser extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    logger.debug('shouldupdate', this.shouldUpdate())
+    logger.debug('shouldupdate', this.update)
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = layout
       this.renderVisibility()

@@ -30,7 +30,7 @@ export default class Rest {
           } else {
             result[field].forEach(item => { item.keyspace = keyspace })
           }
-        } else {
+        } else if (!Array.isArray(result)) {
           result.keyspace = keyspace
         }
         return Promise.resolve(result)
@@ -55,13 +55,10 @@ export default class Rest {
     this.json = this.remoteJson
   }
   search (keyspace, str, limit) {
-    if (str.length < this.prefixLength) {
-      return Promise.resolve({addresses: []})
-    }
     return this.json(keyspace, '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
-  searchTags (keyspace, str, limit) {
-    return this.json(keyspace, '/search_tags?q=' + encodeURIComponent(str) + '&limit=' + limit)
+  searchLabels (str, limit) {
+    return this.json(null, '/labelsearch?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
   node (keyspace, request) {
     return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
@@ -90,7 +87,7 @@ export default class Rest {
   tags (keyspace, {id, type}, csvUrl) {
     let url = '/' + type + '/' + id + '/tags'
     if (csvUrl) return this.csvUrl(keyspace, url)
-    return this.json(keyspace, url, 'tags')
+    return this.json(keyspace, url)
   }
   egonet (keyspace, type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
@@ -105,8 +102,8 @@ export default class Rest {
   block (keyspace, height) {
     return this.json(keyspace, `/block/${height}`)
   }
-  tag (keyspace, id) {
-    return Promise.reject(new Error('tag endpoint not implemented'))
+  label (id) {
+    return this.json(null, `/label/${id}`)
   }
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csvUrl) {
     let dir = isOutgoing ? 'out' : 'in'

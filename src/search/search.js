@@ -6,10 +6,10 @@ import {firstToUpper} from '../utils.js'
 
 const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
-const empty = {addresses: [], transactions: [], tags: []}
+const empty = {addresses: [], transactions: [], labels: []}
 const numShowResults = 7
 
-const byPrefix = term => addr => addr.startsWith(term)
+const byPrefix = term => addr => addr.toLowerCase().startsWith(term.toLowerCase())
 
 export default class Search extends Component {
   constructor (dispatcher, keyspaces, types, isInDialog = false) {
@@ -34,6 +34,7 @@ export default class Search extends Component {
     for (let keyspace in this.keyspaces) {
       this.result[keyspace] = {...empty}
     }
+    this.resultLabels = {labels: []}
   }
   clear () {
     this.clearResults()
@@ -43,6 +44,10 @@ export default class Search extends Component {
   }
   error (keyspace, msg) {
     this.result[keyspace].error = msg
+    this.setUpdate('result')
+  }
+  errorLabels (msg) {
+    this.resultLabels.error = msg
     this.setUpdate('result')
   }
   showLoading () {
@@ -72,7 +77,7 @@ export default class Search extends Component {
         case 'addresses' : return 'addresses'
         case 'transactions' : return 'transaction'
         case 'blocks' : return 'block'
-        case 'tags' : return 'tag'
+        case 'labels' : return 'label'
       }
     }).join(', '))
   }
@@ -102,9 +107,9 @@ export default class Search extends Component {
             this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace, isInDialog: this.isInDialog})
             return false
           }
-          if (this.types.indexOf('tags') !== -1 && this.result[keyspace].tags.length > 0) {
-            let tags = this.result[keyspace].tags.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: tags[0], type: 'tag', keyspace, isInDialog: this.isInDialog})
+          if (this.types.indexOf('labels') !== -1 && this.resultLabels.labels.length > 0) {
+            let labels = this.resultLabels.labels.filter(byPrefix(this.term))
+            this.dispatcher('clickSearchResult', {id: labels[0], type: 'label', keyspace, isInDialog: this.isInDialog})
             return false
           }
           let blocks = this.blocklist(3, keyspace, this.term)
@@ -175,8 +180,12 @@ export default class Search extends Component {
     if (this.term.length < prefixLength) return false
     let alen = this.result[keyspace].addresses.length
     let tlen = this.result[keyspace].transactions.length
-    let talen = this.result[keyspace].tags.length
-    return !(((alen !== 0 && alen < limit) || (tlen !== 0 && tlen < limit) || (talen !== 0 && talen < limit)) && this.term.startsWith(this.resultTerm))
+    return !(((alen !== 0 && alen < limit) || (tlen !== 0 && tlen < limit)) && this.term.startsWith(this.resultTerm))
+  }
+  needsLabelResults (limit, prefixLength) {
+    if (this.term.length < prefixLength) return false
+    let len = this.resultLabels.labels.length
+    return !(((len !== 0 && len < limit)) && this.term.startsWith(this.resultTerm))
   }
   renderOptions () {
     return null
@@ -189,6 +198,15 @@ export default class Search extends Component {
 
     let visible = this.isLoading
     let allErrors = true
+    let searchLine = (keyspace, ul) => (type, icon) => (id) => {
+      let li = document.createElement('li')
+      li.className = 'cursor-pointer'
+      li.innerHTML = `<i class="fas fa-${icon} pr-1 text-grey text-sm"></i>${id}`
+      li.addEventListener('click', () => {
+        this.dispatcher('clickSearchResult', {id, type, keyspace, isInDialog: this.isInDialog})
+      })
+      ul.appendChild(li)
+    }
     for (let keyspace in this.keyspaces) {
       let addresses = this.result[keyspace].addresses
         .filter(byPrefix(this.term))
@@ -198,17 +216,12 @@ export default class Search extends Component {
         .filter(byPrefix(this.term))
         .slice(0, numShowResults)
 
-      let tags = this.result[keyspace].tags
-        .filter(byPrefix(this.term))
-        .slice(0, numShowResults)
-
       let blocks = this.blocklist(3, keyspace, this.term)
 
       let keyspaceVisible =
         this.result[keyspace].error ||
         addresses.length > 0 ||
         transactions.length > 0 ||
-        tags.length > 0 ||
         blocks.length > 0
       visible = visible || keyspaceVisible
       if (this.result[keyspace].error) {
@@ -221,25 +234,33 @@ export default class Search extends Component {
 
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
-      let searchLine = (type, icon) => (id) => {
-        let li = document.createElement('li')
-        li.className = 'cursor-pointer'
-        li.innerHTML = `<i class="fas fa-${icon} pr-1 text-grey text-sm"></i>${id}`
-        li.addEventListener('click', () => {
-          this.dispatcher('clickSearchResult', {id, type, keyspace, isInDialog: this.isInDialog})
-        })
-        ul.appendChild(li)
-      }
-      addresses.forEach(searchLine('address', 'at'))
-      transactions.forEach(searchLine('transaction', 'exchange-alt'))
-      tags.forEach(searchLine('tag', 'tag'))
-      blocks.forEach(searchLine('block', 'cube'))
+      let searchLine_ = searchLine(keyspace, ul)
+      addresses.forEach(searchLine_('address', 'at'))
+      transactions.forEach(searchLine_('transaction', 'exchange-alt'))
+      blocks.forEach(searchLine_('block', 'cube'))
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(this.keyspaces[keyspace]))
       el.appendChild(title)
       el.appendChild(ul)
     }
+    let labels = this.resultLabels.labels
+      .filter(byPrefix(this.term))
+      .slice(0, numShowResults)
+    logger.debug('labels', labels)
+    if (labels.length > 0) {
+      visible = true
+      allErrors = false
+      let ul = document.createElement('ol')
+      ul.className = 'list-reset'
+      labels.forEach(searchLine(null, ul)('label', 'tag'))
+      let title = document.createElement('div')
+      title.className = 'font-bold py-1'
+      title.appendChild(document.createTextNode('Labels'))
+      el.appendChild(title)
+      el.appendChild(ul)
+    }
+
     if (allErrors) {
       el.innerHTML = `Failed to fetch from any keyspaces`
       addClass(el, 'text-gs-red')
@@ -259,9 +280,15 @@ export default class Search extends Component {
     if (term !== this.term) return
     this.result[result.keyspace] = {
       addresses: result.addresses || [],
-      transactions: result.transactions || [],
-      tags: result.tags || []
+      transactions: result.transactions || []
     }
+    this.resultTerm = term
+    this.setUpdate('result')
+  }
+  setResultLabels (term, result) {
+    logger.debug('set result', result, term, this.term)
+    if (term !== this.term) return
+    this.resultLabels.labels = result.labels
     this.resultTerm = term
     this.setUpdate('result')
   }

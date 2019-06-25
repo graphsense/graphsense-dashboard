@@ -1,36 +1,46 @@
 import Table from './table.js'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, data, nodeId, nodeType, currency, keyspace) {
-    super(dispatcher, index, data.length, currency, keyspace)
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace) {
+    super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.nodeType = nodeType
     this.columns = [
-      { name: 'Tag',
-        data: 'tag',
-        render: (value, type, row) => {
-          if (row['source'].startsWith('http')) {
-            return `<a href="${row['source']}" target=_blank>${value}</a>`
-          }
-          return value
-        }
+      { name: 'Address',
+        data: 'address'
       },
-      { name: 'Actor Category',
-        data: 'actorCategory'
+      { name: 'Label',
+        data: 'label'
+      },
+      { name: 'Currency',
+        data: 'currency'
+      },
+      { name: 'Source',
+        data: 'source',
+        render: (value) => this.formatLink(value)
+      },
+      { name: 'TagPack',
+        data: 'tagpack_uri',
+        render: (value) => this.formatLink(value)
+      },
+      { name: 'Category',
+        data: 'category'
       },
       { name: 'Last modified',
-        data: 'timestamp',
+        data: 'lastmod',
         render: this.formatTimestamp
       }
     ]
     this.loadMessage = 'loadTags'
-    this.resultField = 'tags'
+    this.selectMessage = 'clickAddress'
+    this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType]
     this.options =
       [
         this.downloadOption()
       ]
+    if (nodeType === 'label') this.options = []
   }
   isSmall () {
     return true
