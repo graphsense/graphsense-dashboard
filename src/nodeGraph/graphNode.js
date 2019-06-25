@@ -189,9 +189,10 @@ class GraphNode extends Component {
     let tags = (this.data || {}).tags || []
     let categories = {}
     tags.forEach(tag => {
-      categories[tag['actorCategory']] = (categories[tag['actorCategory']] || 0) + 1
+      categories[tag['category']] = (categories[tag['category']] || 0) + 1
     })
     let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]
+    logger.debug('categories', categories, entry)
     if (entry) return entry[0]
   }
   getNote () {
@@ -216,7 +217,7 @@ class GraphNode extends Component {
         return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
       case 'tag':
         return this.getTag() || this.getName()
-      case 'actorCategory':
+      case 'category':
         return this.getActorCategory() || this.getName()
     }
   }
@@ -224,11 +225,13 @@ class GraphNode extends Component {
     let tag
     if (!this.data.tags || this.data.tags.length === 0) {
       tag = ''
-    } else if (this.data.tags.length > 1) {
-      tag = moreThan1TagCategory
     } else {
-      tag = this.getActorCategory()
+      tag = this.getActorCategory() || ''
+      if (!tag && this.data.tags.length > 1) {
+        tag = moreThan1TagCategory
+      }
     }
+    logger.debug('coloring tag', tag)
     let color = this.colors.categories(tag)
     this.root
       .select('.addressNodeRect,.clusterNodeRect')
