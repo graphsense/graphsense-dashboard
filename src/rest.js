@@ -113,7 +113,7 @@ export default class Rest {
     let url = `/${type}/${id}/neighbors`
     if (csvUrl) url += '.csv'
     url += `?direction=${dir}`
-    if (csvUrl) return this.csvUrl(keyspace, url)
+    if (csvUrl) return this.keyspaceUrl(keyspace) + url
     url += '&' +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
