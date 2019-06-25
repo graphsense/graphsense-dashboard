@@ -292,7 +292,7 @@ svg .link:hover * {
   stroke: red !important;
 }
 svg .link:hover path {
-  marker-end: url(#arrow1-red);
+  marker-end: url(#arrow1-red) !important;
 }
 
 svg .link:hover text {
