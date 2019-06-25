@@ -64,6 +64,8 @@ export default class NodeGraph extends Component {
     this.clusterNodes = map()
     this.addressNodes = map()
     this.adding = set()
+    this.selectedNode = null
+    this.highlightedNodes = []
     this.layers = []
     this.transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
     this.colorMapCategories = map(predefinedCategories)
@@ -262,6 +264,20 @@ export default class NodeGraph extends Component {
     if (this.selectedNode && this.selectedNode !== sel) {
       this.selectedNode.deselect()
     }
+    this.highlightedNodes.forEach(node => node.unhighlight())
+    this.highlightedNodes = []
+    let nodes
+    if (sel.data.type === 'cluster') {
+      nodes = this.clusterNodes
+    } else if (sel.data.type === 'address') {
+      nodes = this.addressNodes
+    }
+    nodes.each(node => {
+      if (node.data.id === sel.data.id) {
+        node.highlight()
+        this.highlightedNodes.push(node)
+      }
+    })
     this.selectedNode = sel
   }
   setResultClusterAddresses (id, addresses) {

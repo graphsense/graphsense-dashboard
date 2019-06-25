@@ -140,7 +140,7 @@ class GraphNode extends Component {
     g.attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${h / 2} )`)
   }
   renderSelected () {
-    this.root.select('g').classed('selected', this.selected)
+    this.root.select('g').classed('selected', this.selected || this.highlighted)
   }
   translate (x, y) {
     this.x += x
@@ -252,6 +252,16 @@ class GraphNode extends Component {
   deselect () {
     if (!this.selected) return
     this.selected = false
+    this.setUpdate('select')
+  }
+  highlight () {
+    if (this.highlighted) return
+    this.highlighted = true
+    this.setUpdate('select')
+  }
+  unhighlight () {
+    if (!this.highlighted) return
+    this.highlighted = false
     this.setUpdate('select')
   }
   setCurrency (currency) {
