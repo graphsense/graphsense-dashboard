@@ -219,13 +219,14 @@ export default class ClusterNode extends GraphNode {
     let h = this.getHeight()
     let w = this.getWidth()
     let num = (n) => numeral(n).format('0,000')
+    let plural = this.data.noAddresses > 1 ? 'es' : ''
     button.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
       .attr('title', this.expandCollapseOrShowAddressTableTitle())
-      .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' addresses')
+      .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' address' + plural)
       .on('click', () => {
         event.stopPropagation()
         this.dispatcher('selectNode', ['cluster', this.id])
