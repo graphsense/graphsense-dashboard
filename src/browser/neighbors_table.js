@@ -30,10 +30,7 @@ export default class NeighborsTable extends Table {
     this.resultField = 'neighbors'
     this.selectMessage = 'selectNeighbor'
     this.loadParams = [id, type, isOutgoing]
-    this.options =
-      [
-        this.downloadOption()
-      ]
+    this.addOption(this.downloadOption())
     if (total < maxAddableNodes) this.options.push(this.addAllOption())
   }
   smallThreshold () {

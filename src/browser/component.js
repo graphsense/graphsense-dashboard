@@ -11,13 +11,17 @@ export default class BrowserComponent extends Component {
     this.dispatcher = dispatcher
     this.currency = currency
     this.currentOption = null
+    this.options = []
   }
   setCurrentOption (option) {
     this.currentOption = option
     this.setUpdate(true)
   }
+  addOption (option) {
+    this.options.push(option)
+  }
   renderOptions () {
-    if (!this.options) return
+    if (!this.options || this.options.length === 0) return
     let ul = document.createElement('ul')
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {

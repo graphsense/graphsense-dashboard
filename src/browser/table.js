@@ -20,6 +20,7 @@ export default class Table extends BrowserComponent {
     this.data = []
     this.loading = null
     this.searchable = false
+    this.addOption({icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable'})
   }
   smallThreshold () {
     return 5000
@@ -40,17 +41,7 @@ export default class Table extends BrowserComponent {
       let el = this.root.querySelector('th')
       this.columns.forEach((column, i) => {
         let el2 = el.cloneNode()
-        column.searchable = i === 0
-        if (i === 0 && this.isSmall()) {
-          let sw = this.searchable ? 'searchwidth' : ''
-          el2.innerHTML = '<div id="firstColumn" class="flex justify-between mr-1 ' + sw + '"><span class="flex-grow mr-2">' + column.name + '</span><i class="fas fa-search text-grey"></i></div>'
-          el2.querySelector('i').addEventListener('click', (e) => {
-            e.stopPropagation()
-            this.dispatcher('toggleSearchTable')
-          })
-        } else {
-          el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
-        }
+        el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
         tr.appendChild(el2)
       })
       tr.removeChild(el)

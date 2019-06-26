@@ -40,10 +40,7 @@ export default class TagsTable extends Table {
     this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType]
-    this.options =
-      [
-        this.downloadOption()
-      ]
+    this.addOption(this.downloadOption())
     if (nodeType === 'label') this.options = []
   }
   isSmall () {

@@ -20,8 +20,7 @@ export default class TransactionAddressesTable extends Table {
     ]
     this.data = addresses
     this.selectMessage = 'clickAddress'
-    this.options = []
-    if (addresses.length < maxAddableNodes) this.options.push(this.addAllOption())
+    if (addresses.length < maxAddableNodes) this.addOption(this.addAllOption())
   }
   isSmall () {
     return true

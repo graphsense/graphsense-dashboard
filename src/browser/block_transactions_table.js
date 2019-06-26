@@ -32,10 +32,7 @@ export default class BlockTransactionsTable extends Table {
     this.resultField = 'txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.height, 'block']
-    this.options =
-      [
-        this.downloadOption()
-      ]
+    this.addOption(this.downloadOption())
   }
   getParams () {
     return {

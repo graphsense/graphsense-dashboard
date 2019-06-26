@@ -35,8 +35,7 @@ export default class AddressesTable extends Table {
     this.resultField = 'addresses'
     this.selectMessage = 'selectAddress'
     this.loadParams = this.clusterId
-    this.options = []
-    if (total < maxAddableNodes) this.options.push(this.addAllOption())
+    if (total < maxAddableNodes) this.addOption(this.addAllOption())
   }
   smallThreshold () {
     return 200
