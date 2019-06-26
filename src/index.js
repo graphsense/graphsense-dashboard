@@ -114,7 +114,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'changeSearchCriterion',
   'addAllToGraph',
   'tooltip',
-  'hideTooltip'
+  'hideTooltip',
+  'receiveCSV'
 )
 
 let model = new Model(dispatcher)

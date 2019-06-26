@@ -40,11 +40,18 @@ export default class Rest {
         return Promise.reject(error)
       })
   }
+  csv (keyspace, url) {
+    url = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
+    if (url.indexOf('?') !== -1) {
+      url = url.replace('?', '.csv?')
+    } else {
+      url += '.csv'
+    }
+    return fetch(url, options) // eslint-disable-line no-undef
+      .then(resp => resp.blob())
+  }
   keyspaceUrl (keyspace) {
     return this.baseUrl + (keyspace ? '/' + keyspace : '')
-  }
-  csvUrl (keyspace, url) {
-    return this.keyspaceUrl(keyspace) + url + '.csv'
   }
   disable () {
     this.json = (url) => {
@@ -67,26 +74,26 @@ export default class Rest {
     logger.debug('rest clusterForAddress', id)
     return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
   }
-  transactions (keyspace, request, csvUrl) {
+  transactions (keyspace, request, csv) {
     let url =
        '/' + request.params[1] + '/' + request.params[0] + '/transactions'
-    if (csvUrl) return this.csvUrl(keyspace, url)
+    if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'transactions')
   }
-  addresses (keyspace, request, csvUrl) {
+  addresses (keyspace, request, csv) {
     let url = '/cluster/' + request.params + '/addresses'
-    if (csvUrl) return this.csvUrl(keyspace, url)
+    if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, 'addresses')
   }
-  tags (keyspace, {id, type}, csvUrl) {
+  tags (keyspace, {id, type}, csv) {
     let url = '/' + type + '/' + id + '/tags'
-    if (csvUrl) return this.csvUrl(keyspace, url)
+    if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url).then(tags => tags.map(tag => {
       tag.keyspace = tag.currency.toLowerCase()
       return tag
@@ -108,12 +115,10 @@ export default class Rest {
   label (id) {
     return this.json(null, `/label/${id}`)
   }
-  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csvUrl) {
+  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {
     let dir = isOutgoing ? 'out' : 'in'
-    let url = `/${type}/${id}/neighbors`
-    if (csvUrl) url += '.csv'
-    url += `?direction=${dir}`
-    if (csvUrl) return this.keyspaceUrl(keyspace) + url
+    let url = `/${type}/${id}/neighbors?direction=${dir}`
+    if (csv) return this.csv(keyspace, url)
     url += '&' +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')

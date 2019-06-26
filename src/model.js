@@ -859,32 +859,27 @@ export default class Model {
       if (this.isReplaying) return
       let table = this.browser.content[1]
       if (!table) return
-      let url = ''
-      let filename = ''
+      let filename
+      let request
       if (table instanceof NeighborsTable) {
         let params = table.getParams()
-        url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
-        filename = (params.isOutgoing ? 'outgoing' : 'incoming') + ` neighbors of ${params.type} ${params.id}`
+        request = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
+        filename = (params.isOutgoing ? 'outgoing' : 'incoming') + ` neighbors of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
       } else if (table instanceof TagsTable) {
         let params = table.getParams()
-        url = this.rest.tags(params.keyspace, params, true)
-        filename = `tags of ${params.type} ${params.id}`
+        request = this.rest.tags(params.keyspace, params, true)
+        filename = `tags of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
       } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
         let params = table.getParams()
-        url = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
-        filename = `transactions of ${params.type} ${params.id}`
+        request = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
+        filename = `transactions of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
       }
-      if (url) {
-        // TODO put rest.js in a service worker and handle authorization there
-        // so clicking this link will go to the sw, which will add the auth header
-        // and return the data properly
-        //  FileSaver.saveAs(url, filename + '.csv')
-        let a = document.getElementById('downloadCSV')
-        a.setAttribute('href', url)
-        a.setAttribute('download', filename + '.csv')
-        a.setAttribute('target', '_blank')
-        a.click()
+      if (request) {
+        this.mapResult(request, 'receiveCSV', filename + '.csv')
       }
+    })
+    this.dispatcher.on('receiveCSV', ({context, result}) => {
+      FileSaver.saveAs(result, context)
     })
     this.dispatcher.on('addAllToGraph', () => {
       let table = this.browser.content[1]
