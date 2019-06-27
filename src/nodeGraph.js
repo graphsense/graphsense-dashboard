@@ -49,8 +49,6 @@ const predefinedCategories = (() => {
   }, {})
 })()
 
-logger.debug('predefined', predefinedCategories)
-
 const maxNumSnapshots = 4
 
 export default class NodeGraph extends Component {
