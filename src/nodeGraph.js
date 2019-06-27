@@ -44,7 +44,7 @@ const predefinedCategories = (() => {
   return categories.reduce((obj, category, i) => {
     let c = hsl(colorScale(i))
     c.s -= 0.1
-    obj[category] = c
+    obj[category] = c.toString()
     return obj
   }, {})
 })()
@@ -76,7 +76,8 @@ export default class NodeGraph extends Component {
         let color = map.get(k)
         if (color === undefined) {
           color = colorScale(map.size())
-          map.set(k, color)
+          logger.debug('new color', color)
+          map.set(k, color.toString())
         }
         logger.debug('colorGen', type, k, color)
         let c = hsl(color)
