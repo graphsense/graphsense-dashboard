@@ -2,6 +2,8 @@
 
 A Web dashboard for interactive cryptocurrency analysis.
 
+**ATTENTION:** Both production and development setup need a never expiring access token at build time. Please generate one first as described in the REST service README.md.
+
 ## Development setup
 
 You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
@@ -16,7 +18,7 @@ Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
 
 Then start the development server:
 
-    npm start
+    ./node_modules/.bin/webpack-dev-server --env.token={access token goes here}
 
 Point your browser to `localhost:8080`.
 
@@ -37,7 +39,7 @@ Build the Docker image:
 Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.: 
 
-    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-dashboard
+    docker run -e REST_ENDPOINT="https://example.com:9000" -e JWT_TOKEN="{access token goes here}" -p 8000:80 graphsense-dashboard
 
 
 [nodejs]: https://nodejs.org

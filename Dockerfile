@@ -5,8 +5,11 @@ ENV WORKDIR=/app
 RUN mkdir $WORKDIR
 WORKDIR $WORKDIR
 # clone from a master branch at a given version instead:
+COPY package.json $WORKDIR
+RUN npm install 
+
 COPY . $WORKDIR
-RUN npm install && npm run build
+RUN npm run build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
