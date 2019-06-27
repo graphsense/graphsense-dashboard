@@ -44,7 +44,6 @@ const syncMessages = ['search']
 
 // messages that change the graph
 const dirtyMessages = [
-  'clickSearchResult',
   'addNode',
   'addNodeCont',
   'resultNode',
@@ -840,11 +839,13 @@ export default class Model {
     })
     this.dispatcher.on('undo', () => {
       this.graph.loadPreviousSnapshot(this.store)
+      this.browser.setUpdate('tables_with_addresses')
       this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
       this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     })
     this.dispatcher.on('redo', () => {
       this.graph.loadNextSnapshot(this.store)
+      this.browser.setUpdate('tables_with_addresses')
       this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
       this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     })

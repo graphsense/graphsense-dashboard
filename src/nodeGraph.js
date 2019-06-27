@@ -145,6 +145,16 @@ export default class NodeGraph extends Component {
   removeClusterNode (nodeId) {
     this.removeFromNodes(nodeId, 'cluster')
   }
+  clearNodes (type) {
+    let nodes
+    if (type === 'cluster') {
+      nodes = this.clusterNodes
+    } else if (type === 'address') {
+      nodes = this.addressNodes
+    }
+    nodes.clear()
+    this.references[type].clear()
+  }
   getNodeChecker () {
     return (id, type, keyspace) => this.references[type].has([id, keyspace])
   }
@@ -178,8 +188,8 @@ export default class NodeGraph extends Component {
     this.loadSnapshot(store, s)
   }
   loadSnapshot (store, s) {
-    this.addressNodes.clear()
-    this.clusterNodes.clear()
+    this.clearNodes('address')
+    this.clearNodes('cluster')
     this.layers = []
     this.deserializeGraph(null, store, s[0], s[1], s[2])
     this.setUpdate('layers')
