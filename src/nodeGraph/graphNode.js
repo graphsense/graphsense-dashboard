@@ -67,10 +67,6 @@ class GraphNode extends Component {
       }
     ]).sort((i1, i2) => i1.position - i2.position)
   }
-  neighborsMenu (isOutgoing) {
-    return [
-    ]
-  }
   searchingNeighbors (isOutgoing, state) {
     if (isOutgoing) {
       this.searchingNeighborsOut = state

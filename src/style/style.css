@@ -532,3 +532,12 @@ ul#log-messages li {
 .unsupported-keyspace a[href] {
   @apply text-grey-dark;
 }
+
+div.d3-context-menu-theme {
+  @apply bg-grey-lighter shadow-md rounded border;
+}
+
+div.d3-context-menu-theme ul li.is-parent:after {
+  border-top-color: theme('colors.gs.base')
+}
+
