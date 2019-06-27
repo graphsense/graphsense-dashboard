@@ -29,6 +29,7 @@ export default class ClusterNode extends GraphNode {
     this.type = 'cluster'
     this.numLetters = 11
     this.sortAddressesProperty = data => data.id
+    this.currencyLabelHeight = Math.max(this.labelHeight - 18, 12)
   }
   sortAddresses (getValue) {
     this.sortAddressesProperty = getValue
@@ -170,6 +171,10 @@ export default class ClusterNode extends GraphNode {
           .classed('label', true)
           .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)
         this.renderLabel(label)
+        let currency = g.append('g')
+          .classed('label', true)
+          .attr('transform', `translate(${this.getWidth() - padding}, ${padding / 2 + this.currencyLabelHeight})`)
+        this.renderCurrency(currency)
         let eg = g.append('g').classed('expandHandles', true)
         this.renderExpand(eg, true)
         this.renderExpand(eg, false)
@@ -233,6 +238,12 @@ export default class ClusterNode extends GraphNode {
         this.expandCollapseOrShowAddressTable()
       })
     super.render()
+  }
+  renderCurrency (root) {
+    root.append('text')
+      .attr('text-anchor', 'end')
+      .style('font-size', this.currencyLabelHeight + 'px')
+      .text(this.data.keyspace.toUpperCase())
   }
   translate (x, y) {
     super.translate(x, y)
