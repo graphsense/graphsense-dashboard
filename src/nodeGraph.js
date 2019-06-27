@@ -792,7 +792,14 @@ export default class NodeGraph extends Component {
   renderLink (root, link, domain, source, target, tx) {
     let value, label
     [value, label] = this.findValueAndLabel(tx)
-    let scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
+    let scale
+    // scalePow chooses the median of range, if domain is a-a (instead a-b)
+    // so force it to use the lower range bound
+    if (domain[0] !== domain[1]) {
+      scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
+    } else {
+      scale = transactionsPixelRange[0]
+    }
     let path = link({source: [source, true, scale], target: [target, false, scale]})
     let g1 = root.append('g').classed('link', true)
       .on('mouseover', () => this.dispatcher('tooltip', 'link'))
