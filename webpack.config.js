@@ -119,15 +119,17 @@ module.exports = env => {
             extensions: ['html', 'js', 'hbs']
           }
         ],
+        whitelistPatterns: [
+          /d3-context-menu.+/,
+          /svg.+/
+        ],
         whitelistPatternsChildren: [
           /DTS/,
           /dataTables/,
           /dataTable/,
-          /fa-exchange/,
-          /fa-at/,
-          /fa-sign/,
-          /fa-tags/,
-          /min-h-full/
+          /fa-.+/,
+          /min-h-full/,
+          /svg.+/
         ]
       }) : noop()
     ],
