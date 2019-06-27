@@ -7,7 +7,7 @@ const maxAddableNodes = 100
 const moreThan1TagCategory = 'More than 1 tag'
 
 const categories = [
-  'Exchanges',
+  'Exchange',
   'Gambling',
   'Miner',
   'Old/historic',
