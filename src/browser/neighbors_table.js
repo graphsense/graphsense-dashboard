@@ -33,9 +33,6 @@ export default class NeighborsTable extends Table {
     this.addOption(this.downloadOption())
     if (total < maxAddableNodes) this.options.push(this.addAllOption())
   }
-  smallThreshold () {
-    return 2000
-  }
   getParams () {
     return {
       id: this.loadParams[0],

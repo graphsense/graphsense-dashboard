@@ -37,7 +37,4 @@ export default class AddressesTable extends Table {
     this.loadParams = this.clusterId
     if (total < maxAddableNodes) this.addOption(this.addAllOption())
   }
-  smallThreshold () {
-    return 200
-  }
 }
