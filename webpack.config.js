@@ -124,6 +124,7 @@ module.exports = env => {
           /svg.+/
         ],
         whitelistPatternsChildren: [
+          /d3-context-menu.+/,
           /DTS/,
           /dataTables/,
           /dataTable/,
