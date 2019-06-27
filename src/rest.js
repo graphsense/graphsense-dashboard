@@ -13,6 +13,18 @@ const options = {
   }
 }
 
+const normalizeTag = keyspace => tag => {
+  tag.currency = keyspace.toUpperCase()
+  tag.keyspace = keyspace
+  return tag
+}
+
+const normalizeNodeTags = keyspace => node => {
+  if (!node.tags || !Array.isArray(node.tags)) return node
+  node.tags.forEach(normalizeTag(keyspace))
+  return node
+}
+
 export default class Rest {
   constructor (baseUrl, prefixLength) {
     this.baseUrl = baseUrl
@@ -69,10 +81,12 @@ export default class Rest {
   }
   node (keyspace, request) {
     return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
+      .then(normalizeNodeTags(keyspace))
   }
   clusterForAddress (keyspace, id) {
     logger.debug('rest clusterForAddress', id)
     return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
+      .then(normalizeNodeTags(keyspace))
   }
   transactions (keyspace, request, csv) {
     let url =
@@ -92,12 +106,10 @@ export default class Rest {
     return this.json(keyspace, url, 'addresses')
   }
   tags (keyspace, {id, type}, csv) {
+    logger.debug('fetch tags', keyspace)
     let url = '/' + type + '/' + id + '/tags'
     if (csv) return this.csv(keyspace, url)
-    return this.json(keyspace, url).then(tags => tags.map(tag => {
-      tag.keyspace = tag.currency.toLowerCase()
-      return tag
-    }))
+    return this.json(keyspace, url).then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
   egonet (keyspace, type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'

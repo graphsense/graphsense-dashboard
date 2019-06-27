@@ -318,6 +318,7 @@ export default class Model {
     })
     // user clicks address in a table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
+      if (supportedKeyspaces.indexOf(keyspace) === -1) return
       this.statusbar.addLoading(address)
       this.mapResult(this.rest.node(keyspace, {id: address, type: 'address'}), 'resultNode', address)
     })
@@ -953,7 +954,7 @@ export default class Model {
   createComponents () {
     this.isDirty = false
     this.store = new Store()
-    this.browser = new Browser(this.call, defaultCurrency)
+    this.browser = new Browser(this.call, defaultCurrency, this.keyspaces)
     this.config = new Config(this.call, defaultLabelType, defaultTxLabel, this.locale)
     this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)

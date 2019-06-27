@@ -1,39 +1,42 @@
 import Table from './table.js'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph) {
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces) {
     super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
+    this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.columns = [
       { name: 'Address',
         data: 'address',
         render: (value, type, row) => {
-          let keyspace = row['currency'].toLowerCase()
-          return this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type)
+          return this.formatSupportedKeyspace(row.keyspace, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
         }
       },
       { name: 'Label',
-        data: 'label'
+        data: 'label',
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
       },
       { name: 'Currency',
-        data: 'currency'
+        data: 'currency',
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
       },
       { name: 'Source',
         data: 'source',
-        render: (value) => this.formatLink(value)
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatLink(value))
       },
       { name: 'TagPack',
         data: 'tagpack_uri',
-        render: (value) => this.formatLink(value)
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatLink(value))
       },
       { name: 'Category',
-        data: 'category'
+        data: 'category',
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
       },
       { name: 'Last modified',
         data: 'lastmod',
-        render: this.formatTimestamp
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatTimestamp(value, type, row))
       }
     ]
     this.loadMessage = 'loadTags'
@@ -52,5 +55,11 @@ export default class TagsTable extends Table {
       type: this.loadParams[1],
       keyspace: this.keyspace
     }
+  }
+  formatSupportedKeyspace (keyspace, content) {
+    if (!keyspace || this.supportedKeyspaces.indexOf(keyspace) === -1) {
+      return `<span class="unsupported-keyspace">${content}</span>`
+    }
+    return content
   }
 }

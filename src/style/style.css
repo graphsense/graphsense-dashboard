@@ -525,3 +525,10 @@ ul#log-messages li {
 #layout-status.loading #indicator {
   display: inline;
 }
+
+.unsupported-keyspace {
+  @apply text-grey-dark cursor-not-allowed;
+}
+.unsupported-keyspace a[href] {
+  @apply text-grey-dark;
+}

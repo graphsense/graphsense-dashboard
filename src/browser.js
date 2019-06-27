@@ -19,9 +19,10 @@ import Logger from './logger.js'
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
 export default class Browser extends Component {
-  constructor (dispatcher, currency) {
+  constructor (dispatcher, currency, supportedKeyspaces) {
     super()
     this.currency = currency
+    this.supportedKeyspaces = supportedKeyspaces
     this.loading = set()
     this.dispatcher = dispatcher
     this.content = []
@@ -169,7 +170,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     let keyspace = last.data.keyspace
     let total = fromLabel ? last.data.address_count : last.data.tags.length
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker))
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
 
     this.setUpdate('content')
   }
