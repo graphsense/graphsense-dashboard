@@ -276,10 +276,10 @@ export default class Model {
       this.statusbar.removeLoading(result.txHash)
       this.statusbar.addMsg('loaded', 'transaction', result.txHash)
     })
-    this.dispatcher.on('resultLabelForBrowser', ({result}) => {
+    this.dispatcher.on('resultLabelForBrowser', ({result, context}) => {
       this.browser.setLabel(result)
       historyPushState(null, 'label', result.label)
-      this.statusbar.removeLoading(result.label)
+      this.statusbar.removeLoading(context)
       this.statusbar.addMsg('loaded', 'label', result.label)
       this.call('initTagsTable', {id: result.label, type: 'label', index: 0})
     })
