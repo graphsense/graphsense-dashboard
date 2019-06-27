@@ -7,7 +7,6 @@ const maxAddableNodes = 100
 const moreThan1TagCategory = 'More than 1 tag'
 
 const categories = [
-  'Darknet crawl',
   'Exchanges',
   'Gambling',
   'Miner',
