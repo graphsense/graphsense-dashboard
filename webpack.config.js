@@ -39,8 +39,8 @@ module.exports = env => {
 
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
+    output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
   }
-  output['globalObject'] = 'self' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
 
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
   return {
@@ -75,7 +75,7 @@ module.exports = env => {
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
-        JWT_TOKEN: '\'' + JWT_TOKEN + '\''
+        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',
