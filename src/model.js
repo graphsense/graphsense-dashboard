@@ -224,7 +224,8 @@ export default class Model {
           // this.statusbar.addMsg('error', error)
           break
         case 'resultNode':
-          this.statusbar.removeLoading(context)
+          this.statusbar.removeLoading((context && context.data && context.data.id) || context)
+          this.statusbar.addMsg('error', error)
           break
         case 'resultTransactionForBrowser':
           this.statusbar.removeLoading(context)
@@ -422,6 +423,7 @@ export default class Model {
       let o = this.store.get(data.keyspace, data.nodeType, data.id)
       let context =
         {
+          data,
           focusNode:
             {
               id: focusNode.id,
