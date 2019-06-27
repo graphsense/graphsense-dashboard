@@ -107,7 +107,7 @@ export default class Statusbar extends Component {
     super.render()
   }
   renderTooltip () {
-    if (this.loading.size() > 0) return
+    if (this.loading.size() > 0 || this.searching.size() > 0) return
     let top = this.root.querySelector('#topmsg')
     let tip = this.makeTooltip(this.tooltip)
     top.innerHTML = tip
