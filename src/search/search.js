@@ -229,10 +229,10 @@ export default class Search extends Component {
       if (this.result[keyspace].error) {
         return
       }
+      allErrors = false
+
       // if no results to render don't draw the title and the list at all
       if (!keyspaceVisible) return
-
-      allErrors = false
 
       let ul = document.createElement('ol')
       ul.className = 'list-reset'
