@@ -9,6 +9,7 @@ import Menu from './menu.js'
 import Statusbar from './statusbar.js'
 import Landingpage from './landingpage.js'
 import moment from 'moment'
+import numeral from 'numeral'
 import FileSaver from 'file-saver'
 import {pack, unpack} from 'lzwcompress'
 import {Base64} from 'js-base64'
@@ -109,8 +110,9 @@ const fromURL = (url) => {
 const idleTimeToSnapshot = 2000
 
 export default class Model {
-  constructor (dispatcher) {
+  constructor (dispatcher, locale) {
     this.dispatcher = dispatcher
+    this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
 
@@ -900,6 +902,14 @@ export default class Model {
     this.dispatcher.on('hideTooltip', (type) => {
       this.statusbar.showTooltip('')
     })
+    this.dispatcher.on('changeLocale', (locale) => {
+      moment.locale(locale)
+      numeral.locale(locale)
+      this.locale = locale
+      this.config.setLocale(locale)
+      this.browser.setUpdate('locale')
+      this.graph.setUpdate('layers')
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL)
       logger.debug('hashchange', e, params)
@@ -944,7 +954,7 @@ export default class Model {
     this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
-    this.config = new Config(this.call, defaultLabelType, defaultTxLabel, defaultSearchDepth, defaultSearchBreadth)
+    this.config = new Config(this.call, defaultLabelType, defaultTxLabel, this.locale)
     this.menu = new Menu(this.call, keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())

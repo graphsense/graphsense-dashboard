@@ -10,13 +10,14 @@ import Logger from './logger.js'
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, txLabelType) {
+  constructor (dispatcher, labelType, txLabelType, locale) {
     super()
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
     this.categoryColors = {}
+    this.locale = locale
   }
   toggleConfig () {
     this.visible = this.visible === 'config' ? null : 'config'
@@ -24,6 +25,10 @@ export default class Config extends Component {
   }
   toggleLegend () {
     this.visible = this.visible === 'legend' ? null : 'legend'
+    this.setUpdate(true)
+  }
+  setLocale (locale) {
+    this.locale = locale
     this.setUpdate(true)
   }
   hide () {
@@ -47,9 +52,10 @@ export default class Config extends Component {
     let el = this.root.querySelector('#dropdown')
     if (this.visible === 'config') {
       el.innerHTML = graphConfig
-      this.renderSelect('clusterLabel', 'changeClusterLabel')
-      this.renderSelect('addressLabel', 'changeAddressLabel')
-      this.renderSelect('transactionLabel', 'changeTxLabel')
+      this.renderSelect('clusterLabel', 'changeClusterLabel', this.labelType['clusterLabel'])
+      this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType['addressLabel'])
+      this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
+      this.renderSelect('locale', 'changeLocale', this.locale)
     } else if (this.visible === 'legend') {
       for (let name in this.categoryColors) {
         let itemEl = document.createElement('div')
@@ -109,13 +115,11 @@ export default class Config extends Component {
   applyAddressFilters () {
     this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
-  renderSelect (id, message) {
+  renderSelect (id, message, selectedValue) {
     let select = this.root.querySelector('select#' + id)
     let i = 0
     for (; i < select.options.length; i++) {
-      let value = this.labelType[id]
-      if (id === 'transactionLabel') value = this.txLabelType
-      if (select.options[i].value === value) break
+      if (select.options[i].value === selectedValue) break
     }
     select.options.selectedIndex = i
     select.addEventListener('change', (e) => {

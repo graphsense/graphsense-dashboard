@@ -94,7 +94,7 @@ export default class Table extends BrowserComponent {
       })
       return this.root
     }
-    if (this.shouldUpdate('nodecheck')) {
+    if (this.shouldUpdate('page')) {
       logger.debug('redraw table')
       this.table.rows().invalidate('data').draw('page')
       super.render()

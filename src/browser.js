@@ -230,7 +230,12 @@ export default class Browser extends Component {
         comp instanceof TagsTable ||
         comp instanceof NeighborsTable ||
         comp instanceof TransactionAddressesTable
-      ).map(comp => comp.setUpdate('nodecheck'))
+      ).map(comp => comp.setUpdate('page'))
+    }
+    if (this.shouldUpdate('locale')) {
+      this.content.forEach(comp => {
+        comp.setUpdate(comp instanceof Table ? 'page' : true)
+      })
     }
     this.content.forEach(comp => comp.render())
     super.render()

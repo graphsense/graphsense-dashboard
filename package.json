@@ -14,9 +14,11 @@
     "file-saver": "^2.0.0",
     "jquery": "^3.3.1",
     "js-base64": "^2.4.9",
+    "jstimezonedetect": "^1.0.6",
     "level": "^5.0.1",
     "lzwcompress": "^0.4.0",
     "moment": "^2.22.2",
+    "moment-timezone": "^0.5.25",
     "webpack": "^4.20.2",
     "webpack-cli": "^3.1.2"
   },
