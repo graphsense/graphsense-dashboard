@@ -3,6 +3,7 @@ import Component from '../component.js'
 import {replace, addClass, removeClass} from '../template_utils.js'
 import Logger from '../logger.js'
 import {firstToUpper} from '../utils.js'
+import {currencies} from '../globals.js'
 
 const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
@@ -14,26 +15,27 @@ const byPrefix = term => addr => addr.toLowerCase().startsWith(term.toLowerCase(
 export default class Search extends Component {
   constructor (dispatcher, keyspaces, types, isInDialog = false) {
     super()
-    this.keyspaces = keyspaces
     this.types = types || Object.keys(empty).concat(['blocks'])
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
     this.isInDialog = isInDialog
-    this.clearResults()
+    this.keyspaces = keyspaces
     this.timeout = {}
-    for (let key in keyspaces) {
+    this.keyspaces.forEach(key => {
       this.timeout[key] = null
-    }
+    })
+    this.result = {}
+    this.clearResults()
   }
   setStats (stats) {
     this.stats = stats
   }
   clearResults () {
     this.result = {}
-    for (let keyspace in this.keyspaces) {
+    this.keyspaces.forEach(keyspace => {
       this.result[keyspace] = {...empty}
-    }
+    })
     this.resultLabels = {labels: []}
   }
   clear () {
@@ -119,9 +121,9 @@ export default class Search extends Component {
           }
         }
         this.term.split('\n').forEach((address) => {
-          for (let keyspace in this.keyspaces) {
+          this.keyspaces.forEach(keyspace => {
             this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace, isInDialog: this.isInDialog})
-          }
+          })
         })
         return false
       })
@@ -207,7 +209,7 @@ export default class Search extends Component {
       })
       ul.appendChild(li)
     }
-    for (let keyspace in this.keyspaces) {
+    this.keyspaces.forEach(keyspace => {
       let addresses = this.result[keyspace].addresses
         .filter(byPrefix(this.term))
         .slice(0, numShowResults)
@@ -225,10 +227,10 @@ export default class Search extends Component {
         blocks.length > 0
       visible = visible || keyspaceVisible
       if (this.result[keyspace].error) {
-        continue
+        return
       }
       // if no results to render don't draw the title and the list at all
-      if (!keyspaceVisible) continue
+      if (!keyspaceVisible) return
 
       allErrors = false
 
@@ -240,10 +242,10 @@ export default class Search extends Component {
       blocks.forEach(searchLine_('block', 'cube'))
       let title = document.createElement('div')
       title.className = 'font-bold py-1'
-      title.appendChild(document.createTextNode(this.keyspaces[keyspace]))
+      title.appendChild(document.createTextNode(currencies[keyspace]))
       el.appendChild(title)
       el.appendChild(ul)
-    }
+    })
     let labels = this.resultLabels.labels
       .filter(byPrefix(this.term))
       .slice(0, numShowResults)

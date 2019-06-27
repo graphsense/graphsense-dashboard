@@ -453,22 +453,6 @@ svg.slash path {
   @apply flex justify-center p-4
 }
 
-.currency.btc {
-  background-image: url("img/bitcoin.svg");
-}
-
-.currency.ltc {
-  background-image: url("img/litecoin.svg");
-}
-
-.currency.bch {
-  background-image: url("img/bitcoin-cash.svg");
-}
-
-.currency.zec {
-  background-image: url("img/zcash.svg");
-}
-
 .stats-table {
   @apply table border-collapse 
 }

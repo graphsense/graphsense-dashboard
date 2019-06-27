@@ -30,11 +30,11 @@ const getNavigatorLanguage = () => {
   }
 }
 
-let locale = getNavigatorLanguage().split('-')[0]
+const locale = getNavigatorLanguage().split('-')[0]
 numeral.locale(locale)
 moment.locale(locale)
 
-let timezone = jstz.determine().name()
+const timezone = jstz.determine().name()
 moment.tz.setDefault(timezone)
 
 const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef

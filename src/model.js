@@ -24,6 +24,16 @@ const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
+let supportedKeyspaces
+
+try {
+  supportedKeyspaces = JSON.parse(SUPPORTED_KEYSPACES) // eslint-disable-line no-undef
+  if (!Array.isArray(supportedKeyspaces)) throw new Error('SUPPORTED_KEYSPACES is not an array')
+} catch (e) {
+  console.error(e.message)
+  supportedKeyspaces = []
+}
+
 const searchlimit = 100
 const prefixLength = 5
 const labelPrefixLength = 3
@@ -70,21 +80,9 @@ const defaultCurrency = 'satoshi'
 
 const defaultTxLabel = 'noTransactions'
 
-const defaultSearchDepth = 2
-
-const defaultSearchBreadth = 16
-
-const keyspaces =
-  {
-    'btc': 'Bitcoin',
-    'ltc': 'Litecoin',
-    'bch': 'Bitcoin Cash',
-    'zec': 'Zcash'
-  }
-
 const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block', 'label']
 
-const fromURL = (url) => {
+const fromURL = (url, keyspaces) => {
   let hash = url.split('#!')[1]
   if (!hash) return {id: '', type: '', keyspace: ''} // go home
   let split = hash.split('/')
@@ -95,7 +93,7 @@ const fromURL = (url) => {
     keyspace = null
     type = split[0]
     id = split[1]
-  } else if (Object.keys(keyspaces).indexOf(keyspace) === -1) {
+  } else if (keyspaces.indexOf(keyspace) === -1) {
     logger.error(`invalid keyspace ${keyspace}`)
     return
   }
@@ -115,7 +113,7 @@ export default class Model {
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-
+    this.keyspaces = supportedKeyspaces
     this.snapshotTimeout = null
     this.call = (message, data) => {
       if (this.isReplaying) {
@@ -157,7 +155,7 @@ export default class Model {
       if (!search) return
       search.setSearchTerm(term, labelPrefixLength)
       search.hideLoading()
-      for (let keyspace in keyspaces) {
+      keyspaces.forEach(keyspace => {
         if (search.needsResults(keyspace, searchlimit, prefixLength)) {
           if (search.timeout[keyspace]) clearTimeout(search.timeout[keyspace])
           search.showLoading()
@@ -167,7 +165,7 @@ export default class Model {
             }
           }, 250)
         }
-      }
+      })
       if (search.needsLabelResults(searchlimit, labelPrefixLength)) {
         if (search.timeoutLabels) clearTimeout(search.timeoutLabels)
         search.showLoading()
@@ -668,6 +666,7 @@ export default class Model {
       this.mapResult(this.rest.stats(), 'receiveStats')
     })
     this.dispatcher.on('receiveStats', ({context, result}) => {
+      this.keyspaces = Object.keys(result)
       this.landingpage.setStats({...result})
       this.search.setStats({...result})
     })
@@ -911,7 +910,7 @@ export default class Model {
       this.graph.setUpdate('layers')
     })
     window.onhashchange = (e) => {
-      let params = fromURL(e.newURL)
+      let params = fromURL(e.newURL, this.keyspaces)
       logger.debug('hashchange', e, params)
       if (!params) return
       this.paramsToCall(params)
@@ -930,10 +929,11 @@ export default class Model {
         return message
       }
     })
-    let initParams = fromURL(window.location.href)
+    let initParams = fromURL(window.location.href, this.keyspaces)
     if (initParams.id) {
       this.paramsToCall(initParams)
     }
+    this.call('stats')
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
@@ -955,14 +955,14 @@ export default class Model {
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency)
     this.config = new Config(this.call, defaultLabelType, defaultTxLabel, this.locale)
-    this.menu = new Menu(this.call, keyspaces)
+    this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
-    this.search = new Search(this.call, keyspaces)
+    this.search = new Search(this.call, this.keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
-    this.landingpage = new Landingpage(this.call, this.search, keyspaces)
+    this.landingpage = new Landingpage(this.call, this.search, this.keyspaces)
   }
   compress (data) {
     return new Uint32Array(

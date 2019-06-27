@@ -13,6 +13,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const VERSION = '0.4.1'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
+const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
 // to be injected in static and dynamic pages
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
@@ -40,6 +41,8 @@ module.exports = env => {
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
     output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
+  } else {
+    output['globalObject'] = 'self'
   }
 
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
@@ -75,7 +78,8 @@ module.exports = env => {
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
-        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\''
+        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\'',
+        SUPPORTED_KEYSPACES: '\'' + JSON.stringify(SUPPORTED_KEYSPACES).replace(/'/g, '"') + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',

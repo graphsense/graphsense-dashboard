@@ -152,10 +152,7 @@ export default class Menu extends Component {
     } else if (this.view.criterion === 'addresses') {
       form.innerHTML = addressesForm
       let searchinput = form.querySelector('.searchinput')
-      let keyspaces = {}
-      let keyspace = this.view.id[2]
-      keyspaces[keyspace] = this.keyspaces[keyspace]
-      this.search = new Search(this.dispatcher, keyspaces, ['addresses'], true)
+      this.search = new Search(this.dispatcher, [this.view.id[2]], ['addresses'], true)
       this.search.render(searchinput)
       let searchAddresses = form.querySelector('.searchaddresses')
       this.view.params.addresses.forEach(address => {

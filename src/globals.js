@@ -17,4 +17,23 @@ const categories = [
   moreThan1TagCategory
 ]
 
-export {browserHeight, browserPadding, clusterWidth, categories, expandHandleWidth, moreThan1TagCategory, maxAddableNodes}
+const currencies =
+  {
+    'btc': 'Bitcoin',
+    'ltc': 'Litecoin',
+    'bch': 'Bitcoin Cash',
+    'zec': 'Zcash',
+    'xrp': 'Ripple',
+    'eth': 'Ethereum'
+  }
+
+export {
+  browserHeight,
+  browserPadding,
+  clusterWidth,
+  categories,
+  expandHandleWidth,
+  moreThan1TagCategory,
+  maxAddableNodes,
+  currencies
+}
