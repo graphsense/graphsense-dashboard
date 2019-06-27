@@ -8,7 +8,10 @@ import 'd3-context-menu/css/d3-context-menu.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import numeral from 'numeral'
+import moment from 'moment'
 import Logger from './logger.js'
+import jstz from 'jstimezonedetect'
+import 'moment-timezone'
 
 Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line no-undef
 
@@ -19,7 +22,20 @@ numeral.register('locale', 'de', {
   }
 })
 
-numeral.locale('de')
+const getNavigatorLanguage = () => {
+  if (navigator.languages && navigator.languages.length) {
+    return navigator.languages[0]
+  } else {
+    return navigator.userLanguage || navigator.language || navigator.browserLanguage || 'en'
+  }
+}
+
+let locale = getNavigatorLanguage().split('-')[0]
+numeral.locale(locale)
+moment.locale(locale)
+
+let timezone = jstz.determine().name()
+moment.tz.setDefault(timezone)
 
 const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'initSearch',
@@ -115,10 +131,11 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'addAllToGraph',
   'tooltip',
   'hideTooltip',
-  'receiveCSV'
+  'receiveCSV',
+  'changeLocale'
 )
 
-let model = new Model(dispatcher)
+let model = new Model(dispatcher, locale)
 
 model.render(document.body)
 

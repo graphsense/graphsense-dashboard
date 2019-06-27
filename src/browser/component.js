@@ -45,7 +45,8 @@ export default class BrowserComponent extends Component {
     return `<span class="${cl}">${c}</span>`
   }
   formatTimestamp (timestamp) {
-    return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
+    let t = moment.unix(timestamp)
+    return t.format('L') + ' ' + t.format('LTS')
   }
   formatTimestampWithAgo (timestamp) {
     return this.formatTimestamp(timestamp) + ' <span class="text-grey-dark">(' + this.formatAgo(timestamp) + ')</span>'
