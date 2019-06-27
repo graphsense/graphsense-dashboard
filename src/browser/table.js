@@ -20,7 +20,9 @@ export default class Table extends BrowserComponent {
     this.data = []
     this.loading = null
     this.searchable = false
-    this.addOption({icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable'})
+    if (this.isSmall()) {
+      this.addOption({icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable'})
+    }
   }
   smallThreshold () {
     return 5000
@@ -52,7 +54,7 @@ export default class Table extends BrowserComponent {
           this.ajax(request, drawCallback, settings, this)
         },
         scrollY: browserHeight - rowHeight - 4 * browserPadding,
-        searching: this.searchable,
+        searching: this.searchable && this.isSmall(),
         search: { smart: false },
         dom: 'fti',
         ordering: this.isSmall(),
@@ -67,7 +69,7 @@ export default class Table extends BrowserComponent {
         serverSide: !this.isSmall(),
         columns: this.columns,
         language: {
-          info: `Showing _START_ to _END_ of ${total} entries` + (!this.isSmall() ? ' <span class="text-gs-red">(sorting/filtering disabled)</span>' : '')
+          info: `Showing _START_ to _END_ of ${this.isSmall() ? '_TOTAL_' : total} entries` + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - sort/filter disabled)</span>` : '')
         }
       })
       // using es5 'function' to have 'this' bound to the triggering element
