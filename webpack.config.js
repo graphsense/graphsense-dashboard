@@ -11,8 +11,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
-const VERSION = '0.4.0'
+const VERSION = '0.4.1'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
+const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
 // to be injected in static and dynamic pages
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
@@ -30,6 +31,8 @@ const src = path.join(__dirname, 'src')
 module.exports = env => {
   let IS_DEV = !env || !env.production
 
+  let JWT_TOKEN = env && env.token
+
   let output = {
     filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
@@ -38,6 +41,8 @@ module.exports = env => {
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
     output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
+  } else {
+    output['globalObject'] = 'self'
   }
 
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
@@ -45,7 +50,8 @@ module.exports = env => {
     mode: IS_DEV ? 'development' : 'production',
     entry: {
       static: './src/static.js',
-      main: './src/index.js'
+      main: './src/index.js',
+      sw: './src/sw.js'
     },
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {
@@ -71,7 +77,9 @@ module.exports = env => {
         IS_DEV: IS_DEV,
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
-        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
+        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
+        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\'',
+        SUPPORTED_KEYSPACES: '\'' + JSON.stringify(SUPPORTED_KEYSPACES).replace(/'/g, '"') + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',
@@ -111,15 +119,18 @@ module.exports = env => {
             extensions: ['html', 'js', 'hbs']
           }
         ],
+        whitelistPatterns: [
+          /d3-context-menu.+/,
+          /svg.+/
+        ],
         whitelistPatternsChildren: [
+          /d3-context-menu.+/,
           /DTS/,
           /dataTables/,
           /dataTable/,
-          /fa-exchange/,
-          /fa-at/,
-          /fa-sign/,
-          /fa-tags/,
-          /min-h-full/
+          /fa-.+/,
+          /min-h-full/,
+          /svg.+/
         ]
       }) : noop()
     ],

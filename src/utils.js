@@ -1,3 +1,5 @@
+import numeral from 'numeral'
+
 function firstToUpper (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
@@ -21,11 +23,11 @@ function formatBTC (satoshiValue, currencyCode, {dontAppendCurrency, keyspace}) 
   if (Math.abs(value) < 0.0001) {
     return satoshiValue + (!dontAppendCurrency ? ' s' : '')
   }
-  return _formatCurrency(value, 4, ',', '.') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
+  return numeral(value).format('1,000.[0000]') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
 
 function formatFiat (value, currencyCode, {dontAppendCurrency}) {
-  return _formatCurrency(value, 2) + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
+  return numeral(value).format('1,000.[00]') + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
 }
 
 function formatCurrency (value, currencyCode, options) {

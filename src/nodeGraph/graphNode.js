@@ -4,24 +4,20 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
+import {clusterWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
-const clusterWidth = 190
-const expandHandleWidth = 15
 const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
-const removeHandleWidth = 15
-const removeHandlePadding = 5
-
-const closePath = 'M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm121.6 313.1c4.7 4.7 4.7 12.3 0 17L338 377.6c-4.7 4.7-12.3 4.7-17 0L256 312l-65.1 65.6c-4.7 4.7-12.3 4.7-17 0L134.4 338c-4.7-4.7-4.7-12.3 0-17l65.6-65-65.6-65.1c-4.7-4.7-4.7-12.3 0-17l39.6-39.6c4.7-4.7 12.3-4.7 17 0l65 65.7 65.1-65.6c4.7-4.7 12.3-4.7 17 0l39.6 39.6c4.7 4.7 4.7 12.3 0 17L312 256l65.6 65.1z'
+const noExpandableNeighbors = 25
 
 class GraphNode extends Component {
   constructor (dispatcher, labelType, data, layerId, colors, currency) {
     super()
     this.data = data
-    this.id = [this.data.id, layerId]
+    this.id = [this.data.id, layerId, this.data.keyspace]
     this.labelType = labelType
     this.dispatcher = dispatcher
     this.labelHeight = 25
@@ -35,16 +31,64 @@ class GraphNode extends Component {
     // absolute coords for linking, not meant for rendering of the node itself
     this.x = 0
     this.y = 0
+    this.dx = 0
+    this.dy = 0
+    this.ddx = 0
+    this.ddy = 0
+    this.searchingNeighborsIn = false
+    this.searchingNeighborsOut = false
+  }
+  expandableNeighbors (isOutgoing) {
+    return this.getDegree(isOutgoing) < noExpandableNeighbors
+  }
+  expandCollapseNeighborsOrShowTable (isOutgoing) {
+    if (this.expandableNeighbors(isOutgoing)) {
+      let limit = this.getDegree(isOutgoing)
+      this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.data.type, limit, keyspace: this.data.keyspace})
+    } else {
+      this.dispatcher('initNeighborsTableWithNode', {id: this.data.id, isOutgoing, type: this.data.type, keyspace: this.data.keyspace})
+    }
+  }
+  menu (subClassItems = []) {
+    return subClassItems.concat([
+      {
+        title: 'Add note',
+        action: () => {
+          this.dispatcher('noteDialog', {x: event.x - 50, y: event.y - 50, node: this})
+        },
+        position: 90
+      },
+      {
+        title: 'Remove',
+        action: () => {
+          this.dispatcher('removeNode', [this.type, this.id])
+        },
+        position: 100
+      }
+    ]).sort((i1, i2) => i1.position - i2.position)
+  }
+  searchingNeighbors (isOutgoing, state) {
+    if (isOutgoing) {
+      this.searchingNeighborsOut = state
+    } else {
+      this.searchingNeighborsIn = state
+    }
+    logger.debug('searchingNeighbors', this.searchingNeighborsIn, this.searchingNeighborsOut)
+    this.setUpdate(true)
   }
   serialize () {
     return [
       this.x,
-      this.y
+      this.y,
+      this.dx,
+      this.dy
     ]
   }
-  deserialize ([x, y]) {
+  deserialize ([x, y, dx, dy]) {
     this.x = x
     this.y = y
+    this.dx = this.ddx = dx
+    this.dy = this.ddy = dy
   }
   renderLabel (root) {
     if (this.data.mockup) return
@@ -76,61 +120,36 @@ class GraphNode extends Component {
     let g = root.append('g')
       .classed('expandHandle', true)
       .on('click', () => {
-        let filters
-        if (isOutgoing) {
-          filters = this.outgoingTxsFilters
-        } else {
-          filters = this.incomingTxsFilters
-        }
-        this.dispatcher('loadEgonet', {id: this.id, isOutgoing, type: this.data.type, limit: filters.get('limit'), keyspace: this.data.keyspace})
+        this.expandCollapseNeighborsOrShowTable(isOutgoing)
       })
     g.append('path')
+      .classed('expandHandlePath', true)
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
     let fontSize = expandHandleWidth * 0.8
     let fontX = (expandHandleWidth - fontSize)
     g.append('text')
-      .text(numeral(isOutgoing ? this.getOutDegree() : this.getInDegree()).format('1,000'))
+      .text(numeral(this.getDegree(isOutgoing)).format('1,000'))
       .attr('text-anchor', 'middle')
       .attr('font-size', fontSize + 'px')
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
 
     g.attr('transform', `translate(${x}, ${y}) rotate(${r} 0 ${h / 2} )`)
   }
-  renderRemove (root) {
-    let w = removeHandleWidth
-    let x = this.getWidth() - w - removeHandlePadding
-    let y = removeHandlePadding
-    let fontSize = removeHandleWidth
-    let g = root.append('g')
-      .classed('removeHandle', true)
-      .on('click', () => {
-        this.dispatcher('removeNode', [this.type, this.id])
-        event.stopPropagation()
-      })
-    g.append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', w)
-      .attr('height', w)
-    g.append('path')
-      .attr('d', closePath)
-      .attr('transform', 'scale(0.028)')
-      .attr('x', w / 2)
-      .attr('y', w / 2 + fontSize / 3)
-    g.attr('transform', `translate(${x}, ${y})`)
-  }
   renderSelected () {
-    this.root.select('g').classed('selected', this.selected)
+    this.root.select('g').classed('selected', this.selected || this.highlighted)
   }
   translate (x, y) {
     this.x += x
     this.y += y
   }
+  setDY (dy) {
+    this.dy = this.ddy = dy
+  }
   getX () {
-    return this.x
+    return this.x + this.dx
   }
   getY () {
-    return this.y
+    return this.y + this.dy
   }
   getXForLinks () {
     return this.getX() - expandHandleWidth
@@ -146,7 +165,7 @@ class GraphNode extends Component {
   }
   setLabelType (labelType) {
     this.labelType = labelType
-    this.shouldUpdateLabel()
+    this.setUpdate('label')
   }
   getName () {
     if (this.data.type === 'cluster') return this.data.id
@@ -160,10 +179,20 @@ class GraphNode extends Component {
     if (this.data.tags && this.data.tags.length > 1) {
       return this.data.tags.length + ' tags'
     }
-    return this.findTag('tag') || ''
+    return this.findTag('label') || ''
   }
   getActorCategory () {
-    return this.findTag('actorCategory') || ''
+    let tags = (this.data || {}).tags || []
+    let categories = {}
+    tags.forEach(tag => {
+      categories[tag['category']] = (categories[tag['category']] || 0) + 1
+    })
+    let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]
+    logger.debug('categories', categories, entry)
+    if (entry) return entry[0]
+  }
+  getNote () {
+    return this.data.notes
   }
   findTag (field) {
     let tags = (this.data || {}).tags || []
@@ -179,45 +208,37 @@ class GraphNode extends Component {
       case 'noAddresses':
         return this.data.noAddresses
       case 'id':
-        return this.getName()
+        return this.getNote() || this.getName()
       case 'balance':
         return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
       case 'tag':
         return this.getTag() || this.getName()
-      case 'actorCategory':
+      case 'category':
         return this.getActorCategory() || this.getName()
     }
   }
   coloring () {
-    let color
-    switch (this.labelType) {
-      case 'noAddresses':
-        color = this.colors.range(this.data.noAddresses)
-        break
-      case 'tag':
-        let tag
-        if (this.data.notes) {
-          tag = '__'
-        } else if (!this.data.tags || this.data.tags.length === 0) {
-          tag = ''
-        } else if (this.data.tags.length > 1) {
-          tag = '_'
-        } else {
-          tag = this.getTag(this.data)
-        }
-        color = this.colors.tags(tag)
-        break
-      case 'id':
-      case 'actorCategory':
-        color = this.colors.categories(this.getActorCategory())
-        break
+    let tag
+    if (!this.data.tags || this.data.tags.length === 0) {
+      tag = ''
+    } else {
+      tag = this.getActorCategory() || ''
+      if (!tag && this.data.tags.length > 1) {
+        tag = moreThan1TagCategory
+      }
     }
+    logger.debug('coloring tag', tag)
+    let color = this.colors.categories(tag)
     this.root
-      .select('.rect')
-      .style('color', color)
+      .select('.addressNodeRect,.clusterNodeRect')
+      .style('fill', color)
+      .style('stroke', 'black')
+      .style('stroke-width', '1px')
     this.root
-      .selectAll('.expandHandle path')
-      .style('color', color)
+      .selectAll('.expandHandlePath')
+      .style('fill', color)
+      .style('stroke', 'black')
+      .style('stroke-width', '1px')
   }
   formatCurrency (value) {
     return formatCurrency(value, this.currency)
@@ -225,31 +246,29 @@ class GraphNode extends Component {
   select () {
     if (this.selected) return
     this.selected = true
-    if (this.shouldUpdate() === 'label') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('select')
-    }
+    this.setUpdate('select')
   }
   deselect () {
     if (!this.selected) return
     this.selected = false
-    if (this.shouldUpdate() === 'label') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('select')
-    }
+    this.setUpdate('select')
   }
-  shouldUpdateLabel () {
-    if (this.shouldUpdate() === 'select') {
-      this.shouldUpdate('select+label')
-    } else if (!this.shouldUpdate()) {
-      this.shouldUpdate('label')
-    }
+  highlight () {
+    if (this.highlighted) return
+    this.highlighted = true
+    this.setUpdate('select')
+  }
+  unhighlight () {
+    if (!this.highlighted) return
+    this.highlighted = false
+    this.setUpdate('select')
   }
   setCurrency (currency) {
     this.currency = currency
-    this.shouldUpdate('label')
+    this.setUpdate('label')
+  }
+  getDegree (isOutgoing) {
+    return isOutgoing ? this.getOutDegree() : this.getInDegree()
   }
   getOutDegree () {
     return this.data.outDegree

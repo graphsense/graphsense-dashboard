@@ -5,6 +5,7 @@ import {browserHeight, browserPadding} from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
+import numeral from 'numeral'
 
 const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-vars
 
@@ -18,60 +19,92 @@ export default class Table extends BrowserComponent {
     this.total = total
     this.data = []
     this.loading = null
+    this.searchable = false
+    if (this.isSmall()) {
+      this.addOption({icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable'})
+    }
+  }
+  smallThreshold () {
+    return 10000
   }
   isSmall () {
-    return this.total < 5000
+    return this.total < this.smallThreshold()
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    logger.debug('shouldupdate', this.update)
     if (!this.shouldUpdate()) return this.root
-    logger.debug('render table')
-    super.render()
-    this.root.innerHTML = table
-    let tr = this.root.querySelector('tr')
-    let el = this.root.querySelector('th')
-    this.columns.forEach(({name}) => {
-      let el2 = el.cloneNode()
-      el2.innerHTML = name.replace(/ /g, '&nbsp;')
-      tr.appendChild(el2)
-    })
-    tr.removeChild(el)
-    let that = this
-    let tab = this.table = $(this.root).children().first().DataTable({
-      ajax: (request, drawCallback, settings) => {
-        this.ajax(request, drawCallback, settings, this)
-      },
-      scrollY: browserHeight - rowHeight - 4 * browserPadding,
-      searching: false,
-      ordering: this.isSmall(),
-      deferRender: true,
-      scroller: {
-        loadingIndicator: true,
-        displayBuffer: 100,
-        boundaryScale: 0
-      },
-      stateSave: false,
-      serverSide: !this.isSmall(),
-      columns: this.columns,
-      language: {
-        info: `Showing _START_ to _END_ of ${this.total} entries`
-      }
-    })
-    // using es5 'function' to have 'this' bound to the triggering element
-    $(this.root).on('click', 'tr', function () {
-      let row = tab.row(this).data()
-      if (!row) return
-      logger.debug('row', row)
-      if (!row.keyspace) {
-        row.keyspace = that.keyspace
-      }
-      that.dispatcher(that.selectMessage, row)
-    })
-    return this.root
+    if (this.shouldUpdate(true)) {
+      logger.debug('render table')
+      super.render()
+      this.root.innerHTML = table
+      let tr = this.root.querySelector('tr')
+      let el = this.root.querySelector('th')
+      this.columns.forEach((column, i) => {
+        let el2 = el.cloneNode()
+        el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
+        tr.appendChild(el2)
+      })
+      tr.removeChild(el)
+      let that = this
+      let total = numeral(this.total).format('1,000')
+      let tab = this.table = $(this.root).children().first().DataTable({
+        ajax: (request, drawCallback, settings) => {
+          this.ajax(request, drawCallback, settings, this)
+        },
+        scrollY: browserHeight - rowHeight - 4 * browserPadding,
+        searching: this.searchable && this.isSmall(),
+        search: { smart: false },
+        dom: 'fti',
+        ordering: this.isSmall(),
+        order: this.order,
+        deferRender: true,
+        scroller: {
+          loadingIndicator: true,
+          displayBuffer: 20,
+          boundaryScale: 0
+        },
+        stateSave: false,
+        serverSide: !this.isSmall(),
+        columns: this.columns,
+        language: {
+          info: `Showing _START_ to _END_ of ${this.isSmall() ? '_TOTAL_' : total} entries` + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - sort/filter disabled)</span>` : '')
+        }
+      })
+      // using es5 'function' to have 'this' bound to the triggering element
+      this.table.on('click', 'td', function (e) {
+        if (!that.selectMessage) return
+        let cell = tab.cell(this)
+        if (!cell) return
+        let index = cell.index()
+        logger.debug('index', index)
+        let row = tab.row(index.row).data()
+        logger.debug('row', row)
+        if (!row.keyspace) {
+          row.keyspace = that.keyspace
+        }
+        let msgs = that.selectMessage
+        if (!Array.isArray(msgs)) {
+          msgs = [msgs]
+        }
+        if (!msgs[index.column]) return
+        that.dispatcher(msgs[index.column], row)
+      })
+      this.table.on('order.dt', () => {
+        this.order = this.table.order()
+      })
+      return this.root
+    }
+    if (this.shouldUpdate('page')) {
+      logger.debug('redraw table')
+      this.table.rows().invalidate('data').draw('page')
+      super.render()
+    }
   }
-  renderOptions () {
-    return null
+  toggleSearch () {
+    this.searchable = !this.searchable
+    this.setUpdate(true)
   }
   ajax (request, drawCallback, settings, table) {
     logger.debug('ajax request', request)
@@ -113,7 +146,8 @@ export default class Table extends BrowserComponent {
   }
   setResponse ({page, request, drawCallback, result}) {
     if (!this.isSmall() && page !== this.nextPage) return
-    this.data = this.data.concat(result[this.resultField])
+    this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
+    logger.debug('data', this.data)
     this.nextPage = result.nextPage
     let loading = this.loading || request
     // HACK: The table shall only be scrollable to the currently loaded data.
@@ -131,9 +165,32 @@ export default class Table extends BrowserComponent {
   truncateValue (value) {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
   }
+  formatLink (value) {
+    if (value.startsWith('http')) {
+      return `<a onClick="event.stopPropagation()" href="${value}" target=_blank>${this.truncateValue(value)}</a>`
+    }
+    return value
+  }
   formatValue (func) {
     return (value, type) => {
       if (type === 'display') return func(value)
+      return value
+    }
+  }
+  downloadOption () {
+    return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
+  }
+  addAllOption () {
+    return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}
+  }
+  formatIsInGraph (nodeIsInGraph, type, keyspace) {
+    return (value, t) => {
+      if (t === 'display') {
+        if (nodeIsInGraph(value, type, keyspace)) {
+          return '<i class="fas fa-check text-xs mr-1"></i>' + value
+        }
+        return value
+      }
       return value
     }
   }

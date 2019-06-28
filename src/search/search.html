@@ -1,6 +1,6 @@
 <form class="flex flex-row h-8 text-xs sm:text-sm md:text-base">
   <div class="search-frame overflow-visible">
-    <input class="browser-search-input border p-1 font-mono align-bottom" maxlength="128" type="text" aria-autocomplete="both" aria-haspopup="false" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" title="Search" value="" aria-label="Search" placeholder="Address"/>
+    <textarea class="browser-search-input border p-1 font-mono align-bottom overflow-hidden resize-none" type="text" aria-autocomplete="both" aria-haspopup="false" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" title="Search" aria-label="Search" placeholder="{{placeholder}} "></textarea>
     <div id="browser-search-result" class="hidden relative" style="min-height: 2rem">
       <div id="indicator" class="absolute pin-t pin-r h-8 p-2">
         <img src="../status/loading.gif" class="h-full"/>
@@ -10,6 +10,6 @@
     </div>
   </div>
   <div class="h-full">
-    <button type="submit" id="browser-search-button" class="btn btn-primary h-full rounded-sm white-shadow"><i class="fas fa-search text-gs-dark"></i></button>
+    <button type="submit" id="browser-search-button" class="btn btn-primary h-full white-shadow"><i class="fas fa-search"></i></button>
   </div>
 </form>

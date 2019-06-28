@@ -24,8 +24,8 @@ export default class Address extends BrowserComponent {
     let last = this.data.lastTx.timestamp
     let duration = (last - first) * 1000
     let flat = {
-      firstUsage: this.formatTimestamp(first),
-      lastUsage: this.formatTimestamp(last),
+      firstUsage: this.formatTimestampWithAgo(first),
+      lastUsage: this.formatTimestampWithAgo(last),
       activityPeriod: moment.duration(duration).humanize(),
       totalReceived: this.formatCurrency(this.data.totalReceived[this.currency], this.data.keyspace),
       finalBalance: this.formatCurrency(this.data.balance[this.currency], this.data.keyspace),

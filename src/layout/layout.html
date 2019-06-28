@@ -7,11 +7,17 @@
       <img id="layout-logo" class="h-full cursor-pointer" src="../pages/static/logo.svg"/>
     </div>
     <div id="layout-search"></div>
-    <div class="navbar flex flex-row items-start justify-end">
-      <!--button id="navbar-config" class="nav-btn"><i class="fas fa-cog text-lg"></i></button-->
-      <button id="navbar-save" class="nav-btn"><i class="fas fa-save text-lg"></i></button>
-      <button id="navbar-load" class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
-      <button id="navbar-config" class="nav-btn"><i class="fas fa-cog text-lg"></i></button>
+    
+    <div class="navbar flex flex-row items-center justify-end">
+      <div id="layout-currency-config" class="p-2" title="Change currency"></div>
+      <button id="navbar-new" title="Start from scratch" class="nav-btn"><i class="fas fa-file text-lg"></i></button>
+      <button id="navbar-save" title="Save to file" class="nav-btn"><i class="fas fa-save text-lg"></i></button>
+      <button id="navbar-load" title="Load from file" class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
+      <button id="navbar-export" title="Export to SVG file" class="nav-btn"><i class="fas fa-download text-lg"></i></button>
+      <button id="navbar-undo" title="Undo last graph change" class="nav-btn"><i class="fas fa-undo text-lg"></i></button>
+      <button id="navbar-redo" title="Redo undone graph change" class="nav-btn"><i class="fas fa-redo text-lg"></i></button>
+      <button id="navbar-config" title="Configuration options" class="nav-btn"><i class="fas fa-cog text-lg"></i></button>
+      <button id="navbar-legend" title="Legend" class="nav-btn"><i class="fas fa-info text-lg"></i></button>
     </div>
   </header>
   <section id="layout-graph" class="w-full z-20"></section>
@@ -20,3 +26,4 @@
 <section id="layout-config" class="absolute pin-r z-25 border layout-border bg-white shadow-md rounded-b text-sm"></section>
 <section id="layout-browser" class="absolute pin-l z-25 border layout-border bg-white shadow-md rounded-b text-sm"></section>
 <section id="layout-menu"></section>
+<a id="downloadCSV"></a>

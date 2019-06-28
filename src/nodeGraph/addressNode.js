@@ -1,5 +1,6 @@
 import {event} from 'd3-selection'
 import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
+import contextMenu from 'd3-context-menu'
 
 const padding = 10
 export default class AddressNode extends GraphNode {
@@ -13,7 +14,7 @@ export default class AddressNode extends GraphNode {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate() === true) {
+    if (this.shouldUpdate(true)) {
       this.root.node().innerHTML = ''
       let x = 0
       let y = 0
@@ -24,13 +25,11 @@ export default class AddressNode extends GraphNode {
           event.stopPropagation()
           this.dispatcher('selectNode', ['address', this.id])
         })
-        .on('contextmenu', () => {
-          event.stopPropagation()
-          event.preventDefault()
-          this.dispatcher('contextmenu', {x: event.x, y: event.y, node: this})
-        })
+        .on('contextmenu', contextMenu(this.menu()))
+        .on('mouseover', () => this.dispatcher('tooltip', 'address'))
+        .on('mouseout', () => this.dispatcher('hideTooltip'))
       g.append('rect')
-        .classed('rect', true)
+        .classed('addressNodeRect', true)
         .attr('x', x)
         .attr('y', y)
         .attr('width', addressWidth)
@@ -42,19 +41,18 @@ export default class AddressNode extends GraphNode {
         .attr('transform', `translate(${x + padding}, ${h})`)
 
       this.renderLabel(label)
-      let eg = g.append('g').classed('expandHandles', true)
-      this.renderRemove(g)
+      let eg = g.append('g')
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
       this.coloring()
       this.renderSelected()
     } else {
-      if (this.shouldUpdate() === 'label' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('label')) {
         let label = this.root.select('g.label')
         this.renderLabel(label)
         this.coloring()
       }
-      if (this.shouldUpdate() === 'select' || this.shouldUpdate() === 'select+label') {
+      if (this.shouldUpdate('select')) {
         this.renderSelected()
       }
     }

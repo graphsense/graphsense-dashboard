@@ -1,5 +1,6 @@
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
+import legendItem from './config/legendItem.html'
 import filter from './config/filter.html'
 import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
@@ -9,20 +10,33 @@ import Logger from './logger.js'
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
 export default class Config extends Component {
-  constructor (dispatcher, labelType, currency, txLabelType) {
+  constructor (dispatcher, labelType, txLabelType, locale) {
     super()
-    this.currency = currency
     this.dispatcher = dispatcher
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
+    this.categoryColors = {}
+    this.locale = locale
   }
   toggleConfig () {
-    this.visible = !this.visible
-    this.shouldUpdate(true)
+    this.visible = this.visible === 'config' ? null : 'config'
+    this.setUpdate(true)
   }
-  setCurrency (currency) {
-    this.currency = currency
+  toggleLegend () {
+    this.visible = this.visible === 'legend' ? null : 'legend'
+    this.setUpdate(true)
+  }
+  setLocale (locale) {
+    this.locale = locale
+    this.setUpdate(true)
+  }
+  hide () {
+    this.visible = null
+    this.setUpdate(true)
+  }
+  setCategoryColors (colors) {
+    this.categoryColors = colors
   }
   render (root) {
     if (root) this.root = root
@@ -30,16 +44,28 @@ export default class Config extends Component {
     if (!this.shouldUpdate()) return this.root
     if (!this.visible) {
       removeClass(this.root, 'show')
-    } else {
-      addClass(this.root, 'show')
+      super.render()
+      return this.root
     }
+    addClass(this.root, 'show')
     this.root.innerHTML = configLayout
-    let el = this.root.querySelector('#config')
-    el.innerHTML = graphConfig
-    this.addSelectListener('currency', 'changeCurrency')
-    this.addSelectListener('clusterLabel', 'changeClusterLabel')
-    this.addSelectListener('addressLabel', 'changeAddressLabel')
-    this.addSelectListener('transactionLabel', 'changeTxLabel')
+    let el = this.root.querySelector('#dropdown')
+    if (this.visible === 'config') {
+      el.innerHTML = graphConfig
+      this.renderSelect('clusterLabel', 'changeClusterLabel', this.labelType['clusterLabel'])
+      this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType['addressLabel'])
+      this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
+      this.renderSelect('locale', 'changeLocale', this.locale)
+    } else if (this.visible === 'legend') {
+      for (let name in this.categoryColors) {
+        let itemEl = document.createElement('div')
+        itemEl.className = 'flex items-center'
+        itemEl.innerHTML = legendItem
+        itemEl.querySelector('.legendColor').style.backgroundColor = this.categoryColors[name]
+        itemEl.querySelector('.legendItem').innerHTML = name
+        el.appendChild(itemEl)
+      }
+    }
     super.render()
     return this.root
   }
@@ -89,17 +115,21 @@ export default class Config extends Component {
   applyAddressFilters () {
     this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
-  addSelectListener (id, message) {
+  renderSelect (id, message, selectedValue) {
     let select = this.root.querySelector('select#' + id)
     let i = 0
     for (; i < select.options.length; i++) {
-      let value = this.labelType[id]
-      if (id === 'currency') value = this.currency
-      if (id === 'transactionLabel') value = this.txLabelType
-      if (select.options[i].value === value) break
+      if (select.options[i].value === selectedValue) break
     }
     select.options.selectedIndex = i
     select.addEventListener('change', (e) => {
+      this.dispatcher(message, e.target.value)
+    })
+  }
+  renderInput (id, message, value) {
+    let input = this.root.querySelector('input#' + id)
+    input.value = value
+    input.addEventListener('change', (e) => {
       this.dispatcher(message, e.target.value)
     })
   }
@@ -114,18 +144,12 @@ export default class Config extends Component {
   }
   serialize () {
     return [
-      this.currency,
       this.labelType,
       this.txLabelType
     ]
   }
-  deserialize ([
-    currency,
-    labelType,
-    txLabelType
-  ]) {
-    this.currency = currency
-    this.labelType = labelType
-    this.txLabelType = txLabelType
+  deserialize (version, values) {
+    this.labelType = values[0]
+    this.txLabelType = values[1]
   }
 }

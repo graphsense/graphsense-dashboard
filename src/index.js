@@ -3,11 +3,15 @@ import 'datatables.net-dt/css/jquery.dataTables.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 import './style/Octarine-Bold/fonts.css'
 import './style/Octarine-Light/fonts.css'
+import 'd3-context-menu/css/d3-context-menu.css'
 import './style/style.css'
 import Model from './model.js'
 import {dispatch} from './dispatch.js'
 import numeral from 'numeral'
+import moment from 'moment'
 import Logger from './logger.js'
+import jstz from 'jstimezonedetect'
+import 'moment-timezone'
 
 Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line no-undef
 
@@ -18,17 +22,33 @@ numeral.register('locale', 'de', {
   }
 })
 
-numeral.locale('de')
+const getNavigatorLanguage = () => {
+  if (navigator.languages && navigator.languages.length) {
+    return navigator.languages[0]
+  } else {
+    return navigator.userLanguage || navigator.language || navigator.browserLanguage || 'en'
+  }
+}
+
+const locale = getNavigatorLanguage().split('-')[0]
+numeral.locale(locale)
+moment.locale(locale)
+
+const timezone = jstz.determine().name()
+moment.tz.setDefault(timezone)
 
 const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'initSearch',
   'search',
   'searchresult',
+  'searchresultLabels',
   'clickSearchResult',
   'blurSearch',
   'fetchError',
   'resultNodeForBrowser',
   'resultTransactionForBrowser',
+  'resultLabelForBrowser',
+  'resultBlockForBrowser',
   'addNode',
   'addNodeCont',
   'loadNode',
@@ -38,12 +58,15 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'selectNode',
   'loadEgonet',
   'loadClusterAddresses',
+  'removeClusterAddresses',
   'resultEgonet',
   'resultClusterAddresses',
   'initTransactionsTable',
+  'initBlockTransactionsTable',
   'loadTransactions',
   'resultTransactions',
   'initAddressesTable',
+  'initAddressesTableWithCluster',
   'loadAddresses',
   'resultAddresses',
   'initTagsTable',
@@ -51,9 +74,11 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultTags',
   'resultTagsTable',
   'clickTransaction',
+  'clickBlock',
   'resultTransaction',
   'selectAddress',
   'clickAddress',
+  'clickLabel',
   'changeCurrency',
   'changeClusterLabel',
   'changeAddressLabel',
@@ -61,6 +86,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'removeNode',
   'initIndegreeTable',
   'initOutdegreeTable',
+  'initNeighborsTableWithNode',
   'initTxInputsTable',
   'initTxOutputsTable',
   'loadNeighbors',
@@ -71,7 +97,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleConfig',
   'stats',
   'receiveStats',
-  'contextmenu',
+  'noteDialog',
   'hideContextmenu',
   'save',
   'load',
@@ -81,10 +107,35 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'toggleErrorLogs',
   'moreLogs',
   'hideLogs',
-  'gohome'
+  'gohome',
+  'new',
+  'sortClusterAddresses',
+  'dragNode',
+  'dragNodeEnd',
+  'changeSearchDepth',
+  'changeSearchBreadth',
+  'searchNeighborsDialog',
+  'searchNeighbors',
+  'resultSearchNeighbors',
+  'redrawGraph',
+  'createSnapshot',
+  'undo',
+  'redo',
+  'disableUndoRedo',
+  'toggleSearchTable',
+  'exportSvg',
+  'toggleLegend',
+  'downloadTable',
+  'changeSearchCategory',
+  'changeSearchCriterion',
+  'addAllToGraph',
+  'tooltip',
+  'hideTooltip',
+  'receiveCSV',
+  'changeLocale'
 )
 
-let model = new Model(dispatcher)
+let model = new Model(dispatcher, locale)
 
 model.render(document.body)
 
@@ -136,4 +187,7 @@ if (module.hot) {
     model.replay()
     model.render(document.body)
   })
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+  }
 }

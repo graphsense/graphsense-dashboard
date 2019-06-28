@@ -11,12 +11,17 @@ export default class BrowserComponent extends Component {
     this.dispatcher = dispatcher
     this.currency = currency
     this.currentOption = null
+    this.options = []
   }
   setCurrentOption (option) {
     this.currentOption = option
-    this.shouldUpdate(true)
+    this.setUpdate(true)
+  }
+  addOption (option) {
+    this.options.push(option)
   }
   renderOptions () {
+    if (!this.options || this.options.length === 0) return
     let ul = document.createElement('ul')
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {
@@ -25,12 +30,7 @@ export default class BrowserComponent extends Component {
         (this.currentOption === optionData.message ? 'option-active' : '')
       li.innerHTML = replace(option, optionData)
       li.addEventListener('click', () => {
-        this.dispatcher(optionData.message,
-          { id: this.data.id,
-            type: this.data.type,
-            keyspace: this.data.keyspace,
-            index: this.index
-          })
+        this.dispatcher(optionData.message, this.requestData())
       })
       ul.appendChild(li)
     })
@@ -45,11 +45,18 @@ export default class BrowserComponent extends Component {
     return `<span class="${cl}">${c}</span>`
   }
   formatTimestamp (timestamp) {
-    return moment.unix(timestamp).format('DD.MM.YYYY HH:mm:ss')
+    let t = moment.unix(timestamp)
+    return t.format('L') + ' ' + t.format('LTS')
+  }
+  formatTimestampWithAgo (timestamp) {
+    return this.formatTimestamp(timestamp) + ' <span class="text-grey-dark">(' + this.formatAgo(timestamp) + ')</span>'
+  }
+  formatAgo (timestamp) {
+    return moment.unix(timestamp).fromNow()
   }
   setCurrency (currency) {
     this.currency = currency
-    this.shouldUpdate(true)
+    this.setUpdate(true)
   }
   requestData () {
     return {index: this.index}

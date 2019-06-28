@@ -20,7 +20,7 @@ export default class Transaction extends BrowserComponent {
     super.render()
     let flat = {
       txHash: this.data.txHash,
-      timestamp: moment.unix(this.data.timestamp).fromNow(),
+      timestamp: this.formatTimestampWithAgo(this.data.timestamp),
       totalInput: this.formatCurrency(this.data.totalInput[this.currency], this.data.keyspace),
       totalOutput: this.formatCurrency(this.data.totalOutput[this.currency], this.data.keyspace)
     }

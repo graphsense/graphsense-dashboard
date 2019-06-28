@@ -1,4 +1,4 @@
-import {set} from 'd3-collection'
+import {set, map} from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
 import {addClass, removeClass} from './template_utils.js'
@@ -14,64 +14,63 @@ export default class Statusbar extends Component {
     this.dispatcher = dispatcher
     this.messages = []
     this.loading = set()
+    this.searching = map()
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
     this.update = set()
     this.numErrors = 0
     this.showErrorsLogs = false
   }
-  shouldUpdate (update) {
-    if (update === undefined) {
-      return this.update
-    }
-    if (update === true) {
-      this.update.add('all')
-      return
-    }
-    if (update === false) {
-      this.update.clear()
-    }
-    this.update.add(update)
+  showTooltip (type) {
+    this.tooltip = type
+    this.setUpdate('tooltip')
   }
   toggleErrorLogs () {
     this.showErrorsLogs = !this.showErrorsLogs
     if (this.showErrorsLogs) this.show()
-    this.shouldUpdate('logs')
+    this.setUpdate('logs')
   }
   show () {
     if (!this.visible) {
       this.visible = true
-      this.shouldUpdate('visibility')
+      this.setUpdate('visibility')
     }
   }
   hide () {
     if (this.visible) {
       this.visible = false
-      this.shouldUpdate('visibility')
+      this.setUpdate('visibility')
     }
   }
   add (msg) {
     this.messages.push(msg)
-    this.shouldUpdate('add')
+    this.setUpdate('add')
   }
   moreLogs () {
     this.logsDisplayLength += logsDisplayLength
-    this.shouldUpdate('logs')
+    this.setUpdate('logs')
   }
   addLoading (id) {
     this.loading.add(id)
-    this.shouldUpdate('loading')
+    this.setUpdate('loading')
   }
   removeLoading (id) {
     this.loading.remove(id)
-    this.shouldUpdate('loading')
+    this.setUpdate('loading')
+  }
+  addSearching (search) {
+    this.searching.set(String(search.id) + String(search.isOutgoing), search)
+    this.setUpdate('loading')
+  }
+  removeSearching (search) {
+    this.searching.remove(String(search.id) + String(search.isOutgoing))
+    this.setUpdate('loading')
   }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let s = this.shouldUpdate()
-    if (!s.size() === 0) return this.root
-    if (s.has('all')) {
+    if (!this.shouldUpdate()) return this.root
+    if (this.shouldUpdate(true)) {
       this.root.innerHTML = status
 
       this.root.querySelector('#hide').addEventListener('click', () => {
@@ -86,41 +85,69 @@ export default class Statusbar extends Component {
       this.renderLoading()
       this.renderLogs()
       this.renderVisibility()
-      this.shouldUpdate(false)
+      super.render()
       return
     }
-    if (s.has('loading')) {
+    if (this.shouldUpdate('loading')) {
       this.renderLoading()
-      s.remove('loading')
     }
-    if (s.has('add')) {
+    if (this.shouldUpdate('add')) {
       let i = this.messages.length - 1
       this.renderLogs(this.messages[i], i)
-      s.remove('add')
     }
-    if (s.has('logs')) {
+    if (this.shouldUpdate('logs')) {
       this.renderLogs()
-      s.remove('logs')
     }
-    if (s.has('visibility')) {
+    if (this.shouldUpdate('tooltip')) {
+      this.renderTooltip()
+    }
+    if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
-      s.remove('visibility')
     }
+    super.render()
+  }
+  renderTooltip () {
+    if (this.loading.size() > 0 || this.searching.size() > 0) return
+    let top = this.root.querySelector('#topmsg')
+    let tip = this.makeTooltip(this.tooltip)
+    top.innerHTML = tip
+  }
+  makeTooltip (type) {
+    switch (type) {
+      case 'cluster':
+        return 'A cluster represents an entity dealing with one or more addresses.'
+      case 'address':
+        return 'An address which can receive and spend coins.'
+      case 'link':
+        return 'A link indicates that there exist one or more transactions between the nodes. Flow is always from left to right.'
+      case 'shadow':
+        return 'A shadow link connects identical addresses and clusters'
+    }
+    return ''
   }
   renderLoading () {
     let top = this.root.querySelector('#topmsg')
-    if (this.loading.size() === 0) {
+    if (this.loading.size() > 0) {
+      addClass(this.root, 'loading')
+      let msg = 'Loading '
+      let v = this.loading.values()
+      msg += v.slice(0, 3).join(', ')
+      msg += v.length > 3 ? ` + ${v.length - 3}` : ''
+      msg += ' ...'
+      top.innerHTML = msg
+    } else if (this.searching.size() > 0) {
+      addClass(this.root, 'loading')
+      let search = this.searching.values()[0]
+      let outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
+      let crit = ''
+      if (search.params.category) crit = `category ${search.params.category}`
+      if (search.params.addresses.length > 0) crit = 'addresses ' + search.params.addresses.join(',')
+      let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
+      top.innerHTML = msg
+    } else {
       removeClass(this.root, 'loading')
       if (top) top.innerHTML = ''
-      return
     }
-    addClass(this.root, 'loading')
-    let msg = 'Loading '
-    let v = this.loading.values()
-    msg += v.slice(0, 3).join(', ')
-    msg += v.length > 3 ? ` + ${v.length - 3}` : ''
-    msg += ' ...'
-    top.innerHTML = msg
   }
   renderLogs (msg, index) {
     let logs = this.root.querySelector('ul#log-messages')
@@ -226,6 +253,8 @@ export default class Statusbar extends Component {
         return `Loaded ${args[1]} addresses for cluster ${args[0]}`
       case 'removeNode':
         return `Removed node of ${args[0]} ${args[1]}`
+      case 'searchResult':
+        return `Found ${args[0]} paths to ${args[1]} nodes`
       case 'error':
         this.numErrors++
         return {error: args[0]}
