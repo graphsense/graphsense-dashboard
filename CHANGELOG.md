@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ## [0.4.1] - 2019-06-28
-
 ### Changed
-
 * 43776ec add license
 * f7d13af increase table "small" size threshold being below 10000
 * 2c51436 disable unsupported currencies in tags table, fix #69
@@ -40,7 +38,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 * e19f1a5 fix scrollbar on landingpage and app layout
 * 27985ca fix red search result list after error
 * 2a66e38 put currency switch into navbar, fix #48
-
 ### Added
 * be64fd0 show number of labels on statistics
 * 1d463b3 add currency to cluster node label, fix #68
@@ -90,7 +87,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove block view
 - Restrict autocomplete results (addresses only)
 - Collapse property box if no node is selected
-
 ### Added
 - Support multiple keyspaces (cryptocurrencies)
 - Show statistics for each cryptocurrency on the landing page

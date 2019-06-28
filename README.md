@@ -2,7 +2,10 @@
 
 A Web dashboard for interactive cryptocurrency analysis.
 
-**ATTENTION:** Both production and development setup currently need a never expiring access token at build time since user authentication form is not provided yet. Please generate one first as described [here](https://github.com/graphsense/graphsense-REST/tree/develop#generate-never-expiring-jwt).
+**ATTENTION:** Both production and development setup currently need a never
+expiring access token at build time since user authentication form is not
+provided yet. Please generate one first as described
+[here](https://github.com/graphsense/graphsense-REST/tree/develop#generate-never-expiring-jwt).
 
 ## Development setup
 
