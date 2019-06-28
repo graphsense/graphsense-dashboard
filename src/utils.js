@@ -23,11 +23,11 @@ function formatBTC (satoshiValue, currencyCode, {dontAppendCurrency, keyspace}) 
   if (Math.abs(value) < 0.0001) {
     return satoshiValue + (!dontAppendCurrency ? ' s' : '')
   }
-  return numeral(value).format('1,000.0000') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
+  return numeral(value).format('1,000.[0000]') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
 
 function formatFiat (value, currencyCode, {dontAppendCurrency}) {
-  return numeral(value).format('1,000.0000') + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
+  return numeral(value).format('1,000.[00]') + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
 }
 
 function formatCurrency (value, currencyCode, options) {
