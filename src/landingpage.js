@@ -17,7 +17,7 @@ export default class Landingpage extends Component {
     this.search = search
     this.keyspaces = keyspaces
     keyspaces.forEach(key => {
-      this.stats[key] = this.stats[key]
+      this.stats[key] = 'loading'
     })
   }
   setStats (stats) {
@@ -35,9 +35,6 @@ export default class Landingpage extends Component {
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + statistics + replace(footer, {version: VERSION}) + // eslint-disable-line no-undef
         '</div>'
-      for (let key in this.stats) {
-        this.stats[key] = 'loading'
-      }
       this.renderStats()
       let searchRoot = this.root.querySelector('.splash .search')
       this.search.setUpdate(true)
