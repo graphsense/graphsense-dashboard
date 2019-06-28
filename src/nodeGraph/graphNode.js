@@ -179,7 +179,7 @@ class GraphNode extends Component {
     if (this.data.tags && this.data.tags.length > 1) {
       return this.data.tags.length + ' tags'
     }
-    return this.findTag('tag') || ''
+    return this.findTag('label') || ''
   }
   getActorCategory () {
     let tags = (this.data || {}).tags || []
