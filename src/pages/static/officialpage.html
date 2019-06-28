@@ -7,30 +7,17 @@
 
   <ul>
 
-    <li>
-      <p><strong>Address Clustering</strong>: GraphSense partitions the set of addresses observed in a cryptocurrency
-  ecosystem into maximal subsets (clusters) that are likely to be controlled by the same real-world actor.</p>
-    </li>
+    <li>Search by address, tag, transaction or block in several cryptocurrency ledgers.</li>
+
+    <li>Navigate in transaction network abstractions computed from various ledgers and inspect statistical properties of nodes (addresses, clusters) and edges (aggregated transactions).</li>
+
+    <li>Automatically search for transaction paths connecting two nodes.</li>
 
     <li>
-      <p><strong>Network Abstractions</strong>: GraphSense computes two forms of network abstractions from the underlying blockchain: the address graph, which connects addresses via transactions, and the cluster graph, which connects address clusters.</p>
+      <p><strong>BlockSci integration</strong>: GraphSense makes use of <a href="https://github.com/citp/BlockSci">BlockSci</a> for parsing blockchains, obtaining exchange rates, and filtering CoinJoins.</p> 
     </li>
 
-    <li>
-      <p><strong>Microscopic Analysis</strong>: with the GraphSense dashboard users can inspect transactions and trace currency flows by navigating along the transaction graph abstractions.</p>
-    </li>
-
-    <li>
-      <p><strong>Macroscopic Analysis</strong>: by directly accessing the underlying, pre-computed database it is possible to map real-world phenomena (e.g., Ransomware) onto network abstractions and run subsequent analytics tasks.</p>
-    </li>
-
-    <li>
-      <p><strong>Pre-computed statistics</strong>: GraphSense pre-computes statistics and supports interactive analysis without major delays.</p> 
-    </li>
-
-    <li>
-      <p><strong>BlockSci integration</strong>: GraphSense uses <a href="https://github.com/citp/BlockSci">BlockSci</a> for parsing blockchains and obtaining exchange rates.</p> 
-    </li>
+    <li>Support for data-driven analytics via the GraphSense REST-API</li>
 
     <li>
       <p><strong>Horizontal Scalability</strong>: cryptocurrency blockchains <a href="https://blockchain.info/charts/blocks-size?timespan=all">are growing</a> and new currencies <a href="https://coinmarketcap.com/">appear on the horizon</a>. GraphSense should be future-proof, because it is built on <a href="https://spark.apache.org/">Apache Spark</a> and <a href="http://cassandra.apache.org/">Cassandra</a> for horizontal scalability.</p>
@@ -56,6 +43,9 @@
       <p><a href="https://github.com/graphsense/graphsense-REST">graphsense-REST</a>: an API for retrieving data from the underlying Cassandra store</p>
     </li>
     <li>
+      <p><a href="https://github.com/graphsense/graphsense-tagpacks">graphsense-tagpacks</a>: a data structure for collecting cryptocurrency attribution tags with associated provenance and categorization metadata</p>
+    </li>
+    <li>
       <p><a href="https://github.com/graphsense/graphsense-dashboard">graphsense-dashboard</a>: a user-interface allowing search, inspection, and traversal of cryptocurrency entities</p>
     </li>
   </ul>
@@ -64,7 +54,7 @@
 
   <p>The following screenshot shows details about an example Bitcoin address.</p>
 
-  <p><img class="example" src="./screenshot_dashboard.jpeg" alt="screenshot"></p>
+  <p><img class="example" src="./GraphSense_0.4.1-screenshot_detail.png" alt="screenshot"></p>
 
   <h2 id="publications">Publications</h2>
 
@@ -81,9 +71,14 @@
   <p>So far, GraphSense has been used for computing statistics in the following
   scientific papers:</p>
 
+  <p>Romiti, M., Judmayer, A., Zamyatin, A., Haslhofer, B.
+  <strong>A Deep Dive into Bitcoin Mining Pools: An Empirical Analysis of Mining Shares.</strong>
+  Journal of Cybersecurity, 5 (1).
+  <a href="https://arxiv.org/abs/1905.05999">(pdf)</a></p>
+
   <p>Paquet-Clouston, M., Haslhofer, B., & Dupont, B.
   <strong>Ransomware payments in the bitcoin ecosystem.</strong>
-  17th annual workshop on the economics of information security (WEIS 2018).
+  Journal of Cybersecurity, 5 (1).
   <a href="http://arxiv.org/abs/1804.04080">(pdf)</a></p>
 
   <p>Filtz, E., Polleres, A., Karl, R., Haslhofer, B.:
@@ -96,8 +91,8 @@
   <ul>
     <li><a href="http://bernhardhaslhofer.info/">Bernhard Haslhofer</a></li>
     <li>Rainer Stütz</li>
-    <li>Mihai Bartha</li>
-    <li>Roman Karl</li>
     <li><a href="https://matteoromiti.github.io/">Matteo Romiti</a></li>
+    <li>Matthias Rella</li>    
+    <li>Mihai Bartha</li>    
   </ul>
 </div>
