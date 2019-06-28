@@ -931,11 +931,11 @@ export default class Model {
         return message
       }
     })
+    this.call('stats')
     let initParams = fromURL(window.location.href, this.keyspaces)
     if (initParams.id) {
       this.paramsToCall(initParams)
     }
-    this.call('stats')
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
