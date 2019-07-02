@@ -5,7 +5,7 @@ import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
-import {categories} from './globals.js'
+import {categories, maxSearchBreadth, maxSearchDepth} from './globals.js'
 import {replace, addClass} from './template_utils.js'
 import Search from './search/search.js'
 
@@ -101,7 +101,9 @@ export default class Menu extends Component {
       el.innerHTML = replace(searchDialog,
         {
           searchDepth: this.view.depth,
-          searchBreadth: this.view.breadth
+          searchBreadth: this.view.breadth,
+          maxSearchBreadth: maxSearchBreadth,
+          maxSearchDepth: maxSearchDepth
         }
       )
       this.setupSearch(el)
@@ -192,11 +194,17 @@ export default class Menu extends Component {
   }
   setSearchDepth (d) {
     if (this.view.viewType !== 'search') return
-    this.view.depth = d
+    this.view.depth = Math.min(d, maxSearchDepth)
+    if (d > maxSearchDepth) {
+      this.setUpdate(true)
+    }
   }
   setSearchBreadth (d) {
     if (this.view.viewType !== 'search') return
-    this.view.breadth = d
+    this.view.breadth = Math.min(d, maxSearchBreadth)
+    if (d > maxSearchBreadth) {
+      this.setUpdate(true)
+    }
   }
   addSearchAddress (address) {
     if (this.view.viewType !== 'search' || this.view.criterion !== 'addresses') return

@@ -40,7 +40,7 @@ const labelPrefixLength = 3
 
 // synchronous messages
 // get handled by model in current rendering frame
-const syncMessages = ['search']
+const syncMessages = ['search', 'changeSearchBreadth', 'changeSearchDepth']
 
 // messages that change the graph
 const dirtyMessages = [

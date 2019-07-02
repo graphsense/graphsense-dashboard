@@ -3,6 +3,8 @@ const browserPadding = 1
 const clusterWidth = 190
 const expandHandleWidth = 15
 const maxAddableNodes = 100
+const maxSearchDepth = 7
+const maxSearchBreadth = 100
 
 const moreThan1TagCategory = 'More than 1 tag'
 
@@ -35,5 +37,7 @@ export {
   expandHandleWidth,
   moreThan1TagCategory,
   maxAddableNodes,
-  currencies
+  currencies,
+  maxSearchBreadth,
+  maxSearchDepth
 }
