@@ -222,6 +222,10 @@ export default class Model {
           search.errorLabels(error.message)
           // this.statusbar.addMsg('error', error)
           break
+        case 'resultSearchNeighbors':
+          this.statusbar.removeSearching(context)
+          this.statusbar.addMsg('error', error)
+          break
         case 'resultNode':
           this.statusbar.removeLoading((context && context.data && context.data.id) || context)
           this.statusbar.addMsg('error', error)
