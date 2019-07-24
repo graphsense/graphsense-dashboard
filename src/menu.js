@@ -5,7 +5,7 @@ import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
-import {categories, maxSearchBreadth, maxSearchDepth} from './globals.js'
+import {categories, moreThan1TagCategory, maxSearchBreadth, maxSearchDepth} from './globals.js'
 import {replace, addClass} from './template_utils.js'
 import Search from './search/search.js'
 
@@ -137,7 +137,7 @@ export default class Menu extends Component {
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
       let input = form.querySelector('select')
-      categories.forEach(category => {
+      categories.filter(cat => cat !== moreThan1TagCategory).forEach(category => {
         let option = document.createElement('option')
         option.innerHTML = category
         option.setAttribute('value', category)
