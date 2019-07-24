@@ -9,13 +9,17 @@ const maxSearchBreadth = 100
 const moreThan1TagCategory = 'More than 1 tag'
 
 const categories = [
-  'Exchange',
-  'Gambling',
-  'Miner',
-  'Old/historic',
   'Organization',
-  'Pools',
+  'Miner',
+  'Exchange',
+  'Walletprovider',
+  'Marketplace',
+  'Mixingservice',
+  'Old/historic',
+  'Gambling',
   'Services/others',
+  'Ransomware',
+  'Sextortion',
   moreThan1TagCategory
 ]
 
