@@ -2,7 +2,10 @@ export default class Component {
   constructor () {
     this.update = true
   }
-  setUpdate (update) {
+  setUpdate (update, value) {
+    if (this.nodes) {
+      console.log('setUpdate Cluster', this.id, update, value)
+    }
     // boolean overrides strings
     if (typeof update === 'boolean') {
       this.update = update
@@ -10,14 +13,17 @@ export default class Component {
     }
     if (this.update === true) return
     if (this.update === false) {
-      this.update = new Set()
+      this.update = new Map()
     }
-    this.update.add(update)
+    this.update.set(update, value)
   }
   shouldUpdate (update) {
     if (typeof this.update === 'boolean') return this.update
-    if (update === undefined) return true
+    if (update === undefined) return this.update.size > 0
     return this.update.has(update)
+  }
+  getUpdate (update) {
+    return this.update.get(update)
   }
   render () {
     this.update = false

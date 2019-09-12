@@ -17,7 +17,6 @@ export default class Statusbar extends Component {
     this.searching = map()
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
-    this.update = set()
     this.numErrors = 0
     this.showErrorsLogs = false
   }

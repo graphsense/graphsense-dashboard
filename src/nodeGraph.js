@@ -98,7 +98,14 @@ export default class NodeGraph extends Component {
           range: (v) => defaultColor['address']
         }
       }
+    this.linker = linkHorizontal()
+      .x(([node, isSource, scale]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks() - this.arrowSummit)
+      .y(([node, isSource, scale]) => node.getYForLinks() + node.getHeightForLinks() / 2)
+    this.shadowLinker = linkHorizontal()
+      .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
+      .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
     this.snapshots = []
+
     this.currentSnapshotIndex = -1
     // initialize with true to allow initial snapshot
     this.dirty = true
@@ -250,7 +257,8 @@ export default class NodeGraph extends Component {
     }
     cluster.dx = cluster.ddx
     cluster.dy = cluster.ddy
-    this.setUpdate('layers')
+    cluster.setUpdate('position')
+    this.setUpdate('link', id)
   }
   dragNodeEnd (id, type) {
     let cluster = this.clusterNodes.get(id)
@@ -673,32 +681,58 @@ export default class NodeGraph extends Component {
     }
   }
   renderLinks (root) {
-    if (!this.shouldUpdate('layers') && !this.shouldUpdate('links')) return
-    root.node().innerHTML = ''
-    const link = linkHorizontal()
-      .x(([node, isSource, scale]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks() - this.arrowSummit)
-      .y(([node, isSource, scale]) => node.getYForLinks() + node.getHeightForLinks() / 2)
+    if (this.shouldUpdate('layers') || this.shouldUpdate('links')) {
+      root.node().innerHTML = ''
 
-    for (let i = 0; i < this.layers.length; i++) {
-      // prepare the domain and links
-      let domain = [1 / 0, 0]
-      let clusterLinksFromAddresses = {}
-      this.layers[i].nodes.each((c) => {
-        // stores links between neighbor clusters resulting from address links
-        clusterLinksFromAddresses[c.data.id] = set()
-        c.nodes.each((a) => {
-          this.prepareLinks(domain, this.layers[i + 1], a)
-            .forEach(cl => clusterLinksFromAddresses[c.data.id].add(cl))
+      for (let i = 0; i < this.layers.length; i++) {
+        // prepare the domain and links
+        let domain = [1 / 0, 0]
+        let clusterLinksFromAddresses = {}
+        this.layers[i].nodes.each((c) => {
+          // stores links between neighbor clusters resulting from address links
+          clusterLinksFromAddresses[c.data.id] = set()
+          c.nodes.each((a) => {
+            this.prepareLinks(domain, this.layers[i + 1], a)
+              .forEach(cl => clusterLinksFromAddresses[c.data.id].add(cl))
+          })
+          this.prepareClusterLinks(domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
         })
-        this.prepareClusterLinks(domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
-      })
-      // render links
-      this.layers[i].nodes.each((c) => {
-        c.nodes.each((a) => {
-          this.linkToLayer(root, link, domain, this.layers[i + 1], a)
+        // render links
+        this.layers[i].nodes.each((c) => {
+          c.nodes.each((a) => {
+            this.linkToLayer(root, domain, this.layers[i + 1], a)
+          })
+          this.linkToLayerCluster(root, domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
         })
-        this.linkToLayerCluster(root, link, domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
-      })
+      }
+    } else if (this.shouldUpdate('link')) {
+      // updating the in- and outgoing links of one node (ie. when it is moved)
+      let nodeId = this.getUpdate('link')
+      if (!nodeId) return
+      let node = this.getNode(nodeId, 'cluster')
+      let addressLinkSelects = ''
+      let selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
+      if (node) {
+        node.nodes.each(address => {
+          addressLinkSelects += ',' + selector(address.id)
+        })
+      }
+      root.selectAll(selector(nodeId) + addressLinkSelects)
+        .nodes()
+        .map((link) => {
+          let a = [
+            link.getAttribute('data-source'),
+            link.getAttribute('data-target'),
+            link.getAttribute('data-label'),
+            link.getAttribute('data-scale')
+          ]
+          link.parentElement.removeChild(link)
+          return a
+        }).forEach(([s, t, label, scale]) => {
+          let source = this.getNode(s, 'address') || this.getNode(s, 'cluster')
+          let target = this.getNode(t, 'address') || this.getNode(t, 'cluster')
+          this.drawLink(root, label, scale, source, target)
+        })
     }
   }
   prepareLinks (domain, layer, address) {
@@ -736,19 +770,19 @@ export default class NodeGraph extends Component {
     domain[0] = Math.min(domain[0], value)
     domain[1] = Math.max(domain[1], value)
   }
-  linkToLayer (root, link, domain, layer, address) {
+  linkToLayer (root, domain, layer, address) {
     let neighbors = address.data.outgoing
     if (layer) {
       layer.nodes.each((cluster2) => {
         cluster2.nodes.each((address2) => {
           let ntx = neighbors.get(address2.data.id)
           if (ntx === undefined) return
-          this.renderLink(root, link, domain, address, address2, ntx)
+          this.renderLink(root, domain, address, address2, ntx)
         })
       })
     }
   }
-  linkToLayerCluster (root, link, domain, layer, source, clusterLinksFromAddresses) {
+  linkToLayerCluster (root, domain, layer, source, clusterLinksFromAddresses) {
     let neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((cluster2) => {
@@ -756,7 +790,7 @@ export default class NodeGraph extends Component {
         if (ntx === undefined) return
         // skip cluster if contains in clusterLinksFromAddresses
         if (clusterLinksFromAddresses.has(cluster2.data.id)) return
-        this.renderLink(root, link, domain, source, cluster2, ntx)
+        this.renderLink(root, domain, source, cluster2, ntx)
       })
     }
   }
@@ -764,33 +798,33 @@ export default class NodeGraph extends Component {
     if (!this.shouldUpdate()) return
     clusterRoot.node().innerHTML = ''
     addressRoot.node().innerHTML = ''
-    const link = linkHorizontal()
-      .x(([node, isSource]) => isSource ? node.getXForLinks() + node.getWidthForLinks() : node.getXForLinks())
-      .y(([node, isSource]) => node.getYForLinks() + node.getHeightForLinks() / 2)
     // TODO use a data structure which stores and lists entries in sorted order to prevent this sorting
     let sort = (node1, node2) => {
       return node1.id[1] - node2.id[1]
     }
-    this.linkShadows(addressRoot, link, this.addressNodes.values().sort(sort))
-    this.linkShadows(clusterRoot, link, this.clusterNodes.values().sort(sort))
+    this.linkShadows(addressRoot, this.addressNodes.values().sort(sort))
+    this.linkShadows(clusterRoot, this.clusterNodes.values().sort(sort))
   }
-  linkShadows (root, link, nodes) {
+  linkShadows (root, nodes) {
     nodes.forEach((node1) => {
       for (let i = 0; i < nodes.length; i++) {
         let node2 = nodes[i]
         if (node1 === node2) continue
         if (node1.id[0] !== node2.id[0]) continue
         if (node1.id[1] >= node2.id[1]) continue
-        let path = link({source: [node1, true], target: [node2, false]})
-        root.append('path').classed('shadow', true).attr('d', path)
-          .on('mouseover', () => this.dispatcher('tooltip', 'shadow'))
-          .on('mouseout', () => this.dispatcher('hideTooltip'))
+        this.drawShadow(root, node1, node2)
         // stop iterating if a shadow to next layer was found
         return
       }
     })
   }
-  renderLink (root, link, domain, source, target, tx) {
+  drawShadow (root, source, target) {
+    let path = this.shadowLinker({source: [source, true], target: [target, false]})
+    root.append('path').classed('shadow', true).attr('d', path)
+      .on('mouseover', () => this.dispatcher('tooltip', 'shadow'))
+      .on('mouseout', () => this.dispatcher('hideTooltip'))
+  }
+  renderLink (root, domain, source, target, tx) {
     let value, label
     [value, label] = this.findValueAndLabel(tx)
     let scale
@@ -801,8 +835,15 @@ export default class NodeGraph extends Component {
     } else {
       scale = transactionsPixelRange[0]
     }
-    let path = link({source: [source, true, scale], target: [target, false, scale]})
+    this.drawLink(root, label, scale, source, target)
+  }
+  drawLink (root, label, scale, source, target) {
+    let path = this.linker({source: [source, true, scale], target: [target, false, scale]})
     let g1 = root.append('g').classed('link', true)
+      .attr('data-target', target.id)
+      .attr('data-source', source.id)
+      .attr('data-label', label)
+      .attr('data-scale', scale)
       .on('mouseover', () => this.dispatcher('tooltip', 'link'))
       .on('mouseout', () => this.dispatcher('hideTooltip'))
     g1.append('path').attr('d', path)

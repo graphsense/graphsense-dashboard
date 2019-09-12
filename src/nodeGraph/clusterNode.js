@@ -140,7 +140,7 @@ export default class ClusterNode extends GraphNode {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (this.shouldUpdate(true)) {
+    if (this.shouldUpdate()) {
       this.root.node().innerHTML = ''
       if (!this.data.mockup) {
         let height = this.getHeight()
@@ -198,13 +198,15 @@ export default class ClusterNode extends GraphNode {
       this.nodes.each(addressNode => addressNode.render())
       return
     }
-    root.node().innerHTML = ''
+    if (root) this.addressesRoot = root
+    if (!this.addressesRoot) throw new Error('root not defined')
+    this.addressesRoot.node().innerHTML = ''
     let cumY = 2 * padding + this.labelHeight
     this.nodes
       .values()
       .sort(sort(this.sortAddressesProperty))
       .forEach((addressNode) => {
-        let g = root.append('g')
+        let g = this.addressesRoot.append('g')
         addressNode.setUpdate(true)
         // reset absolute coords
         addressNode.x = 0
@@ -219,7 +221,7 @@ export default class ClusterNode extends GraphNode {
     if (this.data.mockup) return
     let size = this.nodes.size()
     cumY += size > 0 ? gap : 0
-    let button = root.append('g')
+    let button = this.addressesRoot.append('g')
       .classed('addressExpand', true)
     let h = this.getHeight()
     let w = this.getWidth()
