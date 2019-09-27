@@ -431,7 +431,7 @@ svg.slash path {
   @apply w-full
 }
 
-.supported-currencies h2 {
+h2 {
   font-family: Conv_Octarine-Bold;
   @apply pt-0 pb-6 w-full text-center text-gs-base text-3xl;
 }
@@ -472,7 +472,7 @@ svg.slash path {
   @apply text-xl text-grey-dark pt-8
 }
 
-.static-page h2 {
+h2 {
   @apply mb-4 mt-6
 }
 
@@ -541,3 +541,30 @@ div.d3-context-menu-theme ul li.is-parent:after {
   border-top-color: theme('colors.gs.base')
 }
 
+ul.features li {
+  @apply flex flex-col items-center px-10 mb-8 text-center;
+  width: 50%;
+  
+}
+
+ul.features li i {
+  @apply text-5xl bg-gs-base rounded-full text-gs-lighter mb-3;
+  width: 90px;
+  height: 90px;
+  line-height: 88px;
+}
+
+ul.features li strong {
+  @apply text-2xl mb-3;
+}
+
+ul.contributors li {
+  @apply flex flex-col items-center;
+}
+
+ul.contributors li img {
+	width: 100px;
+	border-radius: 100%;
+	overflow: hidden;
+	margin-bottom: 10px;
+}

@@ -1,96 +1,73 @@
 <div class="container">
   
   {{{stats}}}
-  <h2>Features</h2>
+  <div class="mt-8">
+    <h2>Full of Features</h2>
+      <ul class="features flex flex-row flex-wrap w-full">
+        <li><i class="fa fa-search"></i> <strong>Cross-currency search</strong> <div>Search by address, tag, transaction or block in several cryptocurrency ledgers.</div></li>
+        <li><i class="fa fa-project-diagram"></i> <strong>Traverse transactions</strong> <div>Navigate in transaction network abstractions computed from various ledgers.</div></li>
+        <li><i class="fa fa-info"></i> <strong>Inspect metadata</strong> <div>Inspect statistical properties of nodes and edges.</div></li>
+        <li><i class="fa fa-code-branch"></i> <strong>Find paths</strong> <div>Automatically search for transaction paths connecting two nodes.</div></li>
+        <li><i class="fa fa-terminal"></i> <strong>Programmable</strong> <div>Support for data-driven analytics via the REST API.</div></li> </li>
+        <li><i class="fa fa-cube"></i> <strong>BlockSci integration</strong><div>GraphSense makes use of <a target="_blank" href="https://github.com/citp/BlockSci">BlockSci</a> for parsing blockchains, obtaining exchange rates, and filtering CoinJoins.</div></li>
+        <li><i class="fa fa-tachometer-alt"></i> <strong>Future-proof</strong><div>Built on <a target="_blank" href="https://spark.apache.org/">Apache Spark</a> and <a target="_blank" href="http://cassandra.apache.org/">Cassandra</a> for horizontal scalability.</div></li>
+        <li><i class="fab fa-github"></i> <strong>Open source</strong><div>The complete software stack is open souce and MIT licensed.</div></li>
+    </ul>
+  </div>
 
-  <ul>
 
-    <li>Search by address, tag, transaction or block in several cryptocurrency ledgers.</li>
+  <div class="mt-8">
+    <h2 id="example">Example</h2>
 
-    <li>Navigate in transaction network abstractions computed from various ledgers and inspect statistical properties of nodes (addresses, clusters) and edges (aggregated transactions).</li>
+    <p class="w-2/3 m-auto"><img src="./GraphSense_0.4.1-screenshot_detail.png" alt="screenshot"></p><p class="text-center w-full">An example Bitcoin address, its connections and statistics.</p>
+  </div>
 
-    <li>Automatically search for transaction paths connecting two nodes.</li>
 
-    <li>
-      <p><strong>BlockSci integration</strong>: GraphSense makes use of <a href="https://github.com/citp/BlockSci">BlockSci</a> for parsing blockchains, obtaining exchange rates, and filtering CoinJoins.</p> 
-    </li>
 
-    <li>Support for data-driven analytics via the GraphSense REST-API</li>
+  <div class="mt-8">
+    <h2 id="publications">Publications</h2>
 
-    <li>
-      <p><strong>Horizontal Scalability</strong>: cryptocurrency blockchains <a href="https://blockchain.info/charts/blocks-size?timespan=all">are growing</a> and new currencies <a href="https://coinmarketcap.com/">appear on the horizon</a>. GraphSense should be future-proof, because it is built on <a href="https://spark.apache.org/">Apache Spark</a> and <a href="http://cassandra.apache.org/">Cassandra</a> for horizontal scalability.</p>
-    </li>
+    <div class="w-2/3 m-auto">
+      <p>Some more technical details about GraphSense are described <a href="http://ceur-ws.org/Vol-1695/paper20.pdf">here</a>; please cite as:</p>
 
-  </ul>
+      <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@inproceedings{Haslhofer:2016a,
+          title={O Bitcoin Where Art Thou? Insight into Large-Scale Transaction Graphs.},
+          author={Haslhofer, Bernhard and Karl, Roman and Filtz, Erwin},
+          booktitle={SEMANTiCS (Posters, Demos)},
+          year={2016}
+      }
+      </code></pre></div></div>
 
-  <h2 id="technical-architecture">Technical Architecture</h2>
+      <p>So far, GraphSense has been used for computing statistics in the following
+      scientific papers:</p>
 
-  <p>GraphSense is built on scalable and distributed cluster technology and therefore requires a number of software components. They must be setup and/or executed in the following order:</p>
+      <p>Romiti, M., Judmayer, A., Zamyatin, A., Haslhofer, B.
+      <strong>A Deep Dive into Bitcoin Mining Pools: An Empirical Analysis of Mining Shares.</strong>
+      Journal of Cybersecurity, 5 (1).
+      <a href="https://arxiv.org/abs/1905.05999">(pdf)</a></p>
 
-  <ul>
-    <li>
-      <p><a href="https://github.com/graphsense/btc-client">btc-client</a>, <a href="https://github.com/graphsense/bch-client">bch-client</a>, <a href="https://github.com/graphsense/ltc-client">ltc-client</a>, <a href="https://github.com/graphsense/zec-client">zec-client</a>: docker containers encapsulating the most-recent cryptocurrency client versions</p>
-    </li>
-    <li>
-      <p><a href="https://github.com/graphsense/graphsense-blocksci">graphsense-blocksci</a>: a dockerized component to synchronize BlockSci data to Apache Cassandra</p>
-    </li>
-    <li>
-      <p><a href="https://github.com/graphsense/graphsense-tagpacks">graphsense-tagpacks</a>: a data structure for collecting cryptocurrency attribution tags with associated provenance and categorization metadata</p>
-    </li>
-    <li>
-      <p><a href="https://github.com/graphsense/graphsense-transformation">graphsense-transformation</a>: an Apache Spark ETL pipeline for computing statistics and network representations from raw blockchain data stored in Cassandra</p>
-    </li>
-    <li>
-      <p><a href="https://github.com/graphsense/graphsense-REST">graphsense-REST</a>: an API for retrieving data from the underlying Cassandra store</p>
-    </li>
-    <li>
-      <p><a href="https://github.com/graphsense/graphsense-dashboard">graphsense-dashboard</a>: a user-interface allowing search, inspection, and traversal of cryptocurrency entities</p>
-    </li>
-  </ul>
+      <p>Paquet-Clouston, M., Haslhofer, B., & Dupont, B.
+      <strong>Ransomware payments in the bitcoin ecosystem.</strong>
+      Journal of Cybersecurity, 5 (1).
+      <a href="http://arxiv.org/abs/1804.04080">(pdf)</a></p>
 
-  <h2 id="example">Example</h2>
+      <p>Filtz, E., Polleres, A., Karl, R., Haslhofer, B.:
+      <strong>Evolution of the Bitcoin Address Graph - An Exploratory Longitudinal Study.</strong>
+      International Data Science Conference (DSC 2017), Salzburg, Austria, 2017.
+      <a href="https://aic.ai.wu.ac.at/~polleres/publications/filtz-etal-2017IDSC.pdf">(pdf)</a></p>
+    </div>
 
-  <p>The following screenshot shows details about an example Bitcoin address.</p>
+  </div>
 
-  <p><img class="example" src="./GraphSense_0.4.1-screenshot_detail.png" alt="screenshot"></p>
+  <div class="mt-8">
+    <h2 id="contributors">Contributors</h2>
 
-  <h2 id="publications">Publications</h2>
-
-  <p>Some more technical details about GraphSense are described <a href="http://ceur-ws.org/Vol-1695/paper20.pdf">here</a>; please cite as:</p>
-
-  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>@inproceedings{Haslhofer:2016a,
-      title={O Bitcoin Where Art Thou? Insight into Large-Scale Transaction Graphs.},
-      author={Haslhofer, Bernhard and Karl, Roman and Filtz, Erwin},
-      booktitle={SEMANTiCS (Posters, Demos)},
-      year={2016}
-  }
-  </code></pre></div></div>
-
-  <p>So far, GraphSense has been used for computing statistics in the following
-  scientific papers:</p>
-
-  <p>Romiti, M., Judmayer, A., Zamyatin, A., Haslhofer, B.
-  <strong>A Deep Dive into Bitcoin Mining Pools: An Empirical Analysis of Mining Shares.</strong>
-  Journal of Cybersecurity, 5 (1).
-  <a href="https://arxiv.org/abs/1905.05999">(pdf)</a></p>
-
-  <p>Paquet-Clouston, M., Haslhofer, B., & Dupont, B.
-  <strong>Ransomware payments in the bitcoin ecosystem.</strong>
-  Journal of Cybersecurity, 5 (1).
-  <a href="http://arxiv.org/abs/1804.04080">(pdf)</a></p>
-
-  <p>Filtz, E., Polleres, A., Karl, R., Haslhofer, B.:
-  <strong>Evolution of the Bitcoin Address Graph - An Exploratory Longitudinal Study.</strong>
-  International Data Science Conference (DSC 2017), Salzburg, Austria, 2017.
-  <a href="https://aic.ai.wu.ac.at/~polleres/publications/filtz-etal-2017IDSC.pdf">(pdf)</a></p>
-
-  <h2 id="contributors">Contributors</h2>
-
-  <ul>
-    <li><a href="http://bernhardhaslhofer.info/">Bernhard Haslhofer</a></li>
-    <li>Rainer Stütz</li>
-    <li><a href="https://matteoromiti.github.io/">Matteo Romiti</a></li>
-    <li>Matthias Rella</li>    
-    <li>Mihai Bartha</li>    
-  </ul>
+    <ul class="contributors flex flex-row justify-center w-2/3 m-auto justify-around">
+      <li><img src="./bh.jpeg"/><a href="http://bernhardhaslhofer.info/">Bernhard Haslhofer</a></li>
+      <li><img src="./rs.png"/>Rainer Stütz</li>
+      <li><img src="./romitim.png"/><a href="https://matteoromiti.github.io/">Matteo Romiti</a></li>
+      <li><img src="./mr.jpeg"/><a href="https://pi.systems">Matthias Rella</a></li>    
+      <li><img src="./mb.jpeg"/>Mihai Bartha</li>    
+    </ul>
+  </div>
 </div>
