@@ -7,10 +7,12 @@ const officialpage = require('./pages/static/officialpage.hbs')
 const utils = require('./template_utils.js')
 const request = __non_webpack_require__('request') // eslint-disable-line no-undef
 const statsHtml = require('./pages/statsHtml.js')
+const footer = require('./pages/static/footer.hbs')
 
 const wrapPage = (page) => `<div class="container mx-auto px-4 flex-grow mt-8">${page}</div>`
 
 module.exports = function render (locals, callback) {
+  locals.footer = footer({version: VERSION})
   let useslimheader = true
   switch (locals.path) {
     case '/terms.html' :

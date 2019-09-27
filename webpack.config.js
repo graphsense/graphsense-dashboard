@@ -22,7 +22,7 @@ const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
 let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
 let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'boldheader.html'), 'utf-8'))
 let landingpage = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.hbs'), 'utf-8'))
-let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.html'), 'utf-8'))
+let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.hbs'), 'utf-8'))
 boldheader = boldheader({action: ''})
 footer = footer({version: VERSION})
 
@@ -167,9 +167,13 @@ module.exports = env => {
           test: /\.css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            {loader: 'css-loader', options: { importLoaders: 1 } },
+            { loader: 'css-loader', options: { importLoaders: 1 } },
             'postcss-loader'
           ]
+        },
+        {
+          test: /\.hbs$/,
+          loader: 'handlebars-template-loader'
         },
         {
           test: /\.html$/,
@@ -186,10 +190,6 @@ module.exports = env => {
         {
           test: /\.(woff(2)?|ttf|eot|svg|jpe?g|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           loader: 'file-loader'
-        },
-        {
-          test: /\.hbs$/,
-          loader: 'handlebars-loader'
         }
       ]
     },
