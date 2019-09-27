@@ -31,6 +31,8 @@ Static pages are not generated in development mode. The reason is that
 Webpack's development server does not work well with the static-site-generator
 plugin.
 
+To generate static pages, make a local production build (see below) and deploy the directory `official`. It contains everything for the static website.
+
 Static pages are located in `src/pages/static`.
 
 ## Production setup
@@ -44,6 +46,13 @@ service, e.g.:
 
     docker run -e REST_ENDPOINT="https://example.com:9000" -e JWT_TOKEN="{access token goes here}" -p 8000:80 graphsense-dashboard
 
+## Local production setup
+
+If you don't want to use docker or want to access the static site build, create a local production build: 
+
+    ./build.sh {JWT_TOKEN}
+
+Pass it a `JWT_TOKEN` because it's going to fetch statistics from the configured REST backend. Build is made into the directory `dist`.
 
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com
