@@ -21,7 +21,7 @@ const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
 // compose pre-rendered landing page
 let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
 let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'boldheader.html'), 'utf-8'))
-let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.html'), 'utf-8')
+let landingpage = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.hbs'), 'utf-8'))
 let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.html'), 'utf-8'))
 boldheader = boldheader({action: ''})
 footer = footer({version: VERSION})
@@ -96,7 +96,8 @@ module.exports = env => {
         locals: {
           template: template,
           footer: footer,
-          staticpage_classes: STATICPAGE_CLASSES
+          staticpage_classes: STATICPAGE_CLASSES,
+          token: JWT_TOKEN
         }
       }) : noop(),
       new MiniCssExtractPlugin({

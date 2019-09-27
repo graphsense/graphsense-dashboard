@@ -3,10 +3,14 @@ const privacy = require('./pages/static/privacy.html')
 const about = require('./pages/static/about.html')
 const slimheader = require('./pages/static/slimheader.html')
 const boldheader = require('./pages/static/boldheader.html')
-const officialpage = require('./pages/static/officialpage.html')
+const officialpage = require('./pages/static/officialpage.hbs')
 const utils = require('./template_utils.js')
+const request = __non_webpack_require__('request') // eslint-disable-line no-undef
+const statsHtml = require('./pages/statsHtml.js')
 
-module.exports = function render (locals) {
+const wrapPage = (page) => `<div class="container mx-auto px-4 flex-grow mt-8">${page}</div>`
+
+module.exports = function render (locals, callback) {
   let useslimheader = true
   switch (locals.path) {
     case '/terms.html' :
@@ -22,12 +26,10 @@ module.exports = function render (locals) {
       locals.title = 'About'
       break
     case '/officialpage.html' :
-      locals.page = officialpage
       locals.title = 'Graphsense'
       useslimheader = false
       break
   }
-  locals.page = `<div class="container mx-auto px-4 flex-grow mt-8">${locals.page}</div>`
   if (useslimheader) {
     locals.header = utils.replace(slimheader, {title: locals.title})
   } else {
@@ -41,5 +43,29 @@ module.exports = function render (locals) {
     },
     css: css
   }
-  return locals.template(options)
+  if (locals.path === '/officialpage.html') {
+    let requestOptions = {
+      url: 'https://api.graphsense.info/stats',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + locals.token // eslint-disable-line no-undef
+      }
+    }
+    request(requestOptions, (err, res, body) => {
+      if (err) { return console.log(err) }
+
+      try {
+        body = JSON.parse(body)
+      } catch (e) {
+        return callback(new Error('got invalid json from stats'))
+      }
+      let stats = statsHtml.statsHtml(body)
+      locals.page = wrapPage(officialpage({stats}))
+      callback(null, locals.template(options))
+    })
+  } else {
+    locals.page = wrapPage(locals.page)
+    callback(null, locals.template(options))
+  }
 }
