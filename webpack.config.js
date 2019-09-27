@@ -10,7 +10,6 @@ const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
-const FaviconsWebpackPlugin = require('favicons-webpack-plugin')
 
 const VERSION = '0.4.1'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
@@ -72,6 +71,8 @@ module.exports = env => {
       }),
       new CopyWebpackPlugin([{
         from: './src/pages/static/logo-without-icon.svg'
+      },
+      { from: './src/pages/static/favicon.png'
       }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
@@ -134,8 +135,7 @@ module.exports = env => {
           /min-h-full/,
           /svg.+/
         ]
-      }) : noop(),
-      new FaviconsWebpackPlugin('./src/pages/static/favicon.png') // svg works too!
+      }) : noop()
     ],
     output: output,
     module: {

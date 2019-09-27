@@ -543,8 +543,6 @@ div.d3-context-menu-theme ul li.is-parent:after {
 
 ul.features li {
   @apply flex flex-col items-center px-10 mb-8 text-center;
-  width: 50%;
-  
 }
 
 ul.features li i {
