@@ -5,3 +5,7 @@ official
 .vimrc
 Makefile
 testdata
+build.sh
+connect_cassandra.sh
+package-lock.json
+tags
