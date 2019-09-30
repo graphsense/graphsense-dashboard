@@ -33,7 +33,7 @@ plugin.
 
 To generate static pages, make a local production build (see below) and deploy the directory `official`. It contains everything for the static website.
 
-Static pages are located in `src/pages/static`.
+Static pages can be edited in `src/pages/static`.
 
 ## Production setup
 
@@ -48,11 +48,11 @@ service, e.g.:
 
 ## Local production setup
 
-If you don't want to use docker or want to access the static site build, create a local production build: 
+If you don't want to use docker or want to generate the static site, create a local production build: 
 
     ./build.sh {JWT_TOKEN}
 
-Pass it a `JWT_TOKEN` because it's going to fetch statistics from the configured REST backend. Build is made into the directory `dist`.
+Pass it a `JWT_TOKEN` because it's going to fetch statistics from the configured REST backend at build time. Build destination of the application is `dist`, for the static site it's `official`.
 
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com
