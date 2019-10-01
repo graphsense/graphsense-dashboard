@@ -7,9 +7,7 @@ const options = {
   credentials: 'include',
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    // never expiring token
-    'Authorization': 'Bearer ' + JWT_TOKEN // eslint-disable-line no-undef
+    'Content-Type': 'application/json'
   }
 }
 
@@ -32,8 +30,9 @@ export default class Rest {
     this.json = this.remoteJson
   }
   remoteJson (keyspace, url, field) {
-    url = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    return json(url, options)
+    let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
+    options.headers['Authorization'] = 'Bearer ' + this.access_token
+    return json(newurl, options)
       .then(result => {
         if (field) {
         // result is an array
@@ -47,8 +46,19 @@ export default class Rest {
         }
         return Promise.resolve(result)
       }, error => {
+        if (this.access_token && error.message && error.message.startsWith('401')) {
+          options.headers['Authorization'] = 'Bearer ' + this.refresh_token
+          return json(this.baseUrl + '/token_refresh', options).then((result) => {
+            if (!result.access_token) return Promise.reject(new Error('got no access_token'))
+            this.access_token = result.access_token
+            if (result.refresh_token) this.refresh_token = result.refresh_token
+            return this.remoteJson(keyspace, url, field)
+          })
+        }
         error.keyspace = keyspace
         error.requestURL = url
+        // normalize message
+        if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
       })
   }
@@ -161,5 +171,20 @@ export default class Rest {
       return node
     }
     return this.json(keyspace, url).then(addKeyspace)
+  }
+  login (username, password) {
+    options.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
+    return json(this.baseUrl + '/login', options)
+      .catch(error => {
+        // normalize message
+        if (!error.message && error.msg) error.message = error.msg
+        return Promise.reject(error)
+      })
+  }
+  setAccessToken (token) {
+    this.access_token = token
+  }
+  setRefreshToken (token) {
+    this.refresh_token = token
   }
 }

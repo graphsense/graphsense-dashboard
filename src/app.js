@@ -1,5 +1,6 @@
 import Callable from './callable.js'
 import Store from './store.js'
+import Login from './login/login.js'
 import Search from './search/search.js'
 import Browser from './browser.js'
 import Rest from './rest.js'
@@ -87,7 +88,7 @@ const fromURL = (url, keyspaces) => {
 }
 
 export default class Model extends Callable {
-  constructor (locale, search, landingpage) {
+  constructor (locale, rest, login, search, landingpage) {
     super()
     this.locale = locale
     this.isReplaying = false
@@ -96,8 +97,8 @@ export default class Model extends Callable {
     this.snapshotTimeout = null
 
     this.statusbar = new Statusbar(this.call)
-    this.rest = new Rest(baseUrl, prefixLength)
-    this.createComponents(search, landingpage)
+    this.rest = rest || new Rest(baseUrl, prefixLength)
+    this.createComponents(login, search, landingpage)
     this.registerDispatchEvents(startactions)
 
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
@@ -130,49 +131,6 @@ export default class Model extends Callable {
       let search = isInDialog ? this.menu.search : this.search
       if (!search) return
       search.clear()
-    })
-    this.dispatcher.on('fetchError', ({context, msg, error}) => {
-      switch (msg) {
-        case 'searchresult':
-          let search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.error(error.keyspace, error.message)
-          // this.statusbar.addMsg('error', error)
-          break
-        case 'searchresultLabels':
-          search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.errorLabels(error.message)
-          // this.statusbar.addMsg('error', error)
-          break
-        case 'resultSearchNeighbors':
-          this.statusbar.removeSearching(context)
-          this.statusbar.addMsg('error', error)
-          break
-        case 'resultNode':
-          this.statusbar.removeLoading((context && context.data && context.data.id) || context)
-          this.statusbar.addMsg('error', error)
-          break
-        case 'resultTransactionForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultBlockForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultLabelForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultEgonet':
-          this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
-          break
-        case 'resultClusterAddresses':
-          this.statusbar.removeLoading('addresses of cluster ' + context[0])
-          break
-        default:
-          this.statusbar.addMsg('error', error)
-      }
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
@@ -860,7 +818,10 @@ export default class Model extends Callable {
   paramsToCall ({id, type, keyspace}) {
     this.call('clickSearchResult', {id, type, keyspace})
   }
-  createComponents (search, landingpage) {
+  createComponents (login, search, landingpage) {
+    if (login) login.call = this.call
+    if (search) search.call = this.call
+    if (landingpage) landingpage.call = this.call
     this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency, this.keyspaces)
@@ -868,11 +829,13 @@ export default class Model extends Callable {
     this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
+    this.login = login || new Login(this.call)
     this.search = search || new Search(this.call, this.keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
-    this.landingpage = landingpage || new Landingpage(this.call, this.search, this.keyspaces)
+    this.landingpage = landingpage || new Landingpage(this.call, this.keyspaces)
+    this.landingpage.setSearch(this.search)
   }
   compress (data) {
     return new Uint32Array(

@@ -98,7 +98,10 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'tooltip',
   'hideTooltip',
   'receiveCSV',
-  'changeLocale'
+  'changeLocale',
+  'login',
+  'loginResult',
+  'appLoaded'
 )
 
 // synchronous messages

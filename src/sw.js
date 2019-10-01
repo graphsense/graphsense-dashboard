@@ -26,7 +26,12 @@ const myFetch = (request) => {
           logger.debug('fetched', response)
           if (response.headers.get('Content-Type') === 'application/json') {
             response.text().then(text => {
-              if (text.replace(/\s+/g, '').startsWith('{"message"')) {
+              let prune = text.replace(/\s+/g, '')
+              if (prune.startsWith('{"message"') ||
+                  prune.startsWith('{"msg"') ||
+                  prune.startsWith('{"access_token"') ||
+                  prune.startsWith('{"refresh_token"')
+              ) {
                 logger.debug('starts with message, don\'t cache ' + text)
                 return
               }

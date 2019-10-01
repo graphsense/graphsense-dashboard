@@ -4,21 +4,31 @@ import Component from './component.js'
 import {statsHtml} from './pages/statsHtml.js'
 
 export default class Landingpage extends Component {
-  constructor (dispatcher, search, keyspaces) {
+  constructor (dispatcher, keyspaces) {
     super()
     this.dispatcher = dispatcher
     this.stats = {}
-    this.search = search
     this.keyspaces = keyspaces
     keyspaces.forEach(key => {
       this.stats[key] = 'loading'
     })
+  }
+  setSearch (search) {
+    this.search = search
+    this.search.setStats(this.stats)
+    this.setUpdate(true)
+  }
+  setLogin (login) {
+    this.login = login
   }
   setStats (stats) {
     this.keyspaces.forEach(key => {
       this.stats[key] = stats[key]
     })
     this.setUpdate('stats')
+    if (this.search) {
+      this.search.setStats(stats)
+    }
   }
   render (root) {
     if (root) this.root = root
@@ -30,13 +40,20 @@ export default class Landingpage extends Component {
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + stats + footer({version: VERSION}) + // eslint-disable-line no-undef
         '</div>'
-      let searchRoot = this.root.querySelector('.splash .search')
-      this.search.setUpdate(true)
-      this.search.render(searchRoot)
+      if (this.search) {
+        let searchRoot = this.root.querySelector('.splash .search')
+        this.search.setUpdate(true)
+        this.search.render(searchRoot)
+      } else if (this.login) {
+        let loginRoot = this.root.querySelector('.splash .search')
+        this.login.setUpdate(true)
+        this.login.render(loginRoot)
+      }
     } else if (this.shouldUpdate('stats')) {
       this.renderStats()
     } else {
-      this.search.render()
+      if (this.search) this.search.render()
+      if (this.login) this.login.render()
     }
     super.render()
     return this.root

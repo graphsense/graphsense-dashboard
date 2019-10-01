@@ -9,7 +9,6 @@ const stats = function () {
 const receiveStats = function ({context, result}) {
   this.keyspaces = Object.keys(result)
   this.landingpage.setStats({...result})
-  this.search.setStats({...result})
 }
 
 const search = function ({term, types, keyspaces, isInDialog}) {
@@ -54,10 +53,89 @@ const searchresultLabels = function ({context, result}) {
   search.hideLoading()
   search.setResultLabels(context.term, result)
 }
+
+const login = function ([username, password]) {
+  this.login.loading(true)
+  this.mapResult(this.rest.login(username, password), 'loginResult')
+}
+
+const loginResult = function ({result}) {
+  logger.debug('loginResult', result)
+  if (result.access_token && result.refresh_token) {
+    this.rest.setAccessToken(result.access_token)
+    this.rest.setRefreshToken(result.refresh_token)
+    import('../app.js').then(app => { // works despite of parsing error of eslint
+      this.app = new app.default(this.locale, this.rest, this.login, this.search, this.landingpage)
+      this.call('appLoaded')
+    })
+    return
+  }
+  this.login.error(result.message || 'Something went wrong')
+  this.login.loading(false)
+}
+
+const appLoaded = function() {
+  this.login.loading(false)
+  this.landingpage.setSearch(this.search)
+}
+
+const fetchError = function({context, msg, error}) {
+      switch (msg) {
+        case 'loginResult':
+          this.login.error(error.message || 'Something went wrong')
+          this.login.loading(false)
+          break
+        case 'searchresult':
+          let search = context && context.isInDialog ? this.menu.search : this.search
+          if (!search) return
+          search.hideLoading()
+          search.error(error.keyspace, error.message)
+          // this.statusbar.addMsg('error', error)
+          break
+        case 'searchresultLabels': {
+          let search = context && context.isInDialog ? this.menu.search : this.search
+          if (!search) return
+          search.hideLoading()
+          search.errorLabels(error.message)
+          // this.statusbar.addMsg('error', error)
+        }
+          break
+        case 'resultSearchNeighbors':
+          this.statusbar.removeSearching(context)
+          this.statusbar.addMsg('error', error)
+          break
+        case 'resultNode':
+          this.statusbar.removeLoading((context && context.data && context.data.id) || context)
+          this.statusbar.addMsg('error', error)
+          break
+        case 'resultTransactionForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultBlockForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultLabelForBrowser':
+          this.statusbar.removeLoading(context)
+          break
+        case 'resultEgonet':
+          this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
+          break
+        case 'resultClusterAddresses':
+          this.statusbar.removeLoading('addresses of cluster ' + context[0])
+          break
+        default:
+          this.statusbar.addMsg('error', error)
+      }
+    }
+
 export default {
   stats,
   receiveStats,
   search,
   searchresult,
-  searchresultLabels
+  searchresultLabels,
+  login,
+  loginResult,
+  appLoaded,
+  fetchError
 }
