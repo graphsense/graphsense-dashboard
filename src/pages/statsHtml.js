@@ -6,8 +6,10 @@ import statistics from './statistics.hbs'
 function statsHtml (body) {
   const imageContext = require.context('../style/img/currencies/', false)
   let stats = []
+  console.log('body', body)
   Object.keys(body).forEach((keyspace) => {
     let s = body[keyspace]
+    if (!s) return
     let format = '0,000,000'
     let t = moment.unix(s.timestamp)
     let flat =
