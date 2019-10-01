@@ -6,6 +6,10 @@ const maxAddableNodes = 100
 const maxSearchDepth = 7
 const maxSearchBreadth = 100
 
+const searchlimit = 100
+const prefixLength = 5
+const labelPrefixLength = 3
+
 const moreThan1TagCategory = 'More than 1 tag'
 
 const categories = [
@@ -43,5 +47,9 @@ export {
   maxAddableNodes,
   currencies,
   maxSearchBreadth,
-  maxSearchDepth
+  maxSearchDepth,
+  searchlimit,
+  prefixLength,
+  labelPrefixLength
+
 }

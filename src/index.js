@@ -5,8 +5,7 @@ import './style/Octarine-Bold/fonts.css'
 import './style/Octarine-Light/fonts.css'
 import 'd3-context-menu/css/d3-context-menu.css'
 import './style/style.css'
-import Model from './model.js'
-import {dispatch} from './dispatch.js'
+import Start from './start.js'
 import numeral from 'numeral'
 import moment from 'moment'
 import Logger from './logger.js'
@@ -37,108 +36,12 @@ moment.locale(locale)
 const timezone = jstz.determine().name()
 moment.tz.setDefault(timezone)
 
-const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
-  'initSearch',
-  'search',
-  'searchresult',
-  'searchresultLabels',
-  'clickSearchResult',
-  'blurSearch',
-  'fetchError',
-  'resultNodeForBrowser',
-  'resultTransactionForBrowser',
-  'resultLabelForBrowser',
-  'resultBlockForBrowser',
-  'addNode',
-  'addNodeCont',
-  'loadNode',
-  'loadClusterForAddress',
-  'resultNode',
-  'resultClusterForAddress',
-  'selectNode',
-  'loadEgonet',
-  'loadClusterAddresses',
-  'removeClusterAddresses',
-  'resultEgonet',
-  'resultClusterAddresses',
-  'initTransactionsTable',
-  'initBlockTransactionsTable',
-  'loadTransactions',
-  'resultTransactions',
-  'initAddressesTable',
-  'initAddressesTableWithCluster',
-  'loadAddresses',
-  'resultAddresses',
-  'initTagsTable',
-  'loadTags',
-  'resultTags',
-  'resultTagsTable',
-  'clickTransaction',
-  'clickBlock',
-  'resultTransaction',
-  'selectAddress',
-  'clickAddress',
-  'clickLabel',
-  'changeCurrency',
-  'changeClusterLabel',
-  'changeAddressLabel',
-  'changeTxLabel',
-  'removeNode',
-  'initIndegreeTable',
-  'initOutdegreeTable',
-  'initNeighborsTableWithNode',
-  'initTxInputsTable',
-  'initTxOutputsTable',
-  'loadNeighbors',
-  'resultNeighbors',
-  'selectNeighbor',
-  'excourseLoadDegree',
-  'inputNotes',
-  'toggleConfig',
-  'stats',
-  'receiveStats',
-  'noteDialog',
-  'hideContextmenu',
-  'save',
-  'load',
-  'loadFile',
-  'deselect',
-  'showLogs',
-  'toggleErrorLogs',
-  'moreLogs',
-  'hideLogs',
-  'gohome',
-  'new',
-  'sortClusterAddresses',
-  'dragNode',
-  'dragNodeEnd',
-  'changeSearchDepth',
-  'changeSearchBreadth',
-  'searchNeighborsDialog',
-  'searchNeighbors',
-  'resultSearchNeighbors',
-  'redrawGraph',
-  'createSnapshot',
-  'undo',
-  'redo',
-  'disableUndoRedo',
-  'toggleSearchTable',
-  'exportSvg',
-  'toggleLegend',
-  'downloadTable',
-  'changeSearchCategory',
-  'changeSearchCriterion',
-  'addAllToGraph',
-  'tooltip',
-  'hideTooltip',
-  'receiveCSV',
-  'changeLocale'
-)
-
-let model = new Model(dispatcher, locale)
+let model = new Start(locale)
 
 model.render(document.body)
+model.loadApp()
 
+/*
 if (module.hot) {
   module.hot.accept([
     './browser.js',
@@ -191,3 +94,4 @@ if (module.hot) {
     navigator.serviceWorker.register('./sw.js')
   }
 }
+*/

@@ -1,3 +1,4 @@
+import Callable from './callable.js'
 import Store from './store.js'
 import Search from './search/search.js'
 import Browser from './browser.js'
@@ -19,6 +20,8 @@ import NeighborsTable from './browser/neighbors_table.js'
 import TagsTable from './browser/tags_table.js'
 import TransactionsTable from './browser/transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
+import startactions from './actions/start.js'
+import {prefixLength} from './globals.js'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -33,26 +36,6 @@ try {
   console.error(e.message)
   supportedKeyspaces = []
 }
-
-const searchlimit = 100
-const prefixLength = 5
-const labelPrefixLength = 3
-
-// synchronous messages
-// get handled by model in current rendering frame
-const syncMessages = ['search', 'changeSearchBreadth', 'changeSearchDepth']
-
-// messages that change the graph
-const dirtyMessages = [
-  'addNode',
-  'addNodeCont',
-  'resultNode',
-  'resultClusterAddresses',
-  'resultEgonet',
-  'removeNode',
-  'resultSearchNeighbors',
-  'dragNodeEnd'
-]
 
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
@@ -103,78 +86,20 @@ const fromURL = (url, keyspaces) => {
   return {keyspace, id, type}
 }
 
-// time to wait after a dirty message before creating a snapshot
-const idleTimeToSnapshot = 2000
-
-export default class Model {
-  constructor (dispatcher, locale) {
-    this.dispatcher = dispatcher
+export default class Model extends Callable {
+  constructor (locale, search, landingpage) {
+    super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
     this.keyspaces = supportedKeyspaces
     this.snapshotTimeout = null
-    this.call = (message, data) => {
-      if (this.isReplaying) {
-        logger.debug('omit calling while replaying', message, data)
-        return
-      }
-
-      let fun = () => {
-        logger.boldDebug('calling', message, data)
-        this.dispatcher.call(message, null, data)
-        if (dirtyMessages.indexOf(message) === -1) {
-          this.render()
-          return
-        }
-        this.isDirty = true
-        this.dispatcher.call('disableUndoRedo')
-        this.render()
-
-        if (this.snapshotTimeout) clearTimeout(this.snapshotTimeout)
-        this.snapshotTimeout = setTimeout(() => {
-          this.call('createSnapshot')
-          this.snapshotTimeout = null
-        }, idleTimeToSnapshot)
-      }
-
-      if (syncMessages.indexOf(message) !== -1) {
-        fun()
-      } else {
-        setTimeout(fun, 1)
-      }
-    }
 
     this.statusbar = new Statusbar(this.call)
     this.rest = new Rest(baseUrl, prefixLength)
-    this.createComponents()
+    this.createComponents(search, landingpage)
+    this.registerDispatchEvents(startactions)
 
-    this.dispatcher.on('search', ({term, types, keyspaces, isInDialog}) => {
-      let search = isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.setSearchTerm(term, labelPrefixLength)
-      search.hideLoading()
-      keyspaces.forEach(keyspace => {
-        if (search.needsResults(keyspace, searchlimit, prefixLength)) {
-          if (search.timeout[keyspace]) clearTimeout(search.timeout[keyspace])
-          search.showLoading()
-          search.timeout[keyspace] = setTimeout(() => {
-            if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
-              this.mapResult(this.rest.search(keyspace, term, searchlimit), 'searchresult', {term, isInDialog})
-            }
-          }, 250)
-        }
-      })
-      if (search.needsLabelResults(searchlimit, labelPrefixLength)) {
-        if (search.timeoutLabels) clearTimeout(search.timeoutLabels)
-        search.showLoading()
-        search.timeoutLabels = setTimeout(() => {
-          if (types.indexOf('labels') !== -1) {
-            this.mapResult(this.rest.searchLabels(term, searchlimit), 'searchresultLabels', {term, isInDialog})
-          }
-        }, 250)
-      }
-    })
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
       if (isInDialog) {
         if (!this.menu.search || type !== 'address') return
@@ -291,19 +216,6 @@ export default class Model {
       historyPushState(result.keyspace, 'block', result.height)
       this.statusbar.removeLoading(result.height)
       this.statusbar.addMsg('loaded', 'block', result.height)
-    })
-    this.dispatcher.on('searchresult', ({context, result}) => {
-      let search = context.isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.hideLoading()
-      search.setResult(context.term, result)
-    })
-    this.dispatcher.on('searchresultLabels', ({context, result}) => {
-      let search = context.isInDialog ? this.menu.search : this.search
-      logger.debug('search', search)
-      if (!search) return
-      search.hideLoading()
-      search.setResultLabels(context.term, result)
     })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
       logger.debug('selectNode', type, nodeId)
@@ -666,14 +578,6 @@ export default class Model {
     this.dispatcher.on('toggleConfig', () => {
       this.config.toggleConfig()
     })
-    this.dispatcher.on('stats', () => {
-      this.mapResult(this.rest.stats(), 'receiveStats')
-    })
-    this.dispatcher.on('receiveStats', ({context, result}) => {
-      this.keyspaces = Object.keys(result)
-      this.landingpage.setStats({...result})
-      this.search.setStats({...result})
-    })
     this.dispatcher.on('noteDialog', ({x, y, node}) => {
       this.menu.showNodeDialog(x, y, {dialog: 'note', node})
       this.call('selectNode', [node.data.type, node.id])
@@ -935,11 +839,11 @@ export default class Model {
         return message
       }
     })
-    this.call('stats')
     let initParams = fromURL(window.location.href, this.keyspaces)
     if (initParams.id) {
       this.paramsToCall(initParams)
     }
+    console.log('model initialized')
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
@@ -956,7 +860,7 @@ export default class Model {
   paramsToCall ({id, type, keyspace}) {
     this.call('clickSearchResult', {id, type, keyspace})
   }
-  createComponents () {
+  createComponents (search, landingpage) {
     this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency, this.keyspaces)
@@ -964,11 +868,11 @@ export default class Model {
     this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
-    this.search = new Search(this.call, this.keyspaces)
+    this.search = search || new Search(this.call, this.keyspaces)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
-    this.landingpage = new Landingpage(this.call, this.search, this.keyspaces)
+    this.landingpage = landingpage || new Landingpage(this.call, this.search, this.keyspaces)
   }
   compress (data) {
     return new Uint32Array(
@@ -1010,19 +914,6 @@ export default class Model {
   download (filename, buffer) {
     var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef
     FileSaver.saveAs(blob, filename)
-  }
-  mapResult (promise, msg, context) {
-    let onSuccess = result => {
-      this.call(msg, {context, result})
-    }
-    let onReject = error => {
-      this.call('fetchError', {context, msg, error})
-    }
-    if (this.isReplaying) {
-      onSuccess = () => {}
-      onReject = () => {}
-    }
-    return promise.then(onSuccess, onReject)
   }
   render (root) {
     if (root) this.root = root
