@@ -10,6 +10,7 @@ const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 
 const VERSION = '0.4.1'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
@@ -135,7 +136,11 @@ module.exports = env => {
           /min-h-full/,
           /svg.+/
         ]
-      }) : noop()
+      }) : noop(),
+      new MomentTimezoneDataPlugin({
+        startYear: 2009,
+        endYear: 2030
+      })
     ],
     output: output,
     module: {
