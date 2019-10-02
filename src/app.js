@@ -55,7 +55,7 @@ const historyPushState = (keyspace, type, id) => {
 const degreeThreshold = 100
 
 let defaultLabelType =
-      { clusterLabel: 'id',
+      { clusterLabel: 'category',
         addressLabel: 'id'
       }
 
