@@ -84,6 +84,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'dragNodeEnd',
   'changeSearchDepth',
   'changeSearchBreadth',
+  'changeSkipNumNeighbors',
   'searchNeighborsDialog',
   'searchNeighbors',
   'resultSearchNeighbors',

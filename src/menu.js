@@ -37,7 +37,8 @@ export default class Menu extends Component {
         criterion: defaultCriterion,
         params: defaultParams(),
         depth: defaultDepth,
-        breadth: defaultBreadth
+        breadth: defaultBreadth,
+        skipNumNeighbors: defaultBreadth
       }
       menuWidth = 400
       menuHeight = 400
@@ -103,7 +104,8 @@ export default class Menu extends Component {
           searchDepth: this.view.depth,
           searchBreadth: this.view.breadth,
           maxSearchBreadth: maxSearchBreadth,
-          maxSearchDepth: maxSearchDepth
+          maxSearchDepth: maxSearchDepth,
+          skipNumNeighbors: this.view.skipNumNeighbors
         }
       )
       this.setupSearch(el)
@@ -133,6 +135,7 @@ export default class Menu extends Component {
     })
     this.renderInput('searchDepth', 'changeSearchDepth', this.view.depth)
     this.renderInput('searchBreadth', 'changeSearchBreadth', this.view.breadth)
+    this.renderInput('skipNumNeighbors', 'changeSkipNumNeighbors', this.view.skipNumNeighbors)
     let form = el.querySelector('.searchValue')
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
@@ -174,6 +177,7 @@ export default class Menu extends Component {
           isOutgoing: this.view.isOutgoing,
           depth: this.view.depth,
           breadth: this.view.breadth,
+          skipNumNeighbors: this.view.skipNumNeighbors,
           params: this.view.params
         })
       })
@@ -202,7 +206,16 @@ export default class Menu extends Component {
   setSearchBreadth (d) {
     if (this.view.viewType !== 'search') return
     this.view.breadth = Math.min(d, maxSearchBreadth)
-    if (d > maxSearchBreadth) {
+    let old = this.view.skipNumNeighbors
+    this.view.skipNumNeighbors = Math.max(this.view.breadth, this.view.skipNumNeighbors)
+    if (d > maxSearchBreadth || old < this.view.breadth) {
+      this.setUpdate(true)
+    }
+  }
+  setSkipNumNeighbors (d) {
+    if (this.view.viewType !== 'search') return
+    this.view.skipNumNeighbors = Math.max(d, this.view.breadth || maxSearchBreadth)
+    if (d < this.view.skipNumNeighbors) {
       this.setUpdate(true)
     }
   }

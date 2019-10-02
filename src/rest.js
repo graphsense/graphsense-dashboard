@@ -153,7 +153,7 @@ export default class Rest {
   stats () {
     return this.json(null, '/stats')
   }
-  searchNeighbors ({id, type, isOutgoing, depth, breadth, params}) {
+  searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumNeighbors, params}) {
     let dir = isOutgoing ? 'out' : 'in'
     let keyspace = id[2]
     id = id[0]
@@ -164,7 +164,7 @@ export default class Rest {
       searchCrit = 'addresses=' + params.addresses.join(',')
     }
     let url =
-      `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}`
+      `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumNeighbors=${skipNumNeighbors}`
     let addKeyspace = (node) => {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {

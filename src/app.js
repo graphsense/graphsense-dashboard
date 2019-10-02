@@ -674,6 +674,9 @@ export default class Model extends Callable {
     this.dispatcher.on('changeSearchBreadth', value => {
       this.menu.setSearchBreadth(value)
     })
+    this.dispatcher.on('changeSkipNumNeighbors', value => {
+      this.menu.setSkipNumNeighbors(value)
+    })
     this.dispatcher.on('searchNeighbors', params => {
       logger.debug('search params', params)
       this.statusbar.addSearching(params)
