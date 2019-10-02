@@ -18,8 +18,8 @@ export default class Layout extends Component {
     this.currencyRoot = null
     this.disabled = {}
   }
-  triggerFileLoad () {
-    this.root.querySelector('#file-loader').click()
+  triggerFileLoad (loadType) {
+    this.root.querySelector(`.file-loader[data-type="${loadType}"]`).click()
   }
   setCurrency (currency) {
     this.currency = currency
@@ -75,9 +75,8 @@ export default class Layout extends Component {
   renderButtons () {
     let navbarButtons =
         [ ['new', 'new'],
-          ['save', 'save'],
-          ['load', 'load'],
-          ['export', 'exportSvg'],
+          ['load', 'toggleImport'],
+          ['export', 'toggleExport'],
           ['config', 'toggleConfig'],
           ['legend', 'toggleLegend'],
           ['undo', 'undo'],
@@ -93,17 +92,20 @@ export default class Layout extends Component {
         el.on('click', () => this.dispatcher(msg))
       }
     })
-    let loader = this.root.querySelector('#file-loader')
-    loader.addEventListener('change', (e) => {
-      let input = e.target
+    let loaders = this.root.querySelectorAll('.file-loader')
+    loaders.forEach(loader => {
+      loader.addEventListener('change', (e) => {
+        let input = e.target
+        let type = e.target.getAttribute('data-type')
 
-      let reader = new FileReader() // eslint-disable-line no-undef
-      let filename = input.files[0].name
-      reader.onload = () => {
-        let data = reader.result
-        this.dispatcher('loadFile', [data, filename])
-      }
-      reader.readAsArrayBuffer(input.files[0])
+        let reader = new FileReader() // eslint-disable-line no-undef
+        let filename = input.files[0].name
+        reader.onload = () => {
+          let data = reader.result
+          this.dispatcher('loadFile', [type, data, filename])
+        }
+        reader.readAsArrayBuffer(input.files[0])
+      })
     })
   }
   renderCurrency () {

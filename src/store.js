@@ -19,6 +19,7 @@ export default class Store {
     this.addresses = map()
     this.clusters = map()
     this.outgoingLinks = map()
+    this.notesStore = map()
   }
   /**
    * Adds an object to store if it does not exist
@@ -52,6 +53,7 @@ export default class Store {
         let outgoing = this.initOutgoing(id, object.keyspace)
         a.outgoing = outgoing
         this.addresses.set(idPrefixed, a)
+        a.notes = this.notesStore.get('address' + idPrefixed)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { a[key] = object[key] })
@@ -80,6 +82,7 @@ export default class Store {
         let outgoing = this.initOutgoing(id, object.keyspace)
         c.outgoing = outgoing
         this.clusters.set(idPrefixed, c)
+        c.notes = this.notesStore.get('cluster' + idPrefixed)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { c[key] = object[key] })
@@ -170,6 +173,19 @@ export default class Store {
     })
     return [addresses, clusters, alllinks]
   }
+  serializeNotes () {
+    let addresses = []
+    this.addresses.each(address => {
+      let s = [prefix(address.keyspace, address.id), address.notes]
+      addresses.push(s)
+    })
+    let clusters = []
+    this.clusters.each(cluster => {
+      let s = [prefix(cluster.keyspace, cluster.id), cluster.notes]
+      clusters.push(s)
+    })
+    return [addresses, clusters]
+  }
   deserialize (version, [addresses, clusters, alllinks]) {
     clusters.forEach(cluster => {
       cluster.forAddresses = cluster.addresses
@@ -193,5 +209,18 @@ export default class Store {
         this.linkOutgoing(sp[1], key, sp[0], value)
       })
     })
+  }
+  deserializeNotes (version, [addressNotes, clusterNotes]) {
+    let ser = (nodes, type) => ([idPrefixed, notes]) => {
+      let c = nodes.get(idPrefixed)
+      let unprefixed = unprefix(idPrefixed)
+      if (c) {
+        this.add({keyspace: unprefixed[0], id: unprefixed[1], notes, type})
+      } else {
+        this.notesStore.set(type + idPrefixed, notes)
+      }
+    }
+    clusterNotes.forEach(ser(this.clusters, 'cluster'))
+    addressNotes.forEach(ser(this.addresses, 'address'))
   }
 }

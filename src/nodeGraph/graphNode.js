@@ -104,6 +104,7 @@ class GraphNode extends Component {
     } else {
       size = this.labelHeight
     }
+    logger.debug('node', root.node())
     root.node().innerHTML = ''
     root.append('text')
       .style('font-size', size + 'px')

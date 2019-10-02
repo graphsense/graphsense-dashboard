@@ -1,5 +1,7 @@
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
+import exportConfig from './config/export.html'
+import importConfig from './config/import.html'
 import legendItem from './config/legendItem.html'
 import filter from './config/filter.html'
 import {addClass, removeClass, replace} from './template_utils.js'
@@ -25,6 +27,14 @@ export default class Config extends Component {
   }
   toggleLegend () {
     this.visible = this.visible === 'legend' ? null : 'legend'
+    this.setUpdate(true)
+  }
+  toggleExport () {
+    this.visible = this.visible === 'export' ? null : 'export'
+    this.setUpdate(true)
+  }
+  toggleImport () {
+    this.visible = this.visible === 'import' ? null : 'import'
     this.setUpdate(true)
   }
   setLocale (locale) {
@@ -65,6 +75,20 @@ export default class Config extends Component {
         itemEl.querySelector('.legendItem').innerHTML = name
         el.appendChild(itemEl)
       }
+    } else if (this.visible === 'export') {
+      el.innerHTML = exportConfig
+      el.querySelectorAll('button[data-msg]').forEach(button => {
+        let msg = button.getAttribute('data-msg')
+        if (!msg) return
+        button.addEventListener('click', () => { this.dispatcher(msg) })
+      })
+    } else if (this.visible === 'import') {
+      el.innerHTML = importConfig
+      el.querySelectorAll('button[data-msg]').forEach(button => {
+        let msg = button.getAttribute('data-msg')
+        if (!msg) return
+        button.addEventListener('click', () => { this.dispatcher(msg) })
+      })
     }
     super.render()
     return this.root

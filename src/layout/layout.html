@@ -1,6 +1,7 @@
 <div class="h-screen">
   <div class="absolute pin-t pin-l w-full header-height shadow-md z-22">
-    <input type="file" id="file-loader">
+    <input type="file" class="file-loader" data-type="load">
+    <input type="file" class="file-loader" data-type="loadNotes">
   </div>
   <header class="p-2 w-full border-b layout-border flex flex-row justify-between z-30 relative header-height bg-white">
     <div class="text-left"> 
@@ -11,9 +12,8 @@
     <div class="navbar flex flex-row items-center justify-end">
       <div id="layout-currency-config" class="p-2" title="Change currency"></div>
       <button id="navbar-new" title="Start from scratch" class="nav-btn"><i class="fas fa-file text-lg"></i></button>
-      <button id="navbar-save" title="Save to file" class="nav-btn"><i class="fas fa-save text-lg"></i></button>
-      <button id="navbar-load" title="Load from file" class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
-      <button id="navbar-export" title="Export to SVG file" class="nav-btn"><i class="fas fa-download text-lg"></i></button>
+      <button id="navbar-load" title="Load from file ..." class="nav-btn"><i class="fas fa-folder-open text-lg"></i></button>
+      <button id="navbar-export" title="Export ..." class="nav-btn"><i class="fas fa-download text-lg"></i></button>
       <button id="navbar-undo" title="Undo last graph change" class="nav-btn"><i class="fas fa-undo text-lg"></i></button>
       <button id="navbar-redo" title="Redo undone graph change" class="nav-btn"><i class="fas fa-redo text-lg"></i></button>
       <button id="navbar-config" title="Configuration options" class="nav-btn"><i class="fas fa-cog text-lg"></i></button>

@@ -570,6 +570,18 @@ export default class Model extends Callable {
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.serialize())
     })
+    this.dispatcher.on('saveNotes', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.call('saveNotes', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.serializeNotes())
+    })
     this.dispatcher.on('exportSvg', () => {
       if (this.isReplaying) return
       let classMap = map()
@@ -602,20 +614,29 @@ export default class Model extends Callable {
     this.dispatcher.on('load', () => {
       if (this.isReplaying) return
       if (this.promptUnsavedWork('load another file')) {
-        this.layout.triggerFileLoad()
+        this.layout.triggerFileLoad('load')
       }
     })
+    this.dispatcher.on('loadNotes', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadNotes')
+    })
     this.dispatcher.on('loadFile', (params) => {
-      let data = params[0]
-      let filename = params[1]
-      let stage = params[2]
+      let type = params[0]
+      let data = params[1]
+      let filename = params[2]
+      let stage = params[3]
       if (!stage) {
         this.statusbar.addMsg('loadFile', filename)
-        this.call('loadFile', [data, filename, true])
+        this.call('loadFile', [type, data, filename, true])
         return
       }
       this.statusbar.addMsg('loadedFile', filename)
-      this.deserialize(data)
+      if (type === 'load') {
+        this.deserialize(data)
+      } else if (type === 'loadNotes') {
+        this.deserializeNotes(data)
+      }
     })
     this.dispatcher.on('showLogs', () => {
       this.statusbar.show()
@@ -725,6 +746,12 @@ export default class Model extends Callable {
     this.dispatcher.on('toggleLegend', () => {
       this.config.setCategoryColors(this.graph.getCategoryColors())
       this.config.toggleLegend()
+    })
+    this.dispatcher.on('toggleExport', () => {
+      this.config.toggleExport()
+    })
+    this.dispatcher.on('toggleImport', () => {
+      this.config.toggleImport()
     })
     this.dispatcher.on('downloadTable', () => {
       if (this.isReplaying) return
@@ -865,6 +892,12 @@ export default class Model extends Callable {
       this.layout.serialize()
     ])
   }
+  serializeNotes () {
+    return this.compress([
+      VERSION, // eslint-disable-line no-undef
+      this.store.serializeNotes()
+    ])
+  }
   deserialize (buffer) {
     let data = this.decompress(buffer)
     this.createComponents()
@@ -874,8 +907,14 @@ export default class Model extends Callable {
     this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
   }
+  deserializeNotes (buffer) {
+    let data = this.decompress(buffer)
+    this.store.deserializeNotes(data[0], data[1])
+    this.graph.setUpdate('layers')
+  }
   download (filename, buffer) {
     var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef
+    logger.debug('saving to file', filename)
     FileSaver.saveAs(blob, filename)
   }
   render (root) {
