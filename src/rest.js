@@ -7,7 +7,9 @@ const options = {
   credentials: 'include',
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    // never expiring token
+    'Authorization': 'Bearer ' + JWT_TOKEN // eslint-disable-line no-undef
   }
 }
 
@@ -31,7 +33,9 @@ export default class Rest {
   }
   remoteJson (keyspace, url, field) {
     let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    options.headers['Authorization'] = 'Bearer ' + this.access_token
+    if (this.access_token) {
+      options.headers['Authorization'] = 'Bearer ' + this.access_token
+    }
     return json(newurl, options)
       .then(result => {
         if (field) {
@@ -174,6 +178,7 @@ export default class Rest {
   }
   login (username, password) {
     options.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
+    // using d3 json directly to pass options
     return json(this.baseUrl + '/login', options)
       .catch(error => {
         // normalize message

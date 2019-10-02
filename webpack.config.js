@@ -17,7 +17,7 @@ const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
 // to be injected in static and dynamic pages
-const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
+const STATICPAGE_CLASSES = 'flex flex-col min-h-full landingpage'
 
 // compose pre-rendered landing page
 let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
@@ -81,7 +81,7 @@ module.exports = env => {
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
-        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\'',
+        JWT_TOKEN: !IS_DEV ? '\'\'' : '\'' + JWT_TOKEN + '\'',
         SUPPORTED_KEYSPACES: '\'' + JSON.stringify(SUPPORTED_KEYSPACES).replace(/'/g, '"') + '\''
       }),
       new webpack.ProvidePlugin({
