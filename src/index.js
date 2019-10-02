@@ -46,8 +46,14 @@ let model = new Start(locale)
 
 model.render(document.body)
 
-/*
 if (module.hot) {
+  let Model
+  import('./app.js').then(app => { // works despite of parsing error of eslint
+    Model = app.default
+    let root = model.root
+    model = new Model(locale, model.rest, model.login, model.search, model.landingpage)
+    model.root = root
+  })
   module.hot.accept([
     './browser.js',
     './browser/address.html',
@@ -60,6 +66,8 @@ if (module.hot) {
     './browser/option.html',
     './search/search.html',
     './search/search.js',
+    './login/login.html',
+    './login/login.js',
     './status/status.html',
     './statusbar.js',
     './browser/table.html',
@@ -83,7 +91,9 @@ if (module.hot) {
     './layout.js',
     './layout/layout.html',
     './component.js',
-    './model.js',
+    './app.js',
+    './config.js',
+    './start.js',
     './rest.js',
     './store.js',
     './template_utils.js',
@@ -91,6 +101,7 @@ if (module.hot) {
   ], () => {
     // dispatcher.history = [debugHistory[0]]
 
+    if(!Model) return
     model = new Model(dispatcher)
     model.replay()
     model.render(document.body)
@@ -99,4 +110,3 @@ if (module.hot) {
     navigator.serviceWorker.register('./sw.js')
   }
 }
-*/
