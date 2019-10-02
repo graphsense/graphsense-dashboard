@@ -431,9 +431,10 @@ svg.slash path {
   @apply w-full
 }
 
-h2 {
+.landingpage h2 {
   font-family: Conv_Octarine-Bold;
   @apply pt-0 pb-6 w-full text-center text-gs-base text-3xl;
+  @apply mb-4 mt-6;
 }
 
 .currency {
@@ -472,9 +473,6 @@ h2 {
   @apply text-xl text-grey-dark pt-8
 }
 
-h2 {
-  @apply mb-4 mt-6
-}
 
 .static-page p {
   @apply mb-3 mt-2
