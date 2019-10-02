@@ -51,7 +51,8 @@
     "webpack-dev-server": "^3.8.1"
   },
   "scripts": {
-    "build": "./build.sh",
+    "local_build": "build.sh",
+    "build": "rm -rf official && ./node_modules/.bin/webpack --env.production && cp -r dist official && rm official/*.js && mv official/officialpage.html official/index.html",
     "start": "webpack-dev-server"
   },
   "author": "",
