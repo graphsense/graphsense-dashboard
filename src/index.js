@@ -11,15 +11,9 @@ import moment from 'moment'
 import Logger from './logger.js'
 import jstz from 'jstimezonedetect'
 import 'moment-timezone'
+import 'numeral/locales'
 
 Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line no-undef
-
-numeral.register('locale', 'de', {
-  delimiters: {
-    thousands: '.',
-    decimal: ','
-  }
-})
 
 const getNavigatorLanguage = () => {
   if (navigator.languages && navigator.languages.length) {
@@ -31,6 +25,18 @@ const getNavigatorLanguage = () => {
 
 const locale = getNavigatorLanguage().split('-')[0]
 numeral.locale(locale)
+try {
+  numeral.localeData(locale)
+} catch (e) {
+  console.warn(`Couldn't find locale '${locale}', falling back to 'en'`)
+  numeral.locale('en')
+}
+
+if (locale === 'de') {
+  // overwrite locale format
+  let de = numeral.localeData(locale)
+  de.delimiters.thousands = '.'
+}
 moment.locale(locale)
 
 const timezone = jstz.determine().name()
@@ -39,7 +45,6 @@ moment.tz.setDefault(timezone)
 let model = new Start(locale)
 
 model.render(document.body)
-model.loadApp()
 
 /*
 if (module.hot) {
