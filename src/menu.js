@@ -38,7 +38,7 @@ export default class Menu extends Component {
         params: defaultParams(),
         depth: defaultDepth,
         breadth: defaultBreadth,
-        skipNumNeighbors: defaultBreadth
+        skipNumAddresses: defaultBreadth
       }
       menuWidth = 400
       menuHeight = 400
@@ -69,48 +69,54 @@ export default class Menu extends Component {
       if (this.search) this.search.render()
       return this.root
     }
-    if (!this.view.viewType) {
-      this.root.innerHTML = ''
-      super.render()
-      return
+    if (this.shouldUpdate(true)) {
+      if (!this.view.viewType) {
+        this.root.innerHTML = ''
+        super.render()
+        return
+      }
+      this.root.innerHTML = menuLayout
+      let menu = this.root.querySelector('#menu-frame')
+      menu.addEventListener('click', (e) => {
+        this.dispatcher('hideContextmenu')
+      })
+      menu.addEventListener('contextmenu', (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        return false
+      })
+      let box = this.root.querySelector('#menu-box')
+      box.style.left = this.menuX + 'px'
+      box.style.top = this.menuY + 'px'
+      box.addEventListener('click', (e) => {
+        e.stopPropagation()
+      })
+      let el = this.root.querySelector('#config')
+      let title
+      if (this.view.viewType === 'node') {
+        title = 'Notes'
+        el.innerHTML = notes
+        this.setupNotes(el)
+      } else if (this.view.viewType === 'search') {
+        let dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
+        title = `Search ${dir} neighbors`
+        el.innerHTML = replace(searchDialog,
+          {
+            searchDepth: this.view.depth,
+            searchBreadth: this.view.breadth,
+            maxSearchBreadth: maxSearchBreadth,
+            maxSearchDepth: maxSearchDepth,
+            skipNumAddresses: this.view.skipNumAddresses
+          }
+        )
+        this.setupSearch(el)
+      }
+      this.root.querySelector('.title').innerHTML = title
+    } else if (this.shouldUpdate('skipNumAddresses')) {
+      let el = this.root.querySelector('#skipNumAddresses')
+      el.value = this.view.skipNumAddresses
+      el.setAttribute('min', this.view.breadth)
     }
-    this.root.innerHTML = menuLayout
-    let menu = this.root.querySelector('#menu-frame')
-    menu.addEventListener('click', (e) => {
-      this.dispatcher('hideContextmenu')
-    })
-    menu.addEventListener('contextmenu', (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      return false
-    })
-    let box = this.root.querySelector('#menu-box')
-    box.style.left = this.menuX + 'px'
-    box.style.top = this.menuY + 'px'
-    box.addEventListener('click', (e) => {
-      e.stopPropagation()
-    })
-    let el = this.root.querySelector('#config')
-    let title
-    if (this.view.viewType === 'node') {
-      title = 'Notes'
-      el.innerHTML = notes
-      this.setupNotes(el)
-    } else if (this.view.viewType === 'search') {
-      let dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
-      title = `Search ${dir} neighbors`
-      el.innerHTML = replace(searchDialog,
-        {
-          searchDepth: this.view.depth,
-          searchBreadth: this.view.breadth,
-          maxSearchBreadth: maxSearchBreadth,
-          maxSearchDepth: maxSearchDepth,
-          skipNumNeighbors: this.view.skipNumNeighbors
-        }
-      )
-      this.setupSearch(el)
-    }
-    this.root.querySelector('.title').innerHTML = title
     super.render()
     return this.root
   }
@@ -135,7 +141,7 @@ export default class Menu extends Component {
     })
     this.renderInput('searchDepth', 'changeSearchDepth', this.view.depth)
     this.renderInput('searchBreadth', 'changeSearchBreadth', this.view.breadth)
-    this.renderInput('skipNumNeighbors', 'changeSkipNumNeighbors', this.view.skipNumNeighbors)
+    this.renderInput('skipNumAddresses', 'changeSkipNumAddresses', this.view.skipNumAddresses)
     let form = el.querySelector('.searchValue')
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
@@ -177,7 +183,7 @@ export default class Menu extends Component {
           isOutgoing: this.view.isOutgoing,
           depth: this.view.depth,
           breadth: this.view.breadth,
-          skipNumNeighbors: this.view.skipNumNeighbors,
+          skipNumAddresses: this.view.skipNumAddresses,
           params: this.view.params
         })
       })
@@ -206,16 +212,16 @@ export default class Menu extends Component {
   setSearchBreadth (d) {
     if (this.view.viewType !== 'search') return
     this.view.breadth = Math.min(d, maxSearchBreadth)
-    let old = this.view.skipNumNeighbors
-    this.view.skipNumNeighbors = Math.max(this.view.breadth, this.view.skipNumNeighbors)
-    if (d > maxSearchBreadth || old < this.view.breadth) {
+    this.view.skipNumAddresses = Math.max(this.view.breadth, this.view.skipNumAddresses)
+    if (d > maxSearchBreadth) {
       this.setUpdate(true)
     }
+    this.setUpdate('skipNumAddresses')
   }
-  setSkipNumNeighbors (d) {
+  setSkipNumAddresses (d) {
     if (this.view.viewType !== 'search') return
-    this.view.skipNumNeighbors = Math.max(d, this.view.breadth || maxSearchBreadth)
-    if (d < this.view.skipNumNeighbors) {
+    this.view.skipNumAddresses = Math.max(d, this.view.breadth || maxSearchBreadth)
+    if (d < this.view.skipNumAddresses) {
       this.setUpdate(true)
     }
   }
