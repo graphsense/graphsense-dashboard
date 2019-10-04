@@ -12,7 +12,7 @@ const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 
-const VERSION = '0.4.1'
+const VERSION = '0.4.2-dev'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
