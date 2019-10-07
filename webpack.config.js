@@ -11,6 +11,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
+const CompressionPlugin = require('compression-webpack-plugin')
 
 const VERSION = '0.4.2-dev'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
@@ -140,7 +141,8 @@ module.exports = env => {
       new MomentTimezoneDataPlugin({
         startYear: 2009,
         endYear: 2030
-      })
+      }),
+      new CompressionPlugin()
     ],
     output: output,
     module: {
