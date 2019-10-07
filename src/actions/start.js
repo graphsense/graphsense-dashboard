@@ -56,6 +56,7 @@ const searchresultLabels = function ({context, result}) {
 
 const login = function ([username, password]) {
   this.login.loading(true)
+  this.login.setUsername(username)
   this.mapResult(this.rest.login(username, password), 'loginResult')
 }
 

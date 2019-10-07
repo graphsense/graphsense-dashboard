@@ -199,8 +199,15 @@ export default class Statusbar extends Component {
     if (typeof msg === 'string') {
       return msg
     }
+
     if (msg.error) {
-      return `<span class="text-gs-red">Error requesting ${msg.error.requestURL}: ${msg.error.message}`
+      let message
+      if (msg.error.requestURL) {
+        message = `Error requesting ${msg.error.requestURL}: ${msg.error.message}`
+      } else {
+        message = msg.error
+      }
+      return `<span class="text-gs-red">${message}</span>`
     }
   }
   renderVisibility () {

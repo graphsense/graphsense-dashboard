@@ -49,6 +49,26 @@ export default class Layout extends Component {
       this.search.setUpdate(true)
       this.statusbar.setUpdate(true)
       this.renderButtons()
+      let loaders = this.root.querySelectorAll('.file-loader')
+      loaders.forEach(loader => {
+        loader.addEventListener('change', (e) => {
+          let input = e.target
+          let type = e.target.getAttribute('data-type')
+          let accept = e.target.getAttribute('accept')
+
+          let reader = new FileReader() // eslint-disable-line no-undef
+          let filename = input.files[0].name
+          reader.onload = () => {
+            let data = reader.result
+            this.dispatcher('loadFile', [type, data, filename])
+          }
+          if (accept === '.gs') {
+            reader.readAsArrayBuffer(input.files[0])
+          } else {
+            reader.readAsText(input.files[0])
+          }
+        })
+      })
       this.root.querySelector('#layout-logo').addEventListener('click', () => {
         this.dispatcher('gohome')
       })
@@ -91,21 +111,6 @@ export default class Layout extends Component {
         removeClass(el.node(), 'disabled')
         el.on('click', () => this.dispatcher(msg))
       }
-    })
-    let loaders = this.root.querySelectorAll('.file-loader')
-    loaders.forEach(loader => {
-      loader.addEventListener('change', (e) => {
-        let input = e.target
-        let type = e.target.getAttribute('data-type')
-
-        let reader = new FileReader() // eslint-disable-line no-undef
-        let filename = input.files[0].name
-        reader.onload = () => {
-          let data = reader.result
-          this.dispatcher('loadFile', [type, data, filename])
-        }
-        reader.readAsArrayBuffer(input.files[0])
-      })
     })
   }
   renderCurrency () {

@@ -23,6 +23,7 @@ import TransactionsTable from './browser/transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
 import startactions from './actions/start.js'
 import {prefixLength} from './globals.js'
+import YAML from 'yaml'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -563,6 +564,7 @@ export default class Model extends Callable {
       if (!stage) {
         // update status bar before starting serializing
         this.statusbar.addMsg('saving')
+        this.config.hide()
         this.call('save', true)
         return
       }
@@ -575,12 +577,26 @@ export default class Model extends Callable {
       if (!stage) {
         // update status bar before starting serializing
         this.statusbar.addMsg('saving')
+        this.config.hide()
         this.call('saveNotes', true)
         return
       }
       let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.serializeNotes())
+    })
+    this.dispatcher.on('saveYAML', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.config.hide()
+        this.call('saveYAML', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.generateTagpack())
     })
     this.dispatcher.on('exportSvg', () => {
       if (this.isReplaying) return
@@ -610,16 +626,24 @@ export default class Model extends Callable {
       svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
       let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
       this.download(filename, svg)
+      this.config.hide()
     })
     this.dispatcher.on('load', () => {
       if (this.isReplaying) return
       if (this.promptUnsavedWork('load another file')) {
         this.layout.triggerFileLoad('load')
       }
+      this.config.hide()
     })
     this.dispatcher.on('loadNotes', () => {
       if (this.isReplaying) return
       this.layout.triggerFileLoad('loadNotes')
+      this.config.hide()
+    })
+    this.dispatcher.on('loadYAML', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadYAML')
+      this.config.hide()
     })
     this.dispatcher.on('loadFile', (params) => {
       let type = params[0]
@@ -636,6 +660,8 @@ export default class Model extends Callable {
         this.deserialize(data)
       } else if (type === 'loadNotes') {
         this.deserializeNotes(data)
+      } else if (type === 'loadYAML') {
+        this.loadTagpack(data)
       }
     })
     this.dispatcher.on('showLogs', () => {
@@ -900,6 +926,28 @@ export default class Model extends Callable {
       VERSION, // eslint-disable-line no-undef
       this.store.serializeNotes()
     ])
+  }
+  generateTagpack () {
+    return YAML.stringify({
+      title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
+      creator: this.login.getUsername(),
+      lastmod: moment().format('YYYY-MM-DD'),
+      tags: this.store.getNotes()
+    })
+  }
+  loadTagpack (yaml) {
+    let data
+    try {
+      data = YAML.parse(yaml)
+      if (!data) throw new Error('result is empty')
+    } catch (e) {
+      let msg = 'Could not parse YAML file'
+      this.statusbar.addMsg('error', msg + ': ' + e.message)
+      console.error(msg)
+      return
+    }
+    this.store.addNotes(data.tags)
+    this.graph.setUpdate('layers')
   }
   deserialize (buffer) {
     let data = this.decompress(buffer)

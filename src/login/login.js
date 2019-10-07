@@ -12,6 +12,12 @@ export default class Login extends Component {
     this.isLoading = isLoading
     this.setUpdate('loading')
   }
+  setUsername (username) {
+    this.username = username
+  }
+  getUsername () {
+    return this.username || ''
+  }
   error (msg) {
     this.errorMessage = msg
     this.setUpdate('error')

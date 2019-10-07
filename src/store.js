@@ -186,6 +186,37 @@ export default class Store {
     })
     return [addresses, entities]
   }
+  getNotes () {
+    let tags = []
+    this.addresses.each(address => {
+      if (!address.notes) return
+      tags.push({
+        address: address.id,
+        currency: address.keyspace.toUpperCase(),
+        note: address.notes
+      })
+    })
+    this.entities.each(entity => {
+      if (!entity.notes) return
+      tags.push({
+        entity: entity.id,
+        currency: entity.keyspace.toUpperCase(),
+        note: entity.notes
+      })
+    })
+    return tags
+  }
+  addNotes (tags) {
+    tags.forEach(tag => {
+      let keyspace = tag.currency.toLowerCase()
+      let idPrefixed = prefix(keyspace, tag.address)
+      if (this.addresses.get(idPrefixed)) {
+        this.add({keyspace, id: tag.address, notes: tag.note, type: 'address'})
+      } else {
+        this.notesStore.set('address' + idPrefixed, tag.note)
+      }
+    })
+  }
   deserialize (version, [addresses, entities, alllinks]) {
     entities.forEach(entity => {
       entity.forAddresses = entity.addresses
