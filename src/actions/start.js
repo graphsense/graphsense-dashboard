@@ -66,6 +66,7 @@ const loginResult = function ({result}) {
     this.rest.setRefreshToken(result.refresh_token)
     import('../app.js').then(app => { // works despite of parsing error of eslint
       this.app = new app.default(this.locale, this.rest, this.login, this.search, this.landingpage)
+      this.app.root = this.root
       this.call('appLoaded')
     })
     return
@@ -120,8 +121,8 @@ const fetchError = function({context, msg, error}) {
         case 'resultEgonet':
           this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
           break
-        case 'resultClusterAddresses':
-          this.statusbar.removeLoading('addresses of cluster ' + context[0])
+        case 'resultEntityAddresses':
+          this.statusbar.removeLoading('addresses of entity ' + context[0])
           break
         default:
           this.statusbar.addMsg('error', error)

@@ -113,14 +113,14 @@ export default class Statusbar extends Component {
   }
   makeTooltip (type) {
     switch (type) {
-      case 'cluster':
-        return 'A cluster represents an entity dealing with one or more addresses.'
+      case 'entity':
+        return 'An entity represents an entity dealing with one or more addresses.'
       case 'address':
         return 'An address which can receive and spend coins.'
       case 'link':
         return 'A link indicates that there exist one or more transactions between the nodes. Flow is always from left to right.'
       case 'shadow':
-        return 'A shadow link connects identical addresses and clusters'
+        return 'A shadow link connects identical addresses and entities'
     }
     return ''
   }
@@ -141,7 +141,7 @@ export default class Statusbar extends Component {
       let crit = ''
       if (search.params.category) crit = `category ${search.params.category}`
       if (search.params.addresses.length > 0) crit = 'addresses ' + search.params.addresses.join(',')
-      let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}) ...`
+      let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}, skip if more than ${search.skipNumAddresses} addresses) ...`
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
@@ -236,20 +236,20 @@ export default class Statusbar extends Component {
         let filename_ = args[0]
         logger.debug('loadedfile msg', filename_)
         return `Loaded file ${filename_}`
-      case 'loadingClusterFor':
-        return `Loading cluster for ${args[0]}`
-      case 'loadedClusterFor':
-        return `Loaded cluster for ${args[0]}`
-      case 'noClusterFor':
-        return `No cluster for ${args[0]}`
+      case 'loadingEntityFor':
+        return `Loading entity for ${args[0]}`
+      case 'loadedEntityFor':
+        return `Loaded entity for ${args[0]}`
+      case 'noEntityFor':
+        return `No entity for ${args[0]}`
       case 'loadingTagsFor':
         return `Loading tags for ${args[0]} ${args[1]}`
       case 'loadedTagsFor':
         return `Loaded tags for ${args[0]} ${args[1]}`
-      case 'loadingClusterAddresses':
-        return `Trying to load ${args[1]} addresses for cluster ${args[0]}`
-      case 'loadedClusterAddresses':
-        return `Loaded ${args[1]} addresses for cluster ${args[0]}`
+      case 'loadingEntityAddresses':
+        return `Trying to load ${args[1]} addresses for entity ${args[0]}`
+      case 'loadedEntityAddresses':
+        return `Loaded ${args[1]} addresses for entity ${args[0]}`
       case 'removeNode':
         return `Removed node of ${args[0]} ${args[1]}`
       case 'searchResult':

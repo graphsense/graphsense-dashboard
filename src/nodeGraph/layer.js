@@ -66,31 +66,31 @@ export default class Layer extends Component {
     let half = (max + min) / 2
     return node.getYForLinks() < half
   }
-  render (clusterRoot, addressRoot) {
-    if (clusterRoot) this.clusterRoot = clusterRoot
+  render (entityRoot, addressRoot) {
+    if (entityRoot) this.entityRoot = entityRoot
     if (addressRoot) this.addressRoot = addressRoot
-    if (!this.clusterRoot) throw new Error('no clusterRoot defined')
+    if (!this.entityRoot) throw new Error('no entityRoot defined')
     if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
-    let renderNodeWithPosition = (node, clusterRoot, addressesRoot) => {
+    let renderNodeWithPosition = (node, entityRoot, addressesRoot) => {
       // reset absolute coords of node
-      clusterRoot = clusterRoot || node.root
+      entityRoot = entityRoot || node.root
       addressesRoot = addressesRoot || node.addressesRoot
       node.x = 0
       node.y = 0
-      node.render(clusterRoot)
-      clusterRoot.attr('transform', `translate(0, ${cumY})`)
+      node.render(entityRoot)
+      entityRoot.attr('transform', `translate(0, ${cumY})`)
       // render addresses
       node.setUpdate(true)
       node.renderAddresses(addressesRoot)
       addressesRoot.attr('transform', `translate(${node.dx}, ${cumY + node.dy})`)
-      // translate cluster node and its addresses
+      // translate entity node and its addresses
       node.translate(0, cumY)
     }
     this.getSortedNodes().forEach((node) => {
-      // render clusters
+      // render entities
       if (this.shouldUpdate()) {
-        let g = this.clusterRoot.append('g')
+        let g = this.entityRoot.append('g')
         let ag = this.addressRoot.append('g')
         node.setUpdate(true)
         renderNodeWithPosition(node, g, ag)

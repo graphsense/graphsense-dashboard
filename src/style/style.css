@@ -228,11 +228,11 @@ svg .addressNodeRect{
   /* defined inline to allow for export in svg file */
 }
 
-svg .clusterNode {
+svg .entityNode {
   cursor: pointer;
 }
 
-svg .clusterNodeRect{
+svg .entityNodeRect{
   /* defined inline to allow for export in svg file */
 }
 

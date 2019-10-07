@@ -2,9 +2,9 @@ import Table from './table.js'
 import {maxAddableNodes} from '../globals.js'
 
 export default class AddressesTable extends Table {
-  constructor (dispatcher, index, total, clusterId, currency, keyspace, nodeIsInGraph) {
+  constructor (dispatcher, index, total, entityId, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
-    this.clusterId = clusterId
+    this.entityId = entityId
     this.columns = [
       { name: 'Address',
         data: 'address',
@@ -34,7 +34,7 @@ export default class AddressesTable extends Table {
     this.loadMessage = 'loadAddresses'
     this.resultField = 'addresses'
     this.selectMessage = 'selectAddress'
-    this.loadParams = this.clusterId
+    this.loadParams = this.entityId
     if (total < maxAddableNodes) this.addOption(this.addAllOption())
   }
 }

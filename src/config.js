@@ -62,7 +62,7 @@ export default class Config extends Component {
     let el = this.root.querySelector('#dropdown')
     if (this.visible === 'config') {
       el.innerHTML = graphConfig
-      this.renderSelect('clusterLabel', 'changeClusterLabel', this.labelType['clusterLabel'])
+      this.renderSelect('entityLabel', 'changeEntityLabel', this.labelType['entityLabel'])
       this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType['addressLabel'])
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)
@@ -137,7 +137,7 @@ export default class Config extends Component {
     this.dispatcher('loadEgonet', {id: this.node.id, isOutgoing, type: this.view, limit: filters.get('limit')})
   }
   applyAddressFilters () {
-    this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
+    this.dispatcher('loadEntityAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
   renderSelect (id, message, selectedValue) {
     let select = this.root.querySelector('select#' + id)
@@ -160,8 +160,8 @@ export default class Config extends Component {
   setAddressLabel (labelType) {
     this.labelType['address'] = labelType
   }
-  setClusterLabel (labelType) {
-    this.labelType['cluster'] = labelType
+  setEntityLabel (labelType) {
+    this.labelType['entity'] = labelType
   }
   setTxLabel (labelType) {
     this.txLabelType = labelType

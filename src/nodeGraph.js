@@ -6,12 +6,12 @@ import {hsl} from 'd3-color'
 import {linkHorizontal} from 'd3-shape'
 import {zoom, zoomIdentity} from 'd3-zoom'
 import Layer from './nodeGraph/layer.js'
-import ClusterNode from './nodeGraph/clusterNode.js'
+import EntityNode from './nodeGraph/entityNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
-import {clusterWidth, categories, expandHandleWidth} from './globals.js'
+import {entityWidth, categories, expandHandleWidth} from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -29,11 +29,11 @@ const hsl2rgb = (h, s, l) => {
 }
 
 const lightness = {
-  'cluster': 0.75,
+  'entity': 0.75,
   'address': 0.88
 }
 const defaultColor = {
-  'cluster': hsl2rgb(178, 0, 0.95),
+  'entity': hsl2rgb(178, 0, 0.95),
   'address': hsl2rgb(178, 0, 1)
 }
 
@@ -59,10 +59,10 @@ export default class NodeGraph extends Component {
     this.labelType = labelType
     this.txLabelType = txLabelType
     // nodes of the graph
-    this.clusterNodes = map()
+    this.entityNodes = map()
     this.addressNodes = map()
-    // ids of addresses/clusters present in graph
-    this.references = {address: map(), cluster: map()}
+    // ids of addresses/entities present in graph
+    this.references = {address: map(), entity: map()}
     this.adding = set()
     this.selectedNode = null
     this.highlightedNodes = []
@@ -87,10 +87,10 @@ export default class NodeGraph extends Component {
     }
     this.colors =
       {
-        'cluster': {
-          categories: this.colorGen(this.colorMapCategories, 'cluster'),
-          tags: this.colorGen(this.colorMapTags, 'cluster'),
-          range: (v) => defaultColor['cluster']
+        'entity': {
+          categories: this.colorGen(this.colorMapCategories, 'entity'),
+          tags: this.colorGen(this.colorMapTags, 'entity'),
+          range: (v) => defaultColor['entity']
         },
         'address': {
           categories: this.colorGen(this.colorMapCategories, 'address'),
@@ -113,8 +113,8 @@ export default class NodeGraph extends Component {
   }
   setNodes (node, type) {
     let nodes
-    if (type === 'cluster') {
-      nodes = this.clusterNodes
+    if (type === 'entity') {
+      nodes = this.entityNodes
     } else if (type === 'address') {
       nodes = this.addressNodes
     }
@@ -125,8 +125,8 @@ export default class NodeGraph extends Component {
   }
   removeFromNodes (nodeId, type) {
     let nodes
-    if (type === 'cluster') {
-      nodes = this.clusterNodes
+    if (type === 'entity') {
+      nodes = this.entityNodes
     } else if (type === 'address') {
       nodes = this.addressNodes
     }
@@ -142,19 +142,19 @@ export default class NodeGraph extends Component {
   setAddressNodes (node) {
     this.setNodes(node, 'address')
   }
-  setClusterNodes (node) {
-    this.setNodes(node, 'cluster')
+  setEntityNodes (node) {
+    this.setNodes(node, 'entity')
   }
   removeAddressNode (nodeId) {
     this.removeFromNodes(nodeId, 'address')
   }
-  removeClusterNode (nodeId) {
-    this.removeFromNodes(nodeId, 'cluster')
+  removeEntityNode (nodeId) {
+    this.removeFromNodes(nodeId, 'entity')
   }
   clearNodes (type) {
     let nodes
-    if (type === 'cluster') {
-      nodes = this.clusterNodes
+    if (type === 'entity') {
+      nodes = this.entityNodes
     } else if (type === 'address') {
       nodes = this.addressNodes
     }
@@ -195,7 +195,7 @@ export default class NodeGraph extends Component {
   }
   loadSnapshot (store, s) {
     this.clearNodes('address')
-    this.clearNodes('cluster')
+    this.clearNodes('entity')
     this.layers = []
     this.deserializeGraph(null, store, s[0], s[1], s[2])
     this.setUpdate('layers')
@@ -210,8 +210,8 @@ export default class NodeGraph extends Component {
     let nodes
     if (type === 'address') {
       nodes = this.addressNodes
-    } else if (type === 'cluster') {
-      nodes = this.clusterNodes
+    } else if (type === 'entity') {
+      nodes = this.entityNodes
     }
     return nodes.get(id)
   }
@@ -223,26 +223,26 @@ export default class NodeGraph extends Component {
   dragNode (id, type, dx, dy) {
     let layer = this.findLayer(id[1])
     if (!layer) return
-    let cluster = layer.nodes.get(id)
-    if (!cluster) return
+    let entity = layer.nodes.get(id)
+    if (!entity) return
 
     dx /= this.transform.k
     dy /= this.transform.k
 
-    cluster.ddx += dx
-    cluster.ddy += dy
+    entity.ddx += dx
+    entity.ddy += dy
 
-    if (cluster.ddx - 2 * expandHandleWidth < margin / -2) return
-    if (cluster.ddx + 2 * expandHandleWidth > margin / 2) return
+    if (entity.ddx - 2 * expandHandleWidth < margin / -2) return
+    if (entity.ddx + 2 * expandHandleWidth > margin / 2) return
 
     let nodes = layer.nodes.values()
-    let x = cluster.x + cluster.ddx - expandHandleWidth
-    let y = cluster.y + cluster.ddy
-    let cw = cluster.getWidthForLinks()
-    let ch = cluster.getHeightForLinks()
+    let x = entity.x + entity.ddx - expandHandleWidth
+    let y = entity.y + entity.ddy
+    let cw = entity.getWidthForLinks()
+    let ch = entity.getHeightForLinks()
     for (let i = 0; i < nodes.length; i++) {
       let sister = nodes[i]
-      if (sister === cluster) continue
+      if (sister === entity) continue
       let sx = sister.getXForLinks()
       let sy = sister.getYForLinks()
       let sw = sister.getWidthForLinks()
@@ -255,23 +255,23 @@ export default class NodeGraph extends Component {
           )
       ) return
     }
-    cluster.dx = cluster.ddx
-    cluster.dy = cluster.ddy
-    cluster.setUpdate('position')
+    entity.dx = entity.ddx
+    entity.dy = entity.ddy
+    entity.setUpdate('position')
     this.setUpdate('link', id)
   }
   dragNodeEnd (id, type) {
-    let cluster = this.clusterNodes.get(id)
-    if (!cluster) return
-    cluster.ddx = cluster.dx
-    cluster.ddy = cluster.dy
+    let entity = this.entityNodes.get(id)
+    if (!entity) return
+    entity.ddx = entity.dx
+    entity.ddy = entity.dy
     this.dirty = true
   }
-  sortClusterAddresses (id, property) {
-    let cluster = this.clusterNodes.get(id)
-    logger.debug('sort addresses cluster', cluster)
-    if (!cluster) return
-    cluster.sortAddresses(property)
+  sortEntityAddresses (id, property) {
+    let entity = this.entityNodes.get(id)
+    logger.debug('sort addresses entity', entity)
+    if (!entity) return
+    entity.sortAddresses(property)
     this.setUpdate('layers')
   }
   deselect () {
@@ -336,14 +336,14 @@ export default class NodeGraph extends Component {
   setCurrency (currency) {
     this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
-    this.clusterNodes.each(node => node.setCurrency(currency))
+    this.entityNodes.each(node => node.setCurrency(currency))
     if (this.txLabelType === 'estimatedValue') {
       this.setUpdate('links')
     }
   }
-  setClusterLabel (labelType) {
-    this.labelType['clusterLabel'] = labelType
-    this.clusterNodes.each((node) => {
+  setEntityLabel (labelType) {
+    this.labelType['entityLabel'] = labelType
+    this.entityNodes.each((node) => {
       node.setLabelType(labelType)
     })
   }
@@ -366,8 +366,8 @@ export default class NodeGraph extends Component {
     this.highlightedNodes.forEach(node => node.unhighlight())
     this.highlightedNodes = []
     let nodes
-    if (sel.data.type === 'cluster') {
-      nodes = this.clusterNodes
+    if (sel.data.type === 'entity') {
+      nodes = this.entityNodes
     } else if (sel.data.type === 'address') {
       nodes = this.addressNodes
     }
@@ -380,14 +380,14 @@ export default class NodeGraph extends Component {
     logger.debug('highlighted in select', this.highlightedNodes)
     this.selectedNode = sel
   }
-  setResultClusterAddresses (id, addresses) {
-    let cluster = this.clusterNodes.get(id)
+  setResultEntityAddresses (id, addresses) {
+    let entity = this.entityNodes.get(id)
     addresses.forEach((address) => {
       if (this.addressNodes.has([address.id, id[1], address.keyspace])) return
       let addressNode = new AddressNode(this.dispatcher, address, id[1], this.labelType['addressLabel'], this.colors['address'], this.currency)
       logger.debug('new AddressNode', addressNode)
       this.setAddressNodes(addressNode)
-      cluster.add(addressNode)
+      entity.add(addressNode)
       this.dirty = true
     })
     this.setUpdate('layers')
@@ -403,7 +403,7 @@ export default class NodeGraph extends Component {
       layerIds = this.additionLayerBySelection(object.id)
       if (layerIds === false) layerIds = this.additionLayerBySearch(object)
       layerIds = layerIds || 0
-    } else if (anchor.nodeType === 'cluster' && object.type === 'address') {
+    } else if (anchor.nodeType === 'entity' && object.type === 'address') {
       layerIds = anchor.nodeId[1]
     } else {
       // TODO is this safe? Are layer ids consecutive?
@@ -448,21 +448,21 @@ export default class NodeGraph extends Component {
       this.setAddressNodes(addressNode)
       this.selectNodeIfIsNextNode(addressNode)
       logger.debug('new AddressNode', addressNode)
-      node = this.clusterNodes.get([object.cluster.id, layerId, object.cluster.keyspace])
+      node = this.entityNodes.get([object.entity.id, layerId, object.entity.keyspace])
       if (!node) {
-        node = new ClusterNode(this.dispatcher, object.cluster, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
+        node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType['entityLabel'], this.colors['entity'], this.currency)
       }
       node.add(addressNode)
-      this.setClusterNodes(node)
-    } else if (object.type === 'cluster') {
-      node = this.clusterNodes.get([object.id, layerId, object.keyspace])
+      this.setEntityNodes(node)
+    } else if (object.type === 'entity') {
+      node = this.entityNodes.get([object.id, layerId, object.keyspace])
       if (node) {
         this.selectNodeIfIsNextNode(node)
         return node
       }
-      node = new ClusterNode(this.dispatcher, object, layerId, this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
-      this.setClusterNodes(node)
-      logger.debug('new ClusterNode', node)
+      node = new EntityNode(this.dispatcher, object, layerId, this.labelType['entityLabel'], this.colors['entity'], this.currency)
+      this.setEntityNodes(node)
+      logger.debug('new EntityNode', node)
       this.selectNodeIfIsNextNode(node)
     } else {
       throw Error('unknown node type')
@@ -481,8 +481,8 @@ export default class NodeGraph extends Component {
     let node = this.getNode(nodeId, nodeType)
     if (nodeType === 'address') {
       this.removeAddressNode(nodeId)
-    } else if (nodeType === 'cluster') {
-      this.removeClusterNode(nodeId)
+    } else if (nodeType === 'entity') {
+      this.removeEntityNode(nodeId)
     }
     if (this.selectedNode === node) {
       this.selectedNode = null
@@ -491,13 +491,13 @@ export default class NodeGraph extends Component {
     logger.debug('remove layer', nodeId, layer)
     if (!layer) return
     if (nodeType === 'address') {
-      this.clusterNodes.remove('mockup' + nodeId)
-      layer.nodes.each(cluster => {
-        cluster.nodes.remove(nodeId)
+      this.entityNodes.remove('mockup' + nodeId)
+      layer.nodes.each(entity => {
+        entity.nodes.remove(nodeId)
       })
-    } else if (nodeType === 'cluster') {
+    } else if (nodeType === 'entity') {
       node.nodes.each(node => this.removeAddressNode(node.id))
-      this.clusterNodes.remove(nodeId)
+      this.entityNodes.remove(nodeId)
       if (layer.nodes.size() === 0) {
         this.layers = this.layers.filter(l => l !== layer)
       } else {
@@ -506,16 +506,16 @@ export default class NodeGraph extends Component {
     }
     this.setUpdate('layers')
   }
-  removeClusterAddresses (id) {
-    let cluster = this.clusterNodes.get(id)
-    if (!cluster) return
-    cluster.nodes.each((address) => this.remove('address', address.id))
+  removeEntityAddresses (id) {
+    let entity = this.entityNodes.get(id)
+    if (!entity) return
+    entity.nodes.each((address) => this.remove('address', address.id))
   }
   additionLayerBySelection (addressId) {
     if (!addressId) return false
-    if (!(this.selectedNode instanceof ClusterNode)) return false
-    let cluster = this.selectedNode.data
-    if (!cluster.addresses.has(addressId)) return false
+    if (!(this.selectedNode instanceof EntityNode)) return false
+    let entity = this.selectedNode.data
+    if (!entity.addresses.has(addressId)) return false
     return this.selectedNode.id[1]
   }
   additionLayerBySearch (node) {
@@ -533,12 +533,12 @@ export default class NodeGraph extends Component {
     if (this.layers[0]) {
       let nodes = this.layers[0].nodes.values()
       for (let j = 0; j < nodes.length; j++) {
-        if (node.type === 'cluster' && node.outgoing.has(nodes[j].data.id)) {
+        if (node.type === 'entity' && node.outgoing.has(nodes[j].data.id)) {
           logger.debug('select layer by incoming node', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
-        if (node.cluster && node.cluster.outgoing.has(nodes[j].data.id)) {
-          logger.debug('select layer by incoming node on cluster level', nodes[j], this.layers[0].id - 1)
+        if (node.entity && node.entity.outgoing.has(nodes[j].data.id)) {
+          logger.debug('select layer by incoming node on entity level', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
         if (node.type === 'address') {
@@ -557,12 +557,12 @@ export default class NodeGraph extends Component {
       let nodes = this.layers[i].nodes.values()
       for (let j = 0; j < nodes.length; j++) {
         let outgoing = nodes[j].data.outgoing
-        if (node.type === 'cluster' && outgoing.has(node.id)) {
+        if (node.type === 'entity' && outgoing.has(node.id)) {
           logger.debug('select layer by outgoing node', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
-        if (node.cluster && outgoing.has(node.cluster.id)) {
-          logger.debug('select layer by outgoing node on cluster level', nodes[j], this.layers[i].id + 1)
+        if (node.entity && outgoing.has(node.entity.id)) {
+          logger.debug('select layer by outgoing node on entity level', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
         if (node.type === 'address') {
@@ -576,10 +576,10 @@ export default class NodeGraph extends Component {
         }
       }
     }
-    if (!node.cluster) return false
+    if (!node.entity) return false
     for (let i = 0; i < this.layers.length; i++) {
-      if (this.layers[i].has([node.cluster.id, this.layers[i].id])) {
-        logger.debug('select layer by cluster', this.layers[i], this.layers[i].id)
+      if (this.layers[i].has([node.entity.id, this.layers[i].id])) {
+        logger.debug('select layer by entity', this.layers[i], this.layers[i].id)
         ids.add(this.layers[i].id)
       }
     }
@@ -592,7 +592,7 @@ export default class NodeGraph extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let clusterRoot, clusterShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
+    let entityRoot, entityShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
     logger.debug('graph should update', this.shouldUpdate())
     let transformGraph = () => {
       let x = this.transform.x
@@ -628,35 +628,35 @@ export default class NodeGraph extends Component {
       })
       this.root.appendChild(this.svg.node())
 
-      clusterShadowsRoot = this.graphRoot.append('g').classed('clusterShadowsRoot', true)
-      clusterRoot = this.graphRoot.append('g').classed('clusterRoot', true)
+      entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
+      entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
       addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
       linksRoot = this.graphRoot.append('g').classed('linksRoot', true)
       addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
     } else {
-      clusterShadowsRoot = this.graphRoot.select('g.clusterShadowsRoot')
+      entityShadowsRoot = this.graphRoot.select('g.entityShadowsRoot')
       addressShadowsRoot = this.graphRoot.select('g.addressShadowsRoot')
       linksRoot = this.graphRoot.select('g.linksRoot')
-      clusterRoot = this.graphRoot.select('g.clusterRoot')
+      entityRoot = this.graphRoot.select('g.entityRoot')
       addressRoot = this.graphRoot.select('g.addressRoot')
     }
     // render in this order
-    this.renderLayers(clusterRoot, addressRoot)
+    this.renderLayers(entityRoot, addressRoot)
     this.renderLinks(linksRoot)
-    this.renderShadows(clusterShadowsRoot, addressShadowsRoot)
+    this.renderShadows(entityShadowsRoot, addressShadowsRoot)
     this.zoomToHighlightedNodes()
     super.render()
     return this.root
   }
-  renderLayers (clusterRoot, addressRoot, transform) {
+  renderLayers (entityRoot, addressRoot, transform) {
     if (this.shouldUpdate('layers')) {
-      clusterRoot.node().innerHTML = ''
+      entityRoot.node().innerHTML = ''
       addressRoot.node().innerHTML = ''
       this.layers
         .forEach((layer) => {
           if (layer.nodes.size() === 0) return
           layer.setUpdate(true)
-          let cRoot = clusterRoot.append('g')
+          let cRoot = entityRoot.append('g')
           let aRoot = addressRoot.append('g')
           layer.render(cRoot, aRoot)
           // let first = layer.getFirst()
@@ -666,7 +666,7 @@ export default class NodeGraph extends Component {
           // box.height -= last.dy
           // }
           let layerHeight = layer.getHeight()
-          let w = clusterWidth + margin
+          let w = entityWidth + margin
           let x = layer.id * w
           let y = layerHeight / -2
           cRoot.attr('transform', `translate(${x}, ${y})`)
@@ -687,29 +687,29 @@ export default class NodeGraph extends Component {
       for (let i = 0; i < this.layers.length; i++) {
         // prepare the domain and links
         let domain = [1 / 0, 0]
-        let clusterLinksFromAddresses = {}
+        let entityLinksFromAddresses = {}
         this.layers[i].nodes.each((c) => {
-          // stores links between neighbor clusters resulting from address links
-          clusterLinksFromAddresses[c.data.id] = set()
+          // stores links between neighbor entity resulting from address links
+          entityLinksFromAddresses[c.data.id] = set()
           c.nodes.each((a) => {
             this.prepareLinks(domain, this.layers[i + 1], a)
-              .forEach(cl => clusterLinksFromAddresses[c.data.id].add(cl))
+              .forEach(cl => entityLinksFromAddresses[c.data.id].add(cl))
           })
-          this.prepareClusterLinks(domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
+          this.prepareEntityLinks(domain, this.layers[i + 1], c, entityLinksFromAddresses[c.data.id])
         })
         // render links
         this.layers[i].nodes.each((c) => {
           c.nodes.each((a) => {
             this.linkToLayer(root, domain, this.layers[i + 1], a)
           })
-          this.linkToLayerCluster(root, domain, this.layers[i + 1], c, clusterLinksFromAddresses[c.data.id])
+          this.linkToLayerEntity(root, domain, this.layers[i + 1], c, entityLinksFromAddresses[c.data.id])
         })
       }
     } else if (this.shouldUpdate('link')) {
       // updating the in- and outgoing links of one node (ie. when it is moved)
       let nodeId = this.getUpdate('link')
       if (!nodeId) return
-      let node = this.getNode(nodeId, 'cluster')
+      let node = this.getNode(nodeId, 'entity')
       let addressLinkSelects = ''
       let selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
       if (node) {
@@ -729,39 +729,39 @@ export default class NodeGraph extends Component {
           link.parentElement.removeChild(link)
           return a
         }).forEach(([s, t, label, scale]) => {
-          let source = this.getNode(s, 'address') || this.getNode(s, 'cluster')
-          let target = this.getNode(t, 'address') || this.getNode(t, 'cluster')
+          let source = this.getNode(s, 'address') || this.getNode(s, 'entity')
+          let target = this.getNode(t, 'address') || this.getNode(t, 'entity')
           this.drawLink(root, label, scale, source, target)
         })
     }
   }
   prepareLinks (domain, layer, address) {
     let neighbors = address.data.outgoing
-    let clusterLinks = []
+    let entityLinks = []
     if (layer) {
-      layer.nodes.each((cluster2) => {
+      layer.nodes.each((entity2) => {
         let hasLinks = false
-        cluster2.nodes.each((address2) => {
+        entity2.nodes.each((address2) => {
           let ntx = neighbors.get(address2.data.id)
           if (ntx === undefined) return
           this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
           hasLinks = true
         })
         if (hasLinks) {
-          clusterLinks.push(cluster2.data.id)
+          entityLinks.push(entity2.data.id)
         }
       })
     }
-    return clusterLinks
+    return entityLinks
   }
-  prepareClusterLinks (domain, layer, source, clusterLinksFromAddresses) {
+  prepareEntityLinks (domain, layer, source, entityLinksFromAddresses) {
     let neighbors = source.data.outgoing
     if (layer) {
-      layer.nodes.each((cluster2) => {
-        let ntx = neighbors.get(cluster2.data.id)
+      layer.nodes.each((entity2) => {
+        let ntx = neighbors.get(entity2.data.id)
         if (ntx === undefined) return
-        // skip cluster if contains in clusterLinksFromAddresses
-        if (clusterLinksFromAddresses.has(cluster2.data.id)) return
+        // skip entity if contains in entityLinksFromAddresses
+        if (entityLinksFromAddresses.has(entity2.data.id)) return
         this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
       })
     }
@@ -773,8 +773,8 @@ export default class NodeGraph extends Component {
   linkToLayer (root, domain, layer, address) {
     let neighbors = address.data.outgoing
     if (layer) {
-      layer.nodes.each((cluster2) => {
-        cluster2.nodes.each((address2) => {
+      layer.nodes.each((entity2) => {
+        entity2.nodes.each((address2) => {
           let ntx = neighbors.get(address2.data.id)
           if (ntx === undefined) return
           this.renderLink(root, domain, address, address2, ntx)
@@ -782,28 +782,28 @@ export default class NodeGraph extends Component {
       })
     }
   }
-  linkToLayerCluster (root, domain, layer, source, clusterLinksFromAddresses) {
+  linkToLayerEntity (root, domain, layer, source, entityLinksFromAddresses) {
     let neighbors = source.data.outgoing
     if (layer) {
-      layer.nodes.each((cluster2) => {
-        let ntx = neighbors.get(cluster2.data.id)
+      layer.nodes.each((entity2) => {
+        let ntx = neighbors.get(entity2.data.id)
         if (ntx === undefined) return
-        // skip cluster if contains in clusterLinksFromAddresses
-        if (clusterLinksFromAddresses.has(cluster2.data.id)) return
-        this.renderLink(root, domain, source, cluster2, ntx)
+        // skip entity if contains in entityLinksFromAddresses
+        if (entityLinksFromAddresses.has(entity2.data.id)) return
+        this.renderLink(root, domain, source, entity2, ntx)
       })
     }
   }
-  renderShadows (clusterRoot, addressRoot) {
+  renderShadows (entityRoot, addressRoot) {
     if (!this.shouldUpdate()) return
-    clusterRoot.node().innerHTML = ''
+    entityRoot.node().innerHTML = ''
     addressRoot.node().innerHTML = ''
     // TODO use a data structure which stores and lists entries in sorted order to prevent this sorting
     let sort = (node1, node2) => {
       return node1.id[1] - node2.id[1]
     }
     this.linkShadows(addressRoot, this.addressNodes.values().sort(sort))
-    this.linkShadows(clusterRoot, this.clusterNodes.values().sort(sort))
+    this.linkShadows(entityRoot, this.entityNodes.values().sort(sort))
   }
   linkShadows (root, nodes) {
     nodes.forEach((node1) => {
@@ -909,34 +909,34 @@ export default class NodeGraph extends Component {
     return [value, label]
   }
   serializeGraph () {
-    let clusterNodes = []
-    this.clusterNodes.each(node => clusterNodes.push([node.id, node.serialize()]))
+    let entityNodes = []
+    this.entityNodes.each(node => entityNodes.push([node.id, node.serialize()]))
 
     let addressNodes = []
     this.addressNodes.each(node => addressNodes.push([node.id, node.serialize()]))
 
     let layers = []
     this.layers.forEach(layer => layers.push(layer.serialize()))
-    return [clusterNodes, addressNodes, layers]
+    return [entityNodes, addressNodes, layers]
   }
   serialize () {
-    let clusterNodes, addressNodes, layers
+    let entityNodes, addressNodes, layers
 
-    [clusterNodes, addressNodes, layers] = this.serializeGraph()
+    [entityNodes, addressNodes, layers] = this.serializeGraph()
 
     return [
       this.currency,
       this.labelType,
       this.txLabelType,
       this.transform,
-      clusterNodes,
+      entityNodes,
       addressNodes,
       layers,
       this.colorMapCategories.entries(),
       this.colorMapTags.entries()
     ]
   }
-  deserializeGraph (version, store, clusterNodes, addressNodes, layers) {
+  deserializeGraph (version, store, entityNodes, addressNodes, layers) {
     addressNodes.forEach(([nodeId, address]) => {
       if (version === '0.4.0') {
         let found = store.find(nodeId[0], 'address')
@@ -948,29 +948,29 @@ export default class NodeGraph extends Component {
       node.deserialize(address)
       this.setAddressNodes(node)
     })
-    clusterNodes.forEach(([nodeId, cluster]) => {
+    entityNodes.forEach(([nodeId, entity]) => {
       if (version === '0.4.0') {
-        let found = store.find(nodeId[0], 'cluster')
+        let found = store.find(nodeId[0], 'entity')
         if (!found) return
         nodeId[2] = found.keyspace
       }
-      let data = store.get(nodeId[2], 'cluster', nodeId[0])
-      let node = new ClusterNode(this.dispatcher, data, nodeId[1], this.labelType['clusterLabel'], this.colors['cluster'], this.currency)
-      node.deserialize(version, cluster, this.addressNodes)
-      this.setClusterNodes(node)
+      let data = store.get(nodeId[2], 'entity', nodeId[0])
+      let node = new EntityNode(this.dispatcher, data, nodeId[1], this.labelType['entityLabel'], this.colors['entity'], this.currency)
+      node.deserialize(version, entity, this.addressNodes)
+      this.setEntityNodes(node)
     })
-    layers.forEach(([id, clusterKeys]) => {
+    layers.forEach(([id, entityKeys]) => {
       let l = new Layer(id)
-      clusterKeys.forEach(key => {
+      entityKeys.forEach(key => {
         if (version === '0.4.0') {
           let found = null
-          this.clusterNodes.each(node => {
+          this.entityNodes.each(node => {
             if (!found && ([node.id[0], node.id[1]]).join(',') === key) found = node
           })
           if (!found) return
           key = found.id
         }
-        l.add(this.clusterNodes.get(key))
+        l.add(this.entityNodes.get(key))
       })
       this.layers.push(l)
     })
@@ -980,7 +980,7 @@ export default class NodeGraph extends Component {
     labelType,
     txLabelType,
     transform,
-    clusterNodes,
+    entityNodes,
     addressNodes,
     layers,
     colorMapCategories,
@@ -996,6 +996,6 @@ export default class NodeGraph extends Component {
     colorMapTags.forEach(({key, value}) => {
       this.colorMapTags.set(key, value)
     })
-    this.deserializeGraph(version, store, clusterNodes, addressNodes, layers)
+    this.deserializeGraph(version, store, entityNodes, addressNodes, layers)
   }
 }

@@ -1,10 +1,10 @@
-import cluster from './cluster.html'
+import entity from './entity.html'
 import Address from './address.js'
 
-export default class Cluster extends Address {
+export default class Entity extends Address {
   constructor (dispatcher, data, index, currency) {
     super(dispatcher, data, index, currency)
-    this.template = cluster
+    this.template = entity
     this.options =
       [
         {icon: 'sign-in-alt', optionText: 'Incoming neighbors', message: 'initIndegreeTable'},

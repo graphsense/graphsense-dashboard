@@ -17,7 +17,7 @@ const unprefix = (idPrefixed) => {
 export default class Store {
   constructor () {
     this.addresses = map()
-    this.clusters = map()
+    this.entities = map()
     this.outgoingLinks = map()
     this.notesStore = map()
   }
@@ -32,9 +32,9 @@ export default class Store {
     if (object.address || object.type === 'address') {
       id = object.address ? object.address : object.id
       type = 'address'
-    } else if (object.cluster || object.type === 'cluster') {
-      id = object.cluster ? object.cluster : object.id
-      type = 'cluster'
+    } else if (object.entity || object.type === 'entity') {
+      id = object.entity ? object.entity : object.id
+      type = 'entity'
     } else {
       logger.error('invalid object, cannot determine type', object)
       return
@@ -59,42 +59,42 @@ export default class Store {
       Object.keys(object).forEach(key => { a[key] = object[key] })
       // remove unneeded address field (is now id)
       delete a.address
-      if (typeof object.cluster === 'string' || typeof object.cluster === 'number') object.toCluster = object.cluster
-      if (object.toCluster) {
-        let cidPrefixed = prefix(object.keyspace, object.toCluster)
-        let c = this.clusters.get(cidPrefixed)
+      if (typeof object.entity === 'string' || typeof object.entity === 'number') object.toEntity = object.entity
+      if (object.toEntity) {
+        let cidPrefixed = prefix(object.keyspace, object.toEntity)
+        let c = this.entities.get(cidPrefixed)
         if (!c) {
-          c = { addresses: map(), id: object.toCluster, type: 'cluster', ...empty }
+          c = { addresses: map(), id: object.toEntity, type: 'entity', ...empty }
           let outgoing = this.initOutgoing(id, object.keyspace)
           c.outgoing = outgoing
-          this.clusters.set(cidPrefixed, c)
+          this.entities.set(cidPrefixed, c)
         }
         c.addresses.set(a.id, a)
-        a.cluster = c
+        a.entity = c
       }
       return a
-    } else if (idPrefixed && type === 'cluster') {
-      let c = this.clusters.get(idPrefixed)
+    } else if (idPrefixed && type === 'entity') {
+      let c = this.entities.get(idPrefixed)
       if (!c) {
         c = { addresses: map(), ...empty }
         c.id = id
-        c.type = 'cluster'
+        c.type = 'entity'
         let outgoing = this.initOutgoing(id, object.keyspace)
         c.outgoing = outgoing
-        this.clusters.set(idPrefixed, c)
-        c.notes = this.notesStore.get('cluster' + idPrefixed)
+        this.entities.set(idPrefixed, c)
+        c.notes = this.notesStore.get('entity' + idPrefixed)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { c[key] = object[key] })
-      // remove unneeded cluster field (is now id)
-      delete c.cluster
+      // remove unneeded entity field (is now id)
+      delete c.entity
       let addresses = object.forAddresses || []
       addresses.forEach(address => {
         let a = this.addresses.get(prefix(object.keyspace, address))
         logger.debug('forAddress', address, a)
         if (a) {
           c.addresses.set(address, a)
-          a.cluster = c
+          a.entity = c
         }
       })
       return c
@@ -104,8 +104,8 @@ export default class Store {
     let store = null
     if (type === 'address') {
       store = this.addresses
-    } else if (type === 'cluster') {
-      store = this.clusters
+    } else if (type === 'entity') {
+      store = this.entities
     }
     if (!store) {
       logger.error('unknown type ' + type)
@@ -120,11 +120,11 @@ export default class Store {
     }
     if (type === 'address') {
       this.addresses.each(findIt)
-    } else if (type === 'cluster') {
-      this.clusters.each(findIt)
+    } else if (type === 'entity') {
+      this.entities.each(findIt)
     } else {
       this.addresses.each(findIt)
-      if (!found) this.clusters.each(findIt)
+      if (!found) this.entities.each(findIt)
     }
     return found
   }
@@ -156,22 +156,22 @@ export default class Store {
     let addresses = []
     this.addresses.each(address => {
       let s = {...address}
-      s.cluster = s.cluster.id
+      s.entity = s.entity.id
       delete s.outgoing
       addresses.push(s)
     })
-    let clusters = []
-    this.clusters.each(cluster => {
-      let s = {...cluster}
+    let entities = []
+    this.entities.each(entity => {
+      let s = {...entity}
       s.addresses = s.addresses.keys()
       delete s.outgoing
-      clusters.push(s)
+      entities.push(s)
     })
     let alllinks = []
     this.outgoingLinks.each((links, id) => {
       alllinks.push([id, links.entries()])
     })
-    return [addresses, clusters, alllinks]
+    return [addresses, entities, alllinks]
   }
   serializeNotes () {
     let addresses = []
@@ -179,18 +179,18 @@ export default class Store {
       let s = [prefix(address.keyspace, address.id), address.notes]
       addresses.push(s)
     })
-    let clusters = []
-    this.clusters.each(cluster => {
-      let s = [prefix(cluster.keyspace, cluster.id), cluster.notes]
-      clusters.push(s)
+    let entities = []
+    this.entities.each(entity => {
+      let s = [prefix(entity.keyspace, entity.id), entity.notes]
+      entities.push(s)
     })
-    return [addresses, clusters]
+    return [addresses, entities]
   }
-  deserialize (version, [addresses, clusters, alllinks]) {
-    clusters.forEach(cluster => {
-      cluster.forAddresses = cluster.addresses
-      delete cluster.addresses
-      this.add(cluster)
+  deserialize (version, [addresses, entities, alllinks]) {
+    entities.forEach(entity => {
+      entity.forAddresses = entity.addresses
+      delete entity.addresses
+      this.add(entity)
     })
     addresses.forEach(address => {
       this.add(address)
@@ -210,7 +210,7 @@ export default class Store {
       })
     })
   }
-  deserializeNotes (version, [addressNotes, clusterNotes]) {
+  deserializeNotes (version, [addressNotes, entityNotes]) {
     let ser = (nodes, type) => ([idPrefixed, notes]) => {
       let c = nodes.get(idPrefixed)
       let unprefixed = unprefix(idPrefixed)
@@ -220,7 +220,7 @@ export default class Store {
         this.notesStore.set(type + idPrefixed, notes)
       }
     }
-    clusterNotes.forEach(ser(this.clusters, 'cluster'))
+    entityNotes.forEach(ser(this.entities, 'entity'))
     addressNotes.forEach(ser(this.addresses, 'address'))
   }
 }

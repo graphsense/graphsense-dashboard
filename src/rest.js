@@ -13,6 +13,21 @@ const options = {
   }
 }
 
+const translateClusterToEntity = msg => node => {
+  switch (msg) {
+    case 'entityForAddress':
+    case 'cluster':
+      node.entity = node.cluster
+      delete node.cluster
+      break
+    case 'address':
+      break
+    default:
+      console.warn('no translation from cluster to entity applied for msg ' + msg)
+  }
+  return node
+}
+
 const normalizeTag = keyspace => tag => {
   tag.currency = keyspace.toUpperCase()
   tag.keyspace = keyspace
@@ -93,13 +108,16 @@ export default class Rest {
   searchLabels (str, limit) {
     return this.json(null, '/labelsearch?q=' + encodeURIComponent(str) + '&limit=' + limit)
   }
-  node (keyspace, request) {
-    return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
+  node (keyspace, {type, id}) {
+    if (type === 'entity') type = 'cluster'
+    return this.json(keyspace, `/${type}_with_tags/${id}`)
+      .then(translateClusterToEntity(type))
       .then(normalizeNodeTags(keyspace))
   }
-  clusterForAddress (keyspace, id) {
-    logger.debug('rest clusterForAddress', id)
+  entityForAddress (keyspace, id) {
+    logger.debug('rest entityForAddress', id)
     return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
+      .then(translateClusterToEntity('entityForAddress'))
       .then(normalizeNodeTags(keyspace))
   }
   transactions (keyspace, request, csv) {
@@ -121,15 +139,17 @@ export default class Rest {
   }
   tags (keyspace, {id, type}, csv) {
     logger.debug('fetch tags', keyspace)
+    if (type === 'entity') type = 'cluster'
     let url = '/' + type + '/' + id + '/tags'
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url).then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
   egonet (keyspace, type, id, isOutgoing, limit) {
     let dir = isOutgoing ? 'out' : 'in'
+    if (type === 'entity') type = 'cluster'
     return this.json(keyspace, `/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
   }
-  clusterAddresses (keyspace, id, limit) {
+  entityAddresses (keyspace, id, limit) {
     return this.json(keyspace, `/cluster/${id}/addresses?pagesize=${limit}`, 'addresses')
   }
   transaction (keyspace, txHash) {
@@ -143,6 +163,7 @@ export default class Rest {
   }
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {
     let dir = isOutgoing ? 'out' : 'in'
+    if (type === 'entity') type = 'cluster'
     let url = `/${type}/${id}/neighbors?direction=${dir}`
     if (csv) return this.csv(keyspace, url)
     url += '&' +
@@ -155,6 +176,7 @@ export default class Rest {
   }
   searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
     let dir = isOutgoing ? 'out' : 'in'
+    if (type === 'entity') type = 'cluster'
     let keyspace = id[2]
     id = id[0]
     let searchCrit = ''

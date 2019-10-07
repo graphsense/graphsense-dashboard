@@ -4,12 +4,12 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
+import {entityWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
-const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
+const addressWidth = entityWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
 const noExpandableNeighbors = 25
 
@@ -169,7 +169,7 @@ class GraphNode extends Component {
     this.setUpdate('label')
   }
   getName () {
-    if (this.data.type === 'cluster') return this.data.id
+    if (this.data.type === 'entity') return this.data.id
     if (this.data.type === 'address') return this.data.id.substring(0, 8)
     return ''
   }
@@ -231,7 +231,7 @@ class GraphNode extends Component {
     logger.debug('coloring tag', tag)
     let color = this.colors.categories(tag)
     this.root
-      .select('.addressNodeRect,.clusterNodeRect')
+      .select('.addressNodeRect,.entityNodeRect')
       .style('fill', color)
       .style('stroke', 'black')
       .style('stroke-width', '1px')
@@ -279,4 +279,4 @@ class GraphNode extends Component {
   }
 }
 
-export {GraphNode, addressWidth, addressHeight, padding, clusterWidth, expandHandleWidth}
+export {GraphNode, addressWidth, addressHeight, padding, entityWidth, expandHandleWidth}

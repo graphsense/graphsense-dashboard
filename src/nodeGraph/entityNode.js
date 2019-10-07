@@ -1,12 +1,12 @@
 import {event} from 'd3-selection'
 import {map} from 'd3-collection'
-import {GraphNode, addressHeight, clusterWidth, padding, expandHandleWidth} from './graphNode.js'
+import {GraphNode, addressHeight, entityWidth, padding, expandHandleWidth} from './graphNode.js'
 import numeral from 'numeral'
 import contextMenu from 'd3-context-menu'
 import Logger from '../logger.js'
 import {drag} from 'd3-drag'
 
-const logger = Logger.create('ClusterNode') // eslint-disable-line no-unused-vars
+const logger = Logger.create('EntityNode') // eslint-disable-line no-unused-vars
 
 const gap = padding
 const noAddressesLabelHeight = 16
@@ -19,14 +19,14 @@ const sort = (getValue) => (n1, n2) => {
   return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0)
 }
 
-export default class ClusterNode extends GraphNode {
-  constructor (dispatcher, cluster, layerId, labelType, colors, currency) {
-    super(dispatcher, labelType, cluster, layerId, colors, currency)
+export default class EntityNode extends GraphNode {
+  constructor (dispatcher, entity, layerId, labelType, colors, currency) {
+    super(dispatcher, labelType, entity, layerId, colors, currency)
     this.nodes = map()
     this.addressFilters = map()
     this.addressFilters.set('limit', 10)
     this.expandLimit = 10
-    this.type = 'cluster'
+    this.type = 'entity'
     this.numLetters = 11
     this.sortAddressesProperty = data => data.id
     this.currencyLabelHeight = Math.max(this.labelHeight - 18, 12)
@@ -45,11 +45,11 @@ export default class ClusterNode extends GraphNode {
   }
   expandCollapseOrShowAddressTable () {
     if (this.isExpand()) {
-      this.dispatcher('loadClusterAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
+      this.dispatcher('loadEntityAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
     } else if (this.isCollapse()) {
-      this.dispatcher('removeClusterAddresses', this.id)
+      this.dispatcher('removeEntityAddresses', this.id)
     } else {
-      this.dispatcher('initAddressesTableWithCluster', {id: this.data.id, keyspace: this.data.keyspace, type: 'cluster'})
+      this.dispatcher('initAddressesTableWithEntity', {id: this.data.id, keyspace: this.data.keyspace, type: 'entity'})
     }
   }
   expandCollapseOrShowAddressTableTitle () {
@@ -68,36 +68,36 @@ export default class ClusterNode extends GraphNode {
         position: 60,
         children: [
           { title: 'Final balance',
-            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.totalReceived.satoshi - data.totalSpent.satoshi})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.totalReceived.satoshi - data.totalSpent.satoshi})
           },
           { title: 'Total received',
-            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.totalReceived.satoshi})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.totalReceived.satoshi})
           },
           { title: 'No. neighbors',
             children: [
               { title: 'Incoming',
-                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.inDegree})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.inDegree})
               },
               { title: 'Outgoing',
-                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.outDegree})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.outDegree})
               }
             ]
           },
           { title: 'No. transactions',
             children: [
               { title: 'Incoming',
-                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.noIncomingTxs})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.noIncomingTxs})
               },
               { title: 'Outgoing',
-                action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.noOutgoingTxs})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.noOutgoingTxs})
               }
             ]
           },
           { title: 'First usage',
-            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.firstTx.timestamp})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.firstTx.timestamp})
           },
           { title: 'Last usage',
-            action: () => this.dispatcher('sortClusterAddresses', {cluster: this.id, property: data => data.lastTx.timestamp})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.lastTx.timestamp})
           }
         ]})
     }
@@ -146,14 +146,14 @@ export default class ClusterNode extends GraphNode {
         let height = this.getHeight()
         let g = this.root
           .append('g')
-          .classed('clusterNode', true)
+          .classed('entityNode', true)
           .attr('transform', `translate(${this.dx}, ${this.dy})`)
           .on('click', () => {
             event.stopPropagation()
-            this.dispatcher('selectNode', ['cluster', this.id])
+            this.dispatcher('selectNode', ['entity', this.id])
           })
           .on('contextmenu', contextMenu(this.menu()))
-          .on('mouseover', () => this.dispatcher('tooltip', 'cluster'))
+          .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
           .on('mouseout', () => this.dispatcher('hideTooltip'))
           .call(drag()
             .on('drag', () => {
@@ -164,8 +164,8 @@ export default class ClusterNode extends GraphNode {
               this.dispatcher('dragNodeEnd', {id: this.id, type: this.type})
             }))
         g.append('rect')
-          .classed('clusterNodeRect', true)
-          .attr('width', clusterWidth)
+          .classed('entityNodeRect', true)
+          .attr('width', entityWidth)
           .attr('height', height)
         let label = g.append('g')
           .classed('label', true)
@@ -236,7 +236,7 @@ export default class ClusterNode extends GraphNode {
       .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' address' + plural)
       .on('click', () => {
         event.stopPropagation()
-        this.dispatcher('selectNode', ['cluster', this.id])
+        this.dispatcher('selectNode', ['entity', this.id])
         this.expandCollapseOrShowAddressTable()
       })
     super.render()
@@ -260,9 +260,9 @@ export default class ClusterNode extends GraphNode {
       (this.nodes.size() > 0 ? 2 * gap : gap)
   }
   getWidth () {
-    return clusterWidth
+    return entityWidth
   }
   getId () {
-    return this.data.cluster
+    return this.data.entity
   }
 }

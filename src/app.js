@@ -55,7 +55,7 @@ const historyPushState = (keyspace, type, id) => {
 const degreeThreshold = 100
 
 let defaultLabelType =
-      { clusterLabel: 'category',
+      { entityLabel: 'category',
         addressLabel: 'id'
       }
 
@@ -63,7 +63,7 @@ const defaultCurrency = 'satoshi'
 
 const defaultTxLabel = 'noTransactions'
 
-const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block', 'label']
+const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label']
 
 const fromURL = (url, keyspaces) => {
   let hash = url.split('#!')[1]
@@ -115,7 +115,7 @@ export default class Model extends Callable {
         this.layout.setUpdate(true)
       }
       this.search.clear()
-      if (type === 'address' || type === 'cluster') {
+      if (type === 'address' || type === 'entity') {
         this.graph.selectNodeWhenLoaded([id, type, keyspace])
         this.mapResult(this.rest.node(keyspace, {id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
@@ -184,8 +184,8 @@ export default class Model extends Callable {
       historyPushState(o.keyspace, o.type, o.id)
       if (type === 'address') {
         this.browser.setAddress(o)
-      } else if (type === 'cluster') {
-        this.browser.setCluster(o)
+      } else if (type === 'entity') {
+        this.browser.setEntity(o)
       }
       this.graph.selectNode(type, nodeId)
     })
@@ -248,11 +248,11 @@ export default class Model extends Callable {
     this.dispatcher.on('initAddressesTable', (request) => {
       this.browser.initAddressesTable(request)
     })
-    this.dispatcher.on('initAddressesTableWithCluster', ({id, keyspace}) => {
-      let cluster = this.store.get(keyspace, 'cluster', id)
-      if (!cluster) return
-      this.browser.setCluster(cluster)
-      this.browser.initAddressesTable({index: 0, id, type: 'cluster'})
+    this.dispatcher.on('initAddressesTableWithEntity', ({id, keyspace}) => {
+      let entity = this.store.get(keyspace, 'entity', id)
+      if (!entity) return
+      this.browser.setEntity(entity)
+      this.browser.initAddressesTable({index: 0, id, type: 'entity'})
     })
     this.dispatcher.on('initTagsTable', (request) => {
       this.browser.initTagsTable(request)
@@ -268,8 +268,8 @@ export default class Model extends Callable {
       if (!node) return
       if (type === 'address') {
         this.browser.setAddress(node)
-      } else if (type === 'cluster') {
-        this.browser.setCluster(node)
+      } else if (type === 'entity') {
+        this.browser.setEntity(node)
       }
       this.browser.initNeighborsTable({id, keyspace, type, index: 0}, isOutgoing)
     })
@@ -346,35 +346,35 @@ export default class Model extends Callable {
           this.store.linkOutgoing(o.id, anchor.nodeId[0], o.keyspace)
         }
         if (!this.graph.adding.has(o.id)) return
-        logger.debug('cluster', o.cluster)
-        if (o.type === 'address' && !o.cluster) {
-          this.statusbar.addMsg('loadingClusterFor', o.id)
-          this.mapResult(this.rest.clusterForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
+        logger.debug('entity', o.entity)
+        if (o.type === 'address' && !o.entity) {
+          this.statusbar.addMsg('loadingEntityFor', o.id)
+          this.mapResult(this.rest.entityForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
         } else {
           this.call('addNodeCont', {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
         }
       } else if (context.stage === 3 && context.addressId) {
         if (!this.graph.adding.has(context.addressId)) return
         let resultCopy = {...result}
-        // seems there exist addresses without cluster ...
-        // so mockup cluster with the address id
-        if (!resultCopy.cluster) {
-          resultCopy.cluster = 'mockup' + context.addressId
+        // seems there exist addresses without entity ...
+        // so mockup entity with the address id
+        if (!resultCopy.entity) {
+          resultCopy.entity = 'mockup' + context.addressId
           resultCopy.mockup = true
-          this.statusbar.addMsg('noClusterFor', context.addressId)
+          this.statusbar.addMsg('noEntityFor', context.addressId)
         } else {
-          this.statusbar.addMsg('loadedClusterFor', context.addressId)
+          this.statusbar.addMsg('loadedEntityFor', context.addressId)
         }
         this.store.add({...resultCopy, forAddresses: [context.addressId]})
         this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}})
       } else if (context.stage === 4 && context.id && context.type) {
         let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
         let o = this.store.get(context.keyspace, context.type, context.id)
-        if (context.type === 'cluster') {
-          this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'cluster', keyspace}})
+        if (context.type === 'entity') {
+          this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'entity', keyspace}})
         } else if (context.type === 'address') {
-          if (o.cluster && !o.cluster.mockup) {
-            this.call('excourseLoadDegree', {context: {backCall, id: o.cluster.id, type: 'cluster', keyspace}})
+          if (o.entity && !o.entity.mockup) {
+            this.call('excourseLoadDegree', {context: {backCall, id: o.entity.id, type: 'entity', keyspace}})
           } else {
             this.call(backCall.msg, backCall.data)
           }
@@ -439,8 +439,8 @@ export default class Model extends Callable {
       if (context.type === 'address') {
         nodes = this.graph.addressNodes
       }
-      if (context.type === 'cluster') {
-        nodes = this.graph.clusterNodes
+      if (context.type === 'entity') {
+        nodes = this.graph.entityNodes
       }
       if (!nodes) return
       nodes.each((node) => { if (node.id[0] == context.id) node.setUpdate(true) }) // eslint-disable-line eqeqeq
@@ -469,22 +469,22 @@ export default class Model extends Callable {
         this.call('addNode', {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
       })
     })
-    this.dispatcher.on('loadClusterAddresses', ({id, keyspace, limit}) => {
-      this.statusbar.addMsg('loadingClusterAddresses', id, limit)
-      this.statusbar.addLoading('addresses of cluster ' + id[0])
-      this.mapResult(this.rest.clusterAddresses(keyspace, id[0], limit), 'resultClusterAddresses', {id, keyspace})
+    this.dispatcher.on('loadEntityAddresses', ({id, keyspace, limit}) => {
+      this.statusbar.addMsg('loadingEntityAddresses', id, limit)
+      this.statusbar.addLoading('addresses of entity ' + id[0])
+      this.mapResult(this.rest.entityAddresses(keyspace, id[0], limit), 'resultEntityAddresses', {id, keyspace})
     })
-    this.dispatcher.on('removeClusterAddresses', id => {
-      this.graph.removeClusterAddresses(id)
+    this.dispatcher.on('removeEntityAddresses', id => {
+      this.graph.removeEntityAddresses(id)
       this.browser.setUpdate('tables_with_addresses')
     })
-    this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
+    this.dispatcher.on('resultEntityAddresses', ({context, result}) => {
       let id = context && context.id
       let keyspace = context && context.keyspace
       let addresses = []
-      this.statusbar.removeLoading('addresses of cluster ' + id[0])
+      this.statusbar.removeLoading('addresses of entity ' + id[0])
       result.addresses.forEach((address) => {
-        let copy = {...address, toCluster: id[0]}
+        let copy = {...address, toEntity: id[0]}
         let a = this.store.add(copy)
         addresses.push(a)
         if (!a.tags) {
@@ -492,13 +492,13 @@ export default class Model extends Callable {
           this.mapResult(this.rest.tags(keyspace, request), 'resultTags', request)
         }
       })
-      this.statusbar.addMsg('loadedClusterAddresses', id, addresses.length)
-      this.graph.setResultClusterAddresses(id, addresses)
+      this.statusbar.addMsg('loadedEntityAddresses', id, addresses.length)
+      this.graph.setResultEntityAddresses(id, addresses)
       this.browser.setUpdate('tables_with_addresses')
     })
-    this.dispatcher.on('changeClusterLabel', (labelType) => {
-      this.config.setClusterLabel(labelType)
-      this.graph.setClusterLabel(labelType)
+    this.dispatcher.on('changeEntityLabel', (labelType) => {
+      this.config.setEntityLabel(labelType)
+      this.graph.setEntityLabel(labelType)
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
       this.config.setAddressLabel(labelType)
@@ -524,8 +524,8 @@ export default class Model extends Callable {
       let nodes
       if (type === 'address') {
         nodes = this.graph.addressNodes
-      } else if (type === 'cluster') {
-        nodes = this.graph.clusterNodes
+      } else if (type === 'entity') {
+        nodes = this.graph.entityNodes
       }
       nodes.each((node) => {
         if (node.data.id === id) {
@@ -659,8 +659,8 @@ export default class Model extends Callable {
       this.layout.setUpdate(true)
       this.render()
     })
-    this.dispatcher.on('sortClusterAddresses', ({cluster, property}) => {
-      this.graph.sortClusterAddresses(cluster, property)
+    this.dispatcher.on('sortEntityAddresses', ({entity, property}) => {
+      this.graph.sortEntityAddresses(entity, property)
     })
     this.dispatcher.on('dragNode', ({id, type, dx, dy}) => {
       this.graph.dragNode(id, type, dx, dy)
@@ -705,12 +705,12 @@ export default class Model extends Callable {
           this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
           let parent = this.graph.add(node, anchor)
-          // link addresses to cluster and add them (if any returned due of 'addresses' search criterion)
+          // link addresses to entity and add them (if any returned due of 'addresses' search criterion)
           pathnode.matchingAddresses.forEach(address => {
-            address.cluster = pathnode.node.cluster
+            address.entity = pathnode.node.cluster
             let a = this.store.add(address)
-            // anchor the address to its cluster
-            this.graph.add(a, {nodeId: parent.id, nodeType: 'cluster'})
+            // anchor the address to its entity
+            this.graph.add(a, {nodeId: parent.id, nodeType: 'entity'})
           })
           add({nodeId: parent.id, isOutgoing: context.isOutgoing}, pathnode.paths)
         })

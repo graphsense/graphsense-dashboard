@@ -1,7 +1,7 @@
 import {set} from 'd3-collection'
 import layout from './browser/layout.html'
 import Address from './browser/address.js'
-import Cluster from './browser/cluster.js'
+import Entity from './browser/entity.js'
 import Label from './browser/label.js'
 import Transaction from './browser/transaction.js'
 import Block from './browser/block.js'
@@ -50,7 +50,7 @@ export default class Browser extends Component {
     return null
   }
   getCurrentNode () {
-    if (this.content[0] instanceof Address || this.content[0] instanceof Cluster) {
+    if (this.content[0] instanceof Address || this.content[0] instanceof Entity) {
       return this.content[0].data
     }
     return null
@@ -97,13 +97,13 @@ export default class Browser extends Component {
     ]
     this.setUpdate('content')
   }
-  setCluster (cluster) {
+  setEntity (entity) {
     this.activeTab = 'address'
     this.visible = true
     this.setUpdate('visibility')
-    if (this.content[0] instanceof Cluster && this.content[0].data.id === cluster.id) return
+    if (this.content[0] instanceof Entity && this.content[0].data.id === entity.id) return
     this.destroyComponentsFrom(0)
-    this.content = [ new Cluster(this.dispatcher, cluster, 0, this.currency) ]
+    this.content = [ new Entity(this.dispatcher, entity, 0, this.currency) ]
     this.setUpdate('content')
   }
   setResultNode (object) {
@@ -114,8 +114,8 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
       this.content[0] = new Address(this.dispatcher, object, 0, this.currency)
-    } else if (object.type === 'cluster') {
-      this.content[0] = new Cluster(this.dispatcher, object, 0, this.currency)
+    } else if (object.type === 'entity') {
+      this.content[0] = new Entity(this.dispatcher, object, 0, this.currency)
     }
     this.setUpdate('content')
   }
@@ -151,7 +151,7 @@ export default class Browser extends Component {
   initAddressesTable (request) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
-    if (!(last instanceof Cluster)) return
+    if (!(last instanceof Entity)) return
     let keyspace = last.data.keyspace
     if (this.content[request.index + 1] instanceof AddressesTable) return
     last.setCurrentOption('initAddressesTable')
@@ -164,7 +164,7 @@ export default class Browser extends Component {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     let fromLabel = last instanceof Label
-    if (!(last instanceof Cluster) && !(last instanceof Address) && !(fromLabel)) return
+    if (!(last instanceof Entity) && !(last instanceof Address) && !(fromLabel)) return
     if (this.content[request.index + 1] instanceof TagsTable) return
     last.setCurrentOption('initTagsTable')
     this.destroyComponentsFrom(request.index + 1)
@@ -177,7 +177,7 @@ export default class Browser extends Component {
   initNeighborsTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
-    if (!(last instanceof Cluster) && !(last instanceof Address)) return
+    if (!(last instanceof Entity) && !(last instanceof Address)) return
     if (this.content[request.index + 1] instanceof NeighborsTable &&
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) return

@@ -16,7 +16,7 @@ function statsHtml (body) {
         { lastUpdate: (t.format('L') + ' ' + t.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           noAddresses: numeral(s.no_addresses).format(format),
-          noClusters: numeral(s.no_clusters).format(format),
+          noEntities: numeral(s.no_clusters).format(format),
           noTransactions: numeral(s.no_transactions).format(format),
           noLabels: numeral(s.no_labels).format(format),
           currency: currencies[keyspace]

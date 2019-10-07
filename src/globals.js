@@ -1,6 +1,6 @@
 const browserHeight = 220
 const browserPadding = 1
-const clusterWidth = 190
+const entityWidth = 190
 const expandHandleWidth = 15
 const maxAddableNodes = 100
 const maxSearchDepth = 7
@@ -40,7 +40,7 @@ const currencies =
 export {
   browserHeight,
   browserPadding,
-  clusterWidth,
+  entityWidth,
   categories,
   expandHandleWidth,
   moreThan1TagCategory,
