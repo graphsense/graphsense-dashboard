@@ -1,27 +1,27 @@
 <footer class="p-4 mt-6 text-sm w-full text-grey-dark splash-footer">
   <div class="flex flex-col">
-    <div class="flex flex-row mb-2">
-      <div>
+    <div class="flex flex-row mb-4 justify-between">
+        <div class="mt-1">Version {{version}}</div>
+        <ul class="flex flex-row flex-wrap justify-end list-reset">
+          <li class="ml-6 self-end"><a href="/terms.html">Terms</a></li>
+          <li class="ml-6 self-end"><a href="/privacy.html">Privacy</a></li>
+          <li class="ml-6 self-end"><a href="/about.html">About</a></li>
+          <li class="ml-6 self-end"><a href="mailto:contact@graphsense.info">Contact</a></li>
+        </ul>
+    </div>
+    <div class="w-full mb-4">
+        <div>Open Source Software by the <a href="https://www.ait.ac.at" target="_blank">Austrian Institute of Technology</a></div>
+        <div class="mt-1"><a href="https://github.com/graphsense"><i class="fab fa-github"></i> Visit us on Github</a></div>
+    </div>
+    <div class="flex flex-row flex-wrap sm:flex-no-wrap">
+      <div class="flex-shrink mr-8">
         GraphSense is supported by the <a href="https://www.titanium-project.eu">TITANIUM project</a>, which has received funding from the European Union’s <a href="https://ec.europa.eu/programmes/horizon2020/en">Horizon 2020</a> research and innovation programme under grant agreement No 740558, and by the <a href="http://virtcrime-project.info/">VIRTCRIME project</a>, which is funded by the Austrian security research programme <a href="https://www.kiras.at">KIRAS</a> of the Federal Ministry for Transport, Innovation and Technology <a href="http://www.bmvit.gv.at">BMVIT</a>.
       </div>
-      <div class="flex flex-row" style="min-width:250px">
+      <div class="flex flex-row w-full mt-4 justify-center sm:w-auto sm:mt-0" style="min-width:250px">
         <img src="./flag_yellow_low_h45.png" class="h-10"/>
         <img src="./kiras_logo_bundesadler_rgb_h45.png" class="h-10"/>
         <img src="./ffg_logo_en_2018_rgb_h45.png" class="h-10"/>
       </div>
-    </div>
-    <div class="flex flex-row justify-between">
-      <div>
-        <div>Open Source Software by the <a href="https://www.ait.ac.at" target="_blank">Austrian Institute of Technology</a></div>
-        <div class="mt-1"><a href="https://github.com/graphsense"><i class="fab fa-github"></i> Visit us on Github</a></div>
-        <div class="mt-1">Version {{version}}</div>
-      </div>
-      <ul class="flex flex-row flex-wrap justify-end list-reset">
-        <li class="ml-6 self-end"><a href="/terms.html">Terms</a></li>
-        <li class="ml-6 self-end"><a href="/privacy.html">Privacy</a></li>
-        <li class="ml-6 self-end"><a href="/about.html">About</a></li>
-        <li class="ml-6 self-end"><a href="mailto:contact@graphsense.info">Contact</a></li>
-      </ul>
     </div>
   </div>
 </footer>
