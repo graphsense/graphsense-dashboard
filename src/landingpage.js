@@ -4,14 +4,10 @@ import Component from './component.js'
 import {statsHtml} from './pages/statsHtml.js'
 
 export default class Landingpage extends Component {
-  constructor (dispatcher, keyspaces) {
+  constructor (dispatcher) {
     super()
     this.dispatcher = dispatcher
     this.stats = {}
-    this.keyspaces = keyspaces
-    keyspaces.forEach(key => {
-      this.stats[key] = 'loading'
-    })
   }
   setSearch (search) {
     this.search = search
@@ -22,9 +18,7 @@ export default class Landingpage extends Component {
     this.login = login
   }
   setStats (stats) {
-    this.keyspaces.forEach(key => {
-      this.stats[key] = stats[key]
-    })
+    this.stats = stats
     this.setUpdate('stats')
     if (this.search) {
       this.search.setStats(stats)

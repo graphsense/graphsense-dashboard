@@ -8,6 +8,7 @@ const stats = function () {
 
 const receiveStats = function ({context, result}) {
   this.keyspaces = Object.keys(result)
+  this.stats = {...result}
   this.landingpage.setStats({...result})
 }
 
@@ -55,6 +56,7 @@ const searchresultLabels = function ({context, result}) {
 }
 
 const login = function ([username, password]) {
+  logger.debug('login, this is', this)
   this.login.loading(true)
   this.login.setUsername(username)
   this.mapResult(this.rest.login(username, password), 'loginResult')
@@ -66,7 +68,7 @@ const loginResult = function ({result}) {
     this.rest.setAccessToken(result.access_token)
     this.rest.setRefreshToken(result.refresh_token)
     import('../app.js').then(app => { // works despite of parsing error of eslint
-      this.app = new app.default(this.locale, this.rest, this.login, this.search, this.landingpage)
+      this.app = new app.default(this.locale, this.stats, this.rest, this.login, this.search, this.landingpage)
       this.app.root = this.root
       this.call('appLoaded')
     })

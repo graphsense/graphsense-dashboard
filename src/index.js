@@ -51,7 +51,7 @@ if (module.hot) {
   import('./app.js').then(app => { // works despite of parsing error of eslint
     Model = app.default
     let root = model.root
-    model = new Model(locale, model.rest, model.login, model.search, model.landingpage)
+    model = new Model(locale, model.stats, model.rest, model.login, model.search, model.landingpage)
     model.root = root
   })
   module.hot.accept([

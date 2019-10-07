@@ -15,7 +15,6 @@ const CompressionPlugin = require('compression-webpack-plugin')
 
 const VERSION = '0.4.2-dev'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
-const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
 // to be injected in static and dynamic pages
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full landingpage'
@@ -82,8 +81,7 @@ module.exports = env => {
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
-        JWT_TOKEN: !IS_DEV ? '\'\'' : '\'' + JWT_TOKEN + '\'',
-        SUPPORTED_KEYSPACES: '\'' + JSON.stringify(SUPPORTED_KEYSPACES).replace(/'/g, '"') + '\''
+        JWT_TOKEN: !IS_DEV ? '\'\'' : '\'' + JWT_TOKEN + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',

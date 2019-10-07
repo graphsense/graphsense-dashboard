@@ -13,23 +13,27 @@ const numShowResults = 7
 const byPrefix = term => addr => addr.toLowerCase().startsWith(term.toLowerCase())
 
 export default class Search extends Component {
-  constructor (dispatcher, keyspaces, types, isInDialog = false) {
+  constructor (dispatcher, types, isInDialog = false) {
     super()
     this.types = types || Object.keys(empty).concat(['blocks'])
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
     this.isInDialog = isInDialog
-    this.keyspaces = keyspaces
+    this.keyspaces = []
     this.timeout = {}
-    this.keyspaces.forEach(key => {
-      this.timeout[key] = null
-    })
     this.result = {}
-    this.clearResults()
   }
   setStats (stats) {
     this.stats = stats
+    this.setKeyspaces(Object.keys(this.stats))
+  }
+  setKeyspaces (keyspaces) {
+    this.keyspaces = keyspaces
+    this.keyspaces.forEach(key => {
+      this.timeout[key] = null
+    })
+    this.clearResults()
   }
   clearResults () {
     this.result = {}

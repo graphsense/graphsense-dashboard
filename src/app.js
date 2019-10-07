@@ -29,16 +29,6 @@ const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
-let supportedKeyspaces
-
-try {
-  supportedKeyspaces = JSON.parse(SUPPORTED_KEYSPACES) // eslint-disable-line no-undef
-  if (!Array.isArray(supportedKeyspaces)) throw new Error('SUPPORTED_KEYSPACES is not an array')
-} catch (e) {
-  console.error(e.message)
-  supportedKeyspaces = []
-}
-
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
@@ -89,12 +79,13 @@ const fromURL = (url, keyspaces) => {
 }
 
 export default class Model extends Callable {
-  constructor (locale, rest, login, search, landingpage) {
+  constructor (locale, stats, rest, login, search, landingpage) {
     super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-    this.keyspaces = supportedKeyspaces
+    this.stats = stats || {}
+    this.keyspaces = Object.keys(this.stats)
     this.snapshotTimeout = null
 
     this.statusbar = new Statusbar(this.call)
@@ -192,7 +183,7 @@ export default class Model extends Callable {
     })
     // user clicks address in a table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
-      if (supportedKeyspaces.indexOf(keyspace) === -1) return
+      if (this.keyspaces.indexOf(keyspace) === -1) return
       this.statusbar.addLoading(address)
       this.mapResult(this.rest.node(keyspace, {id: address, type: 'address'}), 'resultNode', address)
     })
@@ -886,7 +877,8 @@ export default class Model extends Callable {
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
     this.login = login || new Login(this.call)
-    this.search = search || new Search(this.call, this.keyspaces)
+    this.search = search || new Search(this.call)
+    this.search.setStats(this.stats)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())

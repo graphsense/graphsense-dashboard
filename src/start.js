@@ -9,17 +9,6 @@ import Login from './login/login.js'
 const logger = Logger.create('Start') // eslint-disable-line no-unused-vars
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
-// TODO code duplication!
-let supportedKeyspaces
-
-try {
-  supportedKeyspaces = JSON.parse(SUPPORTED_KEYSPACES) // eslint-disable-line no-undef
-  if (!Array.isArray(supportedKeyspaces)) throw new Error('SUPPORTED_KEYSPACES is not an array')
-} catch (e) {
-  console.error(e.message)
-  supportedKeyspaces = []
-}
-
 const prefixLength = 5
 
 export default class Start extends Callable {
@@ -27,10 +16,9 @@ export default class Start extends Callable {
     super()
     this.locale = locale
     this.rest = new Rest(baseUrl, prefixLength)
-    this.keyspaces = supportedKeyspaces
-    this.search = new Search(this.call, this.keyspaces)
+    this.search = new Search(this.call)
     this.login = new Login(this.call)
-    this.landingpage = new Landingpage(this.call, this.keyspaces)
+    this.landingpage = new Landingpage(this.call)
     this.landingpage.setLogin(this.login)
     this.registerDispatchEvents(actions)
     this.call('stats')
