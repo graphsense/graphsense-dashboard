@@ -16,10 +16,11 @@ import {entityWidth, categories, expandHandleWidth} from './globals.js'
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
 const margin = 300
-const x = -300
-const y = -300
 const w = 800
 const h = 600
+
+const x = w / -2
+const y = h / -2
 
 const hsl2rgb = (h, s, l) => {
   h = h % 360
@@ -604,7 +605,7 @@ export default class NodeGraph extends Component {
       this.svg = create('svg')
         .classed('w-full h-full graph', true)
         .attr('viewBox', `${x} ${y} ${w} ${h}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
+        .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
         .call(this.zoom.on('zoom', () => {
           this.transform.k = event.transform.k
@@ -673,6 +674,12 @@ export default class NodeGraph extends Component {
           aRoot.attr('transform', `translate(${x}, ${y})`)
           layer.translate(x, y)
         })
+      if (this.layers.length === 0) {
+        entityRoot.append('text')
+          .attr('text-anchor', 'middle')
+          .attr('fill', 'lightgrey')
+          .text('Nothing to display yet!')
+      }
     } else {
       this.layers.forEach((layer) => {
         if (layer.nodes.size() === 0) return
