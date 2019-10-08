@@ -172,7 +172,11 @@ export default class Rest {
     let addKeyspace = (node) => {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {
-        path.node.keyspace = keyspace
+        path.node.keyspace = keyspace;
+        (path.node.tags || []).forEach(tag => {
+          tag.keyspace = keyspace
+          tag.currency = keyspace.toUpperCase()
+        })
         path.matchingAddresses.forEach(address => { address.keyspace = keyspace })
         addKeyspace(path)
       })
