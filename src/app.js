@@ -778,27 +778,20 @@ export default class Model extends Callable {
       if (this.isReplaying) return
       let table = this.browser.content[1]
       if (!table) return
-      let filename
-      let request
+      let url
       if (table instanceof NeighborsTable) {
         let params = table.getParams()
-        request = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
-        filename = (params.isOutgoing ? 'outgoing' : 'incoming') + ` neighbors of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
       } else if (table instanceof TagsTable) {
         let params = table.getParams()
-        request = this.rest.tags(params.keyspace, params, true)
-        filename = `tags of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.tags(params.keyspace, params, true)
       } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
         let params = table.getParams()
-        request = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
-        filename = `transactions of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
       }
-      if (request) {
-        this.mapResult(request, 'receiveCSV', filename + '.csv')
+      if (url) {
+        this.layout.triggerDownloadViaLink(url)
       }
-    })
-    this.dispatcher.on('receiveCSV', ({context, result}) => {
-      FileSaver.saveAs(result, context)
     })
     this.dispatcher.on('addAllToGraph', () => {
       let table = this.browser.content[1]

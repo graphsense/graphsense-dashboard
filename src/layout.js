@@ -22,6 +22,11 @@ export default class Layout extends Component {
   triggerFileLoad (loadType) {
     this.root.querySelector(`.file-loader[data-type="${loadType}"]`).click()
   }
+  triggerDownloadViaLink (url) {
+    let a = this.root.querySelector('a#downloadCSV')
+    a.setAttribute('href', url)
+    a.click()
+  }
   setCurrency (currency) {
     this.currency = currency
     this.setUpdate('currency')

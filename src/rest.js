@@ -76,8 +76,7 @@ export default class Rest {
     } else {
       url += '.csv'
     }
-    return fetch(url, options()) // eslint-disable-line no-undef
-      .then(resp => resp.blob())
+    return url
   }
   keyspaceUrl (keyspace) {
     return this.baseUrl + (keyspace ? '/' + keyspace : '')
