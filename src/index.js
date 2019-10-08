@@ -47,11 +47,13 @@ model.render(document.body)
 
 if (module.hot) {
   let Model
+  /*
   import('./app.js').then(app => { // works despite of parsing error of eslint
     Model = app.default
     model = new Model(locale, model.rest, model.stats)
     model.render(document.body)
   })
+  */
   module.hot.accept([
     './browser.js',
     './browser/address.html',
@@ -99,12 +101,12 @@ if (module.hot) {
   ], () => {
     // dispatcher.history = [debugHistory[0]]
 
-    if(!Model) return
+    if (!Model) return
     model = new Model(locale)
     model.replay()
     model.render(document.body)
   })
   if ('serviceWorker' in navigator) {
-    //navigator.serviceWorker.register('./sw.js')
+    // navigator.serviceWorker.register('./sw.js')
   }
 }

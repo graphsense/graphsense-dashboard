@@ -14,6 +14,7 @@ const prefixLength = 5
 export default class Start extends Callable {
   constructor (locale) {
     super()
+    this.isStart = true
     this.locale = locale
     this.rest = new Rest(baseUrl, prefixLength)
     this.search = new Search(this.call)
@@ -22,6 +23,8 @@ export default class Start extends Callable {
     this.landingpage.setLogin(this.login)
     this.registerDispatchEvents(actions)
     this.call('stats')
+    this.mapResult(this.rest.refreshToken(), 'refreshResult')
+    this.showLandingpage = true
   }
   render (root) {
     if (root) this.root = root

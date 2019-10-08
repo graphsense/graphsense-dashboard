@@ -1,16 +1,15 @@
 import {json} from 'd3-fetch'
 import Logger from './logger.js'
-import Cookies from 'js-cookie'
 
 const logger = Logger.create('Rest')
 
-const options = {
+const options = () => ({
   credentials: 'include',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json'
   }
-}
+})
 
 const translateClusterToEntity = msg => node => {
   switch (msg) {
@@ -44,16 +43,23 @@ export default class Rest {
     this.baseUrl = baseUrl
     this.prefixLength = prefixLength
     this.json = this.remoteJson
-    this.authenicated = false
+  }
+  refreshToken () {
+    logger.debug('refreshToken')
+    if (this.refreshing) return Promise.reject(new Error('refresh in progress'))
+    logger.debug('refreshing Token')
+    this.refreshing = true
+    return json(this.baseUrl + '/token_refresh', options())
+      .then(result => {
+        if (!result.refreshed) return Promise.reject(new Error('refreshed is false'))
+        logger.debug('refresh successful')
+        return result
+      })
+      .finally(() => { logger.debug('refresh cleanup'); this.refreshing = false })
   }
   remoteJson (keyspace, url, field) {
     let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    let accessToken = Cookies.get('accessToken')
-
-    if (accessToken) {
-      options.headers['Authorization'] = 'Bearer ' + accessToken
-    }
-    return json(newurl, options)
+    return json(newurl, options())
       .then(result => {
         if (field) {
         // result is an array
@@ -67,14 +73,9 @@ export default class Rest {
         }
         return Promise.resolve(result)
       }, error => {
-        if (this.access_token && error.message && error.message.startsWith('401')) {
-          options.headers['Authorization'] = 'Bearer ' + this.refresh_token
-          return json(this.baseUrl + '/token_refresh', options).then((result) => {
-            if (!result.access_token) return Promise.reject(new Error('got no access_token'))
-            this.access_token = result.access_token
-            if (result.refresh_token) this.refresh_token = result.refresh_token
-            return this.remoteJson(keyspace, url, field)
-          })
+        if (error.message && error.message.startsWith('401')) {
+          return this.refreshToken()
+            .then(() => this.remoteJson(keyspace, url, field))
         }
         error.keyspace = keyspace
         error.requestURL = url
@@ -90,7 +91,7 @@ export default class Rest {
     } else {
       url += '.csv'
     }
-    return fetch(url, options) // eslint-disable-line no-undef
+    return fetch(url, options()) // eslint-disable-line no-undef
       .then(resp => resp.blob())
   }
   keyspaceUrl (keyspace) {
@@ -202,19 +203,14 @@ export default class Rest {
   }
   login (username, password) {
     this.username = username
-    options.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
+    let opt = options()
+    opt.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
     // using d3 json directly to pass options
-    return json(this.baseUrl + '/login', options)
+    return json(this.baseUrl + '/login', opt)
       .catch(error => {
         // normalize message
         if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
       })
-  }
-  setAccessToken (token) {
-    this.access_token = token
-  }
-  setRefreshToken (token) {
-    this.refresh_token = token
   }
 }

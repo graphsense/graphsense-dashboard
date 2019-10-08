@@ -5,7 +5,7 @@ import {addClass, removeClass} from './template_utils.js'
 import {select} from 'd3-selection'
 
 export default class Layout extends Component {
-  constructor (dispatcher, browser, graph, config, menu, search, status, currency) {
+  constructor (dispatcher, browser, graph, config, menu, search, status, login, currency) {
     super()
     this.currency = currency
     this.dispatcher = dispatcher
@@ -15,6 +15,7 @@ export default class Layout extends Component {
     this.menu = menu
     this.search = search
     this.statusbar = status
+    this.login = login
     this.currencyRoot = null
     this.disabled = {}
   }
@@ -29,6 +30,10 @@ export default class Layout extends Component {
     this.disabled[name] = disable
     this.setUpdate('buttons')
   }
+  showLogin (show) {
+    this.loginVisible = show
+    this.setUpdate('login')
+  }
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -40,6 +45,7 @@ export default class Layout extends Component {
     let menuRoot = null
     let searchRoot = null
     let statusRoot = null
+    let loginRoot = null
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = layout
       this.browser.setUpdate(true)
@@ -48,6 +54,7 @@ export default class Layout extends Component {
       this.menu.setUpdate(true)
       this.search.setUpdate(true)
       this.statusbar.setUpdate(true)
+      this.login.setUpdate(true)
       this.renderButtons()
       let loaders = this.root.querySelectorAll('.file-loader')
       loaders.forEach(loader => {
@@ -78,9 +85,12 @@ export default class Layout extends Component {
       menuRoot = this.root.querySelector('#layout-menu')
       searchRoot = this.root.querySelector('#layout-search')
       statusRoot = this.root.querySelector('#layout-status')
+      loginRoot = this.root.querySelector('#layout-login > div')
       this.currencyRoot = this.root.querySelector('#layout-currency-config')
     } else if (this.shouldUpdate('buttons')) {
       this.renderButtons()
+    } else if (this.shouldUpdate('login')) {
+      this.root.querySelector('#layout-login').style.display = this.loginVisible ? 'flex' : 'none'
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
@@ -88,6 +98,7 @@ export default class Layout extends Component {
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
     this.statusbar.render(statusRoot)
+    this.login.render(loginRoot)
     this.renderCurrency()
     super.render()
     return this.root

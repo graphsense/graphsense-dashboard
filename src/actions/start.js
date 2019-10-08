@@ -61,78 +61,93 @@ const login = function ([username, password]) {
   this.mapResult(this.rest.login(username, password), 'loginResult')
 }
 
+const refreshResult = function ({result}) {
+  logger.debug('refreshResult', result)
+  if (result.refreshed) return this.call('loginResult', {result : {loggedin: true}})
+}
+
 const loginResult = function ({result}) {
   logger.debug('loginResult', result)
-  if (result.access_token && result.refresh_token) {
-    this.rest.setAccessToken(result.access_token)
-    this.rest.setRefreshToken(result.refresh_token)
-    if(!this.graph) { // determine whether this is Start or Model
-      import('../app.js').then(app => { // works despite of parsing error of eslint
-        this.app = new app.default(this.locale, this.rest, this.stats)
-        this.call('appLoaded')
-      })
-    } else {
+  if (result.loggedin) {
+    if (!this.isStart) return this.call('appLoaded')
+    import('../app.js').then(app => { // works despite of parsing error of eslint
       this.call('appLoaded')
-    }
+      this.app = new app.default(this.locale, this.rest, this.stats)
+    })
     return
   }
   this.login.error(result.message || 'Something went wrong')
   this.login.loading(false)
 }
 
-const appLoaded = function() {
+const appLoaded = function () {
   this.login.loading(false)
-  this.landingpage.setSearch(this.search)
+  if (this.showLandingpage) {
+    this.landingpage.setSearch(this.search)
+  } else {
+    this.layout.showLogin(false)
+  }
 }
 
-const fetchError = function({context, msg, error}) {
-      switch (msg) {
-        case 'loginResult':
-          this.login.error(error.message || 'Something went wrong')
-          this.login.loading(false)
-          break
-        case 'searchresult':
-          let search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.error(error.keyspace, error.message)
-          // this.statusbar.addMsg('error', error)
-          break
-        case 'searchresultLabels': {
-          let search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.errorLabels(error.message)
-          // this.statusbar.addMsg('error', error)
-        }
-          break
-        case 'resultSearchNeighbors':
-          this.statusbar.removeSearching(context)
-          this.statusbar.addMsg('error', error)
-          break
-        case 'resultNode':
-          this.statusbar.removeLoading((context && context.data && context.data.id) || context)
-          this.statusbar.addMsg('error', error)
-          break
-        case 'resultTransactionForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultBlockForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultLabelForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultEgonet':
-          this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
-          break
-        case 'resultEntityAddresses':
-          this.statusbar.removeLoading('addresses of entity ' + context[0])
-          break
-        default:
-          this.statusbar.addMsg('error', error)
-      }
+const fetchError = function ({context, msg, error}) {
+  if (error.message.startsWith('401')) {
+    this.login.loading(false)
+    this.login.clear()
+    this.login.error('Please fill in your credentials')
+    if (this.showLandingpage) {
+      this.landingpage.setLogin(this.login)
+    } else {
+      this.layout.showLogin(true)
     }
+    return
+  }
+  switch (msg) {
+    case 'loginResult':
+      this.login.error(error.message || 'Something went wrong')
+      this.login.loading(false)
+      break
+    case 'searchresult':
+      let search = context && context.isInDialog ? this.menu.search : this.search
+      if (!search) return
+      search.hideLoading()
+      search.error(error.keyspace, error.message)
+      // this.statusbar.addMsg('error', error)
+      break
+    case 'searchresultLabels': {
+      let search = context && context.isInDialog ? this.menu.search : this.search
+      if (!search) return
+      search.hideLoading()
+      search.errorLabels(error.message)
+      // this.statusbar.addMsg('error', error)
+    }
+      break
+    case 'resultSearchNeighbors':
+      this.statusbar.removeSearching(context)
+      this.statusbar.addMsg('error', error)
+      break
+    case 'resultNode':
+      this.statusbar.removeLoading((context && context.data && context.data.id) || context)
+      this.statusbar.addMsg('error', error)
+      break
+    case 'resultTransactionForBrowser':
+      this.statusbar.removeLoading(context)
+      break
+    case 'resultBlockForBrowser':
+      this.statusbar.removeLoading(context)
+      break
+    case 'resultLabelForBrowser':
+      this.statusbar.removeLoading(context)
+      break
+    case 'resultEgonet':
+      this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
+      break
+    case 'resultEntityAddresses':
+      this.statusbar.removeLoading('addresses of entity ' + context[0])
+      break
+    default:
+      this.statusbar.addMsg('error', error)
+  }
+}
 
 export default {
   stats,
@@ -143,5 +158,6 @@ export default {
   login,
   loginResult,
   appLoaded,
-  fetchError
+  fetchError,
+  refreshResult
 }

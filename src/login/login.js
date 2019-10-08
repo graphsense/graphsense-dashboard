@@ -12,6 +12,9 @@ export default class Login extends Component {
     this.isLoading = isLoading
     this.setUpdate('loading')
   }
+  clear () {
+    this.setUpdate('clear')
+  }
   error (msg) {
     this.errorMessage = msg
     this.setUpdate('error')
@@ -41,6 +44,11 @@ export default class Login extends Component {
             input.value = 'Sign in'
           }
         }
+      })
+    }
+    if (this.shouldUpdate('clear')) {
+      this.root.querySelectorAll('input:not([type="submit"])').forEach(input => {
+        input.value = ''
       })
     }
     if (this.shouldUpdate('error')) {

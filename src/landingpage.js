@@ -10,18 +10,20 @@ export default class Landingpage extends Component {
     this.stats = {}
   }
   setSearch (search) {
-    this.search = search
-    this.search.setStats(this.stats)
+    this.searchOrLogin = search
+    this.searchOrLogin.setStats(this.stats)
     this.setUpdate(true)
   }
   setLogin (login) {
-    this.login = login
+    if (this.searchOrLogin === login) return
+    this.searchOrLogin = login
+    this.setUpdate(true)
   }
   setStats (stats) {
     this.stats = stats
     this.setUpdate('stats')
-    if (this.search) {
-      this.search.setStats(stats)
+    if (this.searchOrLogin && this.searchOrLogin.setStats) {
+      this.searchOrLogin.setStats(stats)
     }
   }
   render (root) {
@@ -34,20 +36,15 @@ export default class Landingpage extends Component {
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + stats + footer({version: VERSION}) + // eslint-disable-line no-undef
         '</div>'
-      if (this.search) {
+      if (this.searchOrLogin) {
         let searchRoot = this.root.querySelector('.splash .search')
-        this.search.setUpdate(true)
-        this.search.render(searchRoot)
-      } else if (this.login) {
-        let loginRoot = this.root.querySelector('.splash .search')
-        this.login.setUpdate(true)
-        this.login.render(loginRoot)
+        this.searchOrLogin.setUpdate(true)
+        this.searchOrLogin.render(searchRoot)
       }
     } else if (this.shouldUpdate('stats')) {
       this.renderStats()
     } else {
-      if (this.search) this.search.render()
-      if (this.login) this.login.render()
+      if (this.searchOrLogin) this.searchOrLogin.render()
     }
     super.render()
     return this.root

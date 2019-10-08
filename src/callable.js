@@ -108,6 +108,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'changeLocale',
   'login',
   'loginResult',
+  'refreshResult',
   'appLoaded'
 )
 

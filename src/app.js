@@ -851,7 +851,6 @@ export default class Model extends Callable {
     }
     console.log('model initialized')
     if (!stats) this.call('stats')
-    this.call('login', ['', ''])
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
@@ -868,10 +867,7 @@ export default class Model extends Callable {
   paramsToCall ({id, type, keyspace}) {
     this.call('clickSearchResult', {id, type, keyspace})
   }
-  createComponents (login, search, landingpage) {
-    if (login) login.call = this.call
-    if (search) search.call = this.call
-    if (landingpage) landingpage.call = this.call
+  createComponents () {
     this.isDirty = false
     this.store = new Store()
     this.browser = new Browser(this.call, defaultCurrency, this.keyspaces)
@@ -879,19 +875,15 @@ export default class Model extends Callable {
     this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
-    this.login = login || new Login(this.call)
-    this.search = search || new Search(this.call)
+    this.login = new Login(this.call)
+    this.search = new Search(this.call)
     this.search.setStats(this.stats)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, this.login, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
-    this.landingpage = landingpage || new Landingpage(this.call, this.keyspaces)
+    this.landingpage = new Landingpage(this.call, this.keyspaces)
     this.landingpage.setStats(this.stats)
-    if (this.rest.authenicated) {
-      this.landingpage.setSearch(this.search)
-    } else {
-      this.landingpage.setLogin(this.login)
-    }
+    this.landingpage.setSearch(this.search)
   }
   compress (data) {
     return new Uint32Array(
