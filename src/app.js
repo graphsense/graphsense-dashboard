@@ -590,6 +590,17 @@ export default class Model extends Callable {
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.generateTagpack())
     })
+    this.dispatcher.on('exportRestLogs', () => {
+      if (this.isReplaying) return
+      let csv = 'timestamp,url\n'
+      this.rest.getLogs().forEach(row => {
+        row[0] = moment(row[0]).format()
+        csv += row.join(',') + '\n'
+      })
+      let filename = 'REST calls ' + moment().format('YYYY-MM-DD HH-mm-ss') + '.csv'
+      let blob = new Blob([csv], {type: 'text/csv;charset=utf-8'}) // eslint-disable-line no-undef
+      FileSaver.saveAs(blob, filename)
+    })
     this.dispatcher.on('exportSvg', () => {
       if (this.isReplaying) return
       let classMap = map()

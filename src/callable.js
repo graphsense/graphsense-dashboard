@@ -97,6 +97,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'disableUndoRedo',
   'toggleSearchTable',
   'exportSvg',
+  'exportRestLogs',
   'toggleLegend',
   'downloadTable',
   'changeSearchCategory',

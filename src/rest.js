@@ -28,6 +28,7 @@ export default class Rest {
     this.baseUrl = baseUrl
     this.prefixLength = prefixLength
     this.json = this.remoteJson
+    this.logs = []
   }
   refreshToken () {
     logger.debug('refreshToken')
@@ -46,6 +47,7 @@ export default class Rest {
     let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
     return json(newurl, options())
       .then(result => {
+        this.logs.push([+new Date(), newurl])
         if (field) {
         // result is an array
           if (!Array.isArray(result[field])) {
@@ -189,5 +191,8 @@ export default class Rest {
         if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
       })
+  }
+  getLogs () {
+    return this.logs
   }
 }
