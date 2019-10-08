@@ -43,16 +43,14 @@ const timezone = jstz.determine().name()
 moment.tz.setDefault(timezone)
 
 let model = new Start(locale)
-
 model.render(document.body)
 
 if (module.hot) {
   let Model
   import('./app.js').then(app => { // works despite of parsing error of eslint
     Model = app.default
-    let root = model.root
-    model = new Model(locale, model.stats, model.rest, model.login, model.search, model.landingpage)
-    model.root = root
+    model = new Model(locale, model.rest, model.stats)
+    model.render(document.body)
   })
   module.hot.accept([
     './browser.js',
@@ -102,11 +100,11 @@ if (module.hot) {
     // dispatcher.history = [debugHistory[0]]
 
     if(!Model) return
-    model = new Model(dispatcher)
+    model = new Model(locale)
     model.replay()
     model.render(document.body)
   })
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
+    //navigator.serviceWorker.register('./sw.js')
   }
 }

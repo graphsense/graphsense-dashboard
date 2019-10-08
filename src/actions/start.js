@@ -58,7 +58,6 @@ const searchresultLabels = function ({context, result}) {
 const login = function ([username, password]) {
   logger.debug('login, this is', this)
   this.login.loading(true)
-  this.login.setUsername(username)
   this.mapResult(this.rest.login(username, password), 'loginResult')
 }
 
@@ -67,11 +66,14 @@ const loginResult = function ({result}) {
   if (result.access_token && result.refresh_token) {
     this.rest.setAccessToken(result.access_token)
     this.rest.setRefreshToken(result.refresh_token)
-    import('../app.js').then(app => { // works despite of parsing error of eslint
-      this.app = new app.default(this.locale, this.stats, this.rest, this.login, this.search, this.landingpage)
-      this.app.root = this.root
+    if(!this.graph) { // determine whether this is Start or Model
+      import('../app.js').then(app => { // works despite of parsing error of eslint
+        this.app = new app.default(this.locale, this.rest, this.stats)
+        this.call('appLoaded')
+      })
+    } else {
       this.call('appLoaded')
-    })
+    }
     return
   }
   this.login.error(result.message || 'Something went wrong')

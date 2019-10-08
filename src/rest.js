@@ -1,5 +1,6 @@
 import {json} from 'd3-fetch'
 import Logger from './logger.js'
+import Cookies from 'js-cookie'
 
 const logger = Logger.create('Rest')
 
@@ -7,9 +8,7 @@ const options = {
   credentials: 'include',
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    // never expiring token
-    'Authorization': 'Bearer ' + JWT_TOKEN // eslint-disable-line no-undef
+    'Content-Type': 'application/json'
   }
 }
 
@@ -45,11 +44,14 @@ export default class Rest {
     this.baseUrl = baseUrl
     this.prefixLength = prefixLength
     this.json = this.remoteJson
+    this.authenicated = false
   }
   remoteJson (keyspace, url, field) {
     let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    if (this.access_token) {
-      options.headers['Authorization'] = 'Bearer ' + this.access_token
+    let accessToken = Cookies.get('accessToken')
+
+    if (accessToken) {
+      options.headers['Authorization'] = 'Bearer ' + accessToken
     }
     return json(newurl, options)
       .then(result => {
@@ -172,7 +174,7 @@ export default class Rest {
     return this.json(keyspace, url, 'neighbors')
   }
   stats () {
-    return this.json(null, '/stats')
+    return json(this.baseUrl + '/stats')
   }
   searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
     let dir = isOutgoing ? 'out' : 'in'
@@ -199,6 +201,7 @@ export default class Rest {
     return this.json(keyspace, url).then(addKeyspace)
   }
   login (username, password) {
+    this.username = username
     options.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
     // using d3 json directly to pass options
     return json(this.baseUrl + '/login', options)

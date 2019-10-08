@@ -79,18 +79,19 @@ const fromURL = (url, keyspaces) => {
 }
 
 export default class Model extends Callable {
-  constructor (locale, stats, rest, login, search, landingpage) {
+  constructor (locale, rest, stats) {
     super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
     this.stats = stats || {}
     this.keyspaces = Object.keys(this.stats)
+    logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
 
     this.statusbar = new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
-    this.createComponents(login, search, landingpage)
+    this.createComponents()
     this.registerDispatchEvents(startactions)
 
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
@@ -849,6 +850,8 @@ export default class Model extends Callable {
       this.paramsToCall(initParams)
     }
     console.log('model initialized')
+    if (!stats) this.call('stats')
+    this.call('login', ['', ''])
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
@@ -883,7 +886,12 @@ export default class Model extends Callable {
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     this.landingpage = landingpage || new Landingpage(this.call, this.keyspaces)
-    this.landingpage.setSearch(this.search)
+    this.landingpage.setStats(this.stats)
+    if (this.rest.authenicated) {
+      this.landingpage.setSearch(this.search)
+    } else {
+      this.landingpage.setLogin(this.login)
+    }
   }
   compress (data) {
     return new Uint32Array(
@@ -922,7 +930,7 @@ export default class Model extends Callable {
   generateTagpack () {
     return YAML.stringify({
       title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
-      creator: this.login.getUsername(),
+      creator: this.rest.username,
       lastmod: moment().format('YYYY-MM-DD'),
       tags: this.store.getNotes()
     })
