@@ -71,6 +71,8 @@ module.exports = env => {
       new CopyWebpackPlugin([{
         from: './src/pages/static/logo-without-icon.svg'
       },
+      { from: './config/categoryColors.yaml'
+      },
       { from: './src/pages/static/favicon.png'
       }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),

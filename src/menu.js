@@ -5,7 +5,7 @@ import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
-import {categories, moreThan1TagCategory, maxSearchBreadth, maxSearchDepth} from './globals.js'
+import {maxSearchBreadth, maxSearchDepth} from './globals.js'
 import {replace, addClass} from './template_utils.js'
 import Search from './search/search.js'
 
@@ -22,6 +22,7 @@ export default class Menu extends Component {
     this.dispatcher = dispatcher
     this.keyspaces = keyspaces
     this.view = {}
+    this.categories = []
   }
   showNodeDialog (x, y, params) {
     let menuWidth = 250
@@ -57,6 +58,9 @@ export default class Menu extends Component {
     if (y + menuHeight > height) y -= menuWidth
     this.menuX = x
     this.menuY = y
+  }
+  setCategories (categories) {
+    this.categories = categories
   }
   hideMenu () {
     this.view = {}
@@ -146,7 +150,7 @@ export default class Menu extends Component {
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
       let input = form.querySelector('select')
-      categories.filter(cat => cat !== moreThan1TagCategory).forEach(category => {
+      this.categories.forEach(category => {
         let option = document.createElement('option')
         option.innerHTML = category
         option.setAttribute('value', category)

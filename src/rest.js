@@ -199,4 +199,7 @@ export default class Rest {
   getLogs () {
     return this.logs
   }
+  categories () {
+    return this.json(null, '/categories')
+  }
 }

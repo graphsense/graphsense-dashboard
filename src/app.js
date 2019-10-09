@@ -1,4 +1,5 @@
 import Callable from './callable.js'
+import {text} from 'd3-fetch'
 import Store from './store.js'
 import Login from './login/login.js'
 import Search from './search/search.js'
@@ -829,6 +830,17 @@ export default class Model extends Callable {
       this.browser.setUpdate('locale')
       this.graph.setUpdate('layers')
     })
+    this.dispatcher.on('receiveCategories', ({result}) => {
+      if (!Array.isArray(result)) return
+      result = result.map(({category}) => category)
+      this.graph.setCategories(result)
+      this.menu.setCategories(result)
+      this.config.setCategoryColors(this.graph.getCategoryColors())
+    })
+    this.dispatcher.on('receiveCategoryColors', ({result}) => {
+      this.graph.setCategoryColors(result)
+      this.config.setCategoryColors(this.graph.getCategoryColors())
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL, this.keyspaces)
       logger.debug('hashchange', e, params)
@@ -853,8 +865,9 @@ export default class Model extends Callable {
     if (initParams.id) {
       this.paramsToCall(initParams)
     }
-    console.log('model initialized')
     if (!stats) this.call('stats')
+    this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
+    this.mapResult(this.rest.categories(), 'receiveCategories')
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {

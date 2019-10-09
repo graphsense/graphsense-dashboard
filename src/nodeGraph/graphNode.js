@@ -4,7 +4,7 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {entityWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
+import {entityWidth, expandHandleWidth} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -225,7 +225,7 @@ class GraphNode extends Component {
     } else {
       tag = this.getActorCategory() || ''
       if (!tag && this.data.tags.length > 1) {
-        tag = moreThan1TagCategory
+        tag = ''
       }
     }
     logger.debug('coloring tag', tag)

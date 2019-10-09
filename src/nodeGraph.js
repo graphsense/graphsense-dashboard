@@ -11,7 +11,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import {formatCurrency} from './utils'
 import Logger from './logger.js'
-import {entityWidth, categories, expandHandleWidth} from './globals.js'
+import {entityWidth, expandHandleWidth} from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -29,26 +29,18 @@ const hsl2rgb = (h, s, l) => {
   return `hsl(${h}, ${s}, ${l})`
 }
 
-const lightness = {
-  'entity': 0.75,
-  'address': 0.88
+const lightnessFactor = {
+  'entity': 1,
+  'address': 0.83
 }
 const defaultColor = {
   'entity': hsl2rgb(178, 0, 0.95),
-  'address': hsl2rgb(178, 0, 1)
+  'address': hsl2rgb(178, 0, 0.90)
 }
 
 const transactionsPixelRange = [1, 7]
 
 const colorScale = scaleOrdinal(schemeCategory10)
-const predefinedCategories = (() => {
-  return categories.reduce((obj, category, i) => {
-    let c = hsl(colorScale(i))
-    c.s -= 0.1
-    obj[category] = c.toString()
-    return obj
-  }, {})
-})()
 
 const maxNumSnapshots = 4
 
@@ -69,33 +61,29 @@ export default class NodeGraph extends Component {
     this.highlightedNodes = []
     this.layers = []
     this.transform = {k: 1, x: 0, y: 0, dx: 0, dy: 0}
-    this.colorMapCategories = map(predefinedCategories)
+    this.colorMapCategories = map()
     this.colorMapTags = map()
-    this.colorGen = (map, type) => {
-      return (k) => {
-        if (!k) return defaultColor[type]
-        let color = map.get(k)
-        if (color === undefined) {
-          color = colorScale(map.size())
-          logger.debug('new color', color)
-          map.set(k, color.toString())
-        }
-        logger.debug('colorGen', type, k, color)
-        let c = hsl(color)
-        c.l = lightness[type]
-        return c
+    let colorGen = (map, type) => (k) => {
+      if (!k) return defaultColor[type]
+      let color = map.get(k)
+      if (color === undefined) {
+        color = colorScale(map.size())
+        map.set(k, color.toString())
       }
+      let c = hsl(color)
+      c.l = c.l * lightnessFactor[type]
+      return c
     }
     this.colors =
       {
         'entity': {
-          categories: this.colorGen(this.colorMapCategories, 'entity'),
-          tags: this.colorGen(this.colorMapTags, 'entity'),
+          categories: colorGen(this.colorMapCategories, 'entity'),
+          tags: colorGen(this.colorMapTags, 'entity'),
           range: (v) => defaultColor['entity']
         },
         'address': {
-          categories: this.colorGen(this.colorMapCategories, 'address'),
-          tags: this.colorGen(this.colorMapTags, 'address'),
+          categories: colorGen(this.colorMapCategories, 'address'),
+          tags: colorGen(this.colorMapTags, 'address'),
           range: (v) => defaultColor['address']
         }
       }
@@ -111,6 +99,25 @@ export default class NodeGraph extends Component {
     // initialize with true to allow initial snapshot
     this.dirty = true
     this.createSnapshot()
+  }
+  setCategoryColors (cc) {
+    if (cc === null || Array.isArray(cc) || typeof cc !== 'object') return
+    for (let category in cc) {
+      logger.debug('category', category, cc[category])
+      let color = cc[category]
+      this.colorMapCategories.set(category, color)
+    }
+    this.setUpdate('layers')
+  }
+  setCategories (categories) {
+    if (!Array.isArray(categories)) return
+    categories.forEach((category, i) => {
+      if (this.colorMapCategories.has(category)) return
+      let c = hsl(colorScale(i))
+      c.s -= 0.1
+      this.colorMapCategories.set(category, c.toString())
+    })
+    this.setUpdate('layers')
   }
   setNodes (node, type) {
     let nodes
@@ -166,7 +173,7 @@ export default class NodeGraph extends Component {
     return (id, type, keyspace) => this.references[type].has([id, keyspace])
   }
   getCategoryColors () {
-    return {...predefinedCategories}
+    return this.colorMapCategories
   }
   createSnapshot () {
     // don't create snapshot if nothing has changed

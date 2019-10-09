@@ -8,6 +8,7 @@ import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
 import Component from './component.js'
 import Logger from './logger.js'
+import {map} from 'd3-collection'
 
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
@@ -18,7 +19,7 @@ export default class Config extends Component {
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
-    this.categoryColors = {}
+    this.categoryColors = map()
     this.locale = locale
   }
   toggleConfig () {
@@ -47,6 +48,9 @@ export default class Config extends Component {
   }
   setCategoryColors (colors) {
     this.categoryColors = colors
+    if (this.visible === 'legend') {
+      this.setUpdate(true)
+    }
   }
   render (root) {
     if (root) this.root = root
@@ -67,14 +71,14 @@ export default class Config extends Component {
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)
     } else if (this.visible === 'legend') {
-      for (let name in this.categoryColors) {
+      this.categoryColors.entries().forEach(({key, value}) => {
         let itemEl = document.createElement('div')
         itemEl.className = 'flex items-center'
         itemEl.innerHTML = legendItem
-        itemEl.querySelector('.legendColor').style.backgroundColor = this.categoryColors[name]
-        itemEl.querySelector('.legendItem').innerHTML = name
+        itemEl.querySelector('.legendColor').style.backgroundColor = value
+        itemEl.querySelector('.legendItem').innerHTML = key
         el.appendChild(itemEl)
-      }
+      })
     } else if (this.visible === 'export') {
       el.innerHTML = exportConfig
       el.querySelectorAll('button[data-msg]').forEach(button => {

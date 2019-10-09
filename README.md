@@ -49,6 +49,14 @@ If you don't want to use docker or want to generate the static site, create a lo
 
 Build destination of the application is `dist`, for the static site it's `official`.
 
+The local production build uses `DEV_REST_ENDPOINT`.
+
+## Color configuration
+
+You can map tag categories to colors in `./config/categoryColors.yaml`. The file contains hints on the format.
+
+This file deployed as is. You can easily replace it at runtime in the deployed directory.
+
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com
 [graphsense-rest]: https://github.com/graphsense/graphsense-rest

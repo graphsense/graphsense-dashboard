@@ -10,23 +10,6 @@ const searchlimit = 100
 const prefixLength = 5
 const labelPrefixLength = 3
 
-const moreThan1TagCategory = 'More than 1 tag'
-
-const categories = [
-  'Organization',
-  'Miner',
-  'Exchange',
-  'Walletprovider',
-  'Marketplace',
-  'Mixingservice',
-  'Old/historic',
-  'Gambling',
-  'Services/others',
-  'Ransomware',
-  'Sextortion',
-  moreThan1TagCategory
-]
-
 const currencies =
   {
     'btc': 'Bitcoin',
@@ -41,9 +24,7 @@ export {
   browserHeight,
   browserPadding,
   entityWidth,
-  categories,
   expandHandleWidth,
-  moreThan1TagCategory,
   maxAddableNodes,
   currencies,
   maxSearchBreadth,
