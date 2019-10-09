@@ -138,7 +138,7 @@ export default class Search extends Component {
       })
       this.input.addEventListener('input', (e) => {
         this.dispatcher('search', {
-          term: e.target.value,
+          term: e.target.value.trim(),
           types: this.types,
           keyspaces: this.keyspaces,
           isInDialog: this.isInDialog

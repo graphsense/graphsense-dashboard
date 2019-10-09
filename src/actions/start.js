@@ -13,7 +13,6 @@ const receiveStats = function ({context, result}) {
 }
 
 const search = function ({term, types, keyspaces, isInDialog}) {
-  logger.debug('this is', this)
   let search = isInDialog ? this.menu.search : this.search
   if (!search) return
   search.setSearchTerm(term, labelPrefixLength)
