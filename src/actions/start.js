@@ -73,6 +73,59 @@ const loginResult = function ({result}) {
     import('../app.js').then(app => { // works despite of parsing error of eslint
       this.call('appLoaded')
       this.app = new app.default(this.locale, this.rest, this.stats)
+      if (module.hot) {
+        module.hot.accept([
+          '../browser.js',
+          '../browser/address.html',
+          '../browser/address.js',
+          '../browser/addresses_table.js',
+          '../browser/entity.html',
+          '../browser/entity.js',
+          '../browser/component.js',
+          '../browser/layout.html',
+          '../browser/option.html',
+          '../search/search.html',
+          '../search/search.js',
+          '../login/login.html',
+          '../login/login.js',
+          '../status/status.html',
+          '../statusbar.js',
+          '../browser/table.html',
+          '../browser/table.js',
+          '../browser/tags_table.js',
+          '../browser/transaction.html',
+          '../browser/transaction.js',
+          '../browser/transaction_addresses_table.js',
+          '../browser/transactions_table.js',
+          '../nodeGraph.js',
+          '../nodeGraph/addressNode.js',
+          '../nodeGraph/entityNode.js',
+          '../nodeGraph/graphNode.js',
+          '../nodeGraph/layer.js',
+          '../config.js',
+          '../config/address.html',
+          '../config/entity.html',
+          '../config/filter.html',
+          '../config/graph.html',
+          '../config/layout.html',
+          '../layout.js',
+          '../layout/layout.html',
+          '../component.js',
+          '../app.js',
+          '../config.js',
+          '../start.js',
+          '../rest.js',
+          '../store.js',
+          '../template_utils.js',
+          '../utils.js'
+        ], () => {
+          // dispatcher.history = [debugHistory[0]]
+
+          this.app = new app.default(this.locale, this.rest, this.stats)
+          this.app.replay()
+          this.app.render(document.body)
+        })
+      }
     })
     return
   }

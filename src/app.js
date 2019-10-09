@@ -25,6 +25,7 @@ import BlockTransactionsTable from './browser/block_transactions_table.js'
 import startactions from './actions/start.js'
 import {prefixLength} from './globals.js'
 import YAML from 'yaml'
+import {SHA256} from 'sha2'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -804,6 +805,39 @@ export default class Model extends Callable {
       if (url) {
         this.layout.triggerDownloadViaLink(url)
       }
+    })
+    this.dispatcher.on('downloadTagsAsJSON', () => {
+      if (this.isReplaying) return
+      let table = this.browser.content[1]
+      if (!table) return
+      if (!(table instanceof TagsTable)) return
+      let insertionDate = moment().format()
+      let tags = table.data.map(tag => ({
+        'uuid': SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
+        'version': 1,
+        'key_type': 'a',
+        'key': tag.address,
+        'tag': tag.label,
+        'contributor': 'GraphSense',
+        'tag_optional': {
+          'actor_type': null,
+          'currency': tag.currency,
+          'tag_source_uri': tag.source,
+          'tag_source_label': null,
+          'post_date': null,
+          'post_author': null
+        },
+        'contributor_optional': {
+          'contact_details': 'contact@graphsense.info',
+          'insertion_date': insertionDate,
+          'software': 'GraphSense ' + VERSION, // eslint-disable-line no-undef
+          'collection_type': 'm'
+        }
+      }))
+      let blob = new Blob([JSON.stringify(tags)], {type: 'text/json;charset=utf-8'}) // eslint-disable-line no-undef
+      let params = table.getParams()
+      let filename = `tags of ${params.type} ${params.id}.json`
+      FileSaver.saveAs(blob, filename)
     })
     this.dispatcher.on('addAllToGraph', () => {
       let table = this.browser.content[1]

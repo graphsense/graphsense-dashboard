@@ -44,6 +44,7 @@ export default class TagsTable extends Table {
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType]
     this.addOption(this.downloadOption())
+    this.addOption({icon: 'downloadTags', optionText: 'Download tags as JSON', message: 'downloadTagsAsJSON'})
     if (nodeType === 'label') this.options = []
   }
   isSmall () {

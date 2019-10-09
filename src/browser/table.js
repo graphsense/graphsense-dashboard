@@ -178,7 +178,7 @@ export default class Table extends BrowserComponent {
     }
   }
   downloadOption () {
-    return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
+    return {icon: 'downloadCSV', optionText: 'Download table as CSV', message: 'downloadTable'}
   }
   addAllOption () {
     return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}

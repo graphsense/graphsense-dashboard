@@ -1,6 +1,6 @@
 import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
-import '@fortawesome/fontawesome-free/css/all.css'
+import '@fortawesome/fontawesome-free/js/all.js'
 import './style/Octarine-Bold/fonts.css'
 import './style/Octarine-Light/fonts.css'
 import 'd3-context-menu/css/d3-context-menu.css'
@@ -44,69 +44,3 @@ moment.tz.setDefault(timezone)
 
 let model = new Start(locale)
 model.render(document.body)
-
-if (module.hot) {
-  let Model
-  /*
-  import('./app.js').then(app => { // works despite of parsing error of eslint
-    Model = app.default
-    model = new Model(locale, model.rest, model.stats)
-    model.render(document.body)
-  })
-  */
-  module.hot.accept([
-    './browser.js',
-    './browser/address.html',
-    './browser/address.js',
-    './browser/addresses_table.js',
-    './browser/entity.html',
-    './browser/entity.js',
-    './browser/component.js',
-    './browser/layout.html',
-    './browser/option.html',
-    './search/search.html',
-    './search/search.js',
-    './login/login.html',
-    './login/login.js',
-    './status/status.html',
-    './statusbar.js',
-    './browser/table.html',
-    './browser/table.js',
-    './browser/tags_table.js',
-    './browser/transaction.html',
-    './browser/transaction.js',
-    './browser/transaction_addresses_table.js',
-    './browser/transactions_table.js',
-    './nodeGraph.js',
-    './nodeGraph/addressNode.js',
-    './nodeGraph/entityNode.js',
-    './nodeGraph/graphNode.js',
-    './nodeGraph/layer.js',
-    './config.js',
-    './config/address.html',
-    './config/entity.html',
-    './config/filter.html',
-    './config/graph.html',
-    './config/layout.html',
-    './layout.js',
-    './layout/layout.html',
-    './component.js',
-    './app.js',
-    './config.js',
-    './start.js',
-    './rest.js',
-    './store.js',
-    './template_utils.js',
-    './utils.js'
-  ], () => {
-    // dispatcher.history = [debugHistory[0]]
-
-    if (!Model) return
-    model = new Model(locale)
-    model.replay()
-    model.render(document.body)
-  })
-  if ('serviceWorker' in navigator) {
-    // navigator.serviceWorker.register('./sw.js')
-  }
-}

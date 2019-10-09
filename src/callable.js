@@ -100,6 +100,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'exportRestLogs',
   'toggleLegend',
   'downloadTable',
+  'downloadTagsAsJSON',
   'changeSearchCategory',
   'changeSearchCriterion',
   'addAllToGraph',
