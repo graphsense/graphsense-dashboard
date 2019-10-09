@@ -29,7 +29,7 @@ Build the Docker image:
 Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.: 
 
-    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-dashboard
+    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:8000 graphsense-dashboard
 
 ## Generate static site
 
