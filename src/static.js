@@ -54,7 +54,9 @@ module.exports = function render (locals, callback) {
       }
     }
     request(requestOptions, (err, res, body) => {
-      if (err) return console.log(err)
+      if (err) {
+        return callback(err)
+      }
 
       try {
         body = JSON.parse(body)

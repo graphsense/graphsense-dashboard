@@ -20,16 +20,6 @@ Then start the development server:
 
 Point your browser to `localhost:8080`.
 
-### A note on static pages
-
-Static pages are not generated in development mode. The reason is that
-Webpack's development server does not work well with the static-site-generator
-plugin.
-
-To generate static pages, make a local production build (see below) and deploy the directory `official`. It contains everything for the static website.
-
-Static pages can be edited in `src/pages/static`.
-
 ## Production setup
 
 Build the Docker image:
@@ -41,15 +31,17 @@ service, e.g.:
 
     docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:80 graphsense-dashboard
 
-## Local production setup
+## Generate static site
 
-If you don't want to use docker or want to generate the static site, create a local production build: 
+Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
 
-    npm run build
+To generate static pages, run the following command:
 
-Build destination of the application is `dist`, for the static site it's `official`.
+    npm run official
 
-The local production build uses `DEV_REST_ENDPOINT`.
+Then deploy the directory `official`. It contains everything for the static website.
+
+Static pages can be edited in `src/pages/static`.
 
 ## Color configuration
 

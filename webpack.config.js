@@ -32,10 +32,20 @@ const src = path.join(__dirname, 'src')
 module.exports = env => {
   let IS_DEV = !env || !env.production
 
+  let nostatic = env && env.nostatic
+
   let output = {
     filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
   }
+
+  let entry = {
+    static: './src/static.js',
+    main: './src/index.js',
+    sw: './src/sw.js'
+  }
+
+  if (nostatic) delete entry['static']
 
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
@@ -47,11 +57,7 @@ module.exports = env => {
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
   return {
     mode: IS_DEV ? 'development' : 'production',
-    entry: {
-      static: './src/static.js',
-      main: './src/index.js',
-      sw: './src/sw.js'
-    },
+    entry,
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {
       contentBase: false,
@@ -86,7 +92,7 @@ module.exports = env => {
         $: 'jquery',
         jQuery: 'jquery'
       }),
-      !IS_DEV ? new StaticSiteGeneratorPlugin({
+      !IS_DEV && !nostatic ? new StaticSiteGeneratorPlugin({
         paths: [
           '/terms.html',
           '/privacy.html',
@@ -141,7 +147,7 @@ module.exports = env => {
       }),
       new CompressionPlugin()
     ],
-    output: output,
+    output,
     module: {
       rules: [
         {
