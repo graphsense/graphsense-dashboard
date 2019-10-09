@@ -85,7 +85,7 @@ export default class Model extends Callable {
     super()
     this.locale = locale
     this.isReplaying = false
-    this.showLandingpage = true
+    this.showLandingpage = false
     this.stats = stats || {}
     this.keyspaces = Object.keys(this.stats)
     logger.debug('keyspaces', this.keyspaces)
