@@ -7,7 +7,7 @@ A Web dashboard for interactive cryptocurrency analysis.
 You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
 the package manager for JavaScript.
 
-In order to install all dependencies run from the root of this repository:
+In order to install all dependencies, run the following from the root of this repository:
 
     npm install
 
@@ -17,10 +17,6 @@ Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
 Then start the development server:
 
     npm start
-
-While developing it is useful to have a token at build time, so you don't have to login over and over again. Having [generated a JWT access token](https://github.com/graphsense/graphsense-REST/tree/develop#generate-never-expiring-jwt), start the development server like this:
-
-    ./node_modules/.bin/webpack-dev-server --env.token={access token goes here}
 
 Point your browser to `localhost:8080`.
 
@@ -49,9 +45,9 @@ service, e.g.:
 
 If you don't want to use docker or want to generate the static site, create a local production build: 
 
-    ./build.sh {access token goes here}
+    npm run build
 
-Pass it a `JWT_TOKEN` because it's going to fetch statistics from the configured REST backend at build time. Build destination of the application is `dist`, for the static site it's `official`.
+Build destination of the application is `dist`, for the static site it's `official`.
 
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com

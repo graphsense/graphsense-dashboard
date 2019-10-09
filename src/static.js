@@ -12,7 +12,7 @@ const footer = require('./pages/static/footer.hbs')
 const wrapPage = (page) => `<div class="container mx-auto px-4 flex-grow mt-8">${page}</div>`
 
 module.exports = function render (locals, callback) {
-  locals.footer = footer({version: VERSION})
+  locals.footer = footer({version: VERSION}) // eslint-disable-line no-undef
   let useslimheader = true
   switch (locals.path) {
     case '/terms.html' :
@@ -47,20 +47,22 @@ module.exports = function render (locals, callback) {
   }
   if (locals.path === '/officialpage.html') {
     let requestOptions = {
-      url: 'https://api.graphsense.info/stats',
+      url: locals.restEndpoint + '/stats', // eslint-disable-line no-undef
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + locals.token // eslint-disable-line no-undef
+        'Content-Type': 'application/json'
       }
     }
     request(requestOptions, (err, res, body) => {
-      if (err) { return console.log(err) }
+      if (err) return console.log(err)
 
       try {
         body = JSON.parse(body)
       } catch (e) {
-        return callback(new Error('got invalid json from stats'))
+        return callback(new Error('got invalid json from ' + requestOptions.url))
+      }
+      if (body.message) {
+        return callback(new Error(`Server at ${requestOptions.url} responded with: ${body.message}`))
       }
       let stats = statsHtml.statsHtml(body)
       locals.page = wrapPage(officialpage({stats}))
