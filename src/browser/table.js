@@ -166,6 +166,7 @@ export default class Table extends BrowserComponent {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
   }
   formatLink (value) {
+    if (!value) return ''
     if (value.startsWith('http')) {
       return `<a onClick="event.stopPropagation()" href="${value}" target=_blank>${this.truncateValue(value)}</a>`
     }

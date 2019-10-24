@@ -1,5 +1,6 @@
 import {map} from 'd3-collection'
 import Logger from './logger.js'
+import moment from 'moment'
 
 const logger = Logger.create('Store') // eslint-disable-line no-unused-vars
 
@@ -20,6 +21,7 @@ export default class Store {
     this.entities = map()
     this.outgoingLinks = map()
     this.notesStore = map()
+    this.tagsStore = map()
   }
   /**
    * Adds an object to store if it does not exist
@@ -29,6 +31,7 @@ export default class Store {
     let idPrefixed = null
     let id = null
     let type = null
+    logger.debug('add', object)
     if (object.address || object.type === 'address') {
       id = object.address ? object.address : object.id
       type = 'address'
@@ -57,6 +60,12 @@ export default class Store {
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { a[key] = object[key] })
+
+      // add existing tags eventually
+      a.tags = a.tags.concat(this.tagsStore.get(idPrefixed) || [])
+      this.tagsStore.remove(idPrefixed)
+
+      logger.debug('added', a)
       // remove unneeded address field (is now id)
       delete a.address
       if (typeof object.entity === 'string' || typeof object.entity === 'number') object.toEntity = object.entity
@@ -208,12 +217,39 @@ export default class Store {
   }
   addNotes (tags) {
     tags.forEach(tag => {
+      if (!tag.note) return
       let keyspace = tag.currency.toLowerCase()
       let idPrefixed = prefix(keyspace, tag.address)
       if (this.addresses.get(idPrefixed)) {
         this.add({keyspace, id: tag.address, notes: tag.note, type: 'address'})
       } else {
         this.notesStore.set('address' + idPrefixed, tag.note)
+      }
+    })
+  }
+  addTagpack (data) {
+    let overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod']
+    let addressTags = map()
+    data.tags.forEach(tag => {
+      overwritable.forEach(key => {
+        if (!tag[key]) tag[key] = data[key]
+      })
+      tag.lastmod = moment(tag.lastmod).unix()
+      tag.keyspace = tag.currency.toLowerCase()
+      let p = prefix(tag.keyspace, tag.address)
+      let t = addressTags.get(p) || []
+      t.push(tag)
+      addressTags.set(p, t)
+    })
+    addressTags.each((tags, p) => {
+      let a = this.addresses.get(p)
+      if (a) {
+        a.tags = a.tags || []
+        a.tags = a.tags.concat(tags)
+      } else {
+        let t = this.tagsStore.get(p) || []
+        t = t.concat(tags)
+        this.tagsStore.set(p, t)
       }
     })
   }

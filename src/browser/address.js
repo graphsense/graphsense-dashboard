@@ -10,8 +10,8 @@ export default class Address extends BrowserComponent {
     this.template = address
     this.options =
       [
-        {icon: 'sign-in-alt', optionText: 'Incoming neighbors', message: 'initIndegreeTable'},
-        {icon: 'sign-out-alt', optionText: 'Outgoing neighbors', message: 'initOutdegreeTable'},
+        {icon: 'long-arrow-alt-left', optionText: 'Incoming neighbors', message: 'initIndegreeTable'},
+        {icon: 'long-arrow-alt-right', optionText: 'Outgoing neighbors', message: 'initOutdegreeTable'},
         {icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable'},
         {icon: 'tags', optionText: 'Tags', message: 'initTagsTable'}
       ]

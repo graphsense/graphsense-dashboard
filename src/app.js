@@ -896,7 +896,7 @@ export default class Model extends Callable {
       }
     })
     let initParams = fromURL(window.location.href, this.keyspaces)
-    if (initParams.id) {
+    if (initParams && initParams.id) {
       this.paramsToCall(initParams)
     }
     if (!stats) this.call('stats')
@@ -990,6 +990,7 @@ export default class Model extends Callable {
       return
     }
     this.store.addNotes(data.tags)
+    this.store.addTagpack(data)
     this.graph.setUpdate('layers')
   }
   deserialize (buffer) {
