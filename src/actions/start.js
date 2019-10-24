@@ -10,6 +10,9 @@ const receiveStats = function ({context, result}) {
   this.keyspaces = Object.keys(result)
   this.stats = {...result}
   this.landingpage.setStats({...result})
+  if(this.browser){
+    this.browser.setKeyspaces(this.keyspaces)
+  }
 }
 
 const search = function ({term, types, keyspaces, isInDialog}) {

@@ -28,6 +28,9 @@ export default class Browser extends Component {
     this.content = []
     this.visible = false
   }
+  setKeyspaces (keyspaces) {
+    this.supportedKeyspaces = keyspaces
+  }
   deselect () {
     this.visible = false
     this.setUpdate('visibility')
