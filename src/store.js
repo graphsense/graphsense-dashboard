@@ -232,7 +232,7 @@ export default class Store {
     let addressTags = map()
     data.tags.forEach(tag => {
       overwritable.forEach(key => {
-        if (!tag[key]) tag[key] = data[key]
+        if (!tag[key]) tag[key] = data[key] || tag[key]
       })
       tag.lastmod = moment(tag.lastmod).unix()
       tag.keyspace = tag.currency.toLowerCase()
@@ -289,5 +289,13 @@ export default class Store {
     }
     entityNotes.forEach(ser(this.entities, 'entity'))
     addressNotes.forEach(ser(this.addresses, 'address'))
+  }
+  allAddressTags () {
+    let tags = []
+    this.addresses.each((address) => {
+      if (!address.tags) return
+      tags = tags.concat(address.tags)
+    })
+    return tags
   }
 }

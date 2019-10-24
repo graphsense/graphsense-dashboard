@@ -80,6 +80,39 @@ const fromURL = (url, keyspaces) => {
   return {keyspace, id, type}
 }
 
+const tagToJSON = tag => ({
+  'uuid': SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
+  'version': 1,
+  'key_type': 'a',
+  'key': tag.address,
+  'tag': tag.label,
+  'contributor': 'GraphSense',
+  'tag_optional': {
+    'actor_type': null,
+    'currency': tag.currency,
+    'tag_source_uri': tag.source,
+    'tag_source_label': null,
+    'post_date': null,
+    'post_author': null
+  },
+  'contributor_optional': {
+    'contact_details': 'contact@graphsense.info',
+    'insertion_date': moment.unix(tag.lastmod).format(),
+    'software': 'GraphSense ' + VERSION, // eslint-disable-line no-undef
+    'collection_type': 'm'
+  }
+})
+
+const tagJSONToTagpackTag = tagJSON => ({
+  address: tagJSON.key,
+  label: tagJSON.tag,
+  currency: tagJSON.tag_optional.currency,
+  source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
+  lastmod: tagJSON.contributor_optional && tagJSON.contributor_optional.insertion_date,
+  category: null,
+  tagpack_uri: null
+})
+
 export default class Model extends Callable {
   constructor (locale, rest, stats) {
     super()
@@ -592,6 +625,19 @@ export default class Model extends Callable {
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.generateTagpack())
     })
+    this.dispatcher.on('saveTagsJSON', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.config.hide()
+        this.call('saveTagsJSON', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.generateTagsJSON())
+    })
     this.dispatcher.on('exportRestLogs', () => {
       if (this.isReplaying) return
       let csv = 'timestamp,url\n'
@@ -650,6 +696,11 @@ export default class Model extends Callable {
       this.layout.triggerFileLoad('loadYAML')
       this.config.hide()
     })
+    this.dispatcher.on('loadTagsJSON', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadTagsJSON')
+      this.config.hide()
+    })
     this.dispatcher.on('loadFile', (params) => {
       let type = params[0]
       let data = params[1]
@@ -667,6 +718,8 @@ export default class Model extends Callable {
         this.deserializeNotes(data)
       } else if (type === 'loadYAML') {
         this.loadTagpack(data)
+      } else if (type === 'loadTagsJSON') {
+        this.loadTagsJSON(data)
       }
     })
     this.dispatcher.on('showLogs', () => {
@@ -811,29 +864,7 @@ export default class Model extends Callable {
       let table = this.browser.content[1]
       if (!table) return
       if (!(table instanceof TagsTable)) return
-      let insertionDate = moment().format()
-      let tags = table.data.map(tag => ({
-        'uuid': SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
-        'version': 1,
-        'key_type': 'a',
-        'key': tag.address,
-        'tag': tag.label,
-        'contributor': 'GraphSense',
-        'tag_optional': {
-          'actor_type': null,
-          'currency': tag.currency,
-          'tag_source_uri': tag.source,
-          'tag_source_label': null,
-          'post_date': null,
-          'post_author': null
-        },
-        'contributor_optional': {
-          'contact_details': 'contact@graphsense.info',
-          'insertion_date': insertionDate,
-          'software': 'GraphSense ' + VERSION, // eslint-disable-line no-undef
-          'collection_type': 'm'
-        }
-      }))
+      let tags = table.data.map(tag => tagToJSON)
       let blob = new Blob([JSON.stringify(tags)], {type: 'text/json;charset=utf-8'}) // eslint-disable-line no-undef
       let params = table.getParams()
       let filename = `tags of ${params.type} ${params.id}.json`
@@ -977,6 +1008,21 @@ export default class Model extends Callable {
       lastmod: moment().format('YYYY-MM-DD'),
       tags: this.store.getNotes()
     })
+  }
+  generateTagsJSON () {
+    return JSON.stringify(this.store.allAddressTags().map(tagToJSON))
+  }
+  loadTagsJSON (data) {
+    try {
+      data = JSON.parse(data)
+      if (!data) throw new Error('result is empty')
+      this.store.addTagpack({tags: data.map(tagJSONToTagpackTag)})
+      this.graph.setUpdate('layers')
+    } catch (e) {
+      let msg = 'Could not parse JSON file'
+      this.statusbar.addMsg('error', msg + ': ' + e.message)
+      console.error(msg)
+    }
   }
   loadTagpack (yaml) {
     let data

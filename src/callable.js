@@ -113,7 +113,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'refreshResult',
   'appLoaded',
   'receiveCategories',
-  'receiveCategoryColors'
+  'receiveCategoryColors',
+  'saveTagsJSON',
+  'loadTagsJSON'
 )
 
 // synchronous messages
