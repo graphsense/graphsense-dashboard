@@ -180,7 +180,7 @@ export default class Statusbar extends Component {
       logs.appendChild(more)
     }
     if (this.numErrors > 0) {
-      removeClass(this.root.querySelector('#errors i'), 'hidden')
+      removeClass(this.root.querySelector('#errors span'), 'hidden')
     }
   }
   renderLogMsg (root, msg, index) {
