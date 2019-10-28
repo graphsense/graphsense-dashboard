@@ -1016,6 +1016,7 @@ export default class Model extends Callable {
     try {
       data = JSON.parse(data)
       if (!data) throw new Error('result is empty')
+      if (!Array.isArray(data)) data = [data]
       this.store.addTagpack({tags: data.map(tagJSONToTagpackTag)})
       this.graph.setUpdate('layers')
     } catch (e) {
