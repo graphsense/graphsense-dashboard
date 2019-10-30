@@ -12,6 +12,7 @@ export default class Landingpage extends Component {
   setSearch (search) {
     this.searchOrLogin = search
     this.searchOrLogin.setStats(this.stats)
+    this.showJumpToApp = true
     this.setUpdate(true)
   }
   setLogin (login) {
@@ -40,6 +41,11 @@ export default class Landingpage extends Component {
         let searchRoot = this.root.querySelector('.splash .search')
         this.searchOrLogin.setUpdate(true)
         this.searchOrLogin.render(searchRoot)
+      }
+      if (this.showJumpToApp) {
+        let el = this.root.querySelector('#jumpToApp')
+        el.innerHTML = '<button class="text-left text-sm text-white" data-msg="jumpToApp">Go to dashboard »</button>'
+        el.firstChild.addEventListener('click', () => this.dispatcher('jumpToApp'))
       }
     } else if (this.shouldUpdate('stats')) {
       this.renderStats()

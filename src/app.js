@@ -118,7 +118,7 @@ export default class Model extends Callable {
     super()
     this.locale = locale
     this.isReplaying = false
-    this.showLandingpage = false
+    this.showLandingpage = true
     this.stats = stats || {}
     this.keyspaces = Object.keys(this.stats)
     logger.debug('keyspaces', this.keyspaces)
@@ -735,13 +735,10 @@ export default class Model extends Callable {
       this.statusbar.toggleErrorLogs()
     })
     this.dispatcher.on('gohome', () => {
-      logger.debug('going home')
       this.showLandingpage = true
-      historyPushState()
-      this.browser.destroyComponentsFrom(0)
+      this.browser.destroyComponentsFrom(1)
       this.landingpage.setUpdate(true)
       this.layout.setUpdate(true)
-      this.render()
     })
     this.dispatcher.on('sortEntityAddresses', ({entity, property}) => {
       this.graph.sortEntityAddresses(entity, property)

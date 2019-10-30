@@ -115,7 +115,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'receiveCategories',
   'receiveCategoryColors',
   'saveTagsJSON',
-  'loadTagsJSON'
+  'loadTagsJSON',
+  'jumpToApp'
 )
 
 // synchronous messages

@@ -204,6 +204,11 @@ const fetchError = function ({context, msg, error}) {
   }
 }
 
+const jumpToApp = function() {
+  this.showLandingpage = false
+  this.layout.setUpdate(true)
+}
+
 export default {
   stats,
   receiveStats,
@@ -214,5 +219,6 @@ export default {
   loginResult,
   appLoaded,
   fetchError,
-  refreshResult
+  refreshResult,
+  jumpToApp
 }
