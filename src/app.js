@@ -106,7 +106,7 @@ const tagToJSON = tag => ({
 const tagJSONToTagpackTag = tagJSON => ({
   address: tagJSON.key,
   label: tagJSON.tag,
-  currency: tagJSON.tag_optional.currency,
+  currency: tagJSON.tag_optional && tagJSON.tag_optional.currency,
   source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
   lastmod: tagJSON.contributor_optional && tagJSON.contributor_optional.insertion_date,
   category: null,
@@ -864,7 +864,7 @@ export default class Model extends Callable {
       let table = this.browser.content[1]
       if (!table) return
       if (!(table instanceof TagsTable)) return
-      let tags = table.data.map(tag => tagToJSON)
+      let tags = table.data.map(tagToJSON)
       let blob = new Blob([JSON.stringify(tags)], {type: 'text/json;charset=utf-8'}) // eslint-disable-line no-undef
       let params = table.getParams()
       let filename = `tags of ${params.type} ${params.id}.json`
@@ -1017,7 +1017,7 @@ export default class Model extends Callable {
       data = JSON.parse(data)
       if (!data) throw new Error('result is empty')
       if (!Array.isArray(data)) data = [data]
-      this.store.addTagpack({tags: data.map(tagJSONToTagpackTag)})
+      this.store.addTagpack(this.keyspaces, {tags: data.map(tagJSONToTagpackTag)})
       this.graph.setUpdate('layers')
     } catch (e) {
       let msg = 'Could not parse JSON file'
@@ -1037,7 +1037,7 @@ export default class Model extends Callable {
       return
     }
     this.store.addNotes(data.tags)
-    this.store.addTagpack(data)
+    this.store.addTagpack(this.keyspaces, data)
     this.graph.setUpdate('layers')
   }
   deserialize (buffer) {

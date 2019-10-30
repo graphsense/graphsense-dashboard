@@ -186,6 +186,7 @@ class GraphNode extends Component {
     let tags = (this.data || {}).tags || []
     let categories = {}
     tags.forEach(tag => {
+      if (!tag['category']) return
       categories[tag['category']] = (categories[tag['category']] || 0) + 1
     })
     let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]

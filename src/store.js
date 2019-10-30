@@ -227,7 +227,7 @@ export default class Store {
       }
     })
   }
-  addTagpack (data) {
+  addTagpack (keyspaces, data) {
     let overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod']
     let addressTags = map()
     data.tags.forEach(tag => {
@@ -235,11 +235,21 @@ export default class Store {
         if (!tag[key]) tag[key] = data[key] || tag[key]
       })
       tag.lastmod = moment(tag.lastmod).unix()
-      tag.keyspace = tag.currency.toLowerCase()
-      let p = prefix(tag.keyspace, tag.address)
-      let t = addressTags.get(p) || []
-      t.push(tag)
-      addressTags.set(p, t)
+      let tags = [tag]
+      if (!tag.currency) {
+        // if no currency given, assume all available keyspaces
+        tags = keyspaces.map(keyspace => ({
+          ...tag,
+          currency: keyspace.toUpperCase()
+        }))
+      }
+      tags.forEach(tag => {
+        tag.keyspace = tag.currency.toLowerCase()
+        let p = prefix(tag.keyspace, tag.address)
+        let t = addressTags.get(p) || []
+        t.push(tag)
+        addressTags.set(p, t)
+      })
     })
     addressTags.each((tags, p) => {
       let a = this.addresses.get(p)
