@@ -177,10 +177,15 @@ class GraphNode extends Component {
     if (this.data.notes) {
       return this.data.notes
     }
-    if (this.data.tags && this.data.tags.length > 1) {
-      return this.data.tags.length + ' tags'
-    }
-    return this.findTag('label') || ''
+    let tags = (this.data || {}).tags || []
+    let grouped = {}
+    tags.forEach(tag => {
+      if (!tag.label) return
+      grouped[tag.label] = (grouped[tag.label] || 0) + 1
+    })
+    let entries = Object.entries(grouped)
+    if (entries.length < 2) return entries[0] && entries[0][0]
+    return entries.length + ' tags'
   }
   getActorCategory () {
     let tags = (this.data || {}).tags || []
@@ -195,15 +200,6 @@ class GraphNode extends Component {
   }
   getNote () {
     return this.data.notes
-  }
-  findTag (field) {
-    let tags = (this.data || {}).tags || []
-    tags.sort((a, b) => {
-      return a.timestamp - b.timestamp
-    })
-    for (let i = 0; i < tags.length; i++) {
-      if (tags[i][field]) return tags[i][field]
-    }
   }
   getLabel () {
     switch (this.labelType) {
