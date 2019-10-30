@@ -6,6 +6,7 @@ import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
+import downloadCSV from '../icons/downloadCSV.html'
 
 const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-vars
 
@@ -179,7 +180,7 @@ export default class Table extends BrowserComponent {
     }
   }
   downloadOption () {
-    return {icon: 'downloadCSV', optionText: 'Download table as CSV', message: 'downloadTable'}
+    return {html: downloadCSV, optionText: 'Download table as CSV', message: 'downloadTable'}
   }
   addAllOption () {
     return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}

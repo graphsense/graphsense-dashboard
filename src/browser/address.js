@@ -2,6 +2,8 @@ import address from './address.html'
 import moment from 'moment'
 import {replace} from '../template_utils'
 import BrowserComponent from './component.js'
+import incomingNeighbors from '../icons/incomingNeighbors.html'
+import outgoingNeighbors from '../icons/outgoingNeighbors.html'
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -10,8 +12,8 @@ export default class Address extends BrowserComponent {
     this.template = address
     this.options =
       [
-        {icon: 'long-arrow-alt-left', optionText: 'Incoming neighbors', message: 'initIndegreeTable'},
-        {icon: 'long-arrow-alt-right', optionText: 'Outgoing neighbors', message: 'initOutdegreeTable'},
+        {html: incomingNeighbors, optionText: 'Incoming neighbors', message: 'initIndegreeTable'},
+        {html: outgoingNeighbors, optionText: 'Outgoing neighbors', message: 'initOutdegreeTable'},
         {icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable'},
         {icon: 'tags', optionText: 'Tags', message: 'initTagsTable'}
       ]

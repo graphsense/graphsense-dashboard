@@ -1,7 +1,5 @@
 import {replace} from '../template_utils.js'
 import option from './option.html'
-import downloadTags from './downloadTags.html'
-import downloadCSV from './downloadCSV.html'
 import {formatCurrency} from '../utils.js'
 import moment from 'moment'
 import Component from '../component.js'
@@ -31,10 +29,8 @@ export default class BrowserComponent extends Component {
       li.className = 'cursor-pointer py-1 ' +
         (this.currentOption === optionData.message ? 'option-active' : '')
       let optionHtml = option
-      if (optionData.icon === 'downloadTags') {
-        optionHtml = downloadTags
-      } else if (optionData.icon === 'downloadCSV') {
-        optionHtml = downloadCSV
+      if (optionData.html) {
+        optionHtml = optionData.html
       }
       li.innerHTML = replace(optionHtml, optionData)
       li.addEventListener('click', () => {
