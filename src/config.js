@@ -66,7 +66,6 @@ export default class Config extends Component {
     let el = this.root.querySelector('#dropdown')
     if (this.visible === 'config') {
       el.innerHTML = graphConfig
-      this.renderSelect('entityLabel', 'changeEntityLabel', this.labelType['entityLabel'])
       this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType['addressLabel'])
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)

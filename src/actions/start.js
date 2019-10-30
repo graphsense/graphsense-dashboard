@@ -105,8 +105,6 @@ const loginResult = function ({result}) {
           '../nodeGraph/graphNode.js',
           '../nodeGraph/layer.js',
           '../config.js',
-          '../config/address.html',
-          '../config/entity.html',
           '../config/filter.html',
           '../config/graph.html',
           '../config/layout.html',
