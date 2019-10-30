@@ -414,8 +414,7 @@ export default class NodeGraph extends Component {
     } else if (anchor.nodeType === 'entity' && object.type === 'address') {
       layerIds = anchor.nodeId[1]
     } else {
-      // TODO is this safe? Are layer ids consecutive?
-      layerIds = anchor.nodeId[1] + (anchor.isOutgoing ? 1 : -1)
+      layerIds = anchor.nodeId[1] * 1 + (anchor.isOutgoing ? 1 : -1)
     }
     if (!Array.isArray(layerIds)) {
       layerIds = [layerIds]
