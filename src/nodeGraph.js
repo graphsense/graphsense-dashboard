@@ -1,7 +1,7 @@
 import {create, event} from 'd3-selection'
 import {scalePow, scaleOrdinal} from 'd3-scale'
 import {set, map} from 'd3-collection'
-import {schemeCategory10} from 'd3-scale-chromatic'
+import {schemeSet3} from 'd3-scale-chromatic'
 import {hsl} from 'd3-color'
 import {linkHorizontal} from 'd3-shape'
 import {zoom, zoomIdentity} from 'd3-zoom'
@@ -40,7 +40,7 @@ const defaultColor = {
 
 const transactionsPixelRange = [1, 7]
 
-const colorScale = scaleOrdinal(schemeCategory10)
+const colorScale = scaleOrdinal(schemeSet3)
 
 const maxNumSnapshots = 4
 
