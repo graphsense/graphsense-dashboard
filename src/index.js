@@ -1,5 +1,6 @@
 import 'datatables.net-scroller-dt/css/scroller.dataTables.css'
 import 'datatables.net-dt/css/jquery.dataTables.css'
+import '@fortawesome/fontawesome-free/css/all.css'
 import '@fortawesome/fontawesome-free/js/all.js'
 import './style/Octarine-Bold/fonts.css'
 import './style/Octarine-Light/fonts.css'
