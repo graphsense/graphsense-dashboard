@@ -5,6 +5,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+* daeb8e2 improve labeling: entities: label (category), notes override all. Position labels better in space + 1 linebreak, remove entity label options at all, fix #88
+* 7079f8a fix wrong layerid addup, #102
+* d1d76bf improve default color scheme
+* 0941e5e improve labeling by tag, fix #99
+* b2c7ac4 improve in/outgoing neighbors icons, fix #101
+* 0cedb38 add button to head to dashboard directly from landing page, fix #93
+* ddbb6da allow undefined currency in tag import (apply to all supported currencies then)
+* e8d422e add titanium tag sharing schema for import/export, fix #97
+* 4e15f12 import tagpack as tags, #97
+* 04adb98 trim whitespaces on search input
+* efcd7f0 add option for downloading tags as json
+* cc8d228 configurable category colors, fix #73
+* 6a6cc8b fix null currencies in tags table after neighbor search, fix #79
+* 8129aed export rest calls as csv, fix #89
+* e51a84d now that we have cookie based auth, download csv via link (=streaming), fix #44
+* 05a51d4 authentication via cookies, #58
+* c1df2bf show empty graph message, center graph, slice aspectratio, fix #84
+* 6658ed9 improve footer, fix #80
+* 360f38c export notes as tag pack, fix #64
+* d025db9 add compression to js files
+* 9655bda rename cluster to entity (everywhere), fix #92
+* 7a7a369 skip searchNeighbors by num. adresses, fix #76
+* 596d301 import/export user notes, fix #64
+* 6e05ce6 load all numeral locales; fallback if locale cannot be found; overwrite thousands delimiter for german locale, fix #83
+* 79036c4 lazy loading of app, related to #77
+* a0fd990 improve offical landing page design
+* 3af7178 add acknowledgements and logos to footer, use handlebars-template-loader
+* 6e4f4e6 show stats on official landing page
+* a054d1a performance improvement when moving nodes (dont redraw everything)
+* eae27a1 increase searchDepth threshold, improve setting search params
+* b400ecb hide search loading message and show error on search neighbors error
+
 ## [0.4.1] - 2019-06-28
 ### Changed
 * 43776ec add license
