@@ -585,6 +585,7 @@ export default class Model extends Callable {
       if (this.isReplaying) return
       if (!this.promptUnsavedWork('start a new graph')) return
       this.createComponents()
+      this.loadCategories()
     })
     this.dispatcher.on('save', (stage) => {
       if (this.isReplaying) return
@@ -928,6 +929,9 @@ export default class Model extends Callable {
       this.paramsToCall(initParams)
     }
     if (!stats) this.call('stats')
+    this.loadCategories()
+  }
+  loadCategories () {
     this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
     this.mapResult(this.rest.categories(), 'receiveCategories')
   }
