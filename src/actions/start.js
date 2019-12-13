@@ -65,12 +65,12 @@ const login = function ([username, password]) {
 
 const refreshResult = function ({result}) {
   logger.debug('refreshResult', result)
-  if (result.refreshed) return this.call('loginResult', {result : {loggedin: true}})
+  if (result.status === 'success') return this.call('loginResult', {result})
 }
 
 const loginResult = function ({result}) {
   logger.debug('loginResult', result)
-  if (result.loggedin) {
+  if (result.status === 'success') {
     if (!this.isStart) return this.call('appLoaded')
     import('../app.js').then(app => { // works despite of parsing error of eslint
       this.call('appLoaded')

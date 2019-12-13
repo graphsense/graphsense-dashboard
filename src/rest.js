@@ -35,9 +35,9 @@ export default class Rest {
     if (this.refreshing) return Promise.reject(new Error('refresh in progress'))
     logger.debug('refreshing Token')
     this.refreshing = true
-    return json(this.baseUrl + '/token_refresh', options())
+    return json(this.baseUrl + '/refresh', options())
       .then(result => {
-        if (!result.refreshed) return Promise.reject(new Error('refreshed is false'))
+        if (result.status !== 'success') return Promise.reject(new Error('refreshed is false'))
         logger.debug('refresh successful')
         return result
       })
@@ -187,7 +187,9 @@ export default class Rest {
   login (username, password) {
     this.username = username
     let opt = options()
-    opt.headers['Authorization'] = 'Basic ' + btoa(username + ':' + password) // eslint-disable-line no-undef
+    opt.method = 'post'
+    opt.body = JSON.stringify({username, password}) // eslint-disable-line no-undef
+
     // using d3 json directly to pass options
     return json(this.baseUrl + '/login', opt)
       .catch(error => {
