@@ -148,8 +148,8 @@ export default class Table extends BrowserComponent {
   setResponse ({page, request, drawCallback, result}) {
     if (!this.isSmall() && page !== this.nextPage) return
     this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
-    logger.debug('data', this.data)
-    this.nextPage = result.nextPage
+    logger.debug('data', result, this.resultField, this.data)
+    this.nextPage = result.next_page
     let loading = this.loading || request
     // HACK: The table shall only be scrollable to the currently loaded data.
     // Add +1 so DataTables triggers loading more data when scrolling to the end.

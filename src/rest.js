@@ -23,6 +23,20 @@ const normalizeNodeTags = keyspace => node => {
   return node
 }
 
+const normalizeNode = node => {
+  node.nodeType = node.node_type
+  delete node.node_type
+  return node
+}
+
+const typeToEndpoint = type => {
+  if (type === 'address') return 'addresses'
+  if (type === 'entity') return 'entities'
+  if (type === 'label') return 'labels'
+  if (type === 'block') return 'blocks'
+  return type
+}
+
 export default class Rest {
   constructor (baseUrl, prefixLength) {
     this.baseUrl = baseUrl
@@ -92,72 +106,79 @@ export default class Rest {
     this.json = this.remoteJson
   }
   search (keyspace, str, limit) {
-    return this.json(keyspace, '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
+    return this.json(keyspace, '/search/' + encodeURIComponent(str))
   }
   searchLabels (str, limit) {
-    return this.json(null, '/labelsearch?q=' + encodeURIComponent(str) + '&limit=' + limit)
+    return this.json(null, '/search/labels/' + encodeURIComponent(str))
   }
   node (keyspace, {type, id}) {
-    return this.json(keyspace, `/${type}_with_tags/${id}`)
+    type = typeToEndpoint(type)
+
+    return this.json(keyspace, `/${type}/${id}`)
+      .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
   entityForAddress (keyspace, id) {
     logger.debug('rest entityForAddress', id)
-    return this.json(keyspace, '/address/' + id + '/entity_with_tags')
+    return this.json(keyspace, '/addresses/' + id + '/entity')
+      .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
   transactions (keyspace, request, csv) {
+    let type = typeToEndpoint(request.params[1])
     let url =
-       '/' + request.params[1] + '/' + request.params[0] + '/transactions'
+       '/' + type + '/' + request.params[0] + '/txs'
     if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'transactions')
+    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'address_txs')
   }
   addresses (keyspace, request, csv) {
-    let url = '/entity/' + request.params + '/addresses'
+    let url = '/entities/' + request.params + '/addresses'
     if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, 'addresses')
+      .then(result => { result.addresses.forEach(normalizeNode); return result })
   }
   tags (keyspace, {id, type}, csv) {
+    type = typeToEndpoint(type)
     logger.debug('fetch tags', keyspace)
     let url = '/' + type + '/' + id + '/tags'
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url).then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
-  egonet (keyspace, type, id, isOutgoing, limit) {
-    let dir = isOutgoing ? 'out' : 'in'
-    return this.json(keyspace, `/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
-  }
   entityAddresses (keyspace, id, limit) {
-    return this.json(keyspace, `/entity/${id}/addresses?pagesize=${limit}`, 'addresses')
+    return this.json(keyspace, `/entities/${id}/addresses?pagesize=${limit}`, 'addresses')
+      .then(result => { result.addresses.forEach(normalizeNode); return result })
   }
   transaction (keyspace, txHash) {
-    return this.json(keyspace, `/tx/${txHash}`)
+    return this.json(keyspace, `/txs/${txHash}`)
   }
   block (keyspace, height) {
-    return this.json(keyspace, `/block/${height}`)
+    return this.json(keyspace, `/blocks/${height}`)
   }
   label (id) {
-    return this.json(null, `/label/${id}`)
+    return this.json(null, `/labels/${id}`)
   }
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {
     let dir = isOutgoing ? 'out' : 'in'
+    type = typeToEndpoint(type)
     let url = `/${type}/${id}/neighbors?direction=${dir}`
     if (csv) return this.csv(keyspace, url)
     url += '&' +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')
+      .then(result => { result.neighbors.forEach(normalizeNode); return result })
   }
   stats () {
     return json(this.baseUrl + '/stats')
   }
   searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
+    type = typeToEndpoint(type)
     let dir = isOutgoing ? 'out' : 'in'
     let keyspace = id[2]
     id = id[0]
@@ -168,16 +189,20 @@ export default class Rest {
       searchCrit = 'addresses=' + params.addresses.join(',')
     }
     let url =
-      `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumAddresses=${skipNumAddresses}`
+      `/entities/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumAddresses=${skipNumAddresses}`
     let addKeyspace = (node) => {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {
-        path.node.keyspace = keyspace;
+        path.node.keyspace = keyspace
+        path.node.nodeType = 'entity';
         (path.node.tags || []).forEach(tag => {
           tag.keyspace = keyspace
           tag.currency = keyspace.toUpperCase()
         })
-        path.matchingAddresses.forEach(address => { address.keyspace = keyspace })
+        path.matching_addresses.forEach(address => {
+          address.keyspace = keyspace
+          address.nodeType = 'address'
+        })
         addKeyspace(path)
       })
       return node
@@ -202,6 +227,6 @@ export default class Rest {
     return this.logs
   }
   categories () {
-    return this.json(null, '/categories')
+    return this.json(null, '/labels/categories')
   }
 }

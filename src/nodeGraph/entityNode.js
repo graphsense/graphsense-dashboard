@@ -35,17 +35,17 @@ export default class EntityNode extends GraphNode {
     this.sortAddressesProperty = getValue
   }
   expandable () {
-    return this.data.noAddresses < noExpandableAddresses
+    return this.data.no_addresses < noExpandableAddresses
   }
   isExpand () {
-    return this.expandable() && this.nodes.size() < this.data.noAddresses
+    return this.expandable() && this.nodes.size() < this.data.no_addresses
   }
   isCollapse () {
-    return this.expandable() && this.nodes.size() === this.data.noAddresses
+    return this.expandable() && this.nodes.size() === this.data.no_addresses
   }
   expandCollapseOrShowAddressTable () {
     if (this.isExpand()) {
-      this.dispatcher('loadEntityAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.noAddresses})
+      this.dispatcher('loadEntityAddresses', {id: this.id, keyspace: this.data.keyspace, limit: this.data.no_addresses})
     } else if (this.isCollapse()) {
       this.dispatcher('removeEntityAddresses', this.id)
     } else {
@@ -68,36 +68,36 @@ export default class EntityNode extends GraphNode {
         position: 60,
         children: [
           { title: 'Final balance',
-            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.totalReceived.satoshi - data.totalSpent.satoshi})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.total_received.value - data.totalSpent.value})
           },
           { title: 'Total received',
-            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.totalReceived.satoshi})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.total_received.value})
           },
           { title: 'No. neighbors',
             children: [
               { title: 'Incoming',
-                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.inDegree})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.in_degree})
               },
               { title: 'Outgoing',
-                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.outDegree})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.out_degree})
               }
             ]
           },
           { title: 'No. transactions',
             children: [
               { title: 'Incoming',
-                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.noIncomingTxs})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.no_incoming_txs})
               },
               { title: 'Outgoing',
-                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.noOutgoingTxs})
+                action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.no_outgoing_txs})
               }
             ]
           },
           { title: 'First usage',
-            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.firstTx.timestamp})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.first_tx.timestamp})
           },
           { title: 'Last usage',
-            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.lastTx.timestamp})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.last_tx.timestamp})
           }
         ]})
     }
@@ -226,14 +226,14 @@ export default class EntityNode extends GraphNode {
     let h = this.getHeight()
     let w = this.getWidth()
     let num = (n) => numeral(n).format('0,000')
-    let plural = this.data.noAddresses > 1 ? 'es' : ''
+    let plural = this.data.no_addresses > 1 ? 'es' : ''
     button.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
       .attr('title', this.expandCollapseOrShowAddressTableTitle())
-      .text((size > 0 ? num(size) + '/' : '') + num(this.data.noAddresses) + ' address' + plural)
+      .text((size > 0 ? num(size) + '/' : '') + num(this.data.no_addresses) + ' address' + plural)
       .on('click', () => {
         event.stopPropagation()
         this.dispatcher('selectNode', ['entity', this.id])

@@ -255,8 +255,8 @@ class GraphNode extends Component {
       return label
     }
     switch (this.labelType) {
-      case 'noAddresses':
-        return this.data.noAddresses
+      case 'no_addresses':
+        return this.data.no_addresses
       case 'id':
         return this.getNote() || this.getName()
       case 'balance':
@@ -320,10 +320,10 @@ class GraphNode extends Component {
     return isOutgoing ? this.getOutDegree() : this.getInDegree()
   }
   getOutDegree () {
-    return this.data.outDegree
+    return this.data.out_degree
   }
   getInDegree () {
-    return this.data.inDegree
+    return this.data.in_degree
   }
 }
 

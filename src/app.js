@@ -52,9 +52,9 @@ let defaultLabelType =
         addressLabel: 'id'
       }
 
-const defaultCurrency = 'satoshi'
+const defaultCurrency = 'value'
 
-const defaultTxLabel = 'noTransactions'
+const defaultTxLabel = 'no_txs'
 
 const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label']
 
@@ -180,15 +180,17 @@ export default class Model extends Callable {
         this.browser.setResultNode(a)
         historyPushState(a.keyspace, a.type, a.id)
       }
+      this.statusbar.addMsg('loadingTagsFor', a.type, a.id)
+      this.mapResult(this.rest.tags(a.keyspace, {id: a.id, type: a.type}), 'resultTags', {id: a.id, type: a.type, keyspace: a.keyspace})
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       this.browser.setTransaction(result)
-      historyPushState(result.keyspace, 'transaction', result.txHash)
-      this.statusbar.removeLoading(result.txHash)
-      this.statusbar.addMsg('loaded', 'transaction', result.txHash)
+      historyPushState(result.keyspace, 'transaction', result.tx_hash)
+      this.statusbar.removeLoading(result.tx_hash)
+      this.statusbar.addMsg('loaded', 'transaction', result.tx_hash)
     })
     this.dispatcher.on('resultLabelForBrowser', ({result, context}) => {
       this.browser.setLabel(result)
@@ -233,10 +235,10 @@ export default class Model extends Callable {
       this.config.hide()
       this.graph.deselect()
     })
-    this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
-      this.browser.loading.add(txHash)
-      this.statusbar.addLoading(txHash)
-      this.mapResult(this.rest.transaction(keyspace, txHash), 'resultTransactionForBrowser', txHash)
+    this.dispatcher.on('clickTransaction', ({txhash, keyspace}) => {
+      this.browser.loading.add(txhash)
+      this.statusbar.addLoading(txhash)
+      this.mapResult(this.rest.transaction(keyspace, txhash), 'resultTransactionForBrowser', txhash)
     })
     this.dispatcher.on('clickBlock', ({height, keyspace}) => {
       this.browser.loading.add(height)
@@ -393,7 +395,11 @@ export default class Model extends Callable {
         } else {
           this.statusbar.addMsg('loadedEntityFor', context.addressId)
         }
-        this.store.add({...resultCopy, forAddresses: [context.addressId]})
+        let e = this.store.add({...resultCopy, forAddresses: [context.addressId]})
+        if (!e.tags) {
+          this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
+          this.mapResult(this.rest.tags(keyspace, {id: e.id, type: e.type}), 'resultTags', {id: e.id, type: e.type, keyspace: e.keyspace})
+        }
         this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}})
       } else if (context.stage === 4 && context.id && context.type) {
         let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
@@ -411,7 +417,7 @@ export default class Model extends Callable {
         let o = this.store.get(context.keyspace, context.type, context.id)
         if (!o.tags) {
           this.statusbar.addMsg('loadingTagsFor', o.type, o.id)
-          this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keypspace: o.keyspace})
+          this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keyspace: o.keyspace})
         }
         this.graph.add(o, context.anchor)
         this.browser.setUpdate('tables_with_addresses')
@@ -422,7 +428,7 @@ export default class Model extends Callable {
       let keyspace = context.keyspace
       if (!context.stage) {
         let o = this.store.get(context.keyspace, context.type, context.id)
-        if (o.inDegree >= degreeThreshold) {
+        if (o.in_degree >= degreeThreshold) {
           this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
           return
         }
@@ -439,7 +445,7 @@ export default class Model extends Callable {
           })
           // this.storeRelations(result.neighbors, o, o.keyspace, false)
         }
-        if (o.outDegree >= degreeThreshold || o.outDegree === o.outgoing.size()) {
+        if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
           this.call(context.backCall.msg, context.backCall.data)
           return
         }
@@ -461,6 +467,7 @@ export default class Model extends Callable {
     })
     this.dispatcher.on('resultTags', ({context, result}) => {
       let o = this.store.get(context.keyspace, context.type, context.id)
+      logger.debug('o', o)
       this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
       o.tags = result || []
       let nodes = null
@@ -788,8 +795,8 @@ export default class Model extends Callable {
 
           let parent = this.graph.add(node, anchor)
           // link addresses to entity and add them (if any returned due of 'addresses' search criterion)
-          pathnode.matchingAddresses.forEach(address => {
-            address.entity = pathnode.node.cluster
+          pathnode.matching_addresses.forEach(address => {
+            address.entity = pathnode.node.entity
             let a = this.store.add(address)
             // anchor the address to its entity
             this.graph.add(a, {nodeId: parent.id, nodeType: 'entity'})

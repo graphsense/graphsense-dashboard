@@ -15,13 +15,13 @@ function _formatCurrency (n, c, d, t) {
   return s + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, '$1' + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : '')
 }
 
-function formatBTC (satoshiValue, currencyCode, {dontAppendCurrency, keyspace}) {
-  let value = satoshiValue / 10000 / 10000
+function formatBTC (valueValue, currencyCode, {dontAppendCurrency, keyspace}) {
+  let value = valueValue / 10000 / 10000
   if (value === 0) {
     return '0 ' + (keyspace || currencyCode).toUpperCase()
   }
   if (Math.abs(value) < 0.0001) {
-    return satoshiValue + (!dontAppendCurrency ? ' s' : '')
+    return valueValue + (!dontAppendCurrency ? ' s' : '')
   }
   return numeral(value).format('1,000.[0000]') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
@@ -32,7 +32,7 @@ function formatFiat (value, currencyCode, {dontAppendCurrency}) {
 
 function formatCurrency (value, currencyCode, options) {
   let options_ = {dontAppendCurrency: false, keyspace: 'btc', ...options}
-  if (currencyCode === 'satoshi') {
+  if (currencyCode === 'value') {
     return formatBTC(value, currencyCode, options_)
   } else {
     return formatFiat(value, currencyCode, options_)

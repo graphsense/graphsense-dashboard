@@ -23,7 +23,7 @@ export default class NeighborsTable extends Table {
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       { name: 'No. Tx',
-        data: 'noTransactions'
+        data: 'no_txs'
       }
     ]
     this.loadMessage = 'loadNeighbors'

@@ -14,10 +14,10 @@ function statsHtml (body) {
     let flat =
         { lastUpdate: (t.format('L') + ' ' + t.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
-          noAddresses: numeral(s.no_addresses).format(format),
-          noEntities: numeral(s.no_entities).format(format),
-          noTransactions: numeral(s.no_transactions).format(format),
-          noLabels: numeral(s.no_labels).format(format),
+          no_addresses: numeral(s.no_addresses).format(format),
+          no_entities: numeral(s.no_entities).format(format),
+          no_txs: numeral(s.no_txs).format(format),
+          no_labels: numeral(s.no_labels).format(format),
           currency: currencies[keyspace]
         }
     try {

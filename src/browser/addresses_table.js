@@ -11,11 +11,11 @@ export default class AddressesTable extends Table {
         render: this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)
       },
       { name: 'First usage',
-        data: 'firstTx.timestamp',
+        data: 'first_tx.timestamp',
         render: this.formatValue(this.formatTimestamp)
       },
       { name: 'Last usage',
-        data: 'lastTx.timestamp',
+        data: 'last_tx.timestamp',
         render: this.formatValue(this.formatTimestamp)
       },
       { name: 'Balance',
@@ -25,7 +25,7 @@ export default class AddressesTable extends Table {
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       { name: 'Received',
-        data: 'totalReceived',
+        data: 'total_received',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)

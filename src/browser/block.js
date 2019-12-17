@@ -20,8 +20,8 @@ export default class Block extends BrowserComponent {
     let flat = {
       height: this.data.height,
       timestamp: this.formatTimestampWithAgo(this.data.timestamp),
-      blockhash: this.data.blockHash,
-      noTransactions: this.data.noTransactions,
+      block_hash: this.data.block_hash,
+      no_txs: this.data.no_txs,
       keyspace: this.data.keyspace.toUpperCase()
     }
     this.root.innerHTML = replace(this.template, {...this.data, ...flat})

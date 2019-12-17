@@ -7,7 +7,7 @@ export default class TransactionsTable extends Table {
     this.nodeType = nodeType
     this.columns = [
       { name: 'Transaction',
-        data: 'txHash',
+        data: 'tx_hash',
         render: this.formatValue(this.truncateValue)
       },
       { name: 'Value',
@@ -25,7 +25,7 @@ export default class TransactionsTable extends Table {
       }
     ]
     this.loadMessage = 'loadTransactions'
-    this.resultField = 'transactions'
+    this.resultField = 'address_txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
   }

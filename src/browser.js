@@ -135,7 +135,7 @@ export default class Browser extends Component {
     let keyspace = comp.data.keyspace
     if (this.content[request.index + 1] instanceof TransactionsTable) return
     comp.setCurrentOption('initTransactionsTable')
-    let total = comp.data.noIncomingTxs + comp.data.noOutgoingTxs
+    let total = comp.data.no_incoming_txs + comp.data.no_outgoing_txs
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
     this.setUpdate('content')
@@ -148,7 +148,7 @@ export default class Browser extends Component {
     if (this.content[request.index + 1] instanceof TransactionsTable) return
     comp.setCurrentOption('initBlockTransactionsTable')
     this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.noTransactions, request.id, this.currency, keyspace))
+    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.no_txs, request.id, this.currency, keyspace))
     this.setUpdate('content')
   }
   initAddressesTable (request) {
@@ -158,7 +158,7 @@ export default class Browser extends Component {
     let keyspace = last.data.keyspace
     if (this.content[request.index + 1] instanceof AddressesTable) return
     last.setCurrentOption('initAddressesTable')
-    let total = last.data.noAddresses
+    let total = last.data.no_addresses
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace, this.nodeChecker))
     this.setUpdate('content')
@@ -187,7 +187,7 @@ export default class Browser extends Component {
 
     last.setCurrentOption(isOutgoing ? 'initOutdegreeTable' : 'initIndegreeTable')
     let keyspace = last.data.keyspace
-    let total = isOutgoing ? last.data.outDegree : last.data.inDegree
+    let total = isOutgoing ? last.data.out_degree : last.data.in_degree
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace, this.nodeChecker))
     this.setUpdate('content')

@@ -31,7 +31,7 @@ export default class Store {
     let idPrefixed = null
     let id = null
     let type = null
-    logger.debug('add', object)
+    logger.debug('add', JSON.stringify(object))
     if (object.address || object.type === 'address') {
       id = object.address ? object.address : object.id
       type = 'address'
@@ -62,7 +62,7 @@ export default class Store {
       Object.keys(object).forEach(key => { a[key] = object[key] })
 
       // add existing tags eventually
-      a.tags = a.tags.concat(this.tagsStore.get(idPrefixed) || [])
+      a.tags = (a.tags || []).concat(this.tagsStore.get(idPrefixed) || [])
       this.tagsStore.remove(idPrefixed)
 
       logger.debug('added', a)
@@ -151,14 +151,14 @@ export default class Store {
   linkOutgoing (source, target, keyspace, data) {
     let outgoing = this.initOutgoing(source, keyspace)
     let n = outgoing.get(target)
-    if (!n && (!data || !data.noTransactions || !data.estimatedValue)) {
+    if (!n && (!data || !data.no_txs || !data.estimated_value)) {
       outgoing.set(target, null)
       return
     }
     if (!data) return
     outgoing.set(target, {
-      noTransactions: data.noTransactions,
-      estimatedValue: data.estimatedValue
+      no_txs: data.no_txs,
+      estimated_value: data.estimated_value
     })
   }
   serialize () {
