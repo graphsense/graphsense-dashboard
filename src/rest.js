@@ -105,8 +105,8 @@ export default class Rest {
   enable () {
     this.json = this.remoteJson
   }
-  search (keyspace, str, limit) {
-    return this.json(keyspace, '/search/' + encodeURIComponent(str))
+  search (str, limit) {
+    return this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''))
   }
   searchLabels (str, limit) {
     return this.json(null, '/search/labels/' + encodeURIComponent(str))

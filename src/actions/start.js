@@ -20,23 +20,12 @@ const search = function ({term, types, keyspaces, isInDialog}) {
   if (!search) return
   search.setSearchTerm(term, labelPrefixLength)
   search.hideLoading()
-  keyspaces.forEach(keyspace => {
-    if (search.needsResults(keyspace, searchlimit, prefixLength)) {
-      if (search.timeout[keyspace]) clearTimeout(search.timeout[keyspace])
-      search.showLoading()
-      search.timeout[keyspace] = setTimeout(() => {
-        if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
-          this.mapResult(this.rest.search(keyspace, term, searchlimit), 'searchresult', {term, isInDialog})
-        }
-      }, 250)
-    }
-  })
-  if (search.needsLabelResults(searchlimit, labelPrefixLength)) {
-    if (search.timeoutLabels) clearTimeout(search.timeoutLabels)
+  if(search.needsResults(searchlimit, prefixLength)) {
+    if (search.timeout) clearTimeout(search.timeout)
     search.showLoading()
-    search.timeoutLabels = setTimeout(() => {
-      if (types.indexOf('labels') !== -1) {
-        this.mapResult(this.rest.searchLabels(term, searchlimit), 'searchresultLabels', {term, isInDialog})
+    search.timeout = setTimeout(() => {
+      if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
+        this.mapResult(this.rest.search(term, searchlimit), 'searchresult', {term, isInDialog})
       }
     }, 250)
   }
@@ -165,14 +154,6 @@ const fetchError = function ({context, msg, error}) {
       search.hideLoading()
       search.error(error.keyspace, error.message)
       // this.statusbar.addMsg('error', error)
-      break
-    case 'searchresultLabels': {
-      let search = context && context.isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.hideLoading()
-      search.errorLabels(error.message)
-      // this.statusbar.addMsg('error', error)
-    }
       break
     case 'resultSearchNeighbors':
       this.statusbar.removeSearching(context)
