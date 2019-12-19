@@ -345,7 +345,7 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
     this.entityNodes.each(node => node.setCurrency(currency))
-    if (this.txLabelType === 'estimatedValue') {
+    if (this.txLabelType === 'estimated_value') {
       this.setUpdate('links')
     }
   }
