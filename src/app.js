@@ -70,8 +70,7 @@ const fromURL = (url, keyspaces) => {
     type = split[0]
     id = split[1]
   } else if (keyspaces.indexOf(keyspace) === -1) {
-    logger.error(`invalid keyspace ${keyspace}`)
-    return
+    logger.warn(`invalid keyspace ${keyspace}?`)
   }
   if (allowedUrlTypes.indexOf(type) === -1) {
     logger.error(`invalid type ${type}`)
@@ -180,8 +179,10 @@ export default class Model extends Callable {
         this.browser.setResultNode(a)
         historyPushState(a.keyspace, a.type, a.id)
       }
-      this.statusbar.addMsg('loadingTagsFor', a.type, a.id)
-      this.mapResult(this.rest.tags(a.keyspace, {id: a.id, type: a.type}), 'resultTags', {id: a.id, type: a.type, keyspace: a.keyspace})
+      if (!a.tags) {
+        this.statusbar.addMsg('loadingTagsFor', a.type, a.id)
+        this.mapResult(this.rest.tags(a.keyspace, {id: a.id, type: a.type}), 'resultTags', {id: a.id, type: a.type, keyspace: a.keyspace})
+      }
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
@@ -235,10 +236,10 @@ export default class Model extends Callable {
       this.config.hide()
       this.graph.deselect()
     })
-    this.dispatcher.on('clickTransaction', ({txhash, keyspace}) => {
-      this.browser.loading.add(txhash)
-      this.statusbar.addLoading(txhash)
-      this.mapResult(this.rest.transaction(keyspace, txhash), 'resultTransactionForBrowser', txhash)
+    this.dispatcher.on('clickTransaction', (data) => {
+      this.browser.loading.add(data.tx_hash)
+      this.statusbar.addLoading(data.tx_hash)
+      this.mapResult(this.rest.transaction(data.keyspace, data.tx_hash), 'resultTransactionForBrowser', data.tx_hash)
     })
     this.dispatcher.on('clickBlock', ({height, keyspace}) => {
       this.browser.loading.add(height)
