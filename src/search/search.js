@@ -82,7 +82,6 @@ export default class Search extends Component {
     if (this.shouldUpdate(true)) {
       super.render()
       let placeholder = this.typesToPlaceholder()
-      logger.debug('placeholder', placeholder)
       this.root.innerHTML = replace(search, {placeholder})
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
@@ -90,7 +89,8 @@ export default class Search extends Component {
       this.form.addEventListener('submit', (e) => {
         e.returnValue = false
         e.preventDefault()
-        this.result.forEach((resultSet) => {
+        for (let i in this.result) {
+          let resultSet = this.result[i]
           if (this.types.indexOf('addresses') !== -1 && resultSet.addresses.length > 0) {
             let addresses = resultSet.addresses.filter(byPrefix(this.term))
             this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace: resultSet['currency'], isInDialog: this.isInDialog})
@@ -101,19 +101,20 @@ export default class Search extends Component {
             this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace: resultSet['currency'], isInDialog: this.isInDialog})
             return false
           }
-        })
+        }
         if (this.types.indexOf('labels') !== -1 && this.resultLabels.length > 0) {
           let labels = this.resultLabels.filter(byPrefix(this.term))
           this.dispatcher('clickSearchResult', {id: labels[0], type: 'label', keyspace: null, isInDialog: this.isInDialog})
           return false
         }
-        this.keyspaces.forEach(keyspace => {
+        for (let i in this.keyspaces) {
+          let keyspace = this.keyspaces[i]
           let blocks = this.blocklist(3, keyspace, this.term)
           if (this.types.indexOf('blocks') !== -1 && blocks.length > 0) {
             this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace, isInDialog: this.isInDialog})
             return false
           }
-        })
+        }
         this.term.split('\n').forEach((address) => {
           this.keyspaces.forEach(keyspace => {
             this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace, isInDialog: this.isInDialog})
@@ -224,7 +225,6 @@ export default class Search extends Component {
       }
 
       let blocks = this.blocklist(3, keyspace, this.term)
-      logger.debug('blcoks', blocks)
 
       let keyspaceVisible =
         addresses.length > 0 ||
@@ -249,7 +249,6 @@ export default class Search extends Component {
     let labels = this.resultLabels
       .filter(byPrefix(this.term))
       .slice(0, numShowResults)
-    logger.debug('labels', labels)
     if (labels.length > 0) {
       visible = true
       let ul = document.createElement('ol')
