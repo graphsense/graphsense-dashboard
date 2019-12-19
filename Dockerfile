@@ -1,4 +1,5 @@
-FROM alpine:3.8.4
+FROM alpine:3.10.3
+LABEL maintainer="contact@graphsense.info"
 
 ENV WORKDIR=/app
 
