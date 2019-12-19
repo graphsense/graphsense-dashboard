@@ -2,6 +2,7 @@
   "name": "graphsense-gui",
   "version": "1.0.0",
   "description": "GraphSense GUI",
+  "repository": "https://github.com/graphsense/graphsense-dashboard",
   "main": "index.js",
   "dependencies": {
     "d3": "5.7.0",
