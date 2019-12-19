@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+* 83a8d37 adapt to cleaned up rest interface
+* 693c0fa fix reload categories on new graph, \#103
+* 2290990 fix typo in stats
 * daeb8e2 improve labeling: entities: label (category), notes override all. Position labels better in space + 1 linebreak, remove entity label options at all, fix #88
 * 7079f8a fix wrong layerid addup, #102
 * d1d76bf improve default color scheme
