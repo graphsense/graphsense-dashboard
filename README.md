@@ -35,7 +35,9 @@ service, e.g.:
 
 Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
 
-To generate static pages, run the following command:
+First, make sure `DEV_REST_ENDPOINT` in `webpack.config.js` points to a [graphsense-REST][graphsense-rest] service. This is needed to fetch cryptocurrency statistics at build time.
+
+Then, to generate static pages, run the following command:
 
     npm run official
 
