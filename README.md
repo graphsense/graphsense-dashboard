@@ -2,17 +2,12 @@
 
 A Web dashboard for interactive cryptocurrency analysis.
 
-**ATTENTION:** Both production and development setup currently need a never
-expiring access token at build time since user authentication form is not
-provided yet. Please generate one first as described
-[here](https://github.com/graphsense/graphsense-REST/tree/develop#generate-never-expiring-jwt).
-
 ## Development setup
 
 You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],
 the package manager for JavaScript.
 
-In order to install all dependencies run from the root of this repository:
+In order to install all dependencies, run the following from the root of this repository:
 
     npm install
 
@@ -21,17 +16,9 @@ Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
 
 Then start the development server:
 
-    ./node_modules/.bin/webpack-dev-server --env.token={access token goes here}
+    npm start
 
 Point your browser to `localhost:8080`.
-
-### A note on static pages
-
-Static pages are not generated in development mode. The reason is that
-Webpack's development server does not work well with the static-site-generator
-plugin.
-
-Static pages are located in `src/pages/static`.
 
 ## Production setup
 
@@ -42,8 +29,27 @@ Build the Docker image:
 Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.: 
 
-    docker run -e REST_ENDPOINT="https://example.com:9000" -e JWT_TOKEN="{access token goes here}" -p 8000:80 graphsense-dashboard
+    docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:8000 graphsense-dashboard
 
+## Generate static site
+
+Static pages are not generated in development mode. The reason is that Webpack's development server does not work well with the static-site-generator plugin.
+
+First, make sure `DEV_REST_ENDPOINT` in `webpack.config.js` points to a [graphsense-REST][graphsense-rest] service. This is needed to fetch cryptocurrency statistics at build time.
+
+Then, to generate static pages, run the following command:
+
+    npm run official
+
+Then deploy the directory `official`. It contains everything for the static website.
+
+Static pages can be edited in `src/pages/static`.
+
+## Color configuration
+
+You can map tag categories to colors in `./config/categoryColors.yaml`. The file itself contains hints on the format.
+
+This file is deployed as is. You can easily replace it at runtime in the deployed directory.
 
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com

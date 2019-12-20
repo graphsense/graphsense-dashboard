@@ -4,12 +4,12 @@ import {event} from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import {clusterWidth, expandHandleWidth, moreThan1TagCategory} from '../globals.js'
+import {entityWidth, expandHandleWidth} from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
 const padding = 10
-const addressWidth = clusterWidth - 2 * padding - 2 * expandHandleWidth
+const addressWidth = entityWidth - 2 * padding - 2 * expandHandleWidth
 const addressHeight = 50
 const noExpandableNeighbors = 25
 
@@ -73,7 +73,6 @@ class GraphNode extends Component {
     } else {
       this.searchingNeighborsIn = state
     }
-    logger.debug('searchingNeighbors', this.searchingNeighborsIn, this.searchingNeighborsOut)
     this.setUpdate(true)
   }
   serialize () {
@@ -94,21 +93,57 @@ class GraphNode extends Component {
     if (this.data.mockup) return
     let label = this.getLabel()
     let size
+    let dy = 0
+    let maxLetters = this.numLetters * 2
+    let resizeFactor = 1.3
+    if (label.length > this.numLetters * 4) {
+      label = label.substring(0, this.numLetters * 4)
+    }
     if (label.length > this.numLetters) {
-      if (label.length > this.numLetters * 2) {
-        size = this.labelHeight * 0.5
-        label = label.substring(0, this.numLetters * 2)
+      if (label.length > maxLetters) {
+        size = this.labelHeight * 0.5 * resizeFactor
+        label = label.split(' ')
+        label = label.reduce((words, word) => {
+          let l = words.length - 1
+          let lwl = l >= 0 ? words[l].length : 0
+          let space = maxLetters - lwl
+          if (word.length > maxLetters) {
+            let first = word.substring(0, space)
+            let rest = word.substring(space)
+            rest = rest.match(new RegExp('.{1,' + maxLetters + '}', 'g'))
+            words[l] += ' ' + first
+            return words.concat(rest)
+          }
+          if (word.length > space) {
+            return words.concat([word])
+          }
+          words[l] += ' ' + word
+          return words
+        }, [''])
+        dy = -3
       } else {
-        size = this.labelHeight * this.numLetters / label.length
+        size = this.labelHeight * this.numLetters / label.length * resizeFactor
+        dy = -3 * ((label.length - this.numLetters) / this.numLetters)
       }
     } else {
       size = this.labelHeight
     }
+    if (!Array.isArray(label)) label = [label]
     root.node().innerHTML = ''
-    root.append('text')
+
+    dy -= (label.length - 1) * (this.labelHeight / 2.5)
+    let t = root.append('text')
       .style('font-size', size + 'px')
-      .text(label)
+      .attr('transform', `translate(0, ${dy})`)
+
+    label.forEach((row, i) => {
+      t.append('tspan')
+        .attr('x', 0)
+        .attr('dy', ((i > 0) * 1.2) + 'em')
+        .text(row)
+    })
   }
+
   renderExpand (root, isOutgoing) {
     let width = this.getWidth()
     let x = isOutgoing ? width : 0
@@ -168,7 +203,7 @@ class GraphNode extends Component {
     this.setUpdate('label')
   }
   getName () {
-    if (this.data.type === 'cluster') return this.data.id
+    if (this.data.type === 'entity') return this.data.id
     if (this.data.type === 'address') return this.data.id.substring(0, 8)
     return ''
   }
@@ -176,43 +211,58 @@ class GraphNode extends Component {
     if (this.data.notes) {
       return this.data.notes
     }
-    if (this.data.tags && this.data.tags.length > 1) {
-      return this.data.tags.length + ' tags'
-    }
-    return this.findTag('label') || ''
+    let tags = (this.data || {}).tags || []
+    let grouped = {}
+    tags.forEach(tag => {
+      if (!tag.label) return
+      grouped[tag.label] = (grouped[tag.label] || 0) + 1
+    })
+    let entries = Object.entries(grouped)
+    if (entries.length < 2) return entries[0] && entries[0][0]
+    return entries.length + ' tags'
   }
   getActorCategory () {
     let tags = (this.data || {}).tags || []
     let categories = {}
     tags.forEach(tag => {
+      if (!tag['category']) return
       categories[tag['category']] = (categories[tag['category']] || 0) + 1
     })
     let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]
-    logger.debug('categories', categories, entry)
     if (entry) return entry[0]
   }
   getNote () {
     return this.data.notes
   }
-  findTag (field) {
-    let tags = (this.data || {}).tags || []
-    tags.sort((a, b) => {
-      return a.timestamp - b.timestamp
-    })
-    for (let i = 0; i < tags.length; i++) {
-      if (tags[i][field]) return tags[i][field]
-    }
-  }
   getLabel () {
+    if (this.type === 'entity') {
+      let label = ''
+      let tag = this.getNote() || this.getTag()
+      let category = this.getActorCategory()
+      if (tag) {
+        label = tag
+      }
+      if (category) {
+        if (tag) {
+          label += ' (' + category + ')'
+        } else {
+          label = category
+        }
+      }
+      if (!label) {
+        return this.getName()
+      }
+      return label
+    }
     switch (this.labelType) {
-      case 'noAddresses':
-        return this.data.noAddresses
+      case 'no_addresses':
+        return this.data.no_addresses
       case 'id':
         return this.getNote() || this.getName()
       case 'balance':
         return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
       case 'tag':
-        return this.getTag() || this.getName()
+        return this.getNote() || this.getTag() || this.getName()
       case 'category':
         return this.getActorCategory() || this.getName()
     }
@@ -224,13 +274,12 @@ class GraphNode extends Component {
     } else {
       tag = this.getActorCategory() || ''
       if (!tag && this.data.tags.length > 1) {
-        tag = moreThan1TagCategory
+        tag = ''
       }
     }
-    logger.debug('coloring tag', tag)
     let color = this.colors.categories(tag)
     this.root
-      .select('.addressNodeRect,.clusterNodeRect')
+      .select('.addressNodeRect,.entityNodeRect')
       .style('fill', color)
       .style('stroke', 'black')
       .style('stroke-width', '1px')
@@ -271,11 +320,11 @@ class GraphNode extends Component {
     return isOutgoing ? this.getOutDegree() : this.getInDegree()
   }
   getOutDegree () {
-    return this.data.outDegree
+    return this.data.out_degree
   }
   getInDegree () {
-    return this.data.inDegree
+    return this.data.in_degree
   }
 }
 
-export {GraphNode, addressWidth, addressHeight, padding, clusterWidth, expandHandleWidth}
+export {GraphNode, addressWidth, addressHeight, padding, entityWidth, expandHandleWidth}

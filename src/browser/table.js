@@ -6,6 +6,7 @@ import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
+import downloadCSV from '../icons/downloadCSV.html'
 
 const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-vars
 
@@ -147,8 +148,8 @@ export default class Table extends BrowserComponent {
   setResponse ({page, request, drawCallback, result}) {
     if (!this.isSmall() && page !== this.nextPage) return
     this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
-    logger.debug('data', this.data)
-    this.nextPage = result.nextPage
+    logger.debug('data', result, this.resultField, this.data)
+    this.nextPage = result.next_page
     let loading = this.loading || request
     // HACK: The table shall only be scrollable to the currently loaded data.
     // Add +1 so DataTables triggers loading more data when scrolling to the end.
@@ -166,6 +167,7 @@ export default class Table extends BrowserComponent {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
   }
   formatLink (value) {
+    if (!value) return ''
     if (value.startsWith('http')) {
       return `<a onClick="event.stopPropagation()" href="${value}" target=_blank>${this.truncateValue(value)}</a>`
     }
@@ -178,7 +180,7 @@ export default class Table extends BrowserComponent {
     }
   }
   downloadOption () {
-    return {icon: 'download', optionText: 'Download table as CSV', message: 'downloadTable'}
+    return {html: downloadCSV, optionText: 'Download table as CSV', message: 'downloadTable'}
   }
   addAllOption () {
     return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}

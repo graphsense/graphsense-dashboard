@@ -1,21 +1,14 @@
 const browserHeight = 220
 const browserPadding = 1
-const clusterWidth = 190
+const entityWidth = 190
 const expandHandleWidth = 15
 const maxAddableNodes = 100
+const maxSearchDepth = 7
+const maxSearchBreadth = 100
 
-const moreThan1TagCategory = 'More than 1 tag'
-
-const categories = [
-  'Exchange',
-  'Gambling',
-  'Miner',
-  'Old/historic',
-  'Organization',
-  'Pools',
-  'Services/others',
-  moreThan1TagCategory
-]
+const searchlimit = 100
+const prefixLength = 5
+const labelPrefixLength = 3
 
 const currencies =
   {
@@ -30,10 +23,14 @@ const currencies =
 export {
   browserHeight,
   browserPadding,
-  clusterWidth,
-  categories,
+  entityWidth,
   expandHandleWidth,
-  moreThan1TagCategory,
   maxAddableNodes,
-  currencies
+  currencies,
+  maxSearchBreadth,
+  maxSearchDepth,
+  searchlimit,
+  prefixLength,
+  labelPrefixLength
+
 }

@@ -28,7 +28,11 @@ export default class BrowserComponent extends Component {
       let li = document.createElement('li')
       li.className = 'cursor-pointer py-1 ' +
         (this.currentOption === optionData.message ? 'option-active' : '')
-      li.innerHTML = replace(option, optionData)
+      let optionHtml = option
+      if (optionData.html) {
+        optionHtml = optionData.html
+      }
+      li.innerHTML = replace(optionHtml, optionData)
       li.addEventListener('click', () => {
         this.dispatcher(optionData.message, this.requestData())
       })

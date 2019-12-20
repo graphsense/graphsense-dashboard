@@ -10,6 +10,8 @@ export default class Layer extends Component {
     super()
     this.id = id
     this.nodes = map()
+    this.x = 0
+    this.y = 0
   }
   serialize () {
     return [this.id, this.nodes.keys()]
@@ -64,39 +66,49 @@ export default class Layer extends Component {
     let half = (max + min) / 2
     return node.getYForLinks() < half
   }
-  render (clusterRoot, addressRoot) {
-    if (clusterRoot) this.clusterRoot = clusterRoot
+  render (entityRoot, addressRoot) {
+    if (entityRoot) this.entityRoot = entityRoot
     if (addressRoot) this.addressRoot = addressRoot
-    if (!this.clusterRoot) throw new Error('no clusterRoot defined')
+    if (!this.entityRoot) throw new Error('no entityRoot defined')
     if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
+    let renderNodeWithPosition = (node, entityRoot, addressesRoot) => {
+      // reset absolute coords of node
+      entityRoot = entityRoot || node.root
+      addressesRoot = addressesRoot || node.addressesRoot
+      node.x = 0
+      node.y = 0
+      node.render(entityRoot)
+      entityRoot.attr('transform', `translate(0, ${cumY})`)
+      // render addresses
+      node.setUpdate(true)
+      node.renderAddresses(addressesRoot)
+      addressesRoot.attr('transform', `translate(${node.dx}, ${cumY + node.dy})`)
+      // translate entity node and its addresses
+      node.translate(0, cumY)
+    }
     this.getSortedNodes().forEach((node) => {
-      // render clusters
+      // render entities
       if (this.shouldUpdate()) {
-        let g = this.clusterRoot.append('g')
-        node.setUpdate(true)
-        // reset absolute coords of node
-        node.x = 0
-        node.y = 0
-        node.render(g)
-        g.attr('transform', `translate(0, ${cumY})`)
-        // render addresses
+        let g = this.entityRoot.append('g')
         let ag = this.addressRoot.append('g')
         node.setUpdate(true)
-        node.renderAddresses(ag)
-        ag.attr('transform', `translate(${node.dx}, ${cumY + node.dy})`)
-
-        // translate cluster node and its addresses
-        node.translate(0, cumY)
-        cumY += node.getHeight() + margin
+        renderNodeWithPosition(node, g, ag)
+      } else if (node.shouldUpdate('position')) {
+        node.setUpdate(true)
+        renderNodeWithPosition(node)
+        node.translate(this.x, this.y)
       } else {
         node.render()
         node.renderAddresses()
       }
+      cumY += node.getHeight() + margin
     })
     super.render()
   }
   translate (x, y) {
+    this.x = x
+    this.y = y
     this.nodes.each((node) => {
       node.translate(x, y)
     })

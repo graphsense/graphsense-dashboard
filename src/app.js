@@ -1,4 +1,7 @@
+import Callable from './callable.js'
+import {text} from 'd3-fetch'
 import Store from './store.js'
+import Login from './login/login.js'
 import Search from './search/search.js'
 import Browser from './browser.js'
 import Rest from './rest.js'
@@ -19,40 +22,14 @@ import NeighborsTable from './browser/neighbors_table.js'
 import TagsTable from './browser/tags_table.js'
 import TransactionsTable from './browser/transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
+import startactions from './actions/start.js'
+import {prefixLength} from './globals.js'
+import YAML from 'yaml'
+import {SHA256} from 'sha2'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
-
-let supportedKeyspaces
-
-try {
-  supportedKeyspaces = JSON.parse(SUPPORTED_KEYSPACES) // eslint-disable-line no-undef
-  if (!Array.isArray(supportedKeyspaces)) throw new Error('SUPPORTED_KEYSPACES is not an array')
-} catch (e) {
-  console.error(e.message)
-  supportedKeyspaces = []
-}
-
-const searchlimit = 100
-const prefixLength = 5
-const labelPrefixLength = 3
-
-// synchronous messages
-// get handled by model in current rendering frame
-const syncMessages = ['search']
-
-// messages that change the graph
-const dirtyMessages = [
-  'addNode',
-  'addNodeCont',
-  'resultNode',
-  'resultClusterAddresses',
-  'resultEgonet',
-  'removeNode',
-  'resultSearchNeighbors',
-  'dragNodeEnd'
-]
 
 const historyPushState = (keyspace, type, id) => {
   let s = window.history.state
@@ -71,15 +48,15 @@ const historyPushState = (keyspace, type, id) => {
 const degreeThreshold = 100
 
 let defaultLabelType =
-      { clusterLabel: 'id',
+      { entityLabel: 'category',
         addressLabel: 'id'
       }
 
-const defaultCurrency = 'satoshi'
+const defaultCurrency = 'value'
 
-const defaultTxLabel = 'noTransactions'
+const defaultTxLabel = 'no_txs'
 
-const allowedUrlTypes = ['address', 'cluster', 'transaction', 'block', 'label']
+const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label']
 
 const fromURL = (url, keyspaces) => {
   let hash = url.split('#!')[1]
@@ -93,8 +70,7 @@ const fromURL = (url, keyspaces) => {
     type = split[0]
     id = split[1]
   } else if (keyspaces.indexOf(keyspace) === -1) {
-    logger.error(`invalid keyspace ${keyspace}`)
-    return
+    logger.warn(`invalid keyspace ${keyspace}?`)
   }
   if (allowedUrlTypes.indexOf(type) === -1) {
     logger.error(`invalid type ${type}`)
@@ -103,78 +79,55 @@ const fromURL = (url, keyspaces) => {
   return {keyspace, id, type}
 }
 
-// time to wait after a dirty message before creating a snapshot
-const idleTimeToSnapshot = 2000
+const tagToJSON = tag => ({
+  'uuid': SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
+  'version': 1,
+  'key_type': 'a',
+  'key': tag.address,
+  'tag': tag.label,
+  'contributor': 'GraphSense',
+  'tag_optional': {
+    'actor_type': null,
+    'currency': tag.currency,
+    'tag_source_uri': tag.source,
+    'tag_source_label': null,
+    'post_date': null,
+    'post_author': null
+  },
+  'contributor_optional': {
+    'contact_details': 'contact@graphsense.info',
+    'insertion_date': moment.unix(tag.lastmod).format(),
+    'software': 'GraphSense ' + VERSION, // eslint-disable-line no-undef
+    'collection_type': 'm'
+  }
+})
 
-export default class Model {
-  constructor (dispatcher, locale) {
-    this.dispatcher = dispatcher
+const tagJSONToTagpackTag = tagJSON => ({
+  address: tagJSON.key,
+  label: tagJSON.tag,
+  currency: tagJSON.tag_optional && tagJSON.tag_optional.currency,
+  source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
+  lastmod: tagJSON.contributor_optional && tagJSON.contributor_optional.insertion_date,
+  category: null,
+  tagpack_uri: null
+})
+
+export default class Model extends Callable {
+  constructor (locale, rest, stats) {
+    super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-    this.keyspaces = supportedKeyspaces
+    this.stats = stats || {}
+    this.keyspaces = Object.keys(this.stats)
+    logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
-    this.call = (message, data) => {
-      if (this.isReplaying) {
-        logger.debug('omit calling while replaying', message, data)
-        return
-      }
-
-      let fun = () => {
-        logger.boldDebug('calling', message, data)
-        this.dispatcher.call(message, null, data)
-        if (dirtyMessages.indexOf(message) === -1) {
-          this.render()
-          return
-        }
-        this.isDirty = true
-        this.dispatcher.call('disableUndoRedo')
-        this.render()
-
-        if (this.snapshotTimeout) clearTimeout(this.snapshotTimeout)
-        this.snapshotTimeout = setTimeout(() => {
-          this.call('createSnapshot')
-          this.snapshotTimeout = null
-        }, idleTimeToSnapshot)
-      }
-
-      if (syncMessages.indexOf(message) !== -1) {
-        fun()
-      } else {
-        setTimeout(fun, 1)
-      }
-    }
 
     this.statusbar = new Statusbar(this.call)
-    this.rest = new Rest(baseUrl, prefixLength)
+    this.rest = rest || new Rest(baseUrl, prefixLength)
     this.createComponents()
+    this.registerDispatchEvents(startactions)
 
-    this.dispatcher.on('search', ({term, types, keyspaces, isInDialog}) => {
-      let search = isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.setSearchTerm(term, labelPrefixLength)
-      search.hideLoading()
-      keyspaces.forEach(keyspace => {
-        if (search.needsResults(keyspace, searchlimit, prefixLength)) {
-          if (search.timeout[keyspace]) clearTimeout(search.timeout[keyspace])
-          search.showLoading()
-          search.timeout[keyspace] = setTimeout(() => {
-            if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
-              this.mapResult(this.rest.search(keyspace, term, searchlimit), 'searchresult', {term, isInDialog})
-            }
-          }, 250)
-        }
-      })
-      if (search.needsLabelResults(searchlimit, labelPrefixLength)) {
-        if (search.timeoutLabels) clearTimeout(search.timeoutLabels)
-        search.showLoading()
-        search.timeoutLabels = setTimeout(() => {
-          if (types.indexOf('labels') !== -1) {
-            this.mapResult(this.rest.searchLabels(term, searchlimit), 'searchresultLabels', {term, isInDialog})
-          }
-        }, 250)
-      }
-    })
     this.dispatcher.on('clickSearchResult', ({id, type, keyspace, isInDialog}) => {
       if (isInDialog) {
         if (!this.menu.search || type !== 'address') return
@@ -189,7 +142,7 @@ export default class Model {
         this.layout.setUpdate(true)
       }
       this.search.clear()
-      if (type === 'address' || type === 'cluster') {
+      if (type === 'address' || type === 'entity') {
         this.graph.selectNodeWhenLoaded([id, type, keyspace])
         this.mapResult(this.rest.node(keyspace, {id, type}), 'resultNode', id)
       } else if (type === 'transaction') {
@@ -205,45 +158,6 @@ export default class Model {
       let search = isInDialog ? this.menu.search : this.search
       if (!search) return
       search.clear()
-    })
-    this.dispatcher.on('fetchError', ({context, msg, error}) => {
-      switch (msg) {
-        case 'searchresult':
-          let search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.error(error.keyspace, error.message)
-          // this.statusbar.addMsg('error', error)
-          break
-        case 'searchresultLabels':
-          search = context && context.isInDialog ? this.menu.search : this.search
-          if (!search) return
-          search.hideLoading()
-          search.errorLabels(error.message)
-          // this.statusbar.addMsg('error', error)
-          break
-        case 'resultNode':
-          this.statusbar.removeLoading((context && context.data && context.data.id) || context)
-          this.statusbar.addMsg('error', error)
-          break
-        case 'resultTransactionForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultBlockForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultLabelForBrowser':
-          this.statusbar.removeLoading(context)
-          break
-        case 'resultEgonet':
-          this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
-          break
-        case 'resultClusterAddresses':
-          this.statusbar.removeLoading('addresses of cluster ' + context[0])
-          break
-        default:
-          this.statusbar.addMsg('error', error)
-      }
     })
     this.dispatcher.on('resultNode', ({context, result}) => {
       let a = this.store.add(result)
@@ -265,15 +179,19 @@ export default class Model {
         this.browser.setResultNode(a)
         historyPushState(a.keyspace, a.type, a.id)
       }
+      if (!a.tags) {
+        this.statusbar.addMsg('loadingTagsFor', a.type, a.id)
+        this.mapResult(this.rest.tags(a.keyspace, {id: a.id, type: a.type}), 'resultTags', {id: a.id, type: a.type, keyspace: a.keyspace})
+      }
       this.statusbar.removeLoading(a.id)
       this.statusbar.addMsg('loaded', a.type, a.id)
       this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
     })
     this.dispatcher.on('resultTransactionForBrowser', ({result}) => {
       this.browser.setTransaction(result)
-      historyPushState(result.keyspace, 'transaction', result.txHash)
-      this.statusbar.removeLoading(result.txHash)
-      this.statusbar.addMsg('loaded', 'transaction', result.txHash)
+      historyPushState(result.keyspace, 'transaction', result.tx_hash)
+      this.statusbar.removeLoading(result.tx_hash)
+      this.statusbar.addMsg('loaded', 'transaction', result.tx_hash)
     })
     this.dispatcher.on('resultLabelForBrowser', ({result, context}) => {
       this.browser.setLabel(result)
@@ -288,19 +206,6 @@ export default class Model {
       this.statusbar.removeLoading(result.height)
       this.statusbar.addMsg('loaded', 'block', result.height)
     })
-    this.dispatcher.on('searchresult', ({context, result}) => {
-      let search = context.isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.hideLoading()
-      search.setResult(context.term, result)
-    })
-    this.dispatcher.on('searchresultLabels', ({context, result}) => {
-      let search = context.isInDialog ? this.menu.search : this.search
-      logger.debug('search', search)
-      if (!search) return
-      search.hideLoading()
-      search.setResultLabels(context.term, result)
-    })
     this.dispatcher.on('selectNode', ([type, nodeId]) => {
       logger.debug('selectNode', type, nodeId)
       let o = this.store.get(nodeId[2], type, nodeId[0])
@@ -310,14 +215,14 @@ export default class Model {
       historyPushState(o.keyspace, o.type, o.id)
       if (type === 'address') {
         this.browser.setAddress(o)
-      } else if (type === 'cluster') {
-        this.browser.setCluster(o)
+      } else if (type === 'entity') {
+        this.browser.setEntity(o)
       }
       this.graph.selectNode(type, nodeId)
     })
     // user clicks address in a table
     this.dispatcher.on('clickAddress', ({address, keyspace}) => {
-      if (supportedKeyspaces.indexOf(keyspace) === -1) return
+      if (this.keyspaces.indexOf(keyspace) === -1) return
       this.statusbar.addLoading(address)
       this.mapResult(this.rest.node(keyspace, {id: address, type: 'address'}), 'resultNode', address)
     })
@@ -331,10 +236,10 @@ export default class Model {
       this.config.hide()
       this.graph.deselect()
     })
-    this.dispatcher.on('clickTransaction', ({txHash, keyspace}) => {
-      this.browser.loading.add(txHash)
-      this.statusbar.addLoading(txHash)
-      this.mapResult(this.rest.transaction(keyspace, txHash), 'resultTransactionForBrowser', txHash)
+    this.dispatcher.on('clickTransaction', (data) => {
+      this.browser.loading.add(data.tx_hash)
+      this.statusbar.addLoading(data.tx_hash)
+      this.mapResult(this.rest.transaction(data.keyspace, data.tx_hash), 'resultTransactionForBrowser', data.tx_hash)
     })
     this.dispatcher.on('clickBlock', ({height, keyspace}) => {
       this.browser.loading.add(height)
@@ -374,11 +279,11 @@ export default class Model {
     this.dispatcher.on('initAddressesTable', (request) => {
       this.browser.initAddressesTable(request)
     })
-    this.dispatcher.on('initAddressesTableWithCluster', ({id, keyspace}) => {
-      let cluster = this.store.get(keyspace, 'cluster', id)
-      if (!cluster) return
-      this.browser.setCluster(cluster)
-      this.browser.initAddressesTable({index: 0, id, type: 'cluster'})
+    this.dispatcher.on('initAddressesTableWithEntity', ({id, keyspace}) => {
+      let entity = this.store.get(keyspace, 'entity', id)
+      if (!entity) return
+      this.browser.setEntity(entity)
+      this.browser.initAddressesTable({index: 0, id, type: 'entity'})
     })
     this.dispatcher.on('initTagsTable', (request) => {
       this.browser.initTagsTable(request)
@@ -394,8 +299,8 @@ export default class Model {
       if (!node) return
       if (type === 'address') {
         this.browser.setAddress(node)
-      } else if (type === 'cluster') {
-        this.browser.setCluster(node)
+      } else if (type === 'entity') {
+        this.browser.setEntity(node)
       }
       this.browser.initNeighborsTable({id, keyspace, type, index: 0}, isOutgoing)
     })
@@ -472,35 +377,39 @@ export default class Model {
           this.store.linkOutgoing(o.id, anchor.nodeId[0], o.keyspace)
         }
         if (!this.graph.adding.has(o.id)) return
-        logger.debug('cluster', o.cluster)
-        if (o.type === 'address' && !o.cluster) {
-          this.statusbar.addMsg('loadingClusterFor', o.id)
-          this.mapResult(this.rest.clusterForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
+        logger.debug('entity', o.entity)
+        if (o.type === 'address' && !o.entity) {
+          this.statusbar.addMsg('loadingEntityFor', o.id)
+          this.mapResult(this.rest.entityForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
         } else {
           this.call('addNodeCont', {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
         }
       } else if (context.stage === 3 && context.addressId) {
         if (!this.graph.adding.has(context.addressId)) return
         let resultCopy = {...result}
-        // seems there exist addresses without cluster ...
-        // so mockup cluster with the address id
-        if (!resultCopy.cluster) {
-          resultCopy.cluster = 'mockup' + context.addressId
+        // seems there exist addresses without entity ...
+        // so mockup entity with the address id
+        if (!resultCopy.entity) {
+          resultCopy.entity = 'mockup' + context.addressId
           resultCopy.mockup = true
-          this.statusbar.addMsg('noClusterFor', context.addressId)
+          this.statusbar.addMsg('noEntityFor', context.addressId)
         } else {
-          this.statusbar.addMsg('loadedClusterFor', context.addressId)
+          this.statusbar.addMsg('loadedEntityFor', context.addressId)
         }
-        this.store.add({...resultCopy, forAddresses: [context.addressId]})
+        let e = this.store.add({...resultCopy, forAddresses: [context.addressId]})
+        if (!e.tags) {
+          this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
+          this.mapResult(this.rest.tags(keyspace, {id: e.id, type: e.type}), 'resultTags', {id: e.id, type: e.type, keyspace: e.keyspace})
+        }
         this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}})
       } else if (context.stage === 4 && context.id && context.type) {
         let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
         let o = this.store.get(context.keyspace, context.type, context.id)
-        if (context.type === 'cluster') {
-          this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'cluster', keyspace}})
+        if (context.type === 'entity') {
+          this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'entity', keyspace}})
         } else if (context.type === 'address') {
-          if (o.cluster && !o.cluster.mockup) {
-            this.call('excourseLoadDegree', {context: {backCall, id: o.cluster.id, type: 'cluster', keyspace}})
+          if (o.entity && !o.entity.mockup) {
+            this.call('excourseLoadDegree', {context: {backCall, id: o.entity.id, type: 'entity', keyspace}})
           } else {
             this.call(backCall.msg, backCall.data)
           }
@@ -509,7 +418,7 @@ export default class Model {
         let o = this.store.get(context.keyspace, context.type, context.id)
         if (!o.tags) {
           this.statusbar.addMsg('loadingTagsFor', o.type, o.id)
-          this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keypspace: o.keyspace})
+          this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keyspace: o.keyspace})
         }
         this.graph.add(o, context.anchor)
         this.browser.setUpdate('tables_with_addresses')
@@ -520,7 +429,7 @@ export default class Model {
       let keyspace = context.keyspace
       if (!context.stage) {
         let o = this.store.get(context.keyspace, context.type, context.id)
-        if (o.inDegree >= degreeThreshold) {
+        if (o.in_degree >= degreeThreshold) {
           this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
           return
         }
@@ -537,7 +446,7 @@ export default class Model {
           })
           // this.storeRelations(result.neighbors, o, o.keyspace, false)
         }
-        if (o.outDegree >= degreeThreshold || o.outDegree === o.outgoing.size()) {
+        if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
           this.call(context.backCall.msg, context.backCall.data)
           return
         }
@@ -559,14 +468,15 @@ export default class Model {
     })
     this.dispatcher.on('resultTags', ({context, result}) => {
       let o = this.store.get(context.keyspace, context.type, context.id)
+      logger.debug('o', o)
       this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
       o.tags = result || []
       let nodes = null
       if (context.type === 'address') {
         nodes = this.graph.addressNodes
       }
-      if (context.type === 'cluster') {
-        nodes = this.graph.clusterNodes
+      if (context.type === 'entity') {
+        nodes = this.graph.entityNodes
       }
       if (!nodes) return
       nodes.each((node) => { if (node.id[0] == context.id) node.setUpdate(true) }) // eslint-disable-line eqeqeq
@@ -595,22 +505,22 @@ export default class Model {
         this.call('addNode', {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
       })
     })
-    this.dispatcher.on('loadClusterAddresses', ({id, keyspace, limit}) => {
-      this.statusbar.addMsg('loadingClusterAddresses', id, limit)
-      this.statusbar.addLoading('addresses of cluster ' + id[0])
-      this.mapResult(this.rest.clusterAddresses(keyspace, id[0], limit), 'resultClusterAddresses', {id, keyspace})
+    this.dispatcher.on('loadEntityAddresses', ({id, keyspace, limit}) => {
+      this.statusbar.addMsg('loadingEntityAddresses', id, limit)
+      this.statusbar.addLoading('addresses of entity ' + id[0])
+      this.mapResult(this.rest.entityAddresses(keyspace, id[0], limit), 'resultEntityAddresses', {id, keyspace})
     })
-    this.dispatcher.on('removeClusterAddresses', id => {
-      this.graph.removeClusterAddresses(id)
+    this.dispatcher.on('removeEntityAddresses', id => {
+      this.graph.removeEntityAddresses(id)
       this.browser.setUpdate('tables_with_addresses')
     })
-    this.dispatcher.on('resultClusterAddresses', ({context, result}) => {
+    this.dispatcher.on('resultEntityAddresses', ({context, result}) => {
       let id = context && context.id
       let keyspace = context && context.keyspace
       let addresses = []
-      this.statusbar.removeLoading('addresses of cluster ' + id[0])
+      this.statusbar.removeLoading('addresses of entity ' + id[0])
       result.addresses.forEach((address) => {
-        let copy = {...address, toCluster: id[0]}
+        let copy = {...address, toEntity: id[0]}
         let a = this.store.add(copy)
         addresses.push(a)
         if (!a.tags) {
@@ -618,13 +528,13 @@ export default class Model {
           this.mapResult(this.rest.tags(keyspace, request), 'resultTags', request)
         }
       })
-      this.statusbar.addMsg('loadedClusterAddresses', id, addresses.length)
-      this.graph.setResultClusterAddresses(id, addresses)
+      this.statusbar.addMsg('loadedEntityAddresses', id, addresses.length)
+      this.graph.setResultEntityAddresses(id, addresses)
       this.browser.setUpdate('tables_with_addresses')
     })
-    this.dispatcher.on('changeClusterLabel', (labelType) => {
-      this.config.setClusterLabel(labelType)
-      this.graph.setClusterLabel(labelType)
+    this.dispatcher.on('changeEntityLabel', (labelType) => {
+      this.config.setEntityLabel(labelType)
+      this.graph.setEntityLabel(labelType)
     })
     this.dispatcher.on('changeAddressLabel', (labelType) => {
       this.config.setAddressLabel(labelType)
@@ -650,8 +560,8 @@ export default class Model {
       let nodes
       if (type === 'address') {
         nodes = this.graph.addressNodes
-      } else if (type === 'cluster') {
-        nodes = this.graph.clusterNodes
+      } else if (type === 'entity') {
+        nodes = this.graph.entityNodes
       }
       nodes.each((node) => {
         if (node.data.id === id) {
@@ -661,14 +571,6 @@ export default class Model {
     })
     this.dispatcher.on('toggleConfig', () => {
       this.config.toggleConfig()
-    })
-    this.dispatcher.on('stats', () => {
-      this.mapResult(this.rest.stats(), 'receiveStats')
-    })
-    this.dispatcher.on('receiveStats', ({context, result}) => {
-      this.keyspaces = Object.keys(result)
-      this.landingpage.setStats({...result})
-      this.search.setStats({...result})
     })
     this.dispatcher.on('noteDialog', ({x, y, node}) => {
       this.menu.showNodeDialog(x, y, {dialog: 'note', node})
@@ -691,18 +593,70 @@ export default class Model {
       if (this.isReplaying) return
       if (!this.promptUnsavedWork('start a new graph')) return
       this.createComponents()
+      this.loadCategories()
     })
     this.dispatcher.on('save', (stage) => {
       if (this.isReplaying) return
       if (!stage) {
         // update status bar before starting serializing
         this.statusbar.addMsg('saving')
+        this.config.hide()
         this.call('save', true)
         return
       }
       let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
       this.statusbar.addMsg('saved', filename)
       this.download(filename, this.serialize())
+    })
+    this.dispatcher.on('saveNotes', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.config.hide()
+        this.call('saveNotes', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.serializeNotes())
+    })
+    this.dispatcher.on('saveYAML', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.config.hide()
+        this.call('saveYAML', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.generateTagpack())
+    })
+    this.dispatcher.on('saveTagsJSON', (stage) => {
+      if (this.isReplaying) return
+      if (!stage) {
+        // update status bar before starting serializing
+        this.statusbar.addMsg('saving')
+        this.config.hide()
+        this.call('saveTagsJSON', true)
+        return
+      }
+      let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
+      this.statusbar.addMsg('saved', filename)
+      this.download(filename, this.generateTagsJSON())
+    })
+    this.dispatcher.on('exportRestLogs', () => {
+      if (this.isReplaying) return
+      let csv = 'timestamp,url\n'
+      this.rest.getLogs().forEach(row => {
+        row[0] = moment(row[0]).format()
+        csv += row.join(',') + '\n'
+      })
+      let filename = 'REST calls ' + moment().format('YYYY-MM-DD HH-mm-ss') + '.csv'
+      let blob = new Blob([csv], {type: 'text/csv;charset=utf-8'}) // eslint-disable-line no-undef
+      FileSaver.saveAs(blob, filename)
     })
     this.dispatcher.on('exportSvg', () => {
       if (this.isReplaying) return
@@ -732,24 +686,50 @@ export default class Model {
       svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
       let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
       this.download(filename, svg)
+      this.config.hide()
     })
     this.dispatcher.on('load', () => {
       if (this.isReplaying) return
       if (this.promptUnsavedWork('load another file')) {
-        this.layout.triggerFileLoad()
+        this.layout.triggerFileLoad('load')
       }
+      this.config.hide()
+    })
+    this.dispatcher.on('loadNotes', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadNotes')
+      this.config.hide()
+    })
+    this.dispatcher.on('loadYAML', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadYAML')
+      this.config.hide()
+    })
+    this.dispatcher.on('loadTagsJSON', () => {
+      if (this.isReplaying) return
+      this.layout.triggerFileLoad('loadTagsJSON')
+      this.config.hide()
     })
     this.dispatcher.on('loadFile', (params) => {
-      let data = params[0]
-      let filename = params[1]
-      let stage = params[2]
+      let type = params[0]
+      let data = params[1]
+      let filename = params[2]
+      let stage = params[3]
       if (!stage) {
         this.statusbar.addMsg('loadFile', filename)
-        this.call('loadFile', [data, filename, true])
+        this.call('loadFile', [type, data, filename, true])
         return
       }
       this.statusbar.addMsg('loadedFile', filename)
-      this.deserialize(data)
+      if (type === 'load') {
+        this.deserialize(data)
+      } else if (type === 'loadNotes') {
+        this.deserializeNotes(data)
+      } else if (type === 'loadYAML') {
+        this.loadTagpack(data)
+      } else if (type === 'loadTagsJSON') {
+        this.loadTagsJSON(data)
+      }
     })
     this.dispatcher.on('showLogs', () => {
       this.statusbar.show()
@@ -764,16 +744,13 @@ export default class Model {
       this.statusbar.toggleErrorLogs()
     })
     this.dispatcher.on('gohome', () => {
-      logger.debug('going home')
       this.showLandingpage = true
-      historyPushState()
-      this.browser.destroyComponentsFrom(0)
+      this.browser.destroyComponentsFrom(1)
       this.landingpage.setUpdate(true)
       this.layout.setUpdate(true)
-      this.render()
     })
-    this.dispatcher.on('sortClusterAddresses', ({cluster, property}) => {
-      this.graph.sortClusterAddresses(cluster, property)
+    this.dispatcher.on('sortEntityAddresses', ({entity, property}) => {
+      this.graph.sortEntityAddresses(entity, property)
     })
     this.dispatcher.on('dragNode', ({id, type, dx, dy}) => {
       this.graph.dragNode(id, type, dx, dy)
@@ -786,6 +763,9 @@ export default class Model {
     })
     this.dispatcher.on('changeSearchBreadth', value => {
       this.menu.setSearchBreadth(value)
+    })
+    this.dispatcher.on('changeSkipNumAddresses', value => {
+      this.menu.setSkipNumAddresses(value)
     })
     this.dispatcher.on('searchNeighbors', params => {
       logger.debug('search params', params)
@@ -815,12 +795,12 @@ export default class Model {
           this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
           let parent = this.graph.add(node, anchor)
-          // link addresses to cluster and add them (if any returned due of 'addresses' search criterion)
-          pathnode.matchingAddresses.forEach(address => {
-            address.cluster = pathnode.node.cluster
+          // link addresses to entity and add them (if any returned due of 'addresses' search criterion)
+          pathnode.matching_addresses.forEach(address => {
+            address.entity = pathnode.node.entity
             let a = this.store.add(address)
-            // anchor the address to its cluster
-            this.graph.add(a, {nodeId: parent.id, nodeType: 'cluster'})
+            // anchor the address to its entity
+            this.graph.add(a, {nodeId: parent.id, nodeType: 'entity'})
           })
           add({nodeId: parent.id, isOutgoing: context.isOutgoing}, pathnode.paths)
         })
@@ -860,31 +840,41 @@ export default class Model {
       this.config.setCategoryColors(this.graph.getCategoryColors())
       this.config.toggleLegend()
     })
+    this.dispatcher.on('toggleExport', () => {
+      this.config.toggleExport()
+    })
+    this.dispatcher.on('toggleImport', () => {
+      this.config.toggleImport()
+    })
     this.dispatcher.on('downloadTable', () => {
       if (this.isReplaying) return
       let table = this.browser.content[1]
       if (!table) return
-      let filename
-      let request
+      let url
       if (table instanceof NeighborsTable) {
         let params = table.getParams()
-        request = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
-        filename = (params.isOutgoing ? 'outgoing' : 'incoming') + ` neighbors of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
       } else if (table instanceof TagsTable) {
         let params = table.getParams()
-        request = this.rest.tags(params.keyspace, params, true)
-        filename = `tags of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.tags(params.keyspace, params, true)
       } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
         let params = table.getParams()
-        request = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
-        filename = `transactions of ${params.type} ${params.id} (${params.keyspace.toUpperCase()})`
+        url = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
       }
-      if (request) {
-        this.mapResult(request, 'receiveCSV', filename + '.csv')
+      if (url) {
+        this.layout.triggerDownloadViaLink(url)
       }
     })
-    this.dispatcher.on('receiveCSV', ({context, result}) => {
-      FileSaver.saveAs(result, context)
+    this.dispatcher.on('downloadTagsAsJSON', () => {
+      if (this.isReplaying) return
+      let table = this.browser.content[1]
+      if (!table) return
+      if (!(table instanceof TagsTable)) return
+      let tags = table.data.map(tagToJSON)
+      let blob = new Blob([JSON.stringify(tags)], {type: 'text/json;charset=utf-8'}) // eslint-disable-line no-undef
+      let params = table.getParams()
+      let filename = `tags of ${params.type} ${params.id}.json`
+      FileSaver.saveAs(blob, filename)
     })
     this.dispatcher.on('addAllToGraph', () => {
       let table = this.browser.content[1]
@@ -911,6 +901,17 @@ export default class Model {
       this.browser.setUpdate('locale')
       this.graph.setUpdate('layers')
     })
+    this.dispatcher.on('receiveCategories', ({result}) => {
+      if (!Array.isArray(result)) return
+      result = result.map(({category}) => category)
+      this.graph.setCategories(result)
+      this.menu.setCategories(result)
+      this.config.setCategoryColors(this.graph.getCategoryColors())
+    })
+    this.dispatcher.on('receiveCategoryColors', ({result}) => {
+      this.graph.setCategoryColors(result)
+      this.config.setCategoryColors(this.graph.getCategoryColors())
+    })
     window.onhashchange = (e) => {
       let params = fromURL(e.newURL, this.keyspaces)
       logger.debug('hashchange', e, params)
@@ -931,11 +932,16 @@ export default class Model {
         return message
       }
     })
-    this.call('stats')
     let initParams = fromURL(window.location.href, this.keyspaces)
-    if (initParams.id) {
+    if (initParams && initParams.id) {
       this.paramsToCall(initParams)
     }
+    if (!stats) this.call('stats')
+    this.loadCategories()
+  }
+  loadCategories () {
+    this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
+    this.mapResult(this.rest.categories(), 'receiveCategories')
   }
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
@@ -960,11 +966,15 @@ export default class Model {
     this.menu = new Menu(this.call, this.keyspaces)
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
-    this.search = new Search(this.call, this.keyspaces)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
+    this.login = new Login(this.call)
+    this.search = new Search(this.call)
+    this.search.setStats(this.stats)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, this.login, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
-    this.landingpage = new Landingpage(this.call, this.search, this.keyspaces)
+    this.landingpage = new Landingpage(this.call, this.keyspaces)
+    this.landingpage.setStats(this.stats)
+    this.landingpage.setSearch(this.search)
   }
   compress (data) {
     return new Uint32Array(
@@ -994,6 +1004,51 @@ export default class Model {
       this.layout.serialize()
     ])
   }
+  serializeNotes () {
+    return this.compress([
+      VERSION, // eslint-disable-line no-undef
+      this.store.serializeNotes()
+    ])
+  }
+  generateTagpack () {
+    return YAML.stringify({
+      title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
+      creator: this.rest.username,
+      lastmod: moment().format('YYYY-MM-DD'),
+      tags: this.store.getNotes()
+    })
+  }
+  generateTagsJSON () {
+    return JSON.stringify(this.store.allAddressTags().map(tagToJSON))
+  }
+  loadTagsJSON (data) {
+    try {
+      data = JSON.parse(data)
+      if (!data) throw new Error('result is empty')
+      if (!Array.isArray(data)) data = [data]
+      this.store.addTagpack(this.keyspaces, {tags: data.map(tagJSONToTagpackTag)})
+      this.graph.setUpdate('layers')
+    } catch (e) {
+      let msg = 'Could not parse JSON file'
+      this.statusbar.addMsg('error', msg + ': ' + e.message)
+      console.error(msg)
+    }
+  }
+  loadTagpack (yaml) {
+    let data
+    try {
+      data = YAML.parse(yaml)
+      if (!data) throw new Error('result is empty')
+    } catch (e) {
+      let msg = 'Could not parse YAML file'
+      this.statusbar.addMsg('error', msg + ': ' + e.message)
+      console.error(msg)
+      return
+    }
+    this.store.addNotes(data.tags)
+    this.store.addTagpack(this.keyspaces, data)
+    this.graph.setUpdate('layers')
+  }
   deserialize (buffer) {
     let data = this.decompress(buffer)
     this.createComponents()
@@ -1003,22 +1058,15 @@ export default class Model {
     this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
   }
+  deserializeNotes (buffer) {
+    let data = this.decompress(buffer)
+    this.store.deserializeNotes(data[0], data[1])
+    this.graph.setUpdate('layers')
+  }
   download (filename, buffer) {
     var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef
+    logger.debug('saving to file', filename)
     FileSaver.saveAs(blob, filename)
-  }
-  mapResult (promise, msg, context) {
-    let onSuccess = result => {
-      this.call(msg, {context, result})
-    }
-    let onReject = error => {
-      this.call('fetchError', {context, msg, error})
-    }
-    if (this.isReplaying) {
-      onSuccess = () => {}
-      onReject = () => {}
-    }
-    return promise.then(onSuccess, onReject)
   }
   render (root) {
     if (root) this.root = root

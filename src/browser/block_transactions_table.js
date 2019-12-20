@@ -6,23 +6,23 @@ export default class BlockTransactionsTable extends Table {
     this.height = height
     this.columns = [
       { name: 'Transaction',
-        data: 'txHash',
+        data: 'tx_hash',
         render: this.formatValue(this.truncateValue)
       },
       { name: 'No. inputs',
-        data: 'noInputs'
+        data: 'no_inputs'
       },
       { name: 'No. outputs',
-        data: 'noOutputs'
+        data: 'no_outputs'
       },
       { name: 'Total input',
-        data: 'totalInput',
+        data: 'total_input',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       { name: 'Total output',
-        data: 'totalOutput',
+        data: 'total_output',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)

@@ -3,15 +3,13 @@ import Logger from './logger.js'
 
 const logger = Logger.create('Rest')
 
-const options = {
+const options = () => ({
   credentials: 'include',
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    // never expiring token
-    'Authorization': 'Bearer ' + JWT_TOKEN // eslint-disable-line no-undef
+    'Content-Type': 'application/json'
   }
-}
+})
 
 const normalizeTag = keyspace => tag => {
   tag.currency = keyspace.toUpperCase()
@@ -25,16 +23,45 @@ const normalizeNodeTags = keyspace => node => {
   return node
 }
 
+const normalizeNode = node => {
+  node.nodeType = node.node_type
+  delete node.node_type
+  return node
+}
+
+const typeToEndpoint = type => {
+  if (type === 'address') return 'addresses'
+  if (type === 'entity') return 'entities'
+  if (type === 'label') return 'labels'
+  if (type === 'block') return 'blocks'
+  return type
+}
+
 export default class Rest {
   constructor (baseUrl, prefixLength) {
     this.baseUrl = baseUrl
     this.prefixLength = prefixLength
     this.json = this.remoteJson
+    this.logs = []
+  }
+  refreshToken () {
+    logger.debug('refreshToken')
+    if (this.refreshing) return Promise.reject(new Error('refresh in progress'))
+    logger.debug('refreshing Token')
+    this.refreshing = true
+    return json(this.baseUrl + '/refresh', options())
+      .then(result => {
+        if (result.status !== 'success') return Promise.reject(new Error('refreshed is false'))
+        logger.debug('refresh successful')
+        return result
+      })
+      .finally(() => { logger.debug('refresh cleanup'); this.refreshing = false })
   }
   remoteJson (keyspace, url, field) {
-    url = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    return json(url, options)
+    let newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
+    return json(newurl, options())
       .then(result => {
+        this.logs.push([+new Date(), newurl])
         if (field) {
         // result is an array
           if (!Array.isArray(result[field])) {
@@ -47,8 +74,14 @@ export default class Rest {
         }
         return Promise.resolve(result)
       }, error => {
+        if (error.message && error.message.startsWith('401')) {
+          return this.refreshToken()
+            .then(() => this.remoteJson(keyspace, url, field))
+        }
         error.keyspace = keyspace
         error.requestURL = url
+        // normalize message
+        if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
       })
   }
@@ -59,8 +92,7 @@ export default class Rest {
     } else {
       url += '.csv'
     }
-    return fetch(url, options) // eslint-disable-line no-undef
-      .then(resp => resp.blob())
+    return url
   }
   keyspaceUrl (keyspace) {
     return this.baseUrl + (keyspace ? '/' + keyspace : '')
@@ -73,73 +105,80 @@ export default class Rest {
   enable () {
     this.json = this.remoteJson
   }
-  search (keyspace, str, limit) {
-    return this.json(keyspace, '/search?q=' + encodeURIComponent(str) + '&limit=' + limit)
+  search (str, limit) {
+    return this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''))
   }
   searchLabels (str, limit) {
-    return this.json(null, '/labelsearch?q=' + encodeURIComponent(str) + '&limit=' + limit)
+    return this.json(null, '/search/labels/' + encodeURIComponent(str))
   }
-  node (keyspace, request) {
-    return this.json(keyspace, `/${request.type}_with_tags/${request.id}`)
+  node (keyspace, {type, id}) {
+    type = typeToEndpoint(type)
+
+    return this.json(keyspace, `/${type}/${id}`)
+      .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
-  clusterForAddress (keyspace, id) {
-    logger.debug('rest clusterForAddress', id)
-    return this.json(keyspace, '/address/' + id + '/cluster_with_tags')
+  entityForAddress (keyspace, id) {
+    logger.debug('rest entityForAddress', id)
+    return this.json(keyspace, '/addresses/' + id + '/entity')
+      .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
   transactions (keyspace, request, csv) {
+    let type = typeToEndpoint(request.params[1])
     let url =
-       '/' + request.params[1] + '/' + request.params[0] + '/transactions'
+       '/' + type + '/' + request.params[0] + '/txs'
     if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'transactions')
+    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'address_txs')
   }
   addresses (keyspace, request, csv) {
-    let url = '/cluster/' + request.params + '/addresses'
+    let url = '/entities/' + request.params + '/addresses'
     if (csv) return this.csv(keyspace, url)
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
     return this.json(keyspace, url, 'addresses')
+      .then(result => { result.addresses.forEach(normalizeNode); return result })
   }
   tags (keyspace, {id, type}, csv) {
+    type = typeToEndpoint(type)
     logger.debug('fetch tags', keyspace)
     let url = '/' + type + '/' + id + '/tags'
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url).then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
-  egonet (keyspace, type, id, isOutgoing, limit) {
-    let dir = isOutgoing ? 'out' : 'in'
-    return this.json(keyspace, `/${type}/${id}/egonet?limit=${limit}&direction=${dir}`, 'nodes')
-  }
-  clusterAddresses (keyspace, id, limit) {
-    return this.json(keyspace, `/cluster/${id}/addresses?pagesize=${limit}`, 'addresses')
+  entityAddresses (keyspace, id, limit) {
+    return this.json(keyspace, `/entities/${id}/addresses?pagesize=${limit}`, 'addresses')
+      .then(result => { result.addresses.forEach(normalizeNode); return result })
   }
   transaction (keyspace, txHash) {
-    return this.json(keyspace, `/tx/${txHash}`)
+    return this.json(keyspace, `/txs/${txHash}`)
   }
   block (keyspace, height) {
-    return this.json(keyspace, `/block/${height}`)
+    return this.json(keyspace, `/blocks/${height}`)
   }
   label (id) {
-    return this.json(null, `/label/${id}`)
+    return this.json(null, `/labels/${id}`)
   }
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {
     let dir = isOutgoing ? 'out' : 'in'
+    type = typeToEndpoint(type)
     let url = `/${type}/${id}/neighbors?direction=${dir}`
     if (csv) return this.csv(keyspace, url)
     url += '&' +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')
+      .then(result => { result.neighbors.forEach(normalizeNode); return result })
   }
   stats () {
-    return this.json(null, '/stats')
+    return json(this.baseUrl + '/stats')
   }
-  searchNeighbors ({id, type, isOutgoing, depth, breadth, params}) {
+  searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
+    type = typeToEndpoint(type)
     let dir = isOutgoing ? 'out' : 'in'
     let keyspace = id[2]
     id = id[0]
@@ -150,16 +189,44 @@ export default class Rest {
       searchCrit = 'addresses=' + params.addresses.join(',')
     }
     let url =
-      `/${type}/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}`
+      `/entities/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumAddresses=${skipNumAddresses}`
     let addKeyspace = (node) => {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {
         path.node.keyspace = keyspace
-        path.matchingAddresses.forEach(address => { address.keyspace = keyspace })
+        path.node.nodeType = 'entity';
+        (path.node.tags || []).forEach(tag => {
+          tag.keyspace = keyspace
+          tag.currency = keyspace.toUpperCase()
+        })
+        path.matching_addresses.forEach(address => {
+          address.keyspace = keyspace
+          address.nodeType = 'address'
+        })
         addKeyspace(path)
       })
       return node
     }
     return this.json(keyspace, url).then(addKeyspace)
+  }
+  login (username, password) {
+    this.username = username
+    let opt = options()
+    opt.method = 'post'
+    opt.body = JSON.stringify({username, password}) // eslint-disable-line no-undef
+
+    // using d3 json directly to pass options
+    return json(this.baseUrl + '/login', opt)
+      .catch(error => {
+        // normalize message
+        if (!error.message && error.msg) error.message = error.msg
+        return Promise.reject(error)
+      })
+  }
+  getLogs () {
+    return this.logs
+  }
+  categories () {
+    return this.json(null, '/labels/categories')
   }
 }

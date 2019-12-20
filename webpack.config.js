@@ -10,19 +10,20 @@ const fs = require('fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const PurgecssPlugin = require('purgecss-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
+const CompressionPlugin = require('compression-webpack-plugin')
 
-const VERSION = '0.4.1'
+const VERSION = '0.4.2'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
-const SUPPORTED_KEYSPACES = ['btc', 'bch', 'ltc', 'zec']
 
 // to be injected in static and dynamic pages
-const STATICPAGE_CLASSES = 'flex flex-col min-h-full'
+const STATICPAGE_CLASSES = 'flex flex-col min-h-full landingpage'
 
 // compose pre-rendered landing page
 let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
 let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'boldheader.html'), 'utf-8'))
-let landingpage = fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.html'), 'utf-8')
-let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.html'), 'utf-8'))
+let landingpage = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.hbs'), 'utf-8'))
+let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.hbs'), 'utf-8'))
 boldheader = boldheader({action: ''})
 footer = footer({version: VERSION})
 
@@ -31,12 +32,20 @@ const src = path.join(__dirname, 'src')
 module.exports = env => {
   let IS_DEV = !env || !env.production
 
-  let JWT_TOKEN = env && env.token
+  let nostatic = env && env.nostatic
 
   let output = {
     filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
   }
+
+  let entry = {
+    static: './src/static.js',
+    main: './src/index.js',
+    sw: './src/sw.js'
+  }
+
+  if (nostatic) delete entry['static']
 
   if (!IS_DEV) {
     output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
@@ -48,11 +57,7 @@ module.exports = env => {
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
   return {
     mode: IS_DEV ? 'development' : 'production',
-    entry: {
-      static: './src/static.js',
-      main: './src/index.js',
-      sw: './src/sw.js'
-    },
+    entry,
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {
       contentBase: false,
@@ -71,21 +76,23 @@ module.exports = env => {
       }),
       new CopyWebpackPlugin([{
         from: './src/pages/static/logo-without-icon.svg'
+      },
+      { from: './config/categoryColors.yaml'
+      },
+      { from: './src/pages/static/favicon.png'
       }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
-        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\'',
-        JWT_TOKEN: !IS_DEV ? '\'{{JWT_TOKEN}}\'' : '\'' + JWT_TOKEN + '\'',
-        SUPPORTED_KEYSPACES: '\'' + JSON.stringify(SUPPORTED_KEYSPACES).replace(/'/g, '"') + '\''
+        STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
       }),
       new webpack.ProvidePlugin({
         $: 'jquery',
         jQuery: 'jquery'
       }),
-      !IS_DEV ? new StaticSiteGeneratorPlugin({
+      !IS_DEV && !nostatic ? new StaticSiteGeneratorPlugin({
         paths: [
           '/terms.html',
           '/privacy.html',
@@ -96,7 +103,8 @@ module.exports = env => {
         locals: {
           template: template,
           footer: footer,
-          staticpage_classes: STATICPAGE_CLASSES
+          staticpage_classes: STATICPAGE_CLASSES,
+          restEndpoint: DEV_REST_ENDPOINT
         }
       }) : noop(),
       new MiniCssExtractPlugin({
@@ -132,9 +140,14 @@ module.exports = env => {
           /min-h-full/,
           /svg.+/
         ]
-      }) : noop()
+      }) : noop(),
+      new MomentTimezoneDataPlugin({
+        startYear: 2009,
+        endYear: 2030
+      }),
+      new CompressionPlugin()
     ],
-    output: output,
+    output,
     module: {
       rules: [
         {
@@ -166,9 +179,13 @@ module.exports = env => {
           test: /\.css$/,
           use: [
             MiniCssExtractPlugin.loader,
-            {loader: 'css-loader', options: { importLoaders: 1 } },
+            { loader: 'css-loader', options: { importLoaders: 1 } },
             'postcss-loader'
           ]
+        },
+        {
+          test: /\.hbs$/,
+          loader: 'handlebars-template-loader'
         },
         {
           test: /\.html$/,
@@ -185,10 +202,6 @@ module.exports = env => {
         {
           test: /\.(woff(2)?|ttf|eot|svg|jpe?g|png|gif)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
           loader: 'file-loader'
-        },
-        {
-          test: /\.hbs$/,
-          loader: 'handlebars-loader'
         }
       ]
     },

@@ -1,11 +1,14 @@
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
+import exportConfig from './config/export.html'
+import importConfig from './config/import.html'
 import legendItem from './config/legendItem.html'
 import filter from './config/filter.html'
 import {addClass, removeClass, replace} from './template_utils.js'
 import {firstToUpper} from './utils.js'
 import Component from './component.js'
 import Logger from './logger.js'
+import {map} from 'd3-collection'
 
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
@@ -16,7 +19,7 @@ export default class Config extends Component {
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
-    this.categoryColors = {}
+    this.categoryColors = map()
     this.locale = locale
   }
   toggleConfig () {
@@ -25,6 +28,14 @@ export default class Config extends Component {
   }
   toggleLegend () {
     this.visible = this.visible === 'legend' ? null : 'legend'
+    this.setUpdate(true)
+  }
+  toggleExport () {
+    this.visible = this.visible === 'export' ? null : 'export'
+    this.setUpdate(true)
+  }
+  toggleImport () {
+    this.visible = this.visible === 'import' ? null : 'import'
     this.setUpdate(true)
   }
   setLocale (locale) {
@@ -37,6 +48,9 @@ export default class Config extends Component {
   }
   setCategoryColors (colors) {
     this.categoryColors = colors
+    if (this.visible === 'legend') {
+      this.setUpdate(true)
+    }
   }
   render (root) {
     if (root) this.root = root
@@ -52,19 +66,32 @@ export default class Config extends Component {
     let el = this.root.querySelector('#dropdown')
     if (this.visible === 'config') {
       el.innerHTML = graphConfig
-      this.renderSelect('clusterLabel', 'changeClusterLabel', this.labelType['clusterLabel'])
       this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType['addressLabel'])
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)
     } else if (this.visible === 'legend') {
-      for (let name in this.categoryColors) {
+      this.categoryColors.entries().forEach(({key, value}) => {
         let itemEl = document.createElement('div')
         itemEl.className = 'flex items-center'
         itemEl.innerHTML = legendItem
-        itemEl.querySelector('.legendColor').style.backgroundColor = this.categoryColors[name]
-        itemEl.querySelector('.legendItem').innerHTML = name
+        itemEl.querySelector('.legendColor').style.backgroundColor = value
+        itemEl.querySelector('.legendItem').innerHTML = key
         el.appendChild(itemEl)
-      }
+      })
+    } else if (this.visible === 'export') {
+      el.innerHTML = exportConfig
+      el.querySelectorAll('button[data-msg]').forEach(button => {
+        let msg = button.getAttribute('data-msg')
+        if (!msg) return
+        button.addEventListener('click', () => { this.dispatcher(msg) })
+      })
+    } else if (this.visible === 'import') {
+      el.innerHTML = importConfig
+      el.querySelectorAll('button[data-msg]').forEach(button => {
+        let msg = button.getAttribute('data-msg')
+        if (!msg) return
+        button.addEventListener('click', () => { this.dispatcher(msg) })
+      })
     }
     super.render()
     return this.root
@@ -113,7 +140,7 @@ export default class Config extends Component {
     this.dispatcher('loadEgonet', {id: this.node.id, isOutgoing, type: this.view, limit: filters.get('limit')})
   }
   applyAddressFilters () {
-    this.dispatcher('loadClusterAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
+    this.dispatcher('loadEntityAddresses', {id: this.node.id, limit: this.node.addressFilters.get('limit')})
   }
   renderSelect (id, message, selectedValue) {
     let select = this.root.querySelector('select#' + id)
@@ -136,8 +163,8 @@ export default class Config extends Component {
   setAddressLabel (labelType) {
     this.labelType['address'] = labelType
   }
-  setClusterLabel (labelType) {
-    this.labelType['cluster'] = labelType
+  setEntityLabel (labelType) {
+    this.labelType['entity'] = labelType
   }
   setTxLabel (labelType) {
     this.txLabelType = labelType

@@ -5,7 +5,7 @@ import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
-import {categories} from './globals.js'
+import {maxSearchBreadth, maxSearchDepth} from './globals.js'
 import {replace, addClass} from './template_utils.js'
 import Search from './search/search.js'
 
@@ -22,6 +22,7 @@ export default class Menu extends Component {
     this.dispatcher = dispatcher
     this.keyspaces = keyspaces
     this.view = {}
+    this.categories = []
   }
   showNodeDialog (x, y, params) {
     let menuWidth = 250
@@ -37,7 +38,8 @@ export default class Menu extends Component {
         criterion: defaultCriterion,
         params: defaultParams(),
         depth: defaultDepth,
-        breadth: defaultBreadth
+        breadth: defaultBreadth,
+        skipNumAddresses: defaultBreadth
       }
       menuWidth = 400
       menuHeight = 400
@@ -57,6 +59,9 @@ export default class Menu extends Component {
     this.menuX = x
     this.menuY = y
   }
+  setCategories (categories) {
+    this.categories = categories
+  }
   hideMenu () {
     this.view = {}
     this.setUpdate(true)
@@ -68,45 +73,54 @@ export default class Menu extends Component {
       if (this.search) this.search.render()
       return this.root
     }
-    if (!this.view.viewType) {
-      this.root.innerHTML = ''
-      super.render()
-      return
+    if (this.shouldUpdate(true)) {
+      if (!this.view.viewType) {
+        this.root.innerHTML = ''
+        super.render()
+        return
+      }
+      this.root.innerHTML = menuLayout
+      let menu = this.root.querySelector('#menu-frame')
+      menu.addEventListener('click', (e) => {
+        this.dispatcher('hideContextmenu')
+      })
+      menu.addEventListener('contextmenu', (e) => {
+        e.stopPropagation()
+        e.preventDefault()
+        return false
+      })
+      let box = this.root.querySelector('#menu-box')
+      box.style.left = this.menuX + 'px'
+      box.style.top = this.menuY + 'px'
+      box.addEventListener('click', (e) => {
+        e.stopPropagation()
+      })
+      let el = this.root.querySelector('#config')
+      let title
+      if (this.view.viewType === 'node') {
+        title = 'Notes'
+        el.innerHTML = notes
+        this.setupNotes(el)
+      } else if (this.view.viewType === 'search') {
+        let dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
+        title = `Search ${dir} neighbors`
+        el.innerHTML = replace(searchDialog,
+          {
+            searchDepth: this.view.depth,
+            searchBreadth: this.view.breadth,
+            maxSearchBreadth: maxSearchBreadth,
+            maxSearchDepth: maxSearchDepth,
+            skipNumAddresses: this.view.skipNumAddresses
+          }
+        )
+        this.setupSearch(el)
+      }
+      this.root.querySelector('.title').innerHTML = title
+    } else if (this.shouldUpdate('skipNumAddresses')) {
+      let el = this.root.querySelector('#skipNumAddresses')
+      el.value = this.view.skipNumAddresses
+      el.setAttribute('min', this.view.breadth)
     }
-    this.root.innerHTML = menuLayout
-    let menu = this.root.querySelector('#menu-frame')
-    menu.addEventListener('click', (e) => {
-      this.dispatcher('hideContextmenu')
-    })
-    menu.addEventListener('contextmenu', (e) => {
-      e.stopPropagation()
-      e.preventDefault()
-      return false
-    })
-    let box = this.root.querySelector('#menu-box')
-    box.style.left = this.menuX + 'px'
-    box.style.top = this.menuY + 'px'
-    box.addEventListener('click', (e) => {
-      e.stopPropagation()
-    })
-    let el = this.root.querySelector('#config')
-    let title
-    if (this.view.viewType === 'node') {
-      title = 'Notes'
-      el.innerHTML = notes
-      this.setupNotes(el)
-    } else if (this.view.viewType === 'search') {
-      let dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
-      title = `Search ${dir} neighbors`
-      el.innerHTML = replace(searchDialog,
-        {
-          searchDepth: this.view.depth,
-          searchBreadth: this.view.breadth
-        }
-      )
-      this.setupSearch(el)
-    }
-    this.root.querySelector('.title').innerHTML = title
     super.render()
     return this.root
   }
@@ -131,11 +145,12 @@ export default class Menu extends Component {
     })
     this.renderInput('searchDepth', 'changeSearchDepth', this.view.depth)
     this.renderInput('searchBreadth', 'changeSearchBreadth', this.view.breadth)
+    this.renderInput('skipNumAddresses', 'changeSkipNumAddresses', this.view.skipNumAddresses)
     let form = el.querySelector('.searchValue')
     if (this.view.criterion === 'category') {
       form.innerHTML = categoryForm
       let input = form.querySelector('select')
-      categories.forEach(category => {
+      this.categories.forEach(category => {
         let option = document.createElement('option')
         option.innerHTML = category
         option.setAttribute('value', category)
@@ -152,7 +167,8 @@ export default class Menu extends Component {
     } else if (this.view.criterion === 'addresses') {
       form.innerHTML = addressesForm
       let searchinput = form.querySelector('.searchinput')
-      this.search = new Search(this.dispatcher, [this.view.id[2]], ['addresses'], true)
+      this.search = new Search(this.dispatcher, ['addresses'], true)
+      this.search.setKeyspaces([this.view.id[2]])
       this.search.render(searchinput)
       let searchAddresses = form.querySelector('.searchaddresses')
       this.view.params.addresses.forEach(address => {
@@ -172,6 +188,7 @@ export default class Menu extends Component {
           isOutgoing: this.view.isOutgoing,
           depth: this.view.depth,
           breadth: this.view.breadth,
+          skipNumAddresses: this.view.skipNumAddresses,
           params: this.view.params
         })
       })
@@ -192,11 +209,26 @@ export default class Menu extends Component {
   }
   setSearchDepth (d) {
     if (this.view.viewType !== 'search') return
-    this.view.depth = d
+    this.view.depth = Math.min(d, maxSearchDepth)
+    if (d > maxSearchDepth) {
+      this.setUpdate(true)
+    }
   }
   setSearchBreadth (d) {
     if (this.view.viewType !== 'search') return
-    this.view.breadth = d
+    this.view.breadth = Math.min(d, maxSearchBreadth)
+    this.view.skipNumAddresses = Math.max(this.view.breadth, this.view.skipNumAddresses)
+    if (d > maxSearchBreadth) {
+      this.setUpdate(true)
+    }
+    this.setUpdate('skipNumAddresses')
+  }
+  setSkipNumAddresses (d) {
+    if (this.view.viewType !== 'search') return
+    this.view.skipNumAddresses = Math.max(d, this.view.breadth || maxSearchBreadth)
+    if (d < this.view.skipNumAddresses) {
+      this.setUpdate(true)
+    }
   }
   addSearchAddress (address) {
     if (this.view.viewType !== 'search' || this.view.criterion !== 'addresses') return
