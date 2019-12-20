@@ -56,7 +56,7 @@
   },
   "scripts": {
     "build": "./node_modules/.bin/webpack --config webpack.config.js --env.production --env.nostatic",
-    "official": "rm -rf official && ./node_modules/.bin/webpack --env.production && cp -r dist official && rm official/*.js && mv official/officialpage.html official/index.html",
+    "official": "rm -rf official && ./node_modules/.bin/webpack --env.production && cp -r dist official && cd official && rm *.js *.gz *.yaml && mv officialpage.html index.html",
     "start": "webpack-dev-server"
   },
   "author": "",
