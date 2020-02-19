@@ -84,7 +84,7 @@ const resultNode = function ({context, result}) {
   }
   this.statusbar.removeLoading(a.id)
   this.statusbar.addMsg('loaded', a.type, a.id)
-  this.call('addNode', {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
+  addNode.call(this, {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
 }
 
 const resultTransactionForBrowser = function ({result}) {
@@ -99,7 +99,7 @@ const resultLabelForBrowser = function ({result, context}) {
   historyPushState(null, 'label', result.label)
   this.statusbar.removeLoading(context)
   this.statusbar.addMsg('loaded', 'label', result.label)
-  this.call('initTagsTable', {id: result.label, type: 'label', index: 0})
+  initTagsTable.call(this, {id: result.label, type: 'label', index: 0})
 }
 
 const resultBlockForBrowser = function ({result}) {
@@ -271,7 +271,7 @@ const selectNeighbor = function (data) {
     this.statusbar.addLoading(data.id)
     this.mapResult(this.rest.node(data.keyspace, {id: data.id, type: data.nodeType}), 'resultNode', context)
   } else {
-    this.call('resultNode', { context, result: o })
+    resultNode.call(this, { context, result: o })
   }
 }
 
@@ -284,7 +284,7 @@ const selectAddress = function (data) {
 const addNode = function ({id, type, keyspace, anchor}) {
   this.graph.adding.add(id)
   this.statusbar.addLoading(id)
-  this.call('addNodeCont', {context: {stage: 1, id, type, keyspace, anchor}, result: null})
+  addNodeCont.call(this, {context: {stage: 1, id, type, keyspace, anchor}, result: null})
 }
 
 const addNodeCont = function ({context, result}) {
@@ -296,7 +296,7 @@ const addNodeCont = function ({context, result}) {
       this.statusbar.addMsg('loading', context.type, context.id)
       this.mapResult(this.rest.node(keyspace, {type: context.type, id: context.id}), 'addNodeCont', {stage: 2, keyspace, anchor})
     } else {
-      this.call('addNodeCont', {context: {stage: 2, keyspace, anchor}, result: a})
+      addNodeCont.call(this, {context: {stage: 2, keyspace, anchor}, result: a})
     }
   } else if (context.stage === 2 && result) {
     let o = this.store.add(result)
@@ -311,7 +311,7 @@ const addNodeCont = function ({context, result}) {
       this.statusbar.addMsg('loadingEntityFor', o.id)
       this.mapResult(this.rest.entityForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
     } else {
-      this.call('addNodeCont', {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
+      addNodeCont.call(this, {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
     }
   } else if (context.stage === 3 && context.addressId) {
     if (!this.graph.adding.has(context.addressId)) return
@@ -330,17 +330,17 @@ const addNodeCont = function ({context, result}) {
       this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
       this.mapResult(this.rest.tags(keyspace, {id: e.id, type: e.type}), 'resultTags', {id: e.id, type: e.type, keyspace: e.keyspace})
     }
-    this.call('addNodeCont', {context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}})
+    addNodeCont.call(this, ({context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}}))
   } else if (context.stage === 4 && context.id && context.type) {
     let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
     let o = this.store.get(context.keyspace, context.type, context.id)
     if (context.type === 'entity') {
-      this.call('excourseLoadDegree', {context: {backCall, id: o.id, type: 'entity', keyspace}})
+      excourseLoadDegree.call(this, {context: {backCall, id: o.id, type: 'entity', keyspace}})
     } else if (context.type === 'address') {
       if (o.entity && !o.entity.mockup) {
-        this.call('excourseLoadDegree', {context: {backCall, id: o.entity.id, type: 'entity', keyspace}})
+        excourseLoadDegree.call(this, {context: {backCall, id: o.entity.id, type: 'entity', keyspace}})
       } else {
-        this.call(backCall.msg, backCall.data)
+        functions[backCall.msg].call(this, backCall.data)
       }
     }
   } else if (context.stage === 5 && context.id && context.type) {
@@ -360,7 +360,7 @@ const excourseLoadDegree = function ({context, result}) {
   if (!context.stage) {
     let o = this.store.get(context.keyspace, context.type, context.id)
     if (o.in_degree >= degreeThreshold) {
-      this.call('excourseLoadDegree', {context: { ...context, stage: 2 }})
+      excourseLoadDegree.call(this, {context: { ...context, stage: 2 }})
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, false)
@@ -377,7 +377,7 @@ const excourseLoadDegree = function ({context, result}) {
       // this.storeRelations(result.neighbors, o, o.keyspace, false)
     }
     if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
-      this.call(context.backCall.msg, context.backCall.data)
+      functions[context.backCall.msg].call(this, context.backCall.data)
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, true)
@@ -393,7 +393,7 @@ const excourseLoadDegree = function ({context, result}) {
       })
       // this.storeRelations(result.neighbors, o, o.keyspace, true)
     }
-    this.call(context.backCall.msg, context.backCall.data)
+    functions[context.backCall.msg].call(this, context.backCall.data)
   }
 }
 
@@ -435,7 +435,7 @@ const resultEgonet = function ({context, result}) {
     } else if (context.isOutgoing === false) {
       this.store.linkOutgoing(node.id, a.id, node.keyspace, node)
     }
-    this.call('addNode', {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
+    addNode.call(this, {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
   })
 }
 
@@ -518,12 +518,12 @@ const toggleConfig = function () {
 
 const noteDialog = function ({x, y, node}) {
   this.menu.showNodeDialog(x, y, {dialog: 'note', node})
-  this.call('selectNode', [node.data.type, node.id])
+  selectNode.call(this, [node.data.type, node.id])
 }
 
 const searchNeighborsDialog = function ({x, y, id, type, isOutgoing}) {
   this.menu.showNodeDialog(x, y, {dialog: 'search', id, type, isOutgoing})
-  this.call('selectNode', [type, id])
+  selectNode.call(this, [type, id])
 }
 
 const changeSearchCriterion = function (criterion) {
@@ -551,7 +551,7 @@ const save = function (stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    this.call('save', true)
+    save.call(this, true)
     return
   }
   let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
@@ -565,7 +565,7 @@ const saveNotes = function (stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    this.call('saveNotes', true)
+    saveNotes.call(this, true)
     return
   }
   let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
@@ -579,7 +579,7 @@ const saveYAML = function (stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    this.call('saveYAML', true)
+    saveYAML.call(this, true)
     return
   }
   let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
@@ -593,7 +593,7 @@ const saveTagsJSON = function (stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    this.call('saveTagsJSON', true)
+    saveTagsJSON.call(this, true)
     return
   }
   let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
@@ -677,7 +677,7 @@ const loadFile = function (params) {
   let stage = params[3]
   if (!stage) {
     this.statusbar.addMsg('loadFile', filename)
-    this.call('loadFile', [type, data, filename, true])
+    loadFile.call(this, [type, data, filename, true])
     return
   }
   this.statusbar.addMsg('loadedFile', filename)
@@ -765,7 +765,7 @@ const resultSearchNeighbors = function ({result, context}) {
 
       // fetch all relations
       let backCall = {msg: 'redrawGraph', data: null}
-      this.call('excourseLoadDegree', {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
+      excourseLoadDegree.call(this, {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
 
       let parent = this.graph.add(node, anchor)
       // link addresses to entity and add them (if any returned due of 'addresses' search criterion)
@@ -869,7 +869,7 @@ const addAllToGraph = function () {
       if (row.currency) row.keyspace = row.currency.toLowerCase()
       else row.keyspace = table.keyspace
     }
-    this.call(table.selectMessage, row)
+    functions[table.selectMessage].call(this, row)
   })
 }
 
@@ -905,7 +905,7 @@ const receiveCategoryColors = function ({result}) {
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }
 
-export default {
+const functions = {
   clickSearchResult,
   blurSearch,
   resultNode,
@@ -1002,3 +1002,5 @@ export default {
   receiveCategoryColors,
   exportSvg
 }
+
+export default functions

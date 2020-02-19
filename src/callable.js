@@ -4,7 +4,6 @@ import Logger from './logger.js'
 const logger = Logger.create('Callable') // eslint-disable-line no-unused-vars
 
 const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
-  'initSearch',
   'search',
   'searchresult',
   'searchresultLabels',
