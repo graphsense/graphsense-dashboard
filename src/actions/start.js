@@ -63,7 +63,7 @@ const loginResult = function ({result}) {
     if (!this.isStart) return this.call('appLoaded')
     import('../app.js').then(app => { // works despite of parsing error of eslint
       this.call('appLoaded')
-      this.app = new app.default(this.locale, this.rest, this.stats)
+      this.app = new app.default(this.locale, this.rest, this.stats, this.reportLogger)
       if (module.hot) {
         module.hot.accept([
           '../browser.js',

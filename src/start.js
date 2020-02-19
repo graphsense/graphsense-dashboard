@@ -5,6 +5,7 @@ import Landingpage from './landingpage.js'
 import Logger from './logger.js'
 import actions from './actions/start.js'
 import Login from './login/login.js'
+import ReportLogger from './reportLogger.js'
 
 const logger = Logger.create('Start') // eslint-disable-line no-unused-vars
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
@@ -19,6 +20,7 @@ export default class Start extends Callable {
     this.rest = new Rest(baseUrl, prefixLength)
     this.search = new Search(this.call)
     this.login = new Login(this.call)
+    this.reportLogger = new ReportLogger()
     this.landingpage = new Landingpage(this.call)
     this.landingpage.setLogin(this.login)
     this.registerDispatchEvents(actions)

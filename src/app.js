@@ -26,6 +26,7 @@ import startactions from './actions/start.js'
 import {prefixLength} from './globals.js'
 import YAML from 'yaml'
 import {SHA256} from 'sha2'
+import ReportLogger from './reportLogger.js'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -113,12 +114,13 @@ const tagJSONToTagpackTag = tagJSON => ({
 })
 
 export default class Model extends Callable {
-  constructor (locale, rest, stats) {
+  constructor (locale, rest, stats, reportLogger) {
     super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
     this.stats = stats || {}
+    this.reportLogger = reportLogger || new ReportLogger()
     this.keyspaces = Object.keys(this.stats)
     logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null

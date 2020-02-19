@@ -149,8 +149,8 @@ export default class Callable {
 
       let fun = () => {
         logger.boldDebug('calling', message, data)
+        this.reportLogger.log(message, data)
         this.dispatcher.call(message, null, data)
-        logger.debug('this is', this)
         if (dirtyMessages.indexOf(message) === -1) {
           this.render()
           return
