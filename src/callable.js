@@ -80,7 +80,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'moreLogs',
   'hideLogs',
   'gohome',
-  'new',
+  'blank',
   'sortEntityAddresses',
   'dragNode',
   'dragNodeEnd',

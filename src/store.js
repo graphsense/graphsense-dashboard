@@ -22,6 +22,7 @@ export default class Store {
     this.outgoingLinks = map()
     this.notesStore = map()
     this.tagsStore = map()
+    this.categories = []
   }
   /**
    * Adds an object to store if it does not exist

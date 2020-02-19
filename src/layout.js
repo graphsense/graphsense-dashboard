@@ -110,7 +110,7 @@ export default class Layout extends Component {
   }
   renderButtons () {
     let navbarButtons =
-        [ ['new', 'new'],
+        [ ['blank', 'blank'],
           ['load', 'toggleImport'],
           ['export', 'toggleExport'],
           ['config', 'toggleConfig'],
