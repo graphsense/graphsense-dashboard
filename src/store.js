@@ -325,7 +325,7 @@ export default class Store {
   }
   setCategories (cats) {
     this.categories = cats
-    this.addresses.forEach(this.calcMainCategory)
-    this.entities.forEach(this.calcMainCategory)
+    this.addresses.each((a) => this.calcMainCategory(a))
+    this.entities.each((a) => this.calcMainCategory(a))
   }
 }
