@@ -31,7 +31,6 @@ export default class Store {
     let idPrefixed = null
     let id = null
     let type = null
-    logger.debug('add', JSON.stringify(object))
     if (object.address || object.type === 'address') {
       id = object.address ? object.address : object.id
       type = 'address'
@@ -81,6 +80,7 @@ export default class Store {
         c.addresses.set(a.id, a)
         a.entity = c
       }
+      this.calcMainCategory(a)
       return a
     } else if (idPrefixed && type === 'entity') {
       let c = this.entities.get(idPrefixed)
@@ -106,8 +106,22 @@ export default class Store {
           a.entity = c
         }
       })
+      this.calcMainCategory(c)
       return c
     }
+  }
+  calcMainCategory (node) {
+    let cats = {}
+    this.categories.forEach(({id, category}) => {
+      cats[category] = id
+    })
+
+    let sorted = (node.tags || [])
+      .map(tag => tag.category)
+      // filter nulls and duplicates
+      .filter((value, index, self) => value && self.indexOf(value) === index)
+      .sort((a, b) => (cats[b] || Infinity) - (cats[a] || Infinity))
+    node.mainCategory = sorted[0]
   }
   get (keyspace, type, key) {
     let store = null
@@ -307,5 +321,10 @@ export default class Store {
       tags = tags.concat(address.tags)
     })
     return tags
+  }
+  setCategories (cats) {
+    this.categories = cats
+    this.addresses.forEach(this.calcMainCategory)
+    this.entities.forEach(this.calcMainCategory)
   }
 }

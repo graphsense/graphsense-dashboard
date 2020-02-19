@@ -903,6 +903,8 @@ export default class Model extends Callable {
     })
     this.dispatcher.on('receiveCategories', ({result}) => {
       if (!Array.isArray(result)) return
+      result.sort((a, b) => a.id - b.id)
+      this.store.setCategories(result)
       result = result.map(({category}) => category)
       this.graph.setCategories(result)
       this.menu.setCategories(result)

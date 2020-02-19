@@ -222,14 +222,7 @@ class GraphNode extends Component {
     return entries.length + ' tags'
   }
   getActorCategory () {
-    let tags = (this.data || {}).tags || []
-    let categories = {}
-    tags.forEach(tag => {
-      if (!tag['category']) return
-      categories[tag['category']] = (categories[tag['category']] || 0) + 1
-    })
-    let entry = Object.entries(categories).sort(([_, v1], [__, v2]) => v1 - v2)[0]
-    if (entry) return entry[0]
+    return this.data.mainCategory
   }
   getNote () {
     return this.data.notes
