@@ -110,8 +110,6 @@ export default class Browser extends Component {
     this.setUpdate('content')
   }
   setResultNode (object) {
-    logger.debug('setResultNode', object)
-
     this.visible = true
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
@@ -133,78 +131,95 @@ export default class Browser extends Component {
     let comp = this.content[request.index]
     if (!(comp instanceof Address)) return
     let keyspace = comp.data.keyspace
-    if (this.content[request.index + 1] instanceof TransactionsTable) return
+    this.setUpdate('content')
+    if (this.content[request.index + 1] instanceof TransactionsTable) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
+    this.destroyComponentsFrom(request.index + 1)
     comp.setCurrentOption('initTransactionsTable')
     let total = comp.data.no_incoming_txs + comp.data.no_outgoing_txs
-    this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
-    this.setUpdate('content')
   }
   initBlockTransactionsTable (request) {
     if (request.index !== 0 && !request.index) return
     let comp = this.content[request.index]
     if (!(comp instanceof Block)) return
     let keyspace = comp.data.keyspace
-    if (this.content[request.index + 1] instanceof TransactionsTable) return
-    comp.setCurrentOption('initBlockTransactionsTable')
-    this.destroyComponentsFrom(request.index + 1)
-    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.no_txs, request.id, this.currency, keyspace))
     this.setUpdate('content')
+    if (this.content[request.index + 1] instanceof BlockTransactionsTable) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
+    this.destroyComponentsFrom(request.index + 1)
+    comp.setCurrentOption('initBlockTransactionsTable')
+    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.no_txs, request.id, this.currency, keyspace))
   }
   initAddressesTable (request) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     if (!(last instanceof Entity)) return
     let keyspace = last.data.keyspace
-    if (this.content[request.index + 1] instanceof AddressesTable) return
+    this.setUpdate('content')
+    if (this.content[request.index + 1] instanceof AddressesTable) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
+    this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initAddressesTable')
     let total = last.data.no_addresses
-    this.destroyComponentsFrom(request.index + 1)
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace, this.nodeChecker))
-    this.setUpdate('content')
   }
   initTagsTable (request) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     let fromLabel = last instanceof Label
     if (!(last instanceof Entity) && !(last instanceof Address) && !(fromLabel)) return
-    if (this.content[request.index + 1] instanceof TagsTable) return
-    last.setCurrentOption('initTagsTable')
+    this.setUpdate('content')
+    if (this.content[request.index + 1] instanceof TagsTable) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
     this.destroyComponentsFrom(request.index + 1)
+    last.setCurrentOption('initTagsTable')
     let keyspace = last.data.keyspace
     let total = fromLabel ? last.data.address_count : last.data.tags.length
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
-
-    this.setUpdate('content')
   }
   initNeighborsTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     if (!(last instanceof Entity) && !(last instanceof Address)) return
+    this.setUpdate('content')
     if (this.content[request.index + 1] instanceof NeighborsTable &&
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
-    ) return
-
+    ) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
+    this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption(isOutgoing ? 'initOutdegreeTable' : 'initIndegreeTable')
     let keyspace = last.data.keyspace
     let total = isOutgoing ? last.data.out_degree : last.data.in_degree
-    this.destroyComponentsFrom(request.index + 1)
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace, this.nodeChecker))
-    this.setUpdate('content')
   }
   initTxAddressesTable (request, isOutgoing) {
     if (request.index !== 0 && !request.index) return
     let last = this.content[request.index]
     if (!(last instanceof Transaction)) return
+
+    this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TransactionAddressesTable &&
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
-    ) return
+    ) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
 
     last.setCurrentOption(isOutgoing ? 'initTxOutputsTable' : 'initTxInputsTable')
     let keyspace = last.data.keyspace
     this.destroyComponentsFrom(request.index + 1)
     this.content.push(new TransactionAddressesTable(this.dispatcher, last.data, isOutgoing, request.index + 1, this.currency, keyspace, this.nodeChecker))
-    this.setUpdate('content')
   }
   render (root) {
     if (root) this.root = root
@@ -257,7 +272,6 @@ export default class Browser extends Component {
     let data = this.root.querySelector('#browser-data')
     data.innerHTML = ''
     let c = 0
-    logger.debug('renderContent', this.content)
     this.content.forEach((comp) => {
       c += 1
       let compEl = document.createElement('div')

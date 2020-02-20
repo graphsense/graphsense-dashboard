@@ -6,6 +6,7 @@ export default class TransactionAddressesTable extends Table {
     let addresses = isOutgoing ? data.outputs : data.inputs
     let label = isOutgoing ? 'Output addresses' : 'Input addresses'
     super(dispatcher, index, addresses.length, currency, keyspace)
+    this.isOutgoing = isOutgoing
     this.columns = [
       { name: label,
         data: 'address',
