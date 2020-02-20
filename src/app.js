@@ -180,7 +180,7 @@ export default class Model extends Callable {
       title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
       creator: this.rest.username,
       lastmod: moment().format('YYYY-MM-DD'),
-      tags: this.store.getNotes()
+      tags: this.store.getUserDefinedTags()
     })
   }
   generateTagsJSON () {

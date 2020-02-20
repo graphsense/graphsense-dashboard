@@ -230,6 +230,19 @@ export default class Store {
     })
     return tags
   }
+  getUserDefinedTags () {
+    let tags = []
+    this.addresses.each(address => {
+      address.tags
+        .filter(tag => tag.isUserDefined)
+        .map(tag => ({...tag}))
+        .forEach(tag => {
+          delete tag.isUserDefined
+          tags.push(tag)
+        })
+    })
+    return tags
+  }
   addNotes (tags) {
     tags.forEach(tag => {
       if (!tag.note) return
