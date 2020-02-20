@@ -24,7 +24,7 @@ const search = function ({term, context}) {
     if (search.timeout) clearTimeout(search.timeout)
     search.showLoading()
     search.timeout = setTimeout(() => {
-      this.mapResult(this.rest.search(term, searchlimit), 'searchresult', {term, dialogContext:context})
+      this.mapResult(this.rest.search(term.trim(), searchlimit), 'searchresult', {term, dialogContext:context})
     }, 250)
   }
 }

@@ -9,7 +9,7 @@ const logger = Logger.create('Search') // eslint-disable-line no-unused-vars
 
 const numShowResults = 7
 
-const byPrefix = term => addr => addr.toLowerCase().startsWith(term.toLowerCase())
+const byPrefix = term => addr => addr.toLowerCase().startsWith(term.trim().toLowerCase())
 
 export default class Search extends Component {
   constructor (dispatcher, types, context) {
@@ -100,7 +100,7 @@ export default class Search extends Component {
       })
       this.input.addEventListener('input', (e) => {
         this.dispatcher('search', {
-          term: e.target.value.trim(),
+          term: e.target.value,
           context: this.context
         })
       })
