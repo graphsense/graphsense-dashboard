@@ -167,6 +167,7 @@ export default class EntityNode extends GraphNode {
           .classed('entityNodeRect', true)
           .attr('width', entityWidth)
           .attr('height', height)
+          .style('stroke-dasharray', this.entityDash)
         let label = g.append('g')
           .classed('label', true)
           .attr('transform', `translate(${padding}, ${padding / 2 + this.labelHeight})`)

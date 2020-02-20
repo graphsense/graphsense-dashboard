@@ -37,6 +37,7 @@ class GraphNode extends Component {
     this.ddy = 0
     this.searchingNeighborsIn = false
     this.searchingNeighborsOut = false
+    this.entityDash = '4 1'
   }
   expandableNeighbors (isOutgoing) {
     return this.getDegree(isOutgoing) < noExpandableNeighbors
@@ -160,6 +161,7 @@ class GraphNode extends Component {
     g.append('path')
       .classed('expandHandlePath', true)
       .attr('d', `M0 0 C ${a} 0, ${a} 0, ${a} ${a} L ${a} ${c} C ${a} ${h} ${a} ${h} 0 ${h}`)
+      .style('stroke-dasharray', this.data.type === 'entity' ? this.entityDash : '')
     let fontSize = expandHandleWidth * 0.8
     let fontX = (expandHandleWidth - fontSize)
     g.append('text')
