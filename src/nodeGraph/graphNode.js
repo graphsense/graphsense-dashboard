@@ -20,7 +20,7 @@ class GraphNode extends Component {
     this.id = [this.data.id, layerId, this.data.keyspace]
     this.labelType = labelType
     this.dispatcher = dispatcher
-    this.labelHeight = 25
+    this.labelHeight = 20
     this.numLetters = 8
     this.currency = currency
     this.outgoingTxsFilters = map()
