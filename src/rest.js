@@ -108,9 +108,6 @@ export default class Rest {
   search (str, limit) {
     return this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''))
   }
-  searchLabels (str, limit) {
-    return this.json(null, '/search/labels/' + encodeURIComponent(str))
-  }
   node (keyspace, {type, id}) {
     type = typeToEndpoint(type)
 
@@ -177,11 +174,9 @@ export default class Rest {
   stats () {
     return json(this.baseUrl + '/stats')
   }
-  searchNeighbors ({id, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
+  searchNeighbors ({id, keyspace, type, isOutgoing, depth, breadth, skipNumAddresses, params}) {
     type = typeToEndpoint(type)
     let dir = isOutgoing ? 'out' : 'in'
-    let keyspace = id[2]
-    id = id[0]
     let searchCrit = ''
     if (params.category) {
       searchCrit = `category=${params.category}`

@@ -1,5 +1,6 @@
 import menuLayout from './config/menu.html'
 import notes from './config/notes.html'
+import tagpack from './config/tagpack.html'
 import Component from './component.js'
 import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
@@ -17,10 +18,9 @@ const defaultDepth = 2
 const defaultBreadth = 20
 
 export default class Menu extends Component {
-  constructor (dispatcher, keyspaces) {
+  constructor (dispatcher) {
     super()
     this.dispatcher = dispatcher
-    this.keyspaces = keyspaces
     this.view = {}
     this.categories = []
   }
@@ -28,12 +28,16 @@ export default class Menu extends Component {
     let menuWidth = 250
     let menuHeight = 300
     if (params.dialog === 'note') {
-      this.view = {viewType: 'node', node: params.node}
+      this.view = {viewType: 'note', data: params.data}
+    } else if (params.dialog === 'tagpack') {
+      let labels = params.data.tags
+        .filter(tag => tag.isUserDefined)
+        .map(tag => tag.label)
+      this.view = {viewType: 'tagpack', data: params.data, labels}
     } else if (params.dialog === 'search') {
       this.view = {
         viewType: 'search',
-        id: params.id,
-        type: params.type,
+        data: params.data,
         isOutgoing: params.isOutgoing,
         criterion: defaultCriterion,
         params: defaultParams(),
@@ -58,6 +62,9 @@ export default class Menu extends Component {
     if (y + menuHeight > height) y -= menuWidth
     this.menuX = x
     this.menuY = y
+  }
+  getType () {
+    return this.view.viewType
   }
   setCategories (categories) {
     this.categories = categories
@@ -97,10 +104,14 @@ export default class Menu extends Component {
       })
       let el = this.root.querySelector('#config')
       let title
-      if (this.view.viewType === 'node') {
+      if (this.view.viewType === 'note') {
         title = 'Notes'
         el.innerHTML = notes
         this.setupNotes(el)
+      } else if (this.view.viewType === 'tagpack') {
+        title = 'Add tags'
+        el.innerHTML = tagpack
+        this.setupTagpack(el)
       } else if (this.view.viewType === 'search') {
         let dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
         title = `Search ${dir} neighbors`
@@ -132,11 +143,38 @@ export default class Menu extends Component {
     })
   }
   setupNotes (el) {
-    let node = this.view.node
+    let data = this.view.data
     let input = el.querySelector('textarea')
-    input.value = node.data.notes || ''
+    input.value = data.notes || ''
     input.addEventListener('input', (e) => {
-      this.dispatcher('inputNotes', {id: node.data.id, type: node.data.type, keyspace: node.data.keyspace, note: e.target.value})
+      this.dispatcher('inputNotes', {id: data.id, type: data.type, keyspace: data.keyspace, note: e.target.value})
+    })
+  }
+  setupTagpack (el) {
+    let searchinput = el.querySelector('.searchinput')
+    this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
+    this.search.render(searchinput)
+    let searchLabels = el.querySelector('.searchlabels')
+    this.view.labels.forEach(label => {
+      let li = document.createElement('li')
+      let span = document.createElement('span')
+      span.innerHTML = '<i class="fas fa-times-circle fa-lg pr-2"></i>'
+      span.addEventListener('click', () => {
+        this.dispatcher('removeLabel', label)
+      })
+      li.appendChild(span)
+      let l = document.createTextNode(label)
+      li.appendChild(l)
+      searchLabels.appendChild(li)
+    })
+    let button = el.querySelector('input[type="button"]')
+    button.addEventListener('click', () => {
+      this.dispatcher('setLabels', {
+        id: this.view.data.id,
+        type: this.view.data.type,
+        keyspace: this.view.data.keyspace,
+        labels: this.view.labels
+      })
     })
   }
   setupSearch (el) {
@@ -167,7 +205,7 @@ export default class Menu extends Component {
     } else if (this.view.criterion === 'addresses') {
       form.innerHTML = addressesForm
       let searchinput = form.querySelector('.searchinput')
-      this.search = new Search(this.dispatcher, ['addresses'], true)
+      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
       this.search.setKeyspaces([this.view.id[2]])
       this.search.render(searchinput)
       let searchAddresses = form.querySelector('.searchaddresses')
@@ -183,8 +221,9 @@ export default class Menu extends Component {
     if (this.view.params.category || this.view.params.addresses.length > 0) {
       button.addEventListener('click', () => {
         this.dispatcher('searchNeighbors', {
-          id: this.view.id,
-          type: this.view.type,
+          id: this.view.data.id,
+          type: this.view.data.type,
+          keyspace: this.view.data.keyspace,
           isOutgoing: this.view.isOutgoing,
           depth: this.view.depth,
           breadth: this.view.breadth,
@@ -233,6 +272,18 @@ export default class Menu extends Component {
   addSearchAddress (address) {
     if (this.view.viewType !== 'search' || this.view.criterion !== 'addresses') return
     this.view.params.addresses.push(address)
+    this.setUpdate(true)
+  }
+  addSearchLabel (label) {
+    if (this.view.viewType !== 'tagpack') return
+    this.view.labels.push(label)
+    this.setUpdate(true)
+  }
+  removeSearchLabel (label) {
+    logger.debug('removelabel', label)
+    if (this.view.viewType !== 'tagpack') return
+    this.view.labels = this.view.labels.filter(l => l !== label)
+    logger.debug('labels', this.view.labels)
     this.setUpdate(true)
   }
 }

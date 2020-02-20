@@ -15,8 +15,8 @@ const receiveStats = function ({context, result}) {
   }
 }
 
-const search = function ({term, types, keyspaces, isInDialog}) {
-  let search = isInDialog ? this.menu.search : this.search
+const search = function ({term, context}) {
+  let search = context === 'search' ? this.search : this.menu.search
   if (!search) return
   search.setSearchTerm(term, labelPrefixLength)
   search.hideLoading()
@@ -24,26 +24,16 @@ const search = function ({term, types, keyspaces, isInDialog}) {
     if (search.timeout) clearTimeout(search.timeout)
     search.showLoading()
     search.timeout = setTimeout(() => {
-      if (types.indexOf('addresses') !== -1 || types.indexOf('transactions') !== -1) {
-        this.mapResult(this.rest.search(term, searchlimit), 'searchresult', {term, isInDialog})
-      }
+      this.mapResult(this.rest.search(term, searchlimit), 'searchresult', {term, dialogContext:context})
     }, 250)
   }
 }
 
 const searchresult = function ({context, result}) {
-  let search = context.isInDialog ? this.menu.search : this.search
+  let search = context.dialogContext === 'search' ? this.search : this.menu.search
   if (!search) return
   search.hideLoading()
   search.setResult(context.term, result)
-}
-
-const searchresultLabels = function ({context, result}) {
-  let search = context.isInDialog ? this.menu.search : this.search
-  logger.debug('search', search)
-  if (!search) return
-  search.hideLoading()
-  search.setResultLabels(context.term, result)
 }
 
 const login = function ([username, password]) {
@@ -193,7 +183,6 @@ export default {
   receiveStats,
   search,
   searchresult,
-  searchresultLabels,
   login,
   loginResult,
   appLoaded,

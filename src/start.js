@@ -18,7 +18,7 @@ export default class Start extends Callable {
     this.isStart = true
     this.locale = locale
     this.rest = new Rest(baseUrl, prefixLength)
-    this.search = new Search(this.call)
+    this.search = new Search(this.call, ['addresses', 'transactions', 'labels', 'blocks'], 'search')
     this.login = new Login(this.call)
     this.reportLogger = new ReportLogger()
     this.landingpage = new Landingpage(this.call)

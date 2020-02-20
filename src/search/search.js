@@ -12,15 +12,16 @@ const numShowResults = 7
 const byPrefix = term => addr => addr.toLowerCase().startsWith(term.toLowerCase())
 
 export default class Search extends Component {
-  constructor (dispatcher, types, isInDialog = false) {
+  constructor (dispatcher, types, context) {
     super()
-    this.types = types || ['addresses', 'transactions', 'labels', 'blocks']
+    this.types = types
     this.dispatcher = dispatcher
     this.term = ''
     this.resultTerm = ''
-    this.isInDialog = isInDialog
+    this.context = context
     this.keyspaces = []
     this.result = []
+    this.resultLabels = []
   }
   setStats (stats) {
     this.stats = stats
@@ -89,37 +90,7 @@ export default class Search extends Component {
       this.form.addEventListener('submit', (e) => {
         e.returnValue = false
         e.preventDefault()
-        for (let i in this.result) {
-          let resultSet = this.result[i]
-          if (this.types.indexOf('addresses') !== -1 && resultSet.addresses.length > 0) {
-            let addresses = resultSet.addresses.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: addresses[0], type: 'address', keyspace: resultSet['currency'], isInDialog: this.isInDialog})
-            return false
-          }
-          if (this.types.indexOf('transactions') !== -1 && resultSet.txs.length > 0) {
-            let transactions = resultSet.txs.filter(byPrefix(this.term))
-            this.dispatcher('clickSearchResult', {id: transactions[0], type: 'transaction', keyspace: resultSet['currency'], isInDialog: this.isInDialog})
-            return false
-          }
-        }
-        if (this.types.indexOf('labels') !== -1 && this.resultLabels.length > 0) {
-          let labels = this.resultLabels.filter(byPrefix(this.term))
-          this.dispatcher('clickSearchResult', {id: labels[0], type: 'label', keyspace: null, isInDialog: this.isInDialog})
-          return false
-        }
-        for (let i in this.keyspaces) {
-          let keyspace = this.keyspaces[i]
-          let blocks = this.blocklist(3, keyspace, this.term)
-          if (this.types.indexOf('blocks') !== -1 && blocks.length > 0) {
-            this.dispatcher('clickSearchResult', {id: blocks[0], type: 'block', keyspace, isInDialog: this.isInDialog})
-            return false
-          }
-        }
-        this.term.split('\n').forEach((address) => {
-          this.keyspaces.forEach(keyspace => {
-            this.dispatcher('clickSearchResult', {id: address, type: 'address', keyspace, isInDialog: this.isInDialog})
-          })
-        })
+        this.dispatcher('submitSearchResult', {term: this.term, context: this.context})
         return false
       })
       this.input.addEventListener('keypress', (e) => {
@@ -130,9 +101,7 @@ export default class Search extends Component {
       this.input.addEventListener('input', (e) => {
         this.dispatcher('search', {
           term: e.target.value.trim(),
-          types: this.types,
-          keyspaces: this.keyspaces,
-          isInDialog: this.isInDialog
+          context: this.context
         })
       })
       this.input.addEventListener('blur', () => {
@@ -198,7 +167,7 @@ export default class Search extends Component {
       li.className = 'cursor-pointer'
       li.innerHTML = `<i class="fas fa-${icon} pr-1 text-grey text-sm"></i>${id}`
       li.addEventListener('click', () => {
-        this.dispatcher('clickSearchResult', {id, type, keyspace, isInDialog: this.isInDialog})
+        this.dispatcher('clickSearchResult', {id, type, keyspace, context: this.context})
       })
       ul.appendChild(li)
     }
@@ -276,6 +245,30 @@ export default class Search extends Component {
     this.resultLabels = result['labels']
     this.resultTerm = term
     this.setUpdate('result')
+  }
+  getFirstResult () {
+    for (let i in this.result) {
+      let resultSet = this.result[i]
+      if (this.types.indexOf('addresses') !== -1 && resultSet.addresses.length > 0) {
+        let addresses = resultSet.addresses.filter(byPrefix(this.term))
+        return {id: addresses[0], type: 'address', keyspace: resultSet['currency']}
+      }
+      if (this.types.indexOf('transactions') !== -1 && resultSet.txs.length > 0) {
+        let transactions = resultSet.txs.filter(byPrefix(this.term))
+        return {id: transactions[0], type: 'transaction', keyspace: resultSet['currency']}
+      }
+    }
+    if (this.types.indexOf('labels') !== -1 && this.resultLabels.length > 0) {
+      let labels = this.resultLabels.filter(byPrefix(this.term))
+      return {id: labels[0], type: 'label'}
+    }
+    for (let i in this.keyspaces) {
+      let keyspace = this.keyspaces[i]
+      let blocks = this.blocklist(3, keyspace, this.term)
+      if (this.types.indexOf('blocks') !== -1 && blocks.length > 0) {
+        return {id: blocks[0], type: 'block', keyspace}
+      }
+    }
   }
   blocklist (limit, keyspace, prefix) {
     if (!this.stats || !this.stats[keyspace]) return []

@@ -6,9 +6,11 @@ const logger = Logger.create('Callable') // eslint-disable-line no-unused-vars
 const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'search',
   'searchresult',
-  'searchresultLabels',
+  'submitSearchResult',
   'clickSearchResult',
   'blurSearch',
+  'setLabels',
+  'removeLabel',
   'fetchError',
   'resultNodeForBrowser',
   'resultTransactionForBrowser',

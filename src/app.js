@@ -132,7 +132,7 @@ export default class Model extends Callable {
     this.graph = new NodeGraph(this.call, defaultLabelType, defaultCurrency, defaultTxLabel)
     this.browser.setNodeChecker(this.graph.getNodeChecker())
     this.login = new Login(this.call)
-    this.search = new Search(this.call)
+    this.search = new Search(this.call, ['addresses', 'transactions', 'labels', 'blocks'], 'search')
     this.search.setStats(this.stats)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, this.login, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())

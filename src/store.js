@@ -328,4 +328,38 @@ export default class Store {
     this.addresses.each((a) => this.calcMainCategory(a))
     this.entities.each((a) => this.calcMainCategory(a))
   }
+  addTags (keyspace, id, labels) {
+    let o = this.get(keyspace, 'address', id)
+    if (!o) {
+      console.error(`${keyspace} address ${id} not found for tagging`)
+      return
+    }
+
+    let tagsWithoutUserDefined = []
+    let userDefinedTags = []
+    o.tags.forEach(tag => {
+      if (tag.isUserDefined) {
+        let i = labels.indexOf(tag.label)
+        if (i !== -1) {
+          userDefinedTags.push(tag)
+          labels.splice(i, 1)
+        }
+      } else {
+        tagsWithoutUserDefined.push(tag)
+      }
+    })
+    let newTags = labels.map(label => ({
+      isUserDefined: true,
+      label,
+      address: o.id,
+      source: 'GraphSense',
+      tagpack_uri: null,
+      currency: keyspace.toUpperCase(),
+      lastmod: +new Date(),
+      category: 'Other',
+      abuse: null,
+      keyspace: keyspace
+    }))
+    o.tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
+  }
 }

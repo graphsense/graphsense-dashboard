@@ -54,7 +54,7 @@ class GraphNode extends Component {
       {
         title: 'Add note',
         action: () => {
-          this.dispatcher('noteDialog', {x: event.x - 50, y: event.y - 50, node: this})
+          this.dispatcher('noteDialog', {x: event.x - 50, y: event.y - 50, nodeId: this.id, nodeType: this.data.type})
         },
         position: 90
       },

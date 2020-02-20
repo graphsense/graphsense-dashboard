@@ -25,10 +25,30 @@ const historyPushState = (keyspace, type, id) => {
 
 const degreeThreshold = 100
 
-const clickSearchResult = function ({id, type, keyspace, isInDialog}) {
-  if (isInDialog) {
-    if (!this.menu.search || type !== 'address') return
-    this.menu.addSearchAddress(id)
+const submitSearchResult = function ({term, context}) {
+  if (context === 'tagpack') {
+    this.menu.addSearchLabel(term)
+    return
+  }
+  let first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
+  if (first) {
+    clickSearchResult.call(this, {...first, context})
+    return
+  }
+  term.split('\n').forEach((address) => {
+    this.keyspaces.forEach(keyspace => {
+      clickSearchResult.call(this, {id: address, type: 'address', keyspace, context: this.context})
+    })
+  })
+}
+
+const clickSearchResult = function ({id, type, keyspace, context}) {
+  if (this.menu.search) {
+    if (context === 'note' && type === 'address') {
+      this.menu.addSearchAddress(id)
+    } else if (context === 'tagpack' && type === 'label') {
+      this.menu.addSearchLabel(id)
+    }
     this.menu.search.clear()
     return
   }
@@ -52,10 +72,21 @@ const clickSearchResult = function ({id, type, keyspace, isInDialog}) {
   this.statusbar.addMsg('loading', type, id)
 }
 
-const blurSearch = function (isInDialog) {
-  let search = isInDialog ? this.menu.search : this.search
+const blurSearch = function (context) {
+  let search = context === 'search' ? this.search : this.menu.search
   if (!search) return
   search.clear()
+}
+
+const removeLabel = function (label) {
+  if (this.menu.getType() !== 'tagpack') return
+  this.menu.removeSearchLabel(label)
+}
+
+const setLabels = function ({labels, id, keyspace}) {
+  if (this.menu.getType() !== 'tagpack') return
+  this.store.addTags(keyspace, id, labels)
+  this.menu.hideMenu()
 }
 
 const resultNode = function ({context, result}) {
@@ -516,9 +547,10 @@ const toggleConfig = function () {
   this.config.toggleConfig()
 }
 
-const noteDialog = function ({x, y, node}) {
-  this.menu.showNodeDialog(x, y, {dialog: 'note', node})
-  selectNode.call(this, [node.data.type, node.id])
+const noteDialog = function ({x, y, nodeId, nodeType}) {
+  let o = this.store.get(nodeId[2], nodeType, nodeId[0])
+  this.menu.showNodeDialog(x, y, {dialog: nodeType === 'entity' ? 'note' : 'tagpack', data: o})
+  selectNode.call(this, [nodeType, nodeId])
 }
 
 const searchNeighborsDialog = function ({x, y, id, type, isOutgoing}) {
@@ -906,8 +938,11 @@ const receiveCategoryColors = function ({result}) {
 }
 
 const functions = {
+  submitSearchResult,
   clickSearchResult,
   blurSearch,
+  removeLabel,
+  setLabels,
   resultNode,
   resultTransactionForBrowser,
   resultLabelForBrowser,
