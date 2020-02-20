@@ -65,4 +65,42 @@ export default class BrowserComponent extends Component {
   requestData () {
     return {index: this.index}
   }
+  formatDuration (duration) {
+    duration = moment.duration(duration)
+    let years = duration.years()
+    let months = duration.months()
+    let days = duration.days()
+    let hours = duration.hours()
+    let minutes = duration.minutes()
+    let seconds = duration.seconds()
+    let format = (num, str, strs) => {
+      if (num === 1) return `${num} ${str}`
+      else if (num > 1) return `${num} ${strs}`
+      return ''
+    }
+    if (years > 0) {
+      return `${format(years, 'year', 'years')} ` +
+        `${format(months, 'month', 'months')} ` +
+        `${format(days, 'day', 'days')} `
+    }
+    if (months > 0) {
+      return `${format(months, 'month', 'months')} ` +
+        `${format(days, 'day', 'days')} `
+    }
+    if (days > 0) {
+      return `${format(days, 'day', 'days')} ` +
+        `${format(hours, 'hour', 'hours')} `
+    }
+    if (hours > 0) {
+      return `${format(hours, 'hour', 'hours')} ` +
+        `${format(minutes, 'minute', 'minutes')} `
+    }
+
+    if (minutes > 0) {
+      return `${format(minutes, 'minute', 'minutes')} ` +
+        `${format(seconds, 'second', 'seconds')} `
+    }
+
+    return `${format(seconds, 'second', 'seconds')} `
+  }
 }

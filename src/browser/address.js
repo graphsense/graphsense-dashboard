@@ -1,5 +1,4 @@
 import address from './address.html'
-import moment from 'moment'
 import {replace} from '../template_utils'
 import BrowserComponent from './component.js'
 import incomingNeighbors from '../icons/incomingNeighbors.html'
@@ -28,7 +27,7 @@ export default class Address extends BrowserComponent {
     let flat = {
       first_usage: this.formatTimestampWithAgo(first),
       last_usage: this.formatTimestampWithAgo(last),
-      activity_period: moment.duration(duration).humanize(),
+      activity_period: this.formatDuration(duration),
       total_received: this.formatCurrency(this.data.total_received[this.currency], this.data.keyspace),
       balance: this.formatCurrency(this.data.balance[this.currency], this.data.keyspace),
       keyspace: this.data.keyspace.toUpperCase()
