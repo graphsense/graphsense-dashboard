@@ -184,7 +184,10 @@ export default class Model extends Callable {
     })
   }
   generateTagsJSON () {
-    return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON))
+    return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON), null, 2)
+  }
+  generateReport () {
+    return JSON.stringify(this.reportLogger.getLogs(), null, 2)
   }
   loadTagsJSON (data) {
     try {

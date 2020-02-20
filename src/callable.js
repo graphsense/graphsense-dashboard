@@ -71,6 +71,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'save',
   'saveNotes',
   'saveYAML',
+  'saveReport',
   'load',
   'loadNotes',
   'loadYAML',

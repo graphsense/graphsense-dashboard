@@ -633,6 +633,20 @@ const saveTagsJSON = function (stage) {
   this.download(filename, this.generateTagsJSON())
 }
 
+const saveReport = function (stage) {
+  if (this.isReplaying) return
+  if (!stage) {
+    // update status bar before starting serializing
+    this.statusbar.addMsg('saving')
+    this.config.hide()
+    saveReport.call(this, true)
+    return
+  }
+  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
+  this.statusbar.addMsg('saved', filename)
+  this.download(filename, this.generateReport())
+}
+
 const exportRestLogs = function () {
   if (this.isReplaying) return
   let csv = 'timestamp,url\n'
@@ -997,6 +1011,7 @@ const functions = {
   blank,
   save,
   saveNotes,
+  saveReport,
   saveYAML,
   saveTagsJSON,
   exportRestLogs,
