@@ -19,6 +19,7 @@
     "moment": "2.22.2",
     "moment-timezone": "0.5.25",
     "sha2": "^1.0.2",
+    "uuid": "^7.0.1",
     "yaml": "^1.7.0"
   },
   "devDependencies": {

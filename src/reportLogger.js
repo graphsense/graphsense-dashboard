@@ -47,7 +47,7 @@ export default class ReportLogger {
     this.logs.push({
       visible_data: messages[eventName](eventData),
       timestamp: moment().format(),
-      data: JSON.stringify({eventName, eventData})
+      data: {eventName, eventData}
     })
     logger.debug('logs', this.logs)
   }

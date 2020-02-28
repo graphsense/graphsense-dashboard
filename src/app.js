@@ -22,6 +22,7 @@ import {prefixLength} from './globals.js'
 import YAML from 'yaml'
 import {SHA256} from 'sha2'
 import ReportLogger from './reportLogger.js'
+import { v4 as uuidv4 } from 'uuid'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -65,9 +66,9 @@ export default class Model extends Callable {
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-    this.stats = stats || {}
+    this.stats = stats || { currencies: {} }
     this.reportLogger = reportLogger || new ReportLogger()
-    this.keyspaces = Object.keys(this.stats)
+    this.keyspaces = Object.keys(this.stats.currencies)
     logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
 
@@ -133,12 +134,12 @@ export default class Model extends Callable {
     this.browser.setNodeChecker(this.graph.getNodeChecker())
     this.login = new Login(this.call)
     this.search = new Search(this.call, ['addresses', 'transactions', 'labels', 'blocks'], 'search')
-    this.search.setStats(this.stats)
+    this.search.setStats(this.stats.currencies)
     this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, this.login, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     this.landingpage = new Landingpage(this.call, this.keyspaces)
-    this.landingpage.setStats(this.stats)
+    this.landingpage.setStats(this.stats.currencies)
     this.landingpage.setSearch(this.search)
   }
   compress (data) {
@@ -187,7 +188,49 @@ export default class Model extends Callable {
     return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON), null, 2)
   }
   generateReport () {
-    return JSON.stringify(this.reportLogger.getLogs(), null, 2)
+    let keyspaces = new Set()
+    this.store.entities.each(entity => {
+      keyspaces.add(entity.keyspace)
+    })
+    let time = moment().format('YYYY-MM-DD HH-mm-ss')
+    let report = {
+      'visible_name': 'Investigation of ...',
+      'timestamp': time,
+      'user': '',
+      'uuid': uuidv4(),
+      'institution': '',
+      'summary': '',
+      'output': [ ]
+    }
+    let concat = (keyspace, key) => {
+      report[key] = report[key].concat(this.stats.currencies[keyspace][key])
+    }
+    report.data_sources = [...this.stats.data_sources]
+    report.tools = [...this.stats.tools]
+    report.notes = [...this.stats.notes]
+
+    keyspaces.forEach(keyspace => {
+      concat(keyspace, 'data_sources')
+      concat(keyspace, 'tools')
+      concat(keyspace, 'notes')
+    })
+    /*
+    report.data_sources.forEach(ds => {
+      ds.version = {nr: null, hash: null, timestamp: null, file: 'bla'}
+      ds.report_uuid = 'bla'
+    })
+    */
+
+    report.recordings = [
+      { 'label': '',
+        'description': '',
+        'user': '',
+        'timestamp': time,
+        'processing_steps': this.reportLogger.getLogs()
+      }
+    ]
+    let output = JSON.stringify(report, null, 2)
+    return output
   }
   loadTagsJSON (data) {
     try {

@@ -9,7 +9,7 @@ const stats = function () {
 const receiveStats = function ({context, result}) {
   this.keyspaces = Object.keys(result)
   this.stats = {...result}
-  this.landingpage.setStats({...result})
+  this.landingpage.setStats({...result.currencies})
   if(this.browser){
     this.browser.setKeyspaces(this.keyspaces)
   }
