@@ -68,7 +68,7 @@ export default class EntityNode extends GraphNode {
         position: 60,
         children: [
           { title: 'Final balance',
-            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.total_received.value - data.totalSpent.value})
+            action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.total_received.value - data.total_spent.value})
           },
           { title: 'Total received',
             action: () => this.dispatcher('sortEntityAddresses', {entity: this.id, property: data => data.total_received.value})
