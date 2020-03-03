@@ -122,6 +122,7 @@ export default class Model extends Callable {
     return confirm('You have unsaved changes. Do you really want to ' + msg + '?') // eslint-disable-line no-undef
   }
   paramsToCall ({id, type, keyspace}) {
+    this.reportLogger.log('__fromURL', {id, type, keyspace})
     appactions.clickSearchResult.call(this, {id, type, keyspace})
   }
   createComponents () {

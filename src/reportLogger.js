@@ -6,7 +6,41 @@ const logger = Logger.create('ReportLogger') // eslint-disable-line no-unused-va
 const outg = (isOutgoing) => isOutgoing ? 'outgoing' : 'incoming'
 
 const messages = {
-  'noteDialog': (payload) => `open note dialog`,
+  '__fromURL': (payload) => `load ${payload.type} ${payload.id} of keyspace ${payload.keyspace} from URL`,
+  'changeLocale': (payload) => `change locale to ${payload}`,
+  'addAllToGraph': (payload) => `add all from current table to graph`,
+  'downloadTagsAsJSON': (payload) => `download tags table as JSON`,
+  'downloadTable': (payload) => `download current table`,
+  'toggleSearchTable': (payload) => `toggle search feature in table`,
+  'redo': (payload) => `redo`,
+  'undo': (payload) => `undo`,
+  'searchNeighbors': (payload) => `start search neighbors`,
+  'changeSkipNumAddresses': (payload) => `change number of addresses to skip further search from an entity`,
+  'changeSearchBreadth': (payload) => `change search breadth to ${payload}`,
+  'changeSearchDepth': (payload) => `change search depth to ${payload}`,
+  'sortEntityAddresses': (payload) => `sort addresses of entity ${payload.entity} by ${payload.property}`,
+  'gohome': (payload) => `go to landing page`,
+  'loadFile': (params) => {
+    let type = params[0]
+    let filename = params[2]
+    let stage = params[3]
+    if (!stage) return
+    switch (type) {
+      case 'load':
+        return `load GS file ${filename}`
+      case 'loadNotes':
+        return `load GS notes file ${filename}`
+      case 'loadYAML':
+        return `load tagpack YAML file ${filename}`
+      case 'loadTagsJSON':
+        return `load titanium tags file ${filename}`
+    }
+  },
+  'blank': (payload) => `start from scratch (clear graph)`,
+  'changeSearchCategory': (payload) => `change search category to ${payload}`,
+  'changeSearchCriterion': (payload) => `change search criterion to ${payload}`,
+  'searchNeighborsDialog': (payload) => `open dialog to deep search ${outg(payload.isOutgoing)} neighbors on ${payload.type} ${payload.id}`,
+  'noteDialog': (payload) => `open note dialog on ${payload.nodeType} ${payload.nodeId}`,
   'toggleConfig': (payload) => `toggle config`,
   'inputNotes': (payload) => `add notes to ${payload.type} ${payload.id} of keyspace ${payload.keyspace}`,
   'removeNode': (payload) => `remove ${payload[0]} ${payload[1]} from graph`,
@@ -49,7 +83,6 @@ export default class ReportLogger {
       timestamp: moment().format(),
       data: {eventName, eventData}
     })
-    logger.debug('logs', this.logs)
   }
   getLogs () {
     return this.logs
