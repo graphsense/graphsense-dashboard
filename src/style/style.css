@@ -310,6 +310,10 @@ svg .shadow {
 svg .shadow:hover {
   opacity: 0.8;
 }
+
+svg .abuse {
+  fill: red;
+}
 div.dataTables_wrapper {
   position: relative;
 }

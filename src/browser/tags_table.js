@@ -42,6 +42,11 @@ export default class TagsTable extends Table {
         render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
       },
       {
+        name: 'Abuse',
+        data: 'abuse',
+        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
+      },
+      {
         name: 'Last modified',
         data: 'lastmod',
         render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatTimestamp(value, type, row))
@@ -70,7 +75,7 @@ export default class TagsTable extends Table {
 
   formatSupportedKeyspace (keyspace, content) {
     if (!keyspace || this.supportedKeyspaces.indexOf(keyspace) === -1) {
-      return `<span class="unsupported-keyspace">${content}</span>`
+      return `<span class="unsupported-keyspace">${content || ''}</span>`
     }
     return content
   }

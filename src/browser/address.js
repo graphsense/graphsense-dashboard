@@ -25,13 +25,15 @@ export default class Address extends BrowserComponent {
     const first = this.data.first_tx.timestamp
     const last = this.data.last_tx.timestamp
     const duration = (last - first) * 1000
+    const abuses = [...new Set((this.data.tags || []).filter(({ abuse }) => abuse).map(({ abuse }) => abuse).values())]
     const flat = {
       first_usage: this.formatTimestampWithAgo(first),
       last_usage: this.formatTimestampWithAgo(last),
       activity_period: this.formatDuration(duration),
       total_received: this.formatCurrency(this.data.total_received[this.currency], this.data.keyspace),
       balance: this.formatCurrency(this.data.balance[this.currency], this.data.keyspace),
-      keyspace: this.data.keyspace.toUpperCase()
+      keyspace: this.data.keyspace.toUpperCase(),
+      abuses: abuses.join(' ')
     }
     this.root.innerHTML = replace(this.template, { ...this.data, ...flat })
     return this.root
