@@ -1,5 +1,5 @@
 import label from './label.html'
-import {replace} from '../template_utils'
+import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
 
 export default class Label extends BrowserComponent {
@@ -9,9 +9,10 @@ export default class Label extends BrowserComponent {
     this.template = label
     this.options =
       [
-        {icon: 'tags', optionText: 'Tags', message: 'initTagsTable'}
+        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -19,7 +20,8 @@ export default class Label extends BrowserComponent {
     this.root.innerHTML = replace(this.template, this.data)
     return this.root
   }
+
   requestData () {
-    return {...super.requestData(), id: this.data.label_norm, type: 'label'}
+    return { ...super.requestData(), id: this.data.label_norm, type: 'label' }
   }
 }

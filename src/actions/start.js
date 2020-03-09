@@ -1,4 +1,4 @@
-import {labelPrefixLength, searchlimit, prefixLength} from '../globals.js'
+import { labelPrefixLength, searchlimit, prefixLength } from '../globals.js'
 import Logger from '../logger.js'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
@@ -6,31 +6,31 @@ const stats = function () {
   this.mapResult(this.rest.stats(), 'receiveStats')
 }
 
-const receiveStats = function ({context, result}) {
+const receiveStats = function ({ context, result }) {
   this.keyspaces = Object.keys(result)
-  this.stats = {...result}
-  this.landingpage.setStats({...result.currencies})
-  if(this.browser){
+  this.stats = { ...result }
+  this.landingpage.setStats({ ...result.currencies })
+  if (this.browser) {
     this.browser.setKeyspaces(this.keyspaces)
   }
 }
 
-const search = function ({term, context}) {
-  let search = context === 'search' ? this.search : this.menu.search
+const search = function ({ term, context }) {
+  const search = context === 'search' ? this.search : this.menu.search
   if (!search) return
   search.setSearchTerm(term, labelPrefixLength)
   search.hideLoading()
-  if(search.needsResults(searchlimit, prefixLength)) {
+  if (search.needsResults(searchlimit, prefixLength)) {
     if (search.timeout) clearTimeout(search.timeout)
     search.showLoading()
     search.timeout = setTimeout(() => {
-      this.mapResult(this.rest.search(term.trim(), searchlimit), 'searchresult', {term, dialogContext:context})
+      this.mapResult(this.rest.search(term.trim(), searchlimit), 'searchresult', { term, dialogContext: context })
     }, 250)
   }
 }
 
-const searchresult = function ({context, result}) {
-  let search = context.dialogContext === 'search' ? this.search : this.menu.search
+const searchresult = function ({ context, result }) {
+  const search = context.dialogContext === 'search' ? this.search : this.menu.search
   if (!search) return
   search.hideLoading()
   search.setResult(context.term, result)
@@ -42,18 +42,18 @@ const login = function ([username, password]) {
   this.mapResult(this.rest.login(username, password), 'loginResult')
 }
 
-const refreshResult = function ({result}) {
+const refreshResult = function ({ result }) {
   logger.debug('refreshResult', result)
-  if (result.status === 'success') return this.call('loginResult', {result})
+  if (result.status === 'success') return this.call('loginResult', { result })
 }
 
-const loginResult = function ({result}) {
+const loginResult = function ({ result }) {
   logger.debug('loginResult', result)
   if (result.status === 'success') {
     if (!this.isStart) return this.call('appLoaded')
     import('../app.js').then(app => { // works despite of parsing error of eslint
       this.call('appLoaded')
-      this.app = new app.default(this.locale, this.rest, this.stats, this.reportLogger)
+      this.app = new app.default(this.locale, this.rest, this.stats, this.reportLogger) // eslint-disable-line new-cap
       if (module.hot) {
         module.hot.accept([
           '../browser.js',
@@ -100,7 +100,7 @@ const loginResult = function ({result}) {
         ], () => {
           // dispatcher.history = [debugHistory[0]]
 
-          this.app = new app.default(this.locale, this.rest, this.stats)
+          this.app = new app.default(this.locale, this.rest, this.stats) // eslint-disable-line new-cap
           this.app.replay()
           this.app.render(document.body)
         })
@@ -121,7 +121,7 @@ const appLoaded = function () {
   }
 }
 
-const fetchError = function ({context, msg, error}) {
+const fetchError = function ({ context, msg, error }) {
   if (error.message.startsWith('401')) {
     this.login.loading(false)
     this.login.clear()
@@ -139,10 +139,12 @@ const fetchError = function ({context, msg, error}) {
       this.login.loading(false)
       break
     case 'searchresult':
-      let search = context && context.isInDialog ? this.menu.search : this.search
-      if (!search) return
-      search.hideLoading()
-      search.error(error.keyspace, error.message)
+      {
+        const search = context && context.isInDialog ? this.menu.search : this.search
+        if (!search) return
+        search.hideLoading()
+        search.error(error.keyspace, error.message)
+      }
       // this.statusbar.addMsg('error', error)
       break
     case 'resultSearchNeighbors':
@@ -173,7 +175,7 @@ const fetchError = function ({context, msg, error}) {
   }
 }
 
-const jumpToApp = function() {
+const jumpToApp = function () {
   this.showLandingpage = false
   this.layout.setUpdate(true)
 }

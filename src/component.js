@@ -2,6 +2,7 @@ export default class Component {
   constructor () {
     this.update = true
   }
+
   setUpdate (update, value) {
     if (this.nodes) {
       console.log('setUpdate Entity', this.id, update, value)
@@ -17,14 +18,17 @@ export default class Component {
     }
     this.update.set(update, value)
   }
+
   shouldUpdate (update) {
     if (typeof this.update === 'boolean') return this.update
     if (update === undefined) return this.update.size > 0
     return this.update.has(update)
   }
+
   getUpdate (update) {
     return this.update.get(update)
   }
+
   render () {
     this.update = false
   }

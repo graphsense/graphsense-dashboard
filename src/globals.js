@@ -12,12 +12,12 @@ const labelPrefixLength = 3
 
 const currencies =
   {
-    'btc': 'Bitcoin',
-    'ltc': 'Litecoin',
-    'bch': 'Bitcoin Cash',
-    'zec': 'Zcash',
-    'xrp': 'Ripple',
-    'eth': 'Ethereum'
+    btc: 'Bitcoin',
+    ltc: 'Litecoin',
+    bch: 'Bitcoin Cash',
+    zec: 'Zcash',
+    xrp: 'Ripple',
+    eth: 'Ethereum'
   }
 
 export {

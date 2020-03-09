@@ -8,17 +8,21 @@ export default class Login extends Component {
     super()
     this.dispatcher = dispatcher
   }
+
   loading (isLoading) {
     this.isLoading = isLoading
     this.setUpdate('loading')
   }
+
   clear () {
     this.setUpdate('clear')
   }
+
   error (msg) {
     this.errorMessage = msg
     this.setUpdate('error')
   }
+
   render (root) {
     logger.debug('render')
     if (root) this.root = root
@@ -29,7 +33,7 @@ export default class Login extends Component {
       this.root.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault()
         console.log(e)
-        this.dispatcher('login', [e.target.elements['username'].value, e.target.elements['password'].value])
+        this.dispatcher('login', [e.target.elements.username.value, e.target.elements.password.value])
       })
       super.render()
       return this.root

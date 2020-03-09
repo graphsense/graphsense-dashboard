@@ -1,5 +1,5 @@
-import {event} from 'd3-selection'
-import {GraphNode, addressHeight, addressWidth} from './graphNode.js'
+import { event } from 'd3-selection'
+import { GraphNode, addressHeight, addressWidth } from './graphNode.js'
 import contextMenu from 'd3-context-menu'
 
 const padding = 10
@@ -11,14 +11,15 @@ export default class AddressNode extends GraphNode {
     this.y = 0
     this.type = 'address'
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (this.shouldUpdate(true)) {
       this.root.node().innerHTML = ''
-      let x = 0
-      let y = 0
-      let g = this.root
+      const x = 0
+      const y = 0
+      const g = this.root
         .append('g')
         .classed('addressNode', true)
         .on('click', () => {
@@ -35,20 +36,20 @@ export default class AddressNode extends GraphNode {
         .attr('width', addressWidth)
         .attr('height', addressHeight)
 
-      let h = y + addressHeight / 2 + this.labelHeight / 3
-      let label = g.append('g')
+      const h = y + addressHeight / 2 + this.labelHeight / 3
+      const label = g.append('g')
         .classed('label', true)
         .attr('transform', `translate(${x + padding}, ${h})`)
 
       this.renderLabel(label)
-      let eg = g.append('g')
+      const eg = g.append('g')
       this.renderExpand(eg, true)
       this.renderExpand(eg, false)
       this.coloring()
       this.renderSelected()
     } else {
       if (this.shouldUpdate('label')) {
-        let label = this.root.select('g.label')
+        const label = this.root.select('g.label')
         this.renderLabel(label)
         this.coloring()
       }
@@ -58,12 +59,15 @@ export default class AddressNode extends GraphNode {
     }
     super.render()
   }
+
   getHeight () {
     return addressHeight
   }
+
   getWidth () {
     return addressWidth
   }
+
   getId () {
     return this.data.address
   }

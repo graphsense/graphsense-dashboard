@@ -1,4 +1,4 @@
-import {map} from 'd3-collection'
+import { map } from 'd3-collection'
 import Logger from './logger.js'
 import moment from 'moment'
 
@@ -10,7 +10,7 @@ const prefix = (keyspace, id) => {
   return keyspace + sep + id
 }
 const unprefix = (idPrefixed) => {
-  let pos = idPrefixed.indexOf(sep)
+  const pos = idPrefixed.indexOf(sep)
   if (pos === -1) return [null, idPrefixed]
   return [idPrefixed.substring(0, pos), idPrefixed.substring(pos + 1)]
 }
@@ -24,11 +24,12 @@ export default class Store {
     this.tagsStore = map()
     this.categories = []
   }
+
   /**
    * Adds an object to store if it does not exist
    */
   add (object) {
-    let empty = {}
+    const empty = {}
     let idPrefixed = null
     let id = null
     let type = null
@@ -53,7 +54,7 @@ export default class Store {
         a = empty
         a.id = id
         a.type = 'address'
-        let outgoing = this.initOutgoing(id, object.keyspace)
+        const outgoing = this.initOutgoing(id, object.keyspace)
         a.outgoing = outgoing
         this.addresses.set(idPrefixed, a)
         a.notes = this.notesStore.get('address' + idPrefixed)
@@ -70,11 +71,11 @@ export default class Store {
       delete a.address
       if (typeof object.entity === 'string' || typeof object.entity === 'number') object.toEntity = object.entity
       if (object.toEntity) {
-        let cidPrefixed = prefix(object.keyspace, object.toEntity)
+        const cidPrefixed = prefix(object.keyspace, object.toEntity)
         let c = this.entities.get(cidPrefixed)
         if (!c) {
           c = { addresses: map(), id: object.toEntity, type: 'entity', ...empty }
-          let outgoing = this.initOutgoing(id, object.keyspace)
+          const outgoing = this.initOutgoing(id, object.keyspace)
           c.outgoing = outgoing
           this.entities.set(cidPrefixed, c)
         }
@@ -89,7 +90,7 @@ export default class Store {
         c = { addresses: map(), ...empty }
         c.id = id
         c.type = 'entity'
-        let outgoing = this.initOutgoing(id, object.keyspace)
+        const outgoing = this.initOutgoing(id, object.keyspace)
         c.outgoing = outgoing
         this.entities.set(idPrefixed, c)
         c.notes = this.notesStore.get('entity' + idPrefixed)
@@ -98,9 +99,9 @@ export default class Store {
       Object.keys(object).forEach(key => { c[key] = object[key] })
       // remove unneeded entity field (is now id)
       delete c.entity
-      let addresses = object.forAddresses || []
+      const addresses = object.forAddresses || []
       addresses.forEach(address => {
-        let a = this.addresses.get(prefix(object.keyspace, address))
+        const a = this.addresses.get(prefix(object.keyspace, address))
         logger.debug('forAddress', address, a)
         if (a) {
           c.addresses.set(address, a)
@@ -111,19 +112,21 @@ export default class Store {
       return c
     }
   }
+
   calcMainCategory (node) {
-    let cats = {}
-    this.categories.forEach(({id, category}) => {
+    const cats = {}
+    this.categories.forEach(({ id, category }) => {
       cats[category] = id
     })
 
-    let sorted = (node.tags || [])
+    const sorted = (node.tags || [])
       .map(tag => tag.category)
       // filter nulls and duplicates
       .filter((value, index, self) => value && self.indexOf(value) === index)
       .sort((a, b) => (cats[b] || Infinity) - (cats[a] || Infinity))
     node.mainCategory = sorted[0]
   }
+
   get (keyspace, type, key) {
     let store = null
     if (type === 'address') {
@@ -137,9 +140,10 @@ export default class Store {
     }
     return store.get(prefix(keyspace, key))
   }
+
   find (key, type) {
     let found = null
-    let findIt = node => {
+    const findIt = node => {
       if (!found && node.id == key) found = node // eslint-disable-line eqeqeq
     }
     if (type === 'address') {
@@ -152,6 +156,7 @@ export default class Store {
     }
     return found
   }
+
   initOutgoing (id, keyspace) {
     if (typeof id !== 'string' && typeof id !== 'number') {
       throw new Error('id is not string')
@@ -163,9 +168,10 @@ export default class Store {
     }
     return outgoing
   }
+
   linkOutgoing (source, target, keyspace, data) {
-    let outgoing = this.initOutgoing(source, keyspace)
-    let n = outgoing.get(target)
+    const outgoing = this.initOutgoing(source, keyspace)
+    const n = outgoing.get(target)
     if (!n && (!data || !data.no_txs || !data.estimated_value)) {
       outgoing.set(target, null)
       return
@@ -176,42 +182,45 @@ export default class Store {
       estimated_value: data.estimated_value
     })
   }
+
   serialize () {
-    let addresses = []
+    const addresses = []
     this.addresses.each(address => {
-      let s = {...address}
+      const s = { ...address }
       s.entity = s.entity.id
       delete s.outgoing
       addresses.push(s)
     })
-    let entities = []
+    const entities = []
     this.entities.each(entity => {
-      let s = {...entity}
+      const s = { ...entity }
       s.addresses = s.addresses.keys()
       delete s.outgoing
       entities.push(s)
     })
-    let alllinks = []
+    const alllinks = []
     this.outgoingLinks.each((links, id) => {
       alllinks.push([id, links.entries()])
     })
     return [addresses, entities, alllinks]
   }
+
   serializeNotes () {
-    let addresses = []
+    const addresses = []
     this.addresses.each(address => {
-      let s = [prefix(address.keyspace, address.id), address.notes]
+      const s = [prefix(address.keyspace, address.id), address.notes]
       addresses.push(s)
     })
-    let entities = []
+    const entities = []
     this.entities.each(entity => {
-      let s = [prefix(entity.keyspace, entity.id), entity.notes]
+      const s = [prefix(entity.keyspace, entity.id), entity.notes]
       entities.push(s)
     })
     return [addresses, entities]
   }
+
   getNotes () {
-    let tags = []
+    const tags = []
     this.addresses.each(address => {
       if (!address.notes) return
       tags.push({
@@ -230,12 +239,13 @@ export default class Store {
     })
     return tags
   }
+
   getUserDefinedTags () {
-    let tags = []
+    const tags = []
     this.addresses.each(address => {
       address.tags
         .filter(tag => tag.isUserDefined)
-        .map(tag => ({...tag}))
+        .map(tag => ({ ...tag }))
         .forEach(tag => {
           delete tag.isUserDefined
           tags.push(tag)
@@ -243,21 +253,23 @@ export default class Store {
     })
     return tags
   }
+
   addNotes (tags) {
     tags.forEach(tag => {
       if (!tag.note) return
-      let keyspace = tag.currency.toLowerCase()
-      let idPrefixed = prefix(keyspace, tag.address)
+      const keyspace = tag.currency.toLowerCase()
+      const idPrefixed = prefix(keyspace, tag.address)
       if (this.addresses.get(idPrefixed)) {
-        this.add({keyspace, id: tag.address, notes: tag.note, type: 'address'})
+        this.add({ keyspace, id: tag.address, notes: tag.note, type: 'address' })
       } else {
         this.notesStore.set('address' + idPrefixed, tag.note)
       }
     })
   }
+
   addTagpack (keyspaces, data) {
-    let overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod']
-    let addressTags = map()
+    const overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod']
+    const addressTags = map()
     data.tags.forEach(tag => {
       overwritable.forEach(key => {
         if (!tag[key]) tag[key] = data[key] || tag[key]
@@ -273,14 +285,14 @@ export default class Store {
       }
       tags.forEach(tag => {
         tag.keyspace = tag.currency.toLowerCase()
-        let p = prefix(tag.keyspace, tag.address)
-        let t = addressTags.get(p) || []
+        const p = prefix(tag.keyspace, tag.address)
+        const t = addressTags.get(p) || []
         t.push(tag)
         addressTags.set(p, t)
       })
     })
     addressTags.each((tags, p) => {
-      let a = this.addresses.get(p)
+      const a = this.addresses.get(p)
       if (a) {
         a.tags = a.tags || []
         a.tags = a.tags.concat(tags)
@@ -291,6 +303,7 @@ export default class Store {
       }
     })
   }
+
   deserialize (version, [addresses, entities, alllinks]) {
     entities.forEach(entity => {
       entity.forAddresses = entity.addresses
@@ -303,24 +316,25 @@ export default class Store {
     alllinks.forEach(([id, links]) => {
       let sp = []
       if (version === '0.4.0') {
-        let found = this.find(id)
+        const found = this.find(id)
         if (!found) return
         sp[0] = found.keyspace
         sp[1] = id
       } else {
         sp = unprefix(id)
       }
-      links.forEach(({key, value}) => {
+      links.forEach(({ key, value }) => {
         this.linkOutgoing(sp[1], key, sp[0], value)
       })
     })
   }
+
   deserializeNotes (version, [addressNotes, entityNotes]) {
-    let ser = (nodes, type) => ([idPrefixed, notes]) => {
-      let c = nodes.get(idPrefixed)
-      let unprefixed = unprefix(idPrefixed)
+    const ser = (nodes, type) => ([idPrefixed, notes]) => {
+      const c = nodes.get(idPrefixed)
+      const unprefixed = unprefix(idPrefixed)
       if (c) {
-        this.add({keyspace: unprefixed[0], id: unprefixed[1], notes, type})
+        this.add({ keyspace: unprefixed[0], id: unprefixed[1], notes, type })
       } else {
         this.notesStore.set(type + idPrefixed, notes)
       }
@@ -328,6 +342,7 @@ export default class Store {
     entityNotes.forEach(ser(this.entities, 'entity'))
     addressNotes.forEach(ser(this.addresses, 'address'))
   }
+
   allAddressTags () {
     let tags = []
     this.addresses.each((address) => {
@@ -336,23 +351,25 @@ export default class Store {
     })
     return tags
   }
+
   setCategories (cats) {
     this.categories = cats
     this.addresses.each((a) => this.calcMainCategory(a))
     this.entities.each((a) => this.calcMainCategory(a))
   }
+
   addTags (keyspace, id, labels) {
-    let o = this.get(keyspace, 'address', id)
+    const o = this.get(keyspace, 'address', id)
     if (!o) {
       console.error(`${keyspace} address ${id} not found for tagging`)
       return
     }
 
-    let tagsWithoutUserDefined = []
-    let userDefinedTags = []
+    const tagsWithoutUserDefined = []
+    const userDefinedTags = []
     o.tags.forEach(tag => {
       if (tag.isUserDefined) {
-        let i = labels.indexOf(tag.label)
+        const i = labels.indexOf(tag.label)
         if (i !== -1) {
           userDefinedTags.push(tag)
           labels.splice(i, 1)
@@ -361,7 +378,7 @@ export default class Store {
         tagsWithoutUserDefined.push(tag)
       }
     })
-    let newTags = labels.map(label => ({
+    const newTags = labels.map(label => ({
       isUserDefined: true,
       label,
       address: o.id,

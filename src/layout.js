@@ -1,8 +1,8 @@
 import layout from './layout/layout.html'
 import Component from './component.js'
 import currency from './layout/currency.html'
-import {addClass, removeClass} from './template_utils.js'
-import {select} from 'd3-selection'
+import { addClass, removeClass } from './template_utils.js'
+import { select } from 'd3-selection'
 
 export default class Layout extends Component {
   constructor (dispatcher, browser, graph, config, menu, search, status, login, currency) {
@@ -19,26 +19,32 @@ export default class Layout extends Component {
     this.currencyRoot = null
     this.disabled = {}
   }
+
   triggerFileLoad (loadType) {
     this.root.querySelector(`.file-loader[data-type="${loadType}"]`).click()
   }
+
   triggerDownloadViaLink (url) {
-    let a = this.root.querySelector('a#downloadCSV')
+    const a = this.root.querySelector('a#downloadCSV')
     a.setAttribute('href', url)
     a.click()
   }
+
   setCurrency (currency) {
     this.currency = currency
     this.setUpdate('currency')
   }
+
   disableButton (name, disable) {
     this.disabled[name] = disable
     this.setUpdate('buttons')
   }
+
   showLogin (show) {
     this.loginVisible = show
     this.setUpdate('login')
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -61,17 +67,17 @@ export default class Layout extends Component {
       this.statusbar.setUpdate(true)
       this.login.setUpdate(true)
       this.renderButtons()
-      let loaders = this.root.querySelectorAll('.file-loader')
+      const loaders = this.root.querySelectorAll('.file-loader')
       loaders.forEach(loader => {
         loader.addEventListener('change', (e) => {
-          let input = e.target
-          let type = e.target.getAttribute('data-type')
-          let accept = e.target.getAttribute('accept')
+          const input = e.target
+          const type = e.target.getAttribute('data-type')
+          const accept = e.target.getAttribute('accept')
 
-          let reader = new FileReader() // eslint-disable-line no-undef
-          let filename = input.files[0].name
+          const reader = new FileReader() // eslint-disable-line no-undef
+          const filename = input.files[0].name
           reader.onload = () => {
-            let data = reader.result
+            const data = reader.result
             this.dispatcher('loadFile', [type, data, filename])
           }
           if (accept === '.gs') {
@@ -108,9 +114,10 @@ export default class Layout extends Component {
     super.render()
     return this.root
   }
+
   renderButtons () {
-    let navbarButtons =
-        [ ['blank', 'blank'],
+    const navbarButtons =
+        [['blank', 'blank'],
           ['load', 'toggleImport'],
           ['export', 'toggleExport'],
           ['config', 'toggleConfig'],
@@ -119,7 +126,7 @@ export default class Layout extends Component {
           ['redo', 'redo']
         ]
     navbarButtons.forEach(([name, msg]) => {
-      let el = select('#navbar-' + name)
+      const el = select('#navbar-' + name)
       el.on('click', null)
       if (this.disabled[name]) {
         addClass(el.node(), 'disabled')
@@ -129,10 +136,11 @@ export default class Layout extends Component {
       }
     })
   }
+
   renderCurrency () {
     if (!this.shouldUpdate(true) && !this.shouldUpdate('currency')) return
     this.currencyRoot.innerHTML = currency
-    let select = this.currencyRoot.querySelector('select')
+    const select = this.currencyRoot.querySelector('select')
     let i = 0
     for (; i < select.options.length; i++) {
       if (select.options[i].value === this.currency) break
@@ -142,9 +150,11 @@ export default class Layout extends Component {
       this.dispatcher('changeCurrency', e.target.value)
     })
   }
+
   serialize () {
     return this.currency
   }
+
   deserialize (version, currency) {
     this.currency = currency
   }

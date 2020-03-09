@@ -1,18 +1,19 @@
 import moment from 'moment'
 import numeral from 'numeral'
-import {currencies} from '../globals.js'
+import { currencies } from '../globals.js'
 import statistics from './statistics.hbs'
 
 function statsHtml (body) {
   const imageContext = require.context('../style/img/currencies/', false)
-  let stats = []
+  const stats = []
   Object.keys(body).forEach((keyspace) => {
-    let s = body[keyspace]
+    const s = body[keyspace]
     if (!s) return
-    let format = '0,000,000'
-    let t = moment.unix(s.timestamp)
-    let flat =
-        { lastUpdate: (t.format('L') + ' ' + t.format('LT')).replace(/ /g, '&nbsp;'),
+    const format = '0,000,000'
+    const t = moment.unix(s.timestamp)
+    const flat =
+        {
+          lastUpdate: (t.format('L') + ' ' + t.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           no_addresses: numeral(s.no_addresses).format(format),
           no_entities: numeral(s.no_entities).format(format),
@@ -27,7 +28,7 @@ function statsHtml (body) {
     }
     stats.push(flat)
   })
-  return statistics({stats})
+  return statistics({ stats })
 }
 
-export {statsHtml}
+export { statsHtml }

@@ -1,7 +1,7 @@
 import $ from 'jquery'
 import 'datatables.net'
 import 'datatables.net-scroller'
-import {browserHeight, browserPadding} from '../globals.js'
+import { browserHeight, browserPadding } from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
 import Logger from '../logger.js'
@@ -22,15 +22,18 @@ export default class Table extends BrowserComponent {
     this.loading = null
     this.searchable = false
     if (this.isSmall()) {
-      this.addOption({icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable'})
+      this.addOption({ icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable' })
     }
   }
+
   smallThreshold () {
     return 10000
   }
+
   isSmall () {
     return this.total < this.smallThreshold()
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -40,17 +43,17 @@ export default class Table extends BrowserComponent {
       logger.debug('render table')
       super.render()
       this.root.innerHTML = table
-      let tr = this.root.querySelector('tr')
-      let el = this.root.querySelector('th')
+      const tr = this.root.querySelector('tr')
+      const el = this.root.querySelector('th')
       this.columns.forEach((column, i) => {
-        let el2 = el.cloneNode()
+        const el2 = el.cloneNode()
         el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
         tr.appendChild(el2)
       })
       tr.removeChild(el)
-      let that = this
-      let total = numeral(this.total).format('1,000')
-      let tab = this.table = $(this.root).children().first().DataTable({
+      const that = this
+      const total = numeral(this.total).format('1,000')
+      const tab = this.table = $(this.root).children().first().DataTable({
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
@@ -76,11 +79,11 @@ export default class Table extends BrowserComponent {
       // using es5 'function' to have 'this' bound to the triggering element
       this.table.on('click', 'td', function (e) {
         if (!that.selectMessage) return
-        let cell = tab.cell(this)
+        const cell = tab.cell(this)
         if (!cell) return
-        let index = cell.index()
+        const index = cell.index()
         logger.debug('index', index)
-        let row = tab.row(index.row).data()
+        const row = tab.row(index.row).data()
         logger.debug('row', row)
         if (!row.keyspace) {
           row.keyspace = that.keyspace
@@ -103,10 +106,12 @@ export default class Table extends BrowserComponent {
       super.render()
     }
   }
+
   toggleSearch () {
     this.searchable = !this.searchable
     this.setUpdate(true)
   }
+
   ajax (request, drawCallback, settings, table) {
     logger.debug('ajax request', request)
     if (table.isSmall()) {
@@ -116,8 +121,8 @@ export default class Table extends BrowserComponent {
     if (request.start + request.length <= table.data.length) {
       // HACK: The table shall only be scrollable to the currently loaded data.
       // Add +1 so DataTables triggers loading more data when scrolling to the end.
-      let total = Math.min(table.total, table.data.length + 1)
-      let data = {
+      const total = Math.min(table.total, table.data.length + 1)
+      const data = {
         draw: request.draw,
         recordsTotal: total,
         recordsFiltered: total
@@ -134,7 +139,7 @@ export default class Table extends BrowserComponent {
       }
       return
     }
-    let r =
+    const r =
       {
         keyspace: table.keyspace,
         params: table.loadParams,
@@ -145,16 +150,17 @@ export default class Table extends BrowserComponent {
     table.dispatcher(table.loadMessage, r)
     table.loading = request
   }
-  setResponse ({page, request, drawCallback, result}) {
+
+  setResponse ({ page, request, drawCallback, result }) {
     if (!this.isSmall() && page !== this.nextPage) return
     this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
     logger.debug('data', result, this.resultField, this.data)
     this.nextPage = result.next_page
-    let loading = this.loading || request
+    const loading = this.loading || request
     // HACK: The table shall only be scrollable to the currently loaded data.
     // Add +1 so DataTables triggers loading more data when scrolling to the end.
-    let total = Math.min(this.total, this.data.length + 1)
-    let data = {
+    const total = Math.min(this.total, this.data.length + 1)
+    const data = {
       draw: request.draw,
       recordsTotal: total,
       recordsFiltered: total,
@@ -163,9 +169,11 @@ export default class Table extends BrowserComponent {
     this.loading = null
     drawCallback(data)
   }
+
   truncateValue (value) {
     return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
   }
+
   formatLink (value) {
     if (!value) return ''
     if (value.startsWith('http')) {
@@ -173,18 +181,22 @@ export default class Table extends BrowserComponent {
     }
     return value
   }
+
   formatValue (func) {
     return (value, type) => {
       if (type === 'display') return func(value)
       return value
     }
   }
+
   downloadOption () {
-    return {html: downloadCSV, optionText: 'Download table as CSV', message: 'downloadTable'}
+    return { html: downloadCSV, optionText: 'Download table as CSV', message: 'downloadTable' }
   }
+
   addAllOption () {
-    return {icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph'}
+    return { icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph' }
   }
+
   formatIsInGraph (nodeIsInGraph, type, keyspace) {
     return (value, t) => {
       if (t === 'display') {

@@ -6,20 +6,24 @@ export default class TransactionsTable extends Table {
     this.nodeId = nodeId
     this.nodeType = nodeType
     this.columns = [
-      { name: 'Transaction',
+      {
+        name: 'Transaction',
         data: 'tx_hash',
         render: this.formatValue(this.truncateValue)
       },
-      { name: 'Value',
+      {
+        name: 'Value',
         data: 'value',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
-      { name: 'Height',
+      {
+        name: 'Height',
         data: 'height'
       },
-      { name: 'Timestamp',
+      {
+        name: 'Timestamp',
         data: 'timestamp',
         render: this.formatValue(this.formatTimestamp)
       }
@@ -29,6 +33,7 @@ export default class TransactionsTable extends Table {
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
   }
+
   getParams () {
     return {
       id: this.loadParams[0],

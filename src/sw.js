@@ -13,20 +13,20 @@ const myFetch = (request) => {
   return db.get(request.url)
     .then((resp) => {
       logger.debug(`${request.url} found in cache`)
-      let headers = new Headers()
+      const headers = new Headers()
       headers.append('Content-Type', 'application/json')
-      return new Response(resp, {status: 200, statusText: 'OK', headers})
+      return new Response(resp, { status: 200, statusText: 'OK', headers })
     }, (err) => {
       logger.debug(`${request.url} not found in cache, fetching it remotely`)
       return fetch(request)
         .then(response => {
           // need to clone the response in order to use it twice in the following
           // see https://developer.mozilla.org/en-US/docs/Web/API/Response/clone
-          let responseClone = response.clone()
+          const responseClone = response.clone()
           logger.debug('fetched', response)
           if (response.headers.get('Content-Type') === 'application/json') {
             response.text().then(text => {
-              let prune = text.replace(/\s+/g, '')
+              const prune = text.replace(/\s+/g, '')
               if (prune.startsWith('{"message"') ||
                   prune.startsWith('{"msg"') ||
                   prune.startsWith('{"access_token"') ||

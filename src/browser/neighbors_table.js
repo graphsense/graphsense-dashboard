@@ -1,28 +1,32 @@
 import Table from './table.js'
-import {maxAddableNodes} from '../globals.js'
+import { maxAddableNodes } from '../globals.js'
 
 export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
     this.isOutgoing = isOutgoing
     this.columns = [
-      { name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,
+      {
+        name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,
         data: 'id',
         render: this.formatIsInGraph(nodeIsInGraph, type, keyspace)
       },
-      { name: 'Balance',
+      {
+        name: 'Balance',
         data: 'balance',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
-      { name: 'Received',
+      {
+        name: 'Received',
         data: 'received',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
-      { name: 'No. Tx',
+      {
+        name: 'No. Tx',
         data: 'no_txs'
       }
     ]
@@ -33,6 +37,7 @@ export default class NeighborsTable extends Table {
     this.addOption(this.downloadOption())
     if (total < maxAddableNodes) this.options.push(this.addAllOption())
   }
+
   getParams () {
     return {
       id: this.loadParams[0],

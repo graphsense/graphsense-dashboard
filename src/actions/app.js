@@ -1,7 +1,7 @@
 import Logger from '../logger.js'
 import numeral from 'numeral'
 import moment from 'moment'
-import {map} from 'd3-collection'
+import { map } from 'd3-collection'
 import NeighborsTable from '../browser/neighbors_table.js'
 import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
@@ -10,39 +10,39 @@ import FileSaver from 'file-saver'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
 const historyPushState = (keyspace, type, id) => {
-  let s = window.history.state
+  const s = window.history.state
   if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
   let url = '/'
   if (type && id) {
     url = '#!' + (keyspace ? keyspace + '/' : '') + [type, id].join('/')
   }
   if (url === '/') {
-    window.history.pushState({keyspace, type, id}, null, url)
+    window.history.pushState({ keyspace, type, id }, null, url)
     return
   }
-  window.history.replaceState({keyspace, type, id}, null, url)
+  window.history.replaceState({ keyspace, type, id }, null, url)
 }
 
 const degreeThreshold = 100
 
-const submitSearchResult = function ({term, context}) {
+const submitSearchResult = function ({ term, context }) {
   if (context === 'tagpack') {
     this.menu.addSearchLabel(term)
     return
   }
-  let first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
+  const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
   if (first) {
-    clickSearchResult.call(this, {...first, context})
+    clickSearchResult.call(this, { ...first, context })
     return
   }
   term.split('\n').forEach((address) => {
     this.keyspaces.forEach(keyspace => {
-      clickSearchResult.call(this, {id: address, type: 'address', keyspace, context: this.context})
+      clickSearchResult.call(this, { id: address, type: 'address', keyspace, context: this.context })
     })
   })
 }
 
-const clickSearchResult = function ({id, type, keyspace, context}) {
+const clickSearchResult = function ({ id, type, keyspace, context }) {
   if (this.menu.search) {
     if (context === 'note' && type === 'address') {
       this.menu.addSearchAddress(id)
@@ -61,7 +61,7 @@ const clickSearchResult = function ({id, type, keyspace, context}) {
   this.search.clear()
   if (type === 'address' || type === 'entity') {
     this.graph.selectNodeWhenLoaded([id, type, keyspace])
-    this.mapResult(this.rest.node(keyspace, {id, type}), 'resultNode', id)
+    this.mapResult(this.rest.node(keyspace, { id, type }), 'resultNode', id)
   } else if (type === 'transaction') {
     this.mapResult(this.rest.transaction(keyspace, id), 'resultTransactionForBrowser', id)
   } else if (type === 'label') {
@@ -73,7 +73,7 @@ const clickSearchResult = function ({id, type, keyspace, context}) {
 }
 
 const blurSearch = function (context) {
-  let search = context === 'search' ? this.search : this.menu.search
+  const search = context === 'search' ? this.search : this.menu.search
   if (!search) return
   search.clear()
 }
@@ -83,16 +83,16 @@ const removeLabel = function (label) {
   this.menu.removeSearchLabel(label)
 }
 
-const setLabels = function ({labels, id, keyspace}) {
+const setLabels = function ({ labels, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
   this.store.addTags(keyspace, id, labels)
   this.menu.hideMenu()
 }
 
-const resultNode = function ({context, result}) {
-  let a = this.store.add(result)
+const resultNode = function ({ context, result }) {
+  const a = this.store.add(result)
   if (context && context.focusNode) {
-    let f = this.store.get(context.focusNode.keyspace, context.focusNode.type, context.focusNode.id)
+    const f = this.store.get(context.focusNode.keyspace, context.focusNode.type, context.focusNode.id)
     if (f) {
       if (context.focusNode.isOutgoing === true) {
         this.store.linkOutgoing(f.id, a.id, f.keyspace, context.focusNode.linkData)
@@ -111,29 +111,29 @@ const resultNode = function ({context, result}) {
   }
   if (!a.tags) {
     this.statusbar.addMsg('loadingTagsFor', a.type, a.id)
-    this.mapResult(this.rest.tags(a.keyspace, {id: a.id, type: a.type}), 'resultTags', {id: a.id, type: a.type, keyspace: a.keyspace})
+    this.mapResult(this.rest.tags(a.keyspace, { id: a.id, type: a.type }), 'resultTags', { id: a.id, type: a.type, keyspace: a.keyspace })
   }
   this.statusbar.removeLoading(a.id)
   this.statusbar.addMsg('loaded', a.type, a.id)
-  addNode.call(this, {id: a.id, type: a.type, keyspace: a.keyspace, anchor})
+  addNode.call(this, { id: a.id, type: a.type, keyspace: a.keyspace, anchor })
 }
 
-const resultTransactionForBrowser = function ({result}) {
+const resultTransactionForBrowser = function ({ result }) {
   this.browser.setTransaction(result)
   historyPushState(result.keyspace, 'transaction', result.tx_hash)
   this.statusbar.removeLoading(result.tx_hash)
   this.statusbar.addMsg('loaded', 'transaction', result.tx_hash)
 }
 
-const resultLabelForBrowser = function ({result, context}) {
+const resultLabelForBrowser = function ({ result, context }) {
   this.browser.setLabel(result)
   historyPushState(null, 'label', result.label)
   this.statusbar.removeLoading(context)
   this.statusbar.addMsg('loaded', 'label', result.label)
-  initTagsTable.call(this, {id: result.label, type: 'label', index: 0})
+  initTagsTable.call(this, { id: result.label, type: 'label', index: 0 })
 }
 
-const resultBlockForBrowser = function ({result}) {
+const resultBlockForBrowser = function ({ result }) {
   this.browser.setBlock(result)
   historyPushState(result.keyspace, 'block', result.height)
   this.statusbar.removeLoading(result.height)
@@ -142,7 +142,7 @@ const resultBlockForBrowser = function ({result}) {
 
 const selectNode = function ([type, nodeId]) {
   logger.debug('selectNode', type, nodeId)
-  let o = this.store.get(nodeId[2], type, nodeId[0])
+  const o = this.store.get(nodeId[2], type, nodeId[0])
   if (!o) {
     throw new Error(`selectNode: ${nodeId} of type ${type} not found in store`)
   }
@@ -156,14 +156,14 @@ const selectNode = function ([type, nodeId]) {
 }
 
 // user clicks address in a table
-const clickAddress = function ({address, keyspace}) {
+const clickAddress = function ({ address, keyspace }) {
   if (this.keyspaces.indexOf(keyspace) === -1) return
   this.statusbar.addLoading(address)
-  this.mapResult(this.rest.node(keyspace, {id: address, type: 'address'}), 'resultNode', address)
+  this.mapResult(this.rest.node(keyspace, { id: address, type: 'address' }), 'resultNode', address)
 }
 
 // user clicks label in a table
-const clickLabel = function ({label, keyspace}) {
+const clickLabel = function ({ label, keyspace }) {
   this.statusbar.addLoading(label)
   this.mapResult(this.rest.label(label), 'resultLabelForBrowser', label)
 }
@@ -180,39 +180,39 @@ const clickTransaction = function (data) {
   this.mapResult(this.rest.transaction(data.keyspace, data.tx_hash), 'resultTransactionForBrowser', data.tx_hash)
 }
 
-const clickBlock = function ({height, keyspace}) {
+const clickBlock = function ({ height, keyspace }) {
   this.browser.loading.add(height)
   this.statusbar.addLoading(height)
   this.mapResult(this.rest.block(keyspace, height), 'resultBlockForBrowser', height)
 }
 
-const loadAddresses = function ({keyspace, params, nextPage, request, drawCallback}) {
+const loadAddresses = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'addresses')
-  this.mapResult(this.rest.addresses(keyspace, {params, nextPage, pagesize: request.length}), 'resultAddresses', {page: nextPage, request, drawCallback})
+  this.mapResult(this.rest.addresses(keyspace, { params, nextPage, pagesize: request.length }), 'resultAddresses', { page: nextPage, request, drawCallback })
 }
 
-const resultAddresses = function ({context, result}) {
+const resultAddresses = function ({ context, result }) {
   this.statusbar.addMsg('loaded', 'addresses')
-  this.browser.setResponse({...context, result})
+  this.browser.setResponse({ ...context, result })
 }
 
-const loadTransactions = function ({keyspace, params, nextPage, request, drawCallback}) {
+const loadTransactions = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'transactions')
-  this.mapResult(this.rest.transactions(keyspace, {params, nextPage, pagesize: request.length}), 'resultTransactions', {page: nextPage, request, drawCallback})
+  this.mapResult(this.rest.transactions(keyspace, { params, nextPage, pagesize: request.length }), 'resultTransactions', { page: nextPage, request, drawCallback })
 }
 
-const resultTransactions = function ({context, result}) {
+const resultTransactions = function ({ context, result }) {
   this.statusbar.addMsg('loaded', 'transactions')
-  this.browser.setResponse({...context, result})
+  this.browser.setResponse({ ...context, result })
 }
 
-const loadTags = function ({keyspace, params, nextPage, request, drawCallback}) {
+const loadTags = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'tags')
-  this.mapResult(this.rest.tags(keyspace, {id: params[0], type: params[1], nextPage, pagesize: request.length}), 'resultTagsTable', {page: nextPage, request, drawCallback})
+  this.mapResult(this.rest.tags(keyspace, { id: params[0], type: params[1], nextPage, pagesize: request.length }), 'resultTagsTable', { page: nextPage, request, drawCallback })
 }
 
-const resultTagsTable = function ({context, result}) {
-  this.browser.setResponse({...context, result})
+const resultTagsTable = function ({ context, result }) {
+  this.browser.setResponse({ ...context, result })
 }
 
 const initTransactionsTable = function (request) {
@@ -227,11 +227,11 @@ const initAddressesTable = function (request) {
   this.browser.initAddressesTable(request)
 }
 
-const initAddressesTableWithEntity = function ({id, keyspace}) {
-  let entity = this.store.get(keyspace, 'entity', id)
+const initAddressesTableWithEntity = function ({ id, keyspace }) {
+  const entity = this.store.get(keyspace, 'entity', id)
   if (!entity) return
   this.browser.setEntity(entity)
-  this.browser.initAddressesTable({index: 0, id, type: 'entity'})
+  this.browser.initAddressesTable({ index: 0, id, type: 'entity' })
 }
 
 const initTagsTable = function (request) {
@@ -246,15 +246,15 @@ const initOutdegreeTable = function (request) {
   this.browser.initNeighborsTable(request, true)
 }
 
-const initNeighborsTableWithNode = function ({id, keyspace, type, isOutgoing}) {
-  let node = this.store.get(keyspace, type, id)
+const initNeighborsTableWithNode = function ({ id, keyspace, type, isOutgoing }) {
+  const node = this.store.get(keyspace, type, id)
   if (!node) return
   if (type === 'address') {
     this.browser.setAddress(node)
   } else if (type === 'entity') {
     this.browser.setEntity(node)
   }
-  this.browser.initNeighborsTable({id, keyspace, type, index: 0}, isOutgoing)
+  this.browser.initNeighborsTable({ id, keyspace, type, index: 0 }, isOutgoing)
 }
 
 const initTxInputsTable = function (request) {
@@ -265,25 +265,25 @@ const initTxOutputsTable = function (request) {
   this.browser.initTxAddressesTable(request, true)
 }
 
-const loadNeighbors = function ({keyspace, params, nextPage, request, drawCallback}) {
-  let id = params[0]
-  let type = params[1]
-  let isOutgoing = params[2]
-  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, request.length, nextPage), 'resultNeighbors', {page: nextPage, request, drawCallback})
+const loadNeighbors = function ({ keyspace, params, nextPage, request, drawCallback }) {
+  const id = params[0]
+  const type = params[1]
+  const isOutgoing = params[2]
+  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, request.length, nextPage), 'resultNeighbors', { page: nextPage, request, drawCallback })
 }
 
-const resultNeighbors = function ({context, result}) {
-  this.browser.setResponse({...context, result})
+const resultNeighbors = function ({ context, result }) {
+  this.browser.setResponse({ ...context, result })
 }
 
 const selectNeighbor = function (data) {
   logger.debug('selectNeighbor', data)
   if (!data.id || !data.nodeType || !data.keyspace) return
-  let focusNode = this.browser.getCurrentNode()
-  let anchorNode = this.graph.selectedNode
-  let isOutgoing = this.browser.isShowingOutgoingNeighbors()
-  let o = this.store.get(data.keyspace, data.nodeType, data.id)
-  let context =
+  const focusNode = this.browser.getCurrentNode()
+  const anchorNode = this.graph.selectedNode
+  const isOutgoing = this.browser.isShowingOutgoingNeighbors()
+  const o = this.store.get(data.keyspace, data.nodeType, data.id)
+  const context =
     {
       data,
       focusNode:
@@ -291,16 +291,16 @@ const selectNeighbor = function (data) {
           id: focusNode.id,
           type: focusNode.type,
           keyspace: data.keyspace,
-          linkData: {...data},
+          linkData: { ...data },
           isOutgoing: isOutgoing
         }
     }
   if (anchorNode) {
-    context['anchorNode'] = {nodeId: anchorNode.id, isOutgoing}
+    context.anchorNode = { nodeId: anchorNode.id, isOutgoing }
   }
   if (!o) {
     this.statusbar.addLoading(data.id)
-    this.mapResult(this.rest.node(data.keyspace, {id: data.id, type: data.nodeType}), 'resultNode', context)
+    this.mapResult(this.rest.node(data.keyspace, { id: data.id, type: data.nodeType }), 'resultNode', context)
   } else {
     resultNode.call(this, { context, result: o })
   }
@@ -309,28 +309,28 @@ const selectNeighbor = function (data) {
 const selectAddress = function (data) {
   logger.debug('selectAdress', data)
   if (!data.address || !data.keyspace) return
-  this.mapResult(this.rest.node(data.keyspace, {id: data.address, type: 'address'}), 'resultNode', data.address)
+  this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
 }
 
-const addNode = function ({id, type, keyspace, anchor}) {
+const addNode = function ({ id, type, keyspace, anchor }) {
   this.graph.adding.add(id)
   this.statusbar.addLoading(id)
-  addNodeCont.call(this, {context: {stage: 1, id, type, keyspace, anchor}, result: null})
+  addNodeCont.call(this, { context: { stage: 1, id, type, keyspace, anchor }, result: null })
 }
 
-const addNodeCont = function ({context, result}) {
-  let anchor = context.anchor
-  let keyspace = context.keyspace
+const addNodeCont = function ({ context, result }) {
+  const anchor = context.anchor
+  const keyspace = context.keyspace
   if (context.stage === 1 && context.type && context.id) {
-    let a = this.store.get(context.keyspace, context.type, context.id)
+    const a = this.store.get(context.keyspace, context.type, context.id)
     if (!a) {
       this.statusbar.addMsg('loading', context.type, context.id)
-      this.mapResult(this.rest.node(keyspace, {type: context.type, id: context.id}), 'addNodeCont', {stage: 2, keyspace, anchor})
+      this.mapResult(this.rest.node(keyspace, { type: context.type, id: context.id }), 'addNodeCont', { stage: 2, keyspace, anchor })
     } else {
-      addNodeCont.call(this, {context: {stage: 2, keyspace, anchor}, result: a})
+      addNodeCont.call(this, { context: { stage: 2, keyspace, anchor }, result: a })
     }
   } else if (context.stage === 2 && result) {
-    let o = this.store.add(result)
+    const o = this.store.add(result)
     this.statusbar.addMsg('loaded', o.type, o.id)
     if (anchor && anchor.isOutgoing === false) {
       // incoming neighbor node
@@ -340,13 +340,13 @@ const addNodeCont = function ({context, result}) {
     logger.debug('entity', o.entity)
     if (o.type === 'address' && !o.entity) {
       this.statusbar.addMsg('loadingEntityFor', o.id)
-      this.mapResult(this.rest.entityForAddress(keyspace, o.id), 'addNodeCont', {stage: 3, addressId: o.id, keyspace, anchor})
+      this.mapResult(this.rest.entityForAddress(keyspace, o.id), 'addNodeCont', { stage: 3, addressId: o.id, keyspace, anchor })
     } else {
-      addNodeCont.call(this, {context: {stage: 4, id: o.id, type: o.type, keyspace, anchor}})
+      addNodeCont.call(this, { context: { stage: 4, id: o.id, type: o.type, keyspace, anchor } })
     }
   } else if (context.stage === 3 && context.addressId) {
     if (!this.graph.adding.has(context.addressId)) return
-    let resultCopy = {...result}
+    const resultCopy = { ...result }
     // seems there exist addresses without entity ...
     // so mockup entity with the address id
     if (!resultCopy.entity) {
@@ -356,29 +356,29 @@ const addNodeCont = function ({context, result}) {
     } else {
       this.statusbar.addMsg('loadedEntityFor', context.addressId)
     }
-    let e = this.store.add({...resultCopy, forAddresses: [context.addressId]})
+    const e = this.store.add({ ...resultCopy, forAddresses: [context.addressId] })
     if (!e.tags) {
       this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
-      this.mapResult(this.rest.tags(keyspace, {id: e.id, type: e.type}), 'resultTags', {id: e.id, type: e.type, keyspace: e.keyspace})
+      this.mapResult(this.rest.tags(keyspace, { id: e.id, type: e.type }), 'resultTags', { id: e.id, type: e.type, keyspace: e.keyspace })
     }
-    addNodeCont.call(this, ({context: {stage: 4, id: context.addressId, type: 'address', keyspace, anchor}}))
+    addNodeCont.call(this, ({ context: { stage: 4, id: context.addressId, type: 'address', keyspace, anchor } }))
   } else if (context.stage === 4 && context.id && context.type) {
-    let backCall = {msg: 'addNodeCont', data: {context: { ...context, stage: 5 }}}
-    let o = this.store.get(context.keyspace, context.type, context.id)
+    const backCall = { msg: 'addNodeCont', data: { context: { ...context, stage: 5 } } }
+    const o = this.store.get(context.keyspace, context.type, context.id)
     if (context.type === 'entity') {
-      excourseLoadDegree.call(this, {context: {backCall, id: o.id, type: 'entity', keyspace}})
+      excourseLoadDegree.call(this, { context: { backCall, id: o.id, type: 'entity', keyspace } })
     } else if (context.type === 'address') {
       if (o.entity && !o.entity.mockup) {
-        excourseLoadDegree.call(this, {context: {backCall, id: o.entity.id, type: 'entity', keyspace}})
+        excourseLoadDegree.call(this, { context: { backCall, id: o.entity.id, type: 'entity', keyspace } })
       } else {
         functions[backCall.msg].call(this, backCall.data)
       }
     }
   } else if (context.stage === 5 && context.id && context.type) {
-    let o = this.store.get(context.keyspace, context.type, context.id)
+    const o = this.store.get(context.keyspace, context.type, context.id)
     if (!o.tags) {
       this.statusbar.addMsg('loadingTagsFor', o.type, o.id)
-      this.mapResult(this.rest.tags(keyspace, {id: o.id, type: o.type}), 'resultTags', {id: o.id, type: o.type, keyspace: o.keyspace})
+      this.mapResult(this.rest.tags(keyspace, { id: o.id, type: o.type }), 'resultTags', { id: o.id, type: o.type, keyspace: o.keyspace })
     }
     this.graph.add(o, context.anchor)
     this.browser.setUpdate('tables_with_addresses')
@@ -386,19 +386,19 @@ const addNodeCont = function ({context, result}) {
   }
 }
 
-const excourseLoadDegree = function ({context, result}) {
-  let keyspace = context.keyspace
+const excourseLoadDegree = function ({ context, result }) {
+  const keyspace = context.keyspace
   if (!context.stage) {
-    let o = this.store.get(context.keyspace, context.type, context.id)
+    const o = this.store.get(context.keyspace, context.type, context.id)
     if (o.in_degree >= degreeThreshold) {
-      excourseLoadDegree.call(this, {context: { ...context, stage: 2 }})
+      excourseLoadDegree.call(this, { context: { ...context, stage: 2 } })
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, false)
     this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, false, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 2 })
   } else if (context.stage === 2) {
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, false)
-    let o = this.store.get(context.keyspace, context.type, context.id)
+    const o = this.store.get(context.keyspace, context.type, context.id)
     if (result && result.neighbors) {
       // add the node in context to the outgoing set of incoming relations
       result.neighbors.forEach((neighbor) => {
@@ -412,9 +412,9 @@ const excourseLoadDegree = function ({context, result}) {
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, true)
-    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, degreeThreshold), 'excourseLoadDegree', {...context, stage: 3})
+    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 3 })
   } else if (context.stage === 3) {
-    let o = this.store.get(context.keyspace, context.type, context.id)
+    const o = this.store.get(context.keyspace, context.type, context.id)
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, true)
     if (result && result.neighbors) {
       // add outgoing relations to the node in context
@@ -428,8 +428,8 @@ const excourseLoadDegree = function ({context, result}) {
   }
 }
 
-const resultTags = function ({context, result}) {
-  let o = this.store.get(context.keyspace, context.type, context.id)
+const resultTags = function ({ context, result }) {
+  const o = this.store.get(context.keyspace, context.type, context.id)
   logger.debug('o', o)
   this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
   o.tags = result || []
@@ -444,19 +444,19 @@ const resultTags = function ({context, result}) {
   nodes.each((node) => { if (node.id[0] == context.id) node.setUpdate(true) }) // eslint-disable-line eqeqeq
 }
 
-const loadEgonet = function ({id, type, keyspace, isOutgoing, limit}) {
+const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
   this.statusbar.addLoading(`neighbors of ${type} ${id[0]}`)
   this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
-  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, limit), 'resultEgonet', {id, type, isOutgoing, keyspace})
+  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
 }
 
-const resultEgonet = function ({context, result}) {
-  let a = this.store.get(context.keyspace, context.type, context.id[0])
+const resultEgonet = function ({ context, result }) {
+  const a = this.store.get(context.keyspace, context.type, context.id[0])
   this.statusbar.addMsg('loadedNeighbors', context.id[0], context.type, context.isOutgoing)
   this.statusbar.removeLoading(`neighbors of ${context.type} ${context.id[0]}`)
   result.neighbors.forEach((node) => {
     if (node.id === context.id[0] || node.nodeType !== context.type) return
-    let anchor = {
+    const anchor = {
       nodeId: context.id,
       nodeType: context.type,
       isOutgoing: context.isOutgoing
@@ -466,14 +466,14 @@ const resultEgonet = function ({context, result}) {
     } else if (context.isOutgoing === false) {
       this.store.linkOutgoing(node.id, a.id, node.keyspace, node)
     }
-    addNode.call(this, {id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor})
+    addNode.call(this, { id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor })
   })
 }
 
-const loadEntityAddresses = function ({id, keyspace, limit}) {
+const loadEntityAddresses = function ({ id, keyspace, limit }) {
   this.statusbar.addMsg('loadingEntityAddresses', id, limit)
   this.statusbar.addLoading('addresses of entity ' + id[0])
-  this.mapResult(this.rest.entityAddresses(keyspace, id[0], limit), 'resultEntityAddresses', {id, keyspace})
+  this.mapResult(this.rest.entityAddresses(keyspace, id[0], limit), 'resultEntityAddresses', { id, keyspace })
 }
 
 const removeEntityAddresses = function (id) {
@@ -481,17 +481,17 @@ const removeEntityAddresses = function (id) {
   this.browser.setUpdate('tables_with_addresses')
 }
 
-const resultEntityAddresses = function ({context, result}) {
-  let id = context && context.id
-  let keyspace = context && context.keyspace
-  let addresses = []
+const resultEntityAddresses = function ({ context, result }) {
+  const id = context && context.id
+  const keyspace = context && context.keyspace
+  const addresses = []
   this.statusbar.removeLoading('addresses of entity ' + id[0])
   result.addresses.forEach((address) => {
-    let copy = {...address, toEntity: id[0]}
-    let a = this.store.add(copy)
+    const copy = { ...address, toEntity: id[0] }
+    const a = this.store.add(copy)
     addresses.push(a)
     if (!a.tags) {
-      let request = {id: a.id, type: 'address', keyspace}
+      const request = { id: a.id, type: 'address', keyspace }
       this.mapResult(this.rest.tags(keyspace, request), 'resultTags', request)
     }
   })
@@ -527,8 +527,8 @@ const removeNode = function ([nodeType, nodeId]) {
   this.browser.setUpdate('tables_with_addresses')
 }
 
-const inputNotes = function ({id, type, keyspace, note}) {
-  let o = this.store.get(keyspace, type, id)
+const inputNotes = function ({ id, type, keyspace, note }) {
+  const o = this.store.get(keyspace, type, id)
   o.notes = note
   let nodes
   if (type === 'address') {
@@ -547,14 +547,14 @@ const toggleConfig = function () {
   this.config.toggleConfig()
 }
 
-const noteDialog = function ({x, y, nodeId, nodeType}) {
-  let o = this.store.get(nodeId[2], nodeType, nodeId[0])
-  this.menu.showNodeDialog(x, y, {dialog: nodeType === 'entity' ? 'note' : 'tagpack', data: o})
+const noteDialog = function ({ x, y, nodeId, nodeType }) {
+  const o = this.store.get(nodeId[2], nodeType, nodeId[0])
+  this.menu.showNodeDialog(x, y, { dialog: nodeType === 'entity' ? 'note' : 'tagpack', data: o })
   selectNode.call(this, [nodeType, nodeId])
 }
 
-const searchNeighborsDialog = function ({x, y, id, type, isOutgoing}) {
-  this.menu.showNodeDialog(x, y, {dialog: 'search', id, type, isOutgoing})
+const searchNeighborsDialog = function ({ x, y, id, type, isOutgoing }) {
+  this.menu.showNodeDialog(x, y, { dialog: 'search', id, type, isOutgoing })
   selectNode.call(this, [type, id])
 }
 
@@ -586,7 +586,7 @@ const save = function (stage) {
     save.call(this, true)
     return
   }
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.serialize())
 }
@@ -600,7 +600,7 @@ const saveNotes = function (stage) {
     saveNotes.call(this, true)
     return
   }
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.serializeNotes())
 }
@@ -614,7 +614,7 @@ const saveYAML = function (stage) {
     saveYAML.call(this, true)
     return
   }
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.generateTagpack())
 }
@@ -628,7 +628,7 @@ const saveTagsJSON = function (stage) {
     saveTagsJSON.call(this, true)
     return
   }
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.generateTagsJSON())
 }
@@ -642,7 +642,7 @@ const saveReport = function (stage) {
     saveReport.call(this, true)
     return
   }
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.generateReport())
 }
@@ -654,27 +654,27 @@ const exportRestLogs = function () {
     row[0] = moment(row[0]).format()
     csv += row.join(',') + '\n'
   })
-  let filename = 'REST calls ' + moment().format('YYYY-MM-DD HH-mm-ss') + '.csv'
-  let blob = new Blob([csv], {type: 'text/csv;charset=utf-8'}) // eslint-disable-line no-undef
+  const filename = 'REST calls ' + moment().format('YYYY-MM-DD HH-mm-ss') + '.csv'
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' }) // eslint-disable-line no-undef
   FileSaver.saveAs(blob, filename)
 }
 
 const exportSvg = function () {
   if (this.isReplaying) return
-  let classMap = map()
-  let rules = document.styleSheets[0].cssRules
+  const classMap = map()
+  const rules = document.styleSheets[0].cssRules
   for (let i = 0; i < rules.length; i++) {
-    let selectorText = rules[i].selectorText
-    let cssText = rules[i].cssText
+    const selectorText = rules[i].selectorText
+    const cssText = rules[i].cssText
     if (!selectorText || !selectorText.startsWith('svg')) continue
-    let s = selectorText.replace('.', '').replace('svg', '').trim()
+    const s = selectorText.replace('.', '').replace('svg', '').trim()
     classMap.set(s, cssText.split('{')[1].replace('}', ''))
   }
   let svg = this.graph.getSvg()
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
     logger.debug('classes', classes)
-    let repl = classes.split(' ')
+    const repl = classes.split(' ')
       .map(cls => classMap.get(cls) || '')
       .join('')
     logger.debug('repl', repl)
@@ -685,7 +685,7 @@ const exportSvg = function () {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
-  let filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
   this.download(filename, svg)
   this.config.hide()
 }
@@ -717,10 +717,10 @@ const loadTagsJSON = function () {
 }
 
 const loadFile = function (params) {
-  let type = params[0]
-  let data = params[1]
-  let filename = params[2]
-  let stage = params[3]
+  const type = params[0]
+  const data = params[1]
+  const filename = params[2]
+  const stage = params[3]
   if (!stage) {
     this.statusbar.addMsg('loadFile', filename)
     loadFile.call(this, [type, data, filename, true])
@@ -761,15 +761,15 @@ const gohome = function () {
   this.layout.setUpdate(true)
 }
 
-const sortEntityAddresses = function ({entity, property}) {
+const sortEntityAddresses = function ({ entity, property }) {
   this.graph.sortEntityAddresses(entity, property)
 }
 
-const dragNode = function ({id, type, dx, dy}) {
+const dragNode = function ({ id, type, dx, dy }) {
   this.graph.dragNode(id, type, dx, dy)
 }
 
-const dragNodeEnd = function ({id, type}) {
+const dragNodeEnd = function ({ id, type }) {
   this.graph.dragNodeEnd(id, type)
 }
 
@@ -792,10 +792,10 @@ const searchNeighbors = function (params) {
   this.menu.hideMenu()
 }
 
-const resultSearchNeighbors = function ({result, context}) {
+const resultSearchNeighbors = function ({ result, context }) {
   this.statusbar.removeSearching(context)
   let count = 0
-  let add = (anchor, paths) => {
+  const add = (anchor, paths) => {
     if (!paths) {
       count++
       return
@@ -804,27 +804,27 @@ const resultSearchNeighbors = function ({result, context}) {
       pathnode.node.keyspace = result.keyspace
 
       // store relations
-      let node = this.store.add(pathnode.node)
-      let src = context.isOutgoing ? anchor.nodeId[0] : node.id
-      let dst = context.isOutgoing ? node.id : anchor.nodeId[0]
+      const node = this.store.add(pathnode.node)
+      const src = context.isOutgoing ? anchor.nodeId[0] : node.id
+      const dst = context.isOutgoing ? node.id : anchor.nodeId[0]
       this.store.linkOutgoing(src, dst, result.keyspace, pathnode.relation)
 
       // fetch all relations
-      let backCall = {msg: 'redrawGraph', data: null}
-      excourseLoadDegree.call(this, {context: {backCall, id: node.id, type: context.type, keyspace: result.keyspace}})
+      const backCall = { msg: 'redrawGraph', data: null }
+      excourseLoadDegree.call(this, { context: { backCall, id: node.id, type: context.type, keyspace: result.keyspace } })
 
-      let parent = this.graph.add(node, anchor)
+      const parent = this.graph.add(node, anchor)
       // link addresses to entity and add them (if any returned due of 'addresses' search criterion)
       pathnode.matching_addresses.forEach(address => {
         address.entity = pathnode.node.entity
-        let a = this.store.add(address)
+        const a = this.store.add(address)
         // anchor the address to its entity
-        this.graph.add(a, {nodeId: parent.id, nodeType: 'entity'})
+        this.graph.add(a, { nodeId: parent.id, nodeType: 'entity' })
       })
-      add({nodeId: parent.id, isOutgoing: context.isOutgoing}, pathnode.paths)
+      add({ nodeId: parent.id, isOutgoing: context.isOutgoing }, pathnode.paths)
     })
   }
-  add({nodeId: context.id, isOutgoing: context.isOutgoing}, result.paths)
+  add({ nodeId: context.id, isOutgoing: context.isOutgoing }, result.paths)
   this.statusbar.addMsg('searchResult', count, context.params.category)
   this.browser.setUpdate('tables_with_addresses')
 }
@@ -877,18 +877,18 @@ const toggleImport = function () {
 
 const downloadTable = function () {
   if (this.isReplaying) return
-  let table = this.browser.content[1]
+  const table = this.browser.content[1]
   if (!table) return
   let url
   if (table instanceof NeighborsTable) {
-    let params = table.getParams()
+    const params = table.getParams()
     url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
   } else if (table instanceof TagsTable) {
-    let params = table.getParams()
+    const params = table.getParams()
     url = this.rest.tags(params.keyspace, params, true)
   } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
-    let params = table.getParams()
-    url = this.rest.transactions(params.keyspace, {params: [params.id, params.type]}, true)
+    const params = table.getParams()
+    url = this.rest.transactions(params.keyspace, { params: [params.id, params.type] }, true)
   }
   if (url) {
     this.layout.triggerDownloadViaLink(url)
@@ -897,18 +897,18 @@ const downloadTable = function () {
 
 const downloadTagsAsJSON = function () {
   if (this.isReplaying) return
-  let table = this.browser.content[1]
+  const table = this.browser.content[1]
   if (!table) return
   if (!(table instanceof TagsTable)) return
-  let tags = table.data.map(this.tagToJSON)
-  let blob = new Blob([JSON.stringify(tags)], {type: 'text/json;charset=utf-8'}) // eslint-disable-line no-undef
-  let params = table.getParams()
-  let filename = `tags of ${params.type} ${params.id}.json`
+  const tags = table.data.map(this.tagToJSON)
+  const blob = new Blob([JSON.stringify(tags)], { type: 'text/json;charset=utf-8' }) // eslint-disable-line no-undef
+  const params = table.getParams()
+  const filename = `tags of ${params.type} ${params.id}.json`
   FileSaver.saveAs(blob, filename)
 }
 
 const addAllToGraph = function () {
-  let table = this.browser.content[1]
+  const table = this.browser.content[1]
   if (!table) return
   table.data.forEach(row => {
     if (!row.keyspace) {
@@ -936,17 +936,17 @@ const changeLocale = function (locale) {
   this.graph.setUpdate('layers')
 }
 
-const receiveCategories = function ({result}) {
+const receiveCategories = function ({ result }) {
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
   this.store.setCategories(result)
-  result = result.map(({category}) => category)
+  result = result.map(({ category }) => category)
   this.graph.setCategories(result)
   this.menu.setCategories(result)
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }
 
-const receiveCategoryColors = function ({result}) {
+const receiveCategoryColors = function ({ result }) {
   this.graph.setCategoryColors(result)
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }

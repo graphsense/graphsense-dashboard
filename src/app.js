@@ -1,5 +1,5 @@
 import Callable from './callable.js'
-import {text} from 'd3-fetch'
+import { text } from 'd3-fetch'
 import Store from './store.js'
 import Login from './login/login.js'
 import Search from './search/search.js'
@@ -13,14 +13,14 @@ import Statusbar from './statusbar.js'
 import Landingpage from './landingpage.js'
 import moment from 'moment'
 import FileSaver from 'file-saver'
-import {pack, unpack} from 'lzwcompress'
-import {Base64} from 'js-base64'
+import { pack, unpack } from 'lzwcompress'
+import { Base64 } from 'js-base64'
 import Logger from './logger.js'
 import startactions from './actions/start.js'
 import appactions from './actions/app.js'
-import {prefixLength} from './globals.js'
+import { prefixLength } from './globals.js'
 import YAML from 'yaml'
-import {SHA256} from 'sha2'
+import { SHA256 } from 'sha2'
 import ReportLogger from './reportLogger.js'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -28,8 +28,9 @@ const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
 const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 
-let defaultLabelType =
-      { entityLabel: 'category',
+const defaultLabelType =
+      {
+        entityLabel: 'category',
         addressLabel: 'id'
       }
 
@@ -40,9 +41,9 @@ const defaultTxLabel = 'no_txs'
 const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label']
 
 const fromURL = (url, keyspaces) => {
-  let hash = url.split('#!')[1]
-  if (!hash) return {id: '', type: '', keyspace: ''} // go home
-  let split = hash.split('/')
+  const hash = url.split('#!')[1]
+  if (!hash) return { id: '', type: '', keyspace: '' } // go home
+  const split = hash.split('/')
   let id = split[2]
   let type = split[1]
   let keyspace = split[0]
@@ -57,7 +58,7 @@ const fromURL = (url, keyspaces) => {
     logger.error(`invalid type ${type}`)
     return
   }
-  return {keyspace, id, type}
+  return { keyspace, id, type }
 }
 
 export default class Model extends Callable {
@@ -79,16 +80,16 @@ export default class Model extends Callable {
     this.registerDispatchEvents(appactions)
 
     window.onhashchange = (e) => {
-      let params = fromURL(e.newURL, this.keyspaces)
+      const params = fromURL(e.newURL, this.keyspaces)
       logger.debug('hashchange', e, params)
       if (!params) return
       this.paramsToCall(params)
     }
-    let that = this
+    const that = this
     window.addEventListener('beforeunload', function (evt) {
       if (IS_DEV) return // eslint-disable-line no-undef
       if (!that.showLandingpage) {
-        let message = 'You are about to leave the site. Your work will be lost. Sure?'
+        const message = 'You are about to leave the site. Your work will be lost. Sure?'
         if (typeof evt === 'undefined') {
           evt = window.event
         }
@@ -98,33 +99,38 @@ export default class Model extends Callable {
         return message
       }
     })
-    let initParams = fromURL(window.location.href, this.keyspaces)
+    const initParams = fromURL(window.location.href, this.keyspaces)
     if (initParams && initParams.id) {
       this.paramsToCall(initParams)
     }
     if (!stats) this.call('stats')
     this.loadCategories()
   }
+
   loadCategories () {
     this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
     this.mapResult(this.rest.categories(), 'receiveCategories')
   }
+
   storeRelations (relations, anchor, keyspace, isOutgoing) {
     relations.forEach((relation) => {
       if (relation.nodeType !== anchor.type) return
-      let src = isOutgoing ? relation.id : anchor.id
-      let dst = isOutgoing ? anchor.id : relation.id
+      const src = isOutgoing ? relation.id : anchor.id
+      const dst = isOutgoing ? anchor.id : relation.id
       this.store.linkOutgoing(src, dst, keyspace, relation)
     })
   }
+
   promptUnsavedWork (msg) {
     if (!this.isDirty) return true
     return confirm('You have unsaved changes. Do you really want to ' + msg + '?') // eslint-disable-line no-undef
   }
-  paramsToCall ({id, type, keyspace}) {
-    this.reportLogger.log('__fromURL', {id, type, keyspace})
-    appactions.clickSearchResult.call(this, {id, type, keyspace})
+
+  paramsToCall ({ id, type, keyspace }) {
+    this.reportLogger.log('__fromURL', { id, type, keyspace })
+    appactions.clickSearchResult.call(this, { id, type, keyspace })
   }
+
   createComponents () {
     this.isDirty = false
     this.store = new Store()
@@ -143,6 +149,7 @@ export default class Model extends Callable {
     this.landingpage.setStats(this.stats.currencies)
     this.landingpage.setSearch(this.search)
   }
+
   compress (data) {
     return new Uint32Array(
       pack(
@@ -153,6 +160,7 @@ export default class Model extends Callable {
       )
     ).buffer
   }
+
   decompress (data) {
     return JSON.parse(
       Base64.decode(
@@ -162,6 +170,7 @@ export default class Model extends Callable {
       )
     )
   }
+
   serialize () {
     return this.compress([
       VERSION, // eslint-disable-line no-undef
@@ -171,12 +180,14 @@ export default class Model extends Callable {
       this.layout.serialize()
     ])
   }
+
   serializeNotes () {
     return this.compress([
       VERSION, // eslint-disable-line no-undef
       this.store.serializeNotes()
     ])
   }
+
   generateTagpack () {
     return YAML.stringify({
       title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
@@ -185,25 +196,27 @@ export default class Model extends Callable {
       tags: this.store.getUserDefinedTags()
     })
   }
+
   generateTagsJSON () {
     return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON), null, 2)
   }
+
   generateReport () {
-    let keyspaces = new Set()
+    const keyspaces = new Set()
     this.store.entities.each(entity => {
       keyspaces.add(entity.keyspace)
     })
-    let time = moment().format('YYYY-MM-DD HH-mm-ss')
-    let report = {
-      'visible_name': 'Investigation of ...',
-      'timestamp': time,
-      'user': '',
-      'uuid': uuidv4(),
-      'institution': '',
-      'summary': '',
-      'output': [ ]
+    const time = moment().format('YYYY-MM-DD HH-mm-ss')
+    const report = {
+      visible_name: 'Investigation of ...',
+      timestamp: time,
+      user: '',
+      uuid: uuidv4(),
+      institution: '',
+      summary: '',
+      output: []
     }
-    let concat = (keyspace, key) => {
+    const concat = (keyspace, key) => {
       report[key] = report[key].concat(this.stats.currencies[keyspace][key])
     }
     report.data_sources = [...this.stats.data_sources]
@@ -223,36 +236,39 @@ export default class Model extends Callable {
     */
 
     report.recordings = [
-      { 'label': '',
-        'description': '',
-        'user': '',
-        'timestamp': time,
-        'processing_steps': this.reportLogger.getLogs()
+      {
+        label: '',
+        description: '',
+        user: '',
+        timestamp: time,
+        processing_steps: this.reportLogger.getLogs()
       }
     ]
-    let output = JSON.stringify(report, null, 2)
+    const output = JSON.stringify(report, null, 2)
     return output
   }
+
   loadTagsJSON (data) {
     try {
       data = JSON.parse(data)
       if (!data) throw new Error('result is empty')
       if (!Array.isArray(data)) data = [data]
-      this.store.addTagpack(this.keyspaces, {tags: data.map(this.tagJSONToTagpackTag)})
+      this.store.addTagpack(this.keyspaces, { tags: data.map(this.tagJSONToTagpackTag) })
       this.graph.setUpdate('layers')
     } catch (e) {
-      let msg = 'Could not parse JSON file'
+      const msg = 'Could not parse JSON file'
       this.statusbar.addMsg('error', msg + ': ' + e.message)
       console.error(msg)
     }
   }
+
   loadTagpack (yaml) {
     let data
     try {
       data = YAML.parse(yaml)
       if (!data) throw new Error('result is empty')
     } catch (e) {
-      let msg = 'Could not parse YAML file'
+      const msg = 'Could not parse YAML file'
       this.statusbar.addMsg('error', msg + ': ' + e.message)
       console.error(msg)
       return
@@ -261,27 +277,28 @@ export default class Model extends Callable {
     this.store.addTagpack(this.keyspaces, data)
     this.graph.setUpdate('layers')
   }
+
   tagToJSON (tag) {
     return {
-      'uuid': SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
-      'version': 1,
-      'key_type': 'a',
-      'key': tag.address,
-      'tag': tag.label,
-      'contributor': 'GraphSense',
-      'tag_optional': {
-        'actor_type': null,
-        'currency': tag.currency,
-        'tag_source_uri': tag.source,
-        'tag_source_label': null,
-        'post_date': null,
-        'post_author': null
+      uuid: SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
+      version: 1,
+      key_type: 'a',
+      key: tag.address,
+      tag: tag.label,
+      contributor: 'GraphSense',
+      tag_optional: {
+        actor_type: null,
+        currency: tag.currency,
+        tag_source_uri: tag.source,
+        tag_source_label: null,
+        post_date: null,
+        post_author: null
       },
-      'contributor_optional': {
-        'contact_details': 'contact@graphsense.info',
-        'insertion_date': moment.unix(tag.lastmod).format(),
-        'software': 'GraphSense ' + VERSION, // eslint-disable-line no-undef
-        'collection_type': 'm'
+      contributor_optional: {
+        contact_details: 'contact@graphsense.info',
+        insertion_date: moment.unix(tag.lastmod).format(),
+        software: 'GraphSense ' + VERSION, // eslint-disable-line no-undef
+        collection_type: 'm'
       }
     }
   }
@@ -299,7 +316,7 @@ export default class Model extends Callable {
   }
 
   deserialize (buffer) {
-    let data = this.decompress(buffer)
+    const data = this.decompress(buffer)
     this.createComponents()
     this.store.deserialize(data[0], data[1])
     this.graph.deserialize(data[0], data[2], this.store)
@@ -307,16 +324,19 @@ export default class Model extends Callable {
     this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
   }
+
   deserializeNotes (buffer) {
-    let data = this.decompress(buffer)
+    const data = this.decompress(buffer)
     this.store.deserializeNotes(data[0], data[1])
     this.graph.setUpdate('layers')
   }
+
   download (filename, buffer) {
-    var blob = new Blob([buffer], {type: 'application/octet-stream'}) // eslint-disable-line no-undef
+    var blob = new Blob([buffer], { type: 'application/octet-stream' }) // eslint-disable-line no-undef
     logger.debug('saving to file', filename)
     FileSaver.saveAs(blob, filename)
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -327,6 +347,7 @@ export default class Model extends Callable {
     logger.debug('model', this)
     return this.layout.render(this.root)
   }
+
   replay () {
     this.rest.disable()
     logger.debug('replay')

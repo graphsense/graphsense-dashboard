@@ -35,7 +35,7 @@ try {
 
 if (locale === 'de') {
   // overwrite locale format
-  let de = numeral.localeData(locale)
+  const de = numeral.localeData(locale)
   de.delimiters.thousands = '.'
 }
 moment.locale(locale)
@@ -43,5 +43,5 @@ moment.locale(locale)
 const timezone = jstz.determine().name()
 moment.tz.setDefault(timezone)
 
-let model = new Start(locale)
+const model = new Start(locale)
 model.render(document.body)

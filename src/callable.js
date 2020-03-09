@@ -1,4 +1,4 @@
-import {dispatch} from './dispatch.js'
+import { dispatch } from './dispatch.js'
 import Logger from './logger.js'
 
 const logger = Logger.create('Callable') // eslint-disable-line no-unused-vars
@@ -149,7 +149,7 @@ export default class Callable {
         return
       }
 
-      let fun = () => {
+      const fun = () => {
         logger.boldDebug('calling', message, data)
         this.reportLogger.log(message, data)
         this.dispatcher.call(message, null, data)
@@ -174,12 +174,13 @@ export default class Callable {
       }
     }
   }
+
   mapResult (promise, msg, context) {
     let onSuccess = result => {
-      this.call(msg, {context, result})
+      this.call(msg, { context, result })
     }
     let onReject = error => {
-      this.call('fetchError', {context, msg, error})
+      this.call('fetchError', { context, msg, error })
     }
     if (this.isReplaying) {
       onSuccess = () => {}
@@ -187,8 +188,9 @@ export default class Callable {
     }
     return promise.then(onSuccess, onReject)
   }
+
   registerDispatchEvents (actions) {
-    for (let ev in actions) {
+    for (const ev in actions) {
       logger.debug('register dispatch event', ev)
       this.dispatcher.on(ev, actions[ev].bind(this))
     }

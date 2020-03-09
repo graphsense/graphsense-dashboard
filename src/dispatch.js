@@ -1,6 +1,6 @@
 /** Adapted from d3-dispatch */
 
-var noop = {value: function () {}}
+var noop = { value: function () {} }
 
 function dispatch () {
   for (var i = 1, n = arguments.length, _ = {}, t; i < n; ++i) {
@@ -20,26 +20,26 @@ function parseTypenames (typenames, types) {
 }
 
 function parseTypename (t, types) {
-  var name = '', i = t.indexOf('.')
+  var name = ''; var i = t.indexOf('.')
   if (i >= 0) name = t.slice(i + 1), t = t.slice(0, i)
   if (t && !types.hasOwnProperty(t)) throw new Error('unknown type: ' + t)
-  return {type: t, name: name}
+  return { type: t, name: name }
 }
 
 function add (history, type, context, data) {
   if (history !== null) {
-    history.push({type, context, data})
+    history.push({ type, context, data })
   }
 }
 
 Dispatch.prototype = dispatch.prototype = {
   constructor: Dispatch,
   on: function (typename, callback) {
-    var _ = this._,
-      T = parseTypenames(typename + '', _),
-      t,
-      i = -1,
-      n = T.length
+    var _ = this._
+    var T = parseTypenames(typename + '', _)
+    var t
+    var i = -1
+    var n = T.length
 
     // If no callback was specified, return the callback of the given type and name.
     if (arguments.length < 2) {
@@ -58,7 +58,7 @@ Dispatch.prototype = dispatch.prototype = {
     return this
   },
   copy: function () {
-    var copy = {}, _ = this._
+    var copy = {}; var _ = this._
     for (var t in _) copy[t] = _[t].slice()
     return new Dispatch(copy)
   },
@@ -109,8 +109,8 @@ function set (type, name, callback) {
       break
     }
   }
-  if (callback != null) type.push({name: name, value: callback})
+  if (callback != null) type.push({ name: name, value: callback })
   return type
 }
 
-export {dispatch}
+export { dispatch }

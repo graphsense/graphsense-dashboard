@@ -1,7 +1,7 @@
-import {set, map} from 'd3-collection'
+import { set, map } from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
-import {addClass, removeClass} from './template_utils.js'
+import { addClass, removeClass } from './template_utils.js'
 import Logger from './logger.js'
 
 const logger = Logger.create('Statusbar') // eslint-disable-line no-unused-vars
@@ -20,51 +20,62 @@ export default class Statusbar extends Component {
     this.numErrors = 0
     this.showErrorsLogs = false
   }
+
   showTooltip (type) {
     this.tooltip = type
     this.setUpdate('tooltip')
   }
+
   toggleErrorLogs () {
     this.showErrorsLogs = !this.showErrorsLogs
     if (this.showErrorsLogs) this.show()
     this.setUpdate('logs')
   }
+
   show () {
     if (!this.visible) {
       this.visible = true
       this.setUpdate('visibility')
     }
   }
+
   hide () {
     if (this.visible) {
       this.visible = false
       this.setUpdate('visibility')
     }
   }
+
   add (msg) {
     this.messages.push(msg)
     this.setUpdate('add')
   }
+
   moreLogs () {
     this.logsDisplayLength += logsDisplayLength
     this.setUpdate('logs')
   }
+
   addLoading (id) {
     this.loading.add(id)
     this.setUpdate('loading')
   }
+
   removeLoading (id) {
     this.loading.remove(id)
     this.setUpdate('loading')
   }
+
   addSearching (search) {
     this.searching.set(String(search.id) + String(search.isOutgoing), search)
     this.setUpdate('loading')
   }
+
   removeSearching (search) {
     this.searching.remove(String(search.id) + String(search.isOutgoing))
     this.setUpdate('loading')
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -91,7 +102,7 @@ export default class Statusbar extends Component {
       this.renderLoading()
     }
     if (this.shouldUpdate('add')) {
-      let i = this.messages.length - 1
+      const i = this.messages.length - 1
       this.renderLogs(this.messages[i], i)
     }
     if (this.shouldUpdate('logs')) {
@@ -105,12 +116,14 @@ export default class Statusbar extends Component {
     }
     super.render()
   }
+
   renderTooltip () {
     if (this.loading.size() > 0 || this.searching.size() > 0) return
-    let top = this.root.querySelector('#topmsg')
-    let tip = this.makeTooltip(this.tooltip)
+    const top = this.root.querySelector('#topmsg')
+    const tip = this.makeTooltip(this.tooltip)
     top.innerHTML = tip
   }
+
   makeTooltip (type) {
     switch (type) {
       case 'entity':
@@ -124,34 +137,36 @@ export default class Statusbar extends Component {
     }
     return ''
   }
+
   renderLoading () {
-    let top = this.root.querySelector('#topmsg')
+    const top = this.root.querySelector('#topmsg')
     if (this.loading.size() > 0) {
       addClass(this.root, 'loading')
       let msg = 'Loading '
-      let v = this.loading.values()
+      const v = this.loading.values()
       msg += v.slice(0, 3).join(', ')
       msg += v.length > 3 ? ` + ${v.length - 3}` : ''
       msg += ' ...'
       top.innerHTML = msg
     } else if (this.searching.size() > 0) {
       addClass(this.root, 'loading')
-      let search = this.searching.values()[0]
-      let outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
+      const search = this.searching.values()[0]
+      const outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
       let crit = ''
       if (search.params.category) crit = `category ${search.params.category}`
       if (search.params.addresses.length > 0) crit = 'addresses ' + search.params.addresses.join(',')
-      let msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}, skip if more than ${search.skipNumAddresses} addresses) ...`
+      const msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}, skip if more than ${search.skipNumAddresses} addresses) ...`
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
       if (top) top.innerHTML = ''
     }
   }
+
   renderLogs (msg, index) {
-    let logs = this.root.querySelector('ul#log-messages')
+    const logs = this.root.querySelector('ul#log-messages')
     let messages = this.messages
-    let errorMsg = this.root.querySelector('#errorMsg')
+    const errorMsg = this.root.querySelector('#errorMsg')
     if (this.showErrorsLogs) {
       errorMsg.innerHTML = 'Errors only'
       messages = messages.filter(msg => typeof msg !== 'string')
@@ -171,7 +186,7 @@ export default class Statusbar extends Component {
       })
     }
     if (messages.length > this.logsDisplayLength) {
-      let more = document.createElement('li')
+      const more = document.createElement('li')
       more.className = 'cursor-pointer text-gs-dark'
       more.innerHTML = 'Show more ...'
       more.addEventListener('click', () => {
@@ -183,8 +198,9 @@ export default class Statusbar extends Component {
       removeClass(this.root.querySelector('#errors span'), 'hidden')
     }
   }
+
   renderLogMsg (root, msg, index) {
-    let el = document.createElement('li')
+    const el = document.createElement('li')
     el.innerHTML = this.msgToString(msg)
     if (root.lastChild && root.childNodes.length > this.logsDisplayLength) {
       root.removeChild(root.lastChild)
@@ -195,6 +211,7 @@ export default class Statusbar extends Component {
       root.appendChild(el)
     }
   }
+
   msgToString (msg) {
     if (typeof msg === 'string') {
       return msg
@@ -210,6 +227,7 @@ export default class Statusbar extends Component {
       return `<span class="text-gs-red">${message}</span>`
     }
   }
+
   renderVisibility () {
     if (!this.visible) {
       removeClass(this.root, 'visible')
@@ -217,8 +235,9 @@ export default class Statusbar extends Component {
       addClass(this.root, 'visible')
     }
   }
+
   msg (type) {
-    let args = Array.prototype.slice.call(arguments, 1)
+    const args = Array.prototype.slice.call(arguments, 1)
     logger.debug('msg', type, args)
     switch (type) {
       case 'loading' :
@@ -226,23 +245,31 @@ export default class Statusbar extends Component {
       case 'loaded' :
         return `Loaded ${args[0]} ${args[1] || ''}`
       case 'loadingNeighbors':
-        let dir = args[2] ? 'outgoing' : 'incoming'
+      {
+        const dir = args[2] ? 'outgoing' : 'incoming'
         return `Loading ${dir} neighbors for ${args[1]} ${args[0]} ...`
+      }
       case 'loadedNeighbors':
-        let dir_ = args[2] ? 'outgoing' : 'incoming'
+      {
+        const dir_ = args[2] ? 'outgoing' : 'incoming'
         return `Loaded ${dir_} neighbors for ${args[1]} ${args[0]}`
+      }
       case 'saving':
-        return `Saving to file ...`
+        return 'Saving to file ...'
       case 'saved':
         return `Saved to file ${args[0]}`
       case 'loadFile':
-        let filename = args[0]
+      {
+        const filename = args[0]
         logger.debug('loadfile msg', filename)
         return `Loading file ${filename} ...`
+      }
       case 'loadedFile':
-        let filename_ = args[0]
+      {
+        const filename_ = args[0]
         logger.debug('loadedfile msg', filename_)
         return `Loaded file ${filename_}`
+      }
       case 'loadingEntityFor':
         return `Loading entity for ${args[0]}`
       case 'loadedEntityFor':
@@ -263,11 +290,12 @@ export default class Statusbar extends Component {
         return `Found ${args[0]} paths to ${args[1]} nodes`
       case 'error':
         this.numErrors++
-        return {error: args[0]}
+        return { error: args[0] }
       default:
         logger.warn('unhandled status message type', type)
     }
   }
+
   addMsg () {
     this.add(this.msg(...arguments))
   }

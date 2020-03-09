@@ -1,5 +1,5 @@
 import Component from '../component.js'
-import {map} from 'd3-collection'
+import { map } from 'd3-collection'
 import Logger from '../logger.js'
 
 const logger = Logger.create('Layer') // eslint-disable-line no-unused-vars
@@ -13,13 +13,15 @@ export default class Layer extends Component {
     this.x = 0
     this.y = 0
   }
+
   serialize () {
     return [this.id, this.nodes.keys()]
   }
+
   add (node, addToTop = false) {
     if (this.nodes.has(node.id)) return
     // calc dy so new node does not overlap with existing, moved nodes
-    let [maxY, cumY] = this.nodes.values().reduce(([maxY, cumY], node) => {
+    const [maxY, cumY] = this.nodes.values().reduce(([maxY, cumY], node) => {
       cumY += node.getHeight() + margin
       maxY = Math.max(maxY, cumY + node.dy)
       return [maxY, cumY]
@@ -35,16 +37,20 @@ export default class Layer extends Component {
     }
     this.nodes.set(node.id, node)
   }
+
   remove (nodeId) {
     this.nodes.remove(nodeId)
     this.getSortedNodes().forEach((node, i) => { node.position = i })
   }
+
   getSortedNodes () {
     return this.nodes.values().sort((nodeA, nodeB) => nodeA.position - nodeB.position)
   }
+
   has (nodeId) {
     return this.nodes.has(nodeId)
   }
+
   getHeight () {
     let height = 0
     this.nodes.each(node => {
@@ -52,27 +58,29 @@ export default class Layer extends Component {
     })
     return height
   }
+
   isNodeInUpperHalf (nodeId) {
-    let node = this.nodes.get(nodeId)
+    const node = this.nodes.get(nodeId)
     if (!node) return
 
     let min = Infinity
     let max = -Infinity
     this.nodes.each(node => {
-      let y = node.getYForLinks()
+      const y = node.getYForLinks()
       min = Math.min(min, y)
       max = Math.max(max, y)
     })
-    let half = (max + min) / 2
+    const half = (max + min) / 2
     return node.getYForLinks() < half
   }
+
   render (entityRoot, addressRoot) {
     if (entityRoot) this.entityRoot = entityRoot
     if (addressRoot) this.addressRoot = addressRoot
     if (!this.entityRoot) throw new Error('no entityRoot defined')
     if (!this.addressRoot) throw new Error('no addressRoot defined')
     let cumY = 0
-    let renderNodeWithPosition = (node, entityRoot, addressesRoot) => {
+    const renderNodeWithPosition = (node, entityRoot, addressesRoot) => {
       // reset absolute coords of node
       entityRoot = entityRoot || node.root
       addressesRoot = addressesRoot || node.addressesRoot
@@ -90,8 +98,8 @@ export default class Layer extends Component {
     this.getSortedNodes().forEach((node) => {
       // render entities
       if (this.shouldUpdate()) {
-        let g = this.entityRoot.append('g')
-        let ag = this.addressRoot.append('g')
+        const g = this.entityRoot.append('g')
+        const ag = this.addressRoot.append('g')
         node.setUpdate(true)
         renderNodeWithPosition(node, g, ag)
       } else if (node.shouldUpdate('position')) {
@@ -106,6 +114,7 @@ export default class Layer extends Component {
     })
     super.render()
   }
+
   translate (x, y) {
     this.x = x
     this.y = y

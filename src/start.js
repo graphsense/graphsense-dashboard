@@ -28,6 +28,7 @@ export default class Start extends Callable {
     this.mapResult(this.rest.refreshToken(), 'refreshResult')
     this.showLandingpage = true
   }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')

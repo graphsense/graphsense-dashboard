@@ -12,7 +12,7 @@ const footer = require('./pages/static/footer.hbs')
 const wrapPage = (page) => `<div class="container mx-auto px-4 flex-grow mt-8">${page}</div>`
 
 module.exports = function render (locals, callback) {
-  locals.footer = footer({version: VERSION}) // eslint-disable-line no-undef
+  locals.footer = footer({ version: VERSION }) // eslint-disable-line no-undef
   let useslimheader = true
   switch (locals.path) {
     case '/terms.html' :
@@ -33,23 +33,23 @@ module.exports = function render (locals, callback) {
       break
   }
   if (useslimheader) {
-    locals.header = utils.replace(slimheader, {title: locals.title})
+    locals.header = utils.replace(slimheader, { title: locals.title })
   } else {
-    locals.header = utils.replace(boldheader, {action: ''}) // put HTML for demo button etc here
+    locals.header = utils.replace(boldheader, { action: '' }) // put HTML for demo button etc here
   }
   const assets = Object.keys(locals.webpackStats.compilation.assets)
-  const css = assets.filter(value => value.match(/\.css\?/)).map(file => { return {file} })
-  let options = {
+  const css = assets.filter(value => value.match(/\.css\?/)).map(file => { return { file } })
+  const options = {
     htmlWebpackPlugin: {
       options: locals
     },
     css: css
   }
   if (locals.path === '/officialpage.html') {
-    let requestOptions = {
+    const requestOptions = {
       url: locals.restEndpoint + '/stats', // eslint-disable-line no-undef
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json'
       }
     }
@@ -66,8 +66,8 @@ module.exports = function render (locals, callback) {
       if (body.message) {
         return callback(new Error(`Server at ${requestOptions.url} responded with: ${body.message}`))
       }
-      let stats = statsHtml.statsHtml(body)
-      locals.page = wrapPage(officialpage({stats}))
+      const stats = statsHtml.statsHtml(body)
+      locals.page = wrapPage(officialpage({ stats }))
       callback(null, locals.template(options))
     })
   } else {

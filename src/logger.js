@@ -12,10 +12,10 @@ export default {
       args.unshift(title)
       return args
     }
-    let debugFunction = function (bold) {
+    const debugFunction = function (bold) {
       return function (string, object) {
         if (logLevel <= DEBUG) {
-          let args = formatArgs([...arguments], bold)
+          const args = formatArgs([...arguments], bold)
           console.log.apply(null, args)
         }
       }
@@ -24,23 +24,23 @@ export default {
       debugObject: function (string, object) {
         if (logLevel > DEBUG) return
         let str = ''
-        for (let key in object) {
+        for (const key in object) {
           str += key + ': ' + (typeof object[key] === 'string' || typeof object[key] === 'number' ? object[key] : '<not a string>') + '\n'
         }
-        let args = formatArgs([string, str])
+        const args = formatArgs([string, str])
         console.log.apply(null, args)
       },
       boldDebug: debugFunction(true),
       debug: debugFunction(false),
       error: function (string, object) {
         if (logLevel <= ERROR) {
-          let args = formatArgs([...arguments])
+          const args = formatArgs([...arguments])
           console.error.apply(null, args)
         }
       },
       warn: function (string, object) {
         if (logLevel <= ERROR) {
-          let args = formatArgs([...arguments])
+          const args = formatArgs([...arguments])
           console.warn.apply(null, args)
         }
       }
