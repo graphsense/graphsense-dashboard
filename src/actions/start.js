@@ -7,7 +7,7 @@ const stats = function () {
 }
 
 const receiveStats = function ({ context, result }) {
-  this.keyspaces = Object.keys(result)
+  this.keyspaces = Object.keys(result.currencies)
   this.stats = { ...result }
   this.landingpage.setStats({ ...result.currencies })
   if (this.browser) {
