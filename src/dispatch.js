@@ -88,6 +88,7 @@ Dispatch.prototype = dispatch.prototype = {
     var that = this
     this.replaying = true
     this.history.forEach(function (h) {
+      console.log('replay', h)
       that.apply(h.type + (name ? '.' + name : ''), h.context, h.data)
     })
     this.replaying = false

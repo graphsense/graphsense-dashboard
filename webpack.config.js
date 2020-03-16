@@ -20,38 +20,38 @@ const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full landingpage'
 
 // compose pre-rendered landing page
-let template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
+const template = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'page.hbs'), 'utf-8'))
 let boldheader = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'boldheader.html'), 'utf-8'))
-let landingpage = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.hbs'), 'utf-8'))
+const landingpage = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'statistics.hbs'), 'utf-8'))
 let footer = hb.compile(fs.readFileSync(path.join(__dirname, 'src', 'pages', 'static', 'footer.hbs'), 'utf-8'))
-boldheader = boldheader({action: ''})
-footer = footer({version: VERSION})
+boldheader = boldheader({ action: '' })
+footer = footer({ version: VERSION })
 
 const src = path.join(__dirname, 'src')
 
 module.exports = env => {
-  let IS_DEV = !env || !env.production
+  const IS_DEV = !env || !env.production
 
-  let nostatic = env && env.nostatic
+  const nostatic = env && env.nostatic
 
-  let output = {
+  const output = {
     filename: '[name].js?[hash]',
     path: path.resolve(__dirname, 'dist')
   }
 
-  let entry = {
+  const entry = {
     static: './src/static.js',
     main: './src/index.js',
     sw: './src/sw.js'
   }
 
-  if (nostatic) delete entry['static']
+  if (nostatic) delete entry.static
 
   if (!IS_DEV) {
-    output['libraryTarget'] = 'umd' // needed for static-site-generator-plugin
-    output['globalObject'] = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
+    output.libraryTarget = 'umd' // needed for static-site-generator-plugin
+    output.globalObject = 'this' // fix issue with webpack 4, see https://github.com/markdalgleish/static-site-generator-webpack-plugin/issues/130
   } else {
-    output['globalObject'] = 'self'
+    output.globalObject = 'self'
   }
 
   console.log(IS_DEV ? 'Development mode' : 'Production mode')
@@ -77,13 +77,12 @@ module.exports = env => {
       new CopyWebpackPlugin([{
         from: './src/pages/static/logo-without-icon.svg'
       },
-      { from: './config/categoryColors.yaml'
-      },
-      { from: './src/pages/static/favicon.png'
-      }]),
+      { from: './config/categoryColors.yaml' },
+      { from: './src/pages/static/favicon.png' }]),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
+        IMPORT_APP: IS_DEV ? 'import Model from "./app.js"' : '',
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
@@ -116,7 +115,7 @@ module.exports = env => {
           path.join(src, '**', '*.js'),
           path.join(src, '**', '*.html'),
           path.join(src, '**', '*.hbs')
-        ], {nodir: true}),
+        ], { nodir: true }),
         extractors: [
           {
             extractor: class {
@@ -155,6 +154,9 @@ module.exports = env => {
           exclude: /(node_modules|bower_components)/,
           use: [
             {
+              loader: 'webpack-strip-block'
+            },
+            {
               loader: 'babel-loader',
               options: {
                 presets: [
@@ -189,7 +191,7 @@ module.exports = env => {
         },
         {
           test: /\.html$/,
-          use: [ {
+          use: [{
             loader: 'html-loader',
             options: {
               minimize: true,

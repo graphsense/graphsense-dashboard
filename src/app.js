@@ -347,13 +347,4 @@ export default class Model extends Callable {
     logger.debug('model', this)
     return this.layout.render(this.root)
   }
-
-  replay () {
-    this.rest.disable()
-    logger.debug('replay')
-    this.isReplaying = true
-    this.dispatcher.replay()
-    this.isReplaying = false
-    this.rest.enable()
-  }
 }

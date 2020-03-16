@@ -38,4 +38,13 @@ export default class Start extends Callable {
     }
     return this.landingpage.render(this.root)
   }
+
+  replay () {
+    this.rest.disable()
+    logger.debug('replay')
+    this.isReplaying = true
+    this.dispatcher.replay()
+    this.isReplaying = false
+    this.rest.enable()
+  }
 }

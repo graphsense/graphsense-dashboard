@@ -56,7 +56,8 @@
     "url-loader": "^1.1.1",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.8.1"
+    "webpack-dev-server": "^3.8.1",
+    "webpack-strip-block": "^0.2.0"
   },
   "scripts": {
     "build": "./node_modules/.bin/webpack --config webpack.config.js --env.production --env.nostatic",
