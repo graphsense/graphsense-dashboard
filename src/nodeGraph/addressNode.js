@@ -81,7 +81,7 @@ export default class AddressNode extends GraphNode {
 
   renderFlags (root) {
     const abuse = (this.data.tags || []).filter(({ abuse }) => !!abuse)
-    if (!abuse) return
+    if (abuse.length === 0) return
     root.append('path')
       .attr('transform', 'translate(-7, 0) scale(0.025) ')
       .attr('d', iconAbuse)
