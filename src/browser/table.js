@@ -171,7 +171,7 @@ export default class Table extends BrowserComponent {
   }
 
   truncateValue (value) {
-    return value ? `<span title="${value}">${value.substr(0, 20)}...</span>` : ''
+    return value ? `<span title="${value}">${value.substr(0, 20)}${value.length > 20 ? '...' : ''}</span>` : ''
   }
 
   formatLink (value) {

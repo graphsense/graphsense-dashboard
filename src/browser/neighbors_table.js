@@ -28,6 +28,12 @@ export default class NeighborsTable extends Table {
       {
         name: 'No. Tx',
         data: 'no_txs'
+      },
+      {
+        name: 'Labels',
+        data: 'labels',
+        render: (value, type) =>
+          this.truncateValue((value || []).sort().join(', '))
       }
     ]
     this.loadMessage = 'loadNeighbors'
