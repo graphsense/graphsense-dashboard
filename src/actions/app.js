@@ -642,9 +642,9 @@ const saveReport = function (stage) {
     saveReport.call(this, true)
     return
   }
-  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.pdf'
   this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateReport())
+  this.generateReport().then(file => this.download(filename, file))
 }
 
 const exportRestLogs = function () {

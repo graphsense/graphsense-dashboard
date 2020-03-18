@@ -207,11 +207,12 @@ export default class Model extends Callable {
       keyspaces.add(entity.keyspace)
     })
     const time = moment().format('YYYY-MM-DD HH-mm-ss')
+    const uuid = uuidv4()
     const report = {
-      visible_name: 'Investigation of ...',
+      visible_name: 'Investigation',
       timestamp: time,
       user: '',
-      uuid: uuidv4(),
+      uuid: uuid,
       institution: '',
       summary: '',
       output: []
@@ -223,17 +224,23 @@ export default class Model extends Callable {
     report.tools = [...this.stats.tools]
     report.notes = [...this.stats.notes]
 
+    report.tools.forEach(tool => {
+      if (tool.id !== 'ait:graphsense') return
+      tool.responsible_for = tool.responsible_for || []
+      tool.responsible_for = [...tool.responsible_for, uuid]
+    })
+
     keyspaces.forEach(keyspace => {
       concat(keyspace, 'data_sources')
       concat(keyspace, 'tools')
       concat(keyspace, 'notes')
     })
     /*
-    report.data_sources.forEach(ds => {
-      ds.version = {nr: null, hash: null, timestamp: null, file: 'bla'}
-      ds.report_uuid = 'bla'
-    })
-    */
+      report.data_sources.forEach(ds => {
+        ds.version = {nr: null, hash: null, timestamp: null, file: 'bla'}
+        ds.report_uuid = 'bla'
+      })
+      */
 
     report.recordings = [
       {
@@ -245,7 +252,18 @@ export default class Model extends Callable {
       }
     ]
     const output = JSON.stringify(report, null, 2)
-    return output
+    return import('jszip').then(jszip => {
+      jszip = new jszip.default() // eslint-disable-line new-cap
+      jszip.file('report.json', output)
+      return jszip.generateAsync({ type: 'blob' })
+    }).then(zipfile => {
+      const formData = new FormData() // eslint-disable-line no-undef
+      formData.append('file', zipfile)
+      return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_report', { // eslint-disable-line no-undef
+        method: 'POST',
+        body: formData
+      }).then(response => response.blob())
+    })
   }
 
   loadTagsJSON (data) {

@@ -15,6 +15,7 @@ const CompressionPlugin = require('compression-webpack-plugin')
 
 const VERSION = '0.4.2'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
+const DEV_TITANIUM_REPORT_GENERATION_URL = 'http://localhost:5000'
 
 // to be injected in static and dynamic pages
 const STATICPAGE_CLASSES = 'flex flex-col min-h-full landingpage'
@@ -84,6 +85,7 @@ module.exports = env => {
         IS_DEV: IS_DEV,
         IMPORT_APP: IS_DEV ? 'import Model from "./app.js"' : '',
         REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
+        TITANIUM_REPORT_GENERATION_URL: !IS_DEV ? '\'{{TITANIUM_REPORT_GENERATION_URL}}\'' : '\'' + DEV_TITANIUM_REPORT_GENERATION_URL + '\'',
         VERSION: '\'' + VERSION + '\'',
         STATICPAGE_CLASSES: '\'' + STATICPAGE_CLASSES + '\''
       }),
