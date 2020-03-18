@@ -193,8 +193,10 @@ export default class Rest {
     return json(this.baseUrl + '/stats')
   }
 
-  searchNeighbors ({ id, keyspace, type, isOutgoing, depth, breadth, skipNumAddresses, params }) {
+  searchNeighbors ({ id, type, isOutgoing, depth, breadth, skipNumAddresses, params }) {
     type = typeToEndpoint(type)
+    const keyspace = id[2]
+    id = id[0]
     const dir = isOutgoing ? 'out' : 'in'
     let searchCrit = ''
     if (params.category) {

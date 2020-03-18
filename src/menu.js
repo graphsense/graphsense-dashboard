@@ -38,7 +38,8 @@ export default class Menu extends Component {
     } else if (params.dialog === 'search') {
       this.view = {
         viewType: 'search',
-        data: params.data,
+        id: params.id,
+        type: params.type,
         isOutgoing: params.isOutgoing,
         criterion: defaultCriterion,
         params: defaultParams(),
@@ -231,9 +232,8 @@ export default class Menu extends Component {
     if (this.view.params.category || this.view.params.addresses.length > 0) {
       button.addEventListener('click', () => {
         this.dispatcher('searchNeighbors', {
-          id: this.view.data.id,
-          type: this.view.data.type,
-          keyspace: this.view.data.keyspace,
+          id: this.view.id,
+          type: this.view.type,
           isOutgoing: this.view.isOutgoing,
           depth: this.view.depth,
           breadth: this.view.breadth,

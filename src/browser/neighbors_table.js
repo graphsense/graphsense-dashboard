@@ -30,10 +30,33 @@ export default class NeighborsTable extends Table {
         data: 'no_txs'
       },
       {
+        // just to enable full search of lables
         name: 'Labels',
         data: 'labels',
-        render: (value, type) =>
-          this.truncateValue((value || []).sort().join(', '))
+        render: (value) => (value || []).join(' '),
+        visible: false
+      },
+      {
+        name: 'Labels',
+        data: 'labels',
+        render: (value, type) => {
+          const maxCount = 30
+          let charCount = 0
+          let output = ''
+          const labels = (value || []).sort()
+          for (let i = 0; i < labels.length; i++) {
+            const label = labels[i]
+            charCount += label.length
+            if (i > 0 && charCount > maxCount) {
+              output += ` + ${labels.length - i}`
+              break
+            } else {
+              if (i > 0) output += ', '
+              output += label.length < maxCount ? label : (label.substr(0, maxCount) + '...')
+            }
+          }
+          return `<span title="${value}">${output}</span>`
+        }
       }
     ]
     this.loadMessage = 'loadNeighbors'
