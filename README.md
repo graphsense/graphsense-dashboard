@@ -14,6 +14,8 @@ In order to install all dependencies, run the following from the root of this re
 Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your development
 [graphsense-REST][graphsense-rest] service.
 
+Additionally you may add the Titanium Report Generation Webservice through `DEV_TITANIUM_REPORT_GENERATION_URL`.
+
 Then start the development server:
 
     npm start
@@ -30,6 +32,10 @@ Run it by passing it the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.: 
 
     docker run -e REST_ENDPOINT="https://example.com:9000" -p 8000:8000 graphsense-dashboard
+
+Additional environment variables:
+
+* `TITANIUM_REPORT_GENERATION_URL`: The webservice URL for generating Titanium PDF Reports (optional).
 
 ## Generate static site
 
