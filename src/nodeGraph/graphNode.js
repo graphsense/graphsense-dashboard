@@ -56,7 +56,7 @@ class GraphNode extends Component {
   menu (subClassItems = []) {
     return subClassItems.concat([
       {
-        title: 'Add note',
+        title: 'Annotate',
         action: () => {
           this.dispatcher('noteDialog', { x: event.x - 50, y: event.y - 50, nodeId: this.id, nodeType: this.data.type })
         },
