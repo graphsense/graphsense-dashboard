@@ -105,6 +105,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'downloadTagsAsJSON',
   'changeSearchCategory',
   'changeSearchCriterion',
+  'changeTagpackCategory',
   'addAllToGraph',
   'tooltip',
   'hideTooltip',

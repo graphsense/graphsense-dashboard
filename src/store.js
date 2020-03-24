@@ -359,6 +359,7 @@ export default class Store {
   }
 
   addTags (keyspace, id, labels) {
+    logger.debug('addTags', JSON.stringify(labels))
     const o = this.get(keyspace, 'address', id)
     if (!o) {
       console.error(`${keyspace} address ${id} not found for tagging`)
@@ -369,27 +370,33 @@ export default class Store {
     const userDefinedTags = []
     o.tags.forEach(tag => {
       if (tag.isUserDefined) {
-        const i = labels.indexOf(tag.label)
-        if (i !== -1) {
+        if (labels[tag.label]) {
+          for (const prop in labels[tag.label]) {
+            tag[prop] = labels[tag.label][prop]
+          }
           userDefinedTags.push(tag)
-          labels.splice(i, 1)
+          delete labels[tag.label]
         }
       } else {
         tagsWithoutUserDefined.push(tag)
       }
     })
-    const newTags = labels.map(label => ({
-      isUserDefined: true,
-      label,
-      address: o.id,
-      source: 'GraphSense',
-      tagpack_uri: null,
-      currency: keyspace.toUpperCase(),
-      lastmod: +new Date(),
-      category: 'Other',
-      abuse: null,
-      keyspace: keyspace
-    }))
+    const newTags = []
+    for (const l in labels) {
+      const label = labels[l]
+      newTags.push({
+        isUserDefined: true,
+        label: label.label,
+        address: o.id,
+        source: 'GraphSense',
+        tagpack_uri: null,
+        currency: keyspace.toUpperCase(),
+        lastmod: +new Date(),
+        category: label.category,
+        abuse: null,
+        keyspace: keyspace
+      })
+    }
     o.tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
   }
 }

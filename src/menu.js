@@ -7,7 +7,7 @@ import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
 import { maxSearchBreadth, maxSearchDepth } from './globals.js'
-import { replace, addClass } from './template_utils.js'
+import { replace, addClass, removeClass } from './template_utils.js'
 import Search from './search/search.js'
 
 const logger = Logger.create('Menu') // eslint-disable-line
@@ -33,7 +33,10 @@ export default class Menu extends Component {
     } else if (params.dialog === 'tagpack') {
       const labels = params.data.tags
         .filter(tag => tag.isUserDefined)
-        .map(tag => tag.label)
+        .reduce((labels, tag) => {
+          labels[tag.label] = { ...tag }
+          return labels
+        }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
     } else if (params.dialog === 'search') {
       this.view = {
@@ -165,18 +168,38 @@ export default class Menu extends Component {
     this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
     this.search.render(searchinput)
     const searchLabels = el.querySelector('.searchlabels')
-    this.view.labels.forEach(label => {
-      const li = document.createElement('li')
+    for (const label in this.view.labels) {
+      removeClass(searchLabels, 'invisible')
+      const tr = document.createElement('tr')
+      let td = document.createElement('td')
       const span = document.createElement('span')
       span.innerHTML = '<i class="fas fa-times-circle fa-lg pr-2"></i>'
       span.addEventListener('click', () => {
         this.dispatcher('removeLabel', label)
       })
-      li.appendChild(span)
+      td.appendChild(span)
+      tr.appendChild(td)
+      td = document.createElement('td')
       const l = document.createTextNode(label)
-      li.appendChild(l)
-      searchLabels.appendChild(li)
-    })
+      td.appendChild(l)
+      tr.appendChild(td)
+      td = document.createElement('td')
+      td.innerHTML = '<select name="category" class="m-2"><option value=""></option></select>'
+      this.categories.forEach(category => {
+        const option = document.createElement('option')
+        option.innerHTML = category
+        option.setAttribute('value', category)
+        if (category === this.view.labels[label].category) {
+          option.setAttribute('selected', 'selected')
+        }
+        td.firstChild.appendChild(option)
+      })
+      td.firstChild.addEventListener('change', (e) => {
+        this.dispatcher('changeTagpackCategory', { category: e.target.value, label })
+      })
+      tr.appendChild(td)
+      searchLabels.appendChild(tr)
+    }
     const button = el.querySelector('input[type="button"]')
     button.addEventListener('click', () => {
       this.dispatcher('setLabels', {
@@ -254,9 +277,13 @@ export default class Menu extends Component {
   }
 
   setSearchCategory (category) {
-    if (this.view.viewType !== 'search' || this.view.criterion !== 'category') return
-    this.view.params.category = category
-    this.setUpdate(true)
+    if (this.view.viewType === 'search' && this.view.criterion !== 'category') {
+      this.view.params.category = category
+      this.setUpdate(true)
+    } else if (this.view.viewType === 'tagpack') {
+      this.view.category = category
+      this.setUpdate(true)
+    }
   }
 
   setSearchDepth (d) {
@@ -293,15 +320,24 @@ export default class Menu extends Component {
 
   addSearchLabel (label) {
     if (this.view.viewType !== 'tagpack') return
-    this.view.labels.push(label)
+    if (this.view.labels[label]) return
+    this.view.labels[label] = { label, category: null }
     this.setUpdate(true)
   }
 
   removeSearchLabel (label) {
     logger.debug('removelabel', label)
     if (this.view.viewType !== 'tagpack') return
-    this.view.labels = this.view.labels.filter(l => l !== label)
+    delete this.view.labels[label]
     logger.debug('labels', this.view.labels)
+    this.setUpdate(true)
+  }
+
+  setTagpackCategory (label, category) {
+    if (this.view.viewType !== 'tagpack') return
+    if (!this.view.labels[label]) return
+    this.view.labels[label].category = category
+    logger.debug('setTagpackCategory', JSON.stringify(this.view.labels))
     this.setUpdate(true)
   }
 }
