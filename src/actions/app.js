@@ -86,6 +86,7 @@ const removeLabel = function (label) {
 const setLabels = function ({ labels, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
   this.store.addTags(keyspace, id, labels)
+  this.graph.setUpdateNodes('address', id, true)
   this.menu.hideMenu()
 }
 
@@ -433,15 +434,7 @@ const resultTags = function ({ context, result }) {
   logger.debug('o', o)
   this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
   o.tags = result || []
-  let nodes = null
-  if (context.type === 'address') {
-    nodes = this.graph.addressNodes
-  }
-  if (context.type === 'entity') {
-    nodes = this.graph.entityNodes
-  }
-  if (!nodes) return
-  nodes.each((node) => { if (node.id[0] == context.id) node.setUpdate(true) }) // eslint-disable-line eqeqeq
+  this.graph.setUpdateNodes(context.type, context.id, true)
 }
 
 const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
@@ -530,17 +523,7 @@ const removeNode = function ([nodeType, nodeId]) {
 const inputNotes = function ({ id, type, keyspace, note }) {
   const o = this.store.get(keyspace, type, id)
   o.notes = note
-  let nodes
-  if (type === 'address') {
-    nodes = this.graph.addressNodes
-  } else if (type === 'entity') {
-    nodes = this.graph.entityNodes
-  }
-  nodes.each((node) => {
-    if (node.data.id === id) {
-      node.setUpdate('label')
-    }
-  })
+  this.graph.setUpdateNodes(type, id, 'label')
 }
 
 const toggleConfig = function () {
@@ -570,6 +553,10 @@ const changeTagpackCategory = function ({ label, category }) {
   this.menu.setTagpackCategory(label, category)
 }
 
+const changeTagpackAbuse = function ({ label, abuse }) {
+  this.menu.setTagpackAbuse(label, abuse)
+}
+
 const hideContextmenu = function () {
   this.menu.hideMenu()
 }
@@ -579,6 +566,7 @@ const blank = function () {
   if (!this.promptUnsavedWork('start a new graph')) return
   this.createComponents()
   this.loadCategories()
+  this.loadAbuses()
 }
 
 const save = function (stage) {
@@ -950,6 +938,13 @@ const receiveCategories = function ({ result }) {
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }
 
+const receiveAbuses = function ({ result }) {
+  if (!Array.isArray(result)) return
+  result.sort((a, b) => a.id - b.id)
+  result = result.map(({ abuse }) => abuse)
+  this.menu.setAbuses(result)
+}
+
 const receiveCategoryColors = function ({ result }) {
   this.graph.setCategoryColors(result)
   this.config.setCategoryColors(this.graph.getCategoryColors())
@@ -1012,6 +1007,7 @@ const functions = {
   changeSearchCriterion,
   changeSearchCategory,
   changeTagpackCategory,
+  changeTagpackAbuse,
   hideContextmenu,
   blank,
   save,
@@ -1055,6 +1051,7 @@ const functions = {
   changeLocale,
   receiveCategories,
   receiveCategoryColors,
+  receiveAbuses,
   exportSvg
 }
 

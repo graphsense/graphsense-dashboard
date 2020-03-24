@@ -393,7 +393,7 @@ export default class Store {
         currency: keyspace.toUpperCase(),
         lastmod: +new Date(),
         category: label.category,
-        abuse: null,
+        abuse: label.abuse,
         keyspace: keyspace
       })
     }

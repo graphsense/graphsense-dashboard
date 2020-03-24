@@ -248,4 +248,8 @@ export default class Rest {
   categories () {
     return this.json(null, '/labels/categories')
   }
+
+  abuses () {
+    return this.json(null, '/labels/abuses')
+  }
 }

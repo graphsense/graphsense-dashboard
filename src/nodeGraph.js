@@ -179,6 +179,18 @@ export default class NodeGraph extends Component {
     this.references[type].clear()
   }
 
+  setUpdateNodes (type, id, update) {
+    let nodes = null
+    if (type === 'address') {
+      nodes = this.addressNodes
+    }
+    if (type === 'entity') {
+      nodes = this.entityNodes
+    }
+    if (!nodes) return
+    nodes.each((node) => { if (node.id[0] == id) node.setUpdate(update) }) // eslint-disable-line eqeqeq
+  }
+
   getNodeChecker () {
     return (id, type, keyspace) => this.references[type].has([id, keyspace])
   }

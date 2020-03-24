@@ -78,6 +78,10 @@ export default class Menu extends Component {
     this.categories = categories
   }
 
+  setAbuses (abuses) {
+    this.abuses = abuses
+  }
+
   hideMenu () {
     this.view = {}
     this.setUpdate(true)
@@ -196,6 +200,21 @@ export default class Menu extends Component {
       })
       td.firstChild.addEventListener('change', (e) => {
         this.dispatcher('changeTagpackCategory', { category: e.target.value, label })
+      })
+      tr.appendChild(td)
+      td = document.createElement('td')
+      td.innerHTML = '<select name="abuse" class="m-2"><option value=""></option></select>'
+      this.abuses.forEach(category => {
+        const option = document.createElement('option')
+        option.innerHTML = category
+        option.setAttribute('value', category)
+        if (category === this.view.labels[label].abuse) {
+          option.setAttribute('selected', 'selected')
+        }
+        td.firstChild.appendChild(option)
+      })
+      td.firstChild.addEventListener('change', (e) => {
+        this.dispatcher('changeTagpackAbuse', { abuse: e.target.value, label })
       })
       tr.appendChild(td)
       searchLabels.appendChild(tr)
@@ -321,7 +340,7 @@ export default class Menu extends Component {
   addSearchLabel (label) {
     if (this.view.viewType !== 'tagpack') return
     if (this.view.labels[label]) return
-    this.view.labels[label] = { label, category: null }
+    this.view.labels[label] = { label, category: null, abuse: null }
     this.setUpdate(true)
   }
 
@@ -337,7 +356,13 @@ export default class Menu extends Component {
     if (this.view.viewType !== 'tagpack') return
     if (!this.view.labels[label]) return
     this.view.labels[label].category = category
-    logger.debug('setTagpackCategory', JSON.stringify(this.view.labels))
+    this.setUpdate(true)
+  }
+
+  setTagpackAbuse (label, abuse) {
+    if (this.view.viewType !== 'tagpack') return
+    if (!this.view.labels[label]) return
+    this.view.labels[label].abuse = abuse
     this.setUpdate(true)
   }
 }

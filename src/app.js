@@ -105,11 +105,16 @@ export default class Model extends Callable {
     }
     if (!stats) this.call('stats')
     this.loadCategories()
+    this.loadAbuses()
   }
 
   loadCategories () {
     this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
     this.mapResult(this.rest.categories(), 'receiveCategories')
+  }
+
+  loadAbuses () {
+    this.mapResult(this.rest.abuses(), 'receiveAbuses')
   }
 
   storeRelations (relations, anchor, keyspace, isOutgoing) {
