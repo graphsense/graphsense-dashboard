@@ -1,11 +1,14 @@
+import Logger from './logger.js'
 import layout from './layout/layout.html'
 import Component from './component.js'
 import currency from './layout/currency.html'
 import { addClass, removeClass } from './template_utils.js'
 import { select } from 'd3-selection'
 
+const logger = Logger.create('Layout') // eslint-disable-line no-unused-vars
+
 export default class Layout extends Component {
-  constructor (dispatcher, browser, graph, config, menu, search, status, login, currency) {
+  constructor (dispatcher, browser, graph, config, menu, search, status, currency) {
     super()
     this.currency = currency
     this.dispatcher = dispatcher
@@ -15,7 +18,6 @@ export default class Layout extends Component {
     this.menu = menu
     this.search = search
     this.statusbar = status
-    this.login = login
     this.currencyRoot = null
     this.disabled = {}
   }
@@ -40,9 +42,14 @@ export default class Layout extends Component {
     this.setUpdate('buttons')
   }
 
-  showLogin (show) {
-    this.loginVisible = show
-    this.setUpdate('login')
+  showModal (modal) {
+    this.modal = modal
+    this.setUpdate('modal')
+  }
+
+  hideModal () {
+    this.modal = null
+    this.setUpdate('modal')
   }
 
   render (root) {
@@ -56,7 +63,7 @@ export default class Layout extends Component {
     let menuRoot = null
     let searchRoot = null
     let statusRoot = null
-    let loginRoot = null
+    let modalRoot = null
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = layout
       this.browser.setUpdate(true)
@@ -65,7 +72,6 @@ export default class Layout extends Component {
       this.menu.setUpdate(true)
       this.search.setUpdate(true)
       this.statusbar.setUpdate(true)
-      this.login.setUpdate(true)
       this.renderButtons()
       const loaders = this.root.querySelectorAll('.file-loader')
       loaders.forEach(loader => {
@@ -96,12 +102,18 @@ export default class Layout extends Component {
       menuRoot = this.root.querySelector('#layout-menu')
       searchRoot = this.root.querySelector('#layout-search')
       statusRoot = this.root.querySelector('#layout-status')
-      loginRoot = this.root.querySelector('#layout-login > div')
       this.currencyRoot = this.root.querySelector('#layout-currency-config')
     } else if (this.shouldUpdate('buttons')) {
       this.renderButtons()
-    } else if (this.shouldUpdate('login')) {
-      this.root.querySelector('#layout-login').style.display = this.loginVisible ? 'flex' : 'none'
+    } else if (this.shouldUpdate('modal')) {
+      modalRoot = this.root.querySelector('#modal > div')
+      const style = this.root.querySelector('#modal').style
+      if (this.modal) {
+        style.display = 'flex'
+        this.modal.render(modalRoot)
+      } else {
+        style.display = 'none'
+      }
     }
     this.browser.render(browserRoot)
     this.graph.render(graphRoot)
@@ -109,7 +121,6 @@ export default class Layout extends Component {
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
     this.statusbar.render(statusRoot)
-    this.login.render(loginRoot)
     this.renderCurrency()
     super.render()
     return this.root

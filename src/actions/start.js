@@ -75,7 +75,7 @@ const appLoaded = function () {
   if (this.showLandingpage) {
     this.landingpage.setSearch(this.search)
   } else {
-    this.layout.showLogin(false)
+    this.layout.hideModal()
   }
 }
 
@@ -87,7 +87,7 @@ const fetchError = function ({ context, msg, error }) {
     if (this.showLandingpage) {
       this.landingpage.setLogin(this.login)
     } else {
-      this.layout.showLogin(true)
+      this.layout.showModal(this.login)
     }
     return
   }

@@ -2,6 +2,7 @@ import Logger from '../logger.js'
 import numeral from 'numeral'
 import moment from 'moment'
 import { map } from 'd3-collection'
+import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
 import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
@@ -622,6 +623,16 @@ const saveTagsJSON = function (stage) {
   this.download(filename, this.generateTagsJSON())
 }
 
+const inputMetaData = function (meta) {
+  this.meta = { ...this.meta, ...meta }
+  this.omitUpdate()
+}
+
+const exportReport = function () {
+  const modal = new Export(this.call, this.meta)
+  this.layout.showModal(modal)
+}
+
 const saveReport = function (stage) {
   if (this.isReplaying) return
   if (!stage) {
@@ -633,7 +644,29 @@ const saveReport = function (stage) {
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.pdf'
   this.statusbar.addMsg('saved', filename)
-  this.generateReport().then(file => this.download(filename, file))
+  this.generateReport().then(file => {
+    this.download(filename, file)
+    this.call('downloadedReport')
+  })
+}
+
+const downloadedReport = function () {
+  this.layout.hideModal()
+}
+
+const saveReportJSON = function (stage) {
+  if (this.isReplaying) return
+  if (!stage) {
+    // update status bar before starting serializing
+    this.statusbar.addMsg('saving')
+    this.config.hide()
+    saveReportJSON.call(this, true)
+    return
+  }
+  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
+  this.statusbar.addMsg('saved', filename)
+  this.download(filename, this.generateReportJSON())
+  this.layout.hideModal()
 }
 
 const exportRestLogs = function () {
@@ -1008,7 +1041,9 @@ const functions = {
   blank,
   save,
   saveNotes,
+  exportReport,
   saveReport,
+  saveReportJSON,
   saveYAML,
   saveTagsJSON,
   exportRestLogs,
@@ -1048,7 +1083,9 @@ const functions = {
   receiveCategories,
   receiveCategoryColors,
   receiveAbuses,
-  exportSvg
+  exportSvg,
+  inputMetaData,
+  downloadedReport
 }
 
 export default functions

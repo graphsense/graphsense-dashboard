@@ -71,7 +71,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'save',
   'saveNotes',
   'saveYAML',
+  'exportReport',
   'saveReport',
+  'saveReportJSON',
   'load',
   'loadNotes',
   'loadYAML',
@@ -120,7 +122,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'receiveAbuses',
   'saveTagsJSON',
   'loadTagsJSON',
-  'jumpToApp'
+  'jumpToApp',
+  'inputMetaData',
+  'downloadedReport'
 )
 
 // synchronous messages

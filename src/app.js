@@ -106,6 +106,14 @@ export default class Model extends Callable {
     if (!stats) this.call('stats')
     this.loadCategories()
     this.loadAbuses()
+
+    this.meta =
+      {
+        investigation: '',
+        investigator: '',
+        institution: '',
+        summary: ''
+      }
   }
 
   loadCategories () {
@@ -207,6 +215,39 @@ export default class Model extends Callable {
   }
 
   generateReport () {
+    return import('jszip').then(jszip => {
+      let zip = new jszip.default() // eslint-disable-line new-cap
+      const json = this.generateReportJSON()
+      zip.file('report.json', json)
+      return zip.generateAsync({ type: 'blob' })
+        .then(zipfile => {
+          const formData = new FormData() // eslint-disable-line no-undef
+          formData.append('file', zipfile)
+          return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_timestamp', { // eslint-disable-line no-undef
+            method: 'POST',
+            body: formData
+          })
+        })
+        .then(response => response.blob())
+        .then(tsr => {
+          zip = new jszip.default() // eslint-disable-line new-cap
+          zip.file('report.json', json)
+          zip.file('report.tsr', tsr)
+          return zip.generateAsync({ type: 'blob' })
+        })
+        .then(zipfile => {
+          const formData = new FormData() // eslint-disable-line no-undef
+          formData.append('file', zipfile)
+          return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_report', { // eslint-disable-line no-undef
+            method: 'POST',
+            body: formData
+          })
+            .then(response => response.blob())
+        })
+    })
+  }
+
+  generateReportJSON () {
     const keyspaces = new Set()
     this.store.entities.each(entity => {
       keyspaces.add(entity.keyspace)
@@ -214,12 +255,12 @@ export default class Model extends Callable {
     const time = moment().format('YYYY-MM-DD HH-mm-ss')
     const uuid = uuidv4()
     const report = {
-      visible_name: 'Investigation',
+      visible_name: this.meta.investigation || 'Investigation',
       timestamp: time,
-      user: '',
+      user: this.meta.investigator || 'Unknown Investigator',
       uuid: uuid,
-      institution: '',
-      summary: '',
+      institution: this.meta.institution || 'Unknown Institution',
+      summary: this.meta.summary || 'No summary provided',
       output: []
     }
     const concat = (keyspace, key) => {
@@ -249,26 +290,14 @@ export default class Model extends Callable {
 
     report.recordings = [
       {
-        label: '',
-        description: '',
-        user: '',
+        label: 'rec1',
+        description: 'Recording',
+        user: this.meta.investigator,
         timestamp: time,
         processing_steps: this.reportLogger.getLogs()
       }
     ]
-    const output = JSON.stringify(report, null, 2)
-    return import('jszip').then(jszip => {
-      jszip = new jszip.default() // eslint-disable-line new-cap
-      jszip.file('report.json', output)
-      return jszip.generateAsync({ type: 'blob' })
-    }).then(zipfile => {
-      const formData = new FormData() // eslint-disable-line no-undef
-      formData.append('file', zipfile)
-      return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_report', { // eslint-disable-line no-undef
-        method: 'POST',
-        body: formData
-      }).then(response => response.blob())
-    })
+    return JSON.stringify(report, null, 2)
   }
 
   loadTagsJSON (data) {
