@@ -549,12 +549,9 @@ const changeSearchCategory = function (category) {
   this.menu.setSearchCategory(category)
 }
 
-const changeTagpackCategory = function ({ label, category }) {
-  this.menu.setTagpackCategory(label, category)
-}
-
-const changeTagpackAbuse = function ({ label, abuse }) {
-  this.menu.setTagpackAbuse(label, abuse)
+const changeUserDefinedTag = function ({ label, data }) {
+  this.menu.setTagpack(label, data)
+  this.omitUpdate()
 }
 
 const hideContextmenu = function () {
@@ -1006,8 +1003,7 @@ const functions = {
   searchNeighborsDialog,
   changeSearchCriterion,
   changeSearchCategory,
-  changeTagpackCategory,
-  changeTagpackAbuse,
+  changeUserDefinedTag,
   hideContextmenu,
   blank,
   save,

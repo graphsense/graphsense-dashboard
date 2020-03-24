@@ -199,7 +199,7 @@ export default class Menu extends Component {
         td.firstChild.appendChild(option)
       })
       td.firstChild.addEventListener('change', (e) => {
-        this.dispatcher('changeTagpackCategory', { category: e.target.value, label })
+        this.dispatcher('changeUserDefinedTag', { data: { category: e.target.value }, label })
       })
       tr.appendChild(td)
       td = document.createElement('td')
@@ -214,7 +214,13 @@ export default class Menu extends Component {
         td.firstChild.appendChild(option)
       })
       td.firstChild.addEventListener('change', (e) => {
-        this.dispatcher('changeTagpackAbuse', { abuse: e.target.value, label })
+        this.dispatcher('changeUserDefinedTag', { data: { abuse: e.target.value }, label })
+      })
+      tr.appendChild(td)
+      td = document.createElement('td')
+      td.innerHTML = `<input type="text" size="10" value="${this.view.labels[label].source || ''}"/>`
+      td.firstChild.addEventListener('input', (e) => {
+        this.dispatcher('changeUserDefinedTag', { data: { source: e.target.value }, label })
       })
       tr.appendChild(td)
       searchLabels.appendChild(tr)
@@ -340,7 +346,7 @@ export default class Menu extends Component {
   addSearchLabel (label) {
     if (this.view.viewType !== 'tagpack') return
     if (this.view.labels[label]) return
-    this.view.labels[label] = { label, category: null, abuse: null }
+    this.view.labels[label] = { label, category: null, abuse: null, source: null }
     this.setUpdate(true)
   }
 
@@ -352,17 +358,12 @@ export default class Menu extends Component {
     this.setUpdate(true)
   }
 
-  setTagpackCategory (label, category) {
+  setTagpack (label, data) {
     if (this.view.viewType !== 'tagpack') return
     if (!this.view.labels[label]) return
-    this.view.labels[label].category = category
-    this.setUpdate(true)
-  }
-
-  setTagpackAbuse (label, abuse) {
-    if (this.view.viewType !== 'tagpack') return
-    if (!this.view.labels[label]) return
-    this.view.labels[label].abuse = abuse
+    for (const i in data) {
+      this.view.labels[label][i] = data[i]
+    }
     this.setUpdate(true)
   }
 }

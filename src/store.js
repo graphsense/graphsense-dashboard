@@ -388,7 +388,7 @@ export default class Store {
         isUserDefined: true,
         label: label.label,
         address: o.id,
-        source: 'GraphSense',
+        source: label.source,
         tagpack_uri: null,
         currency: keyspace.toUpperCase(),
         lastmod: +new Date(),

@@ -105,8 +105,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'downloadTagsAsJSON',
   'changeSearchCategory',
   'changeSearchCriterion',
-  'changeTagpackCategory',
-  'changeTagpackAbuse',
+  'changeUserDefinedTag',
   'addAllToGraph',
   'tooltip',
   'hideTooltip',
@@ -126,7 +125,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
 
 // synchronous messages
 // get handled by model in current rendering frame
-const syncMessages = ['search', 'changeSearchBreadth', 'changeSearchDepth']
+const syncMessages = ['search', 'changeSearchBreadth', 'changeSearchDepth', 'changeUserDefinedTag']
 
 // messages that change the graph
 const dirtyMessages = [
@@ -152,17 +151,26 @@ export default class Callable {
         return
       }
 
+      const render = () => {
+        if (this._omitUpdate) {
+          this._omitUpdate = false
+          return
+        }
+        this.render()
+      }
+
       const fun = () => {
         logger.boldDebug('calling', message, data)
         this.reportLogger.log(message, data)
         this.dispatcher.call(message, null, data)
+
         if (dirtyMessages.indexOf(message) === -1) {
-          this.render()
+          render()
           return
         }
         this.isDirty = true
         this.dispatcher.call('disableUndoRedo')
-        this.render()
+        render()
 
         if (this.snapshotTimeout) clearTimeout(this.snapshotTimeout)
         this.snapshotTimeout = setTimeout(() => {
@@ -197,5 +205,9 @@ export default class Callable {
       logger.debug('register dispatch event', ev)
       this.dispatcher.on(ev, actions[ev].bind(this))
     }
+  }
+
+  omitUpdate () {
+    this._omitUpdate = true
   }
 }
