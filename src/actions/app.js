@@ -45,7 +45,7 @@ const submitSearchResult = function ({ term, context }) {
 
 const clickSearchResult = function ({ id, type, keyspace, context }) {
   if (this.menu.search) {
-    if (context === 'note' && type === 'address') {
+    if (context === 'neighborsearch' && type === 'address') {
       this.menu.addSearchAddress(id)
     } else if (context === 'tagpack' && type === 'label') {
       this.menu.addSearchLabel(id)
@@ -538,7 +538,7 @@ const noteDialog = function ({ x, y, nodeId, nodeType }) {
 }
 
 const searchNeighborsDialog = function ({ x, y, id, type, isOutgoing }) {
-  this.menu.showNodeDialog(x, y, { dialog: 'search', id, type, isOutgoing })
+  this.menu.showNodeDialog(x, y, { dialog: 'neighborsearch', id, type, isOutgoing })
   selectNode.call(this, [type, id])
 }
 

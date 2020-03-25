@@ -38,9 +38,9 @@ export default class Menu extends Component {
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
-    } else if (params.dialog === 'search') {
+    } else if (params.dialog === 'neighborsearch') {
       this.view = {
-        viewType: 'search',
+        viewType: 'neighborsearch',
         id: params.id,
         type: params.type,
         isOutgoing: params.isOutgoing,
@@ -126,7 +126,7 @@ export default class Menu extends Component {
         title = 'Add tags'
         el.innerHTML = tagpack
         this.setupTagpack(el)
-      } else if (this.view.viewType === 'search') {
+      } else if (this.view.viewType === 'neighborsearch') {
         const dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
         title = `Search ${dir} neighbors`
         el.innerHTML = replace(searchDialog,
@@ -295,14 +295,14 @@ export default class Menu extends Component {
   }
 
   setSearchCriterion (criterion) {
-    if (this.view.viewType !== 'search') return
+    if (this.view.viewType !== 'neighborsearch') return
     this.view.criterion = criterion
     this.view.params = defaultParams()
     this.setUpdate(true)
   }
 
   setSearchCategory (category) {
-    if (this.view.viewType === 'search' && this.view.criterion === 'category') {
+    if (this.view.viewType === 'neighborsearch' && this.view.criterion === 'category') {
       this.view.params.category = category
       this.setUpdate(true)
     } else if (this.view.viewType === 'tagpack') {
@@ -312,7 +312,7 @@ export default class Menu extends Component {
   }
 
   setSearchDepth (d) {
-    if (this.view.viewType !== 'search') return
+    if (this.view.viewType !== 'neighborsearch') return
     this.view.depth = Math.min(d, maxSearchDepth)
     if (d > maxSearchDepth) {
       this.setUpdate(true)
@@ -320,7 +320,7 @@ export default class Menu extends Component {
   }
 
   setSearchBreadth (d) {
-    if (this.view.viewType !== 'search') return
+    if (this.view.viewType !== 'neighborsearch') return
     this.view.breadth = Math.min(d, maxSearchBreadth)
     this.view.skipNumAddresses = Math.max(this.view.breadth, this.view.skipNumAddresses)
     if (d > maxSearchBreadth) {
@@ -330,7 +330,7 @@ export default class Menu extends Component {
   }
 
   setSkipNumAddresses (d) {
-    if (this.view.viewType !== 'search') return
+    if (this.view.viewType !== 'neighborsearch') return
     this.view.skipNumAddresses = Math.max(d, this.view.breadth || maxSearchBreadth)
     if (d < this.view.skipNumAddresses) {
       this.setUpdate(true)
@@ -338,7 +338,7 @@ export default class Menu extends Component {
   }
 
   addSearchAddress (address) {
-    if (this.view.viewType !== 'search' || this.view.criterion !== 'addresses') return
+    if (this.view.viewType !== 'neighborsearch' || this.view.criterion !== 'addresses') return
     this.view.params.addresses.push(address)
     this.setUpdate(true)
   }
