@@ -69,7 +69,7 @@ const messages = {
   clickAddress: (payload) => `click address ${payload.address} of keyspace ${payload.keyspace} in table`,
   selectNode: (payload) => `click node ${payload[1]} of type ${payload[0]} in graph`,
   search: (payload) => `search for ${payload.term} in ` + (payload.isInDialog ? 'neighbor search' : 'search bar'),
-  clickSearchResult: (payload) => `select ${payload.type} ${payload.id} of keyspace ${payload.keyspace} in ` + (payload.context === 'neighborsearch' ? 'neighbor search' : (payload.context === 'tagpack' ? 'label search bar in annotation dialog' : 'main search bar'))
+  clickSearchResult: (payload) => `select ${payload.type} ${payload.id} ${payload.keyspace ? `of keyspace ${payload.keyspace} ` : ''}in ` + (payload.context === 'neighborsearch' ? 'neighbor search' : (payload.context === 'tagpack' ? 'label search bar in annotation dialog' : 'main search bar'))
 }
 
 export default class ReportLogger {

@@ -155,7 +155,7 @@ export default class Model extends Callable {
     this.login = new Login(this.call)
     this.search = new Search(this.call, ['addresses', 'transactions', 'labels', 'blocks'], 'search')
     this.search.setStats(this.stats.currencies)
-    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, this.login, defaultCurrency)
+    this.layout = new Layout(this.call, this.browser, this.graph, this.config, this.menu, this.search, this.statusbar, defaultCurrency)
     this.layout.disableButton('undo', !this.graph.thereAreMorePreviousSnapshots())
     this.layout.disableButton('redo', !this.graph.thereAreMoreNextSnapshots())
     this.landingpage = new Landingpage(this.call, this.keyspaces)
