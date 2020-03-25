@@ -302,7 +302,7 @@ export default class Menu extends Component {
   }
 
   setSearchCategory (category) {
-    if (this.view.viewType === 'search' && this.view.criterion !== 'category') {
+    if (this.view.viewType === 'search' && this.view.criterion === 'category') {
       this.view.params.category = category
       this.setUpdate(true)
     } else if (this.view.viewType === 'tagpack') {
