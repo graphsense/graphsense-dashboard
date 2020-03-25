@@ -252,7 +252,7 @@ export default class Model extends Callable {
     this.store.entities.each(entity => {
       keyspaces.add(entity.keyspace)
     })
-    const time = moment().format('YYYY-MM-DD HH-mm-ss')
+    const time = moment().format('YYYY-MM-DD HH:mm:ss')
     const uuid = uuidv4()
     const report = {
       visible_name: this.meta.investigation || 'Investigation',
