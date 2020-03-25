@@ -3,10 +3,14 @@ import Logger from './logger.js'
 
 const logger = Logger.create('ReportLogger') // eslint-disable-line no-unused-vars
 
-const outg = (isOutgoing) => isOutgoing ? 'outgoing' : 'incoming'
+const outg = isOutgoing => isOutgoing ? 'outgoing' : 'incoming'
+
+const searchbar = context => context === 'neighborsearch' ? 'neighbor search' : (context === 'tagpack' ? 'label search bar in annotation dialog' : 'main search bar')
+
+const keyspace = keyspace => keyspace ? `of keyspace ${keyspace} ` : ''
 
 const messages = {
-  __fromURL: (payload) => `load ${payload.type} ${payload.id} of keyspace ${payload.keyspace} from URL`,
+  __fromURL: (payload) => `load ${payload.type} ${decodeURIComponent(payload.id)} ${keyspace(payload.keyspace)}from URL`,
   changeLocale: (payload) => `change locale to ${payload}`,
   addAllToGraph: (payload) => 'add all from current table to graph',
   downloadTagsAsJSON: (payload) => 'download tags table as JSON',
@@ -68,8 +72,8 @@ const messages = {
   clickLabel: (payload) => `click label ${payload.label} of keyspace ${payload.keyspace} in table`,
   clickAddress: (payload) => `click address ${payload.address} of keyspace ${payload.keyspace} in table`,
   selectNode: (payload) => `click node ${payload[1]} of type ${payload[0]} in graph`,
-  search: (payload) => `search for ${payload.term} in ` + (payload.isInDialog ? 'neighbor search' : 'search bar'),
-  clickSearchResult: (payload) => `select ${payload.type} ${payload.id} ${payload.keyspace ? `of keyspace ${payload.keyspace} ` : ''}in ` + (payload.context === 'neighborsearch' ? 'neighbor search' : (payload.context === 'tagpack' ? 'label search bar in annotation dialog' : 'main search bar'))
+  search: (payload) => `search for ${payload.term} in ` + searchbar(payload.context),
+  clickSearchResult: (payload) => `select ${payload.type} ${payload.id} ${keyspace(payload.keyspace)}in ` + searchbar(payload.context)
 }
 
 export default class ReportLogger {
