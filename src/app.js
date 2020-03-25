@@ -272,8 +272,7 @@ export default class Model extends Callable {
 
     report.tools.forEach(tool => {
       if (tool.id !== 'ait:graphsense') return
-      tool.responsible_for = tool.responsible_for || []
-      tool.responsible_for = [...tool.responsible_for, uuid]
+      tool.responsible_for = [uuid]
     })
 
     keyspaces.forEach(keyspace => {
