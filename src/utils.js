@@ -28,4 +28,6 @@ function formatCurrency (value, currencyCode, options) {
   }
 }
 
-export { firstToUpper, formatCurrency }
+const nodesIdentical = (node1, node2) => node1.id == node2.id && node1.keyspace === node2.keyspace // eslint-disable-line eqeqeq
+
+export { firstToUpper, formatCurrency, nodesIdentical }

@@ -61,6 +61,8 @@ const fromURL = (url, keyspaces) => {
   return { keyspace, id, type }
 }
 
+const shiftKey = 16
+
 export default class Model extends Callable {
   constructor (locale, rest, stats, reportLogger) {
     super()
@@ -86,7 +88,7 @@ export default class Model extends Callable {
       this.paramsToCall(params)
     }
     const that = this
-    window.addEventListener('beforeunload', function (evt) {
+    window.onbeforeunload = function (evt) {
       if (IS_DEV) return // eslint-disable-line no-undef
       if (!that.showLandingpage) {
         const message = 'You are about to leave the site. Your work will be lost. Sure?'
@@ -98,7 +100,18 @@ export default class Model extends Callable {
         }
         return message
       }
-    })
+    }
+    window.onkeydown = (e) => {
+      if (e.keyCode !== shiftKey) return
+      logger.debug('keydown', e)
+      this.call('pressShift')
+    }
+    window.onkeyup = (e) => {
+      if (e.keyCode !== shiftKey) return
+      logger.debug('keyup', e)
+      this.call('releaseShift')
+    }
+    this.shiftPressed = false
     const initParams = fromURL(window.location.href, this.keyspaces)
     if (initParams && initParams.id) {
       this.paramsToCall(initParams)

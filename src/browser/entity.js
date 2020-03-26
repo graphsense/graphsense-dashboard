@@ -15,4 +15,11 @@ export default class Entity extends Address {
         { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
+
+  flattenData () {
+    const flat = super.flattenData()
+    flat.no_addresses = this.data.reduce((sum, v) => sum + v.no_addresses, 0)
+
+    return flat
+  }
 }

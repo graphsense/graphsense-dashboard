@@ -15,6 +15,7 @@ import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
 import { addClass, removeClass } from './template_utils.js'
 import Logger from './logger.js'
+import { nodesIdentical } from './utils.js'
 
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
@@ -35,6 +36,7 @@ export default class Browser extends Component {
 
   deselect () {
     this.visible = false
+    this.destroyComponentsFrom(0)
     this.setUpdate('visibility')
   }
 
@@ -59,10 +61,9 @@ export default class Browser extends Component {
   }
 
   getCurrentNode () {
-    if (this.content[0] instanceof Address || this.content[0] instanceof Entity) {
-      return this.content[0].data
-    }
-    return null
+    if (!(this.content[0] instanceof Address) && !(this.content[0] instanceof Entity)) return null
+    if (this.content[0].data.length > 1) return null
+    return this.content[0].data
   }
 
   setNodeChecker (func) {
@@ -83,13 +84,25 @@ export default class Browser extends Component {
     this.setUpdate('content')
   }
 
-  setAddress (address) {
+  setAddress (address, multi) {
     this.activeTab = 'address'
     this.visible = true
     this.setUpdate('visibility')
-    if (this.content[0] instanceof Address && this.content[0].data.id === address.id) return
+    const selected = this.content[0] instanceof Address && this.content[0].data
+    logger.debug('selected', multi, selected)
     this.destroyComponentsFrom(0)
-    this.content = [new Address(this.dispatcher, address, 0, this.currency)]
+    let addresses = [address]
+    if (selected && multi) {
+      addresses = addresses.concat(selected)
+    }
+    if (selected && selected.filter(s => nodesIdentical(s, address)).length === 1 && multi) {
+      addresses = addresses.filter(a => !nodesIdentical(a, address))
+    }
+    if (addresses.length === 0) {
+      this.deselect()
+      return
+    }
+    this.content = [new Address(this.dispatcher, addresses, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -113,13 +126,24 @@ export default class Browser extends Component {
     this.setUpdate('content')
   }
 
-  setEntity (entity) {
+  setEntity (entity, multi) {
     this.activeTab = 'address'
     this.visible = true
     this.setUpdate('visibility')
-    if (this.content[0] instanceof Entity && this.content[0].data.id === entity.id) return
+    const selected = this.content[0] instanceof Entity && this.content[0].data
     this.destroyComponentsFrom(0)
-    this.content = [new Entity(this.dispatcher, entity, 0, this.currency)]
+    let entities = [entity]
+    if (selected && multi) {
+      entities = entities.concat(selected)
+    }
+    if (selected && selected.filter(s => nodesIdentical(s, entity)).length === 1 && multi) {
+      entities = entities.filter(a => !nodesIdentical(a, entity))
+    }
+    if (entities.length === 0) {
+      this.deselect()
+      return
+    }
+    this.content = [new Entity(this.dispatcher, entities, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -128,9 +152,9 @@ export default class Browser extends Component {
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
-      this.content[0] = new Address(this.dispatcher, object, 0, this.currency)
+      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency)
     } else if (object.type === 'entity') {
-      this.content[0] = new Entity(this.dispatcher, object, 0, this.currency)
+      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency)
     }
     this.setUpdate('content')
   }
@@ -146,7 +170,8 @@ export default class Browser extends Component {
     if (request.index !== 0 && !request.index) return
     const comp = this.content[request.index]
     if (!(comp instanceof Address)) return
-    const keyspace = comp.data.keyspace
+    if (comp.data.length > 1) return
+    const keyspace = comp.data[0].keyspace
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
@@ -154,7 +179,7 @@ export default class Browser extends Component {
     }
     this.destroyComponentsFrom(request.index + 1)
     comp.setCurrentOption('initTransactionsTable')
-    const total = comp.data.no_incoming_txs + comp.data.no_outgoing_txs
+    const total = comp.data[0].no_incoming_txs + comp.data[0].no_outgoing_txs
     this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
   }
 
@@ -177,7 +202,8 @@ export default class Browser extends Component {
     if (request.index !== 0 && !request.index) return
     const last = this.content[request.index]
     if (!(last instanceof Entity)) return
-    const keyspace = last.data.keyspace
+    if (last.data.length > 1) return
+    const keyspace = last.data[0].keyspace
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof AddressesTable) {
       this.destroyComponentsFrom(request.index + 1)
@@ -185,15 +211,20 @@ export default class Browser extends Component {
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initAddressesTable')
-    const total = last.data.no_addresses
+    const total = last.data[0].no_addresses
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace, this.nodeChecker))
   }
 
   initTagsTable (request) {
     if (request.index !== 0 && !request.index) return
     const last = this.content[request.index]
-    const fromLabel = last instanceof Label
-    if (!(last instanceof Entity) && !(last instanceof Address) && !(fromLabel)) return
+    const fromLabel = (last instanceof Label)
+    if (!(last instanceof Entity) && !(last instanceof Address) && !fromLabel) return
+    let data = last.data
+    if (!fromLabel) {
+      if (last.data.length > 1) return
+      data = last.data[0]
+    }
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TagsTable) {
       this.destroyComponentsFrom(request.index + 1)
@@ -201,15 +232,18 @@ export default class Browser extends Component {
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initTagsTable')
-    const keyspace = last.data.keyspace
-    const total = fromLabel ? last.data.address_count : last.data.tags.length
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, last.data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
+    const keyspace = data.keyspace
+    const total = fromLabel ? data.address_count : data.tags.length
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
   }
 
   initNeighborsTable (request, isOutgoing) {
+    logger.debug('initNeighborsTable', request, isOutgoing)
     if (request.index !== 0 && !request.index) return
     const last = this.content[request.index]
     if (!(last instanceof Entity) && !(last instanceof Address)) return
+    logger.debug('initNeighborsTable data.length', last.data.length)
+    if (last.data.length > 1) return
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof NeighborsTable &&
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
@@ -219,8 +253,8 @@ export default class Browser extends Component {
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption(isOutgoing ? 'initOutdegreeTable' : 'initIndegreeTable')
-    const keyspace = last.data.keyspace
-    const total = isOutgoing ? last.data.out_degree : last.data.in_degree
+    const keyspace = last.data[0].keyspace
+    const total = isOutgoing ? last.data[0].out_degree : last.data[0].in_degree
     this.content.push(new NeighborsTable(this.dispatcher, request.index + 1, total, request.id, request.type, isOutgoing, this.currency, keyspace, this.nodeChecker))
   }
 

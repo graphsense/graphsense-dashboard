@@ -49,7 +49,7 @@ class GraphNode extends Component {
       const limit = this.getDegree(isOutgoing)
       this.dispatcher('loadEgonet', { id: this.id, isOutgoing, type: this.data.type, limit, keyspace: this.data.keyspace })
     } else {
-      this.dispatcher('initNeighborsTableWithNode', { id: this.data.id, isOutgoing, type: this.data.type, keyspace: this.data.keyspace })
+      this.dispatcher('initNeighborsTableWithNode', { id: this.id, isOutgoing, type: this.data.type })
     }
   }
 
@@ -164,6 +164,7 @@ class GraphNode extends Component {
       .classed('expandHandle', true)
       .on('click', () => {
         this.expandCollapseNeighborsOrShowTable(isOutgoing)
+        event.stopPropagation()
       })
     g.append('path')
       .classed('expandHandlePath', true)

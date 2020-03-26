@@ -21,25 +21,45 @@ export default class Address extends BrowserComponent {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    this.options = this.data.length > 1 ? [] : this.options
     super.render()
-    const first = this.data.first_tx.timestamp
-    const last = this.data.last_tx.timestamp
-    const duration = (last - first) * 1000
-    const abuses = [...new Set((this.data.tags || []).filter(({ abuse }) => abuse).map(({ abuse }) => abuse).values())]
-    const flat = {
-      first_usage: this.formatTimestampWithAgo(first),
-      last_usage: this.formatTimestampWithAgo(last),
-      activity_period: this.formatDuration(duration),
-      total_received: this.formatCurrency(this.data.total_received[this.currency], this.data.keyspace),
-      balance: this.formatCurrency(this.data.balance[this.currency], this.data.keyspace),
-      keyspace: this.data.keyspace.toUpperCase(),
-      abuses: abuses.join(' ')
-    }
-    this.root.innerHTML = replace(this.template, { ...this.data, ...flat })
+    const flat = this.flattenData()
+    this.root.innerHTML = replace(this.template, flat)
     return this.root
   }
 
+  flattenData () {
+    let timestamps = this.data.map(d => d.first_tx.timestamp)
+    const first = Math.min(...timestamps)
+    timestamps = this.data.map(d => d.last_tx.timestamp)
+    const last = Math.max(...timestamps)
+    const duration = (last - first) * 1000
+    const tags = this.data.reduce((tags, d) => tags.concat(d.tags || []), [])
+    const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => abuse).values())]
+    const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
+    const balance = this.data.reduce((sum, v) => sum + v.balance[this.currency], 0)
+    const noOutgoingTxs = this.data.reduce((sum, v) => sum + v.no_outgoing_txs, 0)
+    const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
+    const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
+    const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
+    const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
+    return {
+      id: '<div>' + this.data.map(d => d.id).join('</div><div>') + '</div>',
+      first_usage: this.formatTimestampWithAgo(first),
+      last_usage: this.formatTimestampWithAgo(last),
+      activity_period: this.formatDuration(duration),
+      total_received: this.formatCurrency(totalReceived, keyspace),
+      balance: this.formatCurrency(balance, keyspace),
+      keyspace,
+      abuses: abuses.join(' '),
+      no_outgoing_txs: noOutgoingTxs,
+      no_incoming_txs: noIncomingTxs,
+      out_degree: noOutdegree,
+      in_degree: noIndegree
+    }
+  }
+
   requestData () {
-    return { ...super.requestData(), id: this.data.id, type: this.data.type }
+    return { ...super.requestData(), id: this.data[0].id, type: this.data[0].type }
   }
 }

@@ -103,7 +103,8 @@ export default class Rest {
   }
 
   disable () {
-    this.json = (url) => {
+    this.json = (keyspace, url, field) => {
+      logger.debug('DISABLED calling ', keyspace, url, field)
       return Promise.resolve()
     }
   }
@@ -113,6 +114,7 @@ export default class Rest {
   }
 
   search (str, limit) {
+    logger.debug('calling search')
     return this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''))
   }
 
@@ -190,7 +192,7 @@ export default class Rest {
   }
 
   stats () {
-    return json(this.baseUrl + '/stats')
+    return this.json(null, '/stats')
   }
 
   searchNeighbors ({ id, type, isOutgoing, depth, breadth, skipNumAddresses, params }) {

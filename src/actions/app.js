@@ -143,18 +143,21 @@ const resultBlockForBrowser = function ({ result }) {
 }
 
 const selectNode = function ([type, nodeId]) {
-  logger.debug('selectNode', type, nodeId)
+  logger.debug('selectNode', type, nodeId, this.shiftPressed)
   const o = this.store.get(nodeId[2], type, nodeId[0])
   if (!o) {
     throw new Error(`selectNode: ${nodeId} of type ${type} not found in store`)
   }
+  if (this.shiftPressed && this.graph.selectedNode) {
+    if (this.graph.selectedNode.data.type !== type) return
+  }
   historyPushState(o.keyspace, o.type, o.id)
   if (type === 'address') {
-    this.browser.setAddress(o)
+    this.browser.setAddress(o, this.shiftPressed)
   } else if (type === 'entity') {
-    this.browser.setEntity(o)
+    this.browser.setEntity(o, this.shiftPressed)
   }
-  this.graph.selectNode(type, nodeId)
+  this.graph.selectNode(type, nodeId, this.shiftPressed)
 }
 
 // user clicks address in a table
@@ -248,14 +251,12 @@ const initOutdegreeTable = function (request) {
   this.browser.initNeighborsTable(request, true)
 }
 
-const initNeighborsTableWithNode = function ({ id, keyspace, type, isOutgoing }) {
-  const node = this.store.get(keyspace, type, id)
-  if (!node) return
-  if (type === 'address') {
-    this.browser.setAddress(node)
-  } else if (type === 'entity') {
-    this.browser.setEntity(node)
-  }
+const initNeighborsTableWithNode = function ({ id, type, isOutgoing }) {
+  const keyspace = id[2]
+  const nodeId = id
+  id = id[0]
+  selectNode.call(this, [type, nodeId])
+  if (this.shiftPressed) return
   this.browser.initNeighborsTable({ id, keyspace, type, index: 0 }, isOutgoing)
 }
 
@@ -980,6 +981,14 @@ const receiveCategoryColors = function ({ result }) {
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }
 
+const pressShift = function () {
+  this.shiftPressed = true
+}
+
+const releaseShift = function () {
+  this.shiftPressed = false
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1085,7 +1094,9 @@ const functions = {
   receiveAbuses,
   exportSvg,
   inputMetaData,
-  downloadedReport
+  downloadedReport,
+  pressShift,
+  releaseShift
 }
 
 export default functions

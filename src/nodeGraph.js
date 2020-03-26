@@ -9,7 +9,7 @@ import Layer from './nodeGraph/layer.js'
 import EntityNode from './nodeGraph/entityNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
-import { formatCurrency } from './utils'
+import { formatCurrency, nodesIdentical } from './utils'
 import Logger from './logger.js'
 import { entityWidth, expandHandleWidth } from './globals.js'
 
@@ -318,8 +318,11 @@ export default class NodeGraph extends Component {
   }
 
   deselect () {
+    logger.debug('deselect', this.selectedNode)
     if (!this.selectedNode) return
     this.selectedNode.deselect()
+    this.highlightedNodes.forEach(node => node.unhighlight())
+    this.highlightedNodes = []
     this.selectedNode.setUpdate('select')
     this.selectedNode = null
   }
@@ -404,19 +407,53 @@ export default class NodeGraph extends Component {
     })
   }
 
-  selectNode (type, nodeId) {
+  selectNode (type, nodeId, multi) {
     const sel = this.getNode(nodeId, type)
     if (!sel) return
-    this._selectNode(sel)
+    this._selectNode(sel, multi)
   }
 
-  _selectNode (sel) {
-    sel.select()
-    if (this.selectedNode && this.selectedNode !== sel) {
+  _selectNode (sel, multi) {
+    // deselect single
+    const identical = (node1, node2) => nodesIdentical(node1.data, node2.data)
+    if (multi) {
+      if (this.selectedNode && identical(sel, this.selectedNode)) {
+        this.highlightedNodes.forEach(node => {
+          if (identical(node, sel)) {
+            node.unhighlight()
+            node.deselect()
+          }
+        })
+        this.highlightedNodes = this.highlightedNodes.filter(node => !identical(node, sel))
+        this.selectedNode = null
+        if (this.highlightedNodes.length > 0) {
+          this.selectedNode = this.highlightedNodes[0]
+          this.selectedNode.select()
+        }
+        return
+      }
+      if (this.highlightedNodes.indexOf(sel) !== -1) {
+        // don't unhighlight a highlighted node of same id with selected one
+        if (identical(this.selectedNode, sel)) return
+        this.highlightedNodes = this.highlightedNodes.filter(node => {
+          if (identical(node, sel)) {
+            node.unhighlight()
+            return false
+          }
+          return true
+        })
+        return
+      }
+    }
+
+    // select
+    if (this.selectedNode) {
       this.selectedNode.deselect()
     }
-    this.highlightedNodes.forEach(node => node.unhighlight())
-    this.highlightedNodes = []
+    if (!multi) {
+      this.highlightedNodes.forEach(node => node.unhighlight())
+      this.highlightedNodes = []
+    }
     let nodes
     if (sel.data.type === 'entity') {
       nodes = this.entityNodes
@@ -424,12 +461,12 @@ export default class NodeGraph extends Component {
       nodes = this.addressNodes
     }
     nodes.each(node => {
-      if (node.data.id === sel.data.id) {
+      if (identical(node, sel)) {
         node.highlight()
         this.highlightedNodes.push(node)
       }
     })
-    logger.debug('highlighted in select', this.highlightedNodes)
+    sel.select()
     this.selectedNode = sel
   }
 
