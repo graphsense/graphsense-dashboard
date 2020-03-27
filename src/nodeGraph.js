@@ -44,6 +44,8 @@ const colorScale = scaleOrdinal(schemeSet3)
 
 const maxNumSnapshots = 4
 
+const getOutgoing = (n1, n2) => n1.keyspace === n2.keyspace && n1.outgoing.get(n2.id)
+
 export default class NodeGraph extends Component {
   constructor (dispatcher, labelType, currency, txLabelType) {
     super()
@@ -618,11 +620,11 @@ export default class NodeGraph extends Component {
   additionLayerBySearch (node) {
     logger.debug('search', node)
     const ids = set()
-    if (this.selectedNode && this.selectedNode.data.outgoing.has(node.id)) {
+    if (this.selectedNode && getOutgoing(this.selectedNode.data, node)) {
       logger.debug('select layer by selected node', this.selectedNode.id[1] + 1)
       ids.add(this.selectedNode.id[1] + 1)
     }
-    if (this.selectedNode && node.outgoing.has(this.selectedNode.data.id)) {
+    if (this.selectedNode && getOutgoing(node, this.selectedNode.data)) {
       logger.debug('select layer by selected node (incoming)', this.selectedNode.id[1] - 1)
       ids.add(this.selectedNode.id[1] - 1)
     }
@@ -630,18 +632,18 @@ export default class NodeGraph extends Component {
     if (this.layers[0]) {
       const nodes = this.layers[0].nodes.values()
       for (let j = 0; j < nodes.length; j++) {
-        if (node.type === 'entity' && node.outgoing.has(nodes[j].data.id)) {
+        if (node.type === 'entity' && getOutgoing(node, nodes[j].data)) {
           logger.debug('select layer by incoming node', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
-        if (node.entity && node.entity.outgoing.has(nodes[j].data.id)) {
+        if (node.entity && getOutgoing(node.entity, nodes[j].data)) {
           logger.debug('select layer by incoming node on entity level', nodes[j], this.layers[0].id - 1)
           ids.add(this.layers[0].id - 1)
         }
         if (node.type === 'address') {
           const addresses = nodes[j].nodes.values()
           for (let k = 0; k < addresses.length; k++) {
-            if (node.outgoing.has(addresses[k].data.id)) {
+            if (getOutgoing(node, addresses[k].data)) {
               logger.debug('select layer by incoming node on address level', addresses[k], this.layers[0].id - 1)
               ids.add(this.layers[0].id - 1)
             }
@@ -653,19 +655,18 @@ export default class NodeGraph extends Component {
     for (let i = this.layers.length - 1; i >= 0; i--) {
       const nodes = this.layers[i].nodes.values()
       for (let j = 0; j < nodes.length; j++) {
-        const outgoing = nodes[j].data.outgoing
-        if (node.type === 'entity' && outgoing.has(node.id)) {
+        if (node.type === 'entity' && getOutgoing(nodes[j].data, node)) {
           logger.debug('select layer by outgoing node', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
-        if (node.entity && outgoing.has(node.entity.id)) {
+        if (node.entity && getOutgoing(nodes[j].data, node.entity)) {
           logger.debug('select layer by outgoing node on entity level', nodes[j], this.layers[i].id + 1)
           ids.add(this.layers[i].id + 1)
         }
         if (node.type === 'address') {
           const addresses = nodes[j].nodes.values()
           for (let k = 0; k < addresses.length; k++) {
-            if (addresses[k].data.outgoing.has(node.id)) {
+            if (getOutgoing(addresses[k].data, node)) {
               logger.debug('select layer by outgoing node on address level', addresses[k], this.layers[i].id + 1)
               ids.add(this.layers[i].id + 1)
             }
@@ -844,14 +845,13 @@ export default class NodeGraph extends Component {
   }
 
   prepareLinks (domain, layer, address) {
-    const neighbors = address.data.outgoing
     const entityLinks = []
     if (layer) {
       layer.nodes.each((entity2) => {
         let hasLinks = false
         entity2.nodes.each((address2) => {
-          const ntx = neighbors.get(address2.data.id)
-          if (ntx === undefined) return
+          const ntx = getOutgoing(address.data, address2.data)
+          if (!ntx) return
           this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
           hasLinks = true
         })
@@ -864,11 +864,10 @@ export default class NodeGraph extends Component {
   }
 
   prepareEntityLinks (domain, layer, source, entityLinksFromAddresses) {
-    const neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((entity2) => {
-        const ntx = neighbors.get(entity2.data.id)
-        if (ntx === undefined) return
+        const ntx = getOutgoing(source.data, entity2.data)
+        if (!ntx) return
         // skip entity if contains in entityLinksFromAddresses
         if (entityLinksFromAddresses.has(entity2.data.id)) return
         this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
@@ -882,12 +881,11 @@ export default class NodeGraph extends Component {
   }
 
   linkToLayer (root, domain, layer, address) {
-    const neighbors = address.data.outgoing
     if (layer) {
       layer.nodes.each((entity2) => {
         entity2.nodes.each((address2) => {
-          const ntx = neighbors.get(address2.data.id)
-          if (ntx === undefined) return
+          const ntx = getOutgoing(address.data, address2.data)
+          if (!ntx) return
           this.renderLink(root, domain, address, address2, ntx)
         })
       })
@@ -895,11 +893,10 @@ export default class NodeGraph extends Component {
   }
 
   linkToLayerEntity (root, domain, layer, source, entityLinksFromAddresses) {
-    const neighbors = source.data.outgoing
     if (layer) {
       layer.nodes.each((entity2) => {
-        const ntx = neighbors.get(entity2.data.id)
-        if (ntx === undefined) return
+        const ntx = getOutgoing(source.data, entity2.data)
+        if (!ntx) return
         // skip entity if contains in entityLinksFromAddresses
         if (entityLinksFromAddresses.has(entity2.data.id)) return
         this.renderLink(root, domain, source, entity2, ntx)
@@ -925,6 +922,7 @@ export default class NodeGraph extends Component {
         const node2 = nodes[i]
         if (node1 === node2) continue
         if (node1.id[0] !== node2.id[0]) continue
+        if (node1.data.keyspace !== node2.data.keyspace) continue
         if (node1.id[1] >= node2.id[1]) continue
         this.drawShadow(root, node1, node2)
         // stop iterating if a shadow to next layer was found

@@ -169,7 +169,8 @@ export default class Store {
     return outgoing
   }
 
-  linkOutgoing (source, target, keyspace, data) {
+  linkOutgoing (source, target, keyspace, keyspaceTarget, data) {
+    if (keyspace !== keyspaceTarget) return
     const outgoing = this.initOutgoing(source, keyspace)
     const n = outgoing.get(target)
     if (!n && (!data || !data.no_txs || !data.estimated_value)) {
@@ -324,7 +325,7 @@ export default class Store {
         sp = unprefix(id)
       }
       links.forEach(({ key, value }) => {
-        this.linkOutgoing(sp[1], key, sp[0], value)
+        this.linkOutgoing(sp[1], key, sp[0], key, value)
       })
     })
   }

@@ -97,9 +97,9 @@ const resultNode = function ({ context, result }) {
     const f = this.store.get(context.focusNode.keyspace, context.focusNode.type, context.focusNode.id)
     if (f) {
       if (context.focusNode.isOutgoing === true) {
-        this.store.linkOutgoing(f.id, a.id, f.keyspace, context.focusNode.linkData)
+        this.store.linkOutgoing(f.id, a.id, f.keyspace, a.keyspace, context.focusNode.linkData)
       } else if (context.focusNode.isOutgoing === false) {
-        this.store.linkOutgoing(a.id, f.id, a.keyspace, context.focusNode.linkData)
+        this.store.linkOutgoing(a.id, f.id, a.keyspace, f.keyspace, context.focusNode.linkData)
       }
     }
   }
@@ -337,7 +337,7 @@ const addNodeCont = function ({ context, result }) {
     this.statusbar.addMsg('loaded', o.type, o.id)
     if (anchor && anchor.isOutgoing === false) {
       // incoming neighbor node
-      this.store.linkOutgoing(o.id, anchor.nodeId[0], o.keyspace)
+      this.store.linkOutgoing(o.id, anchor.nodeId[0], o.keyspace, anchor.nodeId[2])
     }
     if (!this.graph.adding.has(o.id)) return
     logger.debug('entity', o.entity)
@@ -406,7 +406,7 @@ const excourseLoadDegree = function ({ context, result }) {
       // add the node in context to the outgoing set of incoming relations
       result.neighbors.forEach((neighbor) => {
         if (neighbor.nodeType !== o.type) return
-        this.store.linkOutgoing(neighbor.id, o.id, neighbor.keyspace, neighbor)
+        this.store.linkOutgoing(neighbor.id, o.id, neighbor.keyspace, o.keyspace, neighbor)
       })
       // this.storeRelations(result.neighbors, o, o.keyspace, false)
     }
@@ -423,7 +423,7 @@ const excourseLoadDegree = function ({ context, result }) {
       // add outgoing relations to the node in context
       result.neighbors.forEach((neighbor) => {
         if (neighbor.nodeType !== o.type) return
-        this.store.linkOutgoing(o.id, neighbor.id, o.keyspace, neighbor)
+        this.store.linkOutgoing(o.id, neighbor.id, o.keyspace, neighbor.keyspace, neighbor)
       })
       // this.storeRelations(result.neighbors, o, o.keyspace, true)
     }
@@ -457,9 +457,9 @@ const resultEgonet = function ({ context, result }) {
       isOutgoing: context.isOutgoing
     }
     if (context.isOutgoing === true) {
-      this.store.linkOutgoing(a.id, node.id, a.keyspace, node)
+      this.store.linkOutgoing(a.id, node.id, a.keyspace, node.keyspace, node)
     } else if (context.isOutgoing === false) {
-      this.store.linkOutgoing(node.id, a.id, node.keyspace, node)
+      this.store.linkOutgoing(node.id, a.id, node.keyspace, a.keyspace, node)
     }
     addNode.call(this, { id: node.id, type: node.nodeType, keyspace: node.keyspace, anchor })
   })
@@ -830,7 +830,7 @@ const resultSearchNeighbors = function ({ result, context }) {
       const node = this.store.add(pathnode.node)
       const src = context.isOutgoing ? anchor.nodeId[0] : node.id
       const dst = context.isOutgoing ? node.id : anchor.nodeId[0]
-      this.store.linkOutgoing(src, dst, result.keyspace, pathnode.relation)
+      this.store.linkOutgoing(src, dst, result.keyspace, result.keyspace, pathnode.relation)
 
       // fetch all relations
       const backCall = { msg: 'redrawGraph', data: null }
