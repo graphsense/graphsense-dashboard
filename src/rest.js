@@ -59,9 +59,13 @@ export default class Rest {
       .finally(() => { logger.debug('refresh cleanup'); this.refreshing = false })
   }
 
-  remoteJson (keyspace, url, field) {
+  remoteJson (keyspace, url, field, abortController) {
     const newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
-    return json(newurl, options())
+    const opts = options()
+    if (abortController) {
+      opts.signal = abortController.signal
+    }
+    return json(newurl, opts)
       .then(result => {
         this.logs.push([+new Date(), newurl])
         if (field) {
@@ -80,8 +84,7 @@ export default class Rest {
           return this.refreshToken()
             .then(() => this.remoteJson(keyspace, url, field))
         }
-        error.keyspace = keyspace
-        error.requestURL = url
+        error.requestURL = newurl
         // normalize message
         if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
@@ -115,7 +118,9 @@ export default class Rest {
 
   search (str, limit) {
     logger.debug('calling search')
-    return this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''))
+    const ac = new window.AbortController()
+    return [ac,
+      this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''), null, ac)]
   }
 
   node (keyspace, { type, id }) {

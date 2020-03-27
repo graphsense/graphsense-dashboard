@@ -26,9 +26,16 @@ const search = function ({ term, context }) {
   search.hideLoading()
   if (search.needsResults(searchlimit, prefixLength)) {
     if (search.timeout) clearTimeout(search.timeout)
+    if (search.abortController) {
+      search.abortController.abort()
+      search.abortController = null
+    }
     search.showLoading()
     search.timeout = setTimeout(() => {
-      this.mapResult(this.rest.search(term.trim(), searchlimit), 'searchresult', { term, dialogContext: context })
+      const resp = this.rest.search(term.trim(), searchlimit)
+      search.abortController = resp[0]
+      const promise = resp[1]
+      this.mapResult(promise, 'searchresult', { term, dialogContext: context })
     }, 250)
   }
 }
@@ -100,10 +107,10 @@ const fetchError = function ({ context, msg, error }) {
       {
         const search = context && context.isInDialog ? this.menu.search : this.search
         if (!search) return
+        if (error.name === 'AbortError') return
         search.hideLoading()
-        search.error(error.keyspace, error.message)
       }
-      // this.statusbar.addMsg('error', error)
+      if (this.statusbar) this.statusbar.addMsg('error', error)
       break
     case 'resultSearchNeighbors':
       this.statusbar.removeSearching(context)

@@ -46,11 +46,6 @@ export default class Search extends Component {
     this.setUpdate(true)
   }
 
-  error (keyspace, msg) {
-    this.result = msg
-    this.setUpdate('result')
-  }
-
   showLoading () {
     if (!this.isLoading) {
       this.isLoading = true
@@ -186,13 +181,6 @@ export default class Search extends Component {
       })
       ul.appendChild(li)
     }
-    if (typeof this.result === 'string') {
-      el.innerHTML = 'Failed to fetch from any keyspaces'
-      addClass(el, 'text-gs-red')
-      return
-    } else {
-      removeClass(el, 'text-gs-red')
-    }
     this.keyspaces.forEach(keyspace => {
       let result = this.result.filter(({ currency }) => currency === keyspace)
       let addresses = []
@@ -266,16 +254,16 @@ export default class Search extends Component {
   getFirstResult () {
     for (const i in this.result) {
       const resultSet = this.result[i]
-      if (this.types.indexOf('addresses') !== -1 && resultSet.addresses.length > 0) {
+      if (this.types.indexOf('addresses') !== -1 && resultSet.addresses && resultSet.addresses.length > 0) {
         const addresses = resultSet.addresses.filter(byPrefix(this.term))
         return { id: addresses[0], type: 'address', keyspace: resultSet.currency }
       }
-      if (this.types.indexOf('transactions') !== -1 && resultSet.txs.length > 0) {
+      if (this.types.indexOf('transactions') !== -1 && resultSet.txs && resultSet.txs.length > 0) {
         const transactions = resultSet.txs.filter(byPrefix(this.term))
         return { id: transactions[0], type: 'transaction', keyspace: resultSet.currency }
       }
     }
-    if (this.types.indexOf('labels') !== -1 && this.resultLabels.length > 0) {
+    if (this.types.indexOf('labels') !== -1 && this.resultLabels && this.resultLabels.length > 0) {
       const labels = this.resultLabels.filter(byPrefix(this.term))
       return { id: labels[0], type: 'label' }
     }
