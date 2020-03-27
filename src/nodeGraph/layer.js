@@ -8,7 +8,7 @@ const margin = 20
 export default class Layer extends Component {
   constructor (id) {
     super()
-    this.id = id
+    this.id = id * 1
     this.nodes = map()
     this.x = 0
     this.y = 0
