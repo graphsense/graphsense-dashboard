@@ -851,8 +851,10 @@ export default class NodeGraph extends Component {
         let hasLinks = false
         entity2.nodes.each((address2) => {
           const ntx = getOutgoing(address.data, address2.data)
-          if (!ntx) return
-          this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
+          if (ntx === undefined || ntx === false) return
+          if (ntx !== null) {
+            this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
+          }
           hasLinks = true
         })
         if (hasLinks) {
@@ -867,10 +869,12 @@ export default class NodeGraph extends Component {
     if (layer) {
       layer.nodes.each((entity2) => {
         const ntx = getOutgoing(source.data, entity2.data)
-        if (!ntx) return
+        if (ntx === undefined || ntx === false) return
         // skip entity if contains in entityLinksFromAddresses
         if (entityLinksFromAddresses.has(entity2.data.id)) return
-        this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
+        if (ntx !== null) {
+          this.updateDomain(domain, this.findValueAndLabel(ntx)[0])
+        }
       })
     }
   }
@@ -885,7 +889,7 @@ export default class NodeGraph extends Component {
       layer.nodes.each((entity2) => {
         entity2.nodes.each((address2) => {
           const ntx = getOutgoing(address.data, address2.data)
-          if (!ntx) return
+          if (ntx === undefined || ntx === false) return
           this.renderLink(root, domain, address, address2, ntx)
         })
       })
@@ -896,7 +900,7 @@ export default class NodeGraph extends Component {
     if (layer) {
       layer.nodes.each((entity2) => {
         const ntx = getOutgoing(source.data, entity2.data)
-        if (!ntx) return
+        if (ntx === undefined || ntx === false) return
         // skip entity if contains in entityLinksFromAddresses
         if (entityLinksFromAddresses.has(entity2.data.id)) return
         this.renderLink(root, domain, source, entity2, ntx)
@@ -939,13 +943,17 @@ export default class NodeGraph extends Component {
   }
 
   renderLink (root, domain, source, target, tx) {
-    const l = this.findValueAndLabel(tx)
-    const value = l[0]
-    const label = l[1]
+    let value = 1
+    let label = ''
     let scale
+    if (tx !== null) {
+      const l = this.findValueAndLabel(tx)
+      value = l[0]
+      label = l[1]
+    }
     // scalePow chooses the median of range, if domain is a-a (instead a-b)
     // so force it to use the lower range bound
-    if (domain[0] !== domain[1]) {
+    if (domain[0] !== Infinity && domain[0] !== domain[1]) {
       scale = scalePow().domain(domain).range(transactionsPixelRange)(value)
     } else {
       scale = transactionsPixelRange[0]

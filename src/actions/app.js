@@ -360,6 +360,19 @@ const addNodeCont = function ({ context, result }) {
       this.statusbar.addMsg('loadedEntityFor', context.addressId)
     }
     const e = this.store.add({ ...resultCopy, forAddresses: [context.addressId] })
+    if (anchor) {
+      const a = this.store.get(keyspace, 'address', anchor.nodeId[0])
+      if (a && a.entity) {
+        const b = this.store.get(keyspace, 'address', context.addressId)
+        if (b && b.entity) {
+          if (anchor.isOutgoing === false) {
+            this.store.linkOutgoing(b.entity.id, a.entity.id, keyspace, keyspace)
+          } else {
+            this.store.linkOutgoing(a.entity.id, b.entity.id, keyspace, keyspace)
+          }
+        }
+      }
+    }
     if (!e.tags) {
       this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
       this.mapResult(this.rest.tags(keyspace, { id: e.id, type: e.type }), 'resultTags', { id: e.id, type: e.type, keyspace: e.keyspace })
