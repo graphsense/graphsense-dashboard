@@ -63,7 +63,7 @@ export default class Browser extends Component {
   getCurrentNode () {
     if (!(this.content[0] instanceof Address) && !(this.content[0] instanceof Entity)) return null
     if (this.content[0].data.length > 1) return null
-    return this.content[0].data
+    return this.content[0].data[0]
   }
 
   setNodeChecker (func) {
