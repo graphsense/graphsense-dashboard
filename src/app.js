@@ -38,7 +38,7 @@ const defaultCurrency = 'value'
 
 const defaultTxLabel = 'no_txs'
 
-const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label']
+const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label', 'addresslink', 'entitylink']
 
 const fromURL = (url, keyspaces) => {
   const hash = url.split('#!')[1]
@@ -47,10 +47,13 @@ const fromURL = (url, keyspaces) => {
   let id = split[2]
   let type = split[1]
   let keyspace = split[0]
+  let target = null
   if (split[0] === 'label') {
     keyspace = null
     type = split[0]
     id = split[1]
+  } else if (split[0].substr(-4, 4) === 'link') {
+    target = split[2]
   } else if (keyspaces.indexOf(keyspace) === -1) {
     logger.warn(`invalid keyspace ${keyspace}?`)
   }
@@ -58,7 +61,7 @@ const fromURL = (url, keyspaces) => {
     logger.error(`invalid type ${type}`)
     return
   }
-  return { keyspace, id, type }
+  return { keyspace, id, type, target }
 }
 
 const shiftKey = 16
@@ -152,9 +155,18 @@ export default class Model extends Callable {
     return confirm('You have unsaved changes. Do you really want to ' + msg + '?') // eslint-disable-line no-undef
   }
 
-  paramsToCall ({ id, type, keyspace }) {
-    this.reportLogger.log('__fromURL', { id, type, keyspace })
-    appactions.clickSearchResult.call(this, { id, type, keyspace })
+  paramsToCall ({ id, type, keyspace, target }) {
+    this.reportLogger.log('__fromURL', { id, type, keyspace, target })
+    if (target) {
+      this.rest.node(keyspace, { id, type })
+        .then(node1 => {
+          this.rest.node(keyspace, { id: target, type })
+            .then(node2 => {
+            })
+        })
+    } else {
+      appactions.clickSearchResult.call(this, { id, type, keyspace })
+    }
   }
 
   createComponents () {

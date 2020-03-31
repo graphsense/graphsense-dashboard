@@ -173,15 +173,12 @@ export default class Store {
     if (keyspace !== keyspaceTarget) return
     const outgoing = this.initOutgoing(source, keyspace)
     const n = outgoing.get(target)
-    if (!n && (!data || !data.no_txs || !data.estimated_value)) {
+    if (!n && !data) {
       outgoing.set(target, null)
       return
     }
     if (!data) return
-    outgoing.set(target, {
-      no_txs: data.no_txs,
-      estimated_value: data.estimated_value
-    })
+    outgoing.set(target, { ...data })
   }
 
   serialize () {

@@ -10,18 +10,20 @@ import BlockTransactionsTable from '../browser/block_transactions_table.js'
 import FileSaver from 'file-saver'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
-const historyPushState = (keyspace, type, id) => {
+const historyPushState = (keyspace, type, id, target) => {
   const s = window.history.state
-  if (s && keyspace === s.keyspace && type === s.type && id == s.id) return // eslint-disable-line eqeqeq
+  if (s && keyspace === s.keyspace && type === s.type && id == s.id && target == s.target) return // eslint-disable-line eqeqeq
   let url = '/'
   if (type && id) {
-    url = '#!' + (keyspace ? keyspace + '/' : '') + [type, id].join('/')
+    const comps = [type, id]
+    if (target) comps.push(target)
+    url = '#!' + (keyspace ? keyspace + '/' : '') + comps.join('/')
   }
   if (url === '/') {
-    window.history.pushState({ keyspace, type, id }, null, url)
+    window.history.pushState({ keyspace, type, id, target }, null, url)
     return
   }
-  window.history.replaceState({ keyspace, type, id }, null, url)
+  window.history.replaceState({ keyspace, type, id, target }, null, url)
 }
 
 const degreeThreshold = 100
@@ -177,6 +179,7 @@ const deselect = function () {
   this.browser.deselect()
   this.config.hide()
   this.graph.deselect()
+  this.graph.deselectLink()
 }
 
 const clickTransaction = function (data) {
@@ -204,6 +207,11 @@ const resultAddresses = function ({ context, result }) {
 const loadTransactions = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'transactions')
   this.mapResult(this.rest.transactions(keyspace, { params, nextPage, pagesize: request.length }), 'resultTransactions', { page: nextPage, request, drawCallback })
+}
+
+const loadLinkTransactions = function ({ keyspace, params, request, drawCallback }) {
+  this.statusbar.addMsg('loadingLinkTransactions', request.source, request.target)
+  this.mapResult(this.rest.linkTransactions(keyspace, params), 'resultTransactions', { request, drawCallback })
 }
 
 const resultTransactions = function ({ context, result }) {
@@ -243,6 +251,9 @@ const initTagsTable = function (request) {
   this.browser.initTagsTable(request)
 }
 
+const initLinkTransactionsTable = function (request) {
+  this.browser.initLinkTransactionsTable(request)
+}
 const initIndegreeTable = function (request) {
   this.browser.initNeighborsTable(request, false)
 }
@@ -1002,6 +1013,13 @@ const releaseShift = function () {
   this.shiftPressed = false
 }
 
+const clickLink = function ({ source, target, type }) {
+  this.graph.selectLink(source, target)
+  this.browser.setLink(source.id[2], source.id[0], target.id[0])
+  historyPushState(source.id[2], type + 'link', source.id[0], target.id[0])
+  initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type, index: 0 })
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1021,6 +1039,7 @@ const functions = {
   loadAddresses,
   resultAddresses,
   loadTransactions,
+  loadLinkTransactions,
   resultTransactions,
   loadTags,
   resultTagsTable,
@@ -1029,6 +1048,7 @@ const functions = {
   initAddressesTable,
   initAddressesTableWithEntity,
   initTagsTable,
+  initLinkTransactionsTable,
   initIndegreeTable,
   initOutdegreeTable,
   initNeighborsTableWithNode,
@@ -1109,7 +1129,8 @@ const functions = {
   inputMetaData,
   downloadedReport,
   pressShift,
-  releaseShift
+  releaseShift,
+  clickLink
 }
 
 export default functions

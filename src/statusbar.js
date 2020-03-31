@@ -242,6 +242,8 @@ export default class Statusbar extends Component {
     switch (type) {
       case 'loading' :
         return `Loading ${args[0]} ${args[1] || ''} ...`
+      case 'loadingLinkTransactions' :
+        return `Loading transactions between ${args[0]} and ${args[1]} ...`
       case 'loaded' :
         return `Loaded ${args[0]} ${args[1] || ''}`
       case 'loadingNeighbors':

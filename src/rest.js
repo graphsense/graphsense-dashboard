@@ -149,6 +149,13 @@ export default class Rest {
     return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'address_txs')
   }
 
+  linkTransactions (keyspace, params, csv) {
+    const url =
+       '/' + params.type + 'link/' + params.source + '/' + params.target
+    if (csv) return this.csv(keyspace, url)
+    return this.json(keyspace, url, 'txs')
+  }
+
   addresses (keyspace, request, csv) {
     let url = '/entities/' + request.params + '/addresses'
     if (csv) return this.csv(keyspace, url)

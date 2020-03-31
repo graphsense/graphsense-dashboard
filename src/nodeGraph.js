@@ -61,6 +61,7 @@ export default class NodeGraph extends Component {
     this.adding = set()
     this.selectedNode = null
     this.highlightedNodes = []
+    this.selectedLink = null
     this.layers = []
     this.transform = { k: 1, x: 0, y: 0, dx: 0, dy: 0 }
     this.colorMapCategories = map()
@@ -329,6 +330,12 @@ export default class NodeGraph extends Component {
     this.selectedNode = null
   }
 
+  deselectLink () {
+    if (!this.selectedLink) return
+    this.setUpdate('link', this.selectedLink[0])
+    this.selectedLink = null
+  }
+
   selectNodeWhenLoaded ([id, type, keyspace]) {
     this.nextSelectedNode = { id, type, keyspace }
   }
@@ -413,6 +420,7 @@ export default class NodeGraph extends Component {
     const sel = this.getNode(nodeId, type)
     if (!sel) return
     this._selectNode(sel, multi)
+    this.deselectLink()
   }
 
   _selectNode (sel, multi) {
@@ -470,6 +478,16 @@ export default class NodeGraph extends Component {
     })
     sel.select()
     this.selectedNode = sel
+  }
+
+  selectLink (source, target) {
+    this.selectedLink = [source.id, target.id]
+    this.setUpdate('link', source.id)
+    this.deselect()
+  }
+
+  isSelectedLink (source, target) {
+    return JSON.stringify([source.id, target.id]) == JSON.stringify(this.selectedLink) // eslint-disable-line eqeqeq
   }
 
   setResultEntityAddresses (id, addresses) {
@@ -945,11 +963,13 @@ export default class NodeGraph extends Component {
   renderLink (root, domain, source, target, tx) {
     let value = 1
     let label = ''
+    let clickable = false
     let scale
     if (tx !== null) {
       const l = this.findValueAndLabel(tx)
       value = l[0]
       label = l[1]
+      clickable = tx.tx_list && tx.tx_list.length > 0
     }
     // scalePow chooses the median of range, if domain is a-a (instead a-b)
     // so force it to use the lower range bound
@@ -958,18 +978,24 @@ export default class NodeGraph extends Component {
     } else {
       scale = transactionsPixelRange[0]
     }
-    this.drawLink(root, label, scale, source, target)
+    this.drawLink(root, label, scale, source, target, clickable)
   }
 
-  drawLink (root, label, scale, source, target) {
+  drawLink (root, label, scale, source, target, clickable) {
     const path = this.linker({ source: [source, true, scale], target: [target, false, scale] })
-    const g1 = root.append('g').classed('link', true)
+    const g1 = root.append('g')
+      .attr('class', 'link')
+      .classed('selected', this.isSelectedLink(source, target))
       .attr('data-target', target.id)
       .attr('data-source', source.id)
       .attr('data-label', label)
       .attr('data-scale', scale)
       .on('mouseover', () => this.dispatcher('tooltip', 'link'))
       .on('mouseout', () => this.dispatcher('hideTooltip'))
+      .on('click', () => {
+        this.dispatcher('clickLink', { source, target })
+        event.stopPropagation()
+      })
     g1.append('path').attr('d', path)
       .classed('linkPathFrame', true)
       .style('stroke-width', '6px')

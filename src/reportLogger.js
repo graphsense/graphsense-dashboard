@@ -10,7 +10,7 @@ const searchbar = context => context === 'neighborsearch' ? 'neighbor search' : 
 const keyspace = keyspace => keyspace ? `of keyspace ${keyspace} ` : ''
 
 const messages = {
-  __fromURL: (payload) => `load ${payload.type} ${decodeURIComponent(payload.id)} ${keyspace(payload.keyspace)}from URL`,
+  __fromURL: (payload) => !payload.target ? `load ${payload.type} ${decodeURIComponent(payload.id)} ${keyspace(payload.keyspace)}from URL` : `load ${payload.id} and ${payload.target} ${keyspace(payload.keyspace)}from URL`,
   changeLocale: (payload) => `change locale to ${payload}`,
   addAllToGraph: (payload) => 'add all from current table to graph',
   downloadTagsAsJSON: (payload) => 'download tags table as JSON',

@@ -5,11 +5,13 @@ import Entity from './browser/entity.js'
 import Label from './browser/label.js'
 import Transaction from './browser/transaction.js'
 import Block from './browser/block.js'
+import Link from './browser/link.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
+import LinkTransactionsTable from './browser/link_transactions_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
@@ -81,6 +83,18 @@ export default class Browser extends Component {
     if (this.content[0] instanceof Label && this.content[0].data.label === label.label) return
     this.destroyComponentsFrom(0)
     this.content = [new Label(this.dispatcher, label, 0, this.currency)]
+    this.setUpdate('content')
+  }
+
+  setLink (keyspace, source, target) {
+    this.visible = true
+    this.setUpdate('visibility')
+    if (this.content[0] instanceof Link &&
+        this.content[0].data.source === source &&
+        this.content[0].data.target === target
+    ) return
+    this.destroyComponentsFrom(0)
+    this.content = [new Link(this.dispatcher, { source, target, keyspace }, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -237,6 +251,21 @@ export default class Browser extends Component {
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
   }
 
+  initLinkTransactionsTable (request) {
+    if (request.index !== 0 && !request.index) return
+    const last = this.content[request.index]
+    if (!(last instanceof Link)) return
+    this.setUpdate('content')
+    if (this.content[request.index + 1] instanceof LinkTransactionsTable) {
+      this.destroyComponentsFrom(request.index + 1)
+      return
+    }
+    this.destroyComponentsFrom(request.index + 1)
+    last.setCurrentOption('initLinkTransactionsTable')
+    const keyspace = last.data.keyspace
+    this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, 0, request.source, request.target, request.type, this.currency, keyspace))
+  }
+
   initNeighborsTable (request, isOutgoing) {
     logger.debug('initNeighborsTable', request, isOutgoing)
     if (request.index !== 0 && !request.index) return
@@ -319,6 +348,7 @@ export default class Browser extends Component {
 
   renderVisibility () {
     const frame = this.root
+    logger.debug('visibility', this.visible)
     if (!this.visible) {
       removeClass(frame, 'show')
     } else {

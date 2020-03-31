@@ -288,14 +288,18 @@ svg .linkPathFrame {
   /* defined inline to allow for export in svg file */
 }
 
-svg .link:hover * {
+svg .link {
+  cursor: pointer;
+}
+
+svg .link:hover *, svg .link.selected * {
   stroke: red !important;
 }
-svg .link:hover path {
+svg .link:hover path, svg .link.selected path {
   marker-end: url(#arrow1-red) !important;
 }
 
-svg .link:hover text {
+svg .link:hover text, svg .link.selected text {
   fill: red;
 }
 

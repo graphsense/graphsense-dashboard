@@ -29,8 +29,10 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultEgonet',
   'resultEntityAddresses',
   'initTransactionsTable',
+  'initLinkTransactionsTable',
   'initBlockTransactionsTable',
   'loadTransactions',
+  'loadLinkTransactions',
   'resultTransactions',
   'initAddressesTable',
   'initAddressesTableWithEntity',
@@ -126,7 +128,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'inputMetaData',
   'downloadedReport',
   'pressShift',
-  'releaseShift'
+  'releaseShift',
+  'clickLink'
 )
 
 // synchronous messages
