@@ -1,13 +1,23 @@
 <h2 class="text-base">Label</h2>
-<div class="searchinput p-2"></div>
-<table class="searchlabels p-2 invisible">
-  <tr>
-    <td colspan="2"></td>
-    <td><div class="ml-4 text-sm">Category</div></td>
-    <td><div class="ml-4 text-sm">Abuse</div></td>
-    <td><div class="text-sm">Source</div></td>
-  </tr>
-</table>
+<div id="input" class="p-2"></div>
+<div id="labels" class="hidden">
+  <div class="p-2 flex justify-between">
+    <div id="label"></div>
+    <a id="remove" class="text-gs-red underline hover:no-underline cursor-pointer">Remove tag</a>
+  </div>
+  <h2 class="text-base">Source</h2>
+  <div id="source" class="p-2">
+    <input type="text"/>
+  </div>
+  <h2 class="text-base">Category</h2>
+  <div id="category" class="p-2">
+    <select name="category"><option value=""></option></select>
+  </div>
+  <h2 class="text-base">Abuse</h2>
+  <div id="abuse" class="p-2">
+    <select name="abuse"><option value=""></option></select>
+  </div>
+</div>
 <div class="p-2">
   <input type="button" class="w-full btn btn-primary" value="Save"/>
 </div>

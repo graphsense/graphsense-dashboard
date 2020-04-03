@@ -123,7 +123,7 @@ export default class Menu extends Component {
         el.innerHTML = notes
         this.setupNotes(el)
       } else if (this.view.viewType === 'tagpack') {
-        title = 'Add tags'
+        title = 'Add tag'
         el.innerHTML = tagpack
         this.setupTagpack(el)
       } else if (this.view.viewType === 'neighborsearch') {
@@ -168,27 +168,19 @@ export default class Menu extends Component {
   }
 
   setupTagpack (el) {
-    const searchinput = el.querySelector('.searchinput')
+    const searchinput = el.querySelector('#input')
     this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
     this.search.render(searchinput)
-    const searchLabels = el.querySelector('.searchlabels')
+    const searchLabels = el.querySelector('#labels')
     for (const label in this.view.labels) {
-      removeClass(searchLabels, 'invisible')
-      const tr = document.createElement('tr')
-      let td = document.createElement('td')
-      const span = document.createElement('span')
-      span.innerHTML = '<i class="fas fa-times-circle fa-lg pr-2"></i>'
-      span.addEventListener('click', () => {
+      removeClass(searchLabels, 'hidden')
+      addClass(searchinput, 'hidden')
+      const del = el.querySelector('#remove')
+      del.addEventListener('click', () => {
         this.dispatcher('removeLabel', label)
       })
-      td.appendChild(span)
-      tr.appendChild(td)
-      td = document.createElement('td')
-      const l = document.createTextNode(label)
-      td.appendChild(l)
-      tr.appendChild(td)
-      td = document.createElement('td')
-      td.innerHTML = '<select name="category" class="m-2"><option value=""></option></select>'
+      el.querySelector('#label').innerHTML = label
+      let sel = el.querySelector('#category > select')
       this.categories.forEach(category => {
         const option = document.createElement('option')
         option.innerHTML = category
@@ -196,14 +188,12 @@ export default class Menu extends Component {
         if (category === this.view.labels[label].category) {
           option.setAttribute('selected', 'selected')
         }
-        td.firstChild.appendChild(option)
+        sel.appendChild(option)
       })
-      td.firstChild.addEventListener('change', (e) => {
+      sel.addEventListener('change', (e) => {
         this.dispatcher('changeUserDefinedTag', { data: { category: e.target.value }, label })
       })
-      tr.appendChild(td)
-      td = document.createElement('td')
-      td.innerHTML = '<select name="abuse" class="m-2"><option value=""></option></select>'
+      sel = el.querySelector('#abuse > select')
       this.abuses.forEach(category => {
         const option = document.createElement('option')
         option.innerHTML = category
@@ -211,19 +201,17 @@ export default class Menu extends Component {
         if (category === this.view.labels[label].abuse) {
           option.setAttribute('selected', 'selected')
         }
-        td.firstChild.appendChild(option)
+        sel.appendChild(option)
       })
-      td.firstChild.addEventListener('change', (e) => {
+      sel.addEventListener('change', (e) => {
         this.dispatcher('changeUserDefinedTag', { data: { abuse: e.target.value }, label })
       })
-      tr.appendChild(td)
-      td = document.createElement('td')
-      td.innerHTML = `<input type="text" size="10" value="${this.view.labels[label].source || ''}"/>`
-      td.firstChild.addEventListener('input', (e) => {
+      sel = el.querySelector('#source > input')
+      sel.value = this.view.labels[label].source || ''
+      sel.addEventListener('input', (e) => {
         this.dispatcher('changeUserDefinedTag', { data: { source: e.target.value }, label })
       })
-      tr.appendChild(td)
-      searchLabels.appendChild(tr)
+      break // only use the first label
     }
     const button = el.querySelector('input[type="button"]')
     button.addEventListener('click', () => {
