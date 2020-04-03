@@ -84,6 +84,7 @@ export default class Menu extends Component {
 
   hideMenu () {
     this.view = {}
+    this.search = null
     this.setUpdate(true)
   }
 
