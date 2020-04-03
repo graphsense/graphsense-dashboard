@@ -121,9 +121,6 @@ export default class Model extends Callable {
       this.paramsToCall(initParams)
     }
     if (!stats) this.call('stats')
-    this.loadCategories()
-    this.loadAbuses()
-
     this.meta =
       {
         investigation: '',
@@ -181,6 +178,8 @@ export default class Model extends Callable {
     this.landingpage = new Landingpage(this.call, this.keyspaces)
     this.landingpage.setStats(this.stats.currencies)
     this.landingpage.setSearch(this.search)
+    this.loadCategories()
+    this.loadAbuses()
   }
 
   compress (data) {
