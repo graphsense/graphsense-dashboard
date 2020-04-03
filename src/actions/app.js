@@ -19,10 +19,6 @@ const historyPushState = (keyspace, type, id, target) => {
     if (target) comps.push(target)
     url = '#!' + (keyspace ? keyspace + '/' : '') + comps.join('/')
   }
-  if (url === '/') {
-    window.history.pushState({ keyspace, type, id, target }, null, url)
-    return
-  }
   window.history.replaceState({ keyspace, type, id, target }, null, url)
 }
 
