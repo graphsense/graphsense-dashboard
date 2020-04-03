@@ -52,8 +52,9 @@ const fromURL = (url, keyspaces) => {
     keyspace = null
     type = split[0]
     id = split[1]
-  } else if (split[0].substr(-4, 4) === 'link') {
-    target = split[2]
+  } else if (split[1].substr(-4, 4) === 'link') {
+    target = split[3]
+    type = split[1].substr(0, split[1].length - 4)
   } else if (keyspaces.indexOf(keyspace) === -1) {
     logger.warn(`invalid keyspace ${keyspace}?`)
   }
@@ -157,15 +158,9 @@ export default class Model extends Callable {
 
   paramsToCall ({ id, type, keyspace, target }) {
     this.reportLogger.log('__fromURL', { id, type, keyspace, target })
+    appactions.clickSearchResult.call(this, { id, type, keyspace })
     if (target) {
-      this.rest.node(keyspace, { id, type })
-        .then(node1 => {
-          this.rest.node(keyspace, { id: target, type })
-            .then(node2 => {
-            })
-        })
-    } else {
-      appactions.clickSearchResult.call(this, { id, type, keyspace })
+      appactions.clickSearchResult.call(this, { id: target, type, keyspace })
     }
   }
 
