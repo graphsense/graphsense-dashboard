@@ -15,6 +15,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultNodeForBrowser',
   'resultTransactionForBrowser',
   'resultLabelForBrowser',
+  'resultLabelTagsForTag',
   'resultBlockForBrowser',
   'addNode',
   'addNodeCont',

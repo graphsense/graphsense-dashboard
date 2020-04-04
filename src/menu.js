@@ -38,6 +38,7 @@ export default class Menu extends Component {
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
+      this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
     } else if (params.dialog === 'neighborsearch') {
       this.view = {
         viewType: 'neighborsearch',
@@ -162,6 +163,7 @@ export default class Menu extends Component {
   setupNotes (el) {
     const data = this.view.data
     const input = el.querySelector('textarea')
+    input.focus()
     input.value = data.notes || ''
     input.addEventListener('input', (e) => {
       this.dispatcher('inputNotes', { id: data.id, type: data.type, keyspace: data.keyspace, note: e.target.value })
@@ -170,50 +172,10 @@ export default class Menu extends Component {
 
   setupTagpack (el) {
     const searchinput = el.querySelector('#input')
-    this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
+    this.search.setUpdate(true)
     this.search.render(searchinput)
     const searchLabels = el.querySelector('#labels')
-    for (const label in this.view.labels) {
-      removeClass(searchLabels, 'hidden')
-      addClass(searchinput, 'hidden')
-      const del = el.querySelector('#remove')
-      del.addEventListener('click', () => {
-        this.dispatcher('removeLabel', label)
-      })
-      el.querySelector('#label').innerHTML = label
-      let sel = el.querySelector('#category > select')
-      this.categories.forEach(category => {
-        const option = document.createElement('option')
-        option.innerHTML = category
-        option.setAttribute('value', category)
-        if (category === this.view.labels[label].category) {
-          option.setAttribute('selected', 'selected')
-        }
-        sel.appendChild(option)
-      })
-      sel.addEventListener('change', (e) => {
-        this.dispatcher('changeUserDefinedTag', { data: { category: e.target.value }, label })
-      })
-      sel = el.querySelector('#abuse > select')
-      this.abuses.forEach(category => {
-        const option = document.createElement('option')
-        option.innerHTML = category
-        option.setAttribute('value', category)
-        if (category === this.view.labels[label].abuse) {
-          option.setAttribute('selected', 'selected')
-        }
-        sel.appendChild(option)
-      })
-      sel.addEventListener('change', (e) => {
-        this.dispatcher('changeUserDefinedTag', { data: { abuse: e.target.value }, label })
-      })
-      sel = el.querySelector('#source > input')
-      sel.value = this.view.labels[label].source || ''
-      sel.addEventListener('input', (e) => {
-        this.dispatcher('changeUserDefinedTag', { data: { source: e.target.value }, label })
-      })
-      break // only use the first label
-    }
+
     const button = el.querySelector('input[type="button"]')
     button.addEventListener('click', () => {
       this.dispatcher('setLabels', {
@@ -222,6 +184,57 @@ export default class Menu extends Component {
         keyspace: this.view.data.keyspace,
         labels: this.view.labels
       })
+    })
+
+    const label = Object.keys(this.view.labels)[0]
+    if (!label) return
+
+    removeClass(searchLabels, 'hidden')
+    addClass(searchinput, 'hidden')
+    if (!this.labelTagsLoading) {
+      el.querySelector('#loading').style.height = '0px'
+    }
+    const del = el.querySelector('#remove')
+    del.addEventListener('click', () => {
+      this.dispatcher('removeLabel', label)
+    })
+    el.querySelector('#label').innerHTML = label
+    let sel = el.querySelector('#category > select')
+    this.categories.forEach(category => {
+      const option = document.createElement('option')
+      option.innerHTML = category
+      option.setAttribute('value', category)
+      if (category === this.view.labels[label].category) {
+        option.setAttribute('selected', 'selected')
+      }
+      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category)) {
+        addClass(option, 'font-bold')
+      }
+      sel.appendChild(option)
+    })
+    sel.addEventListener('change', (e) => {
+      this.dispatcher('changeUserDefinedTag', { data: { category: e.target.value }, label })
+    })
+    sel = el.querySelector('#abuse > select')
+    this.abuses.forEach(category => {
+      const option = document.createElement('option')
+      option.innerHTML = category
+      option.setAttribute('value', category)
+      if (category === this.view.labels[label].abuse) {
+        option.setAttribute('selected', 'selected')
+      }
+      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category)) {
+        addClass(option, 'font-bold')
+      }
+      sel.appendChild(option)
+    })
+    sel.addEventListener('change', (e) => {
+      this.dispatcher('changeUserDefinedTag', { data: { abuse: e.target.value }, label })
+    })
+    sel = el.querySelector('#source > input')
+    sel.value = this.view.labels[label].source || ''
+    sel.addEventListener('input', (e) => {
+      this.dispatcher('changeUserDefinedTag', { data: { source: e.target.value }, label })
     })
   }
 
@@ -253,7 +266,7 @@ export default class Menu extends Component {
     } else if (this.view.criterion === 'addresses') {
       form.innerHTML = addressesForm
       const searchinput = form.querySelector('.searchinput')
-      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
+      this.search.setUpdate(true)
       this.search.setKeyspaces([this.view.id[2]])
       this.search.render(searchinput)
       const searchAddresses = form.querySelector('.searchaddresses')
@@ -287,6 +300,9 @@ export default class Menu extends Component {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.criterion = criterion
     this.view.params = defaultParams()
+    if (criterion === 'addresses') {
+      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
+    }
     this.setUpdate(true)
   }
 
@@ -332,18 +348,17 @@ export default class Menu extends Component {
     this.setUpdate(true)
   }
 
-  addSearchLabel (label) {
+  addSearchLabel (label, loadingTags) {
     if (this.view.viewType !== 'tagpack') return
     if (this.view.labels[label]) return
+    this.labelTagsLoading = loadingTags
     this.view.labels[label] = { label, category: null, abuse: null, source: null }
     this.setUpdate(true)
   }
 
   removeSearchLabel (label) {
-    logger.debug('removelabel', label)
     if (this.view.viewType !== 'tagpack') return
     delete this.view.labels[label]
-    logger.debug('labels', this.view.labels)
     this.setUpdate(true)
   }
 
@@ -352,6 +367,32 @@ export default class Menu extends Component {
     if (!this.view.labels[label]) return
     for (const i in data) {
       this.view.labels[label][i] = data[i]
+    }
+    this.setUpdate(true)
+  }
+
+  labelTagsData (result) {
+    if (this.view.viewType !== 'tagpack') return
+    this.labelTagsLoading = false
+    result.forEach(({ label, category, abuse, source }) => {
+      const l = this.view.labels[label]
+      if (!l) return
+      if (!l.available) {
+        l.available = {
+          sources: new Set(),
+          categories: new Set(),
+          abuses: new Set()
+        }
+      }
+      l.available.sources.add(source)
+      l.available.categories.add(category)
+      l.available.abuses.add(abuse)
+    })
+    for (const label in this.view.labels) {
+      const l = this.view.labels[label]
+      l.source = l.available.sources.values().next().value
+      l.category = l.available.categories.values().next().value
+      l.abuse = l.available.abuses.values().next().value
     }
     this.setUpdate(true)
   }

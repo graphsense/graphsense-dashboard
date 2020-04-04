@@ -25,13 +25,14 @@ const historyPushState = (keyspace, type, id, target) => {
 const degreeThreshold = 100
 
 const submitSearchResult = function ({ term, context }) {
-  if (context === 'tagpack') {
-    this.menu.addSearchLabel(term)
-    return
-  }
+  logger.debug('this.menu.search', this.menu.search)
   const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
   if (first) {
     clickSearchResult.call(this, { ...first, context })
+    return
+  }
+  if (context === 'tagpack') {
+    this.menu.addSearchLabel(term)
     return
   }
   term.split('\n').forEach((address) => {
@@ -46,7 +47,8 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     if (context === 'neighborsearch' && type === 'address') {
       this.menu.addSearchAddress(id)
     } else if (context === 'tagpack' && type === 'label') {
-      this.menu.addSearchLabel(id)
+      this.menu.addSearchLabel(id, true)
+      this.mapResult(this.rest.tags(null, { id, type: 'label' }), 'resultLabelTagsForTag', id)
     }
     this.menu.search.clear()
     return
@@ -131,6 +133,10 @@ const resultLabelForBrowser = function ({ result, context }) {
   this.statusbar.removeLoading(context)
   this.statusbar.addMsg('loaded', 'label', result.label)
   initTagsTable.call(this, { id: result.label, type: 'label', index: 0 })
+}
+
+const resultLabelTagsForTag = function ({ result, context }) {
+  this.menu.labelTagsData(result)
 }
 
 const resultBlockForBrowser = function ({ result }) {
@@ -1058,6 +1064,7 @@ const functions = {
   addNodeCont,
   excourseLoadDegree,
   resultTags,
+  resultLabelTagsForTag,
   loadEgonet,
   resultEgonet,
   loadEntityAddresses,
