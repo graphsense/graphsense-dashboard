@@ -246,6 +246,7 @@ export default class Store {
         .map(tag => ({ ...tag }))
         .forEach(tag => {
           delete tag.isUserDefined
+          delete tag.keyspace
           tags.push(tag)
         })
     })
@@ -266,7 +267,7 @@ export default class Store {
   }
 
   addTagpack (keyspaces, data) {
-    const overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod']
+    const overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod', 'abuse']
     const addressTags = map()
     data.tags.forEach(tag => {
       overwritable.forEach(key => {
@@ -294,6 +295,7 @@ export default class Store {
       if (a) {
         a.tags = a.tags || []
         a.tags = a.tags.concat(tags)
+        this.calcMainCategory(a)
       } else {
         let t = this.tagsStore.get(p) || []
         t = t.concat(tags)

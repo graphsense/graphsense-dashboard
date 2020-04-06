@@ -221,12 +221,36 @@ export default class Model extends Callable {
   }
 
   generateTagpack () {
-    return YAML.stringify({
-      title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
-      creator: this.rest.username,
-      lastmod: moment().format('YYYY-MM-DD'),
-      tags: this.store.getUserDefinedTags()
+    const tags = this.store.getUserDefinedTags()
+    tags.forEach(tag => { tag.lastmod = moment(tag.lastmod).format('YYYY-MM-DD HH:mm:ss') })
+
+    const sets = { ...tags[0] } || {}
+
+    for (const key in sets) {
+      sets[key] = new Set()
+    }
+
+    tags.forEach(tag => {
+      for (const key in tag) {
+        sets[key].add(tag[key])
+      }
     })
+
+    const yaml = {
+      title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
+      creator: this.meta.investigator
+    }
+
+    for (const key in sets) {
+      if (sets[key].size === 1) {
+        yaml[key] = sets[key].values().next().value
+        tags.forEach(tag => { delete tag[key] })
+      }
+    }
+
+    yaml.tags = tags
+
+    return YAML.stringify(yaml)
   }
 
   generateTagsJSON () {
