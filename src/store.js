@@ -396,5 +396,6 @@ export default class Store {
       })
     }
     o.tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
+    this.calcMainCategory(o)
   }
 }

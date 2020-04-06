@@ -297,6 +297,7 @@ class GraphNode extends Component {
       }
     }
     const color = this.colors.categories(tag)
+    logger.debug('category color', this.data, tag, color)
     this.root
       .select('.addressNodeRect,.entityNodeRect')
       .style('fill', color)

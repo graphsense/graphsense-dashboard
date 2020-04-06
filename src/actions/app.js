@@ -178,6 +178,7 @@ const clickLabel = function ({ label, keyspace }) {
 }
 
 const deselect = function () {
+  this.search.clear()
   this.browser.deselect()
   this.config.hide()
   this.graph.deselect()
