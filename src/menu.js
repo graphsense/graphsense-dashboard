@@ -236,6 +236,27 @@ export default class Menu extends Component {
     sel.addEventListener('input', (e) => {
       this.dispatcher('changeUserDefinedTag', { data: { source: e.target.value }, label })
     })
+    // remove value for the time of selecting a source from datalist
+    sel.addEventListener('click', function () {
+      this.value = ''
+    })
+    const that = this
+    // value after selecting a source from datalist or just blurring
+    sel.addEventListener('blur', function () {
+      this.value = that.view.labels[label].source || ''
+    })
+    if (this.view.labels[label].available && this.view.labels[label].available.sources.size > 1) {
+      sel.setAttribute('list', 'sources_datalist')
+      sel = el.querySelector('#source')
+      const datalist = document.createElement('datalist')
+      datalist.setAttribute('id', 'sources_datalist')
+      this.view.labels[label].available.sources.forEach(source => {
+        const option = document.createElement('option')
+        option.innerHTML = source
+        datalist.appendChild(option)
+      })
+      sel.appendChild(datalist)
+    }
   }
 
   setupSearch (el) {
