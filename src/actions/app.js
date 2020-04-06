@@ -624,7 +624,7 @@ const saveNotes = function (stage) {
 }
 
 const exportYAML = function () {
-  const modal = new Export(this.call, { investigator: this.meta.investigator }, 'tagpack')
+  const modal = new Export(this.call, { creator: this.meta.creator || this.meta.investigator }, 'tagpack')
   this.layout.showModal(modal)
 }
 
@@ -640,6 +640,7 @@ const saveYAML = function (stage) {
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.generateTagpack())
+  this.layout.hideModal()
 }
 
 const saveTagsJSON = function (stage) {
@@ -662,7 +663,9 @@ const inputMetaData = function (meta) {
 }
 
 const exportReport = function () {
-  const modal = new Export(this.call, this.meta, 'report')
+  const meta = { ...this.meta }
+  delete meta.creator
+  const modal = new Export(this.call, meta, 'report')
   this.layout.showModal(modal)
 }
 
@@ -679,15 +682,11 @@ const saveReport = function (stage) {
   this.statusbar.addMsg('saved', filename)
   this.generateReport().then(file => {
     this.download(filename, file)
-    this.call('downloadedReport')
+    this.call('hideModal')
   })
 }
 
-const abortExport = function () {
-  this.layout.hideModal()
-}
-
-const downloadedReport = function () {
+const hideModal = function () {
   this.layout.hideModal()
 }
 
@@ -1140,11 +1139,11 @@ const functions = {
   receiveAbuses,
   exportSvg,
   inputMetaData,
-  downloadedReport,
   pressShift,
   releaseShift,
   clickLink,
-  abortExport
+  hideModal,
+  exportYAML
 }
 
 export default functions

@@ -40,7 +40,7 @@ export default class Export extends Component {
       })
     })
     this.root.querySelector('#abort').addEventListener('click', (e) => {
-      this.dispatcher('abortExport')
+      this.dispatcher('hideModal')
     })
     return this.root
   }

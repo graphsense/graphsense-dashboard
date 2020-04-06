@@ -127,11 +127,11 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'loadTagsJSON',
   'jumpToApp',
   'inputMetaData',
-  'downloadedReport',
   'pressShift',
   'releaseShift',
   'clickLink',
-  'abortExport'
+  'hideModal',
+  'exportYAML'
 )
 
 // synchronous messages

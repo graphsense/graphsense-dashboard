@@ -238,7 +238,7 @@ export default class Model extends Callable {
 
     const yaml = {
       title: 'Tagpack exported from GraphSense ' + VERSION, // eslint-disable-line no-undef
-      creator: this.meta.investigator
+      creator: this.meta.creator
     }
 
     for (const key in sets) {
