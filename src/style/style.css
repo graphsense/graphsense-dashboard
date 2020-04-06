@@ -100,11 +100,16 @@ li {
   @apply font-bold py-1 px-2 border rounded-sm cursor-pointer;
 }
 
+.btn:hover {
+  @apply bg-gs-lighter;
+}
+
 .btn-primary {
   @apply bg-white text-gs-dark;
 }
-.btn-primary:hover {
-  @apply bg-gs-lighter;
+
+.btn-danger {
+  @apply bg-white text-gs-red;
 }
 
 .btn.disabled {

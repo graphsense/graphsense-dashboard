@@ -130,7 +130,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'downloadedReport',
   'pressShift',
   'releaseShift',
-  'clickLink'
+  'clickLink',
+  'abortExport'
 )
 
 // synchronous messages

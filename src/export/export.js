@@ -1,46 +1,47 @@
-import exportHTML from './export.html'
+import reportHTML from './report.html'
+import tagpackHTML from './tagpack.html'
 import Component from '../component.js'
 import Logger from '../logger.js'
 
 const logger = Logger.create('Export') // eslint-disable-line no-unused-vars
 
 export default class Export extends Component {
-  constructor (dispatcher, meta) {
+  constructor (dispatcher, meta, type) {
     super()
     this.dispatcher = dispatcher
     this.meta = { ...meta }
+    this.type = type
   }
 
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
-    this.root.innerHTML = exportHTML
-    let el = this.root.querySelector('.investigation')
-    el.value = this.meta.investigation
-    el.addEventListener('input', (e) => {
-      this.dispatcher('inputMetaData', { investigation: e.target.value })
+    if (this.type === 'report') {
+      this.root.innerHTML = reportHTML
+    } else if (this.type === 'tagpack') {
+      this.root.innerHTML = tagpackHTML
+    } else {
+      return this.root
+    }
+    for (const key in this.meta) {
+      const el = this.root.querySelector(`.${key}`)
+      el.value = this.meta[key]
+      el.addEventListener('input', (e) => {
+        const obj = {}
+        obj[key] = e.target.value
+        this.dispatcher('inputMetaData', obj)
+      })
+    }
+    this.root.querySelectorAll('input[data-msg]').forEach(input => {
+      const msg = input.getAttribute('data-msg')
+      input.addEventListener('click', (e) => {
+        this.dispatcher(msg)
+      })
     })
-    el = this.root.querySelector('.investigator')
-    el.value = this.meta.investigator
-    el.addEventListener('input', (e) => {
-      this.dispatcher('inputMetaData', { investigator: e.target.value })
+    this.root.querySelector('#abort').addEventListener('click', (e) => {
+      this.dispatcher('abortExport')
     })
-    el = this.root.querySelector('.institution')
-    el.value = this.meta.institution
-    el.addEventListener('input', (e) => {
-      this.dispatcher('inputMetaData', { institution: e.target.value })
-    })
-    el = this.root.querySelector('.summary')
-    el.value = this.meta.summary
-    el.addEventListener('input', (e) => {
-      this.dispatcher('inputMetaData', { summary: e.target.value })
-    })
-    this.root.querySelector('.exportPDF').addEventListener('click', (e) => {
-      this.dispatcher('saveReport')
-    })
-    this.root.querySelector('.exportJSON').addEventListener('click', (e) => {
-      this.dispatcher('saveReportJSON')
-    })
+    return this.root
   }
 }

@@ -623,6 +623,11 @@ const saveNotes = function (stage) {
   this.download(filename, this.serializeNotes())
 }
 
+const exportYAML = function () {
+  const modal = new Export(this.call, { investigator: this.meta.investigator }, 'tagpack')
+  this.layout.showModal(modal)
+}
+
 const saveYAML = function (stage) {
   if (this.isReplaying) return
   if (!stage) {
@@ -657,7 +662,7 @@ const inputMetaData = function (meta) {
 }
 
 const exportReport = function () {
-  const modal = new Export(this.call, this.meta)
+  const modal = new Export(this.call, this.meta, 'report')
   this.layout.showModal(modal)
 }
 
@@ -676,6 +681,10 @@ const saveReport = function (stage) {
     this.download(filename, file)
     this.call('downloadedReport')
   })
+}
+
+const abortExport = function () {
+  this.layout.hideModal()
 }
 
 const downloadedReport = function () {
@@ -1134,7 +1143,8 @@ const functions = {
   downloadedReport,
   pressShift,
   releaseShift,
-  clickLink
+  clickLink,
+  abortExport
 }
 
 export default functions

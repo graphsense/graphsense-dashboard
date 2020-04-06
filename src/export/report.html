@@ -14,11 +14,16 @@
 <div class="flex p-2 criterion">
   <textarea class="summary"></textarea>
 </div>
-<div class="flex">
-  <div class="p-2">
-    <input type="button" class="exportPDF w-full btn btn-primary" value="PDF"/>
+<div class="flex justify-between">
+  <div class="flex">
+    <div class="p-2">
+      <input type="button" data-msg="saveReport" class="w-full btn btn-primary" value="PDF"/>
+    </div>
+    <div class="p-2">
+      <input type="button" data-msg="saveReportJSON" class="w-full btn btn-primary" value="JSON"/>
+    </div>
   </div>
   <div class="p-2">
-    <input type="button" class="exportJSON w-full btn btn-primary" value="JSON"/>
+    <input type="button" id="abort" class="w-full btn btn-danger" value="Cancel"/>
   </div>
 </div>
