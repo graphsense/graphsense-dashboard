@@ -391,7 +391,7 @@ export default class Store {
         source: label.source,
         tagpack_uri: null,
         currency: keyspace.toUpperCase(),
-        lastmod: +new Date(),
+        lastmod: +new Date() / 1000,
         category: label.category,
         abuse: label.abuse,
         keyspace: keyspace
