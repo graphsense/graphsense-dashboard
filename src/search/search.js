@@ -245,8 +245,22 @@ export default class Search extends Component {
 
   setResult (term, result) {
     if (term !== this.term) return
-    this.result = result.currencies
-    this.resultLabels = result.labels
+    result.currencies.forEach((currResult, c) => {
+      for (let i = 0; i < this.result.length; i++) {
+        if (this.result[i].currency === currResult.currency) {
+          this.result[i].txs = [...new Set(this.result[i].txs.concat(currResult.txs))]
+          this.result[i].addresses = [...new Set(this.result[i].addresses.concat(currResult.addresses))]
+          delete result.currencies[c]
+          break
+        }
+      }
+    })
+    result.currencies.forEach(currResult => {
+      currResult.txs = [...new Set(currResult.txs)]
+      currResult.addresses = [...new Set(currResult.addresses)]
+      this.result.push(currResult)
+    })
+    this.resultLabels = [...new Set(this.resultLabels.concat(result.labels))]
     this.resultTerm = term
     this.setUpdate('result')
   }
