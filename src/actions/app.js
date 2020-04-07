@@ -46,9 +46,13 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
   if (this.menu.search) {
     if (context === 'neighborsearch' && type === 'address') {
       this.menu.addSearchAddress(id)
-    } else if (context === 'tagpack' && type === 'label') {
+    } else if (context === 'tagpack' && (type === 'label' || type === 'userdefinedlabel')) {
       this.menu.addSearchLabel(id, true)
-      this.mapResult(this.rest.tags(null, { id, type: 'label' }), 'resultLabelTagsForTag', id)
+      if (type === 'label') {
+        this.mapResult(this.rest.tags(null, { id, type: 'label' }), 'resultLabelTagsForTag', id)
+      } else {
+        resultLabelTagsForTag.call(this, { result: this.store.getUserDefinedTagsForLabel(id), context: id })
+      }
     }
     this.menu.search.clear()
     return

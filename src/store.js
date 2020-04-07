@@ -22,6 +22,7 @@ export default class Store {
     this.outgoingLinks = map()
     this.notesStore = map()
     this.tagsStore = map()
+    this.userDefinedLabels = map()
     this.categories = []
   }
 
@@ -359,7 +360,6 @@ export default class Store {
   }
 
   addTags (keyspace, id, labels) {
-    logger.debug('addTags', JSON.stringify(labels))
     const o = this.get(keyspace, 'address', id)
     if (!o) {
       console.error(`${keyspace} address ${id} not found for tagging`)
@@ -397,7 +397,30 @@ export default class Store {
         keyspace: keyspace
       })
     }
+    newTags.forEach(tag => {
+      let tags = this.userDefinedLabels.get(tag.label)
+      if (!tags) {
+        tags = [tag]
+        this.userDefinedLabels.set(tag.label, tags)
+      } else {
+        tags.push(tag)
+      }
+    })
     o.tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
     this.calcMainCategory(o)
+  }
+
+  searchUserDefinedLabels (term) {
+    const result = []
+    for (const key of this.userDefinedLabels.keys()) {
+      if (key.toLowerCase().startsWith(term.toLowerCase())) {
+        result.push(key)
+      }
+    }
+    return result
+  }
+
+  getUserDefinedTagsForLabel (label) {
+    return this.userDefinedLabels.get(label)
   }
 }

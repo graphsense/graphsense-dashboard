@@ -38,14 +38,17 @@ const search = function ({ term, context }) {
       const promise = resp[1]
       this.mapResult(promise, 'searchresult', { term, dialogContext: context })
     }, 250)
+    if (this.search.types.indexOf('labels') === -1) return
+    const labels = this.store.searchUserDefinedLabels(term)
+    searchresult.call(this, { result: { currencies: [], labels }, context: { term, dialogContext: context, local: true } })
   }
 }
 
 const searchresult = function ({ context, result }) {
   const search = context.dialogContext === 'search' ? this.search : this.menu.search
   if (!search) return
-  search.hideLoading()
-  search.setResult(context.term, result)
+  if (!context.local) search.hideLoading()
+  search.setResult(context.term, result, context.local)
 }
 
 const login = function ([username, password]) {

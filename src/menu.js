@@ -38,7 +38,7 @@ export default class Menu extends Component {
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
-      this.search = new Search(this.dispatcher, ['labels'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType)
     } else if (params.dialog === 'neighborsearch') {
       this.view = {
         viewType: 'neighborsearch',
@@ -405,9 +405,9 @@ export default class Menu extends Component {
           abuses: new Set()
         }
       }
-      l.available.sources.add(source)
-      l.available.categories.add(category)
-      l.available.abuses.add(abuse)
+      if (source) l.available.sources.add(source)
+      if (category) l.available.categories.add(category)
+      if (abuse) l.available.abuses.add(abuse)
     })
     for (const label in this.view.labels) {
       const l = this.view.labels[label]

@@ -22,6 +22,7 @@ export default class Search extends Component {
     this.keyspaces = []
     this.result = []
     this.resultLabels = []
+    this.resultLocalLabels = []
   }
 
   setStats (stats) {
@@ -37,6 +38,7 @@ export default class Search extends Component {
   clearResults () {
     this.result = []
     this.resultLabels = []
+    this.resultLocalLabels = []
   }
 
   clear () {
@@ -78,7 +80,7 @@ export default class Search extends Component {
         case 'blocks' : return 'block'
         case 'labels' : return 'label'
       }
-    }).join(', '))
+    }).filter(p => p).join(', '))
   }
 
   render (root) {
@@ -199,9 +201,9 @@ export default class Search extends Component {
       const blocks = this.blocklist(3, keyspace, this.term)
 
       const keyspaceVisible =
-        addresses.length > 0 ||
-        transactions.length > 0 ||
-        blocks.length > 0
+        (this.types.indexOf('addresses') !== -1 && addresses.length > 0) ||
+        (this.types.indexOf('transactions') !== -1 && transactions.length > 0) ||
+        (this.types.indexOf('blocks') !== -1 && blocks.length > 0)
       visible = visible || keyspaceVisible
       // if no results to render don't draw the title and the list at all
       if (!keyspaceVisible) return
@@ -209,19 +211,19 @@ export default class Search extends Component {
       const ul = document.createElement('ol')
       ul.className = 'list-reset'
       const searchLine_ = searchLine(keyspace, ul)
-      addresses.forEach(searchLine_('address', 'at'))
-      transactions.forEach(searchLine_('transaction', 'exchange-alt'))
-      blocks.forEach(searchLine_('block', 'cube'))
+      if (this.types.indexOf('addresses') !== -1) addresses.forEach(searchLine_('address', 'at'))
+      if (this.types.indexOf('transactions') !== -1) transactions.forEach(searchLine_('transaction', 'exchange-alt'))
+      if (this.types.indexOf('blocks') !== -1) blocks.forEach(searchLine_('block', 'cube'))
       const title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode(currencies[keyspace]))
       el.appendChild(title)
       el.appendChild(ul)
     })
-    const labels = this.resultLabels
+    let labels = this.resultLabels
       .filter(byPrefix(this.term))
       .slice(0, numShowResults)
-    if (labels.length > 0) {
+    if (this.types.indexOf('labels') !== -1 && labels.length > 0) {
       visible = true
       const ul = document.createElement('ol')
       ul.className = 'list-reset'
@@ -229,6 +231,21 @@ export default class Search extends Component {
       const title = document.createElement('div')
       title.className = 'font-bold py-1'
       title.appendChild(document.createTextNode('Labels'))
+      el.appendChild(title)
+      el.appendChild(ul)
+    }
+
+    labels = this.resultLocalLabels
+      .filter(byPrefix(this.term))
+      .slice(0, numShowResults)
+    if (this.types.indexOf('userdefinedlabels') !== -1 && labels.length > 0) {
+      visible = true
+      const ul = document.createElement('ol')
+      ul.className = 'list-reset'
+      labels.forEach(searchLine(null, ul)('userdefinedlabel', 'tag'))
+      const title = document.createElement('div')
+      title.className = 'font-bold py-1'
+      title.appendChild(document.createTextNode('User-defined labels'))
       el.appendChild(title)
       el.appendChild(ul)
     }
@@ -243,7 +260,7 @@ export default class Search extends Component {
     this.renderLoading()
   }
 
-  setResult (term, result) {
+  setResult (term, result, local) {
     if (term !== this.term) return
     result.currencies.forEach((currResult, c) => {
       for (let i = 0; i < this.result.length; i++) {
@@ -260,7 +277,11 @@ export default class Search extends Component {
       currResult.addresses = [...new Set(currResult.addresses)]
       this.result.push(currResult)
     })
-    this.resultLabels = [...new Set(this.resultLabels.concat(result.labels))]
+    if (local) {
+      this.resultLocalLabels = [...new Set(this.resultLocalLabels.concat(result.labels))]
+    } else {
+      this.resultLabels = [...new Set(this.resultLabels.concat(result.labels))]
+    }
     this.resultTerm = term
     this.setUpdate('result')
   }
@@ -280,6 +301,10 @@ export default class Search extends Component {
     if (this.types.indexOf('labels') !== -1 && this.resultLabels && this.resultLabels.length > 0) {
       const labels = this.resultLabels.filter(byPrefix(this.term))
       return { id: labels[0], type: 'label' }
+    }
+    if (this.types.indexOf('userdefinedlabels') !== -1 && this.resultLocalLabels && this.resultLocalLabels.length > 0) {
+      const labels = this.resultLocalLabels.filter(byPrefix(this.term))
+      return { id: labels[0], type: 'userdefinedlabel' }
     }
     for (const i in this.keyspaces) {
       const keyspace = this.keyspaces[i]
