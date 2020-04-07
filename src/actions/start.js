@@ -1,4 +1,4 @@
-import { labelPrefixLength, searchlimit, prefixLength } from '../globals.js'
+import { searchlimit, prefixLength } from '../globals.js'
 import Logger from '../logger.js'
 /* develblock:start */
 import Model from '../app.js'
@@ -23,7 +23,7 @@ const receiveStats = function ({ context, result }) {
 const search = function ({ term, context }) {
   const search = context === 'search' ? this.search : this.menu.search
   if (!search) return
-  search.setSearchTerm(term, labelPrefixLength)
+  search.setSearchTerm(term, prefixLength)
   search.hideLoading()
   if (search.needsResults(searchlimit, prefixLength)) {
     if (search.timeout) clearTimeout(search.timeout)

@@ -7,8 +7,7 @@ const maxSearchDepth = 7
 const maxSearchBreadth = 100
 
 const searchlimit = 100
-const prefixLength = 5
-const labelPrefixLength = 3
+const prefixLength = 3
 
 const currencies =
   {
@@ -30,7 +29,6 @@ export {
   maxSearchBreadth,
   maxSearchDepth,
   searchlimit,
-  prefixLength,
-  labelPrefixLength
+  prefixLength
 
 }
