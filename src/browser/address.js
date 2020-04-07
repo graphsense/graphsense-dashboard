@@ -25,6 +25,14 @@ export default class Address extends BrowserComponent {
     super.render()
     const flat = this.flattenData()
     this.root.innerHTML = replace(this.template, flat)
+    if (flat.abuses.length === 0) {
+      const el = this.root.querySelector('#abuses')
+      if (el) el.style.display = 'none'
+    }
+    if (flat.categories.length === 0) {
+      const el = this.root.querySelector('#categories')
+      if (el) el.style.display = 'none'
+    }
     return this.root
   }
 
@@ -36,6 +44,7 @@ export default class Address extends BrowserComponent {
     const duration = (last - first) * 1000
     const tags = this.data.reduce((tags, d) => tags.concat(d.tags || []), [])
     const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => abuse).values())]
+    const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => category).values())]
     const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
     const balance = this.data.reduce((sum, v) => sum + v.balance[this.currency], 0)
     const noOutgoingTxs = this.data.reduce((sum, v) => sum + v.no_outgoing_txs, 0)
@@ -52,6 +61,7 @@ export default class Address extends BrowserComponent {
       balance: this.formatCurrency(balance, keyspace),
       keyspace,
       abuses: abuses.join(' '),
+      categories: categories.join(' '),
       no_outgoing_txs: noOutgoingTxs,
       no_incoming_txs: noIncomingTxs,
       out_degree: noOutdegree,
