@@ -184,12 +184,15 @@ export default class EntityNode extends GraphNode {
           .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
           .on('mouseout', () => this.dispatcher('hideTooltip'))
           .call(drag()
+            .on('start', () => {
+              this.dispatcher('dragNodeStart', { id: this.id, type: this.type, x: event.dx, y: event.dy })
+            })
             .on('drag', () => {
               if (Math.abs(event.dx) > 10 || Math.abs(event.dy) > 10) return
-              this.dispatcher('dragNode', { id: this.id, type: this.type, dx: event.dx, dy: event.dy })
+              this.dispatcher('dragNode', { x: event.dx, y: event.dy })
             })
             .on('end', () => {
-              this.dispatcher('dragNodeEnd', { id: this.id, type: this.type })
+              this.dispatcher('dragNodeEnd')
             }))
         g.append('rect')
           .classed('entityNodeRect', true)

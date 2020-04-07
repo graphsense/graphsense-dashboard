@@ -89,6 +89,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'gohome',
   'blank',
   'sortEntityAddresses',
+  'dragNodeStart',
   'dragNode',
   'dragNodeEnd',
   'changeSearchDepth',
@@ -136,7 +137,14 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
 
 // synchronous messages
 // get handled by model in current rendering frame
-const syncMessages = ['search', 'changeSearchBreadth', 'changeSearchDepth', 'changeUserDefinedTag']
+const syncMessages = [
+  'search',
+  'changeSearchBreadth',
+  'changeSearchDepth',
+  'changeUserDefinedTag',
+  'dragNode',
+  'dragNodeEnd'
+]
 
 // messages that change the graph
 const dirtyMessages = [

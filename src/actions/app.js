@@ -827,12 +827,16 @@ const sortEntityAddresses = function ({ entity, property }) {
   this.graph.sortEntityAddresses(entity, property)
 }
 
-const dragNode = function ({ id, type, dx, dy }) {
-  this.graph.dragNode(id, type, dx, dy)
+const dragNodeStart = function ({ id, type, x, y }) {
+  this.graph.dragNodeStart(id, type, x, y)
 }
 
-const dragNodeEnd = function ({ id, type }) {
-  this.graph.dragNodeEnd(id, type)
+const dragNode = function ({ x, y }) {
+  this.graph.dragNode(x, y)
+}
+
+const dragNodeEnd = function () {
+  this.graph.dragNodeEnd()
 }
 
 const changeSearchDepth = function (value) {
@@ -1116,6 +1120,7 @@ const functions = {
   toggleErrorLogs,
   gohome,
   sortEntityAddresses,
+  dragNodeStart,
   dragNode,
   dragNodeEnd,
   changeSearchDepth,

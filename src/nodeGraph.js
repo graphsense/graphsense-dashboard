@@ -263,24 +263,32 @@ export default class NodeGraph extends Component {
     node.searchingNeighbors(isOutgoing, state)
   }
 
-  dragNode (id, type, dx, dy) {
-    const layer = this.findLayer(id[1])
-    if (!layer) return
-    const entity = layer.nodes.get(id)
+  dragNodeStart (id, type, x, y) {
+    const entity = this.entityNodes.get(id)
     if (!entity) return
+    this.draggingNode = entity
+  }
 
-    dx /= this.transform.k
-    dy /= this.transform.k
+  dragNode (x_, y_) {
+    if (!this.draggingNode) return
 
-    entity.ddx += dx
-    entity.ddy += dy
+    const dx = x_
+    const dy = y_
 
-    if (entity.ddx - 2 * expandHandleWidth < margin / -2) return
-    if (entity.ddx + 2 * expandHandleWidth > margin / 2) return
+    const entity = this.draggingNode
+
+    const ddx = entity.dx + dx
+    const ddy = entity.dy + dy
+
+    if (ddx - 2 * expandHandleWidth < margin / -2) return
+    if (ddx + 2 * expandHandleWidth > margin / 2) return
+
+    const layer = this.findLayer(this.draggingNode.id[1])
+    if (!layer) return
 
     const nodes = layer.nodes.values()
-    const x = entity.x + entity.ddx - expandHandleWidth
-    const y = entity.y + entity.ddy
+    const x = entity.x + ddx - expandHandleWidth
+    const y = entity.y + ddy
     const cw = entity.getWidthForLinks()
     const ch = entity.getHeightForLinks()
     for (let i = 0; i < nodes.length; i++) {
@@ -298,17 +306,18 @@ export default class NodeGraph extends Component {
           )
       ) return
     }
-    entity.dx = entity.ddx
-    entity.dy = entity.ddy
+
+    entity.dx = ddx
+    entity.dy = ddy
+
     entity.setUpdate('position')
-    this.setUpdate('link', id)
+    this.setUpdate('link', this.draggingNode.id)
   }
 
-  dragNodeEnd (id, type) {
-    const entity = this.entityNodes.get(id)
+  dragNodeEnd () {
+    const entity = this.draggingNode
     if (!entity) return
-    entity.ddx = entity.dx
-    entity.ddy = entity.dy
+    this.draggingNode = null
     this.dirty = true
   }
 
@@ -724,6 +733,13 @@ export default class NodeGraph extends Component {
         .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
+        /* .on('mousemove', () => {
+          if (this.draggingNode) this.dispatcher('dragNode', { x: event.clientX, y: event.clientY })
+        })
+        .on('mouseup', () => {
+          console.log('mouseup', event)
+          this.dispatcher('dragNodeEnd')
+        }) */
         .call(this.zoom.on('zoom', () => {
           this.transform.k = event.transform.k
           this.transform.x = event.transform.x
