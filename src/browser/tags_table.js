@@ -13,43 +13,43 @@ export default class TagsTable extends Table {
         name: 'Address',
         data: 'address',
         render: (value, type, row) => {
-          return this.formatSupportedKeyspace(row.keyspace, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
+          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
         }
       },
       {
         name: 'Label',
         data: 'label',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
+        render: (value, type, row) => this.formatActive(row, value)
       },
       {
         name: 'Currency',
         data: 'currency',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
+        render: (value, type, row) => this.formatActive(row, value)
       },
       {
         name: 'Source',
         data: 'source',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatLink(value))
+        render: (value, type, row) => this.formatActive(row, this.formatLink(value))
       },
       {
         name: 'TagPack',
         data: 'tagpack_uri',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatLink(value))
+        render: (value, type, row) => this.formatActive(row, this.formatLink(value))
       },
       {
         name: 'Category',
         data: 'category',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
+        render: (value, type, row) => this.formatActive(row, value)
       },
       {
         name: 'Abuse',
         data: 'abuse',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, value)
+        render: (value, type, row) => this.formatActive(row, value)
       },
       {
         name: 'Last modified',
         data: 'lastmod',
-        render: (value, type, row) => this.formatSupportedKeyspace(row.keyspace, this.formatTimestamp(value, type, row))
+        render: (value, type, row) => this.formatActive(row, this.formatTimestamp(value, type, row))
       }
     ]
     this.loadMessage = 'loadTags'
@@ -73,10 +73,14 @@ export default class TagsTable extends Table {
     }
   }
 
-  formatSupportedKeyspace (keyspace, content) {
-    if (!keyspace || this.supportedKeyspaces.indexOf(keyspace) === -1) {
+  formatActive (row, content) {
+    if (!this.isActiveRow(row)) {
       return `<span class="unsupported-keyspace">${content || ''}</span>`
     }
     return content
+  }
+
+  isActiveRow (row) {
+    return row.keyspace && this.supportedKeyspaces.indexOf(row.keyspace) !== -1 && row.active
   }
 }

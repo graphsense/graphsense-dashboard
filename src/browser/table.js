@@ -82,9 +82,8 @@ export default class Table extends BrowserComponent {
         const cell = tab.cell(this)
         if (!cell) return
         const index = cell.index()
-        logger.debug('index', index)
         const row = tab.row(index.row).data()
-        logger.debug('row', row)
+        if (!that.isActiveRow(row)) return
         if (!row.keyspace) {
           row.keyspace = that.keyspace
         }
@@ -207,5 +206,9 @@ export default class Table extends BrowserComponent {
       }
       return value
     }
+  }
+
+  isActiveRow () {
+    return true
   }
 }
