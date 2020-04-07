@@ -63,7 +63,7 @@ export default class NodeGraph extends Component {
     this.highlightedNodes = []
     this.selectedLink = null
     this.layers = []
-    this.transform = { k: 1, x: 0, y: 0, dx: 0, dy: 0 }
+    this.transform = zoomIdentity
     this.colorMapCategories = map()
     this.colorMapTags = map()
     const colorGen = (map, type) => (k) => {
@@ -727,24 +727,19 @@ export default class NodeGraph extends Component {
       this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
     }
     if (this.shouldUpdate(true)) {
+      logger.debug('redraw graph')
       this.zoom = zoom()
       this.svg = create('svg')
         .classed('w-full h-full graph', true)
         .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
-        /* .on('mousemove', () => {
-          if (this.draggingNode) this.dispatcher('dragNode', { x: event.clientX, y: event.clientY })
-        })
-        .on('mouseup', () => {
-          console.log('mouseup', event)
-          this.dispatcher('dragNodeEnd')
-        }) */
         .call(this.zoom.on('zoom', () => {
           this.transform.k = event.transform.k
           this.transform.x = event.transform.x
           this.transform.y = event.transform.y
           transformGraph()
+          logger.debug('transformation on zoom', JSON.stringify(this.transform))
         }))
       const markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
@@ -756,11 +751,16 @@ export default class NodeGraph extends Component {
         )).join('') +
         '</defs>'
       this.graphRoot = this.svg.append('g')
-      transformGraph()
       this.svg.on('click', () => {
         this.dispatcher('deselect')
       })
       this.root.appendChild(this.svg.node())
+
+      const transform = zoomIdentity
+        .scale(this.transform.k)
+      transform.x = this.transform.x
+      transform.y = this.transform.y
+      this.svg.call(this.zoom.transform, transform)
 
       entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
       entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
@@ -1091,6 +1091,7 @@ export default class NodeGraph extends Component {
   serialize () {
     const s = this.serializeGraph()
 
+    logger.debug('serli transform', JSON.stringify(this.transform))
     return [
       this.currency,
       this.labelType,
@@ -1158,6 +1159,7 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.labelType = labelType
     this.txLabelType = txLabelType
+    logger.debug('transform', JSON.stringify(transform))
     this.transform = transform
     colorMapCategories.forEach(({ key, value }) => {
       this.colorMapCategories.set(key, value)
