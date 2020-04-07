@@ -50,8 +50,14 @@ export default class TagsTable extends Table {
         name: 'Last modified',
         data: 'lastmod',
         render: (value, type, row) => this.formatActive(row, this.formatTimestamp(value, type, row))
+      },
+      {
+        name: 'Active',
+        data: 'active',
+        visible: false
       }
     ]
+    this.order = [[8, 'desc']]
     this.loadMessage = 'loadTags'
     this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
