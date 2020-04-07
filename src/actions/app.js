@@ -35,14 +35,16 @@ const submitSearchResult = function ({ term, context }) {
     this.menu.addSearchLabel(term)
     return
   }
+  logger.debug('split', term)
   term.split('\n').forEach((address) => {
     this.keyspaces.forEach(keyspace => {
-      clickSearchResult.call(this, { id: address, type: 'address', keyspace, context: this.context })
+      clickSearchResult.call(this, { id: address, type: 'address', keyspace, context: context })
     })
   })
 }
 
 const clickSearchResult = function ({ id, type, keyspace, context }) {
+  logger.debug('clickSerachResult', id, type, keyspace, context)
   if (this.menu.search) {
     if (context === 'neighborsearch' && type === 'address') {
       this.menu.addSearchAddress(id)

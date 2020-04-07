@@ -365,7 +365,7 @@ export default class Menu extends Component {
 
   addSearchAddress (address) {
     if (this.view.viewType !== 'neighborsearch' || this.view.criterion !== 'addresses') return
-    this.view.params.addresses.push(address)
+    this.view.params.addresses = [...new Set(this.view.params.addresses.concat([address]))]
     this.setUpdate(true)
   }
 
