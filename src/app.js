@@ -131,7 +131,7 @@ export default class Model extends Callable {
   }
 
   loadCategories () {
-    this.mapResult(text('./categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
+    this.mapResult(text('./config/categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
     this.mapResult(this.rest.categories(), 'receiveCategories')
   }
 

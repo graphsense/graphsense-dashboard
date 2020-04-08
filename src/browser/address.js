@@ -3,6 +3,7 @@ import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
 import incomingNeighbors from '../icons/incomingNeighbors.html'
 import outgoingNeighbors from '../icons/outgoingNeighbors.html'
+import { tt } from '../lang.js'
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -24,7 +25,7 @@ export default class Address extends BrowserComponent {
     this.options = this.data.length > 1 ? [] : this.options
     super.render()
     const flat = this.flattenData()
-    this.root.innerHTML = replace(this.template, flat)
+    this.root.innerHTML = replace(tt(this.template), flat)
     if (flat.abuses.length === 0) {
       const el = this.root.querySelector('#abuses')
       if (el) el.style.display = 'none'

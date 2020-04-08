@@ -117,6 +117,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'hideTooltip',
   'receiveCSV',
   'changeLocale',
+  'localeLoaded',
   'login',
   'loginResult',
   'refreshResult',

@@ -1,6 +1,7 @@
 import Logger from '../logger.js'
 import numeral from 'numeral'
 import moment from 'moment'
+import { text } from 'd3-fetch'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
@@ -8,6 +9,8 @@ import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
 import BlockTransactionsTable from '../browser/block_transactions_table.js'
 import FileSaver from 'file-saver'
+import { setLanguagePack } from '../lang.js'
+import YAML from 'yaml'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
 const historyPushState = (keyspace, type, id, target) => {
@@ -996,12 +999,17 @@ const hideTooltip = function (type) {
 }
 
 const changeLocale = function (locale) {
+  this.mapResult(text(`./lang/${locale}.yaml`).then(YAML.parse), 'localeLoaded', locale)
+}
+
+const localeLoaded = function ({ result, context }) {
+  const locale = context
+  setLanguagePack(result)
   moment.locale(locale)
   numeral.locale(locale)
   this.locale = locale
   this.config.setLocale(locale)
-  this.browser.setUpdate('locale')
-  this.graph.setUpdate('layers')
+  this.layout.setUpdate(true)
 }
 
 const receiveCategories = function ({ result }) {
@@ -1145,6 +1153,7 @@ const functions = {
   tooltip,
   hideTooltip,
   changeLocale,
+  localeLoaded,
   receiveCategories,
   receiveCategoryColors,
   receiveAbuses,
