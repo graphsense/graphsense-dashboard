@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
 
@@ -7,12 +8,12 @@ export default class NeighborsTable extends Table {
     this.isOutgoing = isOutgoing
     this.columns = [
       {
-        name: (isOutgoing ? 'Outgoing ' : 'Incoming ') + type,
+        name: t((isOutgoing ? 'Outgoing_type' : 'Incoming_type'), type),
         data: 'id',
         render: this.formatIsInGraph(nodeIsInGraph, type, keyspace)
       },
       {
-        name: 'Labels',
+        name: t('Labels'),
         data: 'labels',
         render: (value, type) => {
           const maxCount = 30
@@ -34,21 +35,21 @@ export default class NeighborsTable extends Table {
         }
       },
       {
-        name: 'Balance',
+        name: t('Final balance'),
         data: 'balance',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       {
-        name: 'Received',
+        name: t('Total received'),
         data: 'received',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       {
-        name: 'No. Tx',
+        name: t('No. transactions'),
         data: 'no_txs'
       },
       {

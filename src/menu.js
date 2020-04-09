@@ -1,3 +1,4 @@
+import { t, tt } from './lang.js'
 import menuLayout from './config/menu.html'
 import notes from './config/notes.html'
 import tagpack from './config/tagpack.html'
@@ -102,7 +103,7 @@ export default class Menu extends Component {
         super.render()
         return
       }
-      this.root.innerHTML = menuLayout
+      this.root.innerHTML = tt(menuLayout)
       const menu = this.root.querySelector('#menu-frame')
       menu.addEventListener('click', (e) => {
         this.dispatcher('hideContextmenu')
@@ -121,17 +122,17 @@ export default class Menu extends Component {
       const el = this.root.querySelector('#config')
       let title
       if (this.view.viewType === 'note') {
-        title = 'Notes'
-        el.innerHTML = notes
+        title = t('Notes')
+        el.innerHTML = tt(notes)
         this.setupNotes(el)
       } else if (this.view.viewType === 'tagpack') {
-        title = 'Add tag'
-        el.innerHTML = tagpack
+        title = t('Add tag')
+        el.innerHTML = tt(tagpack)
         this.setupTagpack(el)
       } else if (this.view.viewType === 'neighborsearch') {
         const dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
-        title = `Search ${dir} neighbors`
-        el.innerHTML = replace(searchDialog,
+        title = t('Search neighbors', dir)
+        el.innerHTML = replace(tt(searchDialog),
           {
             searchDepth: this.view.depth,
             searchBreadth: this.view.breadth,
@@ -268,7 +269,7 @@ export default class Menu extends Component {
     this.renderInput('skipNumAddresses', 'changeSkipNumAddresses', this.view.skipNumAddresses)
     const form = el.querySelector('.searchValue')
     if (this.view.criterion === 'category') {
-      form.innerHTML = categoryForm
+      form.innerHTML = tt(categoryForm)
       const input = form.querySelector('select')
       this.categories.forEach(category => {
         const option = document.createElement('option')
@@ -285,7 +286,7 @@ export default class Menu extends Component {
       el.querySelector('input[value="category"]').setAttribute('checked', 'checked')
       el.querySelector('input[value="addresses"]').removeAttribute('checked')
     } else if (this.view.criterion === 'addresses') {
-      form.innerHTML = addressesForm
+      form.innerHTML = tt(addressesForm)
       const searchinput = form.querySelector('.searchinput')
       this.search.setUpdate(true)
       this.search.setKeyspaces([this.view.id[2]])

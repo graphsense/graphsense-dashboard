@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 import downloadTags from '../icons/downloadTags.html'
 
@@ -10,49 +11,49 @@ export default class TagsTable extends Table {
     this.nodeType = nodeType
     this.columns = [
       {
-        name: 'Address',
+        name: t('Address'),
         data: 'address',
         render: (value, type, row) => {
           return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
         }
       },
       {
-        name: 'Label',
+        name: t('Label'),
         data: 'label',
         render: (value, type, row) => this.formatActive(row, value)
       },
       {
-        name: 'Currency',
+        name: t('Currency'),
         data: 'currency',
         render: (value, type, row) => this.formatActive(row, value)
       },
       {
-        name: 'Source',
+        name: t('Source'),
         data: 'source',
         render: (value, type, row) => this.formatActive(row, this.formatLink(value))
       },
       {
-        name: 'TagPack',
+        name: t('TagPack'),
         data: 'tagpack_uri',
         render: (value, type, row) => this.formatActive(row, this.formatLink(value))
       },
       {
-        name: 'Category',
+        name: t('Category'),
         data: 'category',
         render: (value, type, row) => this.formatActive(row, value)
       },
       {
-        name: 'Abuse',
+        name: t('Abuse'),
         data: 'abuse',
         render: (value, type, row) => this.formatActive(row, value)
       },
       {
-        name: 'Last modified',
+        name: t('Last modified'),
         data: 'lastmod',
         render: (value, type, row) => this.formatActive(row, this.formatTimestamp(value, type, row))
       },
       {
-        name: 'Active',
+        name: t('Active'),
         data: 'active',
         visible: false
       }
@@ -63,7 +64,7 @@ export default class TagsTable extends Table {
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType]
     this.addOption(this.downloadOption())
-    this.addOption({ html: downloadTags, optionText: 'Download tags as JSON', message: 'downloadTagsAsJSON' })
+    this.addOption({ html: downloadTags, optionText: t('Download tags as JSON'), message: 'downloadTagsAsJSON' })
     if (nodeType === 'label') this.options = []
   }
 

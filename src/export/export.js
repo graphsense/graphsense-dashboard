@@ -1,3 +1,4 @@
+import { tt } from '../lang.js'
 import reportHTML from './report.html'
 import tagpackHTML from './tagpack.html'
 import Component from '../component.js'
@@ -18,9 +19,9 @@ export default class Export extends Component {
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
     if (this.type === 'report') {
-      this.root.innerHTML = reportHTML
+      this.root.innerHTML = tt(reportHTML)
     } else if (this.type === 'tagpack') {
-      this.root.innerHTML = tagpackHTML
+      this.root.innerHTML = tt(tagpackHTML)
     } else {
       return this.root
     }

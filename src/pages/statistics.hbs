@@ -1,5 +1,5 @@
 <section id="stats" class="supported-currencies mt-6 flex-grow">
-  <h2>Supported currencies</h2>
+  <h2>{{supported_currencies}}</h2>
   <div id="currencies" class="container flex flex-wrap justify-center mx-auto">
     {{#each stats}}
       <div class="currency w-full md:w-1/2 lg:w-1/3 xl:w-1/4" style="background-image:url({{imageUrl}})">
@@ -7,27 +7,27 @@
         <div class="statistics">
           <div class="stats-table">
             <div class="stats-row">
-              <span class="stats-key">Last update</span>
+              <span class="stats-key">{{{t_lastUpdate}}}</span>
               <span class="stats-value">{{{lastUpdate}}}</span>
             </div>
             <div class="stats-row">
-              <span class="stats-key">Latest&nbsp;block</span>
+              <span class="stats-key">{{{t_latestBlock}}}</span>
               <span class="stats-value">{{latestBlock}}</span>
             </div>
             <div class="stats-row">
-              <span class="stats-key">Transactions</span>
+              <span class="stats-key">{{{t_transactions}}}</span>
               <span class="stats-value">{{no_txs}}</span>
             </div>
             <div class="stats-row">
-              <span class="stats-key">Addresses</span>
+              <span class="stats-key">{{{t_addresses}}}</span>
               <span class="stats-value">{{no_addresses}}</span>
             </div>
             <div class="stats-row">
-              <span class="stats-key">Entities</span>
+              <span class="stats-key">{{{t_entities}}}</span>
               <span class="stats-value">{{no_entities}}</span>
             </div>
             <div class="stats-row">
-              <span class="stats-key">Tags</span>
+              <span class="stats-key">{{{t_tags}}}</span>
               <span class="stats-value">{{no_labels}}</span>
             </div>
           </div>

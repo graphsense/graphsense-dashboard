@@ -1,3 +1,4 @@
+import { t, tt } from '../lang.js'
 import search from './search.html'
 import Component from '../component.js'
 import { replace, addClass, removeClass } from '../template_utils.js'
@@ -75,10 +76,10 @@ export default class Search extends Component {
   typesToPlaceholder () {
     return firstToUpper(this.types.map(type => {
       switch (type) {
-        case 'addresses' : return 'addresses'
-        case 'transactions' : return 'transaction'
-        case 'blocks' : return 'block'
-        case 'labels' : return 'label'
+        case 'addresses' : return t('addresses')
+        case 'transactions' : return t('transaction')
+        case 'blocks' : return t('block')
+        case 'labels' : return t('label')
       }
     }).filter(p => p).join(', '))
   }
@@ -90,7 +91,7 @@ export default class Search extends Component {
     if (this.shouldUpdate(true)) {
       super.render()
       const placeholder = this.typesToPlaceholder()
-      this.root.innerHTML = replace(search, { placeholder })
+      this.root.innerHTML = replace(tt(search), { placeholder })
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
       this.form = this.root.querySelector('form')
@@ -230,7 +231,7 @@ export default class Search extends Component {
       labels.forEach(searchLine(null, ul)('label', 'tag'))
       const title = document.createElement('div')
       title.className = 'font-bold py-1'
-      title.appendChild(document.createTextNode('Labels'))
+      title.appendChild(document.createTextNode(t('Labels')))
       el.appendChild(title)
       el.appendChild(ul)
     }
@@ -245,7 +246,7 @@ export default class Search extends Component {
       labels.forEach(searchLine(null, ul)('userdefinedlabel', 'tag'))
       const title = document.createElement('div')
       title.className = 'font-bold py-1'
-      title.appendChild(document.createTextNode('User-defined labels'))
+      title.appendChild(document.createTextNode(t('User-defined labels')))
       el.appendChild(title)
       el.appendChild(ul)
     }

@@ -1,3 +1,4 @@
+import { t } from './lang.js'
 import { create, event } from 'd3-selection'
 import { scalePow, scaleOrdinal } from 'd3-scale'
 import { set, map } from 'd3-collection'
@@ -812,7 +813,7 @@ export default class NodeGraph extends Component {
         entityRoot.append('text')
           .attr('text-anchor', 'middle')
           .attr('fill', 'lightgrey')
-          .text('Nothing to display yet!')
+          .text(t('Nothing to display yet'))
       }
     } else {
       this.layers.forEach((layer) => {

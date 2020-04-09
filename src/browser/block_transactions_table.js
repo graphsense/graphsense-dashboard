@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 
 export default class BlockTransactionsTable extends Table {
@@ -6,27 +7,27 @@ export default class BlockTransactionsTable extends Table {
     this.height = height
     this.columns = [
       {
-        name: 'Transaction',
+        name: t('Transaction'),
         data: 'tx_hash',
         render: this.formatValue(this.truncateValue)
       },
       {
-        name: 'No. inputs',
+        name: t('No. inputs'),
         data: 'no_inputs'
       },
       {
-        name: 'No. outputs',
+        name: t('No. outputs'),
         data: 'no_outputs'
       },
       {
-        name: 'Total input',
+        name: t('Total input'),
         data: 'total_input',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       {
-        name: 'Total output',
+        name: t('Total output'),
         data: 'total_output',
         className: 'text-right',
         render: (value, type) =>

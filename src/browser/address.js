@@ -3,7 +3,7 @@ import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
 import incomingNeighbors from '../icons/incomingNeighbors.html'
 import outgoingNeighbors from '../icons/outgoingNeighbors.html'
-import { tt } from '../lang.js'
+import { t, tt } from '../lang.js'
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -12,10 +12,10 @@ export default class Address extends BrowserComponent {
     this.template = address
     this.options =
       [
-        { html: incomingNeighbors, optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
-        { html: outgoingNeighbors, optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
-        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable' },
-        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
+        { html: incomingNeighbors, optionText: t('Incoming neighbors'), message: 'initIndegreeTable' },
+        { html: outgoingNeighbors, optionText: t('Outgoing neighbors'), message: 'initOutdegreeTable' },
+        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initTransactionsTable' },
+        { icon: 'tags', optionText: t('Tags'), message: 'initTagsTable' }
       ]
   }
 

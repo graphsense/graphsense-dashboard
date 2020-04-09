@@ -121,6 +121,7 @@ export default class Model extends Callable {
       this.paramsToCall(initParams)
     }
     if (!stats) this.call('stats')
+    this.call('changeLocale', locale)
     this.meta =
       {
         investigation: '',

@@ -1,1 +1,15 @@
-Address: Adresse
+address: Adresse
+addresses: Adressen
+transaction: Transaktion
+transactions: Transaktions
+label: Schlagwort
+labels: Schlagwörter
+tag: Tag
+tags: Tags
+block: Block
+blocks: Blöcke
+supported currencies: unterstützte Währungen
+last update: letztes&nbsp;Update
+latest block: letzter&nbsp;Block
+loading_type_id: lade %0 %1
+loading_thing: lade %0 

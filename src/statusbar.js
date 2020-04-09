@@ -3,6 +3,8 @@ import status from './status/status.html'
 import Component from './component.js'
 import { addClass, removeClass } from './template_utils.js'
 import Logger from './logger.js'
+import { t, tt } from './lang.js'
+import { firstToUpper } from './utils.js'
 
 const logger = Logger.create('Statusbar') // eslint-disable-line no-unused-vars
 
@@ -81,7 +83,7 @@ export default class Statusbar extends Component {
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return this.root
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = status
+      this.root.innerHTML = tt(status)
 
       this.root.querySelector('#hide').addEventListener('click', () => {
         this.dispatcher('hideLogs')
@@ -125,37 +127,30 @@ export default class Statusbar extends Component {
   }
 
   makeTooltip (type) {
-    switch (type) {
-      case 'entity':
-        return 'An entity represents an entity dealing with one or more addresses.'
-      case 'address':
-        return 'An address which can receive and spend coins.'
-      case 'link':
-        return 'A link indicates that there exist one or more transactions between the nodes. Flow is always from left to right.'
-      case 'shadow':
-        return 'A shadow link connects identical addresses and entities'
-    }
-    return ''
+    const key = type + '_tooltip'
+    const tooltip = t(key)
+    if (tooltip === key) return ''
+    return tooltip
   }
 
   renderLoading () {
     const top = this.root.querySelector('#topmsg')
     if (this.loading.size() > 0) {
       addClass(this.root, 'loading')
-      let msg = 'Loading '
       const v = this.loading.values()
-      msg += v.slice(0, 3).join(', ')
-      msg += v.length > 3 ? ` + ${v.length - 3}` : ''
-      msg += ' ...'
+      let thing = ''
+      thing += v.slice(0, 3).join(', ')
+      thing += v.length > 3 ? ` + ${v.length - 3}` : ''
+      const msg = t('Loading_thing', thing) + ' ...'
       top.innerHTML = msg
     } else if (this.searching.size() > 0) {
       addClass(this.root, 'loading')
       const search = this.searching.values()[0]
       const outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
       let crit = ''
-      if (search.params.category) crit = `category ${search.params.category}`
-      if (search.params.addresses.length > 0) crit = 'addresses ' + search.params.addresses.join(',')
-      const msg = `Searching for ${outgoing} neighbors of ${search.type} ${search.id[0]} with ${crit} (depth: ${search.depth}, breadth: ${search.breadth}, skip if more than ${search.skipNumAddresses} addresses) ...`
+      if (search.params.category) crit = t('category_name', search.params.category)
+      if (search.params.addresses.length > 0) crit = t('addresses_ids', search.params.addresses.join(','))
+      const msg = t('searching_msg', t(outgoing), search.type, search.id[0], crit, search.depth, search.breadth, search.skipNumAddresses) + ' ...'
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
@@ -168,7 +163,7 @@ export default class Statusbar extends Component {
     let messages = this.messages
     const errorMsg = this.root.querySelector('#errorMsg')
     if (this.showErrorsLogs) {
-      errorMsg.innerHTML = 'Errors only'
+      errorMsg.innerHTML = t('Errors only')
       messages = messages.filter(msg => typeof msg !== 'string')
     } else {
       errorMsg.innerHTML = ''
@@ -188,7 +183,7 @@ export default class Statusbar extends Component {
     if (messages.length > this.logsDisplayLength) {
       const more = document.createElement('li')
       more.className = 'cursor-pointer text-gs-dark'
-      more.innerHTML = 'Show more ...'
+      more.innerHTML = t('Show more') + ' ...'
       more.addEventListener('click', () => {
         this.dispatcher('moreLogs')
       })
@@ -217,14 +212,18 @@ export default class Statusbar extends Component {
       return msg
     }
 
-    if (msg.error) {
+    if (msg[0] === 'error') {
       let message
-      if (msg.error.requestURL) {
-        message = `Error requesting ${msg.error.requestURL}: ${msg.error.message}`
+      if (msg[1].requestURL) {
+        message = t('Error requesting', msg[1].requestURL, msg[1].message)
       } else {
-        message = msg.error
+        message = msg[1]
       }
       return `<span class="text-gs-red">${message}</span>`
+    }
+
+    if (Array.isArray(msg)) {
+      return this.msg(...msg)
     }
   }
 
@@ -241,55 +240,54 @@ export default class Statusbar extends Component {
     logger.debug('msg', type, args)
     switch (type) {
       case 'loading' :
-        return `Loading ${args[0]} ${args[1] || ''} ...`
+        args[0] = t(args[0])
+        return firstToUpper(t('loading_type_id', ...args))
       case 'loadingLinkTransactions' :
-        return `Loading transactions between ${args[0]} and ${args[1]} ...`
+        return t('Loading transactions between', ...args) + ' ...'
       case 'loaded' :
-        return `Loaded ${args[0]} ${args[1] || ''}`
+        return t('Loaded', t(args[0]), args[1] || '')
       case 'loadingNeighbors':
       {
         const dir = args[2] ? 'outgoing' : 'incoming'
-        return `Loading ${dir} neighbors for ${args[1]} ${args[0]} ...`
+        return t('Loading neighbors for', t(dir), t(args[1]), args[0]) + ' ...'
       }
       case 'loadedNeighbors':
       {
         const dir_ = args[2] ? 'outgoing' : 'incoming'
-        return `Loaded ${dir_} neighbors for ${args[1]} ${args[0]}`
+        return t('Loaded neighbors for', t(dir_), t(args[1]), args[0])
       }
       case 'saving':
-        return 'Saving to file ...'
+        return t('Saving to file') + ' ...'
       case 'saved':
-        return `Saved to file ${args[0]}`
+        return t('Saved to file', args[0])
       case 'loadFile':
       {
         const filename = args[0]
-        logger.debug('loadfile msg', filename)
-        return `Loading file ${filename} ...`
+        return t('Loading file', filename) + ' ...'
       }
       case 'loadedFile':
       {
         const filename_ = args[0]
-        logger.debug('loadedfile msg', filename_)
-        return `Loaded file ${filename_}`
+        return t('Loaded file', filename_) + ' ...'
       }
       case 'loadingEntityFor':
-        return `Loading entity for ${args[0]}`
+        return t('Loading entity for', ...args)
       case 'loadedEntityFor':
-        return `Loaded entity for ${args[0]}`
+        return t('Loaded entity for', ...args)
       case 'noEntityFor':
-        return `No entity for ${args[0]}`
+        return t('No entity for', ...args)
       case 'loadingTagsFor':
-        return `Loading tags for ${args[0]} ${args[1]}`
+        return t('Loading tags for', ...args)
       case 'loadedTagsFor':
-        return `Loaded tags for ${args[0]} ${args[1]}`
+        return t('Loaded tags for', ...args)
       case 'loadingEntityAddresses':
-        return `Trying to load ${args[1]} addresses for entity ${args[0]}`
+        return t('Trying to load addresses for entity', ...args)
       case 'loadedEntityAddresses':
-        return `Loaded ${args[1]} addresses for entity ${args[0]}`
+        return t('Loaded addresses for entity', ...args)
       case 'removeNode':
-        return `Removed node of ${args[0]} ${args[1]}`
+        return t('Removed node of', ...args)
       case 'searchResult':
-        return `Found ${args[0]} paths to ${args[1]} nodes`
+        return t('Found paths to nodes', ...args)
       case 'error':
         this.numErrors++
         return { error: args[0] }
@@ -299,6 +297,6 @@ export default class Statusbar extends Component {
   }
 
   addMsg () {
-    this.add(this.msg(...arguments))
+    this.add([...arguments])
   }
 }

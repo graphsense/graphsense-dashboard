@@ -24,7 +24,7 @@ const getNavigatorLanguage = () => {
   }
 }
 
-const locale = getNavigatorLanguage().split('-')[0]
+let locale = getNavigatorLanguage().split('-')[0]
 numeral.locale(locale)
 try {
   numeral.localeData(locale)

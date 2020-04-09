@@ -1,3 +1,4 @@
+import { t, tt } from '../lang.js'
 import transaction from './transaction.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
@@ -9,8 +10,8 @@ export default class Transaction extends BrowserComponent {
     this.template = transaction
     this.options =
       [
-        { icon: 'sign-in-alt', optionText: 'Incoming addresses', message: 'initTxInputsTable' },
-        { icon: 'sign-out-alt', optionText: 'Outgoing addresses', message: 'initTxOutputsTable' }
+        { icon: 'sign-in-alt', optionText: t('Incoming_type', t('addresses')), message: 'initTxInputsTable' },
+        { icon: 'sign-out-alt', optionText: t('Outgoing_type', t('addresses')), message: 'initTxOutputsTable' }
       ]
   }
 
@@ -24,7 +25,7 @@ export default class Transaction extends BrowserComponent {
       total_input: this.formatCurrency(this.data.total_input[this.currency], this.data.keyspace),
       total_output: this.formatCurrency(this.data.total_output[this.currency], this.data.keyspace)
     }
-    this.root.innerHTML = replace(this.template, { ...this.data, ...flat })
+    this.root.innerHTML = replace(tt(this.template), { ...this.data, ...flat })
     return this.root
   }
 

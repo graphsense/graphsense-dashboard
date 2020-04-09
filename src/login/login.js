@@ -1,3 +1,4 @@
+import { t, tt } from '../lang.js'
 import Logger from '../logger.js'
 import login from './login.html'
 import Component from '../component.js'
@@ -29,7 +30,7 @@ export default class Login extends Component {
     if (!this.root) throw new Error('root not defined')
     if (!this.shouldUpdate()) return
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = login
+      this.root.innerHTML = tt(login)
       this.root.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault()
         console.log(e)
@@ -43,9 +44,9 @@ export default class Login extends Component {
         input.disabled = this.isLoading || false
         if (input.type === 'submit') {
           if (this.isLoading) {
-            input.value = 'Signing in ...'
+            input.value = t('Signing in') + ' ...'
           } else {
-            input.value = 'Sign in'
+            input.value = t('Sign in')
           }
         }
       })

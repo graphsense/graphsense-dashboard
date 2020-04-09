@@ -1,1 +1,156 @@
-Address: Address
+# attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
+address: address
+addresses: adresses
+entity: entity
+entities: entities
+transaction: transaction
+transactions: transactions
+label: label
+labels: labels
+tag: tag
+tags: tags
+block: block
+blocks: blocks
+supported currencies: supported currencies
+last update: last update
+latest block: latest block
+loading_type_id: loading %0 %1  # results in eg. loading address xyz
+loading_thing: loading %0 
+currency: currency
+neighbors: neighbors
+first usage: first usage
+last usage: last usage
+activity period: activity period
+total received: total received
+final balance: final balance
+category: category
+categories: categories
+abuse: abuse
+abuses: abuses
+incoming neighbors: incoming neighbors
+outgoing neighbors: outgoing neighbors
+height: height
+block hash: block hash
+created: created
+no. inputs: no. inputs # number inputs
+no. outputs: no. outputs # number outputs
+total input: total input
+total output: total output
+year: year
+years: years
+month: month
+months: months
+day: day
+days: days
+hour: hour
+hours: hours
+minute: minute
+minutes: minutes
+second: second
+seconds: seconds
+addresses tagged: addresses tagged
+source: source
+destination: destination
+value: value
+timestamp: timestamp
+outgoing_type: outgoing %0 # eg. incoming addresses
+output addresses: output addresses
+input addresses: input addresses
+incoming_type: incoming %0
+no. transactions: no. transactions # number transactions
+filter table contents: filter table contents
+showing_note: Showing %0 to %1 of %2 entries
+sort/filter disabled: sort/filter disabled
+download table as csv: download table as CSV
+add all to graph: add all to graph
+tagpack: tagpack
+last modified: last modified
+active: active
+download tags as json: download tags as JSON
+included in block: included in block
+export: export # as an imperative
+drawing: drawing
+full data: full data
+notes only: notes only
+titanium tag sharing schema: TITANIUM tag sharing schema
+rest calls: rest calls
+titanium report: titanium report
+address label: address label
+transaction label: transaction label
+language: language
+english: english
+german: german
+import: import # as an imperative
+criterion: criterion
+depth: depth
+by category: by category
+for addresses: for addresses
+breadth: breadth
+skip entities with more neighbors than: skip entities with more neighbors than
+search: search # as an imperative
+save: save
+title: title
+investigator: investigator
+institution: institution
+summary: summary
+cancel: cancel
+creator: creator
+change currency: change currency
+start from scratch: start from scratch
+load from file: load from file
+undo last graph change: undo last graph change
+redo undone graph change: redo undone graph change
+configuration options: configuration options
+legend: legend
+username: username
+password: password
+sign in: sign in
+signing in: signing in
+annotate: annotate
+remove: remove
+expand: expand
+collapse: collapse
+show address table: show address table
+sort addresses by: sort addresses by
+no. neighbors: no. neighbors
+incoming: incoming
+outgoing: outgoing
+num_address: %0 address
+num_addresses: %0 addresses
+num_of_address: %1/%0 address
+num_of_addresses: %1/%0 addresses
+the_search: search # as a noun
+user-defined labels: user-defined labels
+hide logs: hide logs
+show logs: show logs
+notes: notes
+add tag: add tag
+search neighbors: search %0 neighbors
+nothing to display yet: nothing to display yet!
+entity_tooltip: An entity represents an entity dealing with one or more addresses.
+address_tooltip: An address which can receive and spend coins.
+link_tooltip: A link indicates that there exist one or more transactions between the nodes. flow is always from left to right.
+shadow_tooltip: A shadow link connects identical addresses and entities.
+category_name: category %0
+addresses_ids: addresses %0
+searching_msg: "Searching for %0 neighbors of %1 %2 with %3 (depth: %4, breadth: %5, skip if more than %6 addresses)"
+errors only: errors only
+show more: show more
+error requesting: "Error requesting %0: %1"
+loading transactions between: loading transactions between %0 and %1
+loaded: loaded %0 %1 # eg. loaded address xy
+loading neighbors for: loading %0 neighbors for %1 %2
+loaded neighbors for: loaded %0 neighbors for %1 %2
+saving to file: saving to file
+saved to file: saved to file %0
+loading file: loading file %0
+loaded file: loaded file %0
+loading entity for: loading entity for %0
+loaded entity for: loaded entity for %0
+no entity for: no entity for %0
+loading tags for: loading tags for %0 %1
+loaded tags for: loaded tags for %0 %1
+trying to load addresses for entity: trying to load %1 addresses for entity %0
+loaded addresses for entity: loaded %1 addresses for entity %0
+removed node of: removed node of %0 %1
+found paths to nodes: found %0 paths to %1 nodes

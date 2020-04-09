@@ -1,3 +1,4 @@
+import { tt } from './lang.js'
 import Logger from './logger.js'
 import layout from './layout/layout.html'
 import Component from './component.js'
@@ -65,7 +66,7 @@ export default class Layout extends Component {
     let statusRoot = null
     let modalRoot = null
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = layout
+      this.root.innerHTML = tt(layout)
       this.browser.setUpdate(true)
       this.graph.setUpdate(true)
       this.config.setUpdate(true)

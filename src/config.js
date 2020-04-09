@@ -1,3 +1,4 @@
+import { tt } from './lang.js'
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
 import exportConfig from './config/export.html'
@@ -70,10 +71,10 @@ export default class Config extends Component {
       return this.root
     }
     addClass(this.root, 'show')
-    this.root.innerHTML = configLayout
+    this.root.innerHTML = tt(configLayout)
     const el = this.root.querySelector('#dropdown')
     if (this.visible === 'config') {
-      el.innerHTML = graphConfig
+      el.innerHTML = tt(graphConfig)
       this.renderSelect('addressLabel', 'changeAddressLabel', this.labelType.addressLabel)
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)
@@ -87,14 +88,14 @@ export default class Config extends Component {
         el.appendChild(itemEl)
       })
     } else if (this.visible === 'export') {
-      el.innerHTML = exportConfig
+      el.innerHTML = tt(exportConfig)
       el.querySelectorAll('button[data-msg]').forEach(button => {
         const msg = button.getAttribute('data-msg')
         if (!msg) return
         button.addEventListener('click', () => { this.dispatcher(msg) })
       })
     } else if (this.visible === 'import') {
-      el.innerHTML = importConfig
+      el.innerHTML = tt(importConfig)
       el.querySelectorAll('button[data-msg]').forEach(button => {
         const msg = button.getAttribute('data-msg')
         if (!msg) return

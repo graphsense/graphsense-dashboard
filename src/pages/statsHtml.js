@@ -2,6 +2,8 @@ import moment from 'moment'
 import numeral from 'numeral'
 import { currencies } from '../globals.js'
 import statistics from './statistics.hbs'
+import { t } from '../lang.js'
+import { nbsp } from '../utils.js'
 
 function statsHtml (body) {
   const imageContext = require.context('../style/img/currencies/', false)
@@ -10,16 +12,22 @@ function statsHtml (body) {
     const s = body[keyspace]
     if (!s) return
     const format = '0,000,000'
-    const t = moment.unix(s.timestamp)
+    const time = moment.unix(s.timestamp)
     const flat =
         {
-          lastUpdate: (t.format('L') + ' ' + t.format('LT')).replace(/ /g, '&nbsp;'),
+          lastUpdate: (time.format('L') + ' ' + time.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           no_addresses: numeral(s.no_addresses).format(format),
           no_entities: numeral(s.no_entities).format(format),
           no_txs: numeral(s.no_txs).format(format),
           no_labels: numeral(s.no_labels).format(format),
-          currency: currencies[keyspace]
+          currency: currencies[keyspace],
+          t_lastUpdate: nbsp(t('Last update')),
+          t_latestBlock: nbsp(t('Latest block')),
+          t_transactions: nbsp(t('Transactions')),
+          t_addresses: nbsp(t('Addresses')),
+          t_entities: nbsp(t('Entities')),
+          t_tags: nbsp(t('Tags'))
         }
     try {
       flat.imageUrl = imageContext(`./${keyspace}.svg`)
@@ -28,7 +36,7 @@ function statsHtml (body) {
     }
     stats.push(flat)
   })
-  return statistics({ stats })
+  return statistics({ stats, supported_currencies: t('Supported currencies') })
 }
 
 export { statsHtml }

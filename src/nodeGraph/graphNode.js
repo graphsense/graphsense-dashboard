@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import { formatCurrency } from '../utils'
 import { map } from 'd3-collection'
 import { event } from 'd3-selection'
@@ -56,14 +57,14 @@ class GraphNode extends Component {
   menu (subClassItems = []) {
     return subClassItems.concat([
       {
-        title: 'Annotate',
+        title: t('Annotate'),
         action: () => {
           this.dispatcher('noteDialog', { x: event.x - 50, y: event.y - 50, nodeId: this.id, nodeType: this.data.type })
         },
         position: 90
       },
       {
-        title: 'Remove',
+        title: t('Remove'),
         action: () => {
           this.dispatcher('removeNode', [this.type, this.id])
         },

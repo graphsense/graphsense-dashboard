@@ -1,5 +1,10 @@
 import { searchlimit, prefixLength } from '../globals.js'
+import { text } from 'd3-fetch'
+import YAML from 'yaml'
 import Logger from '../logger.js'
+import { setLanguagePack } from '../lang.js'
+import numeral from 'numeral'
+import moment from 'moment'
 /* develblock:start */
 import Model from '../app.js'
 /* develblock:end */
@@ -149,6 +154,22 @@ const jumpToApp = function () {
   this.layout.setUpdate(true)
 }
 
+const changeLocale = function (locale) {
+  this.mapResult(text(`./lang/${locale}.yaml`).then(YAML.parse), 'localeLoaded', locale)
+}
+
+const localeLoaded = function ({ result, context }) {
+  const locale = context
+  setLanguagePack(result)
+  logger.debug('pack', result)
+  moment.locale(locale)
+  numeral.locale(locale)
+  this.locale = locale
+  if (this.config) this.config.setLocale(locale)
+  if (this.landingpage) this.landingpage.setUpdate(true)
+  if (this.layout) this.layout.setUpdate(true)
+}
+
 export default {
   stats,
   receiveStats,
@@ -159,5 +180,7 @@ export default {
   appLoaded,
   fetchError,
   refreshResult,
-  jumpToApp
+  jumpToApp,
+  changeLocale,
+  localeLoaded
 }

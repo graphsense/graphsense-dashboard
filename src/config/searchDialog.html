@@ -1,28 +1,28 @@
-<h2 class="text-base">Criterion</h2>
+<h2 class="text-base">{{t:Criterion}}</h2>
 <div class="flex p-2 criterion">
   <div class="flex-grow flex pr-2">
     <input type="radio" value="category" name="searchType" checked/>
-    <div class="pl-2">by category</div>
+    <div class="pl-2">{{t:by category}}</div>
   </div>
   <div class="flex-grow flex">
     <input type="radio" value="addresses" name="searchType"/>
-    <div class="pl-2">for addresses</div>
+    <div class="pl-2">{{t:for addresses}}</div>
   </div>
 </div>
 <div class="searchValue"></div>
-<h2 class="text-base">Depth</h2>
+<h2 class="text-base">{{t:Depth}}</h2>
 <div class="p-2">
   <input type="number" class="w-12" min="1" step="1" max="{{maxSearchDepth}}" id="searchDepth" value="{{searchDepth}}"/>
 </div>
 
-<h2 class="text-base">Breadth</h2>
+<h2 class="text-base">{{t:Breadth}}</h2>
 <div class="p-2">
   <input type="number" class="w-12" min="1" step="1" max="{{maxSearchBreadth}}" id="searchBreadth" value="{{searchBreadth}}"/>
 </div>
-<h2 class="text-base">Skip entities with more neighbors than:</h2>
+<h2 class="text-base">{{t:Skip entities with more neighbors than}}:</h2>
 <div class="p-2">
   <input type="number" class="w-12" min="{{searchBreadth}}" step="1" id="skipNumAddresses" value="{{skipNumAddresses}}"/>
 </div>
 <div class="p-2">
-  <input type="button" class="w-full btn btn-primary" value="Search"/>
+  <input type="button" class="w-full btn btn-primary" value="{{t:Search}}"/>
 </div>

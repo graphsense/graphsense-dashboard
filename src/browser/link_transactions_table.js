@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 
 export default class LinkTransactionsTable extends Table {
@@ -8,23 +9,23 @@ export default class LinkTransactionsTable extends Table {
     this.nodeType = nodeType
     this.columns = [
       {
-        name: 'Transaction',
+        name: t('Transaction'),
         data: 'tx_hash',
         render: this.formatValue(this.truncateValue)
       },
       {
-        name: 'Value',
+        name: t('Value'),
         data: 'value',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       {
-        name: 'Height',
+        name: t('Height'),
         data: 'height'
       },
       {
-        name: 'Timestamp',
+        name: t('Timestamp'),
         data: 'timestamp',
         render: this.formatValue(this.formatTimestamp)
       }

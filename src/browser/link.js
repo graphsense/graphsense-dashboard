@@ -1,3 +1,4 @@
+import { t, tt } from '../lang.js'
 import link from './link.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
@@ -12,7 +13,7 @@ export default class Link extends BrowserComponent {
     this.template = link
     this.options =
       [
-        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initBlockTransactionsTable' }
+        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initBlockTransactionsTable' }
       ]
   }
 
@@ -21,7 +22,7 @@ export default class Link extends BrowserComponent {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     super.render()
-    this.root.innerHTML = replace(this.template, this.data)
+    this.root.innerHTML = replace(tt(this.template), this.data)
     return this.root
   }
 }

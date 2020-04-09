@@ -1,7 +1,11 @@
 import numeral from 'numeral'
 
-function firstToUpper (string) {
+export function firstToUpper (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
+}
+
+export function nbsp (string) {
+  return string.replace(' ', '&nbsp;')
 }
 
 function formatBTC (valueValue, currencyCode, { dontAppendCurrency, keyspace }) {
@@ -19,7 +23,7 @@ function formatFiat (value, currencyCode, { dontAppendCurrency }) {
   return numeral(value).format('1,000.[00]') + (!dontAppendCurrency ? ' ' + currencyCode.toUpperCase() : '')
 }
 
-function formatCurrency (value, currencyCode, options) {
+export function formatCurrency (value, currencyCode, options) {
   const options_ = { dontAppendCurrency: false, keyspace: 'btc', ...options }
   if (currencyCode === 'value') {
     return formatBTC(value, currencyCode, options_)
@@ -28,6 +32,4 @@ function formatCurrency (value, currencyCode, options) {
   }
 }
 
-const nodesIdentical = (node1, node2) => node1.id == node2.id && node1.keyspace === node2.keyspace // eslint-disable-line eqeqeq
-
-export { firstToUpper, formatCurrency, nodesIdentical }
+export const nodesIdentical = (node1, node2) => node1.id == node2.id && node1.keyspace === node2.keyspace // eslint-disable-line eqeqeq

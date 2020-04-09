@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import { event } from 'd3-selection'
 import { map } from 'd3-collection'
 import { GraphNode, addressHeight, entityWidth, padding, expandHandleWidth } from './graphNode.js'
@@ -59,7 +60,7 @@ export default class EntityNode extends GraphNode {
   }
 
   expandCollapseOrShowAddressTableTitle () {
-    return this.isExpand() ? 'Expand' : (this.isCollapse() ? 'Collapse' : 'Show address table')
+    return this.isExpand() ? t('Expand') : (this.isCollapse() ? t('Collapse') : t('Show address table'))
   }
 
   menu () {
@@ -73,49 +74,49 @@ export default class EntityNode extends GraphNode {
       })
     if (this.nodes.size() > 1) {
       items.push({
-        title: 'Sort addresses by',
+        title: t('Sort addresses by'),
         position: 60,
         children: [
           {
-            title: 'Final balance',
+            title: t('Final balance'),
             action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.total_received.value - data.total_spent.value })
           },
           {
-            title: 'Total received',
+            title: t('Total received'),
             action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.total_received.value })
           },
           {
-            title: 'No. neighbors',
+            title: t('No. neighbors'),
             children: [
               {
-                title: 'Incoming',
+                title: t('Incoming'),
                 action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.in_degree })
               },
               {
-                title: 'Outgoing',
+                title: t('Outgoing'),
                 action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.out_degree })
               }
             ]
           },
           {
-            title: 'No. transactions',
+            title: t('No. transactions'),
             children: [
               {
-                title: 'Incoming',
+                title: t('Incoming'),
                 action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.no_incoming_txs })
               },
               {
-                title: 'Outgoing',
+                title: t('Outgoing'),
                 action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.no_outgoing_txs })
               }
             ]
           },
           {
-            title: 'First usage',
+            title: t('First usage'),
             action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.first_tx.timestamp })
           },
           {
-            title: 'Last usage',
+            title: t('Last usage'),
             action: () => this.dispatcher('sortEntityAddresses', { entity: this.id, property: data => data.last_tx.timestamp })
           }
         ]
@@ -123,14 +124,14 @@ export default class EntityNode extends GraphNode {
     }
     items.push(
       {
-        title: 'Search',
+        title: t('Search'),
         children: [
           {
-            title: 'Incoming',
+            title: t('Incoming'),
             action: () => searchNeighborsDialog(false)
           },
           {
-            title: 'Outgoing',
+            title: t('Outgoing'),
             action: () => searchNeighborsDialog(true)
           }
         ]
@@ -260,13 +261,14 @@ export default class EntityNode extends GraphNode {
     const w = this.getWidth()
     const num = (n) => numeral(n).format('0,000')
     const plural = this.data.no_addresses > 1 ? 'es' : ''
+    const translation = (size > 0 ? 'num_of_address' : 'num_address') + plural
     button.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', w / 2)
       .attr('y', h - paddingBottom)
       .attr('font-size', noAddressesLabelHeight)
       .attr('title', this.expandCollapseOrShowAddressTableTitle())
-      .text((size > 0 ? num(size) + '/' : '') + num(this.data.no_addresses) + ' address' + plural)
+      .text(t(translation, num(this.data.no_addresses), num(size)))
       .on('click', () => {
         event.stopPropagation()
         this.dispatcher('selectNode', ['entity', this.id])

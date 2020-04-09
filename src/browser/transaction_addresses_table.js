@@ -1,10 +1,11 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
 
 export default class TransactionAddressesTable extends Table {
   constructor (dispatcher, data, isOutgoing, index, currency, keyspace, nodeIsInGraph) {
     const addresses = isOutgoing ? data.outputs : data.inputs
-    const label = isOutgoing ? 'Output addresses' : 'Input addresses'
+    const label = isOutgoing ? t('Output addresses') : t('Input addresses')
     super(dispatcher, index, addresses.length, currency, keyspace)
     this.isOutgoing = isOutgoing
     this.columns = [
@@ -14,7 +15,7 @@ export default class TransactionAddressesTable extends Table {
         render: this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)
       },
       {
-        name: 'Value',
+        name: t('Value'),
         data: 'value',
         className: 'text-right',
         render: (value, type) =>

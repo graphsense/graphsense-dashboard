@@ -1,3 +1,5 @@
+import { t } from '../lang.js'
+import { nbsp } from '../utils.js'
 import $ from 'jquery'
 import 'datatables.net'
 import 'datatables.net-scroller'
@@ -22,7 +24,7 @@ export default class Table extends BrowserComponent {
     this.loading = null
     this.searchable = false
     if (this.isSmall()) {
-      this.addOption({ icon: 'search', optionText: 'Filter table contents', message: 'toggleSearchTable' })
+      this.addOption({ icon: 'search', optionText: t('Filter table contents'), message: 'toggleSearchTable' })
     }
   }
 
@@ -47,7 +49,7 @@ export default class Table extends BrowserComponent {
       const el = this.root.querySelector('th')
       this.columns.forEach((column, i) => {
         const el2 = el.cloneNode()
-        el2.innerHTML = column.name.replace(/ /g, '&nbsp;')
+        el2.innerHTML = nbsp(column.name)
         tr.appendChild(el2)
       })
       tr.removeChild(el)
@@ -73,7 +75,7 @@ export default class Table extends BrowserComponent {
         serverSide: !this.isSmall(),
         columns: this.columns,
         language: {
-          info: `Showing _START_ to _END_ of ${this.isSmall() ? '_TOTAL_' : total} entries` + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - sort/filter disabled)</span>` : '')
+          info: t('showing_note', '_START_', '_END_', this.isSmall() ? '_TOTAL_' : total) + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - ${t('sort/filter disabled')})</span>` : '')
         }
       })
       // using es5 'function' to have 'this' bound to the triggering element
@@ -189,11 +191,11 @@ export default class Table extends BrowserComponent {
   }
 
   downloadOption () {
-    return { html: downloadCSV, optionText: 'Download table as CSV', message: 'downloadTable' }
+    return { html: downloadCSV, optionText: t('Download table as CSV'), message: 'downloadTable' }
   }
 
   addAllOption () {
-    return { icon: 'plus-square', optionText: 'Add all to graph', message: 'addAllToGraph' }
+    return { icon: 'plus-square', optionText: t('Add all to graph'), message: 'addAllToGraph' }
   }
 
   formatIsInGraph (nodeIsInGraph, type, keyspace) {

@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
 
@@ -7,29 +8,29 @@ export default class AddressesTable extends Table {
     this.entityId = entityId
     this.columns = [
       {
-        name: 'Address',
+        name: t('Address'),
         data: 'address',
         render: this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)
       },
       {
-        name: 'First usage',
+        name: t('First usage'),
         data: 'first_tx.timestamp',
         render: this.formatValue(this.formatTimestamp)
       },
       {
-        name: 'Last usage',
+        name: t('Last usage'),
         data: 'last_tx.timestamp',
         render: this.formatValue(this.formatTimestamp)
       },
       {
-        name: 'Balance',
+        name: t('Final balance'),
         data: 'balance',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
       },
       {
-        name: 'Received',
+        name: t('Total received'),
         data: 'total_received',
         className: 'text-right',
         render: (value, type) =>

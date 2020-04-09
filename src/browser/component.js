@@ -1,3 +1,4 @@
+import { t } from '../lang.js'
 import { replace } from '../template_utils.js'
 import option from './option.html'
 import { formatCurrency } from '../utils.js'
@@ -90,28 +91,28 @@ export default class BrowserComponent extends Component {
       return ''
     }
     if (years > 0) {
-      return `${format(years, 'year', 'years')} ` +
-        `${format(months, 'month', 'months')} ` +
-        `${format(days, 'day', 'days')} `
+      return `${format(years, t('year'), t('years'))} ` +
+        `${format(months, t('month'), t('months'))} ` +
+        `${format(days, t('day'), t('days'))} `
     }
     if (months > 0) {
-      return `${format(months, 'month', 'months')} ` +
-        `${format(days, 'day', 'days')} `
+      return `${format(months, t('month'), t('months'))} ` +
+        `${format(days, t('day'), t('days'))} `
     }
     if (days > 0) {
-      return `${format(days, 'day', 'days')} ` +
-        `${format(hours, 'hour', 'hours')} `
+      return `${format(days, t('day'), t('days'))} ` +
+        `${format(hours, t('hour'), t('hours'))} `
     }
     if (hours > 0) {
-      return `${format(hours, 'hour', 'hours')} ` +
-        `${format(minutes, 'minute', 'minutes')} `
+      return `${format(hours, t('hour'), t('hours'))} ` +
+        `${format(minutes, t('minute'), t('minutes'))} `
     }
 
     if (minutes > 0) {
-      return `${format(minutes, 'minute', 'minutes')} ` +
-        `${format(seconds, 'second', 'seconds')} `
+      return `${format(minutes, t('minute'), t('minutes'))} ` +
+        `${format(seconds, t('second'), t('seconds'))} `
     }
 
-    return `${format(seconds, 'second', 'seconds')} `
+    return `${format(seconds, t('second'), t('seconds'))} `
   }
 }
