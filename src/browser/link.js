@@ -13,7 +13,7 @@ export default class Link extends BrowserComponent {
     this.template = link
     this.options =
       [
-        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initBlockTransactionsTable' }
+        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initLinkTransactionsTable' }
       ]
   }
 

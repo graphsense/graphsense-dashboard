@@ -3,7 +3,7 @@ import Table from './table.js'
 
 export default class LinkTransactionsTable extends Table {
   constructor (dispatcher, index, source, target, nodeType, currency, keyspace) {
-    super(dispatcher, index, 0, currency, keyspace)
+    super(dispatcher, index, 101, currency, keyspace)
     this.source = source
     this.target = target
     this.nodeType = nodeType
@@ -14,8 +14,15 @@ export default class LinkTransactionsTable extends Table {
         render: this.formatValue(this.truncateValue)
       },
       {
-        name: t('Value'),
-        data: 'value',
+        name: t('Input value'),
+        data: 'input_value',
+        className: 'text-right',
+        render: (value, type) =>
+          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+      },
+      {
+        name: t('Output value'),
+        data: 'output_value',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
@@ -31,7 +38,7 @@ export default class LinkTransactionsTable extends Table {
       }
     ]
     this.loadMessage = 'loadLinkTransactions'
-    this.resultField = 'txs'
+    this.resultField = 'links'
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
   }

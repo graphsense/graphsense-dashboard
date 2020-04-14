@@ -16,7 +16,9 @@ export default class Component {
     if (this.update === false) {
       this.update = new Map()
     }
-    this.update.set(update, value)
+    const current = this.update.get(update) || []
+    current.push(value)
+    this.update.set(update, current)
   }
 
   shouldUpdate (update) {

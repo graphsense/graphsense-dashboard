@@ -86,7 +86,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
   }
 
-  setLink (keyspace, source, target) {
+  setLink (keyspace, type, source, target) {
     this.visible = true
     this.setUpdate('visibility')
     if (this.content[0] instanceof Link &&
@@ -94,7 +94,7 @@ export default class Browser extends Component {
         this.content[0].data.target === target
     ) return
     this.destroyComponentsFrom(0)
-    this.content = [new Link(this.dispatcher, { source, target, keyspace }, 0, this.currency)]
+    this.content = [new Link(this.dispatcher, { source, target, keyspace, type }, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -263,7 +263,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initLinkTransactionsTable')
     const keyspace = last.data.keyspace
-    this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, 0, request.source, request.target, request.type, this.currency, keyspace))
+    this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, last.data.source, last.data.target, last.data.type, this.currency, keyspace))
   }
 
   initNeighborsTable (request, isOutgoing) {

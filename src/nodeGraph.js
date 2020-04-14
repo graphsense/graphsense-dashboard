@@ -491,9 +491,11 @@ export default class NodeGraph extends Component {
   }
 
   selectLink (source, target) {
+    this.deselectLink()
     this.selectedLink = [source.id, target.id]
     this.setUpdate('link', source.id)
     this.deselect()
+    logger.debug('setupate', this.update)
   }
 
   isSelectedLink (source, target) {
@@ -721,7 +723,7 @@ export default class NodeGraph extends Component {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     let entityRoot, entityShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
-    logger.debug('graph should update', this.shouldUpdate())
+    logger.debug('graph should update', this.update)
     const transformGraph = () => {
       const x = this.transform.x
       const y = this.transform.y
@@ -850,32 +852,34 @@ export default class NodeGraph extends Component {
       }
     } else if (this.shouldUpdate('link')) {
       // updating the in- and outgoing links of one node (ie. when it is moved)
-      const nodeId = this.getUpdate('link')
-      if (!nodeId) return
-      const node = this.getNode(nodeId, 'entity')
-      let addressLinkSelects = ''
-      const selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
-      if (node) {
-        node.nodes.each(address => {
-          addressLinkSelects += ',' + selector(address.id)
-        })
-      }
-      root.selectAll(selector(nodeId) + addressLinkSelects)
-        .nodes()
-        .map((link) => {
-          const a = [
-            link.getAttribute('data-source'),
-            link.getAttribute('data-target'),
-            link.getAttribute('data-label'),
-            link.getAttribute('data-scale')
-          ]
-          link.parentElement.removeChild(link)
-          return a
-        }).forEach(([s, t, label, scale]) => {
-          const source = this.getNode(s, 'address') || this.getNode(s, 'entity')
-          const target = this.getNode(t, 'address') || this.getNode(t, 'entity')
-          this.drawLink(root, label, scale, source, target)
-        })
+      const nodeIds = this.getUpdate('link')
+      if (!nodeIds) return
+      nodeIds.forEach(nodeId => {
+        const node = this.getNode(nodeId, 'entity')
+        let addressLinkSelects = ''
+        const selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
+        if (node) {
+          node.nodes.each(address => {
+            addressLinkSelects += ',' + selector(address.id)
+          })
+        }
+        root.selectAll(selector(nodeId) + addressLinkSelects)
+          .nodes()
+          .map((link) => {
+            const a = [
+              link.getAttribute('data-source'),
+              link.getAttribute('data-target'),
+              link.getAttribute('data-label'),
+              link.getAttribute('data-scale')
+            ]
+            link.parentElement.removeChild(link)
+            return a
+          }).forEach(([s, t, label, scale]) => {
+            const source = this.getNode(s, 'address') || this.getNode(s, 'entity')
+            const target = this.getNode(t, 'address') || this.getNode(t, 'entity')
+            this.drawLink(root, label, scale, source, target)
+          })
+      })
     }
   }
 

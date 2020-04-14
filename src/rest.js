@@ -151,9 +151,9 @@ export default class Rest {
 
   linkTransactions (keyspace, params, csv) {
     const url =
-       '/' + params.type + 'link/' + params.source + '/' + params.target
+       '/addresses/' + params.source + '/links?neighbor=' + params.target
     if (csv) return this.csv(keyspace, url)
-    return this.json(keyspace, url, 'txs')
+    return this.json(keyspace, url, 'links')
   }
 
   addresses (keyspace, request, csv) {

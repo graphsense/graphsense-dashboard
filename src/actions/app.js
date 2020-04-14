@@ -1026,7 +1026,7 @@ const releaseShift = function () {
 
 const clickLink = function ({ source, target }) {
   this.graph.selectLink(source, target)
-  this.browser.setLink(source.id[2], source.id[0], target.id[0])
+  this.browser.setLink(source.id[2], source.data.type, source.id[0], target.id[0])
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
 }
