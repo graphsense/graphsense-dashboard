@@ -284,6 +284,10 @@ export default class Store {
         }))
       }
       tags.forEach(tag => {
+        for (const key in tag) {
+          if (tag[key] === undefined) tag[key] = null
+        }
+        tag.active = true
         tag.keyspace = tag.currency.toLowerCase()
         const p = prefix(tag.keyspace, tag.address)
         const t = addressTags.get(p) || []
