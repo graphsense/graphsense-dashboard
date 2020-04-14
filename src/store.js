@@ -394,7 +394,8 @@ export default class Store {
         lastmod: +new Date() / 1000,
         category: label.category,
         abuse: label.abuse,
-        keyspace: keyspace
+        keyspace: keyspace,
+        active: true
       })
     }
     newTags.forEach(tag => {
