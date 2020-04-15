@@ -840,6 +840,14 @@ const dragNodeEnd = function () {
   this.graph.dragNodeEnd()
 }
 
+const changeMin = function (value) {
+  this.menu.setMin(value)
+}
+
+const changeMax = function (value) {
+  this.menu.setMax(value)
+}
+
 const changeSearchDepth = function (value) {
   this.menu.setSearchDepth(value)
 }
@@ -1143,7 +1151,9 @@ const functions = {
   releaseShift,
   clickLink,
   hideModal,
-  exportYAML
+  exportYAML,
+  changeMin,
+  changeMax
 }
 
 export default functions

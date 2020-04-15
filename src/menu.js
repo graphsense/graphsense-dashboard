@@ -7,6 +7,7 @@ import Logger from './logger.js'
 import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
+import minmaxForm from './config/minmaxForm.html'
 import { maxSearchBreadth, maxSearchDepth } from './globals.js'
 import { replace, addClass, removeClass } from './template_utils.js'
 import Search from './search/search.js'
@@ -14,7 +15,7 @@ import Search from './search/search.js'
 const logger = Logger.create('Menu') // eslint-disable-line
 
 const defaultCriterion = 'category'
-const defaultParams = () => ({ category: null, addresses: [] })
+const defaultParams = () => ({ category: null, addresses: [], min: 0, max: Infinity })
 const defaultDepth = 2
 const defaultBreadth = 20
 
@@ -148,6 +149,16 @@ export default class Menu extends Component {
       const el = this.root.querySelector('#skipNumAddresses')
       el.value = this.view.skipNumAddresses
       el.setAttribute('min', this.view.breadth)
+    } else if (this.shouldUpdate('minmax')) {
+      if (this.view.params.max !== Infinity) {
+        const min = this.root.querySelector('#min')
+        min.setAttribute('max', this.view.params.max)
+      }
+      if (this.view.params.min !== 0) {
+        const max = this.root.querySelector('#max')
+        max.setAttribute('min', this.view.params.min)
+      }
+      this.renderButton(this.root)
     }
     super.render()
     return this.root
@@ -284,7 +295,6 @@ export default class Menu extends Component {
         this.dispatcher('changeSearchCategory', e.target.value)
       })
       el.querySelector('input[value="category"]').setAttribute('checked', 'checked')
-      el.querySelector('input[value="addresses"]').removeAttribute('checked')
     } else if (this.view.criterion === 'addresses') {
       form.innerHTML = tt(addressesForm)
       const searchinput = form.querySelector('.searchinput')
@@ -298,10 +308,18 @@ export default class Menu extends Component {
         searchAddresses.appendChild(li)
       })
       el.querySelector('input[value="addresses"]').setAttribute('checked', 'checked')
-      el.querySelector('input[value="category"]').removeAttribute('checked')
+    } else if (this.view.criterion === 'balance') {
+      form.innerHTML = tt(minmaxForm)
+      el.querySelector('input[value="balance"]').setAttribute('checked', 'checked')
+      this.renderInput('min', 'changeMin', this.view.params.min)
+      this.renderInput('max', 'changeMax', this.view.params.max)
     }
+    this.renderButton(el)
+  }
+
+  renderButton (el) {
     const button = el.querySelector('input[type="button"]')
-    if (this.view.params.category || this.view.params.addresses.length > 0) {
+    if (this.validParams()) {
       button.addEventListener('click', () => {
         this.dispatcher('searchNeighbors', {
           id: this.view.id,
@@ -316,6 +334,13 @@ export default class Menu extends Component {
     } else {
       addClass(button, 'disabled')
     }
+  }
+
+  validParams () {
+    return this.view.params.category ||
+      this.view.params.addresses.length > 0 ||
+      this.view.params.min !== undefined ||
+      this.view.params.max !== undefined
   }
 
   setSearchCriterion (criterion) {
@@ -417,5 +442,30 @@ export default class Menu extends Component {
       l.abuse = l.available.abuses.values().next().value
     }
     this.setUpdate(true)
+  }
+
+  setMin (value) {
+    if (this.view.viewType !== 'neighborsearch') return
+    if (this.view.criterion !== 'balance') return
+    logger.debug('min', value, this.view.params.min, this.view.params.max)
+    value *= 1
+    this.view.params.min = Math.min(this.view.params.max || Infinity, value)
+    if (this.view.params.min !== value) {
+      this.setUpdate(true)
+    } else {
+      this.setUpdate('minmax')
+    }
+  }
+
+  setMax (value) {
+    if (this.view.viewType !== 'neighborsearch') return
+    if (this.view.criterion !== 'balance') return
+    value *= 1
+    this.view.params.max = Math.max(this.view.params.min || 0, value)
+    if (this.view.params.max !== value) {
+      this.setUpdate(true)
+    } else {
+      this.setUpdate('minmax')
+    }
   }
 }

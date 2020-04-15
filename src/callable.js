@@ -133,7 +133,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'releaseShift',
   'clickLink',
   'hideModal',
-  'exportYAML'
+  'exportYAML',
+  'changeMin',
+  'changeMax'
 )
 
 // synchronous messages

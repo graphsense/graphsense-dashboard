@@ -1,12 +1,16 @@
 <h2 class="text-base">{{t:Criterion}}</h2>
-<div class="flex p-2 criterion">
+<div class="flex flex-col p-2 criterion">
   <div class="flex-grow flex pr-2">
     <input type="radio" value="category" name="searchType" checked/>
     <div class="pl-2">{{t:by category}}</div>
   </div>
   <div class="flex-grow flex">
     <input type="radio" value="addresses" name="searchType"/>
-    <div class="pl-2">{{t:for addresses}}</div>
+    <div class="pl-2">{{t:for contained addresses}}</div>
+  </div>
+  <div class="flex-grow flex">
+    <input type="radio" value="balance" name="searchType"/>
+    <div class="pl-2">{{t:for final balance}}</div>
   </div>
 </div>
 <div class="searchValue"></div>

@@ -85,7 +85,8 @@ import: import # as an imperative
 criterion: criterion
 depth: depth
 by category: by category
-for addresses: for addresses
+for contained addresses: for contained addresses
+for final balance: for final balance
 breadth: breadth
 skip entities with more neighbors than: skip entities with more neighbors than
 search: search # as an imperative
