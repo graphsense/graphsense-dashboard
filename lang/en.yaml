@@ -80,6 +80,7 @@ transaction label: transaction label
 language: language
 english: english
 german: german
+russian: russian
 import: import # as an imperative
 criterion: criterion
 depth: depth

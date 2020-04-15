@@ -1,0 +1,158 @@
+
+# attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
+address: адрес
+addresses: адреса(ов)
+entity: субъект
+entities: субъекта(ов)
+transaction: транзакция
+transactions: транзакции(й)
+label: метка
+labels: метки(ок)
+tag: тэг
+tags: тэга(ов)
+block: блок
+blocks: блока(ов)
+supported currencies: поддерживаемые криптовалюты
+last update: последнее обновление
+latest block: последний блок
+loading_type_id: загружаю %0 %1  # результаты, напр. загружаю адрес xyz
+loading_thing: загружаю %0
+currency: валюта
+neighbors: соседи
+first usage: первое использование
+last usage: последнее использование
+activity period: период активности
+total received: всего получено
+final balance: итоговый баланс
+category: категория
+categories: категории(й)
+abuse: злоупотребление
+abuses: злоупотребления(й)
+incoming neighbors: входящие соседи
+outgoing neighbors: исходящие соседи
+height: высота
+block hash: хэш блока
+created: создан
+no. inputs: кол-во. входящих # number inputs
+no. outputs: кол-во исходящих # number outputs
+total input: итого входящих
+total output: итого исходящих
+year: год
+years: года/лет
+month: месяц
+months: месяца(ев)
+day: день
+days: дня(ей)
+hour: час
+hours: часа(ов)
+minute: минута
+minutes: минут(ы)
+second: секунда
+seconds: секунд(ы)
+addresses tagged: адресов с тэгами
+source: источник
+destination: назначение
+value: 1значение
+timestamp: врем.метка
+outgoing_type: исходящие(х) %0 # eg. incoming addresses
+output addresses: выходящие адреса
+input addresses: входящие адреса
+incoming_type: входящий %0
+no. transactions: кол-во транзакций # number transactions
+filter table contents: фильтровать содержимое таблицы
+showing_note: Показано %0 по %1 от %2 записей
+sort/filter disabled: cортировка/фильтр отключены
+download table as csv: скачать таблицу как CSV
+add all to graph: добавить все в график
+tagpack: набор тэгов
+last modified: посл.изменение
+active: активный
+download tags as json: скачать тэги как JSON
+included in block: включено в блоке
+export: экспорт # as an imperative
+drawing: рисунок
+full data: полные данные
+notes only: только заметки
+titanium tag sharing schema: Схема обмена тегами TITANIUM
+rest calls: вызовы REST
+titanium report: отчет TITANIUM
+address label: адресная метка
+transaction label: метка транзакции
+language: язык
+english: английский
+russian: русский
+german: немецкий
+import: импорт # as an imperative
+criterion: критерий
+depth: глубина
+by category: по категории
+for addresses: для адресов
+breadth: широта
+skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
+search: поиск # as an imperative
+save: сохранить
+title: название
+investigator: следователь
+institution: организация
+summary: сводка
+cancel: отмена
+creator: автор
+change currency: сменить валюту
+start from scratch: новая диаграмма
+load from file: загрузить из файла
+undo last graph change: отменить последнее изменение
+redo undone graph change: повторить последнее изменение
+configuration options: настройка параметров
+legend: цветовое обозначение
+username: имя пользователя
+password: пароль
+sign in: войти
+signing in: вход в систему
+annotate: аннотировать
+remove: удалить
+expand: развернуть
+collapse: свернуть
+show address table: показать таблицу адресов
+sort addresses by: сортировать адреса по
+no. neighbors: кол-во соседей
+incoming: входящие
+outgoing: исходящие
+num_address: %0 адрес
+num_addresses: %0 адреса(ов)
+num_of_address: %1/%0 адрес
+num_of_addresses: %1/%0 адрес(ов)
+the_search: поиск # as a noun
+user-defined labels: пользовательские метки
+hide logs: спрятать логи
+show logs: показать логи
+notes: заметки
+add tag: добавить тэг
+search neighbors: искать %0 соседей
+nothing to display yet: пока нечего отображать!
+entity_tooltip: Субъект касающийся одного или нескольких адресов.
+address_tooltip: Адрес, который можно получить и потратить монеты.
+link_tooltip: Ссылка указывает на то, что существует одна или несколько транзакций между узлами. Направление потока всегда слева направо.
+shadow_tooltip: Теневая ссылка соединяет идентичные адреса и объекты.
+category_name: категория %0
+addresses_ids: адреса %0
+searching_msg: "Поиск по %0 соседей из %1 %2 с %3 (глубина: %4, широта: %5, пропустить если больше %6 адреса(ов))"
+errors only: только ошибки
+show more: показать больше
+error requesting: "Ошибка запроса %0: %1"
+loading transactions between: загружаем транзакции между %0 и %1
+loaded: загружен %0 %1 # eg. loaded address xy
+loading neighbors for: загружено %0 соседей для %1 %2
+loaded neighbors for: загружено %0 соседей для %1 %2
+saving to file: сохранение в файл
+saved to file: сохранение в файл %0
+loading file: загружаем файл %0
+loaded file: загружен файл %0
+loading entity for: загружаем субъект для %0
+loaded entity for: загружен субхект для %0
+no entity for: нет субъекта для %0
+loading tags for: загружаем тэги для %0 %1
+loaded tags for: загружены тэги для %0 %1
+trying to load addresses for entity: пытаемся загрузить %1 адресов для субъекта %0
+loaded addresses for entity: загружено %1 адресов для субъекта %0
+removed node of: удален узел %0 %1
+found paths to nodes: найдено %0 путей к %1 узлам
