@@ -38,7 +38,6 @@ export default class Landingpage extends Component {
     if (this.shouldUpdate(true)) {
       document.body.style.overflow = 'hidden scroll'
       const stats = statsHtml(this.stats)
-      console.log('stats', stats)
       this.root.innerHTML =
         '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
         header + stats + footer({ version: VERSION }) + // eslint-disable-line no-undef

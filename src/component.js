@@ -4,9 +4,6 @@ export default class Component {
   }
 
   setUpdate (update, value) {
-    if (this.nodes) {
-      console.log('setUpdate Entity', this.id, update, value)
-    }
     // boolean overrides strings
     if (typeof update === 'boolean') {
       this.update = update
