@@ -18,6 +18,7 @@ import Component from './component.js'
 import { addClass, removeClass } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
+import { maxTransactionListSize } from './globals.js'
 
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
@@ -86,15 +87,15 @@ export default class Browser extends Component {
     this.setUpdate('content')
   }
 
-  setLink (keyspace, type, source, target) {
+  setLink (data) {
     this.visible = true
     this.setUpdate('visibility')
     if (this.content[0] instanceof Link &&
-        this.content[0].data.source === source &&
-        this.content[0].data.target === target
+        this.content[0].data.source === data.source &&
+        this.content[0].data.target === data.target
     ) return
     this.destroyComponentsFrom(0)
-    this.content = [new Link(this.dispatcher, { source, target, keyspace, type }, 0, this.currency)]
+    this.content = [new Link(this.dispatcher, data, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -263,7 +264,8 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initLinkTransactionsTable')
     const keyspace = last.data.keyspace
-    this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, last.data.source, last.data.target, last.data.type, this.currency, keyspace))
+    const total = Math.min(last.data.no_txs, maxTransactionListSize)
+    this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, last.data.source, last.data.target, total, last.data.type, this.currency, keyspace))
   }
 
   initNeighborsTable (request, isOutgoing) {

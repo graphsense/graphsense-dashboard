@@ -182,6 +182,13 @@ export default class Store {
     outgoing.set(target, { ...data })
   }
 
+  getOutgoing (keyspace, type, source, target) {
+    const s = this.get(keyspace, type, source)
+    logger.debug('s', keyspace, type, source, target, s)
+    if (!s) return
+    return s.outgoing.get(target)
+  }
+
   serialize () {
     const addresses = []
     this.addresses.each(address => {

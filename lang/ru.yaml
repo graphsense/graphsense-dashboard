@@ -86,7 +86,7 @@ import: импорт # as an imperative
 criterion: критерий
 depth: глубина
 by category: по категории
-for addresses: для адресов
+for containing addresses: для адресов
 breadth: широта
 skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
 search: поиск # as an imperative
@@ -156,3 +156,6 @@ trying to load addresses for entity: пытаемся загрузить %1 ад
 loaded addresses for entity: загружено %1 адресов для субъекта %0
 removed node of: удален узел %0 %1
 found paths to nodes: найдено %0 путей к %1 узлам
+go to dashboard: go to dashboard
+remove tag: remove tag
+show at most in links table: at most %0 transactions are listed

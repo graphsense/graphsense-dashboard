@@ -1034,8 +1034,18 @@ const releaseShift = function () {
 
 const clickLink = function ({ source, target }) {
   this.graph.selectLink(source, target)
-  this.browser.setLink(source.id[2], source.data.type, source.id[0], target.id[0])
+  const t = this.store.getOutgoing(source.id[2], source.data.type, source.id[0], target.id[0])
+  logger.debug('t', t)
+  this.browser.setLink({
+    keyspace: source.id[2],
+    type: source.data.type,
+    source: source.id[0],
+    target: target.id[0],
+    no_txs: t.no_txs,
+    estimated_value: t.estimated_value
+  })
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
+  if (source.data.type !== 'address') return
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
 }
 

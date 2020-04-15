@@ -2,8 +2,8 @@ import { t } from '../lang.js'
 import Table from './table.js'
 
 export default class LinkTransactionsTable extends Table {
-  constructor (dispatcher, index, source, target, nodeType, currency, keyspace) {
-    super(dispatcher, index, 101, currency, keyspace)
+  constructor (dispatcher, index, source, target, total, nodeType, currency, keyspace) {
+    super(dispatcher, index, total, currency, keyspace)
     this.source = source
     this.target = target
     this.nodeType = nodeType

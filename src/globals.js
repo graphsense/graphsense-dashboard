@@ -1,15 +1,15 @@
-const browserHeight = 220
-const browserPadding = 1
-const entityWidth = 190
-const expandHandleWidth = 15
-const maxAddableNodes = 100
-const maxSearchDepth = 7
-const maxSearchBreadth = 100
+export const browserHeight = 220
+export const browserPadding = 1
+export const entityWidth = 190
+export const expandHandleWidth = 15
+export const maxAddableNodes = 100
+export const maxSearchDepth = 7
+export const maxSearchBreadth = 100
 
-const searchlimit = 100
-const prefixLength = 3
+export const searchlimit = 100
+export const prefixLength = 3
 
-const currencies =
+export const currencies =
   {
     btc: 'Bitcoin',
     ltc: 'Litecoin',
@@ -19,16 +19,4 @@ const currencies =
     eth: 'Ethereum'
   }
 
-export {
-  browserHeight,
-  browserPadding,
-  entityWidth,
-  expandHandleWidth,
-  maxAddableNodes,
-  currencies,
-  maxSearchBreadth,
-  maxSearchDepth,
-  searchlimit,
-  prefixLength
-
-}
+export const maxTransactionListSize = 100
