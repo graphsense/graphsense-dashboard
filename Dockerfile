@@ -11,6 +11,7 @@ WORKDIR $WORKDIR
 COPY ./docker/docker-entrypoint.sh /
 COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src
+COPY ./lang $WORKDIR/lang
 COPY ./*.js ./*package.json $WORKDIR/
 COPY ./docker/site.conf /etc/nginx/conf.d/
 
