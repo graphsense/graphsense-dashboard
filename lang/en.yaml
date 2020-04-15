@@ -155,3 +155,5 @@ trying to load addresses for entity: trying to load %1 addresses for entity %0
 loaded addresses for entity: loaded %1 addresses for entity %0
 removed node of: removed node of %0 %1
 found paths to nodes: found %0 paths to %1 nodes
+go to dashboard: go to dashboard
+remove tag: remove tag

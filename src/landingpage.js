@@ -1,3 +1,4 @@
+import { t } from './lang.js'
 import header from './pages/static/boldheader.html'
 import footer from './pages/static/footer.hbs'
 import Component from './component.js'
@@ -49,7 +50,7 @@ export default class Landingpage extends Component {
       }
       if (this.showJumpToApp) {
         const el = this.root.querySelector('#jumpToApp')
-        el.innerHTML = '<button class="text-left text-sm text-white" data-msg="jumpToApp">Go to dashboard »</button>'
+        el.innerHTML = '<button class="text-left text-sm text-white" data-msg="jumpToApp">' + t('Go to dashboard') + ' »</button>'
         el.firstChild.addEventListener('click', () => this.dispatcher('jumpToApp'))
       }
     } else if (this.shouldUpdate('stats')) {
