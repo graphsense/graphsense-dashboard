@@ -21,8 +21,11 @@ function parseTypenames (typenames, types) {
 
 function parseTypename (t, types) {
   var name = ''; var i = t.indexOf('.')
-  if (i >= 0) name = t.slice(i + 1), t = t.slice(0, i)
-  if (t && !types.hasOwnProperty(t)) throw new Error('unknown type: ' + t)
+  if (i >= 0) {
+    name = t.slice(i + 1)
+    t = t.slice(0, i)
+  }
+  if (t && !types.hasOwnProperty(t)) throw new Error('unknown type: ' + t) // eslint-disable-line
   return { type: t, name: name }
 }
 
@@ -51,7 +54,9 @@ Dispatch.prototype = dispatch.prototype = {
     // Otherwise, if a null callback was specified, remove callbacks of the given name.
     if (callback != null && typeof callback !== 'function') throw new Error('invalid callback: ' + callback)
     while (++i < n) {
-      if (t = (typename = T[i]).type) _[t] = set(_[t], typename.name, callback)
+      typename = T[i]
+      t = typename.type
+      if (t) _[t] = set(_[t], typename.name, callback)
       else if (callback == null) for (t in _) _[t] = set(_[t], typename.name, null)
     }
 
@@ -66,14 +71,15 @@ Dispatch.prototype = dispatch.prototype = {
     if (this.replaying) {
       return
     }
-    if ((n = arguments.length - 2) > 0) for (var args = new Array(n), i = 0, n, t; i < n; ++i) args[i] = arguments[i + 2]
-    if (!this._.hasOwnProperty(type)) throw new Error('unknown type: ' + type)
+    var n = arguments.length - 2
+    if (n > 0) for (var args = new Array(n), i = 0, t; i < n; ++i) args[i] = arguments[i + 2]
+    if (!this._.hasOwnProperty(type)) throw new Error('unknown type: ' + type) // eslint-disable-line
     add(this.history, type, that, Array.prototype.slice.call(arguments, 2))
     for (t = this._[type], i = 0, n = t.length; i < n; ++i) t[i].value.apply(that, args)
   },
   apply: function (type, that, args) {
     var tt = parseTypename(type, this._)
-    if (!this._.hasOwnProperty(tt.type)) throw new Error('unknown type: ' + tt.type)
+    if (!this._.hasOwnProperty(tt.type)) throw new Error('unknown type: ' + tt.type) // eslint-disable-line
     for (var t = this._[tt.type], i = 0, n = t.length; i < n; ++i) {
       if (tt.name === '') {
         t[i].value.apply(that, args)
@@ -106,7 +112,8 @@ function get (type, name) {
 function set (type, name, callback) {
   for (var i = 0, n = type.length; i < n; ++i) {
     if (type[i].name === name) {
-      type[i] = noop, type = type.slice(0, i).concat(type.slice(i + 1))
+      type[i] = noop
+      type = type.slice(0, i).concat(type.slice(i + 1))
       break
     }
   }

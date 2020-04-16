@@ -13,12 +13,12 @@ const myFetch = (request) => {
   return db.get(request.url)
     .then((resp) => {
       logger.debug(`${request.url} found in cache`)
-      const headers = new Headers()
+      const headers = new Headers() // eslint-disable-line no-undef
       headers.append('Content-Type', 'application/json')
-      return new Response(resp, { status: 200, statusText: 'OK', headers })
-    }, (err) => {
+      return new Response(resp, { status: 200, statusText: 'OK', headers }) // eslint-disable-line no-undef
+    }, (err) => { // eslint-disable-line 
       logger.debug(`${request.url} not found in cache, fetching it remotely`)
-      return fetch(request)
+      return fetch(request) // eslint-disable-line no-undef
         .then(response => {
           // need to clone the response in order to use it twice in the following
           // see https://developer.mozilla.org/en-US/docs/Web/API/Response/clone
