@@ -192,7 +192,6 @@ li.option-active i {
 }
 
 .search-frame {
-  width: 45ex;
   position: relative;
   @apply mr-1 white-shadow
 }

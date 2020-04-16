@@ -1,4 +1,4 @@
-import { t, tt } from '../lang.js'
+import { tt } from '../lang.js'
 import block from './block.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
@@ -10,7 +10,7 @@ export default class Block extends BrowserComponent {
     this.template = block
     this.options =
       [
-        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initBlockTransactionsTable' }
+        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initBlockTransactionsTable' }
       ]
   }
 

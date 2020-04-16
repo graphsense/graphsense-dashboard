@@ -1,7 +1,10 @@
+# attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: Adresse
 addresses: Adressen
+entity: Entität
+entities: Entitäten
 transaction: Transaktion
-transactions: Transaktions
+transactions: Transaktionen
 label: Schlagwort
 labels: Schlagwörter
 tag: Tag
@@ -9,9 +12,158 @@ tags: Tags
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen
-last update: letztes&nbsp;Update
-latest block: letzter&nbsp;Block
-loading_type_id: lade %0 %1
+last update: letztes Update
+latest block: letzter Block
+loading_type_id: lade %0 %1  # results in eg. loading address xyz
 loading_thing: lade %0 
+currency: Währung
+neighbors: Nachbarn
+first usage: erste Verwendung
+last usage: letzte Verwendung
+activity period: Nutzungsdauer
+total received: Gesamt empfangen
+final balance: Endbilanz
+category: Kategorie
+categories: Kategorien
+abuse: Missbrauch
+abuses: Missbräuche
+incoming neighbors: eingehende Nachbarn
+outgoing neighbors: ausgehende Nachbarn
+height: Höhe
+block hash: Block Hash
+created: erstellt
+no. inputs: Anz. Eingehende # number inputs
+no. outputs: Anz. Ausgehende # number outputs
+total input: Gesamt Eingang
+total output: Gesamt Ausgang
+year: Jahr
+years: Jahre
+month: Monat
+months: Monate
+day: Tag
+days: Tage
+hour: Stunde
+hours: Stunden
+minute: Minute
+minutes: Minuten
+second: Sekunde
+seconds: Sekunden
+addresses tagged: getaggte Adressen
+source: Quelle
+destination: Ziel
+value: Wert
+timestamp: Zeitstempel
+outgoing address: ausgehende Adressen 
+incoming address: eingehende Adressen
+outgoing entity: ausgehende Entitäten # plural!
+incoming entity: eingehende Entitäten # plural!
+output addresses: ausgehende Adressen
+input addresses: eingehende Adressen
+no. transactions: Anz. Transaktionen # number transactions
+filter table contents: Tabelle filtern
+showing_note: %0 bis %1 von %2 Einträgen
+sort/filter disabled: Sortieren/Filtern nicht möglich
+download table as csv: Tabelle als CSV herunterladen
+add all to graph: alle zum Graph hinzufügen
+tagpack: Tagpack
+last modified: geändert
+active: aktiv
+download tags as json: Tags als JSON herunterladen
+included in block: enthalten in Block
+export: exportiere # as an imperative
+drawing: Zeichnung
+full data: alle Daten
+notes only: nur Notizen
+titanium tag sharing schema: TITANIUM Tag Sharing Schema
+rest calls: REST Aufrufe
+titanium report: TITANIUM Bericht
+address label: Adressenaufschrift
+transaction label: Transaktionenaufschrift
+language: Sprache
+english: Englisch
+german: Deutsch
+russian: Russisch
+import: importiere # as an imperative
+criterion: Kriterium
+depth: Tiefe
+by category: nach Kategorie
+for contained addresses: nach enthaltenen Adressen
+for final balance: nach Endbilanz
+breadth: Breite
+skip entities with more neighbors than: Entitäten auslassen mit mehr Nachbarn als
+search: suche # as an imperative
+save: speichern
+title: Titel
+investigator: Untersucher
+institution: Institution
+summary: Zusammenfassung
+cancel: Abbrechen
+creator: Ersteller
+change currency: Währung ändern
+start from scratch: neu
+load from file: aus Datei laden
+undo last graph change: rückgängig
+redo undone graph change: wiederherstellen
+configuration options: Konfiguration
+legend: Legende
+username: Benutzername
+password: Passwort
+sign in: anmelden
+signing in: anmelden
+annotate: annotieren
+remove: entfernen
+expand: erweitern
+collapse: Adressen ausblenden
+show address table: Adressentabelle
+sort addresses by: Adressen sortieren
+no. neighbors: Anz. Nachbarn
+incoming: eingehend
+outgoing: ausgehend
+num_address: %0 Adresse
+num_addresses: %0 Adressen
+num_of_address: %1/%0 Adresse
+num_of_addresses: %1/%0 Adressen
+the_search: Suche # as a noun
+user-defined labels: benutzerdefinierte Schlagwörter
+hide logs: Logs verstecken
+show logs: Logs anzeigen
+notes: Notizen
+add tag: Tag hinzufügen
+search incoming neighbors: suche eingehende Nachbarn
+search outgoing neighbors: suche ausgehende Nachbarn
+nothing to display yet: nichts anzuzeigen!
+entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
+address_tooltip: Eine Adresse kann Coins senden und empfangen
+link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
+shadow_tooltip: Eine Schattenverbindung verbinden identische Adressen und Entitäten.
+searching msg category_name: Kategorie %0
+searching msg addresses_ids: Adressen %0
+searching msg outgoing: ausgehenden
+searching msg incoming: eingehenden
+searching msg: "suche nach %0 Nachbarn von %1 mit %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching msg outgoing/incoming, %1 = an id, %2 = searching msg category_name/addresses_ids, %3-%5 = numbers
+errors only: nur Fehler
+show more: zeige mehr
+error requesting: "Fehler beim Aufruf von %0: %1"
+loading transactions between: lade Transaktionen zwischen %0 und %1
+loaded: %0 %1 geladen # eg. loaded address xy
+loading msg outgoing: ausgehende
+loading msg incoming: eingehende
+loading neighbors for: lade %0 Nachbarn von %1 %2 # %0 = loading msg outgoing/incoming, %1 = type %2 = id
+loaded neighbors for: %0 Nachbarn von %1 %2 geladen
+saving to file: speichern in Datei
+saved to file: in Datei %0 gespeichert
+loading file: lade Datei %0
+loaded file: Datei %0 geladen
+loading entity for: lade Entität von %0
+loaded entity for: Entiät von %0 geladen
+no entity for: keine Entität von %0 gefunden
+loading tags for: lade Tags für %0 %1
+loaded tags for: Tags für %0 %1 geladen
+trying to load addresses for entity: versuche %1 Adressen für Entität %0 zu laden # %0 = id, %1 = number
+loaded addresses for entity: %1 Adressen für Entität %0 geladen
+removed node of: Knoten %1 von Typ %0 entfernt
+found paths to nodes: %0 Pfade gefunden
 go to dashboard: zum Dashboard
 remove tag: Tag löschen
+show at most in links table: maximal %0 Transaktionen gelistet
+estimated value: geschätzter Wert

@@ -146,11 +146,11 @@ export default class Statusbar extends Component {
     } else if (this.searching.size() > 0) {
       addClass(this.root, 'loading')
       const search = this.searching.values()[0]
-      const outgoing = search.isOutgoing ? 'outgoing' : 'incoming'
+      const outgoing = 'searching msg ' + (search.isOutgoing ? 'outgoing' : 'incoming')
       let crit = ''
-      if (search.params.category) crit = t('category_name', search.params.category)
-      if (search.params.addresses.length > 0) crit = t('addresses_ids', search.params.addresses.join(','))
-      const msg = t('searching_msg', t(outgoing), search.type, search.id[0], crit, search.depth, search.breadth, search.skipNumAddresses) + ' ...'
+      if (search.params.category) crit = t('searching msg category_name', search.params.category)
+      if (search.params.addresses.length > 0) crit = t('searching msg addresses_ids', search.params.addresses.join(','))
+      const msg = t('Searching msg', t(outgoing), search.id[0], crit, search.depth, search.breadth, search.skipNumAddresses) + ' ...'
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
@@ -248,12 +248,12 @@ export default class Statusbar extends Component {
         return t('Loaded', t(args[0]), args[1] || '')
       case 'loadingNeighbors':
       {
-        const dir = args[2] ? 'outgoing' : 'incoming'
+        const dir = 'loading msg ' + (args[2] ? 'outgoing' : 'incoming')
         return t('Loading neighbors for', t(dir), t(args[1]), args[0]) + ' ...'
       }
       case 'loadedNeighbors':
       {
-        const dir_ = args[2] ? 'outgoing' : 'incoming'
+        const dir_ = 'loading msg ' + (args[2] ? 'outgoing' : 'incoming')
         return t('Loaded neighbors for', t(dir_), t(args[1]), args[0])
       }
       case 'saving':

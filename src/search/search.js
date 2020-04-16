@@ -92,6 +92,7 @@ export default class Search extends Component {
       super.render()
       const placeholder = this.typesToPlaceholder()
       this.root.innerHTML = replace(tt(search), { placeholder })
+      this.root.querySelector('.search-frame').style.width = Math.max(35, placeholder.length) + 10 + 'ex'
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
       this.form = this.root.querySelector('form')

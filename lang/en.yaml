@@ -1,6 +1,6 @@
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: address
-addresses: adresses
+addresses: addresses
 entity: entity
 entities: entities
 transaction: transaction
@@ -53,10 +53,12 @@ source: source
 destination: destination
 value: value
 timestamp: timestamp
-outgoing_type: outgoing %0 # eg. incoming addresses
+outgoing address: outgoing addresses # plural!
+incoming address: incoming addresses # plural!
+outgoing entity: outgoing entities # plural!
+incoming entity: incoming entities # plural!
 output addresses: output addresses
 input addresses: input addresses
-incoming_type: incoming %0
 no. transactions: no. transactions # number transactions
 filter table contents: filter table contents
 showing_note: Showing %0 to %1 of %2 entries
@@ -111,7 +113,7 @@ signing in: signing in
 annotate: annotate
 remove: remove
 expand: expand
-collapse: collapse
+collapse: hide addresses
 show address table: show address table
 sort addresses by: sort addresses by
 no. neighbors: no. neighbors
@@ -127,20 +129,25 @@ hide logs: hide logs
 show logs: show logs
 notes: notes
 add tag: add tag
-search neighbors: search %0 neighbors
+search incoming neighbors: search incoming neighbors
+search outgoing neighbors: search outgoing neighbors
 nothing to display yet: nothing to display yet!
 entity_tooltip: An entity represents an entity dealing with one or more addresses.
 address_tooltip: An address which can receive and spend coins.
 link_tooltip: A link indicates that there exist one or more transactions between the nodes. flow is always from left to right.
 shadow_tooltip: A shadow link connects identical addresses and entities.
-category_name: category %0
-addresses_ids: addresses %0
-searching_msg: "Searching for %0 neighbors of %1 %2 with %3 (depth: %4, breadth: %5, skip if more than %6 addresses)"
+searching msg category_name: category %0
+searching msg addresses_ids: addresses %0
+searching msg outgoing: outgoing
+searching msg incoming: incoming
+searching msg: "searching for %0 neighbors of %1 with %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching msg outgoing/incoming, %1 = an id, %2 = searching msg category_name/addresses_ids, %3-%5 = numbers
 errors only: errors only
 show more: show more
 error requesting: "Error requesting %0: %1"
 loading transactions between: loading transactions between %0 and %1
 loaded: loaded %0 %1 # eg. loaded address xy
+loading msg outgoing: outgoing
+loading msg incoming: incoming
 loading neighbors for: loading %0 neighbors for %1 %2
 loaded neighbors for: loaded %0 neighbors for %1 %2
 saving to file: saving to file
@@ -154,8 +161,9 @@ loading tags for: loading tags for %0 %1
 loaded tags for: loaded tags for %0 %1
 trying to load addresses for entity: trying to load %1 addresses for entity %0
 loaded addresses for entity: loaded %1 addresses for entity %0
-removed node of: removed node of %0 %1
-found paths to nodes: found %0 paths to %1 nodes
+removed node of: removed %0 node %1 # %0 = type, %1 = id
+found paths to nodes: found %0 paths 
 go to dashboard: go to dashboard
 remove tag: remove tag
 show at most in links table: at most %0 transactions are listed
+estimated value: estimated value

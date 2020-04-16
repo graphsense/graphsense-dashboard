@@ -1,4 +1,4 @@
-import { t, tt } from '../lang.js'
+import { tt } from '../lang.js'
 import label from './label.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
@@ -10,7 +10,7 @@ export default class Label extends BrowserComponent {
     this.template = label
     this.options =
       [
-        { icon: 'tags', optionText: t('Tags'), message: 'initTagsTable' }
+        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
 

@@ -1,4 +1,3 @@
-
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: адрес
 addresses: адреса(ов)
@@ -54,10 +53,12 @@ source: источник
 destination: назначение
 value: 1значение
 timestamp: врем.метка
-outgoing_type: исходящие(х) %0 # eg. incoming addresses
+outgoing address: outgoing addresses # plural! TODO
+incoming address: incoming addresses # plural! TODO
+outgoing entity: outgoing entities # plural! #TODO
+incoming entity: incoming entities # plural! #TODO
 output addresses: выходящие адреса
 input addresses: входящие адреса
-incoming_type: входящий %0
 no. transactions: кол-во транзакций # number transactions
 filter table contents: фильтровать содержимое таблицы
 showing_note: Показано %0 по %1 от %2 записей
@@ -80,13 +81,14 @@ address label: адресная метка
 transaction label: метка транзакции
 language: язык
 english: английский
-russian: русский
 german: немецкий
+russian: русский
 import: импорт # as an imperative
 criterion: критерий
 depth: глубина
 by category: по категории
-for containing addresses: для адресов
+for contained addresses: для адресов # TODO
+for final balance: for final balance #TODO
 breadth: широта
 skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
 search: поиск # as an imperative
@@ -127,20 +129,25 @@ hide logs: спрятать логи
 show logs: показать логи
 notes: заметки
 add tag: добавить тэг
-search neighbors: искать %0 соседей
+search incoming neighbors: search incoming neighbors #TODO
+search outgoing neighbors: search outgoing neighbors #TODO
 nothing to display yet: пока нечего отображать!
 entity_tooltip: Субъект касающийся одного или нескольких адресов.
 address_tooltip: Адрес, который можно получить и потратить монеты.
 link_tooltip: Ссылка указывает на то, что существует одна или несколько транзакций между узлами. Направление потока всегда слева направо.
 shadow_tooltip: Теневая ссылка соединяет идентичные адреса и объекты.
-category_name: категория %0
-addresses_ids: адреса %0
-searching_msg: "Поиск по %0 соседей из %1 %2 с %3 (глубина: %4, широта: %5, пропустить если больше %6 адреса(ов))"
+searching msg category_name: категория %0
+searching msg addresses_ids: адреса %0
+searching msg outgoing: outgoing #TODO
+searching msg incoming: incoming #TODO
+searching msg: "Поиск по %0 соседей из %1 %2 с %3 (глубина: %4, широта: %5, пропустить если больше %6 адреса(ов))"
 errors only: только ошибки
 show more: показать больше
 error requesting: "Ошибка запроса %0: %1"
 loading transactions between: загружаем транзакции между %0 и %1
 loaded: загружен %0 %1 # eg. loaded address xy
+loading msg outgoing: outgoing #TODO
+loading msg incoming: incoming #TODO
 loading neighbors for: загружено %0 соседей для %1 %2
 loaded neighbors for: загружено %0 соседей для %1 %2
 saving to file: сохранение в файл
@@ -156,6 +163,7 @@ trying to load addresses for entity: пытаемся загрузить %1 ад
 loaded addresses for entity: загружено %1 адресов для субъекта %0
 removed node of: удален узел %0 %1
 found paths to nodes: найдено %0 путей к %1 узлам
-go to dashboard: go to dashboard
-remove tag: remove tag
-show at most in links table: at most %0 transactions are listed
+go to dashboard: go to dashboard # TODO
+remove tag: remove tag # TODO
+show at most in links table: at most %0 transactions are listed # TODO
+estimated value: estimated value # TODO

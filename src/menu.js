@@ -132,7 +132,7 @@ export default class Menu extends Component {
         this.setupTagpack(el)
       } else if (this.view.viewType === 'neighborsearch') {
         const dir = this.view.isOutgoing ? 'outgoing' : 'incoming'
-        title = t('Search neighbors', dir)
+        title = t(`Search ${dir} neighbors`)
         el.innerHTML = replace(tt(searchDialog),
           {
             searchDepth: this.view.depth,

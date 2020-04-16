@@ -8,7 +8,7 @@ export default class NeighborsTable extends Table {
     this.isOutgoing = isOutgoing
     this.columns = [
       {
-        name: t((isOutgoing ? 'Outgoing_type' : 'Incoming_type'), type),
+        name: t((isOutgoing ? 'Outgoing ' : 'Incoming ') + type),
         data: 'id',
         render: this.formatIsInGraph(nodeIsInGraph, type, keyspace)
       },

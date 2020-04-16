@@ -14,7 +14,7 @@ export default class Link extends BrowserComponent {
     this.template = link
     this.options =
       [
-        { icon: 'exchange-alt', optionText: t('Transactions'), message: 'initLinkTransactionsTable' }
+        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initLinkTransactionsTable' }
       ]
     if (this.data.type !== 'address') {
       this.options = []

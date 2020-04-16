@@ -36,6 +36,7 @@ export default class BrowserComponent extends Component {
       if (optionData.html) {
         optionHtml = optionData.html
       }
+      optionData.optionText = t(optionData.optionText)
       li.innerHTML = replace(optionHtml, optionData)
       li.addEventListener('click', () => {
         this.dispatcher(optionData.message, this.requestData())

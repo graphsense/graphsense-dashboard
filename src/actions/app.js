@@ -900,7 +900,7 @@ const resultSearchNeighbors = function ({ result, context }) {
     })
   }
   add({ nodeId: context.id, isOutgoing: context.isOutgoing }, result.paths)
-  this.statusbar.addMsg('searchResult', count, context.params.category)
+  this.statusbar.addMsg('searchResult', count)
   this.browser.setUpdate('tables_with_addresses')
 }
 
