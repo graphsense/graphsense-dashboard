@@ -303,9 +303,9 @@ export default class Menu extends Component {
         searchAddresses.appendChild(li)
       })
       el.querySelector('input[value="addresses"]').setAttribute('checked', 'checked')
-    } else if (this.view.criterion === 'final_balance') {
+    } else if (this.view.criterion === 'final_balance' || this.view.criterion === 'total_received') {
       form.innerHTML = tt(minmaxForm)
-      el.querySelector('input[value="final_balance"]').setAttribute('checked', 'checked')
+      el.querySelector('input[value="' + this.view.criterion + '"]').setAttribute('checked', 'checked')
       this.renderInput('min', 'changeMin', this.view.params.min)
       this.renderInput('max', 'changeMax', this.view.params.max)
     }
@@ -363,7 +363,7 @@ export default class Menu extends Component {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.criterion = criterion
     this.view.params = defaultParams()
-    if (this.view.criterion === 'final_balance') {
+    if (this.view.criterion === 'final_balance' || this.view.criterion === 'total_received') {
       this.view.params.field = this.view.criterion
     }
     if (criterion === 'addresses') {
@@ -467,7 +467,7 @@ export default class Menu extends Component {
 
   setMin (value) {
     if (this.view.viewType !== 'neighborsearch') return
-    if (this.view.criterion !== 'final_balance') return
+    if (this.view.criterion !== 'final_balance' && this.view.criterion !== 'total_received') return
     logger.debug('min', value, this.view.params.min, this.view.params.max)
     value *= 1
     this.view.params.min = Math.min(this.view.params.max || Infinity, value)
@@ -480,7 +480,7 @@ export default class Menu extends Component {
 
   setMax (value) {
     if (this.view.viewType !== 'neighborsearch') return
-    if (this.view.criterion !== 'final_balance') return
+    if (this.view.criterion !== 'final_balance' && this.view.criterion !== 'total_received') return
     value *= 1
     this.view.params.max = Math.max(this.view.params.min || 0, value)
     if (this.view.params.max !== value) {

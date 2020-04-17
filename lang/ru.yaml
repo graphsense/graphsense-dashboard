@@ -89,6 +89,7 @@ depth: глубина
 by category: по категории
 for contained addresses: для адресов # TODO
 for final balance: for final balance #TODO
+for total received: for total received #TODO
 breadth: широта
 skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
 search: поиск # as an imperative
@@ -141,7 +142,8 @@ searching criterion addresses_ids: адреса %0
 searching between: between %0 and %1 #TODO
 searching min: from %0 #TODO
 searching max: up to %1 #TODO
-searching criterion final balance: итоговый баланс %0 # one of searching between, min, max
+searching criterion final_balance: итоговый баланс %0 # one of searching between, min, max
+searching criterion total_received: всего получено %0 # one of searching between, min, max
 searching outgoing: outgoing #TODO
 searching incoming: incoming #TODO
 searching: "Поиск по %0 соседей из %1 с %2 (глубина: %3, широта: %4, пропустить если больше %5 адреса(ов))" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
