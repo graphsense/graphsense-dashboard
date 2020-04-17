@@ -15,7 +15,7 @@ import Search from './search/search.js'
 const logger = Logger.create('Menu') // eslint-disable-line
 
 const defaultCriterion = 'category'
-const defaultParams = () => ({ category: null, addresses: [], min: 0, max: Infinity })
+const defaultParams = () => ({ category: null, addresses: [], field: null, min: null, max: null })
 const defaultDepth = 2
 const defaultBreadth = 20
 
@@ -303,9 +303,9 @@ export default class Menu extends Component {
         searchAddresses.appendChild(li)
       })
       el.querySelector('input[value="addresses"]').setAttribute('checked', 'checked')
-    } else if (this.view.criterion === 'balance') {
+    } else if (this.view.criterion === 'final_balance') {
       form.innerHTML = tt(minmaxForm)
-      el.querySelector('input[value="balance"]').setAttribute('checked', 'checked')
+      el.querySelector('input[value="final_balance"]').setAttribute('checked', 'checked')
       this.renderInput('min', 'changeMin', this.view.params.min)
       this.renderInput('max', 'changeMax', this.view.params.max)
     }
@@ -313,7 +313,11 @@ export default class Menu extends Component {
   }
 
   renderButton (el) {
-    const button = el.querySelector('input[type="button"]')
+    let button = el.querySelector('input[type="button"]')
+    // to remove existing event listeners
+    const clone = button.cloneNode(false)
+    button.parentNode.replaceChild(clone, button)
+    button = clone
     if (this.view.viewType === 'neighborsearch') {
       if (this.validParams()) {
         button.addEventListener('click', () => {
@@ -359,6 +363,9 @@ export default class Menu extends Component {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.criterion = criterion
     this.view.params = defaultParams()
+    if (this.view.criterion === 'final_balance') {
+      this.view.params.field = this.view.criterion
+    }
     if (criterion === 'addresses') {
       this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
     }
@@ -460,7 +467,7 @@ export default class Menu extends Component {
 
   setMin (value) {
     if (this.view.viewType !== 'neighborsearch') return
-    if (this.view.criterion !== 'balance') return
+    if (this.view.criterion !== 'final_balance') return
     logger.debug('min', value, this.view.params.min, this.view.params.max)
     value *= 1
     this.view.params.min = Math.min(this.view.params.max || Infinity, value)
@@ -473,7 +480,7 @@ export default class Menu extends Component {
 
   setMax (value) {
     if (this.view.viewType !== 'neighborsearch') return
-    if (this.view.criterion !== 'balance') return
+    if (this.view.criterion !== 'final_balance') return
     value *= 1
     this.view.params.max = Math.max(this.view.params.min || 0, value)
     if (this.view.params.max !== value) {

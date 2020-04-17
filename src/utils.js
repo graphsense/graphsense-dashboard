@@ -8,8 +8,16 @@ export function nbsp (string) {
   return string.replace(' ', '&nbsp;')
 }
 
+export function satoshiToCoin (value) {
+  return value * 10000 * 10000
+}
+
+export function coinToSatoshi (value) {
+  return value / 10000 / 10000
+}
+
 function formatBTC (valueValue, currencyCode, { dontAppendCurrency, keyspace }) {
-  const value = valueValue / 10000 / 10000
+  const value = coinToSatoshi(valueValue)
   if (value === 0) {
     return '0 ' + (keyspace || currencyCode).toUpperCase()
   }

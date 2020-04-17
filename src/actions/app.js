@@ -1,5 +1,6 @@
 import Logger from '../logger.js'
 import moment from 'moment'
+import { satoshiToCoin } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
@@ -860,8 +861,12 @@ const changeSkipNumAddresses = function (value) {
 }
 
 const searchNeighbors = function (params) {
-  logger.debug('search params', params)
   this.statusbar.addSearching(params)
+  params.params.currency = this.layout.currency
+  if (this.layout.currency === 'value') {
+    params.params.min = params.params.min ? satoshiToCoin(params.params.min) : null
+    params.params.max = params.params.max ? satoshiToCoin(params.params.max) : null
+  }
   this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
   this.menu.hideMenu()
 }

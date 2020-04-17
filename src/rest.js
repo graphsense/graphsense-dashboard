@@ -215,8 +215,10 @@ export default class Rest {
     let searchCrit = ''
     if (params.category) {
       searchCrit = `category=${params.category}`
-    } else if (params.addresses) {
+    } else if (params.addresses && params.addresses.length > 0) {
       searchCrit = 'addresses=' + params.addresses.join(',')
+    } else if (params.field) {
+      searchCrit = `field=${params.field}&fieldcurrency=${params.currency}${params.min ? `&min=${params.min}` : ''}${params.max ? `&max=${params.max}` : ''}`
     }
     const url =
       `/entities/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumAddresses=${skipNumAddresses}`

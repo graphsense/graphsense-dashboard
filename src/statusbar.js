@@ -146,11 +146,15 @@ export default class Statusbar extends Component {
     } else if (this.searching.size() > 0) {
       addClass(this.root, 'loading')
       const search = this.searching.values()[0]
-      const outgoing = 'searching msg ' + (search.isOutgoing ? 'outgoing' : 'incoming')
+      const outgoing = 'searching ' + (search.isOutgoing ? 'outgoing' : 'incoming')
       let crit = ''
-      if (search.params.category) crit = t('searching msg category_name', search.params.category)
-      if (search.params.addresses.length > 0) crit = t('searching msg addresses_ids', search.params.addresses.join(','))
-      const msg = t('Searching msg', t(outgoing), search.id[0], crit, search.depth, search.breadth, search.skipNumAddresses) + ' ...'
+      if (search.params.category) crit = t('searching criterion category_name', search.params.category)
+      if (search.params.addresses.length > 0) crit = t('searching criterion addresses_ids', search.params.addresses.join(','))
+      if (search.params.field) {
+        const range = 'searching ' + (search.params.min && search.params.max ? 'between' : (search.params.max ? 'max' : 'min'))
+        crit = t('searching criterion ' + search.params.field, t(range, search.params.min, search.params.max))
+      }
+      const msg = t('Searching', t(outgoing), search.id[0], crit, search.depth, search.breadth, search.skipNumAddresses) + ' ...'
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
