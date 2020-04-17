@@ -159,6 +159,9 @@ export default class Menu extends Component {
         max.setAttribute('min', this.view.params.min)
       }
       this.renderButton(this.root)
+    } else if (this.shouldUpdate('button')) {
+      logger.debug('render button')
+      this.renderButton(this.root)
     }
     super.render()
     return this.root
@@ -188,15 +191,7 @@ export default class Menu extends Component {
     this.search.render(searchinput)
     const searchLabels = el.querySelector('#labels')
 
-    const button = el.querySelector('input[type="button"]')
-    button.addEventListener('click', () => {
-      this.dispatcher('setLabels', {
-        id: this.view.data.id,
-        type: this.view.data.type,
-        keyspace: this.view.data.keyspace,
-        labels: this.view.labels
-      })
-    })
+    this.renderButton(el)
 
     const label = Object.keys(this.view.labels)[0]
     if (!label) return
@@ -319,20 +314,37 @@ export default class Menu extends Component {
 
   renderButton (el) {
     const button = el.querySelector('input[type="button"]')
-    if (this.validParams()) {
-      button.addEventListener('click', () => {
-        this.dispatcher('searchNeighbors', {
-          id: this.view.id,
-          type: this.view.type,
-          isOutgoing: this.view.isOutgoing,
-          depth: this.view.depth,
-          breadth: this.view.breadth,
-          skipNumAddresses: this.view.skipNumAddresses,
-          params: this.view.params
+    if (this.view.viewType === 'neighborsearch') {
+      if (this.validParams()) {
+        button.addEventListener('click', () => {
+          this.dispatcher('searchNeighbors', {
+            id: this.view.id,
+            type: this.view.type,
+            isOutgoing: this.view.isOutgoing,
+            depth: this.view.depth,
+            breadth: this.view.breadth,
+            skipNumAddresses: this.view.skipNumAddresses,
+            params: this.view.params
+          })
         })
-      })
-    } else {
-      addClass(button, 'disabled')
+        removeClass(button, 'disabled')
+      } else {
+        addClass(button, 'disabled')
+      }
+    } else if (this.view.viewType === 'tagpack') {
+      if (this.view.dirty) {
+        button.addEventListener('click', () => {
+          this.dispatcher('setLabels', {
+            id: this.view.data.id,
+            type: this.view.data.type,
+            keyspace: this.view.data.keyspace,
+            labels: this.view.labels
+          })
+        })
+        removeClass(button, 'disabled')
+      } else {
+        addClass(button, 'disabled')
+      }
     }
   }
 
@@ -400,12 +412,14 @@ export default class Menu extends Component {
     if (this.view.labels[label]) return
     this.labelTagsLoading = loadingTags
     this.view.labels[label] = { label, category: null, abuse: null, source: null }
+    this.setDirty(true)
     this.setUpdate(true)
   }
 
   removeSearchLabel (label) {
     if (this.view.viewType !== 'tagpack') return
     delete this.view.labels[label]
+    this.setDirty(true)
     this.setUpdate(true)
   }
 
@@ -415,7 +429,7 @@ export default class Menu extends Component {
     for (const i in data) {
       this.view.labels[label][i] = data[i]
     }
-    this.setUpdate(true)
+    this.setDirty(true)
   }
 
   labelTagsData (result) {
@@ -467,5 +481,11 @@ export default class Menu extends Component {
     } else {
       this.setUpdate('minmax')
     }
+  }
+
+  setDirty (d) {
+    if (this.view.viewType !== 'tagpack') return
+    this.view.dirty = d
+    this.setUpdate('button')
   }
 }

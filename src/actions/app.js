@@ -585,7 +585,6 @@ const changeSearchCategory = function (category) {
 
 const changeUserDefinedTag = function ({ label, data }) {
   this.menu.setTagpack(label, data)
-  this.omitUpdate()
 }
 
 const hideContextmenu = function () {
