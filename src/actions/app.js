@@ -473,7 +473,6 @@ const resultTags = function ({ context, result }) {
 }
 
 const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
-  this.statusbar.addLoading(`neighbors of ${type} ${id[0]}`)
   this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
   this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
 }
@@ -500,7 +499,6 @@ const resultEgonet = function ({ context, result }) {
 
 const loadEntityAddresses = function ({ id, keyspace, limit }) {
   this.statusbar.addMsg('loadingEntityAddresses', id, limit)
-  this.statusbar.addLoading('addresses of entity ' + id[0])
   this.mapResult(this.rest.entityAddresses(keyspace, id[0], limit), 'resultEntityAddresses', { id, keyspace })
 }
 
