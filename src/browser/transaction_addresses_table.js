@@ -5,7 +5,7 @@ import { maxAddableNodes } from '../globals.js'
 export default class TransactionAddressesTable extends Table {
   constructor (dispatcher, data, isOutgoing, index, currency, keyspace, nodeIsInGraph) {
     const addresses = isOutgoing ? data.outputs : data.inputs
-    const label = isOutgoing ? t('Output addresses') : t('Input addresses')
+    const label = isOutgoing ? t('Output address') : t('Input address')
     super(dispatcher, index, addresses.length, currency, keyspace)
     this.isOutgoing = isOutgoing
     this.columns = [

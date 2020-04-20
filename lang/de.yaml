@@ -53,12 +53,16 @@ source: Quelle
 destination: Ziel
 value: Wert
 timestamp: Zeitstempel
-outgoing address: ausgehende Adressen 
-incoming address: eingehende Adressen
-outgoing entity: ausgehende Entitäten # plural!
-incoming entity: eingehende Entitäten # plural!
-output addresses: ausgehende Adressen
-input addresses: eingehende Adressen
+outgoing address: ausgehende Adresse 
+incoming address: eingehende Adresse
+outgoing entity: ausgehende Entität
+incoming entity: eingehende Entität
+outgoing addresses: ausgehende Adressen
+incoming addresses: eingehende Adressen
+outgoing entities: ausgehende Entitäten
+incoming entities: eingehende Entitäten
+output address: ausgehende Adresse
+input address: eingehende Adresse
 no. transactions: Anz. Transaktionen # number transactions
 filter table contents: Tabelle filtern
 sort/filter disabled: Sortieren/Filtern nicht möglich

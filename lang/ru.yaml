@@ -53,12 +53,16 @@ source: источник
 destination: назначение
 value: 1значение
 timestamp: врем.метка
-outgoing address: outgoing addresses # plural! TODO
-incoming address: incoming addresses # plural! TODO
-outgoing entity: outgoing entities # plural! #TODO
-incoming entity: incoming entities # plural! #TODO
-output addresses: выходящие адреса
-input addresses: входящие адреса
+outgoing address: outgoing address # TODO
+incoming address: incoming address # TODO
+outgoing entity: outgoing entity # TODO
+incoming entity: incoming entity # TODO
+outgoing addresses: outgoing addresses # TODO
+incoming addresses: incoming addresses # TODO
+outgoing entities: outgoing entities # TODO
+incoming entities: incoming entities # TODO
+output address: выходящие адреса # TODO
+input address: входящие адреса # TODO
 no. transactions: кол-во транзакций # number transactions
 filter table contents: фильтровать содержимое таблицы
 sort/filter disabled: cортировка/фильтр отключены

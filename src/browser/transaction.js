@@ -10,8 +10,8 @@ export default class Transaction extends BrowserComponent {
     this.template = transaction
     this.options =
       [
-        { icon: 'sign-in-alt', optionText: 'Incoming address', message: 'initTxInputsTable' },
-        { icon: 'sign-out-alt', optionText: 'Outgoing address', message: 'initTxOutputsTable' }
+        { icon: 'sign-in-alt', optionText: 'Incoming addresses', message: 'initTxInputsTable' },
+        { icon: 'sign-out-alt', optionText: 'Outgoing addresses', message: 'initTxOutputsTable' }
       ]
   }
 

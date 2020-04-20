@@ -53,12 +53,16 @@ source: source
 destination: destination
 value: value
 timestamp: timestamp
-outgoing address: outgoing addresses # plural!
-incoming address: incoming addresses # plural!
-outgoing entity: outgoing entities # plural!
-incoming entity: incoming entities # plural!
-output addresses: output addresses
-input addresses: input addresses
+outgoing address: outgoing address
+incoming address: incoming address
+outgoing entity: outgoing entity
+incoming entity: incoming entity
+outgoing addresses: outgoing addresses
+incoming addresses: incoming addresses
+outgoing entities: outgoing entities
+incoming entities: incoming entities
+output address: output address
+input address: input address
 no. transactions: no. transactions # number transactions
 filter table contents: filter table contents
 sort/filter disabled: sort/filter disabled
