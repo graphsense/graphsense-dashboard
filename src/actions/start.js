@@ -173,7 +173,10 @@ const localeLoaded = function ({ result, context }) {
   setDTLanguagePack(result.dtLocale)
   logger.debug('pack', result)
   moment.locale(locale)
+  // fix thousands
   numeral.locale(locale)
+  const l = numeral.localeData(locale)
+  if (l.delimiters.thousands === ' ') l.delimiters.thousands = '.'
   this.locale = locale
   if (this.config) this.config.setLocale(locale)
   if (this.landingpage) this.landingpage.setUpdate(true)
