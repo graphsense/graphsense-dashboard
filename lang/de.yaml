@@ -61,7 +61,6 @@ output addresses: ausgehende Adressen
 input addresses: eingehende Adressen
 no. transactions: Anz. Transaktionen # number transactions
 filter table contents: Tabelle filtern
-showing_note: %0 bis %1 von %2 Einträgen
 sort/filter disabled: Sortieren/Filtern nicht möglich
 download table as csv: Tabelle als CSV herunterladen
 add all to graph: alle zum Graph hinzufügen

@@ -1,4 +1,4 @@
-import { t } from '../lang.js'
+import { t, dtLanguagePack } from '../lang.js'
 import { nbsp } from '../utils.js'
 import $ from 'jquery'
 import 'datatables.net'
@@ -54,8 +54,11 @@ export default class Table extends BrowserComponent {
       })
       tr.removeChild(el)
       const that = this
-      const total = numeral(this.total).format('1,000')
+      const language = { ...dtLanguagePack }
+      const info = language.info ? 'info' : 'sInfo'
+      language[info] = language[info] + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - ${t('sort/filter disabled')})</span>` : '')
       const tab = this.table = $(this.root).children().first().DataTable({
+
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
@@ -74,9 +77,7 @@ export default class Table extends BrowserComponent {
         stateSave: false,
         serverSide: !this.isSmall(),
         columns: this.columns,
-        language: {
-          info: t('showing_note', '_START_', '_END_', this.isSmall() ? '_TOTAL_' : total) + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - ${t('sort/filter disabled')})</span>` : '')
-        }
+        language
       })
       // using es5 'function' to have 'this' bound to the triggering element
       this.table.on('click', 'td', function (e) {

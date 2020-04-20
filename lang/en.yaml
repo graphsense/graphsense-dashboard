@@ -61,7 +61,6 @@ output addresses: output addresses
 input addresses: input addresses
 no. transactions: no. transactions # number transactions
 filter table contents: filter table contents
-showing_note: Showing %0 to %1 of %2 entries
 sort/filter disabled: sort/filter disabled
 download table as csv: download table as CSV
 add all to graph: add all to graph

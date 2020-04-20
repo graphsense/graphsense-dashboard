@@ -17,3 +17,9 @@ export const t = (key, ...args) => {
 export const tt = (template) => {
   return template.replace(new RegExp('{{t:([^}]+)}}', 'g'), (match, key) => t(key))
 }
+
+export let dtLanguagePack = null
+
+export const setDTLanguagePack = (pack) => {
+  dtLanguagePack = pack
+}

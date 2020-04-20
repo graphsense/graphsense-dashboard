@@ -61,7 +61,6 @@ output addresses: выходящие адреса
 input addresses: входящие адреса
 no. transactions: кол-во транзакций # number transactions
 filter table contents: фильтровать содержимое таблицы
-showing_note: Показано %0 по %1 от %2 записей
 sort/filter disabled: cортировка/фильтр отключены
 download table as csv: скачать таблицу как CSV
 add all to graph: добавить все в график

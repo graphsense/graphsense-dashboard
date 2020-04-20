@@ -2,7 +2,7 @@ import { searchlimit, prefixLength } from '../globals.js'
 import { text } from 'd3-fetch'
 import YAML from 'yaml'
 import Logger from '../logger.js'
-import { setLanguagePack } from '../lang.js'
+import { setLanguagePack, setDTLanguagePack } from '../lang.js'
 import numeral from 'numeral'
 import moment from 'moment'
 /* develblock:start */
@@ -155,12 +155,22 @@ const jumpToApp = function () {
 }
 
 const changeLocale = function (locale) {
-  this.mapResult(text(`./lang/${locale}.yaml`).then(YAML.parse), 'localeLoaded', locale)
+  this.mapResult(
+    text(`./lang/${locale}.yaml`)
+      .then(YAML.parse)
+      .then(yaml =>
+        text(`./lang/datatables/${locale}.lang`)
+          .then(JSON.parse)
+          .then(json => ({ locale: yaml, dtLocale: json }))
+      ),
+    'localeLoaded', locale
+  )
 }
 
 const localeLoaded = function ({ result, context }) {
   const locale = context
-  setLanguagePack(result)
+  setLanguagePack(result.locale)
+  setDTLanguagePack(result.dtLocale)
   logger.debug('pack', result)
   moment.locale(locale)
   numeral.locale(locale)
