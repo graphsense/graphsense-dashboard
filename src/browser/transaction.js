@@ -2,6 +2,8 @@ import { tt } from '../lang.js'
 import transaction from './transaction.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
+import incomingNeighbors from '../icons/incomingNeighbors.html'
+import outgoingNeighbors from '../icons/outgoingNeighbors.html'
 
 export default class Transaction extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -10,8 +12,8 @@ export default class Transaction extends BrowserComponent {
     this.template = transaction
     this.options =
       [
-        { icon: 'sign-in-alt', optionText: 'Incoming addresses', message: 'initTxInputsTable' },
-        { icon: 'sign-out-alt', optionText: 'Outgoing addresses', message: 'initTxOutputsTable' }
+        { html: incomingNeighbors, optionText: 'Incoming addresses', message: 'initTxInputsTable' },
+        { html: outgoingNeighbors, optionText: 'Outgoing addresses', message: 'initTxOutputsTable' }
       ]
   }
 
