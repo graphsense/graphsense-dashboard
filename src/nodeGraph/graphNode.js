@@ -242,7 +242,7 @@ class GraphNode extends Component {
     })
     const entries = Object.entries(grouped)
     if (entries.length < 2) return entries[0] && entries[0][0]
-    return entries.length + ' tags'
+    return entries.length + ' ' + t('tags')
   }
 
   getActorCategory () {
