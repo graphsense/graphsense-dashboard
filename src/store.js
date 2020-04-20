@@ -336,7 +336,7 @@ export default class Store {
         sp = unprefix(id)
       }
       links.forEach(({ key, value }) => {
-        this.linkOutgoing(sp[1], key, sp[0], key, value)
+        this.linkOutgoing(sp[1], key, sp[0], sp[0], value)
       })
     })
   }
