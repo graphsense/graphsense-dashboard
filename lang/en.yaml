@@ -157,7 +157,7 @@ loading transactions between: loading transactions between %0 and %1
 loaded: loaded %0 %1 # eg. loaded address xy
 loading msg outgoing: outgoing
 loading msg incoming: incoming
-loading neighbors for: loading %0 neighbors for %1 %2
+loading neighbors for: loading %0 neighbors for %1 %2 # %0 = loading msg outgoing/incoming, %1 = type %2 = id
 loaded neighbors for: loaded %0 neighbors for %1 %2
 saving to file: saving to file
 saved to file: saved to file %0

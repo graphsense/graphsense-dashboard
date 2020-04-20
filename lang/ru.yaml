@@ -1,18 +1,19 @@
+
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: адрес
-addresses: адреса(ов)
+addresses: адреса
 entity: субъект
-entities: субъекта(ов)
+entities: субъекты
 transaction: транзакция
-transactions: транзакции(й)
+transactions: транзакции
 label: метка
-labels: метки(ок)
+labels: метки
 tag: тэг
-tags: тэга(ов)
+tags: тэги
 block: блок
 blocks: блока(ов)
 supported currencies: поддерживаемые криптовалюты
-last update: последнее обновление
+last update: посл. обновление
 latest block: последний блок
 loading_type_id: загружаю %0 %1  # результаты, напр. загружаю адрес xyz
 loading_thing: загружаю %0
@@ -126,7 +127,7 @@ outgoing: исходящие
 num_address: %0 адрес
 num_addresses: %0 адреса(ов)
 num_of_address: %1/%0 адрес
-num_of_addresses: %1/%0 адрес(ов)
+num_of_addresses: %1/%0 адреса(ов)
 the_search: поиск # as a noun
 user-defined labels: пользовательские метки
 hide logs: спрятать логи
@@ -157,7 +158,7 @@ loading transactions between: загружаем транзакции между
 loaded: загружен %0 %1 # eg. loaded address xy
 loading msg outgoing: outgoing #TODO
 loading msg incoming: incoming #TODO
-loading neighbors for: загружено %0 соседей для %1 %2
+loading neighbors for: загружено %0 соседей для %1 %2 # %0 = loading msg outgoing/incoming, %1 = type %2 = id
 loaded neighbors for: загружено %0 соседей для %1 %2
 saving to file: сохранение в файл
 saved to file: сохранение в файл %0
