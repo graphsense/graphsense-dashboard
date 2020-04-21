@@ -13,7 +13,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 
-const VERSION = '0.4.2'
+const VERSION = '0.4.3.dev'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const DEV_TITANIUM_REPORT_GENERATION_URL = 'http://localhost:5000'
 
