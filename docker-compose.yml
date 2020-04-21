@@ -1,0 +1,18 @@
+version: "3.1"
+
+services:
+
+  graphsense-dashboard:
+    image: graphsense-dashboard
+    container_name: graphsense-dashboard
+    hostname: graphsense-dashboard
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      REST_ENDPOINT: "${REST_ENDPOINT}"
+      TITANIUM_REPORT_GENERATION_URL: "${TITANIUM_REPORT_GENERATION_URL}"
+    command: ["nginx", "-g", "daemon off;"]
+    restart: always
