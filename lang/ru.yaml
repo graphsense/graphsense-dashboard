@@ -1,4 +1,3 @@
-
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: адрес
 addresses: адреса
@@ -25,15 +24,15 @@ activity period: период активности
 total received: всего получено
 final balance: итоговый баланс
 category: категория
-categories: категории(й)
+categories: категории
 abuse: злоупотребление
-abuses: злоупотребления(й)
+abuses: злоупотреблений
 incoming neighbors: входящие соседи
 outgoing neighbors: исходящие соседи
 height: высота
 block hash: хэш блока
 created: создан
-no. inputs: кол-во. входящих # number inputs
+no. inputs: кол-во входящих # number inputs
 no. outputs: кол-во исходящих # number outputs
 total input: итого входящих
 total output: итого исходящих
@@ -52,18 +51,18 @@ seconds: секунд(ы)
 addresses tagged: адресов с тэгами
 source: источник
 destination: назначение
-value: 1значение
+value: значение
 timestamp: врем.метка
-outgoing address: outgoing address # TODO
-incoming address: incoming address # TODO
-outgoing entity: outgoing entity # TODO
-incoming entity: incoming entity # TODO
-outgoing addresses: outgoing addresses # TODO
-incoming addresses: incoming addresses # TODO
-outgoing entities: outgoing entities # TODO
-incoming entities: incoming entities # TODO
-output address: выходящие адреса # TODO
-input address: входящие адреса # TODO
+outgoing address: исходящий адрес
+incoming address: входящий адрес
+outgoing entity: отсылающий субъект
+incoming entity: получающий субъект
+outgoing addresses: исходящие адреса
+incoming addresses: входящие адреса
+outgoing entities: отсылающие субъекты
+incoming entities: получающие субъекты
+output address: выходящие адреса
+input address: входящие адреса
 no. transactions: кол-во транзакций # number transactions
 filter table contents: фильтровать содержимое таблицы
 sort/filter disabled: cортировка/фильтр отключены
@@ -91,9 +90,9 @@ import: импорт # as an imperative
 criterion: критерий
 depth: глубина
 by category: по категории
-for contained addresses: для адресов # TODO
-for final balance: for final balance #TODO
-for total received: for total received #TODO
+for contained addresses: для содержащихся адресов
+for final balance: для итог. баланса
+for total received: для всего получено
 breadth: широта
 skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
 search: поиск # as an imperative
@@ -125,39 +124,39 @@ no. neighbors: кол-во соседей
 incoming: входящие
 outgoing: исходящие
 num_address: %0 адрес
-num_addresses: %0 адреса(ов)
+num_addresses: %0 адреса
 num_of_address: %1/%0 адрес
-num_of_addresses: %1/%0 адреса(ов)
+num_of_addresses: %1/%0 адреса
 the_search: поиск # as a noun
 user-defined labels: пользовательские метки
 hide logs: спрятать логи
 show logs: показать логи
 notes: заметки
 add tag: добавить тэг
-search incoming neighbors: search incoming neighbors #TODO
-search outgoing neighbors: search outgoing neighbors #TODO
-nothing to display yet: пока нечего отображать!
+search incoming neighbors: поиск по входящим соседям
+search outgoing neighbors: поиск по исходящим соседям
+nothing to display yet: пока ничего не отображается
 entity_tooltip: Субъект касающийся одного или нескольких адресов.
 address_tooltip: Адрес, который можно получить и потратить монеты.
 link_tooltip: Ссылка указывает на то, что существует одна или несколько транзакций между узлами. Направление потока всегда слева направо.
 shadow_tooltip: Теневая ссылка соединяет идентичные адреса и объекты.
 searching criterion category_name: категория %0
 searching criterion addresses_ids: адреса %0
-searching between: between %0 and %1 #TODO
-searching min: from %0 #TODO
-searching max: up to %1 #TODO
+searching between: между %0 и %1
+searching min: с %0
+searching max: вплоть до %1
 searching criterion final_balance: итоговый баланс %0 # one of searching between, min, max
 searching criterion total_received: всего получено %0 # one of searching between, min, max
-searching outgoing: outgoing #TODO
-searching incoming: incoming #TODO
+searching outgoing: исходящие
+searching incoming: входящие
 searching: "Поиск по %0 соседей из %1 с %2 (глубина: %3, широта: %4, пропустить если больше %5 адреса(ов))" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
 errors only: только ошибки
 show more: показать больше
 error requesting: "Ошибка запроса %0: %1"
 loading transactions between: загружаем транзакции между %0 и %1
 loaded: загружен %0 %1 # eg. loaded address xy
-loading msg outgoing: outgoing #TODO
-loading msg incoming: incoming #TODO
+loading msg outgoing: исходящие
+loading msg incoming: входящие
 loading neighbors for: загружено %0 соседей для %1 %2 # %0 = loading msg outgoing/incoming, %1 = type %2 = id
 loaded neighbors for: загружено %0 соседей для %1 %2
 saving to file: сохранение в файл
@@ -173,7 +172,7 @@ trying to load addresses for entity: пытаемся загрузить %1 ад
 loaded addresses for entity: загружено %1 адресов для субъекта %0
 removed node of: удален узел %0 %1
 found paths to nodes: найдено %0 путей к %1 узлам
-go to dashboard: go to dashboard # TODO
-remove tag: remove tag # TODO
-show at most in links table: at most %0 transactions are listed # TODO
-estimated value: estimated value # TODO
+go to dashboard: перейти к панели инструментов
+remove tag: удалить тэг
+show at most in links table: перечислено максимум %0 транзакций
+estimated value: ориентировочная стоимость
