@@ -43,7 +43,7 @@ const transactionsPixelRange = [1, 7]
 
 const colorScale = scaleOrdinal(schemeSet3)
 
-const maxNumSnapshots = 4
+const maxNumSnapshots = 10
 
 const getOutgoing = (n1, n2) => n1.keyspace === n2.keyspace && n1.outgoing.get(n2.id)
 

@@ -158,7 +158,9 @@ const dirtyMessages = [
   'resultEgonet',
   'removeNode',
   'resultSearchNeighbors',
-  'dragNodeEnd'
+  'dragNodeEnd',
+  'excourseLoadDegree',
+  'resultTags'
 ]
 
 // time to wait after a dirty message before creating a snapshot
