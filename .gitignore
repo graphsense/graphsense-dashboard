@@ -9,3 +9,4 @@ connect_cassandra.sh
 package-lock.json
 tags
 ctags_exclude
+.env

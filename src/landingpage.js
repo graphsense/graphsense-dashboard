@@ -1,8 +1,9 @@
 import { t } from './lang.js'
-import header from './pages/static/boldheader.html'
-import footer from './pages/static/footer.hbs'
+import header from './pages/boldheader.html'
+import footer from './pages/footer.html'
 import Component from './component.js'
 import { statsHtml } from './pages/statsHtml.js'
+import { replace } from './template_utils.js'
 
 export default class Landingpage extends Component {
   constructor (dispatcher) {
@@ -39,8 +40,8 @@ export default class Landingpage extends Component {
       document.body.style.overflow = 'hidden scroll'
       const stats = statsHtml(this.stats)
       this.root.innerHTML =
-        '<div class="' + STATICPAGE_CLASSES + '">' + // eslint-disable-line no-undef
-        header + stats + footer({ version: VERSION }) + // eslint-disable-line no-undef
+        '<div class="flex flex-col min-h-full landingpage">' + // eslint-disable-line no-undef
+        header + stats + replace(footer, { version: VERSION }) + // eslint-disable-line no-undef
         '</div>'
       if (this.searchOrLogin) {
         const searchRoot = this.root.querySelector('.splash .search')

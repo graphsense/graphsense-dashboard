@@ -1,13 +1,15 @@
 import moment from 'moment'
 import numeral from 'numeral'
 import { currencies } from '../globals.js'
-import statistics from './statistics.hbs'
+import statistics from './statistics.html'
+import currency from './currency.html'
 import { t } from '../lang.js'
 import { nbsp } from '../utils.js'
+import { replace } from '../template_utils.js'
 
 function statsHtml (body) {
+  let stats = ''
   const imageContext = require.context('../style/img/currencies/', false)
-  const stats = []
   Object.keys(body).forEach((keyspace) => {
     const s = body[keyspace]
     if (!s) return
@@ -15,6 +17,7 @@ function statsHtml (body) {
     const time = moment.unix(s.timestamp)
     const flat =
         {
+          keyspace: keyspace,
           lastUpdate: (time.format('L') + ' ' + time.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           no_addresses: numeral(s.no_addresses).format(format),
@@ -34,9 +37,9 @@ function statsHtml (body) {
     } catch (e) {
       console.error(e.message)
     }
-    stats.push(flat)
+    stats += replace(currency, flat)
   })
-  return statistics({ stats, supported_currencies: t('Supported currencies') })
+  return replace(statistics, { stats, supported_currencies: t('Supported currencies') })
 }
 
 export { statsHtml }

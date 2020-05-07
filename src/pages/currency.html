@@ -1,7 +1,31 @@
 <div class="currency w-full md:w-1/2 lg:w-1/3 xl:w-1/4" style="background-image:url({{imageUrl}})">
   <h3>{{currency}}</h3>
   <div class="statistics">
-    {{statistics}}
+    <div class="stats-table">
+      <div class="stats-row">
+        <span class="stats-key">{{t_lastUpdate}}</span>
+        <span class="stats-value">{{lastUpdate}}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-key">{{t_latestBlock}}</span>
+        <span class="stats-value">{{latestBlock}}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-key">{{t_transactions}}</span>
+        <span class="stats-value">{{no_txs}}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-key">{{t_addresses}}</span>
+        <span class="stats-value">{{no_addresses}}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-key">{{t_entities}}</span>
+        <span class="stats-value">{{no_entities}}</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-key">{{t_tags}}</span>
+        <span class="stats-value">{{no_labels}}</span>
+      </div>
+    </div>
   </div>
 </div>
-

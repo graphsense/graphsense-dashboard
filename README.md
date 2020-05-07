@@ -63,25 +63,6 @@ Finally, test the application in a web browser:
 
     http://localhost:8000
 
-## Generate static site
-
-Static pages are not generated in development mode. The reason is that
-Webpack's development server does not work well with the static-site-generator
-plugin.
-
-First, make sure `DEV_REST_ENDPOINT` in `webpack.config.js` points to a
-[graphsense-REST][graphsense-rest] service. This is needed to fetch
-cryptocurrency statistics at build time.
-
-Then, to generate static pages, run the following command:
-
-    npm run official
-
-Then deploy the directory `official`. It contains everything for the
-static website.
-
-Static pages can be edited in `src/pages/static`.
-
 ## Color configuration
 
 You can map tag categories to colors in `./config/categoryColors.yaml`.
@@ -93,3 +74,4 @@ deployed directory.
 [nodejs]: https://nodejs.org
 [npm]: https://www.npmjs.com
 [graphsense-rest]: https://github.com/graphsense/graphsense-rest
+[docker]: https://www.docker.com
