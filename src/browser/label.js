@@ -18,7 +18,12 @@ export default class Label extends BrowserComponent {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     super.render()
-    this.root.innerHTML = replace(tt(this.template), this.data)
+    const flat =
+      {
+        label: this.data.label,
+        address_count: this.data.tags.length
+      }
+    this.root.innerHTML = replace(tt(this.template), flat)
     return this.root
   }
 

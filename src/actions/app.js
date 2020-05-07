@@ -134,7 +134,7 @@ const resultTransactionForBrowser = function ({ result }) {
 }
 
 const resultLabelForBrowser = function ({ result, context }) {
-  this.browser.setLabel(result)
+  this.browser.setLabel(context, result)
   historyPushState(null, 'label', result.label)
   this.statusbar.removeLoading(context)
   this.statusbar.addMsg('loaded', 'label', result.label)

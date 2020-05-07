@@ -32,7 +32,7 @@ const normalizeNode = node => {
 const typeToEndpoint = type => {
   if (type === 'address') return 'addresses'
   if (type === 'entity') return 'entities'
-  if (type === 'label') return 'labels'
+  if (type === 'tag') return 'tags'
   if (type === 'block') return 'blocks'
   return type
 }
@@ -120,7 +120,7 @@ export default class Rest {
     logger.debug('calling search')
     const ac = new window.AbortController()
     return [ac,
-      this.json(null, '/search/' + encodeURIComponent(str) + (limit ? `?limit=${limit}` : ''), null, ac)]
+      this.json(null, '/search?q=' + encodeURIComponent(str) + (limit ? `&limit=${limit}` : ''), null, ac)]
   }
 
   node (keyspace, { type, id }) {
@@ -188,7 +188,8 @@ export default class Rest {
   }
 
   label (id) {
-    return this.json(null, `/labels/${id}`)
+    return this.json(null, `/tags?label=${id}`)
+      .then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
 
   neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {

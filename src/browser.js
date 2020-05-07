@@ -78,12 +78,12 @@ export default class Browser extends Component {
     this.content.forEach(comp => comp.setCurrency(currency))
   }
 
-  setLabel (label) {
+  setLabel (label, tags) {
     this.visible = true
     this.setUpdate('visibility')
     if (this.content[0] instanceof Label && this.content[0].data.label === label.label) return
     this.destroyComponentsFrom(0)
-    this.content = [new Label(this.dispatcher, label, 0, this.currency)]
+    this.content = [new Label(this.dispatcher, { label, tags }, 0, this.currency)]
     this.setUpdate('content')
   }
 
@@ -248,7 +248,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initTagsTable')
     const keyspace = data.keyspace
-    const total = fromLabel ? data.address_count : data.tags.length
+    const total = data.tags.length
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
   }
 
