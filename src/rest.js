@@ -262,11 +262,12 @@ export default class Rest {
     return this.logs
   }
 
-  categories () {
-    return this.json(null, '/labels/categories')
+  taxonomies () {
+    return Promise.resolve(['entity', 'abuse'])
+    // return this.json(null, '/tags/taxonomies')
   }
 
-  abuses () {
-    return this.json(null, '/labels/abuses')
+  concepts (taxonomy) {
+    return this.json(null, '/tags/taxonomies/' + encodeURIComponent(taxonomy))
   }
 }

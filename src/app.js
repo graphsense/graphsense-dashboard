@@ -131,13 +131,9 @@ export default class Model extends Callable {
       }
   }
 
-  loadCategories () {
-    this.mapResult(text('./config/categoryColors.yaml').then(YAML.parse), 'receiveCategoryColors')
-    this.mapResult(this.rest.categories(), 'receiveCategories')
-  }
-
-  loadAbuses () {
-    this.mapResult(this.rest.abuses(), 'receiveAbuses')
+  loadTaxonomies () {
+    this.mapResult(text('./config/conceptsColors.yaml').then(YAML.parse), 'receiveConceptsColors')
+    this.mapResult(this.rest.taxonomies(), 'receiveTaxonomies')
   }
 
   storeRelations (relations, anchor, keyspace, isOutgoing) {
@@ -179,8 +175,7 @@ export default class Model extends Callable {
     this.landingpage = new Landingpage(this.call, this.keyspaces)
     this.landingpage.setStats(this.stats.currencies)
     this.landingpage.setSearch(this.search)
-    this.loadCategories()
-    this.loadAbuses()
+    this.loadTaxonomies()
   }
 
   compress (data) {

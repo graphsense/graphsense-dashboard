@@ -1004,11 +1004,13 @@ const hideTooltip = function (type) {
   this.statusbar.showTooltip('')
 }
 
-const receiveCategories = function ({ result }) {
+const receiveConcepts = function ({ result, context }) {
+  const taxonomy = context
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
+  if (taxonomy !== 'entity') return
   this.store.setCategories(result)
-  result = result.map(({ category }) => category)
+  result = result.map(({ label }) => label)
   this.graph.setCategories(result)
   this.menu.setCategories(result)
   this.config.setCategoryColors(this.graph.getCategoryColors())
@@ -1021,7 +1023,7 @@ const receiveAbuses = function ({ result }) {
   this.menu.setAbuses(result)
 }
 
-const receiveCategoryColors = function ({ result }) {
+const receiveConceptsColors = function ({ result }) {
   this.graph.setCategoryColors(result)
   this.config.setCategoryColors(this.graph.getCategoryColors())
 }
@@ -1049,6 +1051,10 @@ const clickLink = function ({ source, target }) {
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
   if (source.data.type !== 'address') return
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
+}
+
+const receiveTaxonomies = function ({ result }) {
+  result.forEach(taxo => this.mapResult(this.rest.concepts(taxo), 'receiveConcepts', taxo))
 }
 
 const functions = {
@@ -1154,8 +1160,8 @@ const functions = {
   addAllToGraph,
   tooltip,
   hideTooltip,
-  receiveCategories,
-  receiveCategoryColors,
+  receiveConcepts,
+  receiveConceptsColors,
   receiveAbuses,
   exportSvg,
   inputMetaData,
@@ -1165,7 +1171,8 @@ const functions = {
   hideModal,
   exportYAML,
   changeMin,
-  changeMax
+  changeMax,
+  receiveTaxonomies
 }
 
 export default functions

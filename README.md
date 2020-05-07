@@ -65,7 +65,7 @@ Finally, test the application in a web browser:
 
 ## Color configuration
 
-You can map tag categories to colors in `./config/categoryColors.yaml`.
+You can map tag concepts to colors in `./config/conceptsColors.yaml`.
 The file itself contains hints on the format.
 
 This file is deployed as is. You can easily replace it at runtime in the
