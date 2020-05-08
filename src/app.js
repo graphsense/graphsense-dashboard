@@ -437,4 +437,20 @@ export default class Model extends Callable {
     logger.debug('model', this)
     return this.layout.render(this.root)
   }
+
+  updateCategoriesByTags (tags) {
+    let cats = new Set()
+    let abs = new Set()
+    tags.forEach(({ category, abuse }) => {
+      if (category) cats.add(category)
+      if (abuse) abs.add(abuse)
+    })
+    cats = [...cats]
+    abs = [...abs]
+    this.store.addCategories(cats)
+    this.graph.addCategories(cats)
+    this.menu.addCategories(cats)
+    this.menu.addAbuses(abs)
+    this.config.setCategoryColors(this.graph.getCategoryColors(), this.store.getCategories())
+  }
 }

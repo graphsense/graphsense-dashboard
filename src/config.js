@@ -1,4 +1,4 @@
-import { tt } from './lang.js'
+import { t, tt } from './lang.js'
 import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
 import exportConfig from './config/export.html'
@@ -9,7 +9,8 @@ import { addClass, removeClass, replace } from './template_utils.js'
 import { firstToUpper } from './utils.js'
 import Component from './component.js'
 import Logger from './logger.js'
-import { map } from 'd3-collection'
+import $ from 'jquery'
+import '../lib/jquery-ui/widgets/sortable'
 
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
 
@@ -20,7 +21,7 @@ export default class Config extends Component {
     this.labelType = labelType
     this.txLabelType = txLabelType
     this.visible = false
-    this.categoryColors = map()
+    this.categoryColors = []
     this.locale = locale
   }
 
@@ -54,8 +55,8 @@ export default class Config extends Component {
     this.setUpdate(true)
   }
 
-  setCategoryColors (colors) {
-    this.categoryColors = colors
+  setCategoryColors (colors, ordering) {
+    this.categoryColors = ordering.map(cat => ({ key: cat, value: colors.get(cat) }))
     if (this.visible === 'legend') {
       this.setUpdate(true)
     }
@@ -79,14 +80,28 @@ export default class Config extends Component {
       this.renderSelect('transactionLabel', 'changeTxLabel', this.txLabelType)
       this.renderSelect('locale', 'changeLocale', this.locale)
     } else if (this.visible === 'legend') {
-      this.categoryColors.entries().forEach(({ key, value }) => {
+      const canSort = this.categoryColors.length > 1
+      this.categoryColors.forEach(({ key, value }) => {
         const itemEl = document.createElement('div')
         itemEl.className = 'flex items-center'
         itemEl.innerHTML = legendItem
+        itemEl.id = key
+        if (canSort) {
+          itemEl.title = t('Reorder to prioritize')
+          addClass(itemEl, 'cursor-grab')
+        }
         itemEl.querySelector('.legendColor').style.backgroundColor = value
         itemEl.querySelector('.legendItem').innerHTML = key
         el.appendChild(itemEl)
       })
+      if (canSort) {
+        const j = $(el)
+        j.sortable({
+          cursor: 'grabbing',
+          axis: 'y',
+          update: (e, ui) => this.dispatcher('sortCategories', j.sortable('toArray'))
+        })
+      }
     } else if (this.visible === 'export') {
       el.innerHTML = tt(exportConfig)
       el.querySelectorAll('button[data-msg]').forEach(button => {

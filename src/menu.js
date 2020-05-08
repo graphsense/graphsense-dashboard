@@ -25,6 +25,7 @@ export default class Menu extends Component {
     this.dispatcher = dispatcher
     this.view = {}
     this.categories = []
+    this.abuses = []
   }
 
   showNodeDialog (x, y, params) {
@@ -77,12 +78,28 @@ export default class Menu extends Component {
     return this.view.viewType
   }
 
-  setCategories (categories) {
-    this.categories = categories
+  setConcepts (concepts) {
+    const categories = concepts
+      .filter(({ taxonomy }) => taxonomy === 'entity')
+      .map(({ label }) => label)
+    const abuses = concepts
+      .filter(({ taxonomy }) => taxonomy === 'abuse')
+      .map(({ label }) => label)
+    this.addCategories(categories)
+    this.addAbuses(abuses)
+    this.setUpdate(true)
   }
 
-  setAbuses (abuses) {
-    this.abuses = abuses
+  addCategories (cats) {
+    cats.forEach(cat => {
+      if (this.categories.indexOf(cat) === -1) this.categories.push(cat)
+    })
+  }
+
+  addAbuses (abs) {
+    abs.forEach(ab => {
+      if (this.abuses.indexOf(ab) === -1) this.abuses.push(ab)
+    })
   }
 
   hideMenu () {

@@ -31,10 +31,18 @@ export default class Browser extends Component {
     this.dispatcher = dispatcher
     this.content = []
     this.visible = false
+    this.categories = {}
   }
 
   setKeyspaces (keyspaces) {
     this.supportedKeyspaces = keyspaces
+  }
+
+  addConcepts (concepts) {
+    concepts.forEach(({ label, uri }) => {
+      this.categories[label] = uri
+    })
+    this.setUpdate('tagstable')
   }
 
   deselect () {
@@ -249,7 +257,7 @@ export default class Browser extends Component {
     last.setCurrentOption('initTagsTable')
     const keyspace = data.keyspace
     const total = data.tags.length
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces))
+    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces, this.categories))
   }
 
   initLinkTransactionsTable (request) {
@@ -336,6 +344,11 @@ export default class Browser extends Component {
         comp instanceof TagsTable ||
         comp instanceof NeighborsTable ||
         comp instanceof TransactionAddressesTable
+      ).map(comp => comp.setUpdate('page'))
+    }
+    if (this.shouldUpdate('tagstable')) {
+      this.content.filter(comp =>
+        comp instanceof TagsTable
       ).map(comp => comp.setUpdate('page'))
     }
     if (this.shouldUpdate('locale')) {

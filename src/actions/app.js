@@ -51,7 +51,7 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     } else if (context === 'tagpack' && (type === 'label' || type === 'userdefinedlabel')) {
       this.menu.addSearchLabel(id, true)
       if (type === 'label') {
-        this.mapResult(this.rest.tags(null, { id, type: 'label' }), 'resultLabelTagsForTag', id)
+        this.mapResult(this.rest.label(id), 'resultLabelTagsForTag', id)
       } else {
         resultLabelTagsForTag.call(this, { result: this.store.getUserDefinedTagsForLabel(id), context: id })
       }
@@ -93,6 +93,7 @@ const removeLabel = function (label) {
 const setLabels = function ({ labels, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
   this.store.addTags(keyspace, id, labels)
+  this.updateCategoriesByTags(Object.values(labels))
   this.graph.setUpdateNodes('address', id, true)
   this.menu.hideMenu()
 }
@@ -396,6 +397,8 @@ const addNodeCont = function ({ context, result }) {
     if (!e.tags) {
       this.statusbar.addMsg('loadingTagsFor', e.type, e.id)
       this.mapResult(this.rest.tags(keyspace, { id: e.id, type: e.type }), 'resultTags', { id: e.id, type: e.type, keyspace: e.keyspace })
+    } else {
+      this.updateCategoriesByTags(e.tags)
     }
     addNodeCont.call(this, ({ context: { stage: 4, id: context.addressId, type: 'address', keyspace, anchor } }))
   } else if (context.stage === 4 && context.id && context.type) {
@@ -415,6 +418,8 @@ const addNodeCont = function ({ context, result }) {
     if (!o.tags) {
       this.statusbar.addMsg('loadingTagsFor', o.type, o.id)
       this.mapResult(this.rest.tags(keyspace, { id: o.id, type: o.type }), 'resultTags', { id: o.id, type: o.type, keyspace: o.keyspace })
+    } else {
+      this.updateCategoriesByTags(o.tags)
     }
     this.graph.add(o, context.anchor)
     this.browser.setUpdate('tables_with_addresses')
@@ -470,6 +475,8 @@ const resultTags = function ({ context, result }) {
   this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
   o.tags = result || []
   this.graph.setUpdateNodes(context.type, context.id, true)
+
+  this.updateCategoriesByTags(o.tags)
 }
 
 const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
@@ -940,7 +947,7 @@ const toggleSearchTable = function () {
 }
 
 const toggleLegend = function () {
-  this.config.setCategoryColors(this.graph.getCategoryColors())
+  this.config.setCategoryColors(this.graph.getCategoryColors(), this.store.getCategories())
   this.config.toggleLegend()
 }
 
@@ -1005,27 +1012,14 @@ const hideTooltip = function (type) {
 }
 
 const receiveConcepts = function ({ result, context }) {
-  const taxonomy = context
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
-  if (taxonomy !== 'entity') return
-  this.store.setCategories(result)
-  result = result.map(({ label }) => label)
-  this.graph.setCategories(result)
-  this.menu.setCategories(result)
-  this.config.setCategoryColors(this.graph.getCategoryColors())
-}
-
-const receiveAbuses = function ({ result }) {
-  if (!Array.isArray(result)) return
-  result.sort((a, b) => a.id - b.id)
-  result = result.map(({ abuse }) => abuse)
-  this.menu.setAbuses(result)
+  this.browser.addConcepts(result)
+  this.menu.setConcepts(result)
 }
 
 const receiveConceptsColors = function ({ result }) {
   this.graph.setCategoryColors(result)
-  this.config.setCategoryColors(this.graph.getCategoryColors())
 }
 
 const pressShift = function () {
@@ -1054,7 +1048,13 @@ const clickLink = function ({ source, target }) {
 }
 
 const receiveTaxonomies = function ({ result }) {
-  result.forEach(taxo => this.mapResult(this.rest.concepts(taxo), 'receiveConcepts', taxo))
+  result.forEach(({ taxonomy }) => this.mapResult(this.rest.concepts(taxonomy), 'receiveConcepts', taxonomy))
+}
+
+const sortCategories = function (ids) {
+  this.store.setCategories(ids)
+  this.config.setCategoryColors(this.graph.getCategoryColors(), ids)
+  this.graph.setUpdate('layers')
 }
 
 const functions = {
@@ -1162,7 +1162,6 @@ const functions = {
   hideTooltip,
   receiveConcepts,
   receiveConceptsColors,
-  receiveAbuses,
   exportSvg,
   inputMetaData,
   pressShift,
@@ -1172,7 +1171,8 @@ const functions = {
   exportYAML,
   changeMin,
   changeMax,
-  receiveTaxonomies
+  receiveTaxonomies,
+  sortCategories
 }
 
 export default functions

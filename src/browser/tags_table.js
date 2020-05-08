@@ -3,12 +3,13 @@ import Table from './table.js'
 import downloadTags from '../icons/downloadTags.html'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces) {
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories) {
     super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
+    this.categories = categories
     this.columns = [
       {
         name: t('Address'),
@@ -40,12 +41,12 @@ export default class TagsTable extends Table {
       {
         name: t('Category'),
         data: 'category',
-        render: (value, type, row) => this.formatActive(row, value)
+        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
       },
       {
         name: t('Abuse'),
         data: 'abuse',
-        render: (value, type, row) => this.formatActive(row, value)
+        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
       },
       {
         name: t('Last modified'),

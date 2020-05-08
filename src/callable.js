@@ -125,7 +125,6 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'receiveTaxonomies',
   'receiveConcepts',
   'receiveConceptsColors',
-  'receiveAbuses',
   'saveTagsJSON',
   'loadTagsJSON',
   'jumpToApp',
@@ -136,7 +135,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'hideModal',
   'exportYAML',
   'changeMin',
-  'changeMax'
+  'changeMax',
+  'sortCategories'
 )
 
 // synchronous messages

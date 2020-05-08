@@ -115,11 +115,12 @@ export default class NodeGraph extends Component {
     this.setUpdate('layers')
   }
 
-  setCategories (categories) {
+  addCategories (categories) {
     if (!Array.isArray(categories)) return
+    const s = this.colorMapCategories.size()
     categories.forEach((category, i) => {
       if (this.colorMapCategories.has(category)) return
-      const c = hsl(colorScale(i))
+      const c = hsl(colorScale(s + i))
       c.s -= 0.1
       this.colorMapCategories.set(category, c.toString())
     })

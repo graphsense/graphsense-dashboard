@@ -528,3 +528,7 @@ div.d3-context-menu-theme ul li.is-parent:after {
   border-top-color: theme('colors.gs.base')
 }
 
+
+.cursor-grab {
+  cursor: grab;
+}

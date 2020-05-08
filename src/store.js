@@ -116,8 +116,8 @@ export default class Store {
 
   calcMainCategory (node) {
     const cats = {}
-    this.categories.forEach(({ id, category }) => {
-      cats[category] = id
+    this.categories.forEach((category, index) => {
+      cats[category] = index
     })
 
     const sorted = (node.tags || [])
@@ -365,9 +365,20 @@ export default class Store {
   }
 
   setCategories (cats) {
+    cats = cats.map(c => typeof c === 'string' ? c : c.label)
     this.categories = cats
     this.addresses.each((a) => this.calcMainCategory(a))
     this.entities.each((a) => this.calcMainCategory(a))
+  }
+
+  addCategories (cats) {
+    cats.forEach(cat => {
+      if (this.categories.indexOf(cat) === -1) this.categories.push(cat)
+    })
+  }
+
+  getCategories () {
+    return this.categories
   }
 
   addTags (keyspace, id, labels) {
