@@ -208,7 +208,7 @@ export default class Store {
     this.outgoingLinks.each((links, id) => {
       alllinks.push([id, links.entries()])
     })
-    return [addresses, entities, alllinks]
+    return [addresses, entities, alllinks, this.categories]
   }
 
   serializeNotes () {
@@ -316,7 +316,7 @@ export default class Store {
     })
   }
 
-  deserialize (version, [addresses, entities, alllinks]) {
+  deserialize (version, [addresses, entities, alllinks, categories]) {
     entities.forEach(entity => {
       entity.forAddresses = entity.addresses
       delete entity.addresses
@@ -339,6 +339,7 @@ export default class Store {
         this.linkOutgoing(sp[1], key, sp[0], sp[0], value)
       })
     })
+    this.categories = categories
   }
 
   deserializeNotes (version, [addressNotes, entityNotes]) {
