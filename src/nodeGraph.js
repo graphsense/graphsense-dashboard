@@ -271,11 +271,8 @@ export default class NodeGraph extends Component {
     this.draggingNode = entity
   }
 
-  dragNode (x_, y_) {
+  dragNode (dx, dy) {
     if (!this.draggingNode) return
-
-    const dx = x_
-    const dy = y_
 
     const entity = this.draggingNode
 
@@ -291,6 +288,7 @@ export default class NodeGraph extends Component {
     const nodes = layer.nodes.values()
     const x = entity.x + ddx - expandHandleWidth
     const y = entity.y + ddy
+    logger.debug('y', y, dy)
     const cw = entity.getWidthForLinks()
     const ch = entity.getHeightForLinks()
     for (let i = 0; i < nodes.length; i++) {
@@ -723,7 +721,7 @@ export default class NodeGraph extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    let entityRoot, entityShadowsRoot, addressShadowsRoot, addressRoot, linksRoot
+    let entityRoot, entityShadowsRoot, addressShadowsRoot, addressRoot, entityLinksRoot, addressLinksRoot
     logger.debug('graph should update', this.update)
     const transformGraph = () => {
       const x = this.transform.x
@@ -769,18 +767,20 @@ export default class NodeGraph extends Component {
       entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
       entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
       addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
-      linksRoot = this.graphRoot.append('g').classed('linksRoot', true)
       addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
+      entityLinksRoot = this.graphRoot.append('g').classed('entityLinksRoot', true)
+      addressLinksRoot = this.graphRoot.append('g').classed('addressLinksRoot', true)
     } else {
       entityShadowsRoot = this.graphRoot.select('g.entityShadowsRoot')
       addressShadowsRoot = this.graphRoot.select('g.addressShadowsRoot')
-      linksRoot = this.graphRoot.select('g.linksRoot')
+      entityLinksRoot = this.graphRoot.select('g.entityLinksRoot')
+      addressLinksRoot = this.graphRoot.select('g.addressLinksRoot')
       entityRoot = this.graphRoot.select('g.entityRoot')
       addressRoot = this.graphRoot.select('g.addressRoot')
     }
     // render in this order
     this.renderLayers(entityRoot, addressRoot)
-    this.renderLinks(linksRoot)
+    this.renderLinks(entityLinksRoot, addressLinksRoot)
     this.renderShadows(entityShadowsRoot, addressShadowsRoot)
     this.zoomToHighlightedNodes()
     super.render()
@@ -826,9 +826,10 @@ export default class NodeGraph extends Component {
     }
   }
 
-  renderLinks (root) {
+  renderLinks (entityRoot, addressRoot) {
     if (this.shouldUpdate('layers') || this.shouldUpdate('links')) {
-      root.node().innerHTML = ''
+      entityRoot.node().innerHTML = ''
+      addressRoot.node().innerHTML = ''
 
       for (let i = 0; i < this.layers.length; i++) {
         // prepare the domain and links
@@ -846,9 +847,9 @@ export default class NodeGraph extends Component {
         // render links
         this.layers[i].nodes.each((c) => {
           c.nodes.each((a) => {
-            this.linkToLayer(root, domain, this.layers[i + 1], a)
+            this.linkToLayer(addressRoot, domain, this.layers[i + 1], a)
           })
-          this.linkToLayerEntity(root, domain, this.layers[i + 1], c, entityLinksFromAddresses[c.data.id])
+          this.linkToLayerEntity(entityRoot, domain, this.layers[i + 1], c, entityLinksFromAddresses[c.data.id])
         })
       }
     } else if (this.shouldUpdate('link')) {
@@ -864,22 +865,24 @@ export default class NodeGraph extends Component {
             addressLinkSelects += ',' + selector(address.id)
           })
         }
-        root.selectAll(selector(nodeId) + addressLinkSelects)
-          .nodes()
-          .map((link) => {
-            const a = [
-              link.getAttribute('data-source'),
-              link.getAttribute('data-target'),
-              link.getAttribute('data-label'),
-              link.getAttribute('data-scale')
-            ]
-            link.parentElement.removeChild(link)
-            return a
-          }).forEach(([s, t, label, scale]) => {
-            const source = this.getNode(s, 'address') || this.getNode(s, 'entity')
-            const target = this.getNode(t, 'address') || this.getNode(t, 'entity')
-            this.drawLink(root, label, scale, source, target)
-          })
+        ([addressRoot, entityRoot]).forEach(root => {
+          root.selectAll(selector(nodeId) + addressLinkSelects)
+            .nodes()
+            .map((link) => {
+              const a = [
+                link.getAttribute('data-source'),
+                link.getAttribute('data-target'),
+                link.getAttribute('data-label'),
+                link.getAttribute('data-scale')
+              ]
+              link.parentElement.removeChild(link)
+              return a
+            }).forEach(([s, t, label, scale]) => {
+              const source = this.getNode(s, 'address') || this.getNode(s, 'entity')
+              const target = this.getNode(t, 'address') || this.getNode(t, 'entity')
+              this.drawLink(root, label, scale, source, target)
+            })
+        })
       })
     }
   }
