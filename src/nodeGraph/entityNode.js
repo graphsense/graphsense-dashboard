@@ -5,7 +5,6 @@ import { GraphNode, addressHeight, entityWidth, padding, expandHandleWidth } fro
 import numeral from 'numeral'
 import contextMenu from 'd3-context-menu'
 import Logger from '../logger.js'
-import { drag } from 'd3-drag'
 
 const logger = Logger.create('EntityNode') // eslint-disable-line no-unused-vars
 
@@ -176,7 +175,7 @@ export default class EntityNode extends GraphNode {
         const g = this.root
           .append('g')
           .classed('entityNode', true)
-          .attr('transform', `translate(${this.dx}, ${this.dy})`)
+          .attr('transform', `translate(${this.dx + this.ddx}, ${this.dy + this.ddy})`)
           .on('click', () => {
             event.stopPropagation()
             this.dispatcher('selectNode', ['entity', this.id])
@@ -184,7 +183,12 @@ export default class EntityNode extends GraphNode {
           .on('contextmenu', contextMenu(this.menu()))
           .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
           .on('mouseout', () => this.dispatcher('hideTooltip'))
-          /* .call(drag()
+        g.node().addEventListener('mousedown', (e) => {
+          e.stopPropagation()
+          e.preventDefault()
+          this.dispatcher('dragNodeStart', { id: this.id, type: this.type, x: e.clientX, y: e.clientY })
+        })
+        /* .call(drag()
             .on('start', () => {
               this.dispatcher('dragNodeStart', { id: this.id, type: this.type, x: event.dx, y: event.dy })
             })
@@ -249,7 +253,7 @@ export default class EntityNode extends GraphNode {
         const x = padding + expandHandleWidth
         const y = cumY
         addressNode.render(g)
-        addressNode.translate(x + this.dx, y + this.dy)
+        addressNode.translate(x + this.dx + this.ddx, y + this.dy + this.ddy)
         g.attr('transform', `translate(${x}, ${y})`)
         cumY += addressNode.getHeight()
       })

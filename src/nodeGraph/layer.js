@@ -91,7 +91,7 @@ export default class Layer extends Component {
       // render addresses
       node.setUpdate(true)
       node.renderAddresses(addressesRoot)
-      addressesRoot.attr('transform', `translate(${node.dx}, ${cumY + node.dy})`)
+      addressesRoot.attr('transform', `translate(${node.dx + node.ddx}, ${cumY + node.dy + node.ddy})`)
       // translate entity node and its addresses
       node.translate(0, cumY)
     }

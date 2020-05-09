@@ -280,13 +280,19 @@ export default class NodeGraph extends Component {
   dragNodeStart (id, type, x, y) {
     const entity = this.entityNodes.get(id)
     if (!entity) return
-    this.draggingNode = entity
+    this.draggingNode = { entity, x, y }
+    entity.dx += entity.ddx
+    entity.dy += entity.ddy
+    entity.ddx = entity.ddy = 0
   }
 
-  dragNode (dx, dy) {
+  dragNode (clientX, clientY) {
     if (!this.draggingNode) return
 
-    const entity = this.draggingNode
+    const entity = this.draggingNode.entity
+
+    const dx = (clientX - this.draggingNode.x) / this.k
+    const dy = (clientY - this.draggingNode.y) / this.k
 
     const ddx = entity.dx + dx
     const ddy = entity.dy + dy
@@ -294,13 +300,12 @@ export default class NodeGraph extends Component {
     if (ddx - 2 * expandHandleWidth < margin / -2) return
     if (ddx + 2 * expandHandleWidth > margin / 2) return
 
-    const layer = this.findLayer(this.draggingNode.id[1])
+    const layer = this.findLayer(entity.id[1])
     if (!layer) return
 
     const nodes = layer.nodes.values()
     const x = entity.x + ddx - expandHandleWidth
     const y = entity.y + ddy
-    logger.debug('y', y, dy)
     const cw = entity.getWidthForLinks()
     const ch = entity.getHeightForLinks()
     for (let i = 0; i < nodes.length; i++) {
@@ -319,17 +324,20 @@ export default class NodeGraph extends Component {
       ) return
     }
 
-    entity.dx = ddx
-    entity.dy = ddy
+    entity.ddx = dx
+    entity.ddy = dy
 
     entity.setUpdate('position')
-    this.setUpdate('link', this.draggingNode.id)
+    this.setUpdate('link', entity.id)
   }
 
   dragNodeEnd () {
-    const entity = this.draggingNode
-    if (!entity) return
+    if (!this.draggingNode) return
+    const entity = this.draggingNode.entity
     this.draggingNode = null
+    entity.dx += entity.ddx
+    entity.dy += entity.ddy
+    entity.ddx = entity.ddy = 0
     this.dirty = true
   }
 
@@ -395,7 +403,6 @@ export default class NodeGraph extends Component {
     x2 += dx * 0
     y1 -= dy * 0.3
     y2 += dy * 0
-    logger.debug('zoom bbox', x1, x2, y1, y2)
     let k = this.k
     if (x2 - x1 > this.w) {
       k = this.w / (x2 - x1)
@@ -404,14 +411,12 @@ export default class NodeGraph extends Component {
       const k2 = this.h / (y2 - y1)
       k = Math.min(k, k2)
     }
-    logger.debug('zoom k', k)
     const x = (x2 + x1) / 2
     const y = (y2 + y1) / 2
     const now = performance.now() // eslint-disable-line no-undef
     this.zoomTarget = {
       x, y, k, started: now
     }
-    logger.debug('zoomTarget', this.zoomTarget)
     window.requestAnimationFrame(t => this.zoom(t))
   }
 
@@ -419,7 +424,6 @@ export default class NodeGraph extends Component {
     if (!this.zoomTarget) return
     const d = (time - this.zoomTarget.started) / zoomDuration
     const completed = easeCubicOut(d)
-    logger.debug('zoom', this.x, this.y, this.zoomTarget.x, this.zoomTarget.y, completed)
     this.dx = (this.zoomTarget.x - this.x) * completed
     this.dy = (this.zoomTarget.y - this.y) * completed
     this.dk = (this.k - this.zoomTarget.k) * d
@@ -533,7 +537,6 @@ export default class NodeGraph extends Component {
     this.selectedLink = [source.id, target.id]
     this.setUpdate('link', source.id)
     this.deselect()
-    logger.debug('setupate', this.update)
   }
 
   isSelectedLink (source, target) {
@@ -780,12 +783,20 @@ export default class NodeGraph extends Component {
             e.preventDefault()
             this.dispatcher('screenDragMove', { x: e.clientX, y: e.clientY })
           }
+          if (this.draggingNode) {
+            e.preventDefault()
+            this.dispatcher('dragNode', { x: e.clientX, y: e.clientY })
+          }
         })
       this.svg.node()
         .addEventListener('mouseup', (e) => {
           if (this.dragging) {
             e.preventDefault()
             this.dispatcher('screenDragStop')
+          }
+          if (this.draggingNode) {
+            e.preventDefault()
+            this.dispatcher('dragNodeEnd')
           }
         })
       this.svg.node()
@@ -815,10 +826,10 @@ export default class NodeGraph extends Component {
       this.root.appendChild(this.svg.node())
 
       entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
-      entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
       addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
-      addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
       entityLinksRoot = this.graphRoot.append('g').classed('entityLinksRoot', true)
+      entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
+      addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
       addressLinksRoot = this.graphRoot.append('g').classed('addressLinksRoot', true)
     } else {
       entityShadowsRoot = this.graphRoot.select('g.entityShadowsRoot')
@@ -914,31 +925,42 @@ export default class NodeGraph extends Component {
       if (!nodeIds) return
       nodeIds.forEach(nodeId => {
         const node = this.getNode(nodeId, 'entity')
-        let addressLinkSelects = ''
+        let addressLinkSelects = []
         const selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
         if (node) {
           node.nodes.each(address => {
-            addressLinkSelects += ',' + selector(address.id)
+            addressLinkSelects.push(selector(address.id))
           })
         }
-        ([addressRoot, entityRoot]).forEach(root => {
-          root.selectAll(selector(nodeId) + addressLinkSelects)
+        addressLinkSelects = addressLinkSelects.join(',')
+        const getDataAndRemove = (link) => {
+          const a = [
+            link.getAttribute('data-source'),
+            link.getAttribute('data-target'),
+            link.getAttribute('data-label'),
+            link.getAttribute('data-scale')
+          ]
+          link.parentElement.removeChild(link)
+          return a
+        }
+        entityRoot.selectAll(selector(nodeId))
+          .nodes()
+          .map(getDataAndRemove)
+          .forEach(([s, t, label, scale]) => {
+            const source = this.getNode(s, 'entity')
+            const target = this.getNode(t, 'entity')
+            this.drawLink(entityRoot, label, scale, source, target)
+          })
+        if (addressLinkSelects) {
+          addressRoot.selectAll(addressLinkSelects)
             .nodes()
-            .map((link) => {
-              const a = [
-                link.getAttribute('data-source'),
-                link.getAttribute('data-target'),
-                link.getAttribute('data-label'),
-                link.getAttribute('data-scale')
-              ]
-              link.parentElement.removeChild(link)
-              return a
-            }).forEach(([s, t, label, scale]) => {
-              const source = this.getNode(s, 'address') || this.getNode(s, 'entity')
-              const target = this.getNode(t, 'address') || this.getNode(t, 'entity')
-              this.drawLink(root, label, scale, source, target)
+            .map(getDataAndRemove)
+            .forEach(([s, t, label, scale]) => {
+              const source = this.getNode(s, 'address')
+              const target = this.getNode(t, 'address')
+              this.drawLink(addressRoot, label, scale, source, target)
             })
-        })
+        }
       })
     }
   }
