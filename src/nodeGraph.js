@@ -291,14 +291,20 @@ export default class NodeGraph extends Component {
 
     const entity = this.draggingNode.entity
 
-    const dx = (clientX - this.draggingNode.x) / this.k
+    let dx = (clientX - this.draggingNode.x) / this.k
     const dy = (clientY - this.draggingNode.y) / this.k
 
-    const ddx = entity.dx + dx
+    let ddx = entity.dx + dx
     const ddy = entity.dy + dy
 
-    if (ddx - 2 * expandHandleWidth < margin / -2) return
-    if (ddx + 2 * expandHandleWidth > margin / 2) return
+    if (ddx - 2 * expandHandleWidth < margin / -2) {
+      dx = margin / -2 + 2 * expandHandleWidth - entity.dx
+      ddx = entity.dx + dx
+    }
+    if (ddx + 2 * expandHandleWidth > margin / 2) {
+      dx = margin / 2 - 2 * expandHandleWidth - entity.dx
+      ddx = entity.dx + dx
+    }
 
     const layer = this.findLayer(entity.id[1])
     if (!layer) return
