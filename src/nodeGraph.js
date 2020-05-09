@@ -407,13 +407,13 @@ export default class NodeGraph extends Component {
     // padding
     x1 -= dx * 0.3
     x2 += dx * 0
-    y1 -= dy * 0.3
-    y2 += dy * 0
+    y1 -= dy * 0.2
+    y2 += dy * 0.1
     let k = this.k
-    if (x2 - x1 > this.w) {
+    if (x2 - x1 > this.w / this.k) {
       k = this.w / (x2 - x1)
     }
-    if (y2 - y1 > this.h) {
+    if (y2 - y1 > this.h / this.k) {
       const k2 = this.h / (y2 - y1)
       k = Math.min(k, k2)
     }
@@ -432,8 +432,7 @@ export default class NodeGraph extends Component {
     const completed = easeCubicOut(d)
     this.dx = (this.zoomTarget.x - this.x) * completed
     this.dy = (this.zoomTarget.y - this.y) * completed
-    this.dk = (this.k - this.zoomTarget.k) * d
-    this.renderViewBox()
+    this.dk = (this.zoomTarget.k - this.k) * completed
     if (completed < 1) {
       window.requestAnimationFrame(t => this.zoom(t))
     } else {
@@ -443,6 +442,7 @@ export default class NodeGraph extends Component {
       this.k += this.dk
       this.dx = this.dy = this.dk = 0
     }
+    this.renderViewBox()
   }
 
   setTxLabel (type) {
@@ -858,7 +858,7 @@ export default class NodeGraph extends Component {
   }
 
   renderViewBox () {
-    this.svg.attr('viewBox', `${this.x + this.dx - this.w / this.k / 2} ${this.y + this.dy - this.h / this.k / 2} ${this.w / (this.k + this.dk)} ${this.h / (this.k + this.dk)}`)
+    this.svg.attr('viewBox', `${this.x + this.dx - this.w / (this.k + this.dk) / 2} ${this.y + this.dy - this.h / (this.k + this.dk) / 2} ${this.w / (this.k + this.dk)} ${this.h / (this.k + this.dk)}`)
   }
 
   renderLayers (entityRoot, addressRoot, transform) {
@@ -1294,7 +1294,6 @@ export default class NodeGraph extends Component {
     const k = this.k
     const dir = d / Math.abs(d)
     this.k /= Math.pow(1 + (dir / zoomSlowity), Math.abs(d) / 53)
-    logger.debug('kneg', k)
     const wp = (this.w / 2 - x) / this.w
     const hp = (this.h / 2 - y) / this.h
     // zoom to mouse cursor
