@@ -353,7 +353,7 @@ export default class Menu extends Component {
         addClass(button, 'disabled')
       }
     } else if (this.view.viewType === 'tagpack') {
-      if (this.view.dirty) {
+      if (this.view.dirty && this.validParams()) {
         button.addEventListener('click', () => {
           this.dispatcher('setLabels', {
             id: this.view.data.id,
@@ -372,8 +372,12 @@ export default class Menu extends Component {
   validParams () {
     return this.view.params.category ||
       this.view.params.addresses.length > 0 ||
-      this.view.params.min !== undefined ||
-      this.view.params.max !== undefined
+      (this.view.params.min !== undefined &&
+      this.view.params.max !== undefined &&
+      this.view.params.min >= 0 &&
+      this.view.params.max >= 0 &&
+      this.view.params.min <= this.view.params.max
+      )
   }
 
   setSearchCriterion (criterion) {
@@ -487,24 +491,16 @@ export default class Menu extends Component {
     if (this.view.criterion !== 'final_balance' && this.view.criterion !== 'total_received') return
     logger.debug('min', value, this.view.params.min, this.view.params.max)
     value *= 1
-    this.view.params.min = Math.min(this.view.params.max || Infinity, value)
-    if (this.view.params.min !== value) {
-      this.setUpdate(true)
-    } else {
-      this.setUpdate('minmax')
-    }
+    this.view.params.min = value
+    this.setUpdate('minmax')
   }
 
   setMax (value) {
     if (this.view.viewType !== 'neighborsearch') return
     if (this.view.criterion !== 'final_balance' && this.view.criterion !== 'total_received') return
     value *= 1
-    this.view.params.max = Math.max(this.view.params.min || 0, value)
-    if (this.view.params.max !== value) {
-      this.setUpdate(true)
-    } else {
-      this.setUpdate('minmax')
-    }
+    this.view.params.max = value
+    this.setUpdate('minmax')
   }
 
   setDirty (d) {

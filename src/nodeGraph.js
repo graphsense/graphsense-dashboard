@@ -780,6 +780,7 @@ export default class NodeGraph extends Component {
       this.renderViewBox()
       this.svg.node()
         .addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return
           e.preventDefault()
           this.dispatcher('screenDragStart', { x: e.clientX, y: e.clientY })
         })

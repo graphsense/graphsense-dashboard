@@ -184,6 +184,7 @@ export default class EntityNode extends GraphNode {
           .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
           .on('mouseout', () => this.dispatcher('hideTooltip'))
         g.node().addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return
           e.stopPropagation()
           e.preventDefault()
           this.dispatcher('dragNodeStart', { id: this.id, type: this.type, x: e.clientX, y: e.clientY })
