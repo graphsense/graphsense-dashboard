@@ -1269,11 +1269,13 @@ export default class NodeGraph extends Component {
   }
 
   screenDragStart (coords) {
+    if (this.zoomTarget) return
     this.dragging = coords
     this.dx = this.dy = 0
   }
 
   screenDragMove ({ x, y }) {
+    if (this.zoomTarget) return
     this.dx = (this.dragging.x - x) / this.k
     this.dy = (this.dragging.y - y) / this.k
     this.setUpdate('viewbox')
@@ -1288,9 +1290,11 @@ export default class NodeGraph extends Component {
   }
 
   screenZoom ({ x, y, d }) {
+    if (this.zoomTarget) return
     const k = this.k
     const dir = d / Math.abs(d)
     this.k /= Math.pow(1 + (dir / zoomSlowity), Math.abs(d) / 53)
+    logger.debug('kneg', k)
     const wp = (this.w / 2 - x) / this.w
     const hp = (this.h / 2 - y) / this.h
     // zoom to mouse cursor
