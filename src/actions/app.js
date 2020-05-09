@@ -1048,6 +1048,7 @@ const clickLink = function ({ source, target }) {
 }
 
 const receiveTaxonomies = function ({ result }) {
+  if (!result) return
   result.forEach(({ taxonomy }) => this.mapResult(this.rest.concepts(taxonomy), 'receiveConcepts', taxonomy))
 }
 
@@ -1055,6 +1056,22 @@ const sortCategories = function (ids) {
   this.store.setCategories(ids)
   this.config.setCategoryColors(this.graph.getCategoryColors(), ids)
   this.graph.setUpdate('layers')
+}
+
+const screenDragStart = function (coords) {
+  this.graph.screenDragStart(coords)
+}
+
+const screenDragMove = function (coords) {
+  this.graph.screenDragMove(coords)
+}
+
+const screenDragStop = function () {
+  this.graph.screenDragStop()
+}
+
+const screenZoom = function (zoom) {
+  this.graph.screenZoom(zoom)
 }
 
 const functions = {
@@ -1172,7 +1189,11 @@ const functions = {
   changeMin,
   changeMax,
   receiveTaxonomies,
-  sortCategories
+  sortCategories,
+  screenDragStart,
+  screenDragMove,
+  screenDragStop,
+  screenZoom
 }
 
 export default functions

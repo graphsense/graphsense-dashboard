@@ -1,11 +1,11 @@
 import { t } from './lang.js'
+import { easeCubicOut } from 'd3-ease'
 import { create, event } from 'd3-selection'
 import { scalePow, scaleOrdinal } from 'd3-scale'
 import { set, map } from 'd3-collection'
 import { schemeSet3 } from 'd3-scale-chromatic'
 import { hsl } from 'd3-color'
 import { linkHorizontal } from 'd3-shape'
-import { zoom, zoomIdentity } from 'd3-zoom'
 import Layer from './nodeGraph/layer.js'
 import EntityNode from './nodeGraph/entityNode.js'
 import AddressNode from './nodeGraph/addressNode.js'
@@ -17,11 +17,10 @@ import { entityWidth, expandHandleWidth } from './globals.js'
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
 const margin = 300
-const w = 800
-const h = 600
 
-const x = w / -2
-const y = h / -2
+const zoomSlowity = 5
+
+const zoomDuration = 1000
 
 const hsl2rgb = (h, s, l) => {
   h = h % 360
@@ -64,7 +63,6 @@ export default class NodeGraph extends Component {
     this.highlightedNodes = []
     this.selectedLink = null
     this.layers = []
-    this.transform = zoomIdentity
     this.colorMapCategories = map()
     this.colorMapTags = map()
     const colorGen = (map, type) => (k) => {
@@ -103,6 +101,20 @@ export default class NodeGraph extends Component {
     // initialize with true to allow initial snapshot
     this.dirty = true
     this.createSnapshot()
+    this.w = window.innerWidth
+    this.h = window.innerHeight
+    this.k = 1
+    this.x = 0
+    this.dx = 0
+    this.y = 0
+    this.dy = 0
+    this.dk = 0
+
+    window.addEventListener('resize', () => {
+      this.w = window.innerWidth
+      this.h = window.innerHeight
+      this.renderViewBox()
+    })
   }
 
   setCategoryColors (cc) {
@@ -357,13 +369,15 @@ export default class NodeGraph extends Component {
     if (this.nextSelectedNode.id != node.data.id) return // eslint-disable-line eqeqeq
     this._selectNode(node)
     this.nextSelectedNode = null
-    this.zoomToNodes = true
   }
 
   zoomToHighlightedNodes () {
-    if (!this.zoomToNodes) return
-    logger.debug('highlighted', this.highlightedNodes)
+    logger.debug('zoom highlighted', this.highlightedNodes)
     if (this.highlightedNodes.length === 0) return
+    this.x += this.dx
+    this.y += this.dy
+    this.k += this.dk
+
     let x1 = Infinity
     let y1 = Infinity
     let x2 = -Infinity
@@ -376,25 +390,49 @@ export default class NodeGraph extends Component {
     })
     const dx = (x2 - x1)
     const dy = (y2 - y1)
+    // padding
     x1 -= dx * 0.3
     x2 += dx * 0
-    y1 -= dy * 0.1
-    y2 += dy * 0.1
-    const k = w / Math.max(w, (x2 - x1))
-    const x = (x2 + x1) / -2
-    const y = (y2 + y1) / -2
-    const transform = zoomIdentity.scale(k).translate(x, y)
-    /*
-    TODO make transition duration depend on distance of transforms
-    let vx = x * k - this.transform.x * this.transform.k
-    let vy = y * k - this.transform.y * this.transform.k
-    let len = Math.sqrt(vx * vx + vy * vy)
-    logger.debug('len', len)
-    let duration = len / 200 * 1000
-    */
-    const duration = 1000
-    this.svg.transition().duration(duration).call(this.zoom.transform, transform)
-    this.zoomToNodes = false
+    y1 -= dy * 0.3
+    y2 += dy * 0
+    logger.debug('zoom bbox', x1, x2, y1, y2)
+    let k = this.k
+    if (x2 - x1 > this.w) {
+      k = this.w / (x2 - x1)
+    }
+    if (y2 - y1 > this.h) {
+      const k2 = this.h / (y2 - y1)
+      k = Math.min(k, k2)
+    }
+    logger.debug('zoom k', k)
+    const x = (x2 + x1) / 2
+    const y = (y2 + y1) / 2
+    const now = performance.now() // eslint-disable-line no-undef
+    this.zoomTarget = {
+      x, y, k, started: now
+    }
+    logger.debug('zoomTarget', this.zoomTarget)
+    window.requestAnimationFrame(t => this.zoom(t))
+  }
+
+  zoom (time) {
+    if (!this.zoomTarget) return
+    const d = (time - this.zoomTarget.started) / zoomDuration
+    const completed = easeCubicOut(d)
+    logger.debug('zoom', this.x, this.y, this.zoomTarget.x, this.zoomTarget.y, completed)
+    this.dx = (this.zoomTarget.x - this.x) * completed
+    this.dy = (this.zoomTarget.y - this.y) * completed
+    this.dk = (this.k - this.zoomTarget.k) * d
+    this.renderViewBox()
+    if (completed < 1) {
+      window.requestAnimationFrame(t => this.zoom(t))
+    } else {
+      this.zoomTarget = null
+      this.x += this.dx
+      this.y += this.dy
+      this.k += this.dk
+      this.dx = this.dy = this.dk = 0
+    }
   }
 
   setTxLabel (type) {
@@ -487,6 +525,7 @@ export default class NodeGraph extends Component {
     })
     sel.select()
     this.selectedNode = sel
+    this.zoomToHighlightedNodes()
   }
 
   selectLink (source, target) {
@@ -723,26 +762,43 @@ export default class NodeGraph extends Component {
     if (!this.root) throw new Error('root not defined')
     let entityRoot, entityShadowsRoot, addressShadowsRoot, addressRoot, entityLinksRoot, addressLinksRoot
     logger.debug('graph should update', this.update)
-    const transformGraph = () => {
-      const x = this.transform.x
-      const y = this.transform.y
-      this.graphRoot.attr('transform', `translate(${x}, ${y}) scale(${this.transform.k})`)
-    }
     if (this.shouldUpdate(true)) {
       logger.debug('redraw graph')
-      this.zoom = zoom()
       this.svg = create('svg')
         .classed('w-full h-full graph', true)
-        .attr('viewBox', `${x} ${y} ${w} ${h}`)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
-        .call(this.zoom.on('zoom', () => {
-          this.transform.k = event.transform.k
-          this.transform.x = event.transform.x
-          this.transform.y = event.transform.y
-          transformGraph()
-          logger.debug('transformation on zoom', JSON.stringify(this.transform))
-        }))
+      this.renderViewBox()
+      this.svg.node()
+        .addEventListener('mousedown', (e) => {
+          e.preventDefault()
+          this.dispatcher('screenDragStart', { x: e.clientX, y: e.clientY })
+        })
+      this.svg.node()
+        .addEventListener('mousemove', (e) => {
+          if (this.dragging) {
+            e.preventDefault()
+            this.dispatcher('screenDragMove', { x: e.clientX, y: e.clientY })
+          }
+        })
+      this.svg.node()
+        .addEventListener('mouseup', (e) => {
+          if (this.dragging) {
+            e.preventDefault()
+            this.dispatcher('screenDragStop')
+          }
+        })
+      this.svg.node()
+        .addEventListener('wheel', (e) => {
+          e.preventDefault()
+          this.dispatcher('screenZoom', {
+            w: e.view.innerWidth,
+            h: e.view.innerHeight,
+            x: e.clientX,
+            y: e.clientY,
+            d: e.deltaY
+          })
+        })
       const markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
       this.svg.node().innerHTML = '<defs>' +
@@ -758,12 +814,6 @@ export default class NodeGraph extends Component {
       })
       this.root.appendChild(this.svg.node())
 
-      const transform = zoomIdentity
-        .scale(this.transform.k)
-      transform.x = this.transform.x
-      transform.y = this.transform.y
-      this.svg.call(this.zoom.transform, transform)
-
       entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
       entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
       addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
@@ -777,14 +827,20 @@ export default class NodeGraph extends Component {
       addressLinksRoot = this.graphRoot.select('g.addressLinksRoot')
       entityRoot = this.graphRoot.select('g.entityRoot')
       addressRoot = this.graphRoot.select('g.addressRoot')
+      if (this.shouldUpdate('viewbox')) {
+        this.renderViewBox()
+      }
     }
     // render in this order
     this.renderLayers(entityRoot, addressRoot)
     this.renderLinks(entityLinksRoot, addressLinksRoot)
     this.renderShadows(entityShadowsRoot, addressShadowsRoot)
-    this.zoomToHighlightedNodes()
     super.render()
     return this.root
+  }
+
+  renderViewBox () {
+    this.svg.attr('viewBox', `${this.x + this.dx - this.w / this.k / 2} ${this.y + this.dy - this.h / this.k / 2} ${this.w / (this.k + this.dk)} ${this.h / (this.k + this.dk)}`)
   }
 
   renderLayers (entityRoot, addressRoot, transform) {
@@ -1100,12 +1156,13 @@ export default class NodeGraph extends Component {
   serialize () {
     const s = this.serializeGraph()
 
-    logger.debug('serli transform', JSON.stringify(this.transform))
     return [
       this.currency,
       this.labelType,
       this.txLabelType,
-      this.transform,
+      this.x,
+      this.y,
+      this.k,
       s[0],
       s[1],
       s[2],
@@ -1158,7 +1215,9 @@ export default class NodeGraph extends Component {
     currency,
     labelType,
     txLabelType,
-    transform,
+    x,
+    y,
+    k,
     entityNodes,
     addressNodes,
     layers,
@@ -1168,8 +1227,9 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.labelType = labelType
     this.txLabelType = txLabelType
-    logger.debug('transform', JSON.stringify(transform))
-    this.transform = transform
+    this.x = x
+    this.y = y
+    this.k = k
     colorMapCategories.forEach(({ key, value }) => {
       this.colorMapCategories.set(key, value)
     })
@@ -1177,5 +1237,36 @@ export default class NodeGraph extends Component {
       this.colorMapTags.set(key, value)
     })
     this.deserializeGraph(version, store, entityNodes, addressNodes, layers)
+  }
+
+  screenDragStart (coords) {
+    this.dragging = coords
+    this.dx = this.dy = 0
+  }
+
+  screenDragMove ({ x, y }) {
+    this.dx = (this.dragging.x - x) / this.k
+    this.dy = (this.dragging.y - y) / this.k
+    this.setUpdate('viewbox')
+  }
+
+  screenDragStop () {
+    this.dragging = null
+    this.x += this.dx
+    this.y += this.dy
+    this.dx = this.dy = 0
+    this.setUpdate('viewbox')
+  }
+
+  screenZoom ({ x, y, d }) {
+    const k = this.k
+    const dir = d / Math.abs(d)
+    this.k /= Math.pow(1 + (dir / zoomSlowity), Math.abs(d) / 53)
+    const wp = (this.w / 2 - x) / this.w
+    const hp = (this.h / 2 - y) / this.h
+    // zoom to mouse cursor
+    this.x += (this.w / this.k - this.w / k) * wp
+    this.y += (this.h / this.k - this.h / k) * hp
+    this.setUpdate('viewbox')
   }
 }

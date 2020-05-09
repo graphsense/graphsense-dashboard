@@ -136,7 +136,12 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'exportYAML',
   'changeMin',
   'changeMax',
-  'sortCategories'
+  'sortCategories',
+  'screenDragStart',
+  'screenDragStop',
+  'screenDragMove',
+  'screenZoom',
+  'zoomToHighlightedNodes'
 )
 
 // synchronous messages
@@ -147,7 +152,11 @@ const syncMessages = [
   'changeSearchDepth',
   'changeUserDefinedTag',
   'dragNode',
-  'dragNodeEnd'
+  'dragNodeEnd',
+  'screenDragStart',
+  'screenDragStop',
+  'screenDragMove',
+  'screenZoom'
 ]
 
 // messages that change the graph

@@ -184,7 +184,7 @@ export default class EntityNode extends GraphNode {
           .on('contextmenu', contextMenu(this.menu()))
           .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
           .on('mouseout', () => this.dispatcher('hideTooltip'))
-          .call(drag()
+          /* .call(drag()
             .on('start', () => {
               this.dispatcher('dragNodeStart', { id: this.id, type: this.type, x: event.dx, y: event.dy })
             })
@@ -195,6 +195,7 @@ export default class EntityNode extends GraphNode {
             .on('end', () => {
               this.dispatcher('dragNodeEnd')
             }))
+            */
         g.append('rect')
           .classed('entityNodeRect', true)
           .attr('width', entityWidth)
