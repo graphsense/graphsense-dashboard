@@ -96,4 +96,8 @@ if (module.hot) {
     model.replay()
     model.render(document.body)
   })
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+  }
 }
