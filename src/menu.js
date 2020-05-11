@@ -353,7 +353,7 @@ export default class Menu extends Component {
         addClass(button, 'disabled')
       }
     } else if (this.view.viewType === 'tagpack') {
-      if (this.view.dirty && this.validParams()) {
+      if (this.view.dirty) {
         button.addEventListener('click', () => {
           this.dispatcher('setLabels', {
             id: this.view.data.id,
