@@ -8,7 +8,7 @@ export const setLanguagePack = (pack) => {
 export const t = (key, ...args) => {
   const lk = key.toLowerCase()
   if (!languagePack || !languagePack[lk]) return key
-  const str = languagePack[lk].replace(new RegExp('%([0-9]+)', 'g'), (match, key) => args[key * 1] || '')
+  const str = languagePack[lk].replace(new RegExp('%([0-9]+)', 'g'), (match, key) => args[key * 1] === undefined || args[key * 1] === null ? '' : args[key * 1])
   if (lk[0] === key[0]) return str
   // ie. first character is upper case so make the result also first char uppercase
   return firstToUpper(str)
