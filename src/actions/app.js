@@ -905,6 +905,7 @@ const resultSearchNeighbors = function ({ result, context }) {
         // anchor the address to its entity
         this.graph.add(a, { nodeId: parent.id, nodeType: 'entity' })
       })
+      if (pathnode.node.tags) this.updateCategoriesByTags(pathnode.node.tags)
       add({ nodeId: parent.id, isOutgoing: context.isOutgoing }, pathnode.paths)
     })
   }
