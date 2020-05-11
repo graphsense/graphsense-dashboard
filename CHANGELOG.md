@@ -3,8 +3,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-### Unreleased
-
+## [0.4.3] - 2020-05-11
+### Changed
 15b0b7b fix message on found paths, #138
 6647295 improve setting min/max in neighbor search
 2146fc4 dont make nodes stuck on layers borders
