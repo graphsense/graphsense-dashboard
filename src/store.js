@@ -117,14 +117,19 @@ export default class Store {
   calcMainCategory (node) {
     const cats = {}
     this.categories.forEach((category, index) => {
-      cats[category] = index
+      // add 1 to avoid 0
+      cats[category] = index + 1
     })
+
+    logger.debug('node', node.id)
+    logger.debug('cats', cats)
 
     const sorted = (node.tags || [])
       .map(tag => tag.category)
       // filter nulls and duplicates
       .filter((value, index, self) => value && self.indexOf(value) === index)
-      .sort((a, b) => (cats[b] || Infinity) - (cats[a] || Infinity))
+      .sort((a, b) => (cats[a] || Infinity) - (cats[b] || Infinity))
+    logger.debug('sorted cat', sorted)
     node.mainCategory = sorted[0]
   }
 
