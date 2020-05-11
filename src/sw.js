@@ -29,7 +29,7 @@ const myFetch = (request) => {
               const prune = text.replace(/\s+/g, '')
               if (prune.startsWith('{"message"') ||
                   prune.startsWith('{"msg"') ||
-                  prune.startsWith('{"Auth"') ||
+                  prune.startsWith('{"Auth') ||
                   prune.startsWith('{"status"')
               ) {
                 logger.debug('starts with message, don\'t cache ' + text)
