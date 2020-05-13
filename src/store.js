@@ -344,7 +344,7 @@ export default class Store {
         this.linkOutgoing(sp[1], key, sp[0], sp[0], value)
       })
     })
-    this.categories = categories
+    this.categories = categories || []
   }
 
   deserializeNotes (version, [addressNotes, entityNotes]) {

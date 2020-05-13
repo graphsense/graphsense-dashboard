@@ -1189,14 +1189,15 @@ export default class NodeGraph extends Component {
       this.currency,
       this.labelType,
       this.txLabelType,
-      this.x,
-      this.y,
-      this.k,
+      null, // deprecated transform
       s[0],
       s[1],
       s[2],
       this.colorMapCategories.entries(),
-      this.colorMapTags.entries()
+      this.colorMapTags.entries(),
+      this.x,
+      this.y,
+      this.k
     ]
   }
 
@@ -1244,21 +1245,22 @@ export default class NodeGraph extends Component {
     currency,
     labelType,
     txLabelType,
-    x,
-    y,
-    k,
+    _, // ignore transform from former versions
     entityNodes,
     addressNodes,
     layers,
     colorMapCategories,
-    colorMapTags
+    colorMapTags,
+    x,
+    y,
+    k
   ], store) {
     this.currency = currency
     this.labelType = labelType
     this.txLabelType = txLabelType
-    this.x = x
-    this.y = y
-    this.k = k
+    this.x = x || 0
+    this.y = y || 0
+    this.k = k || 1
     colorMapCategories.forEach(({ key, value }) => {
       this.colorMapCategories.set(key, value)
     })
