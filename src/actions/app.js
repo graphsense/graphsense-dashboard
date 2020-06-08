@@ -22,8 +22,6 @@ const historyPushState = (keyspace, type, id, target) => {
   window.history.replaceState({ keyspace, type, id, target }, null, url)
 }
 
-const degreeThreshold = 100
-
 const submitSearchResult = function ({ term, context }) {
   logger.debug('this.menu.search', this.menu.search)
   const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
@@ -293,7 +291,7 @@ const loadNeighbors = function ({ keyspace, params, nextPage, request, drawCallb
   const id = params[0]
   const type = params[1]
   const isOutgoing = params[2]
-  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, request.length, nextPage), 'resultNeighbors', { page: nextPage, request, drawCallback })
+  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, null, request.length, nextPage), 'resultNeighbors', { page: nextPage, request, drawCallback })
 }
 
 const resultNeighbors = function ({ context, result }) {
@@ -431,12 +429,9 @@ const excourseLoadDegree = function ({ context, result }) {
   const keyspace = context.keyspace
   if (!context.stage) {
     const o = this.store.get(context.keyspace, context.type, context.id)
-    if (o.in_degree >= degreeThreshold) {
-      excourseLoadDegree.call(this, { context: { ...context, stage: 2 } })
-      return
-    }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, false)
-    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, false, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 2 })
+    const targets = this.store.getEntityKeys(context.keyspace)
+    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, false, targets), 'excourseLoadDegree', { ...context, stage: 2 })
   } else if (context.stage === 2) {
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, false)
     const o = this.store.get(context.keyspace, context.type, context.id)
@@ -446,14 +441,14 @@ const excourseLoadDegree = function ({ context, result }) {
         if (neighbor.nodeType !== o.type) return
         this.store.linkOutgoing(neighbor.id, o.id, neighbor.keyspace, o.keyspace, neighbor)
       })
-      // this.storeRelations(result.neighbors, o, o.keyspace, false)
     }
-    if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
+    if (o.out_degree === o.outgoing.size()) {
       functions[context.backCall.msg].call(this, context.backCall.data)
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, true)
-    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 3 })
+    const targets = this.store.getEntityKeys(context.keyspace)
+    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, targets), 'excourseLoadDegree', { ...context, stage: 3 })
   } else if (context.stage === 3) {
     const o = this.store.get(context.keyspace, context.type, context.id)
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, true)
@@ -481,7 +476,7 @@ const resultTags = function ({ context, result }) {
 
 const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
   this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
-  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
+  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, null, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
 }
 
 const resultEgonet = function ({ context, result }) {
@@ -967,7 +962,7 @@ const downloadTable = function () {
   let url
   if (table instanceof NeighborsTable) {
     const params = table.getParams()
-    url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
+    url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, null, 0, 0, true)
   } else if (table instanceof TagsTable) {
     const params = table.getParams()
     url = this.rest.tags(params.keyspace, params, true)
