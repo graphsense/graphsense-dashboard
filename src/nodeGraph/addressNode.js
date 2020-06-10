@@ -67,6 +67,7 @@ export default class AddressNode extends GraphNode {
         this.renderSelected()
       }
     }
+    this.root.attr('transform', `translate(${this.x + this.dx}, ${this.y + this.dy})`)
     super.render()
   }
 

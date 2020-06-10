@@ -281,9 +281,14 @@ export default class NodeGraph extends Component {
     const entity = this.entityNodes.get(id)
     if (!entity) return
     this.draggingNode = { entity, x, y }
-    entity.dx += entity.ddx
-    entity.dy += entity.ddy
-    entity.ddx = entity.ddy = 0
+    entity.x += entity.dx
+    entity.y += entity.dy
+    entity.dx = entity.dy = 0
+    entity.nodes.each(node => {
+      node.x += node.dx
+      node.y += node.dy
+      node.dx = node.dy = 0
+    })
   }
 
   dragNode (clientX, clientY) {
@@ -294,24 +299,21 @@ export default class NodeGraph extends Component {
     let dx = (clientX - this.draggingNode.x) / this.k
     const dy = (clientY - this.draggingNode.y) / this.k
 
-    let ddx = entity.dx + dx
-    const ddy = entity.dy + dy
-
-    if (ddx - 2 * expandHandleWidth < margin / -2) {
+    if (dx - 2 * expandHandleWidth < margin / -2) {
       dx = margin / -2 + 2 * expandHandleWidth - entity.dx
-      ddx = entity.dx + dx
+      dx = entity.dx + dx
     }
-    if (ddx + 2 * expandHandleWidth > margin / 2) {
+    if (dx + 2 * expandHandleWidth > margin / 2) {
       dx = margin / 2 - 2 * expandHandleWidth - entity.dx
-      ddx = entity.dx + dx
+      dx = entity.dx + dx
     }
 
     const layer = this.findLayer(entity.id[1])
     if (!layer) return
 
     const nodes = layer.nodes.values()
-    const x = entity.x + ddx - expandHandleWidth
-    const y = entity.y + ddy
+    const x = entity.x + dx - expandHandleWidth
+    const y = entity.y + dy
     const cw = entity.getWidthForLinks()
     const ch = entity.getHeightForLinks()
     for (let i = 0; i < nodes.length; i++) {
@@ -330,10 +332,15 @@ export default class NodeGraph extends Component {
       ) return
     }
 
-    entity.ddx = dx
-    entity.ddy = dy
+    entity.dx = dx
+    entity.dy = dy
 
     entity.setUpdate('position')
+
+    entity.nodes.each(node => {
+      node.dx = dx
+      node.dy = dy
+    })
     this.setUpdate('link', entity.id)
   }
 
@@ -341,9 +348,14 @@ export default class NodeGraph extends Component {
     if (!this.draggingNode) return
     const entity = this.draggingNode.entity
     this.draggingNode = null
-    entity.dx += entity.ddx
-    entity.dy += entity.ddy
-    entity.ddx = entity.ddy = 0
+    entity.x += entity.dx
+    entity.y += entity.dy
+    entity.dx = entity.dy = 0
+    entity.nodes.each(node => {
+      node.x += node.dx
+      node.y += node.dy
+      node.dx = node.dy = 0
+    })
     this.dirty = true
   }
 
@@ -559,6 +571,8 @@ export default class NodeGraph extends Component {
       entity.add(addressNode)
       this.dirty = true
     })
+    const layer = this.findLayer(id[1])
+    layer.repositionNodesAround(entity)
     this.setUpdate('layers')
   }
 
@@ -582,7 +596,6 @@ export default class NodeGraph extends Component {
     if (!Array.isArray(layerIds)) {
       layerIds = [layerIds]
     }
-    logger.debug('layerIds', layerIds)
     let node
     layerIds.forEach(layerId => {
       node = this.addLayer(layerId, object, anchor)
@@ -599,6 +612,9 @@ export default class NodeGraph extends Component {
     let layer = this.findLayer(layerId)
     if (!layer) {
       layer = new Layer(layerId)
+      const w = entityWidth + margin
+      const x = layer.id * w
+      layer.translate(x, 0)
       if (anchor && anchor.isOutgoing === false) {
         this.layers.unshift(layer)
       } else {
@@ -619,7 +635,6 @@ export default class NodeGraph extends Component {
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType.addressLabel, this.colors.address, this.currency)
       this.setAddressNodes(addressNode)
       this.selectNodeIfIsNextNode(addressNode)
-      logger.debug('new AddressNode', addressNode)
       node = this.entityNodes.get([object.entity.id, layerId, object.entity.keyspace])
       if (!node) {
         node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType.entityLabel, this.colors.entity, this.currency)
@@ -641,11 +656,7 @@ export default class NodeGraph extends Component {
     }
     this.dirty = true
 
-    const anchorLayer = anchor && this.findLayer(anchor.nodeId[1])
-
-    const addToTop = anchorLayer && anchorLayer.isNodeInUpperHalf(anchor.nodeId)
-
-    layer.add(node, addToTop)
+    layer.add(node, anchor && this.getNode(anchor.nodeId, 'entity'))
     return node
   }
 
@@ -869,22 +880,7 @@ export default class NodeGraph extends Component {
         .forEach((layer) => {
           if (layer.nodes.size() === 0) return
           layer.setUpdate(true)
-          const cRoot = entityRoot.append('g')
-          const aRoot = addressRoot.append('g')
-          layer.render(cRoot, aRoot)
-          // let first = layer.getFirst()
-          // box.height += first.dy
-          // let last = layer.getLast()
-          // if (last !== first) {
-          // box.height -= last.dy
-          // }
-          const layerHeight = layer.getHeight()
-          const w = entityWidth + margin
-          const x = layer.id * w
-          const y = layerHeight / -2
-          cRoot.attr('transform', `translate(${x}, ${y})`)
-          aRoot.attr('transform', `translate(${x}, ${y})`)
-          layer.translate(x, y)
+          layer.render(entityRoot, addressRoot)
         })
       if (this.layers.length === 0) {
         entityRoot.append('text')
