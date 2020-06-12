@@ -725,7 +725,7 @@ const exportRestLogs = function () {
 const exportSvg = function () {
   if (this.isReplaying) return
   const classMap = map()
-  const rules = document.styleSheets[0].cssRules
+  const rules = document.styleSheets[document.styleSheets.length - 1].cssRules
   for (let i = 0; i < rules.length; i++) {
     const selectorText = rules[i].selectorText
     const cssText = rules[i].cssText
@@ -736,11 +736,9 @@ const exportSvg = function () {
   let svg = this.graph.getSvg()
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
-    logger.debug('classes', classes)
     const repl = classes.split(' ')
       .map(cls => classMap.get(cls) || '')
       .join('')
-    logger.debug('repl', repl)
     if (repl.trim() === '') return ''
     return 'style="' + repl.replace(/"/g, '\'').replace('"', '\'') + '"'
   })
