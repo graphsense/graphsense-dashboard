@@ -170,10 +170,19 @@ const selectNode = function ([type, nodeId]) {
 }
 
 // user clicks address in a table
-const clickAddress = function ({ address, keyspace }) {
-  if (this.keyspaces.indexOf(keyspace) === -1) return
-  this.statusbar.addLoading(address)
-  this.mapResult(this.rest.node(keyspace, { id: address, type: 'address' }), 'resultNode', address)
+const clickAddress = function (data) {
+  if (!Array.isArray(data)) data = [data]
+  const found = new Set()
+  data = data.filter(row => {
+    if (found.has(row.address)) return false
+    found.add(row.address)
+    return true
+  })
+  data.forEach(data => {
+    if (this.keyspaces.indexOf(data.keyspace) === -1) return
+    this.statusbar.addLoading(data.address)
+    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  })
 }
 
 // user clicks label in a table
@@ -300,38 +309,44 @@ const resultNeighbors = function ({ context, result }) {
 
 const selectNeighbor = function (data) {
   logger.debug('selectNeighbor', data)
-  if (!data.id || !data.nodeType || !data.keyspace) return
-  const focusNode = this.browser.getCurrentNode()
-  const anchorNode = this.graph.selectedNode
-  const isOutgoing = this.browser.isShowingOutgoingNeighbors()
-  const o = this.store.get(data.keyspace, data.nodeType, data.id)
-  const context =
-    {
-      data,
-      focusNode:
-        {
-          id: focusNode.id,
-          type: focusNode.type,
-          keyspace: data.keyspace,
-          linkData: { ...data },
-          isOutgoing: isOutgoing
-        }
+  if (!Array.isArray(data)) data = [data]
+  data.forEach(data => {
+    if (!data.id || !data.nodeType || !data.keyspace) return
+    const focusNode = this.browser.getCurrentNode()
+    const anchorNode = this.graph.selectedNode
+    const isOutgoing = this.browser.isShowingOutgoingNeighbors()
+    const o = this.store.get(data.keyspace, data.nodeType, data.id)
+    const context =
+      {
+        data,
+        focusNode:
+          {
+            id: focusNode.id,
+            type: focusNode.type,
+            keyspace: data.keyspace,
+            linkData: { ...data },
+            isOutgoing: isOutgoing
+          }
+      }
+    if (anchorNode) {
+      context.anchorNode = { nodeId: anchorNode.id, isOutgoing }
     }
-  if (anchorNode) {
-    context.anchorNode = { nodeId: anchorNode.id, isOutgoing }
-  }
-  if (!o) {
-    this.statusbar.addLoading(data.id)
-    this.mapResult(this.rest.node(data.keyspace, { id: data.id, type: data.nodeType }), 'resultNode', context)
-  } else {
-    resultNode.call(this, { context, result: o })
-  }
+    if (!o) {
+      this.statusbar.addLoading(data.id)
+      this.mapResult(this.rest.node(data.keyspace, { id: data.id, type: data.nodeType }), 'resultNode', context)
+    } else {
+      resultNode.call(this, { context, result: o })
+    }
+  })
 }
 
 const selectAddress = function (data) {
   logger.debug('selectAdress', data)
-  if (!data.address || !data.keyspace) return
-  this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  if (!Array.isArray(data)) data = [data]
+  data.forEach(data => {
+    if (!data.address || !data.keyspace) return
+    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  })
 }
 
 const addNode = function ({ id, type, keyspace, anchor }) {
@@ -988,13 +1003,15 @@ const downloadTagsAsJSON = function () {
 const addAllToGraph = function () {
   const table = this.browser.content[1]
   if (!table) return
+  const rows = []
   table.data.forEach(row => {
     if (!row.keyspace) {
       if (row.currency) row.keyspace = row.currency.toLowerCase()
       else row.keyspace = table.keyspace
     }
-    functions[table.selectMessage].call(this, row)
+    rows.push(row)
   })
+  functions[table.selectMessage].call(this, rows)
 }
 
 const tooltip = function (type) {
