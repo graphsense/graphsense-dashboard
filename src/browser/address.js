@@ -65,10 +65,10 @@ export default class Address extends BrowserComponent {
       keyspace,
       abuses: abuses.join(' '),
       categories: categories.join(' '),
-      no_outgoing_txs: noOutgoingTxs,
-      no_incoming_txs: noIncomingTxs,
-      out_degree: noOutdegree,
-      in_degree: noIndegree,
+      no_outgoing_txs: numeral(noOutgoingTxs).format('0,000'),
+      no_incoming_txs: numeral(noIncomingTxs).format('0,000'),
+      out_degree: numeral(noOutdegree).format('0,000'),
+      in_degree: numeral(noIndegree).format('0,000'),
       tagCoherence
     }
   }
