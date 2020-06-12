@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.4] - 2020-06-12
+### Changed
+
+- 09cfef6 keep node selected on move
+- 550c0d9 don't zoom on selecting node
+- a2a723c fix thousands seperator in property box
+- 86be354 rewrite layout algorithm, fix #142
+- d9fd723 query and show links between entities explicitly, fix #140
+
+### Added
+- a1883ba display tag coherence
+
 ## [0.4.3] - 2020-05-11
 ### Changed
 
