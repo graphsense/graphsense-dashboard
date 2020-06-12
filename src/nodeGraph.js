@@ -841,14 +841,12 @@ export default class NodeGraph extends Component {
         )).join('') +
         '</defs>'
       this.graphRoot = this.svg.append('g')
-      this.svg.on('click', () => {
-      })
       this.root.appendChild(this.svg.node())
 
       entityShadowsRoot = this.graphRoot.append('g').classed('entityShadowsRoot', true)
-      addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
       entityLinksRoot = this.graphRoot.append('g').classed('entityLinksRoot', true)
       entityRoot = this.graphRoot.append('g').classed('entityRoot', true)
+      addressShadowsRoot = this.graphRoot.append('g').classed('addressShadowsRoot', true)
       addressRoot = this.graphRoot.append('g').classed('addressRoot', true)
       addressLinksRoot = this.graphRoot.append('g').classed('addressLinksRoot', true)
     } else {
