@@ -810,6 +810,9 @@ export default class NodeGraph extends Component {
         .addEventListener('mouseup', (e) => {
           if (this.dragging) {
             e.preventDefault()
+            if (this.dx === 0 && this.dy === 0) {
+              this.dispatcher('deselect')
+            }
             this.dispatcher('screenDragStop')
           }
           if (this.draggingNode) {
@@ -839,7 +842,6 @@ export default class NodeGraph extends Component {
         '</defs>'
       this.graphRoot = this.svg.append('g')
       this.svg.on('click', () => {
-        this.dispatcher('deselect')
       })
       this.root.appendChild(this.svg.node())
 
