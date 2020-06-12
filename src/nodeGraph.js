@@ -547,7 +547,7 @@ export default class NodeGraph extends Component {
     })
     sel.select()
     this.selectedNode = sel
-    this.zoomToHighlightedNodes()
+    // this.zoomToHighlightedNodes()
   }
 
   selectLink (source, target) {
