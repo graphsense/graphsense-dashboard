@@ -34,8 +34,6 @@ class GraphNode extends Component {
     this.y = 0
     this.dx = 0
     this.dy = 0
-    this.ddx = 0
-    this.ddy = 0
     this.searchingNeighborsIn = false
     this.searchingNeighborsOut = false
     this.entityDash = '4 1'
@@ -86,16 +84,14 @@ class GraphNode extends Component {
     return [
       this.x,
       this.y,
-      this.dx,
-      this.dy
+      0, // formerly dx
+      0 // formerly dy
     ]
   }
 
   deserialize ([x, y, dx, dy]) {
-    this.x = x
-    this.y = y
-    this.dx = dx
-    this.dy = dy
+    this.x = x + dx
+    this.y = y + dy
   }
 
   renderLabel (root) {
@@ -187,20 +183,17 @@ class GraphNode extends Component {
   }
 
   translate (x, y) {
+    logger.debug('translate', x, y)
     this.x += x
     this.y += y
   }
 
-  setDY (dy) {
-    this.dy = dy
-  }
-
   getX () {
-    return this.x + this.dx + this.ddx
+    return this.x + this.dx
   }
 
   getY () {
-    return this.y + this.dy + this.ddy
+    return this.y + this.dy
   }
 
   getXForLinks () {

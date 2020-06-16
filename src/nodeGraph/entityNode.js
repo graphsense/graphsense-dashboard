@@ -34,6 +34,7 @@ export default class EntityNode extends GraphNode {
 
   sortAddresses (getValue) {
     this.sortAddressesProperty = getValue
+    this.repositionNodes()
   }
 
   expandable () {
@@ -159,10 +160,27 @@ export default class EntityNode extends GraphNode {
   add (node) {
     if (!node.id) throw new Error('not a node', node)
     this.nodes.set(node.id, node)
+    this.repositionNodes()
   }
 
   has (address) {
     this.nodes.has([address, this.id[1]])
+  }
+
+  repositionNodes () {
+    let cumY = 2 * padding + this.labelHeight
+    this.nodes
+      .values()
+      .sort(sort(this.sortAddressesProperty))
+      .forEach((addressNode) => {
+        // reset absolute coords
+        logger.debug('addressNode.y', addressNode.y)
+        const x = padding + expandHandleWidth
+        const y = cumY
+        addressNode.x = this.x + x + this.dx
+        addressNode.y = this.y + y + this.dy
+        cumY += addressNode.getHeight()
+      })
   }
 
   render (root) {
@@ -175,7 +193,6 @@ export default class EntityNode extends GraphNode {
         const g = this.root
           .append('g')
           .classed('entityNode', true)
-          .attr('transform', `translate(${this.dx + this.ddx}, ${this.dy + this.ddy})`)
           .on('click', () => {
             event.stopPropagation()
             this.dispatcher('selectNode', ['entity', this.id])
@@ -219,6 +236,7 @@ export default class EntityNode extends GraphNode {
         this.renderExpand(eg, false)
         this.coloring()
         this.renderSelected()
+        this.renderAddressExpand()
       }
     } else {
       if (this.shouldUpdate('label')) {
@@ -230,38 +248,16 @@ export default class EntityNode extends GraphNode {
         this.renderSelected()
       }
     }
+    const x = this.x + this.dx
+    const y = this.y + this.dy
+    this.root.attr('transform', `translate(${x}, ${y})`)
     super.render()
   }
 
-  renderAddresses (root) {
-    if (!this.shouldUpdate()) {
-      this.nodes.each(addressNode => addressNode.render())
-      return
-    }
-    if (root) this.addressesRoot = root
-    if (!this.addressesRoot) throw new Error('root not defined')
-    this.addressesRoot.node().innerHTML = ''
-    let cumY = 2 * padding + this.labelHeight
-    this.nodes
-      .values()
-      .sort(sort(this.sortAddressesProperty))
-      .forEach((addressNode) => {
-        const g = this.addressesRoot.append('g')
-        addressNode.setUpdate(true)
-        // reset absolute coords
-        addressNode.x = 0
-        addressNode.y = 0
-        const x = padding + expandHandleWidth
-        const y = cumY
-        addressNode.render(g)
-        addressNode.translate(x + this.dx + this.ddx, y + this.dy + this.ddy)
-        g.attr('transform', `translate(${x}, ${y})`)
-        cumY += addressNode.getHeight()
-      })
-    if (this.data.mockup) return
+  renderAddressExpand () {
+    // expand
     const size = this.nodes.size()
-    cumY += size > 0 ? gap : 0
-    const button = this.addressesRoot.append('g')
+    const button = this.root.append('g')
       .classed('addressExpand', true)
     const h = this.getHeight()
     const w = this.getWidth()
@@ -280,6 +276,23 @@ export default class EntityNode extends GraphNode {
         this.dispatcher('selectNode', ['entity', this.id])
         this.expandCollapseOrShowAddressTable()
       })
+  }
+
+  renderAddresses (root) {
+    if (!this.shouldUpdate()) {
+      this.nodes.each(addressNode => addressNode.render())
+      return
+    }
+    if (root) this.addressesRoot = root
+    if (!this.addressesRoot) throw new Error('root not defined')
+    this.addressesRoot.node().innerHTML = ''
+    this.nodes
+      .values()
+      .forEach((addressNode) => {
+        const g = this.addressesRoot.append('g')
+        addressNode.setUpdate(true)
+        addressNode.render(g)
+      })
     super.render()
   }
 
@@ -291,6 +304,7 @@ export default class EntityNode extends GraphNode {
   }
 
   translate (x, y) {
+    logger.debug('translate', x, y)
     super.translate(x, y)
     this.nodes.each((node) => {
       node.translate(x, y)

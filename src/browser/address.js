@@ -3,7 +3,8 @@ import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
 import incomingNeighbors from '../icons/incomingNeighbors.html'
 import outgoingNeighbors from '../icons/outgoingNeighbors.html'
-import { tt } from '../lang.js'
+import { t, tt } from '../lang.js'
+import numeral from 'numeral'
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency) {
@@ -52,6 +53,7 @@ export default class Address extends BrowserComponent {
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
+    const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
     return {
       id: '<div>' + this.data.map(d => d.id).join('</div><div>') + '</div>',
@@ -63,10 +65,11 @@ export default class Address extends BrowserComponent {
       keyspace,
       abuses: abuses.join(' '),
       categories: categories.join(' '),
-      no_outgoing_txs: noOutgoingTxs,
-      no_incoming_txs: noIncomingTxs,
-      out_degree: noOutdegree,
-      in_degree: noIndegree
+      no_outgoing_txs: numeral(noOutgoingTxs).format('0,000'),
+      no_incoming_txs: numeral(noIncomingTxs).format('0,000'),
+      out_degree: numeral(noOutdegree).format('0,000'),
+      in_degree: numeral(noIndegree).format('0,000'),
+      tagCoherence
     }
   }
 

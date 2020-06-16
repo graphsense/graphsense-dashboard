@@ -192,12 +192,13 @@ export default class Rest {
       .then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
   }
 
-  neighbors (keyspace, id, type, isOutgoing, pagesize, nextPage, csv) {
+  neighbors (keyspace, id, type, isOutgoing, targets, pagesize, nextPage, csv) {
     const dir = isOutgoing ? 'out' : 'in'
     type = typeToEndpoint(type)
     let url = `/${type}/${id}/neighbors?direction=${dir}`
     if (csv) return this.csv(keyspace, url)
     url += '&' +
+      (targets ? '&targets=' + targets.join(',') : '') +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')

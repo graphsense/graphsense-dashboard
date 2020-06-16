@@ -22,8 +22,6 @@ const historyPushState = (keyspace, type, id, target) => {
   window.history.replaceState({ keyspace, type, id, target }, null, url)
 }
 
-const degreeThreshold = 100
-
 const submitSearchResult = function ({ term, context }) {
   logger.debug('this.menu.search', this.menu.search)
   const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
@@ -172,10 +170,19 @@ const selectNode = function ([type, nodeId]) {
 }
 
 // user clicks address in a table
-const clickAddress = function ({ address, keyspace }) {
-  if (this.keyspaces.indexOf(keyspace) === -1) return
-  this.statusbar.addLoading(address)
-  this.mapResult(this.rest.node(keyspace, { id: address, type: 'address' }), 'resultNode', address)
+const clickAddress = function (data) {
+  if (!Array.isArray(data)) data = [data]
+  const found = new Set()
+  data = data.filter(row => {
+    if (found.has(row.address)) return false
+    found.add(row.address)
+    return true
+  })
+  data.forEach(data => {
+    if (this.keyspaces.indexOf(data.keyspace) === -1) return
+    this.statusbar.addLoading(data.address)
+    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  })
 }
 
 // user clicks label in a table
@@ -293,7 +300,7 @@ const loadNeighbors = function ({ keyspace, params, nextPage, request, drawCallb
   const id = params[0]
   const type = params[1]
   const isOutgoing = params[2]
-  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, request.length, nextPage), 'resultNeighbors', { page: nextPage, request, drawCallback })
+  this.mapResult(this.rest.neighbors(keyspace, id, type, isOutgoing, null, request.length, nextPage), 'resultNeighbors', { page: nextPage, request, drawCallback })
 }
 
 const resultNeighbors = function ({ context, result }) {
@@ -302,38 +309,44 @@ const resultNeighbors = function ({ context, result }) {
 
 const selectNeighbor = function (data) {
   logger.debug('selectNeighbor', data)
-  if (!data.id || !data.nodeType || !data.keyspace) return
-  const focusNode = this.browser.getCurrentNode()
-  const anchorNode = this.graph.selectedNode
-  const isOutgoing = this.browser.isShowingOutgoingNeighbors()
-  const o = this.store.get(data.keyspace, data.nodeType, data.id)
-  const context =
-    {
-      data,
-      focusNode:
-        {
-          id: focusNode.id,
-          type: focusNode.type,
-          keyspace: data.keyspace,
-          linkData: { ...data },
-          isOutgoing: isOutgoing
-        }
+  if (!Array.isArray(data)) data = [data]
+  data.forEach(data => {
+    if (!data.id || !data.nodeType || !data.keyspace) return
+    const focusNode = this.browser.getCurrentNode()
+    const anchorNode = this.graph.selectedNode
+    const isOutgoing = this.browser.isShowingOutgoingNeighbors()
+    const o = this.store.get(data.keyspace, data.nodeType, data.id)
+    const context =
+      {
+        data,
+        focusNode:
+          {
+            id: focusNode.id,
+            type: focusNode.type,
+            keyspace: data.keyspace,
+            linkData: { ...data },
+            isOutgoing: isOutgoing
+          }
+      }
+    if (anchorNode) {
+      context.anchorNode = { nodeId: anchorNode.id, isOutgoing }
     }
-  if (anchorNode) {
-    context.anchorNode = { nodeId: anchorNode.id, isOutgoing }
-  }
-  if (!o) {
-    this.statusbar.addLoading(data.id)
-    this.mapResult(this.rest.node(data.keyspace, { id: data.id, type: data.nodeType }), 'resultNode', context)
-  } else {
-    resultNode.call(this, { context, result: o })
-  }
+    if (!o) {
+      this.statusbar.addLoading(data.id)
+      this.mapResult(this.rest.node(data.keyspace, { id: data.id, type: data.nodeType }), 'resultNode', context)
+    } else {
+      resultNode.call(this, { context, result: o })
+    }
+  })
 }
 
 const selectAddress = function (data) {
   logger.debug('selectAdress', data)
-  if (!data.address || !data.keyspace) return
-  this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  if (!Array.isArray(data)) data = [data]
+  data.forEach(data => {
+    if (!data.address || !data.keyspace) return
+    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+  })
 }
 
 const addNode = function ({ id, type, keyspace, anchor }) {
@@ -431,12 +444,9 @@ const excourseLoadDegree = function ({ context, result }) {
   const keyspace = context.keyspace
   if (!context.stage) {
     const o = this.store.get(context.keyspace, context.type, context.id)
-    if (o.in_degree >= degreeThreshold) {
-      excourseLoadDegree.call(this, { context: { ...context, stage: 2 } })
-      return
-    }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, false)
-    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, false, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 2 })
+    const targets = this.store.getEntityKeys(context.keyspace)
+    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, false, targets), 'excourseLoadDegree', { ...context, stage: 2 })
   } else if (context.stage === 2) {
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, false)
     const o = this.store.get(context.keyspace, context.type, context.id)
@@ -446,14 +456,14 @@ const excourseLoadDegree = function ({ context, result }) {
         if (neighbor.nodeType !== o.type) return
         this.store.linkOutgoing(neighbor.id, o.id, neighbor.keyspace, o.keyspace, neighbor)
       })
-      // this.storeRelations(result.neighbors, o, o.keyspace, false)
     }
-    if (o.out_degree >= degreeThreshold || o.out_degree === o.outgoing.size()) {
+    if (o.out_degree === o.outgoing.size()) {
       functions[context.backCall.msg].call(this, context.backCall.data)
       return
     }
     this.statusbar.addMsg('loadingNeighbors', o.id, o.type, true)
-    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, degreeThreshold), 'excourseLoadDegree', { ...context, stage: 3 })
+    const targets = this.store.getEntityKeys(context.keyspace)
+    this.mapResult(this.rest.neighbors(keyspace, o.id, o.type, true, targets), 'excourseLoadDegree', { ...context, stage: 3 })
   } else if (context.stage === 3) {
     const o = this.store.get(context.keyspace, context.type, context.id)
     this.statusbar.addMsg('loadedNeighbors', context.id, context.type, true)
@@ -481,7 +491,7 @@ const resultTags = function ({ context, result }) {
 
 const loadEgonet = function ({ id, type, keyspace, isOutgoing, limit }) {
   this.statusbar.addMsg('loadingNeighbors', id, type, isOutgoing)
-  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
+  this.mapResult(this.rest.neighbors(keyspace, id[0], type, isOutgoing, null, limit), 'resultEgonet', { id, type, isOutgoing, keyspace })
 }
 
 const resultEgonet = function ({ context, result }) {
@@ -730,7 +740,7 @@ const exportRestLogs = function () {
 const exportSvg = function () {
   if (this.isReplaying) return
   const classMap = map()
-  const rules = document.styleSheets[0].cssRules
+  const rules = document.styleSheets[document.styleSheets.length - 1].cssRules
   for (let i = 0; i < rules.length; i++) {
     const selectorText = rules[i].selectorText
     const cssText = rules[i].cssText
@@ -741,11 +751,9 @@ const exportSvg = function () {
   let svg = this.graph.getSvg()
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
-    logger.debug('classes', classes)
     const repl = classes.split(' ')
       .map(cls => classMap.get(cls) || '')
       .join('')
-    logger.debug('repl', repl)
     if (repl.trim() === '') return ''
     return 'style="' + repl.replace(/"/g, '\'').replace('"', '\'') + '"'
   })
@@ -967,7 +975,7 @@ const downloadTable = function () {
   let url
   if (table instanceof NeighborsTable) {
     const params = table.getParams()
-    url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, 0, 0, true)
+    url = this.rest.neighbors(params.keyspace, params.id, params.type, params.isOutgoing, null, 0, 0, true)
   } else if (table instanceof TagsTable) {
     const params = table.getParams()
     url = this.rest.tags(params.keyspace, params, true)
@@ -995,13 +1003,15 @@ const downloadTagsAsJSON = function () {
 const addAllToGraph = function () {
   const table = this.browser.content[1]
   if (!table) return
+  const rows = []
   table.data.forEach(row => {
     if (!row.keyspace) {
       if (row.currency) row.keyspace = row.currency.toLowerCase()
       else row.keyspace = table.keyspace
     }
-    functions[table.selectMessage].call(this, row)
+    rows.push(row)
   })
+  functions[table.selectMessage].call(this, rows)
 }
 
 const tooltip = function (type) {

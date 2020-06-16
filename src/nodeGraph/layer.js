@@ -18,29 +18,36 @@ export default class Layer extends Component {
     return [this.id, this.nodes.keys()]
   }
 
-  add (node, addToTop = false) {
+  add (node, anchor) {
     if (this.nodes.has(node.id)) return
-    // calc dy so new node does not overlap with existing, moved nodes
-    const [maxY, cumY] = this.nodes.values().reduce(([maxY, cumY], node) => {
-      cumY += node.getHeight() + margin
-      maxY = Math.max(maxY, cumY + node.dy)
-      return [maxY, cumY]
-    }, [0, 0])
-    if (maxY > cumY) {
-      node.setDY(maxY - cumY)
-    }
-    if (addToTop) {
-      node.position = 0
-      this.nodes.each(node => { node.position++ })
-    } else {
-      node.position = this.nodes.size()
-    }
+    node.translate(this.x, (anchor && anchor.y) || 0)
     this.nodes.set(node.id, node)
+    this.repositionNodesAround(node)
+  }
+
+  repositionNodesAround (node) {
+    logger.debug('repositionAround', node.id[0], node, node.getHeight())
+    this.nodes.each(sister => {
+      logger.debug('reposition sister', sister.id[0], sister, sister.getHeight())
+      if (node === sister) return
+      let diff = node.getY() + node.getHeight() - sister.getY()
+      logger.debug('reposition diff 1', diff)
+      if (diff >= 0 && diff <= sister.getHeight()) {
+        sister.translate(0, diff + margin)
+        this.repositionNodesAround(sister)
+        return
+      }
+      diff = sister.getY() + sister.getHeight() - node.getY()
+      logger.debug('reposition diff 2', diff)
+      if (diff >= 0 && diff <= node.getHeight()) {
+        sister.translate(0, -diff - margin)
+        this.repositionNodesAround(sister)
+      }
+    })
   }
 
   remove (nodeId) {
     this.nodes.remove(nodeId)
-    this.getSortedNodes().forEach((node, i) => { node.position = i })
   }
 
   getSortedNodes () {
@@ -54,8 +61,9 @@ export default class Layer extends Component {
   getHeight () {
     let height = 0
     this.nodes.each(node => {
-      height += node.getHeight()
+      height += node.getHeight() + margin
     })
+    height -= margin
     return height
   }
 
@@ -79,23 +87,16 @@ export default class Layer extends Component {
     if (addressRoot) this.addressRoot = addressRoot
     if (!this.entityRoot) throw new Error('no entityRoot defined')
     if (!this.addressRoot) throw new Error('no addressRoot defined')
-    let cumY = 0
     const renderNodeWithPosition = (node, entityRoot, addressesRoot) => {
       // reset absolute coords of node
       entityRoot = entityRoot || node.root
       addressesRoot = addressesRoot || node.addressesRoot
-      node.x = 0
-      node.y = 0
       node.render(entityRoot)
-      entityRoot.attr('transform', `translate(0, ${cumY})`)
       // render addresses
       node.setUpdate(true)
       node.renderAddresses(addressesRoot)
-      addressesRoot.attr('transform', `translate(${node.dx + node.ddx}, ${cumY + node.dy + node.ddy})`)
-      // translate entity node and its addresses
-      node.translate(0, cumY)
     }
-    this.getSortedNodes().forEach((node) => {
+    this.nodes.values().forEach((node) => {
       // render entities
       if (this.shouldUpdate()) {
         const g = this.entityRoot.append('g')
@@ -105,19 +106,19 @@ export default class Layer extends Component {
       } else if (node.shouldUpdate('position')) {
         node.setUpdate(true)
         renderNodeWithPosition(node)
-        node.translate(this.x, this.y)
       } else {
         node.render()
         node.renderAddresses()
       }
-      cumY += node.getHeight() + margin
     })
+    // this.entityRoot.attr('transform', `translate(${this.x}, ${this.y})`)
+    // this.addressRoot.attr('transform', `translate(${this.x}, ${this.y})`)
     super.render()
   }
 
   translate (x, y) {
-    this.x = x
-    this.y = y
+    this.x += x
+    this.y += y
     this.nodes.each((node) => {
       node.translate(x, y)
     })

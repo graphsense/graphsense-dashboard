@@ -55,6 +55,7 @@ export default class Table extends BrowserComponent {
       tr.removeChild(el)
       const that = this
       const language = { ...dtLanguagePack }
+      logger.debug('language', language)
       const info = language.info ? 'info' : 'sInfo'
       language[info] = language[info] + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - ${t('sort/filter disabled')})</span>` : '')
       const tab = this.table = $(this.root).children().first().DataTable({
@@ -121,13 +122,10 @@ export default class Table extends BrowserComponent {
       request.length = table.total
     }
     if (request.start + request.length <= table.data.length) {
-      // HACK: The table shall only be scrollable to the currently loaded data.
-      // Add +1 so DataTables triggers loading more data when scrolling to the end.
-      const total = Math.min(table.total, table.data.length + 1)
       const data = {
         draw: request.draw,
-        recordsTotal: total,
-        recordsFiltered: total
+        recordsTotal: this.total,
+        recordsFiltered: this.total
       }
       // data from cache
       data.data = table.data.slice(request.start, request.start + request.length)
@@ -159,13 +157,10 @@ export default class Table extends BrowserComponent {
     logger.debug('data', result, this.resultField, this.data)
     this.nextPage = result.next_page
     const loading = this.loading || request
-    // HACK: The table shall only be scrollable to the currently loaded data.
-    // Add +1 so DataTables triggers loading more data when scrolling to the end.
-    const total = Math.min(this.total, this.data.length + 1)
     const data = {
       draw: request.draw,
-      recordsTotal: total,
-      recordsFiltered: total,
+      recordsTotal: this.total,
+      recordsFiltered: this.total,
       data: this.data.slice(loading.start, loading.start + loading.length)
     }
     this.loading = null

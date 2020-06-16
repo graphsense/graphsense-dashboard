@@ -5,7 +5,6 @@ import '@fortawesome/fontawesome-free/js/all.js'
 import './style/fonts/Octarine-Bold/fonts.css'
 import './style/fonts/Octarine-Light/fonts.css'
 import 'd3-context-menu/css/d3-context-menu.css'
-import './style/style.css'
 import Start from './start.js'
 import numeral from 'numeral'
 import moment from 'moment'
@@ -13,6 +12,7 @@ import Logger from './logger.js'
 import jstz from 'jstimezonedetect'
 import 'moment-timezone'
 import 'numeral/locales'
+import './style/style.css'
 
 Logger.setLogLevel(IS_DEV ? Logger.LogLevels.DEBUG : Logger.LogLevels.ERROR) // eslint-disable-line no-undef
 

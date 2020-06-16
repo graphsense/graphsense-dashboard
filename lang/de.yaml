@@ -135,7 +135,7 @@ notes: Notizen
 add tag: Tag hinzufügen
 search incoming neighbors: suche eingehende Nachbarn
 search outgoing neighbors: suche ausgehende Nachbarn
-nothing to display yet: nichts anzuzeigen!
+nothing to display yet: noch nichts anzuzeigen!
 entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
 link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
@@ -177,3 +177,5 @@ remove tag: Tag löschen
 show at most in links table: maximal %0 Transaktionen gelistet
 estimated value: geschätzter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
+tag coherence: Tagkohärenz
+unknown: unbekannt

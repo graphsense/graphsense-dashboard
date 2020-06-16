@@ -479,9 +479,9 @@ export default class Menu extends Component {
     })
     for (const label in this.view.labels) {
       const l = this.view.labels[label]
-      l.source = l.available.sources.values().next().value
-      l.category = l.available.categories.values().next().value
-      l.abuse = l.available.abuses.values().next().value
+      l.source = l.available.sources.values().next().value || null
+      l.category = l.available.categories.values().next().value || null
+      l.abuse = l.available.abuses.values().next().value || null
     }
     this.setUpdate(true)
   }

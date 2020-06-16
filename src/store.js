@@ -344,7 +344,7 @@ export default class Store {
         this.linkOutgoing(sp[1], key, sp[0], sp[0], value)
       })
     })
-    this.categories = categories
+    this.categories = categories || []
   }
 
   deserializeNotes (version, [addressNotes, entityNotes]) {
@@ -451,5 +451,11 @@ export default class Store {
 
   getUserDefinedTagsForLabel (label) {
     return this.userDefinedLabels.get(label)
+  }
+
+  getEntityKeys (keyspace) {
+    return this.entities.keys()
+      .filter(key => unprefix(key)[0] === keyspace)
+      .map(key => unprefix(key)[1])
   }
 }
