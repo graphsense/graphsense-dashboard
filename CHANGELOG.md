@@ -3,81 +3,68 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.4.4] - 2020-06-12
-### Changed
-
-- 09cfef6 keep node selected on move
-- 550c0d9 don't zoom on selecting node
-- a2a723c fix thousands seperator in property box
-- 86be354 rewrite layout algorithm, fix #142
-- d9fd723 query and show links between entities explicitly, fix #140
-
-### Added
-- a1883ba display tag coherence
-
 ## [0.4.3] - 2020-05-11
 ### Changed
-
-- 15b0b7b fix message on found paths, #138
-- 6647295 improve setting min/max in neighbor search
-- 2146fc4 dont make nodes stuck on layers borders
-- cbdc3e7 tremendously improve moving of nodes, #115
-- f55f5c7 improve drag/drop and zooming of graph
-- 9dda161 render entitys above links
-- dcceba7 integrate taxonomies and concepts in legend, make legend items sortable, only show legend items for categories in graph, #120
-- b0eb812 remove static pages (project website moved to github pages)
-- 671321f fix undo, #137
-- 58a732b include datatables translations, #125
-- 9071ddc add more info to link prop box, fix currency switching, fix #85
-- 39a842c add russian
-- 13385aa fix import of tagpack yaml
-- dad30bb add active field to user defined tag
-- b98873a link transactions table, #85
-- 9f50abc completed translation, #125
-- 6fbb524 fix deserialize of zoom, #91
-- a44519c show categories in prop box, hide abuses and categories if empty
-- f9512d0 fix search neighbor by address
-- d87c03b order addresses by active state, #98
-- 6dc6c73 fix search for labels from 3 characters on
-- 4bea99c grey out addresses which have not been used but been tagged, #98
-- 1a65a28 improve moving of nodes, fix #115
-- b9b6ce1 move label column next to entity/address id, #54
-- 9f274da show user-defined labels in tag annotation search, #118
-- 8de90c0 redesign search (append results)
-- ae79a04 add tagpack creator on export, #118
-- cc71239 redesign modal
-- d1306be fix lastmod timestamp of tag, #118
-- 7b773cf move same tagpack values to top level on export, #118
-- c54dc96 update address color on tag annotation (#118), hide search results when clicking anywhere
-- 3ae305a selectable source in tag annotation, #118
-- ec7a047 load tags when annotating and prefill fields, #118
-- 63c27ff reload categories/abuses after loading gs file, fix #129
-- e61e54d remove browser history at all, fix #124
-- f29566c clickable links, #85
-- 60ab74e fix missing links between big entities after removing an address
-- 5cbdd33 fix wrong cross-ledger linking of nodes, fix #127
-- d3d8cbd multi select nodes, calculate node property sum (cross-ledger merge), fix #116
-- 08a8b37 fix deep search address search
-- b66854b fix env var injection
-- 401a380 report export dialog, use generate_timestamp webservice, #121
-- 4f9e7cd rename "add note" to "annotate", #118
-- d5bc3ba add source to user defined label annotation, #118
-- 5f78e54 add abuses to user defined label annotation, #118
-- 3c6fd73 add category option to user defined label annotation, #118
-- c48ecd8 show labels per row in neighbors table, fix a bug in neighbors search btw, closes #54
-- b0289b0 generate PDF through titanium report webservice, closes #121
-- d352a88 show abuses in tag table, on address node and in property box, closes #106
-- 341c53e fix supported currencies in tags table
-- da49b3a use standardjs to lint code, cleanup
-- 58fe763 fix sorting of addresses by final balance
-- 0b9150a generate report from stats, #121
-- 4cdb7f6 more precise activity period, fix #108
-- 18ac5c8 dashed entity border, fix #110
-- 445bf38 collapsable tables, fix #109
-- 4d847b9 smaller label size to not overlap with currency, fix #112
-- 3207d20 dont strip whitespaces on input, fix #113
-- ad06470 export address tags in tagpack, fix #119
-- b3cc71c add user defined labels as tags, fix #118
+15b0b7b fix message on found paths, #138
+6647295 improve setting min/max in neighbor search
+2146fc4 dont make nodes stuck on layers borders
+cbdc3e7 tremendously improve moving of nodes, #115
+f55f5c7 improve drag/drop and zooming of graph
+9dda161 render entitys above links
+dcceba7 integrate taxonomies and concepts in legend, make legend items sortable, only show legend items for categories in graph, #120
+b0eb812 remove static pages (project website moved to github pages)
+671321f fix undo, #137
+58a732b include datatables translations, #125
+9071ddc add more info to link prop box, fix currency switching, fix #85
+39a842c add russian
+13385aa fix import of tagpack yaml
+dad30bb add active field to user defined tag
+b98873a link transactions table, #85
+9f50abc completed translation, #125
+6fbb524 fix deserialize of zoom, #91
+a44519c show categories in prop box, hide abuses and categories if empty
+f9512d0 fix search neighbor by address
+d87c03b order addresses by active state, #98
+6dc6c73 fix search for labels from 3 characters on
+4bea99c grey out addresses which have not been used but been tagged, #98
+1a65a28 improve moving of nodes, fix #115
+b9b6ce1 move label column next to entity/address id, #54
+9f274da show user-defined labels in tag annotation search, #118
+8de90c0 redesign search (append results)
+ae79a04 add tagpack creator on export, #118
+cc71239 redesign modal
+d1306be fix lastmod timestamp of tag, #118
+7b773cf move same tagpack values to top level on export, #118
+c54dc96 update address color on tag annotation (#118), hide search results when clicking anywhere
+3ae305a selectable source in tag annotation, #118
+ec7a047 load tags when annotating and prefill fields, #118
+63c27ff reload categories/abuses after loading gs file, fix #129
+e61e54d remove browser history at all, fix #124
+f29566c clickable links, #85
+60ab74e fix missing links between big entities after removing an address
+5cbdd33 fix wrong cross-ledger linking of nodes, fix #127
+d3d8cbd multi select nodes, calculate node property sum (cross-ledger merge), fix #116
+08a8b37 fix deep search address search
+b66854b fix env var injection
+401a380 report export dialog, use generate_timestamp webservice, #121
+4f9e7cd rename "add note" to "annotate", #118
+d5bc3ba add source to user defined label annotation, #118
+5f78e54 add abuses to user defined label annotation, #118
+3c6fd73 add category option to user defined label annotation, #118
+c48ecd8 show labels per row in neighbors table, fix a bug in neighbors search btw, closes #54
+b0289b0 generate PDF through titanium report webservice, closes #121
+d352a88 show abuses in tag table, on address node and in property box, closes #106
+341c53e fix supported currencies in tags table
+da49b3a use standardjs to lint code, cleanup
+58fe763 fix sorting of addresses by final balance
+0b9150a generate report from stats, #121
+4cdb7f6 more precise activity period, fix #108
+18ac5c8 dashed entity border, fix #110
+445bf38 collapsable tables, fix #109
+4d847b9 smaller label size to not overlap with currency, fix #112
+3207d20 dont strip whitespaces on input, fix #113
+ad06470 export address tags in tagpack, fix #119
+b3cc71c add user defined labels as tags, fix #118
 
 ## [0.4.2] - 2019-12-20
 ### Changed
