@@ -812,6 +812,8 @@ const loadFile = function (params) {
   } else if (type === 'loadTagsJSON') {
     this.loadTagsJSON(data)
   }
+  this.graph.dirty = true
+  this.graph.createSnapshot()
 }
 
 const showLogs = function () {
