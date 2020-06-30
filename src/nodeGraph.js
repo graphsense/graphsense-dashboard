@@ -640,6 +640,7 @@ export default class NodeGraph extends Component {
         node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType.entityLabel, this.colors.entity, this.currency)
       }
       node.add(addressNode)
+      layer.repositionNodesAround(node)
       this.setEntityNodes(node)
     } else if (object.type === 'entity') {
       node = this.entityNodes.get([object.id, layerId, object.keyspace])
@@ -675,9 +676,10 @@ export default class NodeGraph extends Component {
     logger.debug('remove layer', nodeId, layer)
     if (!layer) return
     if (nodeType === 'address') {
-      this.entityNodes.remove('mockup' + nodeId)
       layer.nodes.each(entity => {
-        entity.nodes.remove(nodeId)
+        if (entity.nodes.remove(nodeId)) {
+          entity.repositionNodes()
+        }
       })
     } else if (nodeType === 'entity') {
       node.nodes.each(node => this.removeAddressNode(node.id))
