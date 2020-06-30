@@ -1,6 +1,7 @@
 export const browserHeight = 220
 export const browserPadding = 1
 export const entityWidth = 190
+export const layerMargin = 300
 export const expandHandleWidth = 15
 export const maxAddableNodes = 100
 export const maxSearchDepth = 7
