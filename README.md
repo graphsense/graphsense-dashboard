@@ -33,11 +33,19 @@ Install Docker and Docker Compose:
 - [Docker][docker], see e.g. https://docs.docker.com/engine/install/
 - Docker Compose: https://docs.docker.com/compose/install/
 
+This service assumes that:
+ - There is a cassandra instance running;
+ - Both parser and exporter from `graphsense-blocksci` have completed fetching data into that cassandra instance.
+ - The transformation pipeline has completed.
+ - The Graphsense REST service is running, connected to the same cassandra database.
+ 
+**It is possible to set up all required services using a single docker-compose evironment. For that, check out the `graphsense-setup` project.** Alternatively, you can set up each required service manually, in which case, keep on reading.
+
 ### Configuration
 
-Copy `docker/env.template` to `.env`:
+Copy `env.example` to `.env`:
 
-    cp docker/env.template .env
+    cp env.example .env
 
 Edit the file `.env` and set the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.:
@@ -48,6 +56,15 @@ Additional environment variables:
 
 * `TITANIUM_REPORT_GENERATION_URL`: The webservice URL for generating
   Titanium JSON/PDF Reports (optional).
+
+Make sure to apply the configuation by adding this line to `docker-compose.yml`:
+```yaml
+services:
+    graphsense-dashboard:
+        ...
+        env_file: .env
+        ...
+```
 
 ### Usage
 
@@ -62,6 +79,8 @@ Start a container (in detached mode):
 Finally, test the application in a web browser:
 
     http://localhost:8000
+
+The default port (8000) can be changed in the `.env` file.
 
 ## Color configuration
 
