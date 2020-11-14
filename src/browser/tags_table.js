@@ -41,11 +41,13 @@ export default class TagsTable extends Table {
       {
         name: t('Category'),
         data: 'category',
+        defaultContent: '',
         render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
       },
       {
         name: t('Abuse'),
         data: 'abuse',
+        defaultContent: '',
         render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
       },
       {

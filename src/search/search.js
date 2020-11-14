@@ -28,7 +28,7 @@ export default class Search extends Component {
 
   setStats (stats) {
     this.stats = stats
-    this.setKeyspaces(Object.keys(this.stats))
+    this.setKeyspaces((this.stats.map(s => s.name)))
   }
 
   setKeyspaces (keyspaces) {
@@ -318,11 +318,13 @@ export default class Search extends Component {
   }
 
   blocklist (limit, keyspace, prefix) {
-    if (!this.stats || !this.stats[keyspace]) return []
+    if (!this.stats) return []
+    const curr = this.stats.filter(s => s.name === keyspace)[0]
+    if (!curr) return []
     prefix = prefix * 1
     if (typeof prefix !== 'number') return []
     if (prefix <= 0) return []
-    if (prefix < this.stats[keyspace].no_blocks) {
+    if (prefix < curr.no_blocks) {
       return [prefix]
     }
     return []

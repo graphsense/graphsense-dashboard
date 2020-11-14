@@ -17,9 +17,9 @@ const stats = function () {
 
 const receiveStats = function ({ context, result }) {
   if (!result) return
-  this.keyspaces = Object.keys(result.currencies)
+  this.keyspaces = (result.currencies || []).map(c => c.name)
   this.stats = { ...result }
-  this.landingpage.setStats({ ...result.currencies })
+  this.landingpage.setStats([...result.currencies])
   if (this.browser) {
     this.browser.setKeyspaces(this.keyspaces)
   }
@@ -50,16 +50,16 @@ const search = function ({ term, context }) {
 }
 
 const searchresult = function ({ context, result }) {
+  logger.debug('searchresult', result)
   const search = context.dialogContext === 'search' ? this.search : this.menu.search
   if (!search) return
   if (!context.local) search.hideLoading()
   search.setResult(context.term, result, context.local)
 }
 
-const login = function ([username, password]) {
-  logger.debug('login, this is', this)
+const login = function (apiKey) {
   this.login.loading(true)
-  this.mapResult(this.rest.login(username, password), 'loginResult')
+  this.mapResult(this.rest.login(apiKey), 'loginResult')
 }
 
 const refreshResult = function ({ result }) {

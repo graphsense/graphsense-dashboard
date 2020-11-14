@@ -10,14 +10,13 @@ import { replace } from '../template_utils.js'
 function statsHtml (body) {
   let stats = ''
   const imageContext = require.context('../style/img/currencies/', false)
-  Object.keys(body).forEach((keyspace) => {
-    const s = body[keyspace]
-    if (!s) return
+  body.forEach((s) => {
     const format = '0,000,000'
     const time = moment.unix(s.timestamp)
+    const keyspace = s.name
     const flat =
         {
-          keyspace: keyspace,
+          keyspace,
           lastUpdate: (time.format('L') + ' ' + time.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           no_addresses: numeral(s.no_addresses).format(format),

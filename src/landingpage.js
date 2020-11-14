@@ -9,7 +9,7 @@ export default class Landingpage extends Component {
   constructor (dispatcher) {
     super()
     this.dispatcher = dispatcher
-    this.stats = {}
+    this.stats = []
   }
 
   setSearch (search) {
