@@ -26,6 +26,7 @@ export default class Start extends Callable {
     this.registerDispatchEvents(actions)
     this.call('stats')
     this.call('changeLocale', locale)
+    this.mapResult(this.rest.login(), 'loginResult')
     this.showLandingpage = true
   }
 

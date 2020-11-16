@@ -73,7 +73,7 @@ export default class Model extends Callable {
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-    this.stats = stats || { currencies: {} }
+    this.stats = stats || { currencies: [] }
     this.reportLogger = reportLogger || new ReportLogger()
     this.keyspaces = (this.stats.currencies || []).map(c => c.name)
     logger.debug('keyspaces', this.keyspaces)
