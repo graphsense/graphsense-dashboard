@@ -7,6 +7,8 @@ import NeighborsTable from '../browser/neighbors_table.js'
 import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
 import BlockTransactionsTable from '../browser/block_transactions_table.js'
+import LinkTransactionsTable from '../browser/link_transactions_table.js'
+import AddressesTable from '../browser/addresses_table.js'
 import FileSaver from 'file-saver'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
@@ -984,6 +986,13 @@ const downloadTable = function () {
   } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
     const params = table.getParams()
     url = this.rest.transactions(params.keyspace, { params: [params.id, params.type] }, true)
+  } else if (table instanceof AddressesTable) {
+    const params = table.getParams()
+    url = this.rest.addresses(params.keyspace, { params: params.id }, true)
+  } else if (table instanceof LinkTransactionsTable) {
+    logger.debug('table', table)
+    const params = table.getParams()
+    url = this.rest.linkTransactions(params.keyspace, params, true)
   }
   if (url) {
     this.layout.triggerDownloadViaLink(url)

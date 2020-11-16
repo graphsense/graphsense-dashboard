@@ -42,5 +42,13 @@ export default class AddressesTable extends Table {
     this.selectMessage = 'selectAddress'
     this.loadParams = this.entityId
     if (total < maxAddableNodes) this.addOption(this.addAllOption())
+    this.addOption(this.downloadOption())
+  }
+
+  getParams () {
+    return {
+      id: this.entityId,
+      keyspace: this.keyspace
+    }
   }
 }

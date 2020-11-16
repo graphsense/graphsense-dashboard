@@ -41,6 +41,7 @@ export default class LinkTransactionsTable extends Table {
     this.resultField = null
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
+    this.addOption(this.downloadOption())
   }
 
   isSmall () {
