@@ -49,6 +49,7 @@ export default class Statusbar extends Component {
   }
 
   add (msg) {
+    if (msg[0] === 'error') this.numErrors++
     this.messages.push(msg)
     this.setUpdate('add')
   }
@@ -293,7 +294,6 @@ export default class Statusbar extends Component {
       case 'searchResult':
         return t('Found paths to nodes', ...args)
       case 'error':
-        this.numErrors++
         return { error: args[0] }
       default:
         logger.warn('unhandled status message type', type)

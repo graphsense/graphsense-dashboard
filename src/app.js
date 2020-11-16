@@ -68,7 +68,7 @@ const fromURL = (url, keyspaces) => {
 const shiftKey = 16
 
 export default class Model extends Callable {
-  constructor (locale, rest, stats, reportLogger) {
+  constructor (locale, rest, stats, reportLogger, statusbar) {
     super()
     this.locale = locale
     this.isReplaying = false
@@ -79,7 +79,7 @@ export default class Model extends Callable {
     logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
 
-    this.statusbar = new Statusbar(this.call)
+    this.statusbar = statusbar || new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
     this.createComponents()
     this.registerDispatchEvents(startactions)
