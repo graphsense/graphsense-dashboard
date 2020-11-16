@@ -24,7 +24,7 @@
     "yaml": "^1.7.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.1.2",
+    "@babel/cli": "^7.12.1",
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
     "@fortawesome/fontawesome-free": "^5.4.0",
