@@ -46,10 +46,12 @@ module.exports = env => {
         title: 'GraphSense App',
         favicon: './src/style/img/favicon.png'
       }),
-      new CopyWebpackPlugin([
-        { from: './config', to: './config/' },
-        { from: './lang', to: './lang/' }
-      ]),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: './config', to: './config/' },
+          { from: './lang', to: './lang/' }
+        ]
+      }),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
