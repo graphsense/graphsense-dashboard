@@ -12,11 +12,9 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import { formatCurrency, nodesIdentical } from './utils'
 import Logger from './logger.js'
-import { entityWidth, expandHandleWidth } from './globals.js'
+import { layerMargin, expandHandleWidth } from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
-
-const margin = 300
 
 const zoomSlowity = 5
 
@@ -299,12 +297,12 @@ export default class NodeGraph extends Component {
     let dx = (clientX - this.draggingNode.x) / this.k
     const dy = (clientY - this.draggingNode.y) / this.k
 
-    if (dx - 2 * expandHandleWidth < margin / -2) {
-      dx = margin / -2 + 2 * expandHandleWidth - entity.dx
+    if (dx - 2 * expandHandleWidth < layerMargin / -2) {
+      dx = layerMargin / -2 + 2 * expandHandleWidth - entity.dx
       dx = entity.dx + dx
     }
-    if (dx + 2 * expandHandleWidth > margin / 2) {
-      dx = margin / 2 - 2 * expandHandleWidth - entity.dx
+    if (dx + 2 * expandHandleWidth > layerMargin / 2) {
+      dx = layerMargin / 2 - 2 * expandHandleWidth - entity.dx
       dx = entity.dx + dx
     }
 
@@ -612,9 +610,6 @@ export default class NodeGraph extends Component {
     let layer = this.findLayer(layerId)
     if (!layer) {
       layer = new Layer(layerId)
-      const w = entityWidth + margin
-      const x = layer.id * w
-      layer.translate(x, 0)
       if (anchor && anchor.isOutgoing === false) {
         this.layers.unshift(layer)
       } else {
@@ -640,6 +635,7 @@ export default class NodeGraph extends Component {
         node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType.entityLabel, this.colors.entity, this.currency)
       }
       node.add(addressNode)
+      layer.repositionNodesAround(node)
       this.setEntityNodes(node)
     } else if (object.type === 'entity') {
       node = this.entityNodes.get([object.id, layerId, object.keyspace])
@@ -675,9 +671,10 @@ export default class NodeGraph extends Component {
     logger.debug('remove layer', nodeId, layer)
     if (!layer) return
     if (nodeType === 'address') {
-      this.entityNodes.remove('mockup' + nodeId)
       layer.nodes.each(entity => {
-        entity.nodes.remove(nodeId)
+        if (entity.nodes.remove(nodeId)) {
+          entity.repositionNodes()
+        }
       })
     } else if (nodeType === 'entity') {
       node.nodes.each(node => this.removeAddressNode(node.id))
@@ -1231,7 +1228,8 @@ export default class NodeGraph extends Component {
           if (!found) return
           key = found.id
         }
-        l.add(this.entityNodes.get(key))
+        const node = this.entityNodes.get(key)
+        l.nodes.set(node.id, node)
       })
       this.layers.push(l)
     })

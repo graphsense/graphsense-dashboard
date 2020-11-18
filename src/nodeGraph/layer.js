@@ -1,6 +1,7 @@
 import Component from '../component.js'
 import { map } from 'd3-collection'
 import Logger from '../logger.js'
+import { entityWidth, layerMargin } from '../globals.js'
 
 const logger = Logger.create('Layer') // eslint-disable-line no-unused-vars
 const margin = 20
@@ -10,7 +11,7 @@ export default class Layer extends Component {
     super()
     this.id = id * 1
     this.nodes = map()
-    this.x = 0
+    this.x = (entityWidth + layerMargin) * this.id
     this.y = 0
   }
 

@@ -10,7 +10,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 
-const VERSION = '0.4.4'
+const VERSION = '0.4.5'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
 const DEV_TITANIUM_REPORT_GENERATION_URL = 'http://localhost:5000'
 
@@ -46,10 +46,12 @@ module.exports = env => {
         title: 'GraphSense App',
         favicon: './src/style/img/favicon.png'
       }),
-      new CopyWebpackPlugin([
-        { from: './config', to: './config/' },
-        { from: './lang', to: './lang/' }
-      ]),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: './config', to: './config/' },
+          { from: './lang', to: './lang/' }
+        ]
+      }),
       IS_DEV ? new webpack.HotModuleReplacementPlugin() : noop(),
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,

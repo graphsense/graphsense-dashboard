@@ -3,6 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.5] - 2020-11-18
+### Added
+652bba6 add csv download to addresses table, link transactions table, address txs table
+### Changed
+f9e3fb4 adapt to REST service v0.4.5, replace username/password by API key
+c343af2 make snapshot after loading gs file
+936ccb5 fix x coord of layers after deserialization, fix #152
+a731f34 fix repositioning of entities when getting addresses in, fix #151, #149
+
+## [0.4.4] - 2020-06-12
+### Changed
+- 09cfef6 keep node selected on move
+- 550c0d9 don't zoom on selecting node
+- a2a723c fix thousands seperator in property box
+- 86be354 rewrite layout algorithm, fix #142
+- d9fd723 query and show links between entities explicitly, fix #140
+### Added
+- a1883ba display tag coherence
+
 ## [0.4.3] - 2020-05-11
 ### Changed
 15b0b7b fix message on found paths, #138

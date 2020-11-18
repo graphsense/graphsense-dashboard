@@ -49,6 +49,7 @@ export default class Statusbar extends Component {
   }
 
   add (msg) {
+    if (msg[0] === 'error') this.numErrors++
     this.messages.push(msg)
     this.setUpdate('add')
   }
@@ -219,7 +220,11 @@ export default class Statusbar extends Component {
     if (msg[0] === 'error') {
       let message
       if (msg[1].requestURL) {
-        message = t('Error requesting', msg[1].requestURL, msg[1].message)
+        let m = msg[1].message
+        if (m.startsWith('429')) {
+          m = t('API rate limit exceeded')
+        }
+        message = t('Error requesting', msg[1].requestURL, m)
       } else {
         message = msg[1]
       }
@@ -293,7 +298,6 @@ export default class Statusbar extends Component {
       case 'searchResult':
         return t('Found paths to nodes', ...args)
       case 'error':
-        this.numErrors++
         return { error: args[0] }
       default:
         logger.warn('unhandled status message type', type)

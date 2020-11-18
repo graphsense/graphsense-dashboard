@@ -68,18 +68,18 @@ const fromURL = (url, keyspaces) => {
 const shiftKey = 16
 
 export default class Model extends Callable {
-  constructor (locale, rest, stats, reportLogger) {
+  constructor (locale, rest, stats, reportLogger, statusbar) {
     super()
     this.locale = locale
     this.isReplaying = false
     this.showLandingpage = true
-    this.stats = stats || { currencies: {} }
+    this.stats = stats || { currencies: [] }
     this.reportLogger = reportLogger || new ReportLogger()
-    this.keyspaces = Object.keys(this.stats.currencies)
+    this.keyspaces = (this.stats.currencies || []).map(c => c.name)
     logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
 
-    this.statusbar = new Statusbar(this.call)
+    this.statusbar = statusbar || new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
     this.createComponents()
     this.registerDispatchEvents(startactions)
@@ -430,11 +430,10 @@ export default class Model extends Callable {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    logger.debug('model', this)
     if (this.showLandingpage) {
       return this.landingpage.render(this.root)
     }
-    logger.debug('model render')
-    logger.debug('model', this)
     return this.layout.render(this.root)
   }
 

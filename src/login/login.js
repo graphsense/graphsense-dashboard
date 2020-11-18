@@ -33,7 +33,7 @@ export default class Login extends Component {
       this.root.innerHTML = tt(login)
       this.root.querySelector('form').addEventListener('submit', (e) => {
         e.preventDefault()
-        this.dispatcher('login', [e.target.elements.username.value, e.target.elements.password.value])
+        this.dispatcher('login', e.target.elements.api_key.value)
       })
       super.render()
       return this.root

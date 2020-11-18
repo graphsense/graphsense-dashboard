@@ -65,6 +65,7 @@ export default class Rest {
     if (abortController) {
       opts.signal = abortController.signal
     }
+    if (this.apiKey) opts.headers.Authorization = this.apiKey
     return json(newurl, opts)
       .then(result => {
         this.logs.push([+new Date(), newurl])
@@ -215,15 +216,22 @@ export default class Rest {
     id = id[0]
     const dir = isOutgoing ? 'out' : 'in'
     let searchCrit = ''
+    let searchKey = ''
     if (params.category) {
-      searchCrit = `category=${params.category}`
+      searchKey = 'category'
+      searchCrit = params.category
     } else if (params.addresses && params.addresses.length > 0) {
-      searchCrit = 'addresses=' + params.addresses.join(',')
+      searchKey = 'addresses'
+      searchCrit = params.addresses.join(',')
     } else if (params.field) {
-      searchCrit = `field=${params.field}&fieldcurrency=${params.currency}${params.min ? `&min=${params.min}` : ''}${params.max ? `&max=${params.max}` : ''}`
+      searchKey = params.field
+      if (searchKey === 'final_balance') searchKey = 'balance'
+      searchCrit = [params.currency, params.min ? params.min : 0]
+      if (params.max) searchCrit.push(params.max)
+      searchCrit = searchCrit.join(',')
     }
     const url =
-      `/entities/${id}/search?direction=${dir}&${searchCrit}&depth=${depth}&breadth=${breadth}&skipNumAddresses=${skipNumAddresses}`
+      `/entities/${id}/search?direction=${dir}&key=${searchKey}&value=${searchCrit}&depth=${depth}&breadth=${breadth}&skip_num_addresses=${skipNumAddresses}`
     const addKeyspace = (node) => {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {
@@ -244,14 +252,16 @@ export default class Rest {
     return this.json(keyspace, url).then(addKeyspace)
   }
 
-  login (username, password) {
-    this.username = username
+  login (apiKey) {
+    this.apiKey = apiKey
     const opt = options()
-    opt.method = 'post'
-    opt.body = JSON.stringify({ username, password }) // eslint-disable-line no-undef
+    opt.method = 'get'
+    opt.headers.Authorization = apiKey // eslint-disable-line no-undef
 
+    logger.debug('opt', opt)
     // using d3 json directly to pass options
-    return json(this.baseUrl + '/login', opt)
+    return json(this.baseUrl + '/btc/blocks/1', opt)
+      .then(result => ({ status: 'success' }))
       .catch(error => {
         // normalize message
         if (!error.message && error.msg) error.message = error.msg
