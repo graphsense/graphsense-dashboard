@@ -134,6 +134,7 @@ export default class Layout extends Component {
           ['export', 'toggleExport'],
           ['config', 'toggleConfig'],
           ['legend', 'toggleLegend'],
+          ['logout', 'logout'],
           ['undo', 'undo'],
           ['redo', 'redo']
         ]

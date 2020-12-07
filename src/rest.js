@@ -269,6 +269,10 @@ export default class Rest {
       })
   }
 
+  logout () {
+    return window.fetch(this.baseUrl + '/?logout', options())
+  }
+
   getLogs () {
     return this.logs
   }

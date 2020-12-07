@@ -1097,6 +1097,14 @@ const screenZoom = function (zoom) {
   this.graph.screenZoom(zoom)
 }
 
+const logout = function () {
+  this.mapResult(this.rest.logout(), 'loggedout')
+}
+
+const loggedout = function () {
+  window.history.go(0)
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1216,7 +1224,9 @@ const functions = {
   screenDragStart,
   screenDragMove,
   screenDragStop,
-  screenZoom
+  screenZoom,
+  logout,
+  loggedout
 }
 
 export default functions

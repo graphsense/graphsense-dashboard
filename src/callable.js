@@ -141,7 +141,9 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'screenDragStop',
   'screenDragMove',
   'screenZoom',
-  'zoomToHighlightedNodes'
+  'zoomToHighlightedNodes',
+  'logout',
+  'loggedout'
 )
 
 // synchronous messages
