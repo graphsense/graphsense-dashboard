@@ -97,7 +97,7 @@ for contained addresses: nach enthaltenen Adressen
 for final balance: nach Bilanz
 for total received: nach Eingänge
 breadth: Breite
-skip entities with more neighbors than: Entitäten auslassen mit mehr Nachbarn als
+skip entities with more addresses than: Entitäten auslassen mit mehr Adressen als
 search: suche # as an imperative
 save: speichern
 title: Titel

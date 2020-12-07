@@ -97,7 +97,7 @@ for contained addresses: for contained addresses
 for final balance: for balance
 for total received: for received
 breadth: breadth
-skip entities with more neighbors than: skip entities with more neighbors than
+skip entities with more addresses than: skip entities with more addresses than
 search: search # as an imperative
 save: save
 title: title

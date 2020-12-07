@@ -94,7 +94,7 @@ for contained addresses: для содержащихся адресов
 for final balance: для итог. баланса
 for total received: для всего получено
 breadth: широта
-skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
+skip entities with more addresses than: пропустить объекты с большим количеством адреса, чем
 search: поиск # as an imperative
 save: сохранить
 title: название
