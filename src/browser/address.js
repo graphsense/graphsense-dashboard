@@ -67,6 +67,7 @@ export default class Address extends BrowserComponent {
       categories: categories.join(' '),
       no_outgoing_txs: numeral(noOutgoingTxs).format('0,000'),
       no_incoming_txs: numeral(noIncomingTxs).format('0,000'),
+      no_transfers: numeral(noIncomingTxs + noOutgoingTxs).format('0,000'),
       out_degree: numeral(noOutdegree).format('0,000'),
       in_degree: numeral(noIndegree).format('0,000'),
       tagCoherence

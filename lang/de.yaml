@@ -17,12 +17,15 @@ latest block: letzter Block
 loading_type_id: lade %0 %1  # results in eg. loading address xyz
 loading_thing: lade %0 
 currency: Währung
+transfers: Transfers
+withdrawals: Behebungen
+deposits: Einzahlungen
 neighbors: Nachbarn
 first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
-total received: Summe Eingänge
-final balance: Endbilanz
+total received: Eingänge
+final balance: Bilanz
 category: Kategorie
 categories: Kategorien
 abuse: Missbrauch
@@ -91,8 +94,8 @@ criterion: Kriterium
 depth: Tiefe
 by category: nach Kategorie
 for contained addresses: nach enthaltenen Adressen
-for final balance: nach Endbilanz
-for total received: nach Summe Eingänge
+for final balance: nach Bilanz
+for total received: nach Eingänge
 breadth: Breite
 skip entities with more neighbors than: Entitäten auslassen mit mehr Nachbarn als
 search: suche # as an imperative
@@ -145,8 +148,8 @@ searching criterion addresses_ids: Adressen %0
 searching between: zwischen %0 und %1
 searching min: ab %0
 searching max: bis %1
-searching criterion final_balance: Endbilanz %0 # one of searching between, min, max
-searching criterion total_received: Summe Eingänge %0 # one of searching between, min, max
+searching criterion final_balance: Bilanz %0 # one of searching between, min, max
+searching criterion total_received: Eingänge %0 # one of searching between, min, max
 searching outgoing: ausgehenden
 searching incoming: eingehenden
 searching: "suche nach %0 Nachbarn von %1 mit %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
