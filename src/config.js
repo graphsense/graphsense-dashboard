@@ -23,6 +23,7 @@ export default class Config extends Component {
     this.visible = false
     this.categoryColors = []
     this.locale = locale
+    this.concepts = new Map()
   }
 
   toggleConfig () {
@@ -53,6 +54,12 @@ export default class Config extends Component {
   hide () {
     this.visible = null
     this.setUpdate(true)
+  }
+
+  setConcepts (concepts) {
+    concepts.forEach(concept => {
+      this.concepts.set(concept.label.toLowerCase(), concept)
+    })
   }
 
   setCategoryColors (colors, ordering) {
@@ -91,7 +98,9 @@ export default class Config extends Component {
           addClass(itemEl, 'cursor-grab')
         }
         itemEl.querySelector('.legendColor').style.backgroundColor = value
-        itemEl.querySelector('.legendItem').innerHTML = key
+        const concept = this.concepts.get(key.toLowerCase())
+        const output = concept ? `<a ${concept.url ? `href="${concept.url}"` : ''} title="${concept.description}">${concept.label}</a>` : key
+        itemEl.querySelector('.legendItem').innerHTML = output
         el.appendChild(itemEl)
       })
       if (canSort) {

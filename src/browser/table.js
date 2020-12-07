@@ -171,12 +171,12 @@ export default class Table extends BrowserComponent {
     return value ? `<span title="${value}">${value.substr(0, 20)}${value.length > 20 ? '...' : ''}</span>` : ''
   }
 
-  formatLink (url, title) {
-    if (!url) return ''
-    if (url.startsWith('http')) {
-      return `<a onClick="event.stopPropagation()" href="${url}" target=_blank>${title || this.truncateValue(url)}</a>`
+  formatLink (url, title, description) {
+    if (url && url.startsWith('http')) {
+      return `<a onClick="event.stopPropagation()" title="${description}" href="${url}" target=_blank>${title || this.truncateValue(url)}</a>`
+    } else {
+      return `<span title="${description}">${title}</span>`
     }
-    return url
   }
 
   formatValue (func) {

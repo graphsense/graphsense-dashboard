@@ -42,13 +42,21 @@ export default class TagsTable extends Table {
         name: t('Category'),
         data: 'category',
         defaultContent: '',
-        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
+        render: (value, type, row) => {
+          const v = this.categories[value && value.toLowerCase()]
+          return this.formatActive(
+            row, v ? this.formatLink(v.url, v.label, v.description) : value)
+        }
       },
       {
         name: t('Abuse'),
         data: 'abuse',
         defaultContent: '',
-        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
+        render: (value, type, row) => {
+          const v = this.categories[value && value.toLowerCase()]
+          return this.formatActive(
+            row, v ? this.formatLink(v.url, v.label, v.description) : value)
+        }
       },
       {
         name: t('Last modified'),

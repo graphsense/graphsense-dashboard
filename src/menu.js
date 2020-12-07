@@ -81,10 +81,8 @@ export default class Menu extends Component {
   setConcepts (concepts) {
     const categories = concepts
       .filter(({ taxonomy }) => taxonomy === 'entity')
-      .map(({ label }) => label)
     const abuses = concepts
       .filter(({ taxonomy }) => taxonomy === 'abuse')
-      .map(({ label }) => label)
     this.addCategories(categories)
     this.addAbuses(abuses)
     this.setUpdate(true)
@@ -92,13 +90,21 @@ export default class Menu extends Component {
 
   addCategories (cats) {
     cats.forEach(cat => {
-      if (this.categories.indexOf(cat) === -1) this.categories.push(cat)
+      if (this.categories
+        .map(({ label }) => label)
+        .indexOf(cat.label) === -1) {
+        this.categories.push(cat)
+      }
     })
   }
 
   addAbuses (abs) {
     abs.forEach(ab => {
-      if (this.abuses.indexOf(ab) === -1) this.abuses.push(ab)
+      if (this.abuses
+        .map(({ label }) => label)
+        .indexOf(ab) === -1) {
+        this.abuses.push(ab)
+      }
     })
   }
 
@@ -226,12 +232,12 @@ export default class Menu extends Component {
     let sel = el.querySelector('#category > select')
     this.categories.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].category) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.label)
+      if (category.label === this.view.labels[label].category.label) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -242,12 +248,12 @@ export default class Menu extends Component {
     sel = el.querySelector('#abuse > select')
     this.abuses.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].abuse) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.label)
+      if (category.label === this.view.labels[label].abuse) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -296,9 +302,9 @@ export default class Menu extends Component {
       const input = form.querySelector('select')
       this.categories.forEach(category => {
         const option = document.createElement('option')
-        option.innerHTML = category
-        option.setAttribute('value', category)
-        if (category === this.view.params.category) {
+        option.innerHTML = category.label
+        option.setAttribute('value', category.label)
+        if (category.label === this.view.params.category) {
           option.setAttribute('selected', 'selected')
         }
         input.appendChild(option)

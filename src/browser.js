@@ -39,8 +39,8 @@ export default class Browser extends Component {
   }
 
   addConcepts (concepts) {
-    concepts.forEach(({ label, uri }) => {
-      this.categories[label] = uri
+    concepts.forEach(concept => {
+      this.categories[concept.label.toLowerCase()] = concept
     })
     this.setUpdate('tagstable')
   }

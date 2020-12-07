@@ -1038,6 +1038,7 @@ const receiveConcepts = function ({ result, context }) {
   result.sort((a, b) => a.id - b.id)
   this.browser.addConcepts(result)
   this.menu.setConcepts(result)
+  this.config.setConcepts(result)
 }
 
 const receiveConceptsColors = function ({ result }) {
