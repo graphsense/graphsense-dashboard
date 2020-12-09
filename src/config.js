@@ -99,7 +99,7 @@ export default class Config extends Component {
         }
         itemEl.querySelector('.legendColor').style.backgroundColor = value
         const concept = this.concepts.get(key.toLowerCase())
-        const output = concept ? `<a ${concept.url ? `href="${concept.url}"` : ''} title="${concept.description}">${concept.label}</a>` : key
+        const output = concept ? `<a ${concept.uri ? `href="${concept.uri}" target="_blank"` : ''} title="${concept.description}">${concept.label}</a>` : key
         itemEl.querySelector('.legendItem').innerHTML = output
         el.appendChild(itemEl)
       })

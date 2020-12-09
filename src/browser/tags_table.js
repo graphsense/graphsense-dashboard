@@ -45,7 +45,7 @@ export default class TagsTable extends Table {
         render: (value, type, row) => {
           const v = this.categories[value && value.toLowerCase()]
           return this.formatActive(
-            row, v ? this.formatLink(v.url, v.label, v.description) : value)
+            row, v ? this.formatLink(v.uri, v.label, v.description) : value)
         }
       },
       {
@@ -55,7 +55,7 @@ export default class TagsTable extends Table {
         render: (value, type, row) => {
           const v = this.categories[value && value.toLowerCase()]
           return this.formatActive(
-            row, v ? this.formatLink(v.url, v.label, v.description) : value)
+            row, v ? this.formatLink(v.uri, v.label, v.description) : value)
         }
       },
       {
