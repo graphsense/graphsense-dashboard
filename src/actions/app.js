@@ -702,7 +702,8 @@ const saveReport = function (stage) {
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.pdf'
   this.statusbar.addMsg('saved', filename)
-  this.generateReport().then(file => {
+  this.generateReportPDF().then(file => {
+    logger.debug('otuput', file)
     this.download(filename, file)
     this.call('hideModal')
   })
@@ -723,7 +724,7 @@ const saveReportJSON = function (stage) {
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
   this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateReportJSON())
+  this.download(filename, JSON.stringify(this.generateReportJSON(), null, 2))
   this.layout.hideModal()
 }
 

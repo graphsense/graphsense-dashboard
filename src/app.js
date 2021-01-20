@@ -256,7 +256,7 @@ export default class Model extends Callable {
   generateReport () {
     return import('jszip').then(jszip => {
       let zip = new jszip.default() // eslint-disable-line new-cap
-      const json = this.generateReportJSON()
+      const json = JSON.stringify(this.generateReportJSON())
       zip.file('report.json', json)
       return zip.generateAsync({ type: 'blob' })
         .then(zipfile => {
@@ -286,6 +286,23 @@ export default class Model extends Callable {
     })
   }
 
+  generateReportPDF () {
+    return import('./pdf.js').then((PDFGenerator) => {
+      const json = this.generateReportJSON()
+      PDFGenerator = PDFGenerator.default
+      const doc = new PDFGenerator()
+      doc.titlepage(json.visible_name, json.user, json.institution, json.timestamp)
+      doc.heading('Summary')
+      doc.paragraph(json.summary)
+      doc.heading('Recordings')
+      json.recordings[0].processing_steps.forEach(step => {
+        doc.paragraph(step.timestamp, { style: 'bold' })
+        doc.paragraph(step.visible_data, { margin: 10 })
+      })
+      return doc.blob()
+    })
+  }
+
   generateReportJSON () {
     const keyspaces = new Set()
     this.store.entities.each(entity => {
@@ -303,9 +320,10 @@ export default class Model extends Callable {
       output: []
     }
     const concat = (keyspace, key) => {
-      report[key] = report[key].concat(this.stats.currencies[keyspace][key])
+      const currency = this.stats.currencies.filter(curr => curr.name === keyspace)
+      if (!currency || !currency[0]) return
+      report[key] = report[key].concat(currency[0][key])
     }
-    report.data_sources = [...this.stats.data_sources]
     report.tools = [...this.stats.tools]
     report.notes = [...this.stats.notes]
 
@@ -315,9 +333,9 @@ export default class Model extends Callable {
     })
 
     keyspaces.forEach(keyspace => {
-      concat(keyspace, 'data_sources')
-      concat(keyspace, 'tools')
+      // concat(keyspace, 'data_sources')
       concat(keyspace, 'notes')
+      concat(keyspace, 'tools')
     })
     /*
       report.data_sources.forEach(ds => {
@@ -335,7 +353,7 @@ export default class Model extends Callable {
         processing_steps: this.reportLogger.getLogs()
       }
     ]
-    return JSON.stringify(report, null, 2)
+    return report
   }
 
   loadTagsJSON (data) {
