@@ -12,7 +12,6 @@ const CompressionPlugin = require('compression-webpack-plugin')
 
 const VERSION = '0.4.5'
 const DEV_REST_ENDPOINT = 'http://localhost:9000'
-const DEV_TITANIUM_REPORT_GENERATION_URL = 'http://localhost:5000'
 
 const src = path.join(__dirname, 'src')
 
@@ -56,8 +55,7 @@ module.exports = env => {
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
         IMPORT_APP: IS_DEV ? 'import Model from "./app.js"' : '',
-        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
-        TITANIUM_REPORT_GENERATION_URL: !IS_DEV ? '\'{{TITANIUM_REPORT_GENERATION_URL}}\'' : '\'' + DEV_TITANIUM_REPORT_GENERATION_URL + '\'',
+        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\''
         VERSION: '\'' + VERSION + '\''
       }),
       new webpack.ProvidePlugin({

@@ -1,20 +1,8 @@
 const path = require('path')
-const glob = require('glob-all')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
-const noop = require('noop-webpack-plugin')
 const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const PurgecssPlugin = require('purgecss-webpack-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
-const CompressionPlugin = require('compression-webpack-plugin')
-
-const VERSION = '0.4.5'
-const DEV_REST_ENDPOINT = 'http://localhost:9000'
-const DEV_TITANIUM_REPORT_GENERATION_URL = 'http://localhost:5000'
-
-const src = path.join(__dirname, 'src')
 
 module.exports = env => {
   const IS_DEV = !env || !env.production
