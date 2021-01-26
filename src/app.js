@@ -294,10 +294,29 @@ export default class Model extends Callable {
       doc.titlepage(json.visible_name, json.user, json.institution, json.timestamp)
       doc.heading('Summary')
       doc.paragraph(json.summary)
-      doc.heading('Recordings')
+      doc.heading('Data sources')
+      doc.paragraph('The following data sources were used in the investigation:\n')
+      json.data_sources.forEach(ds => {
+        if (!ds) ds = { version: null }
+        if (!ds.version) ds.version = { nr: null, timestamp: null }
+        if (!ds.visible_name) return
+        doc.bulletpoint(ds.visible_name, `nr: ${ds.version.nr || ''}; time: ${ds.version.timestamp || ''}`)
+      })
+      doc.heading('Tools used')
+      doc.paragraph('This section lists tools that were used in the context of this investigation:\n')
+      json.tools.forEach(tool => {
+        doc.bulletpoint(tool.visible_name, `version: ${tool.version || ''}`)
+      })
+      doc.heading('Processing steps taken in the investigation')
       json.recordings[0].processing_steps.forEach(step => {
         doc.paragraph(step.timestamp, { style: 'bold' })
         doc.paragraph(step.visible_data, { margin: 10 })
+      })
+      doc.heading('Notes')
+      json.notes.forEach((note) => {
+        if (!note) return
+        if (!note.note) return
+        doc.paragraph(note.note)
       })
       return doc.blob()
     })
@@ -324,6 +343,7 @@ export default class Model extends Callable {
       if (!currency || !currency[0]) return
       report[key] = report[key].concat(currency[0][key])
     }
+    report.data_sources = []
     report.tools = [...this.stats.tools]
     report.notes = [...this.stats.notes]
 
@@ -333,16 +353,10 @@ export default class Model extends Callable {
     })
 
     keyspaces.forEach(keyspace => {
-      // concat(keyspace, 'data_sources')
+      concat(keyspace, 'data_sources')
       concat(keyspace, 'notes')
       concat(keyspace, 'tools')
     })
-    /*
-      report.data_sources.forEach(ds => {
-        ds.version = {nr: null, hash: null, timestamp: null, file: 'bla'}
-        ds.report_uuid = 'bla'
-      })
-      */
 
     report.recordings = [
       {

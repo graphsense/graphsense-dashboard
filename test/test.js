@@ -20,6 +20,7 @@ const json =
         ]
     }
     ]
+
   }
 
 for (let i = 0; i < 40; i++) {
@@ -33,6 +34,9 @@ const doc = new PDFGenerator()
 doc.titlepage('Investigation of case xy on the matter of something really criminal', 'John Doe', 'Police', '2019')
 doc.heading('Summary')
 doc.paragraph('This is a summary of the Investigation conducted.')
+doc.heading('Data sources')
+doc.bulletpoint('data source', 'x y z')
+doc.bulletpoint('a long name of a data source that has a very long name and never ends', 'data source data that has a very long name and never ends')
 doc.heading('Recordings')
 json.recordings[0].processing_steps.forEach(step => {
   doc.paragraph(step.timestamp, { style: 'bold' })
