@@ -621,6 +621,7 @@ export default class NodeGraph extends Component {
       }
     }
     let node
+    let anchorNode
     if (object.type === 'address') {
       let addressNode = this.addressNodes.get([object.id, layerId, object.keyspace])
       if (addressNode) {
@@ -634,8 +635,12 @@ export default class NodeGraph extends Component {
       if (!node) {
         node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType.entityLabel, this.colors.entity, this.currency)
       }
+      const anchorAddress = this.getNode(anchor.nodeId, 'address')
+      if (anchorAddress) {
+        const nodeId = [anchorAddress.data.entity.id, anchor.nodeId[1], anchor.nodeId[2]]
+        anchorNode = this.getNode(nodeId, 'entity')
+      }
       node.add(addressNode)
-      layer.repositionNodesAround(node)
       this.setEntityNodes(node)
     } else if (object.type === 'entity') {
       node = this.entityNodes.get([object.id, layerId, object.keyspace])
@@ -647,12 +652,13 @@ export default class NodeGraph extends Component {
       this.setEntityNodes(node)
       logger.debug('new EntityNode', node)
       this.selectNodeIfIsNextNode(node)
+      anchorNode = anchor && this.getNode(anchor.nodeId, 'entity')
     } else {
       throw Error('unknown node type')
     }
     this.dirty = true
 
-    layer.add(node, anchor && this.getNode(anchor.nodeId, 'entity'))
+    layer.add(node, anchorNode)
     return node
   }
 
