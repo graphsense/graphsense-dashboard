@@ -9,10 +9,10 @@ export default class Entity extends Address {
     this.template = entity
     this.options =
       [
-        { html: incomingNeighbors, optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
-        { html: outgoingNeighbors, optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
-        { icon: 'at', optionText: 'Addresses', message: 'initAddressesTable' },
-        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-incoming', optionText: 'Sending entities', message: 'initIndegreeTable' },
+        { inline: 'row-outgoing', optionText: 'Receiving entities', message: 'initOutdegreeTable' },
+        { inline: 'row-addresses', optionText: 'Addresses', message: 'initAddressesTable' },
+        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
 

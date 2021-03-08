@@ -11,8 +11,8 @@ export default class Address extends BrowserComponent {
     this.template = address
     this.options =
       [
-        { inline: 'row-incoming', optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
-        { inline: 'row-outgoing', optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
+        { inline: 'row-incoming', optionText: 'Sending addresses', message: 'initIndegreeTable' },
+        { inline: 'row-outgoing', optionText: 'Receiving addresses', message: 'initOutdegreeTable' },
         { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
         { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable' }
       ]

@@ -14,7 +14,7 @@ export default class Link extends BrowserComponent {
     this.template = link
     this.options =
       [
-        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initLinkTransactionsTable' }
+        { inline: 'row-transactions', optionText: 'Transactions', message: 'initLinkTransactionsTable' }
       ]
     if (this.data.type !== 'address') {
       this.options = []
@@ -32,6 +32,7 @@ export default class Link extends BrowserComponent {
       estimated_value: this.formatCurrency(this.data.estimated_value[this.currency], this.data.keyspace)
     }
     this.root.innerHTML = replace(tt(this.template), flat)
+    this.renderInlineOptions()
     return this.root
   }
 }

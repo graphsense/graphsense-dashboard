@@ -10,7 +10,7 @@ export default class Label extends BrowserComponent {
     this.template = label
     this.options =
       [
-        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-addresses', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
 
@@ -24,6 +24,7 @@ export default class Label extends BrowserComponent {
         address_count: this.data.tags.length
       }
     this.root.innerHTML = replace(tt(this.template), flat)
+    this.renderInlineOptions()
     return this.root
   }
 

@@ -10,7 +10,7 @@ export default class Block extends BrowserComponent {
     this.template = block
     this.options =
       [
-        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initBlockTransactionsTable' }
+        { inline: 'row-transactions', optionText: 'Transactions', message: 'initBlockTransactionsTable' }
       ]
   }
 
@@ -26,6 +26,7 @@ export default class Block extends BrowserComponent {
       keyspace: this.data.keyspace.toUpperCase()
     }
     this.root.innerHTML = replace(tt(this.template), { ...this.data, ...flat })
+    this.renderInlineOptions()
     return this.root
   }
 
