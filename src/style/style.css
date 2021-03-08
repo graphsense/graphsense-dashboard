@@ -151,7 +151,11 @@ select, input {
   @apply table border-collapse 
 }
 .prop-row {
-  @apply table-row 
+  @apply table-row pr-1
+}
+
+.prop-row:hover {
+  @apply bg-grey-lighter
 }
 
 .prop-key {
@@ -164,15 +168,34 @@ select, input {
 
 .browser-component {
   /* height set via globals.js */
-  @apply layout-border p-2 border-r h-full overflow-hidden
+  @apply layout-border p-2 border-r h-full;
 }
 
 .browser-options {
   @apply h-full px-1 py-1 bg-grey-lighter text-center
 }
 
-li.option-active i {
+.option-active svg {
   @apply text-gs-base
+}
+
+.option-inline-wrapper {
+  position: relative;
+  @apply pr-1;
+}
+
+.option-inline-wrapper svg.option-arrow {
+  position: absolute;
+  top: calc(50% - 8px);
+  right: calc(config('padding.2') * -1 - 1px);
+  width: 8px;
+  height: 16px;
+}
+
+svg.option-arrow path {
+  stroke-width: 1px;
+  stroke: #e1e1e1;
+  fill: white;
 }
 
 .browser-options-short {

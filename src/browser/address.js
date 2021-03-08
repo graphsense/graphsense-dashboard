@@ -1,8 +1,6 @@
 import address from './address.html'
 import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
-import incomingNeighbors from '../icons/incomingNeighbors.html'
-import outgoingNeighbors from '../icons/outgoingNeighbors.html'
 import { t, tt } from '../lang.js'
 import numeral from 'numeral'
 
@@ -13,10 +11,10 @@ export default class Address extends BrowserComponent {
     this.template = address
     this.options =
       [
-        { html: incomingNeighbors, optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
-        { html: outgoingNeighbors, optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
-        { icon: 'exchange-alt', optionText: 'Transactions', message: 'initTransactionsTable' },
-        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-incoming', optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
+        { inline: 'row-outgoing', optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
+        { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
+        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable' }
       ]
   }
 
@@ -35,6 +33,7 @@ export default class Address extends BrowserComponent {
       const el = this.root.querySelector('#categories')
       if (el) el.style.display = 'none'
     }
+    this.renderInlineOptions()
     return this.root
   }
 
@@ -53,6 +52,7 @@ export default class Address extends BrowserComponent {
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
+    const noTags = this.data.reduce((sum, v) => sum + v.tags.length, 0)
     const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
     return {
@@ -70,6 +70,7 @@ export default class Address extends BrowserComponent {
       no_transfers: numeral(noIncomingTxs + noOutgoingTxs).format('0,000'),
       out_degree: numeral(noOutdegree).format('0,000'),
       in_degree: numeral(noIndegree).format('0,000'),
+      no_tags: numeral(noTags).format('0,000'),
       tagCoherence
     }
   }

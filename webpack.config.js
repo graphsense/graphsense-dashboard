@@ -55,7 +55,7 @@ module.exports = env => {
       new webpack.DefinePlugin({
         IS_DEV: IS_DEV,
         IMPORT_APP: IS_DEV ? 'import Model from "./app.js"' : '',
-        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\''
+        REST_ENDPOINT: !IS_DEV ? '\'{{REST_ENDPOINT}}\'' : '\'' + DEV_REST_ENDPOINT + '\'',
         VERSION: '\'' + VERSION + '\''
       }),
       new webpack.ProvidePlugin({

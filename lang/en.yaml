@@ -21,8 +21,12 @@ transfers: transfers
 withdrawals: withdrawals
 deposits: deposits
 neighbors: neighbors
-withdrawing neighbors: withdrawing neighbors
-depositing neighbors: depositing neighbors
+receiving neighbors: receiving neighbors
+sending neighbors: sending neighbors
+receiving entities: receiving entities
+sending entities: sending entities
+receiving addresses: receiving addresses
+sending addresses: sending addresses
 first usage: first usage
 last usage: last usage
 activity period: activity period

@@ -381,8 +381,8 @@ export default class Browser extends Component {
       compEl.className = 'browser-component'
       data.appendChild(compEl)
       comp.render(compEl)
-      const options = comp.renderOptions()
-      if (!options) return
+      const options = comp.renderOuterOptions()
+      if (!options || !options.hasChildNodes()) return
       const el = document.createElement('div')
       el.className = 'browser-options ' + (c < this.content.length ? 'browser-options-short' : '')
       el.appendChild(options)

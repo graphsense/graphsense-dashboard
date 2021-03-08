@@ -17,14 +17,14 @@ latest block: letzter Block
 loading_type_id: lade %0 %1  # results in eg. loading address xyz
 loading_thing: lade %0 
 currency: Währung
-transfers: Transfers
+transfers: Transaktionen
 withdrawals: Abbuchungen
 deposits: Einzahlungen
 neighbors: Nachbarn
-withdrawing entities: abbuchende Entitäten
-depositing entities: einzahlende Entitäten
-withdrawing addresses: abbuchende Adressen
-depositing addresses: einzahlende Adressen
+receiving entities: abbuchende Entitäten
+sending entities: einzahlende Entitäten
+receiving addresses: abbuchende Adressen
+sending addresses: einzahlende Adressen
 first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
