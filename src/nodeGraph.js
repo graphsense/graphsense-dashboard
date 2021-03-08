@@ -635,7 +635,7 @@ export default class NodeGraph extends Component {
       if (!node) {
         node = new EntityNode(this.dispatcher, object.entity, layerId, this.labelType.entityLabel, this.colors.entity, this.currency)
       }
-      const anchorAddress = this.getNode(anchor.nodeId, 'address')
+      const anchorAddress = anchor && this.getNode(anchor.nodeId, 'address')
       if (anchorAddress) {
         const nodeId = [anchorAddress.data.entity.id, anchor.nodeId[1], anchor.nodeId[2]]
         anchorNode = this.getNode(nodeId, 'entity')
