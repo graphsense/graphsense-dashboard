@@ -260,7 +260,7 @@ export default class Rest {
 
     logger.debug('opt', opt)
     // using d3 json directly to pass options
-    return json(this.baseUrl + '/btc/blocks/1', opt)
+    return json(this.baseUrl + '/tags/taxonomies', opt)
       .then(result => ({ status: 'success' }))
       .catch(error => {
         // normalize message
@@ -270,7 +270,8 @@ export default class Rest {
   }
 
   logout () {
-    return window.fetch(this.baseUrl + '/?logout', options())
+    // need to run logout against any existing endpoint
+    return window.fetch(this.baseUrl + '/search?logout', options())
   }
 
   getLogs () {
