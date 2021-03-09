@@ -26,9 +26,11 @@ const historyPushState = (keyspace, type, id, target) => {
 
 const submitSearchResult = function ({ term, context }) {
   logger.debug('this.menu.search', this.menu.search)
-  const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
-  if (first) {
-    clickSearchResult.call(this, { ...first, context })
+  if (context === 'search' || context === 'neighborsearch') {
+    const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
+    if (first) {
+      clickSearchResult.call(this, { ...first, context })
+    }
     return
   }
   if (context === 'tagpack') {

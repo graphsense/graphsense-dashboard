@@ -41,7 +41,7 @@ export default class Menu extends Component {
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
-      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType, 'plus')
     } else if (params.dialog === 'neighborsearch') {
       this.view = {
         viewType: 'neighborsearch',
@@ -394,7 +394,7 @@ export default class Menu extends Component {
       this.view.params.field = this.view.criterion
     }
     if (criterion === 'addresses') {
-      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType, 'plus')
     }
     this.setUpdate(true)
   }
