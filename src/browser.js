@@ -198,6 +198,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -214,6 +215,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof BlockTransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -230,6 +232,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof AddressesTable) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -251,6 +254,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TagsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -267,6 +271,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof LinkTransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -288,6 +293,7 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -307,6 +313,7 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
 
