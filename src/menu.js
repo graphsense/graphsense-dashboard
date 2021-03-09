@@ -234,7 +234,7 @@ export default class Menu extends Component {
       const option = document.createElement('option')
       option.innerHTML = category.label
       option.setAttribute('value', category.label)
-      if (category.label === this.view.labels[label].category.label) {
+      if (this.view.labels[label].category && category.label === this.view.labels[label].category.label) {
         option.setAttribute('selected', 'selected')
       }
       if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category.label)) {
