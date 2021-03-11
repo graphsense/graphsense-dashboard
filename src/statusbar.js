@@ -1,4 +1,3 @@
-import { set, map } from 'd3-collection'
 import status from './status/status.html'
 import Component from './component.js'
 import { addClass, removeClass } from './template_utils.js'
@@ -15,8 +14,8 @@ export default class Statusbar extends Component {
     super()
     this.dispatcher = dispatcher
     this.messages = []
-    this.loading = set()
-    this.searching = map()
+    this.loading = new Set()
+    this.searching = new Map()
     this.visible = false
     this.logsDisplayLength = logsDisplayLength
     this.numErrors = 0
@@ -51,6 +50,10 @@ export default class Statusbar extends Component {
   add (msg) {
     if (msg[0] === 'error') this.numErrors++
     this.messages.push(msg)
+    if (msg[0] === 'loading' && this.isRateLimitExceeded) {
+      this.isRateLimitExceeded = false
+      this.setUpdate('loading')
+    }
     this.setUpdate('add')
   }
 
@@ -61,11 +64,12 @@ export default class Statusbar extends Component {
 
   addLoading (id) {
     this.loading.add(id)
+    this.isRateLimitExceeded = false
     this.setUpdate('loading')
   }
 
   removeLoading (id) {
-    this.loading.remove(id)
+    this.loading.delete(id)
     this.setUpdate('loading')
   }
 
@@ -75,7 +79,7 @@ export default class Statusbar extends Component {
   }
 
   removeSearching (search) {
-    this.searching.remove(String(search.id) + String(search.isOutgoing))
+    this.searching.delete(String(search.id) + String(search.isOutgoing))
     this.setUpdate('loading')
   }
 
@@ -121,7 +125,7 @@ export default class Statusbar extends Component {
   }
 
   renderTooltip () {
-    if (this.loading.size() > 0 || this.searching.size() > 0) return
+    if (this.loading.size > 0 || this.searching.size > 0) return
     const top = this.root.querySelector('#topmsg')
     const tip = this.makeTooltip(this.tooltip)
     top.innerHTML = tip
@@ -136,17 +140,17 @@ export default class Statusbar extends Component {
 
   renderLoading () {
     const top = this.root.querySelector('#topmsg')
-    if (this.loading.size() > 0) {
+    if (this.loading.size > 0) {
       addClass(this.root, 'loading')
-      const v = this.loading.values()
+      const v = [...this.loading.values()]
       let thing = ''
       thing += v.slice(0, 3).join(', ')
       thing += v.length > 3 ? ` + ${v.length - 3}` : ''
       const msg = t('Loading_thing', thing) + ' ...'
       top.innerHTML = msg
-    } else if (this.searching.size() > 0) {
+    } else if (this.searching.size > 0) {
       addClass(this.root, 'loading')
-      const search = this.searching.values()[0]
+      const search = [...this.searching.values][0]
       const outgoing = 'searching ' + (search.isOutgoing ? 'outgoing' : 'incoming')
       let crit = ''
       if (search.params.category) crit = t('searching criterion category_name', search.params.category)
@@ -159,7 +163,11 @@ export default class Statusbar extends Component {
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
-      if (top) top.innerHTML = ''
+      if (this.isRateLimitExceeded) {
+        top.innerHTML = this.printError(t('Rate limit exceeded!'))
+      } else {
+        top.innerHTML = ''
+      }
     }
   }
 
@@ -228,12 +236,16 @@ export default class Statusbar extends Component {
       } else {
         message = msg[1]
       }
-      return `<span class="text-gs-red">${message}</span>`
+      return this.printError(message)
     }
 
     if (Array.isArray(msg)) {
       return this.msg(...msg)
     }
+  }
+
+  printError (message) {
+    return `<span class="text-gs-red">${message}</span>`
   }
 
   renderVisibility () {
@@ -306,5 +318,13 @@ export default class Statusbar extends Component {
 
   addMsg () {
     this.add([...arguments])
+  }
+
+  rateLimitExceeded (error) {
+    this.addMsg('error', error)
+    this.loading.clear()
+    this.searching.clear()
+    this.setUpdate('loading')
+    this.isRateLimitExceeded = true
   }
 }

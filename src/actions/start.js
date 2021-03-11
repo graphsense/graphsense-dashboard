@@ -109,7 +109,7 @@ const fetchError = function ({ context, msg, error }) {
   }
   if (error.message.startsWith('429')) {
     logger.debug('ERRORMESSAGE', error)
-    this.statusbar.addMsg('error', error)
+    this.statusbar.rateLimitExceeded(error)
     return
   }
   switch (msg) {
