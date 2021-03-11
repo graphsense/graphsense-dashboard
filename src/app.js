@@ -36,7 +36,7 @@ const defaultLabelType =
 
 const defaultCurrency = 'value'
 
-const defaultTxLabel = 'no_txs'
+const defaultTxLabel = 'estimated_value'
 
 const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label', 'addresslink', 'entitylink']
 
