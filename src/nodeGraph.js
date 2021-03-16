@@ -837,7 +837,7 @@ export default class NodeGraph extends Component {
       const markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
       this.svg.node().innerHTML = '<defs>' +
-        (['black', 'red'].map(color =>
+        (['black', 'red', 'lightgrey'].map(color =>
           `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
            `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
          '</marker>'
@@ -930,13 +930,16 @@ export default class NodeGraph extends Component {
       const nodeIds = this.getUpdate('link')
       if (!nodeIds) return
       nodeIds.forEach(nodeId => {
-        const node = this.getNode(nodeId, 'entity')
+        const entity = this.getNode(nodeId, 'entity')
+        const address = this.getNode(nodeId, 'address')
         let addressLinkSelects = []
         const selector = (nodeId) => 'g.link[data-target="' + nodeId + '"],g.link[data-source="' + nodeId + '"]'
-        if (node) {
-          node.nodes.each(address => {
+        if (entity) {
+          entity.nodes.each(address => {
             addressLinkSelects.push(selector(address.id))
           })
+        } else if (address) {
+          addressLinkSelects.push(selector(address.id))
         }
         addressLinkSelects = addressLinkSelects.join(',')
         const getDataAndRemove = (link) => {
@@ -1065,8 +1068,8 @@ export default class NodeGraph extends Component {
   drawShadow (root, source, target) {
     const path = this.shadowLinker({ source: [source, true], target: [target, false] })
     root.append('path').classed('shadow', true).attr('d', path)
-      .on('mouseover', () => this.dispatcher('tooltip', 'shadow'))
-      .on('mouseout', () => this.dispatcher('hideTooltip'))
+      .on('mouseover', () => this.dispatcher('hoverShadow'))
+      .on('mouseout', () => this.dispatcher('leaveShadow'))
   }
 
   renderLink (root, domain, source, target, tx) {
@@ -1099,22 +1102,21 @@ export default class NodeGraph extends Component {
       .attr('data-source', source.id)
       .attr('data-label', label)
       .attr('data-scale', scale)
-      .on('mouseover', () => this.dispatcher('tooltip', 'link'))
-      .on('mouseout', () => this.dispatcher('hideTooltip'))
+      .on('mouseover', () => this.dispatcher('hoverLink'))
+      .on('mouseout', () => this.dispatcher('leaveLink'))
       .on('click', () => {
         this.dispatcher('clickLink', { source, target })
         event.stopPropagation()
       })
+    const hovered = !!(source.hovered || target.hovered)
     g1.append('path').attr('d', path)
-      .classed('linkPathFrame', true)
       .style('stroke-width', '6px')
       .style('opacity', 0)
     g1.append('path').attr('d', path)
       .classed('linkPath', true)
+      .classed('hover', hovered)
       .style('stroke-width', scale + 'px')
       .style('fill', 'none')
-      .style('stroke', 'black')
-      .style('marker-end', 'url(#arrow1-black)')
     const sourceX = source.getXForLinks() + source.getWidthForLinks()
     const sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     const targetX = target.getXForLinks() - this.arrowSummit
@@ -1127,6 +1129,7 @@ export default class NodeGraph extends Component {
     const f = () => {
       return g2.append('text')
         .classed('linkText', true)
+        .classed('hover', hovered)
         .attr('text-anchor', 'middle')
         .text(label)
         .style('font-size', fontSize)
@@ -1302,5 +1305,15 @@ export default class NodeGraph extends Component {
     this.x += (this.w / this.k - this.w / k) * wp
     this.y += (this.h / this.k - this.h / k) * hp
     this.setUpdate('viewbox')
+  }
+
+  hoverNode (id, type, hovered) {
+    const node = this.getNode(id, type)
+    if (!node) return
+    node.hovered = hovered
+    if (type === 'entity') {
+      node.nodes.each(address => { address.hovered = hovered })
+    }
+    this.setUpdate('link', id)
   }
 }

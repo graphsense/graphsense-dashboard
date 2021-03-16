@@ -301,18 +301,24 @@ svg .linkRect {
 }
 
 svg .linkText {
-  fill: black;
+  fill: lightgrey;
   stroke-width: 0;
   cursor: default;
   font-weight: bold;
 }
 
-svg .linkPath {
-  /* defined inline to allow for export in svg file */
+svg .linkText.hover {
+  fill: black;
 }
 
-svg .linkPathFrame {
-  /* defined inline to allow for export in svg file */
+svg .linkPath {
+  stroke: lightgrey;
+  marker-end: url(#arrow1-lightgrey);
+}
+
+svg .linkPath.hover {
+  stroke: black;
+  marker-end: url(#arrow1-black);
 }
 
 svg .link {

@@ -113,8 +113,12 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'changeSearchCriterion',
   'changeUserDefinedTag',
   'addAllToGraph',
-  'tooltip',
-  'hideTooltip',
+  'hoverNode',
+  'leaveNode',
+  'hoverLink',
+  'leaveLink',
+  'hoverShadow',
+  'leaveShadow',
   'receiveCSV',
   'changeLocale',
   'localeLoaded',
@@ -245,5 +249,17 @@ export default class Callable {
 
   omitUpdate () {
     this._omitUpdate = true
+  }
+
+  debounce (id, callback, timeout) {
+    if (this.debouncing[id]) {
+      clearTimeout(this.debouncing[id])
+      this.debouncing[id] = null
+    }
+    this.debouncing[id] = setTimeout(() => {
+      callback()
+      this.debouncing[id] = null
+      this.render()
+    })
   }
 }

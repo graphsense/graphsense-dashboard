@@ -1028,12 +1028,34 @@ const addAllToGraph = function () {
   functions[table.selectMessage].call(this, rows)
 }
 
-const tooltip = function (type) {
-  this.statusbar.showTooltip(type)
+const hoverLink = function () {
+  this.statusbar.showTooltip('shadow')
 }
 
-const hideTooltip = function (type) {
+const leaveLink = function () {
   this.statusbar.showTooltip('')
+}
+
+const hoverShadow = function () {
+  this.statusbar.showTooltip('shadow')
+}
+
+const leaveShadow = function () {
+  this.statusbar.showTooltip('')
+}
+
+const hoverNode = function ([type, id]) {
+  this.debounce('hover' + id, () => {
+    this.graph.hoverNode(id, type, true)
+    this.statusbar.showTooltip(type)
+  }, 1)
+}
+
+const leaveNode = function ([type, id]) {
+  this.debounce('hover' + id, () => {
+    this.graph.hoverNode(id, type, false)
+    this.statusbar.showTooltip('')
+  }, 1)
 }
 
 const receiveConcepts = function ({ result, context }) {
@@ -1209,8 +1231,12 @@ const functions = {
   downloadTable,
   downloadTagsAsJSON,
   addAllToGraph,
-  tooltip,
-  hideTooltip,
+  hoverNode,
+  leaveNode,
+  hoverLink,
+  leaveLink,
+  hoverShadow,
+  leaveShadow,
   receiveConcepts,
   receiveConceptsColors,
   exportSvg,

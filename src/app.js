@@ -81,6 +81,7 @@ export default class Model extends Callable {
 
     this.statusbar = statusbar || new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
+    this.debouncing = {}
     this.createComponents()
     this.registerDispatchEvents(startactions)
     this.registerDispatchEvents(appactions)

@@ -198,8 +198,8 @@ export default class EntityNode extends GraphNode {
             this.dispatcher('selectNode', ['entity', this.id])
           })
           .on('contextmenu', contextMenu(this.menu()))
-          .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
-          .on('mouseout', () => this.dispatcher('hideTooltip'))
+          .on('mouseover', () => this.dispatcher('hoverNode', ['entity', this.id]))
+          .on('mouseout', () => this.dispatcher('leaveNode', ['entity', this.id]))
         g.node().addEventListener('mousedown', (e) => {
           if (e.button !== 0) return
           e.stopPropagation()
@@ -271,6 +271,8 @@ export default class EntityNode extends GraphNode {
       .attr('font-size', noAddressesLabelHeight)
       .attr('title', this.expandCollapseOrShowAddressTableTitle())
       .text(t(translation, num(this.data.no_addresses), num(size)))
+      .on('mouseover', () => this.dispatcher('hoverNode', ['entity', this.id]))
+      .on('mouseout', () => this.dispatcher('leaveNode', ['entity', this.id]))
       .on('click', () => {
         event.stopPropagation()
         this.dispatcher('selectNode', ['entity', this.id])
