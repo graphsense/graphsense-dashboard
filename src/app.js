@@ -31,7 +31,7 @@ const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 const defaultLabelType =
       {
         entityLabel: 'category',
-        addressLabel: 'id'
+        addressLabel: 'tag'
       }
 
 const defaultCurrency = 'value'
