@@ -234,7 +234,8 @@ class GraphNode extends Component {
       grouped[tag.label] = (grouped[tag.label] || 0) + 1
     })
     const entries = Object.entries(grouped)
-    if (entries.length < 2) return entries[0] && entries[0][0]
+    if (entries.length < 2) return (entries[0] && entries[0][0])
+    if (entries.length < 3) return (entries[0] && entries[0][0]) + (entries[1] ? ' ' + entries[1][0] : '')
     return entries.length + ' ' + t('tags')
   }
 
