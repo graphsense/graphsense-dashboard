@@ -63,13 +63,13 @@ export default class Statusbar extends Component {
   }
 
   addLoading (id) {
-    this.loading.add(id)
+    this.loading.add(id + '')
     this.isRateLimitExceeded = false
     this.setUpdate('loading')
   }
 
   removeLoading (id) {
-    this.loading.delete(id)
+    this.loading.delete(id + '')
     this.setUpdate('loading')
   }
 
