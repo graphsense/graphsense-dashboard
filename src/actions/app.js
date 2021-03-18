@@ -156,6 +156,10 @@ const resultBlockForBrowser = function ({ result }) {
 }
 
 const selectNode = function ([type, nodeId]) {
+  if (this.graph.highlightMode) {
+    this.graph.colorNode(type, nodeId)
+    return
+  }
   logger.debug('selectNode', type, nodeId, this.shiftPressed)
   const o = this.store.get(nodeId[2], type, nodeId[0])
   if (!o) {
@@ -1130,6 +1134,40 @@ const loggedout = function () {
   window.history.go(0)
 }
 
+const toggleHighlight = function () {
+  if (!this.config.toggleHighlight()) {
+    this.graph.highlightModeOff()
+  }
+}
+
+const addHighlight = function (color) {
+  this.config.addHighlight(color)
+  this.graph.highlightModeOn(color)
+}
+
+const pickHighlight = function (color) {
+  this.config.pickHighlight(color)
+  this.graph.highlightModeOn(color)
+}
+
+const inputHighlight = function ([color, title]) {
+  this.config.inputHighlight(color, title)
+}
+
+const removeHighlight = function (color) {
+  this.config.removeHighlight(color)
+  this.graph.removeHighlight(color)
+}
+
+const editHighlight = function ([color, newColor]) {
+  this.config.editHighlight(color, newColor)
+  this.graph.editHighlight(color, newColor)
+}
+
+const colorNode = function ([type, id]) {
+  this.graph.colorNode(type, id)
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1255,7 +1293,14 @@ const functions = {
   screenDragStop,
   screenZoom,
   logout,
-  loggedout
+  loggedout,
+  toggleHighlight,
+  addHighlight,
+  pickHighlight,
+  inputHighlight,
+  removeHighlight,
+  editHighlight,
+  colorNode
 }
 
 export default functions

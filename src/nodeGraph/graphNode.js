@@ -291,7 +291,7 @@ class GraphNode extends Component {
         tag = ''
       }
     }
-    const color = this.colors.categories(tag)
+    const color = this.color || this.colors.categories(tag)
     logger.debug('category color', this.data, tag, color)
     this.root
       .select('.addressNodeRect,.entityNodeRect')
@@ -348,6 +348,11 @@ class GraphNode extends Component {
 
   getInDegree () {
     return this.data.in_degree
+  }
+
+  setColoring (color) {
+    this.color = color
+    this.setUpdate(true)
   }
 }
 

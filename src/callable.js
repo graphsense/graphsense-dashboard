@@ -147,7 +147,14 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'screenZoom',
   'zoomToHighlightedNodes',
   'logout',
-  'loggedout'
+  'loggedout',
+  'toggleHighlight',
+  'addHighlight',
+  'pickHighlight',
+  'inputHighlight',
+  'removeHighlight',
+  'editHighlight',
+  'colorNode'
 )
 
 // synchronous messages

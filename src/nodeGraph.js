@@ -37,6 +37,7 @@ const defaultColor = {
 }
 
 const transactionsPixelRange = [1, 7]
+const markerHeight = transactionsPixelRange[1]
 
 const colorScale = scaleOrdinal(schemeSet3)
 
@@ -367,6 +368,7 @@ export default class NodeGraph extends Component {
 
   deselect () {
     logger.debug('deselect', this.selectedNode)
+    if (this.highlightMode) this.highlightModeOff()
     if (!this.selectedNode) return
     this.selectedNode.deselect()
     this.highlightedNodes.forEach(node => node.unhighlight())
@@ -780,6 +782,17 @@ export default class NodeGraph extends Component {
     return this.root.innerHTML
   }
 
+  makeArrowSummitMarkerId (color) {
+    color = color.replace('#', '')
+    return `arrow1-${color}`
+  }
+
+  makeArrowSummitMarker (color) {
+    return `<marker id="${this.makeArrowSummitMarkerId(color)}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
+       `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
+     '</marker>'
+  }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -834,14 +847,10 @@ export default class NodeGraph extends Component {
             d: e.deltaY
           })
         })
-      const markerHeight = transactionsPixelRange[1]
       this.arrowSummit = markerHeight
       this.svg.node().innerHTML = '<defs>' +
-        (['black', 'red', 'lightgrey'].map(color =>
-          `<marker id="arrow1-${color}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
-           `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
-         '</marker>'
-        )).join('') +
+        (['black', 'red', 'lightgrey'].map((color) => this.makeArrowSummitMarker(color))
+        ).join('') +
         '</defs>'
       this.graphRoot = this.svg.append('g')
       this.root.appendChild(this.svg.node())
@@ -861,6 +870,22 @@ export default class NodeGraph extends Component {
       addressRoot = this.graphRoot.select('g.addressRoot')
       if (this.shouldUpdate('viewbox')) {
         this.renderViewBox()
+      }
+    }
+    if (this.shouldUpdate('highlight')) {
+      if (this.highlightMode) {
+        const style = document.createElement('style')
+        style.innerText = 'g.entityNode, g.addressNode { cursor: crosshair !important; }'
+        this.root.appendChild(style)
+        const defs = this.svg.node().querySelector('defs')
+        if (!defs.querySelector('marker#' + this.makeArrowSummitMarkerId(this.highlightMode))) {
+          defs.innerHTML += this.makeArrowSummitMarker(this.highlightMode)
+        }
+      } else {
+        this.root.querySelectorAll('style').forEach(style => {
+          logger.debug('style', style)
+          if (style) this.root.removeChild(style)
+        })
       }
     }
     // render in this order
@@ -1112,11 +1137,16 @@ export default class NodeGraph extends Component {
     g1.append('path').attr('d', path)
       .style('stroke-width', '6px')
       .style('opacity', 0)
-    g1.append('path').attr('d', path)
+    const p = g1.append('path').attr('d', path)
       .classed('linkPath', true)
       .classed('hover', hovered)
       .style('stroke-width', scale + 'px')
       .style('fill', 'none')
+
+    if (source.color && target.color) {
+      p.style('stroke', source.color)
+      p.style('marker-end', `url(#${this.makeArrowSummitMarkerId(source.color)})`)
+    }
     const sourceX = source.getXForLinks() + source.getWidthForLinks()
     const sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     const targetX = target.getXForLinks() - this.arrowSummit
@@ -1127,7 +1157,7 @@ export default class NodeGraph extends Component {
     const g2 = g1.append('g')
 
     const f = () => {
-      return g2.append('text')
+      const te = g2.append('text')
         .classed('linkText', true)
         .classed('hover', hovered)
         .attr('text-anchor', 'middle')
@@ -1135,6 +1165,10 @@ export default class NodeGraph extends Component {
         .style('font-size', fontSize)
         .attr('x', x)
         .attr('y', y)
+      if (source.color && target.color) {
+        te.style('fill', source.color)
+      }
+      return te
     }
 
     const t = f()
@@ -1314,6 +1348,46 @@ export default class NodeGraph extends Component {
     if (type === 'entity') {
       node.nodes.each(address => { address.hovered = hovered })
     }
+    this.setUpdate('link', id)
+  }
+
+  highlightModeOn (color) {
+    this.highlightMode = color
+    this.setUpdate('highlight')
+  }
+
+  highlightModeOff () {
+    this.highlightMode = null
+    this.setUpdate('highlight')
+  }
+
+  removeHighlight (color) {
+    if (this.highlightMode === color) {
+      this.highlightModeOff()
+    }
+    this.updateNodeColoring(color, null)
+  }
+
+  editHighlight (color, newColor) {
+    this.highlightModeOn(newColor)
+    this.updateNodeColoring(color, newColor)
+  }
+
+  updateNodeColoring (color, newColor) {
+    ([this.entityNodes, this.addressNodes]).forEach(nodes => {
+      nodes.each(node => {
+        if (node.color !== color) return
+        node.setColoring(newColor)
+        this.setUpdate('link', node.id)
+      })
+    })
+  }
+
+  colorNode (type, id) {
+    if (!this.highlightMode) return
+    const node = this.getNode(id, type)
+    if (!node) return
+    node.setColoring(this.highlightMode)
     this.setUpdate('link', id)
   }
 }

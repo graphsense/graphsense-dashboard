@@ -136,7 +136,8 @@ export default class Layout extends Component {
           ['legend', 'toggleLegend'],
           ['logout', 'logout'],
           ['undo', 'undo'],
-          ['redo', 'redo']
+          ['redo', 'redo'],
+          ['highlight', 'toggleHighlight']
         ]
     navbarButtons.forEach(([name, msg]) => {
       const el = select('#navbar-' + name)

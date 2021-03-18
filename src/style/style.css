@@ -557,7 +557,22 @@ div.d3-context-menu-theme ul li.is-parent:after {
   border-top-color: theme('colors.gs.base')
 }
 
-
 .cursor-grab {
   cursor: grab;
+}
+
+.highlightColor {
+  @apply mr-1 shadow rounded-sm;
+  width: 20px;
+  height: 20px;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.highlightColor:hover, .highlightColor.current {
+  @apply shadow-md;
+  transform: scale(1.15)
+}
+
+.highlightWrapper {
+  position: relative;
 }

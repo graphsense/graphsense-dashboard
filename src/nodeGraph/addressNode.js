@@ -27,6 +27,12 @@ export default class AddressNode extends GraphNode {
       const g = this.root
         .append('g')
         .classed('addressNode', true)
+        .on('mouseup', () => {
+          event.stopPropagation()
+        })
+        .on('mousedown', () => {
+          event.stopPropagation()
+        })
         .on('click', () => {
           event.stopPropagation()
           this.dispatcher('selectNode', ['address', this.id])
