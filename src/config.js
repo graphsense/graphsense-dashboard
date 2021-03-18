@@ -321,12 +321,14 @@ export default class Config extends Component {
   serialize () {
     return [
       this.labelType,
-      this.txLabelType
+      this.txLabelType,
+      this.highlights
     ]
   }
 
   deserialize (version, values) {
     this.labelType = values[0]
     this.txLabelType = values[1]
+    this.highlights = values[2] || [] // backwards compat
   }
 }

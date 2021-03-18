@@ -85,13 +85,15 @@ class GraphNode extends Component {
       this.x,
       this.y,
       0, // formerly dx
-      0 // formerly dy
+      0, // formerly dy
+      this.color
     ]
   }
 
-  deserialize ([x, y, dx, dy]) {
+  deserialize ([x, y, dx, dy, color]) {
     this.x = x + dx
     this.y = y + dy
+    this.color = color
   }
 
   renderLabel (root) {

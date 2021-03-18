@@ -143,12 +143,15 @@ export default class EntityNode extends GraphNode {
 
   serialize () {
     const s = super.serialize()
-    s.push(this.nodes.keys())
+    const color = s[s.length - 1]
+    // keep nodes at this index for backwards compat
+    s[s.length - 1] = this.nodes.keys()
+    s.push(color)
     return s
   }
 
-  deserialize (version, [x, y, dx, dy, nodes], addressNodes) {
-    super.deserialize([x, y, dx, dy])
+  deserialize (version, [x, y, dx, dy, nodes, color], addressNodes) {
+    super.deserialize([x, y, dx, dy, color])
     nodes.forEach(key => {
       if (version === '0.4.0') {
         key += ',' + this.data.keyspace

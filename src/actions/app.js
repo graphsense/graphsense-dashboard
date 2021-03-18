@@ -619,8 +619,6 @@ const blank = function () {
   if (this.isReplaying) return
   if (!this.promptUnsavedWork('start a new graph')) return
   this.createComponents()
-  this.loadCategories()
-  this.loadAbuses()
 }
 
 const save = function (stage) {
