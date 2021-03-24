@@ -388,10 +388,13 @@ export default class Store {
   }
 
   addTags (keyspace, id, labels) {
-    const o = this.get(keyspace, 'address', id)
+    let o = this.get(keyspace, 'address', id)
     if (!o) {
-      console.error(`${keyspace} address ${id} not found for tagging`)
-      return
+      o = this.get(keyspace, 'entity', id)
+      if (!o) {
+        console.error(`${keyspace} address/entity ${id} not found for tagging`)
+        return
+      }
     }
 
     const tagsWithoutUserDefined = []

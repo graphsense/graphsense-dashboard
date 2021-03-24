@@ -1,7 +1,7 @@
 const DEBUG = 0
 const ERROR = 1
 let logLevel = DEBUG
-const filter = ['Callable']
+const filter = ['Model', 'Callable', 'Menu']
 export default {
   create: (name) => {
     const formatArgs = function (args, bold) {

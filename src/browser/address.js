@@ -5,10 +5,11 @@ import { t, tt } from '../lang.js'
 import numeral from 'numeral'
 
 export default class Address extends BrowserComponent {
-  constructor (dispatcher, data, index, currency) {
+  constructor (dispatcher, data, index, currency, categories) {
     super(dispatcher, index, currency)
     this.data = data
     this.template = address
+    this.categories = categories
     this.options =
       [
         { inline: 'row-incoming', optionText: 'Sending addresses', message: 'initIndegreeTable' },
@@ -44,8 +45,8 @@ export default class Address extends BrowserComponent {
     const last = Math.max(...timestamps)
     const duration = (last - first) * 1000
     const tags = this.data.reduce((tags, d) => tags.concat(d.tags || []), [])
-    const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => abuse).values())]
-    const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => category).values())]
+    const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => this.categories[abuse] ? this.categories[abuse].label : '').filter(a => a).values())]
+    const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => this.categories[category] ? this.categories[category].label : '').filter(a => a).values())]
     const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
     const balance = this.data.reduce((sum, v) => sum + v.balance[this.currency], 0)
     const noOutgoingTxs = this.data.reduce((sum, v) => sum + v.no_outgoing_txs, 0)
@@ -63,8 +64,8 @@ export default class Address extends BrowserComponent {
       total_received: this.formatCurrency(totalReceived, keyspace),
       balance: this.formatCurrency(balance, keyspace),
       keyspace,
-      abuses: abuses.join(' '),
-      categories: categories.join(' '),
+      abuses: abuses.join(', '),
+      categories: categories.join(', '),
       no_outgoing_txs: numeral(noOutgoingTxs).format('0,000'),
       no_incoming_txs: numeral(noIncomingTxs).format('0,000'),
       no_transfers: numeral(noIncomingTxs + noOutgoingTxs).format('0,000'),

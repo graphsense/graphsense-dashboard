@@ -40,7 +40,7 @@ export default class Browser extends Component {
 
   addConcepts (concepts) {
     concepts.forEach(concept => {
-      this.categories[concept.label.toLowerCase()] = concept
+      this.categories[concept.id] = concept
     })
     this.setUpdate('tagstable')
   }
@@ -125,7 +125,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Address(this.dispatcher, addresses, 0, this.currency)]
+    this.content = [new Address(this.dispatcher, addresses, 0, this.currency, this.categories)]
     this.setUpdate('content')
   }
 
@@ -166,7 +166,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Entity(this.dispatcher, entities, 0, this.currency)]
+    this.content = [new Entity(this.dispatcher, entities, 0, this.currency, this.categories)]
     this.setUpdate('content')
   }
 
@@ -175,9 +175,9 @@ export default class Browser extends Component {
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
-      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency)
+      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency, this.categories)
     } else if (object.type === 'entity') {
-      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency)
+      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency, this.categories)
     }
     this.setUpdate('content')
   }

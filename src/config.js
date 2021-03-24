@@ -79,7 +79,7 @@ export default class Config extends Component {
 
   setConcepts (concepts) {
     concepts.forEach(concept => {
-      this.concepts.set(concept.label.toLowerCase(), concept)
+      this.concepts.set(concept.id, concept)
     })
   }
 
@@ -119,7 +119,7 @@ export default class Config extends Component {
           addClass(itemEl, 'cursor-grab')
         }
         itemEl.querySelector('.legendColor').style.backgroundColor = value
-        const concept = this.concepts.get(key.toLowerCase())
+        const concept = this.concepts.get(key)
         const output = concept ? `<a ${concept.uri ? `href="${concept.uri}" target="_blank"` : ''} title="${concept.description}">${concept.label}</a>` : key
         itemEl.querySelector('.legendItem').innerHTML = output
         el.appendChild(itemEl)

@@ -590,7 +590,7 @@ const toggleConfig = function () {
 
 const noteDialog = function ({ x, y, nodeId, nodeType }) {
   const o = this.store.get(nodeId[2], nodeType, nodeId[0])
-  this.menu.showNodeDialog(x, y, { dialog: nodeType === 'entity' ? 'note' : 'tagpack', data: o })
+  this.menu.showNodeDialog(x, y, { dialog: 'tagpack', data: o })
   selectNode.call(this, [nodeType, nodeId])
 }
 
@@ -1064,7 +1064,7 @@ const receiveConcepts = function ({ result, context }) {
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
   this.browser.addConcepts(result)
-  this.menu.setConcepts(result)
+  this.menu.setConcepts(result, context)
   this.config.setConcepts(result)
 }
 

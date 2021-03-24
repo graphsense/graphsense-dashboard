@@ -78,34 +78,22 @@ export default class Menu extends Component {
     return this.view.viewType
   }
 
-  setConcepts (concepts) {
-    const categories = concepts
-      .filter(({ taxonomy }) => taxonomy === 'entity')
-    const abuses = concepts
-      .filter(({ taxonomy }) => taxonomy === 'abuse')
-    this.addCategories(categories)
-    this.addAbuses(abuses)
+  setConcepts (concepts, context) {
+    if (context === 'entity') {
+      this.setCategories(concepts)
+    } else if (context === 'abuse') {
+      this.setAbuses(concepts)
+    }
+  }
+
+  setCategories (categories) {
+    this.categories = [...categories]
     this.setUpdate(true)
   }
 
-  addCategories (cats) {
-    cats.forEach(cat => {
-      if (this.categories
-        .map(({ label }) => label)
-        .indexOf(cat.label) === -1) {
-        this.categories.push(cat)
-      }
-    })
-  }
-
-  addAbuses (abs) {
-    abs.forEach(ab => {
-      if (this.abuses
-        .map(({ label }) => label)
-        .indexOf(ab) === -1) {
-        this.abuses.push(ab)
-      }
-    })
+  setAbuses (abuses) {
+    this.abuses = [...abuses]
+    this.setUpdate(true)
   }
 
   hideMenu () {
@@ -233,8 +221,8 @@ export default class Menu extends Component {
     this.categories.forEach(category => {
       const option = document.createElement('option')
       option.innerHTML = category.label
-      option.setAttribute('value', category.label)
-      if (this.view.labels[label].category && category.label === this.view.labels[label].category.label) {
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].category) {
         option.setAttribute('selected', 'selected')
       }
       if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category.label)) {
@@ -249,8 +237,8 @@ export default class Menu extends Component {
     this.abuses.forEach(category => {
       const option = document.createElement('option')
       option.innerHTML = category.label
-      option.setAttribute('value', category.label)
-      if (category.label === this.view.labels[label].abuse) {
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].abuse) {
         option.setAttribute('selected', 'selected')
       }
       if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category.label)) {

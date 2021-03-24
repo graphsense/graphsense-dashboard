@@ -464,6 +464,7 @@ export default class Model extends Callable {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     logger.debug('model', this)
+    logger.debug('exchange cat', this.menu.categories[15])
     if (this.showLandingpage) {
       return this.landingpage.render(this.root)
     }
@@ -481,8 +482,6 @@ export default class Model extends Callable {
     abs = [...abs]
     this.store.addCategories(cats)
     this.graph.addCategories(cats)
-    this.menu.addCategories(cats)
-    this.menu.addAbuses(abs)
     this.config.setCategoryColors(this.graph.getCategoryColors(), this.store.getCategories())
   }
 }
