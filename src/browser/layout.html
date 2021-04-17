@@ -1,3 +1,6 @@
-<div id="browser-frame" class="flex flex-row h-full">
-  <div id="browser-data" class="flex-grow flex flex-row"></div>
+<div id="browser-frame" class="flex flex-row h-full relative">
+  <section id="browser-leftbar" class="bg-grey-lighter h-full z-40">
+    <button id="sidebar-my-entity-tags" title="{{t:My entity tags}}" class="nav-btn"><i class="fas fa-tag text-md"></i></button>
+  </section>
+  <div id="browser-data" class="absolute flex-grow flex flex-row z-30 shadow-md"></div>
 </div>

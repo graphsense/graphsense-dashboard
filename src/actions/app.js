@@ -1006,9 +1006,15 @@ const downloadTable = function () {
 
 const downloadTagsAsJSON = function () {
   if (this.isReplaying) return
-  const table = this.browser.content[1]
+  let table = null
+  for (let i = 0; i < this.browser.content.length; i++) {
+    if (this.browser.content[i] instanceof TagsTable) {
+      table = this.browser.content[i]
+      break
+    }
+  }
+  logger.debug('table', table)
   if (!table) return
-  if (!(table instanceof TagsTable)) return
   const tags = table.data.map(this.tagToJSON)
   const blob = new Blob([JSON.stringify(tags)], { type: 'text/json;charset=utf-8' }) // eslint-disable-line no-undef
   const params = table.getParams()
@@ -1166,6 +1172,10 @@ const colorNode = function ([type, id]) {
   this.graph.colorNode(type, id)
 }
 
+const clickSidebarMyEntityTags = function () {
+  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2())
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1298,7 +1308,8 @@ const functions = {
   inputHighlight,
   removeHighlight,
   editHighlight,
-  colorNode
+  colorNode,
+  clickSidebarMyEntityTags
 }
 
 export default functions

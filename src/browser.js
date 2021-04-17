@@ -11,6 +11,7 @@ import TransactionsTable from './browser/transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
+import MyTagsTable from './browser/my_tags_table.js'
 import LinkTransactionsTable from './browser/link_transactions_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
@@ -19,6 +20,7 @@ import { addClass, removeClass } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
 import { maxTransactionListSize } from './globals.js'
+import { tt } from './lang.js'
 
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
@@ -264,6 +266,20 @@ export default class Browser extends Component {
     this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces, this.categories))
   }
 
+  initMyEntityTagsTable (tags) {
+    logger.debug('initMyEntityTagsTable')
+    this.destroyComponentsFrom(0)
+    this.content.push(new MyTagsTable(
+      this.dispatcher,
+      0, tags.length,
+      tags,
+      'entity',
+      this.nodeChecker,
+      this.supportedKeyspaces,
+      this.categories))
+    this.setUpdate('content')
+  }
+
   initLinkTransactionsTable (request) {
     if (request.index !== 0 && !request.index) return
     const last = this.content[request.index]
@@ -328,7 +344,10 @@ export default class Browser extends Component {
     if (!this.root) throw new Error('root not defined')
     logger.debug('shouldupdate', this.update)
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = layout
+      this.root.innerHTML = tt(layout)
+      this.root.querySelector('#sidebar-my-entity-tags').addEventListener('click', () => {
+        this.dispatcher('clickSidebarMyEntityTags')
+      })
       this.renderVisibility()
       this.renderContent()
       super.render()
@@ -369,7 +388,7 @@ export default class Browser extends Component {
   }
 
   renderVisibility () {
-    const frame = this.root
+    const frame = this.root.querySelector('#browser-data')
     logger.debug('visibility', this.visible)
     if (!this.visible) {
       removeClass(frame, 'show')

@@ -56,23 +56,31 @@ export default class Address extends BrowserComponent {
     const noTags = this.data.reduce((sum, v) => sum + v.tags.length, 0)
     const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
+    const esc = s => s.replace(' ', '&nbsp;')
     return {
       id: '<div>' + this.data.map(d => d.id).join('</div><div>') + '</div>',
-      first_usage: this.formatTimestampWithAgo(first),
-      last_usage: this.formatTimestampWithAgo(last),
-      activity_period: this.formatDuration(duration),
-      total_received: this.formatCurrency(totalReceived, keyspace),
-      balance: this.formatCurrency(balance, keyspace),
+      first_usage: esc(this.formatTimestampWithAgo(first)),
+      last_usage: esc(this.formatTimestampWithAgo(last)),
+      activity_period: esc(this.formatDuration(duration)),
+      total_received: esc(this.formatCurrency(totalReceived), keyspace),
+      balance: esc(this.formatCurrency(balance), keyspace),
       keyspace,
-      abuses: abuses.join(', '),
-      categories: categories.join(', '),
-      no_outgoing_txs: numeral(noOutgoingTxs).format('0,000'),
-      no_incoming_txs: numeral(noIncomingTxs).format('0,000'),
-      no_transfers: numeral(noIncomingTxs + noOutgoingTxs).format('0,000'),
-      out_degree: numeral(noOutdegree).format('0,000'),
-      in_degree: numeral(noIndegree).format('0,000'),
-      no_tags: numeral(noTags).format('0,000'),
-      tagCoherence
+      abuses: esc(abuses.join(', ')),
+      categories: esc(categories.join(', ')),
+      no_outgoing_txs: esc(numeral(noOutgoingTxs).format('0,000')),
+      no_incoming_txs: esc(numeral(noIncomingTxs).format('0,000')),
+      no_transfers: esc(numeral(noIncomingTxs + noOutgoingTxs).format('0,000')),
+      out_degree: esc(numeral(noOutdegree).format('0,000')),
+      in_degree: esc(numeral(noIndegree).format('0,000')),
+      no_tags: esc(numeral(noTags).format('0,000')),
+      tagCoherence,
+      label_activity_period: esc(t('Activity period')),
+      label_receiving_addresses: esc(t('Receiving addresses')),
+      label_sending_addresses: esc(t('Sending addresses')),
+      label_first_usage: esc(t('First usage')),
+      label_last_usage: esc(t('Last usage')),
+      label_total_received: esc(t('Total received')),
+      label_final_balance: esc(t('Final balance'))
     }
   }
 

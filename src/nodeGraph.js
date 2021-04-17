@@ -801,7 +801,7 @@ export default class NodeGraph extends Component {
     if (this.shouldUpdate(true)) {
       logger.debug('redraw graph')
       this.svg = create('svg')
-        .classed('w-full h-full graph', true)
+        .classed('w-full graph', true)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
       this.renderViewBox()

@@ -150,7 +150,7 @@ export default class Statusbar extends Component {
       top.innerHTML = msg
     } else if (this.searching.size > 0) {
       addClass(this.root, 'loading')
-      const search = [...this.searching.values][0]
+      const search = [...this.searching.values()][0]
       const outgoing = 'searching ' + (search.isOutgoing ? 'outgoing' : 'incoming')
       let crit = ''
       if (search.params.category) crit = t('searching criterion category_name', search.params.category)

@@ -84,16 +84,28 @@ li {
   height: calc(100vh - 49px);
 }
 
-#layout-browser, #layout-config {
+#layout-config {
   top: -300px;
   opacity: 0;
   transition: top 0.5s, opacity step-end 0.5s;
 }
 
-#layout-browser.show, #layout-config.show {
+#layout-config.show {
   top: 49px;
   opacity: 1;
   transition: top 0.5s, opacity step-start 0.5s;
+}
+
+#browser-data {
+  left: 100%; 
+  overflow: visible; 
+  transform: translate(-110%);
+  transition: transform 0.5s;
+  min-width: 440px;
+}
+
+#browser-data.show {
+  transform: translate(0%);
 }
 
 .btn {
@@ -148,7 +160,7 @@ select, input {
 }
 
 .prop-table {
-  @apply table border-collapse 
+  @apply table border-collapse w-full;
 }
 .prop-row {
   @apply table-row pr-1
@@ -169,6 +181,7 @@ select, input {
 .browser-component {
   /* height set via globals.js */
   @apply layout-border p-2 border-r h-full;
+  min-width: 440px;
 }
 
 .browser-options {

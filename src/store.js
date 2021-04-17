@@ -456,6 +456,14 @@ export default class Store {
     return this.userDefinedLabels.get(label)
   }
 
+  getUserDefinedTags2 () {
+    let all = []
+    this.userDefinedLabels.each((tags, label) => {
+      all = all.concat(tags)
+    })
+    return all
+  }
+
   getEntityKeys (keyspace) {
     return this.entities.keys()
       .filter(key => unprefix(key)[0] === keyspace)
