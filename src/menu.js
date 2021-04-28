@@ -41,7 +41,7 @@ export default class Menu extends Component {
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
-      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType, 'plus')
     } else if (params.dialog === 'neighborsearch') {
       this.view = {
         viewType: 'neighborsearch',
@@ -78,28 +78,22 @@ export default class Menu extends Component {
     return this.view.viewType
   }
 
-  setConcepts (concepts) {
-    const categories = concepts
-      .filter(({ taxonomy }) => taxonomy === 'entity')
-      .map(({ label }) => label)
-    const abuses = concepts
-      .filter(({ taxonomy }) => taxonomy === 'abuse')
-      .map(({ label }) => label)
-    this.addCategories(categories)
-    this.addAbuses(abuses)
+  setConcepts (concepts, context) {
+    if (context === 'entity') {
+      this.setCategories(concepts)
+    } else if (context === 'abuse') {
+      this.setAbuses(concepts)
+    }
+  }
+
+  setCategories (categories) {
+    this.categories = [...categories]
     this.setUpdate(true)
   }
 
-  addCategories (cats) {
-    cats.forEach(cat => {
-      if (this.categories.indexOf(cat) === -1) this.categories.push(cat)
-    })
-  }
-
-  addAbuses (abs) {
-    abs.forEach(ab => {
-      if (this.abuses.indexOf(ab) === -1) this.abuses.push(ab)
-    })
+  setAbuses (abuses) {
+    this.abuses = [...abuses]
+    this.setUpdate(true)
   }
 
   hideMenu () {
@@ -226,12 +220,12 @@ export default class Menu extends Component {
     let sel = el.querySelector('#category > select')
     this.categories.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].category) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].category) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -242,12 +236,12 @@ export default class Menu extends Component {
     sel = el.querySelector('#abuse > select')
     this.abuses.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].abuse) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].abuse) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -296,9 +290,9 @@ export default class Menu extends Component {
       const input = form.querySelector('select')
       this.categories.forEach(category => {
         const option = document.createElement('option')
-        option.innerHTML = category
-        option.setAttribute('value', category)
-        if (category === this.view.params.category) {
+        option.innerHTML = category.label
+        option.setAttribute('value', category.label)
+        if (category.label === this.view.params.category) {
           option.setAttribute('selected', 'selected')
         }
         input.appendChild(option)
@@ -388,7 +382,7 @@ export default class Menu extends Component {
       this.view.params.field = this.view.criterion
     }
     if (criterion === 'addresses') {
-      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType, 'plus')
     }
     this.setUpdate(true)
   }

@@ -26,9 +26,11 @@ const historyPushState = (keyspace, type, id, target) => {
 
 const submitSearchResult = function ({ term, context }) {
   logger.debug('this.menu.search', this.menu.search)
-  const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
-  if (first) {
-    clickSearchResult.call(this, { ...first, context })
+  if (context === 'search' || context === 'neighborsearch') {
+    const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
+    if (first) {
+      clickSearchResult.call(this, { ...first, context })
+    }
     return
   }
   if (context === 'tagpack') {
@@ -613,8 +615,6 @@ const blank = function () {
   if (this.isReplaying) return
   if (!this.promptUnsavedWork('start a new graph')) return
   this.createComponents()
-  this.loadCategories()
-  this.loadAbuses()
 }
 
 const save = function (stage) {
@@ -1037,7 +1037,8 @@ const receiveConcepts = function ({ result, context }) {
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
   this.browser.addConcepts(result)
-  this.menu.setConcepts(result)
+  this.menu.setConcepts(result, context)
+  this.config.setConcepts(result)
 }
 
 const receiveConceptsColors = function ({ result }) {

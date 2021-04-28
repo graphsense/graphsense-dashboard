@@ -343,7 +343,9 @@ export default class Model extends Callable {
       data = JSON.parse(data)
       if (!data) throw new Error('result is empty')
       if (!Array.isArray(data)) data = [data]
-      this.store.addTagpack(this.keyspaces, { tags: data.map(this.tagJSONToTagpackTag) })
+      const tags = data.map(this.tagJSONToTagpackTag)
+      this.store.addTagpack(this.keyspaces, { tags })
+      this.updateCategoriesByTags(tags)
       this.graph.setUpdate('layers')
     } catch (e) {
       const msg = 'Could not parse JSON file'
@@ -365,6 +367,7 @@ export default class Model extends Callable {
     }
     this.store.addNotes(data.tags)
     this.store.addTagpack(this.keyspaces, data)
+    this.updateCategoriesByTags(data.tags)
     this.graph.setUpdate('layers')
   }
 
@@ -448,8 +451,6 @@ export default class Model extends Callable {
     abs = [...abs]
     this.store.addCategories(cats)
     this.graph.addCategories(cats)
-    this.menu.addCategories(cats)
-    this.menu.addAbuses(abs)
     this.config.setCategoryColors(this.graph.getCategoryColors(), this.store.getCategories())
   }
 }
