@@ -4,8 +4,8 @@ import incomingNeighbors from '../icons/incomingNeighbors.html'
 import outgoingNeighbors from '../icons/outgoingNeighbors.html'
 
 export default class Entity extends Address {
-  constructor (dispatcher, data, index, currency) {
-    super(dispatcher, data, index, currency)
+  constructor (dispatcher, data, index, currency, categories) {
+    super(dispatcher, data, index, currency, categories)
     this.template = entity
     this.options =
       [
