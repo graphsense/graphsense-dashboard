@@ -225,11 +225,17 @@ class GraphNode extends Component {
     return ''
   }
 
+  tags () {
+    if (!this.data || !this.data.tags) return []
+    if (this.data.type === 'entity') return this.data.tags.entity_tags
+    return this.data.tags
+  }
+
   getTag () {
     if (this.data.notes) {
       return this.data.notes
     }
-    const tags = (this.data || {}).tags || []
+    const tags = this.tags()
     const grouped = {}
     tags.forEach(tag => {
       if (!tag.label) return
@@ -285,11 +291,12 @@ class GraphNode extends Component {
 
   coloring () {
     let tag
-    if (!this.data.tags || this.data.tags.length === 0) {
+    const tags = this.tags()
+    if (tags.length === 0) {
       tag = ''
     } else {
       tag = this.getActorCategory() || ''
-      if (!tag && this.data.tags.length > 1) {
+      if (!tag && tags.length > 1) {
         tag = ''
       }
     }

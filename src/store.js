@@ -124,7 +124,15 @@ export default class Store {
     logger.debug('node', node.id)
     logger.debug('cats', cats)
 
-    const sorted = (node.tags || [])
+    let tags = []
+    if (node.type === 'entity') {
+      const t = (node.tags || {})
+      tags = t.entity_tags || t.address_tags
+    } else {
+      tags = node.tags
+    }
+
+    const sorted = tags
       .map(tag => tag.category)
       // filter nulls and duplicates
       .filter((value, index, self) => value && self.indexOf(value) === index)
@@ -399,6 +407,7 @@ export default class Store {
 
     const tagsWithoutUserDefined = []
     const userDefinedTags = []
+    let tags = o.type === 'entity' ? o.tags.entity_tags : o.tags
     o.tags.forEach(tag => {
       if (tag.isUserDefined) {
         if (labels[tag.label]) {
@@ -438,7 +447,13 @@ export default class Store {
         tags.push(tag)
       }
     })
-    o.tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
+    tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
+    if (o.type === 'entity') {
+      o.tags.entity_tags = tags
+    } else {
+      o.tags = tags
+    }
+
     this.calcMainCategory(o)
   }
 

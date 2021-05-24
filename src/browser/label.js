@@ -10,7 +10,8 @@ export default class Label extends BrowserComponent {
     this.template = label
     this.options =
       [
-        { inline: 'row-addresses', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-addresses', optionText: 'Address tags', message: 'initTagsTable' },
+        { inline: 'row-entities', optionText: 'Entity tags', message: 'initEntityTagsTable' }
       ]
   }
 
@@ -21,7 +22,8 @@ export default class Label extends BrowserComponent {
     const flat =
       {
         label: this.data.label,
-        address_count: this.data.tags.length
+        no_address_tags: this.data.tags.address_tags.length,
+        no_entity_tags: this.data.tags.entity_tags.length
       }
     this.root.innerHTML = replace(tt(this.template), flat)
     this.renderInlineOptions()
@@ -29,6 +31,6 @@ export default class Label extends BrowserComponent {
   }
 
   requestData () {
-    return { ...super.requestData(), id: this.data.label_norm, type: 'label' }
+    return { ...super.requestData(), id: this.data.label, type: 'label' }
   }
 }

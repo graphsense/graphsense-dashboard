@@ -138,10 +138,10 @@ const resultTransactionForBrowser = function ({ result }) {
 
 const resultLabelForBrowser = function ({ result, context }) {
   this.browser.setLabel(context, result)
-  historyPushState(null, 'label', result.label)
+  historyPushState(null, 'label', context)
   this.statusbar.removeLoading(context)
-  this.statusbar.addMsg('loaded', 'label', result.label)
-  initTagsTable.call(this, { id: result.label, type: 'label', index: 0 })
+  this.statusbar.addMsg('loaded', 'label', context)
+  initTagsTable.call(this, { id: context, type: 'label', index: 0 })
 }
 
 const resultLabelTagsForTag = function ({ result, context }) {
@@ -246,7 +246,13 @@ const resultTransactions = function ({ context, result }) {
 
 const loadTags = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'tags')
-  this.mapResult(this.rest.tags(keyspace, { id: params[0], type: params[1], nextPage, pagesize: request.length }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  this.mapResult(this.rest.tags(keyspace, {
+    id: params[0],
+    type: params[1],
+    level: params[2],
+    nextPage,
+    pagesize: request.length
+  }), 'resultTagsTable', { page: nextPage, request, drawCallback })
 }
 
 const resultTagsTable = function ({ context, result }) {
@@ -274,6 +280,10 @@ const initAddressesTableWithEntity = function ({ id, keyspace }) {
 
 const initTagsTable = function (request) {
   this.browser.initTagsTable(request)
+}
+
+const initEntityTagsTable = function (request) {
+  this.browser.initEntityTagsTable(request)
 }
 
 const initLinkTransactionsTable = function (request) {
@@ -1204,6 +1214,7 @@ const functions = {
   initAddressesTable,
   initAddressesTableWithEntity,
   initTagsTable,
+  initEntityTagsTable,
   initLinkTransactionsTable,
   initIndegreeTable,
   initOutdegreeTable,

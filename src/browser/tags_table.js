@@ -3,19 +3,20 @@ import Table from './table.js'
 import downloadTags from '../icons/downloadTags.html'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories) {
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories, level) {
     super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.categories = categories
+    this.level = nodeType === 'address' ? 'address' : level
     this.columns = [
       {
-        name: t('Address'),
-        data: 'address',
+        name: t(level.charAt(0).toUpperCase() + level.slice(1)),
+        data: level,
         render: (value, type, row) => {
-          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
+          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, level, keyspace)(value, type))
         }
       },
       {
@@ -73,7 +74,7 @@ export default class TagsTable extends Table {
     this.loadMessage = 'loadTags'
     this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
-    this.loadParams = [this.nodeId, this.nodeType]
+    this.loadParams = [this.nodeId, this.nodeType, this.level]
     this.addOption(this.downloadOption())
     this.addOption({ html: downloadTags, optionText: t('Download tags as JSON'), message: 'downloadTagsAsJSON' })
     if (nodeType === 'label') this.options = []
@@ -87,7 +88,8 @@ export default class TagsTable extends Table {
     return {
       id: this.loadParams[0],
       type: this.loadParams[1],
-      keyspace: this.keyspace
+      keyspace: this.keyspace,
+      level: this.loadParams[2]
     }
   }
 

@@ -37,6 +37,16 @@ export default class LinkTransactionsTable extends Table {
         render: this.formatValue(this.formatTimestamp)
       }
     ]
+    if (keyspace === 'eth') {
+      const col = {
+        name: t('Value'),
+        data: 'values',
+        className: 'text-right',
+        render: (value, type) =>
+          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+      }
+      this.columns.splice(1, 2, col)
+    }
     this.loadMessage = 'loadLinkTransactions'
     this.resultField = null
     this.selectMessage = 'clickTransaction'

@@ -9,6 +9,8 @@ label: метка
 labels: метки
 tag: тэг
 tags: тэги
+address tags: address tags
+entity tags: tags
 block: блок
 blocks: блока(ов)
 supported currencies: поддерживаемые криптовалюты

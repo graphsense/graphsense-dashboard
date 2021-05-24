@@ -9,6 +9,8 @@ label: label
 labels: labels
 tag: tag
 tags: tags
+address tags: address tags
+entity tags: tags
 block: block
 blocks: blocks
 supported currencies: supported currencies

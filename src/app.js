@@ -405,8 +405,8 @@ export default class Model extends Callable {
     return {
       uuid: SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
       version: 1,
-      key_type: 'a',
-      key: tag.address,
+      key_type: tag.address ? 'a' : 'e',
+      key: tag.address || tag.entity,
       tag: tag.label,
       contributor: 'GraphSense',
       tag_optional: {
@@ -427,8 +427,7 @@ export default class Model extends Callable {
   }
 
   tagJSONToTagpackTag (tagJSON) {
-    return {
-      address: tagJSON.key,
+    const tag = {
       label: tagJSON.tag,
       currency: tagJSON.tag_optional && tagJSON.tag_optional.currency,
       source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
@@ -436,6 +435,12 @@ export default class Model extends Callable {
       category: null,
       tagpack_uri: null
     }
+    if (tagJSON.key_type === 'a') {
+      tag.address = tagJSON.key
+    } else if (tagJSON.key_type === 'e') {
+      tag.entity = tagJSON.key
+    }
+    return tag
   }
 
   deserialize (buffer) {
@@ -474,6 +479,9 @@ export default class Model extends Callable {
   updateCategoriesByTags (tags) {
     let cats = new Set()
     let abs = new Set()
+    if (tags.address_tags && tags.entity_tags) {
+      tags = tags.address_tags.concat(tags.entity_tags)
+    }
     tags.forEach(({ category, abuse }) => {
       if (category) cats.add(category)
       if (abuse) abs.add(abuse)

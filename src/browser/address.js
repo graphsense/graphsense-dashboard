@@ -44,7 +44,7 @@ export default class Address extends BrowserComponent {
     timestamps = this.data.map(d => d.last_tx.timestamp)
     const last = Math.max(...timestamps)
     const duration = (last - first) * 1000
-    const tags = this.data.reduce((tags, d) => tags.concat(d.tags || []), [])
+    const tags = this.flattenTags()
     const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => this.categories[abuse] ? this.categories[abuse].label : '').filter(a => a).values())]
     const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => this.categories[category] ? this.categories[category].label : '').filter(a => a).values())]
     const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
@@ -53,7 +53,6 @@ export default class Address extends BrowserComponent {
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
-    const noTags = this.data.reduce((sum, v) => sum + v.tags.length, 0)
     const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
     const esc = s => s.replace(' ', '&nbsp;')
@@ -72,7 +71,7 @@ export default class Address extends BrowserComponent {
       no_transfers: esc(numeral(noIncomingTxs + noOutgoingTxs).format('0,000')),
       out_degree: esc(numeral(noOutdegree).format('0,000')),
       in_degree: esc(numeral(noIndegree).format('0,000')),
-      no_tags: esc(numeral(noTags).format('0,000')),
+      no_tags: esc(numeral(tags.length).format('0,000')),
       tagCoherence,
       label_activity_period: esc(t('Activity period')),
       label_receiving_addresses: esc(t('Receiving addresses')),
@@ -82,6 +81,10 @@ export default class Address extends BrowserComponent {
       label_total_received: esc(t('Total received')),
       label_final_balance: esc(t('Final balance'))
     }
+  }
+
+  flattenTags () {
+    return this.data.reduce((tags, d) => tags.concat(d.tags || []), [])
   }
 
   requestData () {

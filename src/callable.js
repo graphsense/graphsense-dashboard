@@ -40,6 +40,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'loadAddresses',
   'resultAddresses',
   'initTagsTable',
+  'initEntityTagsTable',
   'loadTags',
   'resultTags',
   'resultTagsTable',
