@@ -156,7 +156,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'removeHighlight',
   'editHighlight',
   'colorNode',
-  'clickSidebarMyEntityTags'
+  'clickSidebarMyEntityTags',
+  'clickSidebarMyAddressTags'
 )
 
 // synchronous messages

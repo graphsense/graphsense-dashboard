@@ -408,7 +408,7 @@ export default class Store {
     const tagsWithoutUserDefined = []
     const userDefinedTags = []
     let tags = o.type === 'entity' ? o.tags.entity_tags : o.tags
-    o.tags.forEach(tag => {
+    tags.forEach(tag => {
       if (tag.isUserDefined) {
         if (labels[tag.label]) {
           for (const prop in labels[tag.label]) {
@@ -424,10 +424,9 @@ export default class Store {
     const newTags = []
     for (const l in labels) {
       const label = labels[l]
-      newTags.push({
+      const newTag = {
         isUserDefined: true,
         label: label.label,
-        address: o.id,
         source: label.source,
         tagpack_uri: null,
         currency: keyspace.toUpperCase(),
@@ -436,8 +435,14 @@ export default class Store {
         abuse: label.abuse,
         keyspace: keyspace,
         active: true
-      })
+      }
+      newTag[o.type] = o.id
+      newTags.push(newTag)
     }
+    logger.debug('labels', labels)
+    logger.debug('newtags', newTags)
+    logger.debug('userDefinedTags', userDefinedTags)
+    logger.debug('tagsWithoutUserDefined', tagsWithoutUserDefined)
     newTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)
       if (!tags) {
@@ -474,7 +479,8 @@ export default class Store {
   getUserDefinedTags2 () {
     let all = []
     this.userDefinedLabels.each((tags, label) => {
-      all = all.concat(tags)
+      const t = tags.map(tt => ({ ...tt }))
+      all = all.concat(t)
     })
     return all
   }

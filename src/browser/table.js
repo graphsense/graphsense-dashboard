@@ -174,9 +174,10 @@ export default class Table extends BrowserComponent {
   formatLink (url, title, description) {
     if (url && url.startsWith('http')) {
       return `<a onClick="event.stopPropagation()" title="${description}" href="${url}" target="_blank">${title || this.truncateValue(url)}</a>`
-    } else {
+    } else if (title) {
       return `<span title="${description}">${title}</span>`
     }
+    return url || ''
   }
 
   formatValue (func) {

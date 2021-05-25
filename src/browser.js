@@ -18,11 +18,12 @@ import LinkTransactionsTable from './browser/link_transactions_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
-import { addClass, removeClass } from './template_utils.js'
+import { addClass, removeClass, replace } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
 import { maxTransactionListSize } from './globals.js'
 import { tt } from './lang.js'
+import entityTag from './icons/entityTag.html'
 
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
@@ -296,9 +297,25 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(0)
     this.content.push(new MyTagsTable(
       this.dispatcher,
-      0, tags.length,
+      0,
+      tags.length,
       tags,
       'entity',
+      this.nodeChecker,
+      this.supportedKeyspaces,
+      this.categories))
+    this.setUpdate('content')
+  }
+
+  initMyAddressTagsTable (tags) {
+    logger.debug('initMyAddressTagsTable')
+    this.destroyComponentsFrom(0)
+    this.content.push(new MyTagsTable(
+      this.dispatcher,
+      0,
+      tags.length,
+      tags,
+      'address',
       this.nodeChecker,
       this.supportedKeyspaces,
       this.categories))
@@ -369,9 +386,12 @@ export default class Browser extends Component {
     if (!this.root) throw new Error('root not defined')
     logger.debug('shouldupdate', this.update)
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = tt(layout)
+      this.root.innerHTML = tt(replace(layout, { entityTag }))
       this.root.querySelector('#sidebar-my-entity-tags').addEventListener('click', () => {
         this.dispatcher('clickSidebarMyEntityTags')
+      })
+      this.root.querySelector('#sidebar-my-address-tags').addEventListener('click', () => {
+        this.dispatcher('clickSidebarMyAddressTags')
       })
       this.renderVisibility()
       this.renderContent()

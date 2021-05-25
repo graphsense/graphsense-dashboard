@@ -989,7 +989,13 @@ const toggleImport = function () {
 
 const downloadTable = function () {
   if (this.isReplaying) return
-  const table = this.browser.content[1]
+  let table = null
+  for (let i = 0; i < this.browser.content.length; i++) {
+    if (this.browser.content[i] instanceof TagsTable) {
+      table = this.browser.content[i]
+      break
+    }
+  }
   if (!table) return
   let url
   if (table instanceof NeighborsTable) {
@@ -1183,7 +1189,11 @@ const colorNode = function ([type, id]) {
 }
 
 const clickSidebarMyEntityTags = function () {
-  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2())
+  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity))
+}
+
+const clickSidebarMyAddressTags = function () {
+  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address))
 }
 
 const functions = {
@@ -1320,7 +1330,8 @@ const functions = {
   removeHighlight,
   editHighlight,
   colorNode,
-  clickSidebarMyEntityTags
+  clickSidebarMyEntityTags,
+  clickSidebarMyAddressTags
 }
 
 export default functions

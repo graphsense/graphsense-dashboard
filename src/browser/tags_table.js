@@ -10,13 +10,13 @@ export default class TagsTable extends Table {
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.categories = categories
-    this.level = nodeType === 'address' ? 'address' : level
+    this.level = nodeType === 'address' ? 'address' : (level || nodeType)
     this.columns = [
       {
-        name: t(level.charAt(0).toUpperCase() + level.slice(1)),
-        data: level,
+        name: t(this.level.charAt(0).toUpperCase() + this.level.slice(1)),
+        data: this.level,
         render: (value, type, row) => {
-          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, level, keyspace)(value, type))
+          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, this.level, keyspace)(value, type))
         }
       },
       {

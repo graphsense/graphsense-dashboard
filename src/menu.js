@@ -34,7 +34,8 @@ export default class Menu extends Component {
     if (params.dialog === 'note') {
       this.view = { viewType: 'note', data: params.data }
     } else if (params.dialog === 'tagpack') {
-      const labels = params.data.tags
+      const tags = params.data.type === 'entity' ? params.data.tags.entity_tags : params.data.tags
+      const labels = tags
         .filter(tag => tag.isUserDefined)
         .reduce((labels, tag) => {
           labels[tag.label] = { ...tag }

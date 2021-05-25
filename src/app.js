@@ -221,14 +221,17 @@ export default class Model extends Callable {
     const tags = this.store.getUserDefinedTags2()
     tags.forEach(tag => { tag.lastmod = moment.unix(tag.lastmod).format('YYYY-MM-DD HH:mm:ss') })
 
-    const sets = { ...tags[0] } || {}
-
-    for (const key in sets) {
-      sets[key] = new Set()
-    }
+    const sets = {}
 
     tags.forEach(tag => {
       for (const key in tag) {
+        if (key === 'isUserDefined' || key === 'active') {
+          delete tag[key]
+          continue
+        }
+        if (sets[key] === undefined) {
+          sets[key] = new Set()
+        }
         sets[key].add(tag[key])
       }
     })
@@ -239,7 +242,7 @@ export default class Model extends Callable {
     }
 
     for (const key in sets) {
-      if (sets[key].size === 1) {
+      if (key !== 'entity' && key !== 'address' && sets[key].size === 1) {
         yaml[key] = sets[key].values().next().value
         tags.forEach(tag => { delete tag[key] })
       }
