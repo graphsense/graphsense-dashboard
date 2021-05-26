@@ -8,6 +8,10 @@ export function nbsp (string) {
   return string.replace(' ', '&nbsp;')
 }
 
+export function coinToSatoshi (value) {
+  return value * 10000 * 10000
+}
+
 export function satoshiToCoin (value) {
   return value / 10000 / 10000
 }
