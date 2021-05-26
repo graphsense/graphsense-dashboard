@@ -33,7 +33,7 @@ export default class Table extends BrowserComponent {
   }
 
   smallThreshold () {
-    return 50000
+    return 10000
   }
 
   isSmall () {

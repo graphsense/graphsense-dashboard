@@ -292,8 +292,8 @@ export default class Menu extends Component {
       this.categories.forEach(category => {
         const option = document.createElement('option')
         option.innerHTML = category.label
-        option.setAttribute('value', category.label)
-        if (category.label === this.view.params.category) {
+        option.setAttribute('value', category.id)
+        if (category.id === this.view.params.category) {
           option.setAttribute('selected', 'selected')
         }
         input.appendChild(option)

@@ -87,6 +87,7 @@ export default class Store {
       return a
     } else if (idPrefixed && type === 'entity') {
       let c = this.entities.get(idPrefixed)
+      let tags = null
       if (!c) {
         c = { addresses: map(), ...empty }
         c.id = id
@@ -95,15 +96,18 @@ export default class Store {
         c.outgoing = outgoing
         this.entities.set(idPrefixed, c)
         c.notes = this.notesStore.get('entity' + idPrefixed)
+      } else {
+        tags = { ...c.tags }
       }
-      // merge new object into existing one
+      // merge new object into existing one (save tags)
       Object.keys(object).forEach(key => { c[key] = object[key] })
+      if (tags) c.tags = tags
+
       // remove unneeded entity field (is now id)
       delete c.entity
       const addresses = object.forAddresses || []
       addresses.forEach(address => {
         const a = this.addresses.get(prefix(object.keyspace, address))
-        logger.debug('forAddress', address, a)
         if (a) {
           c.addresses.set(address, a)
           a.entity = c
@@ -121,9 +125,6 @@ export default class Store {
       cats[category] = index + 1
     })
 
-    logger.debug('node', node.id)
-    logger.debug('cats', cats)
-
     let tags = []
     if (node.type === 'entity') {
       const t = (node.tags || {})
@@ -137,7 +138,6 @@ export default class Store {
       // filter nulls and duplicates
       .filter((value, index, self) => value && self.indexOf(value) === index)
       .sort((a, b) => (cats[a] || Infinity) - (cats[b] || Infinity))
-    logger.debug('sorted cat', sorted)
     node.mainCategory = sorted[0]
   }
 
@@ -197,7 +197,6 @@ export default class Store {
 
   getOutgoing (keyspace, type, source, target) {
     const s = this.get(keyspace, type, source)
-    logger.debug('s', keyspace, type, source, target, s)
     if (!s) return
     return s.outgoing.get(target)
   }
@@ -439,10 +438,6 @@ export default class Store {
       newTag[o.type] = o.id
       newTags.push(newTag)
     }
-    logger.debug('labels', labels)
-    logger.debug('newtags', newTags)
-    logger.debug('userDefinedTags', userDefinedTags)
-    logger.debug('tagsWithoutUserDefined', tagsWithoutUserDefined)
     newTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)
       if (!tags) {

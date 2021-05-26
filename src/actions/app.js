@@ -900,6 +900,19 @@ const searchNeighbors = function (params) {
     params.params.max = params.params.max ? coinToSatoshi(params.params.max) : null
   }
   this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
+  // make another call for local matching entity tags
+  if (params.params.category) {
+    let ids = this.store.getUserDefinedTags2()
+    ids = ids
+      .filter(tag => !!tag.entity && tag.category === params.params.category)
+      .map(tag => tag.entity)
+    ids = [...new Set(ids)]
+    if (ids.length > 0) {
+      delete params.params.category
+      params.params.ids = ids
+      this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
+    }
+  }
   this.menu.hideMenu()
 }
 

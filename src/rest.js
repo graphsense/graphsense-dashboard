@@ -265,6 +265,9 @@ export default class Rest {
       searchCrit = [params.currency, params.min ? params.min : 0]
       if (params.max) searchCrit.push(params.max)
       searchCrit = searchCrit.join(',')
+    } else if (params.ids) {
+      searchKey = 'entities'
+      searchCrit = params.ids.join(',')
     }
     const url =
       `/entities/${id}/search?direction=${dir}&key=${searchKey}&value=${searchCrit}&depth=${depth}&breadth=${breadth}&skip_num_addresses=${skipNumAddresses}`
