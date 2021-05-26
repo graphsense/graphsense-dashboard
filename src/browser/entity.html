@@ -13,15 +13,12 @@
   </div>
   <div class="prop-row">
     <span class="prop-key">{{t:Transfers}}</span>
-    <span class="prop-value id">{{no_transfers}}</span>
-  </div>
-  <div class="prop-row">
-    <span class="prop-key">{{t:Withdrawals}}</span>
-    <span class="prop-value id">{{no_outgoing_txs}}</span>
-  </div>
-  <div class="prop-row">
-    <span class="prop-key">{{t:Deposits}}</span>
-    <span class="prop-value id">{{no_incoming_txs}}</span>
+    <span class="prop-value id">{{no_transfers}}&nbsp;
+      <i class="fas fa-long-arrow-alt-down text-gs-base" title="{{t:Deposits}}"></i>
+      {{no_incoming_txs}}&nbsp;
+      <i class="fas fa-long-arrow-alt-up text-gs-red" title="{{t:Withdrawals}}"></i>
+      {{no_outgoing_txs}}
+    </span>
   </div>
   <div class="prop-row" id="row-outgoing">
     <span class="prop-key">{{label_receiving_entities}}</span>
