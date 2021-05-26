@@ -185,7 +185,7 @@ select, input {
 }
 
 .option-active svg {
-  @apply text-gs-base
+  @apply text-gs-dark
 }
 
 .option-inline-wrapper {

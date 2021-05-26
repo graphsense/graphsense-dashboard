@@ -26,7 +26,8 @@ export default class BrowserComponent extends Component {
 
   optionEl (parent, optionData) {
     parent.className = 'cursor-pointer py-1 ' +
-      (this.currentOption === optionData.message ? 'option-active' : '')
+      (this.currentOption === optionData.message ||
+        !optionData.inline ? 'option-active' : '')
     let optionHtml = option
     if (optionData.html) {
       optionHtml = optionData.html

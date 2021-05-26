@@ -24,7 +24,12 @@ export default class Table extends BrowserComponent {
     this.loading = null
     this.searchable = false
     if (this.isSmall()) {
-      this.addOption({ icon: 'search', optionText: t('Filter table contents'), message: 'toggleSearchTable' })
+      this.addOption({
+        icon: 'search',
+        optionText: t('Filter table contents'),
+        message: 'toggleSearchTable',
+        alwaysActive: true
+      })
     }
   }
 
