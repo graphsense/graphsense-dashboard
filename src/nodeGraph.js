@@ -100,8 +100,9 @@ export default class NodeGraph extends Component {
     // initialize with true to allow initial snapshot
     this.dirty = true
     this.createSnapshot()
-    this.w = window.innerWidth
-    this.h = window.innerHeight
+
+    this.h = 0
+    this.w = 0
     this.k = 1
     this.x = 0
     this.dx = 0
@@ -110,8 +111,7 @@ export default class NodeGraph extends Component {
     this.dk = 0
 
     window.addEventListener('resize', () => {
-      this.w = window.innerWidth
-      this.h = window.innerHeight
+      this.adaptDimensions()
       this.renderViewBox()
     })
   }
@@ -793,6 +793,13 @@ export default class NodeGraph extends Component {
      '</marker>'
   }
 
+  adaptDimensions () {
+    if (!this.root) return
+    const rect = this.root.getBoundingClientRect()
+    this.h = rect.height
+    this.w = rect.width
+  }
+
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
@@ -800,8 +807,9 @@ export default class NodeGraph extends Component {
     logger.debug('graph should update', this.update)
     if (this.shouldUpdate(true)) {
       logger.debug('redraw graph')
+      this.adaptDimensions()
       this.svg = create('svg')
-        .classed('w-full graph', true)
+        .classed('w-full h-full graph', true)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
       this.renderViewBox()

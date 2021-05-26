@@ -80,10 +80,6 @@ li {
   min-height: 49px;
 }
 
-#layout-graph {
-  height: calc(100vh - 49px);
-}
-
 #layout-config {
   top: -300px;
   opacity: 0;
@@ -520,7 +516,7 @@ svg.slash path {
 ul#log-messages {
   height: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-y: scroll;
   transition: height ease 0.5s;
 }
 
@@ -528,10 +524,18 @@ ul#log-messages li {
   @apply pb-1
 }
 
+#layout-status {
+  transition: transform ease 0.5s;
+  transform: translateY(0)
+}
+
 #layout-status.visible ul#log-messages {
-  height : 15ex;
-  overflow-y: scroll;
+  height : 10rem;
   @apply p-1
+}
+
+#layout-status.visible {
+  transform: translateY(-10rem)
 }
 
 #layout-status #show {

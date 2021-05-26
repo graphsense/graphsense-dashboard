@@ -117,11 +117,11 @@ export default class Layout extends Component {
       }
     }
     this.browser.render(browserRoot)
-    this.graph.render(graphRoot)
     this.config.render(configRoot)
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
     this.statusbar.render(statusRoot)
+    this.graph.render(graphRoot)
     this.renderCurrency()
     super.render()
     return this.root
