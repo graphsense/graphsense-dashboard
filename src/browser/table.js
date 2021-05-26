@@ -27,8 +27,7 @@ export default class Table extends BrowserComponent {
       this.addOption({
         icon: 'search',
         optionText: t('Filter table contents'),
-        message: 'toggleSearchTable',
-        alwaysActive: true
+        message: 'toggleSearchTable'
       })
     }
   }
@@ -68,7 +67,7 @@ export default class Table extends BrowserComponent {
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
-        scrollY: browserHeight - rowHeight - 4 * browserPadding,
+        scrollY: Math.max(this.root.getBoundingClientRect().height, browserHeight) - 1.5 * rowHeight,
         searching: this.searchable && this.isSmall(),
         search: { smart: false },
         dom: 'fti',

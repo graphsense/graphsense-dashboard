@@ -176,12 +176,12 @@ select, input {
 
 .browser-component {
   /* height set via globals.js */
-  @apply layout-border p-2 border-r h-full;
+  @apply layout-border p-2 border-r;
   min-width: 440px;
 }
 
 .browser-options {
-  @apply h-full px-1 py-1 bg-grey-lighter text-center
+  @apply px-1 py-1 bg-grey-lighter text-center
 }
 
 .option-active svg {
