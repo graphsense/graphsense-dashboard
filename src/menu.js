@@ -1,6 +1,5 @@
 import { t, tt } from './lang.js'
 import menuLayout from './config/menu.html'
-import notes from './config/notes.html'
 import tagpack from './config/tagpack.html'
 import Component from './component.js'
 import Logger from './logger.js'
@@ -134,11 +133,7 @@ export default class Menu extends Component {
       })
       const el = this.root.querySelector('#config')
       let title
-      if (this.view.viewType === 'note') {
-        title = t('Notes')
-        el.innerHTML = tt(notes)
-        this.setupNotes(el)
-      } else if (this.view.viewType === 'tagpack') {
+      if (this.view.viewType === 'tagpack') {
         title = t('Add tag')
         el.innerHTML = tt(tagpack)
         this.setupTagpack(el)
@@ -184,16 +179,6 @@ export default class Menu extends Component {
     input.value = value
     input.addEventListener('input', (e) => {
       this.dispatcher(message, e.target.value)
-    })
-  }
-
-  setupNotes (el) {
-    const data = this.view.data
-    const input = el.querySelector('textarea')
-    input.focus()
-    input.value = data.notes || ''
-    input.addEventListener('input', (e) => {
-      this.dispatcher('inputNotes', { id: data.id, type: data.type, keyspace: data.keyspace, note: e.target.value })
     })
   }
 

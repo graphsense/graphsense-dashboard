@@ -32,8 +32,6 @@ const messages = {
     switch (type) {
       case 'load':
         return `load GS file ${filename}`
-      case 'loadNotes':
-        return `load GS notes file ${filename}`
       case 'loadYAML':
         return `load tagpack YAML file ${filename}`
       case 'loadTagsJSON':
@@ -46,7 +44,6 @@ const messages = {
   searchNeighborsDialog: (payload) => `open dialog to deep search ${outg(payload.isOutgoing)} neighbors on ${payload.type} ${payload.id}`,
   noteDialog: (payload) => `open note dialog on ${payload.nodeType} ${payload.nodeId}`,
   toggleConfig: (payload) => 'toggle config',
-  inputNotes: (payload) => `add notes to ${payload.type} ${payload.id} of keyspace ${payload.keyspace}`,
   removeNode: (payload) => `remove ${payload[0]} ${payload[1]} from graph`,
   changeTxLabel: (payload) => `change transaction label display to ${payload}`,
   changeCurrency: (payload) => `change currency display to ${payload}`,

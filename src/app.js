@@ -210,13 +210,6 @@ export default class Model extends Callable {
     ])
   }
 
-  serializeNotes () {
-    return this.compress([
-      VERSION, // eslint-disable-line no-undef
-      this.store.serializeNotes()
-    ])
-  }
-
   generateTagpack () {
     const tags = this.store.getUserDefinedTags2()
     tags.forEach(tag => { tag.lastmod = moment.unix(tag.lastmod).format('YYYY-MM-DD HH:mm:ss') })
@@ -399,7 +392,6 @@ export default class Model extends Callable {
       console.error(msg)
       return
     }
-    this.store.addNotes(data.tags)
     this.store.addTagpack(this.keyspaces, data)
     this.graph.setUpdate('layers')
   }
@@ -450,18 +442,12 @@ export default class Model extends Callable {
     const data = this.decompress(buffer)
     this.createComponents()
     data[0] = data[0].split(' ')[0]
-    logger.debug('Importing from version ', data[0])
+    logger.debug('Importing from version', data[0], data[1])
     this.store.deserialize(data[0], data[1])
     this.graph.deserialize(data[0], data[2], this.store)
     this.config.deserialize(data[0], data[3])
     this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
-  }
-
-  deserializeNotes (buffer) {
-    const data = this.decompress(buffer)
-    this.store.deserializeNotes(data[0], data[1])
-    this.graph.setUpdate('layers')
   }
 
   download (filename, buffer) {

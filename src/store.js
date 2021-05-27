@@ -1,6 +1,7 @@
 import { map } from 'd3-collection'
 import Logger from './logger.js'
 import moment from 'moment'
+import Tag from './tag.js'
 
 const logger = Logger.create('Store') // eslint-disable-line no-unused-vars
 
@@ -20,7 +21,6 @@ export default class Store {
     this.addresses = map()
     this.entities = map()
     this.outgoingLinks = map()
-    this.notesStore = map()
     this.tagsStore = map()
     this.userDefinedLabels = map()
     this.categories = []
@@ -58,7 +58,6 @@ export default class Store {
         const outgoing = this.initOutgoing(id, object.keyspace)
         a.outgoing = outgoing
         this.addresses.set(idPrefixed, a)
-        a.notes = this.notesStore.get('address' + idPrefixed)
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { a[key] = object[key] })
@@ -66,8 +65,8 @@ export default class Store {
       // add existing tags eventually
       a.tags = (a.tags || []).concat(this.tagsStore.get(idPrefixed) || [])
       this.tagsStore.remove(idPrefixed)
+      this.addTags(a.keyspace, a.id, a.tags.filter(t => t.isUserDefined))
 
-      logger.debug('added', a)
       // remove unneeded address field (is now id)
       delete a.address
       if (typeof object.entity === 'string' || typeof object.entity === 'number') object.toEntity = object.entity
@@ -95,13 +94,13 @@ export default class Store {
         const outgoing = this.initOutgoing(id, object.keyspace)
         c.outgoing = outgoing
         this.entities.set(idPrefixed, c)
-        c.notes = this.notesStore.get('entity' + idPrefixed)
       } else {
         tags = { ...c.tags }
       }
       // merge new object into existing one (save tags)
       Object.keys(object).forEach(key => { c[key] = object[key] })
       if (tags) c.tags = tags
+      this.addTags(c.keyspace, c.id, c.tags.entity_tags.filter(t => t.isUserDefined))
 
       // remove unneeded entity field (is now id)
       delete c.entity
@@ -223,41 +222,6 @@ export default class Store {
     return [addresses, entities, alllinks, this.categories]
   }
 
-  serializeNotes () {
-    const addresses = []
-    this.addresses.each(address => {
-      const s = [prefix(address.keyspace, address.id), address.notes]
-      addresses.push(s)
-    })
-    const entities = []
-    this.entities.each(entity => {
-      const s = [prefix(entity.keyspace, entity.id), entity.notes]
-      entities.push(s)
-    })
-    return [addresses, entities]
-  }
-
-  getNotes () {
-    const tags = []
-    this.addresses.each(address => {
-      if (!address.notes) return
-      tags.push({
-        address: address.id,
-        currency: address.keyspace.toUpperCase(),
-        note: address.notes
-      })
-    })
-    this.entities.each(entity => {
-      if (!entity.notes) return
-      tags.push({
-        entity: entity.id,
-        currency: entity.keyspace.toUpperCase(),
-        note: entity.notes
-      })
-    })
-    return tags
-  }
-
   getUserDefinedTags () {
     const tags = []
     this.addresses.each(address => {
@@ -271,19 +235,6 @@ export default class Store {
         })
     })
     return tags
-  }
-
-  addNotes (tags) {
-    tags.forEach(tag => {
-      if (!tag.note) return
-      const keyspace = tag.currency.toLowerCase()
-      const idPrefixed = prefix(keyspace, tag.address)
-      if (this.addresses.get(idPrefixed)) {
-        this.add({ keyspace, id: tag.address, notes: tag.note, type: 'address' })
-      } else {
-        this.notesStore.set('address' + idPrefixed, tag.note)
-      }
-    })
   }
 
   addTagpack (keyspaces, data) {
@@ -332,7 +283,20 @@ export default class Store {
     entities.forEach(entity => {
       entity.forAddresses = entity.addresses
       delete entity.addresses
-      this.add(entity)
+      if (version <= '0.4.5') {
+        entity.tags = {
+          address_tags: entity.tags,
+          entity_tags: []
+        }
+        this.add(entity)
+        if (entity.notes) {
+          const tag = {}
+          tag[entity.notes] = new Tag(entity.keyspace, entity.notes, entity.id, 'entity').data
+          this.addTags(entity.keyspace, entity.id, tag)
+        }
+      } else {
+        this.add(entity)
+      }
     })
     addresses.forEach(address => {
       this.add(address)
@@ -352,20 +316,6 @@ export default class Store {
       })
     })
     this.categories = categories || []
-  }
-
-  deserializeNotes (version, [addressNotes, entityNotes]) {
-    const ser = (nodes, type) => ([idPrefixed, notes]) => {
-      const c = nodes.get(idPrefixed)
-      const unprefixed = unprefix(idPrefixed)
-      if (c) {
-        this.add({ keyspace: unprefixed[0], id: unprefixed[1], notes, type })
-      } else {
-        this.notesStore.set(type + idPrefixed, notes)
-      }
-    }
-    entityNotes.forEach(ser(this.entities, 'entity'))
-    addressNotes.forEach(ser(this.addresses, 'address'))
   }
 
   allAddressTags () {
@@ -423,20 +373,8 @@ export default class Store {
     const newTags = []
     for (const l in labels) {
       const label = labels[l]
-      const newTag = {
-        isUserDefined: true,
-        label: label.label,
-        source: label.source,
-        tagpack_uri: null,
-        currency: keyspace.toUpperCase(),
-        lastmod: +new Date() / 1000,
-        category: label.category,
-        abuse: label.abuse,
-        keyspace: keyspace,
-        active: true
-      }
-      newTag[o.type] = o.id
-      newTags.push(newTag)
+      const newTag = new Tag(keyspace, label.label, o.id, o.type)
+      newTags.push(newTag.data)
     }
     newTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)

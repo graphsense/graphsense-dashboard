@@ -1222,10 +1222,15 @@ export default class NodeGraph extends Component {
 
   serializeGraph () {
     const entityNodes = []
-    this.entityNodes.each(node => entityNodes.push([node.id, node.serialize()]))
+    this.entityNodes.each(node => {
+      logger.debug('ser od', node.id, node)
+      entityNodes.push([node.id, node.serialize()])
+    })
+    logger.debug('serialize enityt', entityNodes)
 
     const addressNodes = []
     this.addressNodes.each(node => addressNodes.push([node.id, node.serialize()]))
+    logger.debug('serialize addresses', addressNodes)
 
     const layers = []
     this.layers.forEach(layer => layers.push(layer.serialize()))
@@ -1263,6 +1268,7 @@ export default class NodeGraph extends Component {
       node.deserialize(address)
       this.setAddressNodes(node)
     })
+    logger.debug('entityNodes', entityNodes)
     entityNodes.forEach(([nodeId, entity]) => {
       if (version === '0.4.0') {
         const found = store.find(nodeId[0], 'entity')
@@ -1275,6 +1281,7 @@ export default class NodeGraph extends Component {
       this.setEntityNodes(node)
     })
     layers.forEach(([id, entityKeys]) => {
+      logger.debug('entityKeys', entityKeys)
       const l = new Layer(id)
       entityKeys.forEach(key => {
         if (version === '0.4.0') {

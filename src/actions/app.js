@@ -588,12 +588,6 @@ const removeNode = function ([nodeType, nodeId]) {
   this.browser.setUpdate('tables_with_addresses')
 }
 
-const inputNotes = function ({ id, type, keyspace, note }) {
-  const o = this.store.get(keyspace, type, id)
-  o.notes = note
-  this.graph.setUpdateNodes(type, id, 'label')
-}
-
 const toggleConfig = function () {
   this.config.toggleConfig()
 }
@@ -643,20 +637,6 @@ const save = function (stage) {
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.gs'
   this.statusbar.addMsg('saved', filename)
   this.download(filename, this.serialize())
-}
-
-const saveNotes = function (stage) {
-  if (this.isReplaying) return
-  if (!stage) {
-    // update status bar before starting serializing
-    this.statusbar.addMsg('saving')
-    this.config.hide()
-    saveNotes.call(this, true)
-    return
-  }
-  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
-  this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.serializeNotes())
 }
 
 const exportYAML = function () {
@@ -791,12 +771,6 @@ const load = function () {
   this.config.hide()
 }
 
-const loadNotes = function () {
-  if (this.isReplaying) return
-  this.layout.triggerFileLoad('loadNotes')
-  this.config.hide()
-}
-
 const loadYAML = function () {
   if (this.isReplaying) return
   this.layout.triggerFileLoad('loadYAML')
@@ -822,8 +796,6 @@ const loadFile = function (params) {
   this.statusbar.addMsg('loadedFile', filename)
   if (type === 'load') {
     this.deserialize(data)
-  } else if (type === 'loadNotes') {
-    this.deserializeNotes(data)
   } else if (type === 'loadYAML') {
     this.loadTagpack(data)
   } else if (type === 'loadTagsJSON') {
@@ -1264,7 +1236,6 @@ const functions = {
   changeCurrency,
   changeTxLabel,
   removeNode,
-  inputNotes,
   toggleConfig,
   noteDialog,
   searchNeighborsDialog,
@@ -1274,7 +1245,6 @@ const functions = {
   hideContextmenu,
   blank,
   save,
-  saveNotes,
   exportReport,
   saveReport,
   saveReportJSON,
@@ -1282,7 +1252,6 @@ const functions = {
   saveTagsJSON,
   exportRestLogs,
   load,
-  loadNotes,
   loadYAML,
   loadTagsJSON,
   loadFile,

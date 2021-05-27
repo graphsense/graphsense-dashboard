@@ -232,9 +232,6 @@ class GraphNode extends Component {
   }
 
   getTag () {
-    if (this.data.notes) {
-      return this.data.notes
-    }
     const tags = this.tags()
     const grouped = {}
     tags.forEach(tag => {
@@ -251,14 +248,10 @@ class GraphNode extends Component {
     return this.data.mainCategory
   }
 
-  getNote () {
-    return this.data.notes
-  }
-
   getLabel () {
     if (this.type === 'entity') {
       let label = ''
-      const tag = this.getNote() || this.getTag()
+      const tag = this.getTag()
       const category = this.getActorCategory()
       if (tag) {
         label = tag
@@ -279,11 +272,11 @@ class GraphNode extends Component {
       case 'no_addresses':
         return this.data.no_addresses
       case 'id':
-        return this.getNote() || this.getName()
+        return this.getName()
       case 'balance':
         return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
       case 'tag':
-        return this.getNote() || this.getTag() || this.getName()
+        return this.getTag() || this.getName()
       case 'category':
         return this.getActorCategory() || this.getName()
     }
