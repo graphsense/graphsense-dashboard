@@ -1,6 +1,6 @@
 import Logger from '../logger.js'
 import moment from 'moment'
-import { coinToSatoshi } from '../utils.js'
+import { coinToSatoshi, coinToWei } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
@@ -895,9 +895,10 @@ const changeSkipNumAddresses = function (value) {
 const searchNeighbors = function (params) {
   this.statusbar.addSearching(params)
   params.params.currency = this.layout.currency
+  const convert = params.id[2] === 'eth' ? coinToWei : coinToSatoshi
   if (this.layout.currency === 'value') {
-    params.params.min = params.params.min ? coinToSatoshi(params.params.min) : null
-    params.params.max = params.params.max ? coinToSatoshi(params.params.max) : null
+    params.params.min = params.params.min ? convert(params.params.min) : null
+    params.params.max = params.params.max ? convert(params.params.max) : null
   }
   this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
   // make another call for local matching entity tags

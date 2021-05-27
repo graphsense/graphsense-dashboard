@@ -16,8 +16,12 @@ export function satoshiToCoin (value) {
   return value / 10000 / 10000
 }
 
+export function coinToWei (value) {
+  return value * 1e+18
+}
+
 export function weiToCoin (value) {
-  return value / 10e+18
+  return value / 1e+18
 }
 
 function smallCurrency (keyspace) {
