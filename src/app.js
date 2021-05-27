@@ -449,6 +449,8 @@ export default class Model extends Callable {
   deserialize (buffer) {
     const data = this.decompress(buffer)
     this.createComponents()
+    data[0] = data[0].split(' ')[0]
+    logger.debug('Importing from version ', data[0])
     this.store.deserialize(data[0], data[1])
     this.graph.deserialize(data[0], data[2], this.store)
     this.config.deserialize(data[0], data[3])
