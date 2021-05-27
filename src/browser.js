@@ -293,7 +293,11 @@ export default class Browser extends Component {
   }
 
   initMyEntityTagsTable (tags) {
-    logger.debug('initMyEntityTagsTable')
+    if ((this.content[0] instanceof MyTagsTable && this.content[0].nodeType === 'entity')) {
+      this.deselect()
+      return
+    }
+    this.visible = true
     this.destroyComponentsFrom(0)
     this.content.push(new MyTagsTable(
       this.dispatcher,
@@ -308,7 +312,11 @@ export default class Browser extends Component {
   }
 
   initMyAddressTagsTable (tags) {
-    logger.debug('initMyAddressTagsTable')
+    if ((this.content[0] instanceof MyTagsTable && this.content[0].nodeType === 'address')) {
+      this.deselect()
+      return
+    }
+    this.visible = true
     this.destroyComponentsFrom(0)
     this.content.push(new MyTagsTable(
       this.dispatcher,
