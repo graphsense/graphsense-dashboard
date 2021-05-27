@@ -12,7 +12,7 @@ import AddressNode from './nodeGraph/addressNode.js'
 import Component from './component.js'
 import { formatCurrency, nodesIdentical } from './utils'
 import Logger from './logger.js'
-import { layerMargin, expandHandleWidth } from './globals.js'
+import { layerMargin, expandHandleWidth, noCategory } from './globals.js'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -34,6 +34,11 @@ const lightnessFactor = {
 const defaultColor = {
   entity: hsl2rgb(178, 0, 0.95),
   address: hsl2rgb(178, 0, 0.90)
+}
+
+const noCategoryColor = {
+  entity: hsl2rgb(178, 0, 0.85),
+  address: hsl2rgb(178, 0, 0.80)
 }
 
 const transactionsPixelRange = [1, 7]
@@ -66,6 +71,7 @@ export default class NodeGraph extends Component {
     this.colorMapTags = map()
     const colorGen = (map, type) => (k) => {
       if (!k) return defaultColor[type]
+      if (k === noCategory) return noCategoryColor[type]
       let color = map.get(k)
       if (color === undefined) {
         color = colorScale(map.size())

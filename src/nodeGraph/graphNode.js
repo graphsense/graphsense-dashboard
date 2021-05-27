@@ -5,7 +5,7 @@ import { event } from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import { entityWidth, expandHandleWidth } from '../globals.js'
+import { entityWidth, expandHandleWidth, noCategory } from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -295,7 +295,7 @@ class GraphNode extends Component {
     if (tags.length === 0) {
       tag = ''
     } else {
-      tag = this.getActorCategory() || ''
+      tag = this.getActorCategory() || noCategory
       if (!tag && tags.length > 1) {
         tag = ''
       }

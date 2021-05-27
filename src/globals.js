@@ -21,3 +21,5 @@ export const currencies =
   }
 
 export const maxTransactionListSize = 100
+
+export const noCategory = '__none__'
