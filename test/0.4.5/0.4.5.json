@@ -1,0 +1,68 @@
+[
+  {
+    "uuid": "1a5ee77c38f0d2a4eaa2849937131708c96e2b67afd9a1b7fe27c2157e1d1b28",
+    "version": 1,
+    "key_type": "a",
+    "key": "1Archive1n2C579dMsAu3iC6tWzuQJz8dN",
+    "tag": "Internet Archive",
+    "contributor": "GraphSense",
+    "tag_optional": {
+      "actor_type": null,
+      "currency": "BTC",
+      "tag_source_uri": "https://archive.org/donate/cryptocurrency",
+      "tag_source_label": null,
+      "post_date": null,
+      "post_author": null
+    },
+    "contributor_optional": {
+      "contact_details": "contact@graphsense.info",
+      "insertion_date": "2019-06-12T00:00:00+02:00",
+      "software": "GraphSense 0.4.5 [0be4975]",
+      "collection_type": "m"
+    }
+  },
+  {
+    "uuid": "780f42b914b8afa2d3a1512d3cdd63e172fb391dbdcac543ee162645bd5af814",
+    "version": 1,
+    "key_type": "a",
+    "key": "113Juav7ZSz1JkKJhxaoNArjFPmX6TQV5t",
+    "tag": "my tag",
+    "contributor": "GraphSense",
+    "tag_optional": {
+      "actor_type": null,
+      "currency": "BTC",
+      "tag_source_uri": "my source",
+      "tag_source_label": null,
+      "post_date": null,
+      "post_author": null
+    },
+    "contributor_optional": {
+      "contact_details": "contact@graphsense.info",
+      "insertion_date": "2021-05-27T11:54:03+02:00",
+      "software": "GraphSense 0.4.5 [0be4975]",
+      "collection_type": "m"
+    }
+  },
+  {
+    "uuid": "715052d59795e82f8806a824826f46f246c9734c092971a9074551f91430ca3b",
+    "version": 1,
+    "key_type": "a",
+    "key": "17gN64BPHtxi4mEM3qWrxdwhieUvRq8R2r",
+    "tag": "test",
+    "contributor": "GraphSense",
+    "tag_optional": {
+      "actor_type": null,
+      "currency": "BTC",
+      "tag_source_uri": "asdf",
+      "tag_source_label": null,
+      "post_date": null,
+      "post_author": null
+    },
+    "contributor_optional": {
+      "contact_details": "contact@graphsense.info",
+      "insertion_date": "2021-05-27T11:59:58+02:00",
+      "software": "GraphSense 0.4.5 [0be4975]",
+      "collection_type": "m"
+    }
+  }
+]
