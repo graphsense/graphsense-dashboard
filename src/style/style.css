@@ -593,3 +593,7 @@ div.d3-context-menu-theme ul li.is-parent:after {
 .highlightWrapper {
   position: relative;
 }
+
+.note {
+  @apply text-grey italic;
+}

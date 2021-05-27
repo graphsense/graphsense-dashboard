@@ -132,6 +132,9 @@ export default class Config extends Component {
           update: (e, ui) => this.dispatcher('sortCategories', j.sortable('toArray'))
         })
       }
+      if (this.categoryColors.length === 0) {
+        el.innerHTML = `<span class="note">${t('legend empty')}</span>`
+      }
     } else if (this.visible === 'export') {
       el.innerHTML = tt(exportConfig)
       el.querySelectorAll('button[data-msg]').forEach(button => {
