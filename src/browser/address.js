@@ -73,6 +73,7 @@ export default class Address extends BrowserComponent {
       in_degree: esc(numeral(noIndegree).format('0,000')),
       no_tags: esc(numeral(tags.length).format('0,000')),
       tagCoherence,
+      label_transfers: esc(t('Transfers') + keyspace === 'eth' ? ' (ext.)' : ''),
       label_activity_period: esc(t('Activity period')),
       label_receiving_addresses: esc(t('Receiving addresses')),
       label_sending_addresses: esc(t('Sending addresses')),
