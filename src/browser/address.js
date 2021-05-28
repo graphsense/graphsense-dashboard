@@ -80,7 +80,8 @@ export default class Address extends BrowserComponent {
       label_first_usage: esc(t('First usage')),
       label_last_usage: esc(t('Last usage')),
       label_total_received: esc(t('Total received')),
-      label_final_balance: esc(t('Final balance'))
+      label_final_balance: esc(t('Final balance')),
+      external_txs_note: keyspace.toLowerCase() === 'eth' ? t('balance from external transactions') : ''
     }
   }
 
