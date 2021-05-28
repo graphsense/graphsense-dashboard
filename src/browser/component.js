@@ -1,5 +1,5 @@
 import { t } from '../lang.js'
-import { replace } from '../template_utils.js'
+import { replace, addClass } from '../template_utils.js'
 import option from './option.html'
 import { formatCurrency } from '../utils.js'
 import moment from 'moment'
@@ -47,7 +47,9 @@ export default class BrowserComponent extends Component {
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {
       if (optionData.inline) return
-      ul.appendChild(this.optionEl(document.createElement('li'), optionData))
+      const el = this.optionEl(document.createElement('li'), optionData)
+      addClass(el, 'py-1')
+      ul.appendChild(el)
     })
     return ul
   }
