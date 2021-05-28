@@ -1,5 +1,5 @@
 <div class="h-screen flex flex-col">
-  <header class="p-2 w-full border-b layout-border flex flex-row justify-between relative header-height bg-white z-40">
+  <header class="p-2 w-full border-b layout-border flex flex-row justify-between relative header-height bg-white z-30 shadow-md">
     <div class="text-left"> 
       <img id="layout-logo" class="h-full cursor-pointer" src="../style/img/logo.svg"/>
     </div>
@@ -22,7 +22,7 @@
     <section id="layout-browser" class="h-full border layout-border bg-white shadow-md rounded-b text-sm"></section>
     <section id="layout-graph" class="h-full w-full"></section>
   </section>
-  <section id="layout-status" class="border layout-border bg-white shadow-md rounded-t text-sm w-full z-40"></section>
+  <section id="layout-status" class="border layout-border bg-white shadow-md rounded-t text-sm w-full z-50"></section>
 </div>
 <div class="absolute pin-t pin-l w-full header-height shadow-md z-22 invisible">
   <input type="file" class="file-loader" accept=".gs" data-type="load">
@@ -30,7 +30,7 @@
   <input type="file" class="file-loader" accept=".yaml" data-type="loadYAML">
   <input type="file" class="file-loader" accept=".json" data-type="loadTagsJSON">
 </div>
-<section id="layout-config" class="absolute pin-r z-30 border layout-border bg-white shadow-md rounded-b text-sm"></section>
+<section id="layout-config" class="absolute pin-r z-20 border layout-border bg-white shadow-md rounded-b text-sm"></section>
 <section id="layout-menu"></section>
 <a target="_blank" id="downloadCSV"></a>
 <section id="modal" class="absolute pin-t z-50 w-full h-full flex items-center justify-center" style="display: none; background-color:rgba(0,0,0,0.8)">
