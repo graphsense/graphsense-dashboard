@@ -4,6 +4,7 @@ import { coinToSatoshi, coinToWei } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
+import Table from '../browser/table.js'
 import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
 import BlockTransactionsTable from '../browser/block_transactions_table.js'
@@ -958,7 +959,7 @@ const downloadTable = function () {
   if (this.isReplaying) return
   let table = null
   for (let i = 0; i < this.browser.content.length; i++) {
-    if (this.browser.content[i] instanceof TagsTable) {
+    if (this.browser.content[i] instanceof Table) {
       table = this.browser.content[i]
       break
     }
