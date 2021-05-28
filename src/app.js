@@ -246,10 +246,6 @@ export default class Model extends Callable {
     return YAML.stringify(yaml)
   }
 
-  generateTagsJSON () {
-    return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON), null, 2)
-  }
-
   generateReport () {
     return import('jszip').then(jszip => {
       let zip = new jszip.default() // eslint-disable-line new-cap
@@ -367,20 +363,6 @@ export default class Model extends Callable {
     return report
   }
 
-  loadTagsJSON (data) {
-    try {
-      data = JSON.parse(data)
-      if (!data) throw new Error('result is empty')
-      if (!Array.isArray(data)) data = [data]
-      this.store.addTagpack(this.keyspaces, { tags: data.map(this.tagJSONToTagpackTag) })
-      this.graph.setUpdate('layers')
-    } catch (e) {
-      const msg = 'Could not parse JSON file'
-      this.statusbar.addMsg('error', msg + ': ' + e.message)
-      console.error(msg)
-    }
-  }
-
   loadTagpack (yaml) {
     let data
     try {
@@ -394,48 +376,6 @@ export default class Model extends Callable {
     }
     this.store.addTagpack(this.keyspaces, data)
     this.graph.setUpdate('layers')
-  }
-
-  tagToJSON (tag) {
-    return {
-      uuid: SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
-      version: 1,
-      key_type: tag.address ? 'a' : 'e',
-      key: tag.address || tag.entity,
-      tag: tag.label,
-      contributor: 'GraphSense',
-      tag_optional: {
-        actor_type: null,
-        currency: tag.currency,
-        tag_source_uri: tag.source,
-        tag_source_label: null,
-        post_date: null,
-        post_author: null
-      },
-      contributor_optional: {
-        contact_details: 'contact@graphsense.info',
-        insertion_date: moment.unix(tag.lastmod).format(),
-        software: 'GraphSense ' + VERSION, // eslint-disable-line no-undef
-        collection_type: 'm'
-      }
-    }
-  }
-
-  tagJSONToTagpackTag (tagJSON) {
-    const tag = {
-      label: tagJSON.tag,
-      currency: tagJSON.tag_optional && tagJSON.tag_optional.currency,
-      source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
-      lastmod: tagJSON.contributor_optional && tagJSON.contributor_optional.insertion_date,
-      category: null,
-      tagpack_uri: null
-    }
-    if (tagJSON.key_type === 'a') {
-      tag.address = tagJSON.key
-    } else if (tagJSON.key_type === 'e') {
-      tag.entity = tagJSON.key
-    }
-    return tag
   }
 
   deserialize (buffer) {

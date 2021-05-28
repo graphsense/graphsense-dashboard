@@ -1,7 +1,6 @@
 import { t } from '../lang.js'
 import TagsTable from './tags_table.js'
 import downloadTagpack from '../icons/downloadTagpack.html'
-import downloadTags from '../icons/downloadTags.html'
 
 export default class MyTagsTable extends TagsTable {
   constructor (dispatcher, index, total, data, nodeType, nodeIsInGraph, supportedKeyspaces, categories) {
@@ -61,7 +60,6 @@ export default class MyTagsTable extends TagsTable {
     ]
     this.order = [[6, 'desc']]
     this.options = []
-    this.addOption({ html: downloadTags, optionText: t('Download tags as JSON'), message: 'downloadTagsAsJSON' })
     this.addOption({ html: downloadTagpack, optionText: t('Download tags as TagPack'), message: 'exportYAML' })
   }
 }

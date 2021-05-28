@@ -662,20 +662,6 @@ const saveYAML = function (stage) {
   this.layout.hideModal()
 }
 
-const saveTagsJSON = function (stage) {
-  if (this.isReplaying) return
-  if (!stage) {
-    // update status bar before starting serializing
-    this.statusbar.addMsg('saving')
-    this.config.hide()
-    saveTagsJSON.call(this, true)
-    return
-  }
-  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
-  this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateTagsJSON())
-}
-
 const inputMetaData = function (meta) {
   this.meta = { ...this.meta, ...meta }
   this.omitUpdate()
@@ -780,12 +766,6 @@ const loadYAML = function () {
   this.config.hide()
 }
 
-const loadTagsJSON = function () {
-  if (this.isReplaying) return
-  this.layout.triggerFileLoad('loadTagsJSON')
-  this.config.hide()
-}
-
 const loadFile = function (params) {
   const type = params[0]
   const data = params[1]
@@ -801,8 +781,6 @@ const loadFile = function (params) {
     this.deserialize(data)
   } else if (type === 'loadYAML') {
     this.loadTagpack(data)
-  } else if (type === 'loadTagsJSON') {
-    this.loadTagsJSON(data)
   }
   this.graph.dirty = true
   this.graph.createSnapshot()
@@ -1007,24 +985,6 @@ const downloadTable = function () {
   if (url) {
     this.layout.triggerDownloadViaLink(url)
   }
-}
-
-const downloadTagsAsJSON = function () {
-  if (this.isReplaying) return
-  let table = null
-  for (let i = 0; i < this.browser.content.length; i++) {
-    if (this.browser.content[i] instanceof TagsTable) {
-      table = this.browser.content[i]
-      break
-    }
-  }
-  logger.debug('table', table)
-  if (!table) return
-  const tags = table.data.map(this.tagToJSON)
-  const blob = new Blob([JSON.stringify(tags)], { type: 'text/json;charset=utf-8' }) // eslint-disable-line no-undef
-  const params = table.getParams()
-  const filename = `tags of ${params.type} ${params.id}.json`
-  FileSaver.saveAs(blob, filename)
 }
 
 const addAllToGraph = function () {
@@ -1252,11 +1212,9 @@ const functions = {
   saveReport,
   saveReportJSON,
   saveYAML,
-  saveTagsJSON,
   exportRestLogs,
   load,
   loadYAML,
-  loadTagsJSON,
   loadFile,
   showLogs,
   hideLogs,
@@ -1282,7 +1240,6 @@ const functions = {
   toggleExport,
   toggleImport,
   downloadTable,
-  downloadTagsAsJSON,
   addAllToGraph,
   hoverNode,
   leaveNode,

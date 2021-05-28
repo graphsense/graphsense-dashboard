@@ -13,7 +13,6 @@ const messages = {
   __fromURL: (payload) => !payload.target ? `load ${payload.type} ${decodeURIComponent(payload.id)} ${keyspace(payload.keyspace)}from URL` : `load ${payload.id} and ${payload.target} ${keyspace(payload.keyspace)}from URL`,
   changeLocale: (payload) => `change locale to ${payload}`,
   addAllToGraph: (payload) => 'add all from current table to graph',
-  downloadTagsAsJSON: (payload) => 'download tags table as JSON',
   downloadTable: (payload) => 'download current table',
   toggleSearchTable: (payload) => 'toggle search feature in table',
   redo: (payload) => 'redo',
@@ -34,8 +33,6 @@ const messages = {
         return `load GS file ${filename}`
       case 'loadYAML':
         return `load tagpack YAML file ${filename}`
-      case 'loadTagsJSON':
-        return `load titanium tags file ${filename}`
     }
   },
   blank: (payload) => 'start from scratch (clear graph)',

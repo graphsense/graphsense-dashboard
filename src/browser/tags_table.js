@@ -1,6 +1,5 @@
 import { t } from '../lang.js'
 import Table from './table.js'
-import downloadTags from '../icons/downloadTags.html'
 
 export default class TagsTable extends Table {
   constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories, level) {
@@ -76,7 +75,6 @@ export default class TagsTable extends Table {
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType, this.level]
     this.addOption(this.downloadOption())
-    this.addOption({ html: downloadTags, optionText: t('Download tags as JSON'), message: 'downloadTagsAsJSON' })
     if (nodeType === 'label') this.options = []
   }
 
