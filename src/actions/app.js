@@ -452,9 +452,12 @@ const addNodeCont = function ({ context, result }) {
     } else {
       this.updateCategoriesByTags(o.tags)
     }
-    this.graph.add(o, context.anchor)
+    const node = this.graph.add(o, context.anchor)
     this.browser.setUpdate('tables_with_addresses')
     this.statusbar.removeLoading(o.id)
+    if (context.keyspace === 'eth' && context.type === 'entity') {
+      loadEntityAddresses.call(this, { id: node.id, keyspace: context.keyspace, limit: 1 })
+    }
   }
 }
 
