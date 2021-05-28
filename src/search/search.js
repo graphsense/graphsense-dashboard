@@ -322,6 +322,9 @@ export default class Search extends Component {
     if (!this.stats) return []
     const curr = this.stats.filter(s => s.name === keyspace)[0]
     if (!curr) return []
+    if (prefix.substr(0, 2).toLowerCase() === '0x') {
+      prefix = prefix.substr(2)
+    }
     prefix = prefix * 1
     if (typeof prefix !== 'number') return []
     if (prefix <= 0) return []
