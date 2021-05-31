@@ -18,18 +18,26 @@
   </div>
 </div>
 <div class="searchValue"></div>
-<h2 class="text-base">{{t:Depth}}</h2>
-<div class="p-2">
-  <input type="number" class="w-12" min="1" step="1" max="{{maxSearchDepth}}" id="searchDepth" value="{{searchDepth}}"/>
-</div>
+<div class="flex flex-row">
+  <div>
+    <h2 class="text-base">{{t:Depth}}</h2>
+    <div class="p-2">
+      <input type="number" class="w-12" min="1" step="1" max="{{maxSearchDepth}}" id="searchDepth" value="{{searchDepth}}"/>
+    </div>
+  </div>
 
-<h2 class="text-base">{{t:Breadth}}</h2>
-<div class="p-2">
-  <input type="number" class="w-12" min="1" step="1" max="{{maxSearchBreadth}}" id="searchBreadth" value="{{searchBreadth}}"/>
-</div>
-<h2 class="text-base">{{t:Skip entities with more addresses than}}:</h2>
-<div class="p-2">
-  <input type="number" class="w-12" min="{{searchBreadth}}" step="1" id="skipNumAddresses" value="{{skipNumAddresses}}"/>
+  <div>
+    <h2 class="text-base">{{t:Breadth}}</h2>
+    <div class="p-2">
+      <input type="number" class="w-12" min="1" step="1" max="{{maxSearchBreadth}}" id="searchBreadth" value="{{searchBreadth}}"/>
+    </div>
+  </div>
+  <div>
+    <h2 class="text-base">{{t:Max. addresses}}:</h2>
+    <div class="p-2">
+      <input type="number" class="w-12" min="{{minSkipNumAddresses}}" step="1" id="skipNumAddresses" value="{{skipNumAddresses}}"/>
+    </div>
+  </div>
 </div>
 <div class="p-2">
   <input type="button" class="w-full btn btn-primary" value="{{t:Search}}"/>

@@ -6,6 +6,7 @@ export const expandHandleWidth = 15
 export const maxAddableNodes = 100
 export const maxSearchDepth = 7
 export const maxSearchBreadth = 100
+export const minSkipNumAddresses = 1
 
 export const searchlimit = 100
 export const prefixLength = 3

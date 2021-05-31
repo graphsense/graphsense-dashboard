@@ -7,7 +7,7 @@ import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
 import minmaxForm from './config/minmaxForm.html'
-import { maxSearchBreadth, maxSearchDepth } from './globals.js'
+import { maxSearchBreadth, maxSearchDepth, minSkipNumAddresses } from './globals.js'
 import { replace, addClass, removeClass } from './template_utils.js'
 import Search from './search/search.js'
 
@@ -144,9 +144,9 @@ export default class Menu extends Component {
           {
             searchDepth: this.view.depth,
             searchBreadth: this.view.breadth,
-            maxSearchBreadth: maxSearchBreadth,
-            maxSearchDepth: maxSearchDepth,
-            skipNumAddresses: this.view.skipNumAddresses
+            maxSearchBreadth,
+            maxSearchDepth,
+            minSkipNumAddresses
           }
         )
         this.setupSearch(el)
@@ -394,7 +394,6 @@ export default class Menu extends Component {
   setSearchBreadth (d) {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.breadth = Math.min(d, maxSearchBreadth)
-    this.view.skipNumAddresses = Math.max(this.view.breadth, this.view.skipNumAddresses)
     if (d > maxSearchBreadth) {
       this.setUpdate(true)
     }
@@ -403,10 +402,8 @@ export default class Menu extends Component {
 
   setSkipNumAddresses (d) {
     if (this.view.viewType !== 'neighborsearch') return
-    this.view.skipNumAddresses = Math.max(d, this.view.breadth || maxSearchBreadth)
-    if (d < this.view.skipNumAddresses) {
-      this.setUpdate(true)
-    }
+    this.view.skipNumAddresses = Math.max(d, minSkipNumAddresses)
+    this.setUpdate(true)
   }
 
   addSearchAddress (address) {

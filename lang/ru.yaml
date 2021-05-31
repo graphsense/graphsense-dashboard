@@ -96,7 +96,7 @@ for contained addresses: для содержащихся адресов
 for final balance: для итог. баланса
 for total received: для всего получено
 breadth: широта
-skip entities with more addresses than: пропустить объекты с большим количеством адреса, чем
+max. addresses: max. адреса
 search: поиск # as an imperative
 save: сохранить
 title: название
@@ -181,3 +181,5 @@ estimated value: ориентировочная стоимость
 reorder to prioritize: reorder to prioritize
 tag coherence: tag coherence
 unknown: unknown
+from: from
+to: to

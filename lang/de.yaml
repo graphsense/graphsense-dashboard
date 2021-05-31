@@ -103,7 +103,7 @@ for contained addresses: nach enthaltenen Adressen
 for final balance: nach Bilanz
 for total received: nach Eingänge
 breadth: Breite
-skip entities with more addresses than: Entitäten auslassen mit mehr Adressen als
+max. addresses: max. Adressen
 search: suche # as an imperative
 save: speichern
 title: Titel
@@ -191,3 +191,5 @@ unknown: unbekannt
 API rate limit exceeded: API rate limit exceeded. Please try again later.
 legend empty: Legende noch leer
 balance from external transactions: noch ohne externe Transaktionen und Gaskosten
+from: von
+to: bis
