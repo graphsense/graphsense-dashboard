@@ -360,6 +360,7 @@ export default class Store {
 
     const tagsWithoutUserDefined = []
     const userDefinedTags = []
+    const removedTags = []
     let tags = o.type === 'entity' ? o.tags.entity_tags : o.tags
     tags.forEach(tag => {
       if (tag.isUserDefined) {
@@ -369,6 +370,8 @@ export default class Store {
           }
           userDefinedTags.push(tag)
           delete labels[tag.label]
+        } else {
+          removedTags.push(tag)
         }
       } else {
         tagsWithoutUserDefined.push(tag)
@@ -395,6 +398,17 @@ export default class Store {
     } else {
       o.tags = tags
     }
+
+    removedTags.forEach(tag => {
+      let tags = this.userDefinedLabels.get(tag.label)
+      if (!tags) return
+      tags = tags.filter(t => o.type === 'entity' ? t.entity !== tag.entity : t.address !== tag.address)
+      if (tags.length > 0) {
+        this.userDefinedLabels.set(tag.label, tags)
+      } else {
+        this.userDefinedLabels.remove(tag.label)
+      }
+    })
 
     this.calcMainCategory(o)
   }
