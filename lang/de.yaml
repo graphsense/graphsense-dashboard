@@ -10,7 +10,7 @@ labels: Schlagwörter
 tag: Tag
 tags: Tags
 address tags: Adressentags
-entity tags: Tags
+entity tags: Entität-Tags 
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen

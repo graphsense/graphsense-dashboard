@@ -253,16 +253,7 @@ class GraphNode extends Component {
       let label = ''
       const tag = this.getTag()
       const category = this.getActorCategory()
-      if (tag) {
-        label = tag
-      }
-      if (category) {
-        if (tag) {
-          label += ' (' + category + ')'
-        } else {
-          label = category
-        }
-      }
+      label = tag || category
       if (!label) {
         return this.getName()
       }

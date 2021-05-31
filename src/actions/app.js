@@ -178,19 +178,20 @@ const selectNode = function ([type, nodeId]) {
   this.graph.selectNode(type, nodeId, this.shiftPressed)
 }
 
-// user clicks address in a table
+// user clicks address/entity in a table
 const clickAddress = function (data) {
   if (!Array.isArray(data)) data = [data]
+  const type = data[0].address ? 'address' : 'entity'
   const found = new Set()
   data = data.filter(row => {
-    if (found.has(row.address)) return false
-    found.add(row.address)
+    if (found.has(row[type])) return false
+    found.add(row[type])
     return true
   })
   data.forEach(data => {
     if (this.keyspaces.indexOf(data.keyspace) === -1) return
-    this.statusbar.addLoading(data.address)
-    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+    this.statusbar.addLoading(data[type])
+    this.mapResult(this.rest.node(data.keyspace, { id: data[type], type }), 'resultNode', data[type])
   })
 }
 
@@ -881,6 +882,7 @@ const resultSearchNeighbors = function ({ result, context }) {
     }
     paths.forEach(pathnode => {
       pathnode.node.keyspace = result.keyspace
+      pathnode.relation.keyspace = result.keyspace
 
       // store relations
       const node = this.store.add(pathnode.node)
