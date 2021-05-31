@@ -274,7 +274,7 @@ class GraphNode extends Component {
       case 'id':
         return this.getName()
       case 'balance':
-        return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
+        return this.formatCurrency(this.data.balance[this.currency])
       case 'tag':
         return this.getTag() || this.getName()
       case 'category':
@@ -308,7 +308,7 @@ class GraphNode extends Component {
   }
 
   formatCurrency (value) {
-    return formatCurrency(value, this.currency)
+    return formatCurrency(value, this.currency, { keyspace: this.data.keyspace })
   }
 
   select () {
