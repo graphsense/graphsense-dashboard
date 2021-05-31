@@ -239,7 +239,7 @@ export default class Store {
 
   addTagpack (keyspaces, data) {
     const overwritable = ['address', 'label', 'source', 'currency', 'source', 'category', 'lastmod', 'abuse']
-    const addressTags = map()
+    const nodeTags = map()
     data.tags.forEach(tag => {
       overwritable.forEach(key => {
         if (!tag[key]) tag[key] = data[key] || tag[key]
@@ -259,18 +259,22 @@ export default class Store {
         }
         tag.active = true
         tag.keyspace = tag.currency.toLowerCase()
-        const p = prefix(tag.keyspace, tag.address)
-        const t = addressTags.get(p) || []
+        const p = prefix(tag.keyspace, tag.address || tag.entity)
+        const t = nodeTags.get(p) || []
         t.push(tag)
-        addressTags.set(p, t)
+        nodeTags.set(p, t)
       })
     })
-    addressTags.each((tags, p) => {
+    nodeTags.each((tags, p) => {
       const a = this.addresses.get(p)
+      const e = this.entities.get(p)
       if (a) {
         a.tags = a.tags || []
         a.tags = a.tags.concat(tags)
         this.calcMainCategory(a)
+      } else if (e) {
+        e.tags.entity_tags = e.tags.entity_tags.concat(tags)
+        this.calcMainCategory(e)
       } else {
         let t = this.tagsStore.get(p) || []
         t = t.concat(tags)
