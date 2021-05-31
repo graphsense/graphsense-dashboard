@@ -9,11 +9,11 @@ export function nbsp (string) {
 }
 
 export function coinToSatoshi (value) {
-  return value * 10000 * 10000
+  return value * 1e+8
 }
 
 export function satoshiToCoin (value) {
-  return value / 10000 / 10000
+  return value / 1e+8
 }
 
 export function coinToWei (value) {
@@ -29,12 +29,14 @@ function smallCurrency (keyspace) {
   return 's'
 }
 
-function currencyFormat (keyspace) {
-  if (keyspace === 'ETH') return '1,000.[000000000000000000]'
-  return '1,000.[00000000]'
+function currencyFormat (keyspace, value) {
+  const zeros = Math.max(Math.floor(Math.log10(value)) - 3, 0)
+  const max = Math.max((keyspace === 'ETH' ? 18 : 8) - zeros, 2)
+  return '1,000.[' + ('0'.repeat(max)) + ']'
 }
 
 function formatCoin (valueValue, currencyCode, { dontAppendCurrency, keyspace }) {
+  keyspace = keyspace.toUpperCase()
   const value = keyspace === 'ETH' ? weiToCoin(valueValue) : satoshiToCoin(valueValue)
   if (value === 0) {
     return '0 ' + (keyspace || currencyCode).toUpperCase()
@@ -42,7 +44,7 @@ function formatCoin (valueValue, currencyCode, { dontAppendCurrency, keyspace })
   if (Math.abs(value) < 0.0001) {
     return valueValue + (!dontAppendCurrency ? ' ' + smallCurrency(keyspace) : '')
   }
-  return numeral(value).format(currencyFormat(keyspace)) + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
+  return numeral(value).format(currencyFormat(keyspace, valueValue)) + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
 
 function formatFiat (value, currencyCode, { dontAppendCurrency }) {
