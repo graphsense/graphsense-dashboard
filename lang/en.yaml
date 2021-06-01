@@ -192,4 +192,4 @@ tag coherence: tag coherence
 unknown: unknown
 API rate limit exceeded: Maximale Anzahl API Zugriffe erreicht. Bitte später nochmals versuchen.
 legend empty: legend empty
-balance from external transactions: without internal transactions and gas costs
+balance from external transactions: without internal transactions and gas costs yet
