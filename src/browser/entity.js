@@ -24,6 +24,11 @@ export default class Entity extends Address {
     flat.label_sending_entities = esc(t('Sending entities'))
     flat.label_tag_coherence = esc(t('Tag coherence'))
     flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
+    flat.label = ''
+    if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
+      flat.label = this.data[0].tags.entity_tags[0].label
+      flat.id = this.data[0].id
+    }
     return flat
   }
 
