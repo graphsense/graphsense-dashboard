@@ -520,7 +520,7 @@ svg.slash path {
 ul#log-messages {
   height: 0;
   padding: 0;
-  overflow-y: scroll;
+  overflow-y: hidden;
   transition: height ease 0.5s;
 }
 
@@ -529,17 +529,13 @@ ul#log-messages li {
 }
 
 #layout-status {
-  transition: transform ease 0.5s;
-  transform: translateY(0)
+  transition: overflow-y step-start 0.5s;
 }
 
 #layout-status.visible ul#log-messages {
   height : 10rem;
-  @apply p-1
-}
-
-#layout-status.visible {
-  transform: translateY(-10rem)
+  @apply p-1;
+  overflow-y: scroll;
 }
 
 #layout-status #show {
