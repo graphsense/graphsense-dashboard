@@ -151,6 +151,10 @@ li {
   outline: 0;
 }
 
+#browser-leftbar .nav-btn {
+  @apply pb-0 pt-3;
+}
+
 select, input {
   @apply rounded-sm shadow bg-grey-light px-1 pt-1;
 }
