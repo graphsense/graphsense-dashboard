@@ -190,6 +190,6 @@ tag coherence: Tagkohärenz
 unknown: unbekannt
 API rate limit exceeded: API rate limit exceeded. Please try again later.
 legend empty: Legende noch leer
-balance from external transactions: noch ohne externe Transaktionen und Gaskosten
+balance from external transactions: noch ohne interne Transaktionen und Gaskosten
 from: von
 to: bis
