@@ -1148,6 +1148,10 @@ const clickSidebarMyAddressTags = function () {
   this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address))
 }
 
+const resize = function () {
+  this.graph.resize()
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1277,7 +1281,8 @@ const functions = {
   editHighlight,
   colorNode,
   clickSidebarMyEntityTags,
-  clickSidebarMyAddressTags
+  clickSidebarMyAddressTags,
+  resize
 }
 
 export default functions

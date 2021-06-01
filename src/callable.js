@@ -151,7 +151,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'editHighlight',
   'colorNode',
   'clickSidebarMyEntityTags',
-  'clickSidebarMyAddressTags'
+  'clickSidebarMyAddressTags',
+  'resize'
 )
 
 // synchronous messages
@@ -166,7 +167,8 @@ const syncMessages = [
   'screenDragStart',
   'screenDragStop',
   'screenDragMove',
-  'screenZoom'
+  'screenZoom',
+  'resize'
 ]
 
 // messages that change the graph

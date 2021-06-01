@@ -117,9 +117,13 @@ export default class NodeGraph extends Component {
     this.dk = 0
 
     window.addEventListener('resize', () => {
-      this.adaptDimensions()
-      this.renderViewBox()
+      this.dispatcher('resize')
     })
+  }
+
+  resize () {
+    this.adaptDimensions()
+    this.setUpdate('viewbox')
   }
 
   setCategoryColors (cc) {
@@ -815,7 +819,7 @@ export default class NodeGraph extends Component {
       logger.debug('redraw graph')
       this.adaptDimensions()
       this.svg = create('svg')
-        .classed('w-full h-full graph', true)
+        .classed('absolute graph', true)
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .attr('xmlns', 'http://www.w3.org/2000/svg')
       this.renderViewBox()
