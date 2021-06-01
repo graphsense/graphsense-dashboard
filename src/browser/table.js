@@ -76,7 +76,7 @@ export default class Table extends BrowserComponent {
         deferRender: true,
         scroller: {
           loadingIndicator: true,
-          displayBuffer: 20,
+          displayBuffer: 200,
           boundaryScale: 0
         },
         stateSave: false,
