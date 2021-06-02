@@ -51,6 +51,7 @@ export default class Store {
     idPrefixed = prefix(object.keyspace, id)
     if (idPrefixed && type === 'address') {
       let a = this.addresses.get(idPrefixed)
+      let tags = null
       if (!a) {
         a = empty
         a.id = id
@@ -58,14 +59,21 @@ export default class Store {
         const outgoing = this.initOutgoing(id, object.keyspace)
         a.outgoing = outgoing
         this.addresses.set(idPrefixed, a)
+      } else {
+        tags = a.tags
       }
       // merge new object into existing one
       Object.keys(object).forEach(key => { a[key] = object[key] })
+      if (tags) a.tags = tags
 
       // add existing tags eventually
       a.tags = (a.tags || []).concat(this.tagsStore.get(idPrefixed) || [])
       this.tagsStore.remove(idPrefixed)
-      this.addTags(a.keyspace, a.id, a.tags.filter(t => t.isUserDefined))
+      const labels = {}
+      a.tags.filter(t => t.isUserDefined).forEach(tag => {
+        labels[tag.label] = tag
+      })
+      this.addTags(a.keyspace, a.id, labels)
 
       // remove unneeded address field (is now id)
       delete a.address
@@ -100,7 +108,11 @@ export default class Store {
       // merge new object into existing one (save tags)
       Object.keys(object).forEach(key => { c[key] = object[key] })
       if (tags) c.tags = tags
-      this.addTags(c.keyspace, c.id, c.tags.entity_tags.filter(t => t.isUserDefined))
+      const labels = {}
+      c.tags.entity_tags.filter(t => t.isUserDefined).forEach(tag => {
+        labels[tag.label] = tag
+      })
+      this.addTags(c.keyspace, c.id, labels)
 
       // remove unneeded entity field (is now id)
       delete c.entity
@@ -381,8 +393,12 @@ export default class Store {
     for (const l in labels) {
       const label = labels[l]
       const newTag = new Tag(keyspace, label.label, o.id, o.type)
+      newTag.source(label.source)
+        .abuse(label.abuse)
+        .category(label.category)
       newTags.push(newTag.data)
     }
+    logger.debug('newTags', newTags)
     newTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)
       if (!tags) {
@@ -398,6 +414,7 @@ export default class Store {
     } else {
       o.tags = tags
     }
+    logger.debug('removedTags', removedTags)
 
     removedTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)

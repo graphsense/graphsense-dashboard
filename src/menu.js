@@ -339,7 +339,7 @@ export default class Menu extends Component {
             id: this.view.data.id,
             type: this.view.data.type,
             keyspace: this.view.data.keyspace,
-            labels: this.view.labels
+            labels: { ...this.view.labels }
           })
         })
         removeClass(button, 'disabled')
