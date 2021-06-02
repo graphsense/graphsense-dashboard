@@ -60,6 +60,6 @@ export default class MyTagsTable extends TagsTable {
     ]
     this.order = [[6, 'desc']]
     this.options = []
-    this.addOption({ html: downloadTagpack, optionText: t('Download tags as TagPack'), message: 'exportYAML' })
+    this.addOption({ html: downloadTagpack, optionText: t('Download tags as TagPack'), message: 'exportYAML' + nodeType })
   }
 }

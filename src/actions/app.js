@@ -644,24 +644,40 @@ const save = function (stage) {
   this.download(filename, this.serialize())
 }
 
-const exportYAML = function () {
-  const modal = new Export(this.call, { creator: this.meta.creator || this.meta.investigator }, 'tagpack')
+const exportYAML = function (nodeType) {
+  const modal = new Export(this.call, { creator: this.meta.creator || this.meta.investigator }, 'tagpack', nodeType)
   this.layout.showModal(modal)
 }
 
-const saveYAML = function (stage) {
+const exportYAMLentity = function () {
+  exportYAML.call(this, 'entity')
+}
+
+const exportYAMLaddress = function () {
+  exportYAML.call(this, 'address')
+}
+
+const saveYAML = function (stage, nodeType) {
   if (this.isReplaying) return
   if (!stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    saveYAML.call(this, true)
+    saveYAML.call(this, true, nodeType)
     return
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
   this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateTagpack())
+  this.download(filename, this.generateTagpack(nodeType))
   this.layout.hideModal()
+}
+
+const saveYAMLentity = function () {
+  saveYAML.call(this, null, 'entity')
+}
+
+const saveYAMLaddress = function () {
+  saveYAML.call(this, null, 'address')
 }
 
 const inputMetaData = function (meta) {
@@ -1219,6 +1235,8 @@ const functions = {
   saveReport,
   saveReportJSON,
   saveYAML,
+  saveYAMLentity,
+  saveYAMLaddress,
   exportRestLogs,
   load,
   loadYAML,
@@ -1263,6 +1281,8 @@ const functions = {
   clickLink,
   hideModal,
   exportYAML,
+  exportYAMLentity,
+  exportYAMLaddress,
   changeMin,
   changeMax,
   receiveTaxonomies,

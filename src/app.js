@@ -210,8 +210,12 @@ export default class Model extends Callable {
     ])
   }
 
-  generateTagpack () {
-    const tags = this.store.getUserDefinedTags2()
+  generateTagpack (nodeType) {
+    let tags = this.store.getUserDefinedTags2()
+    if (nodeType) {
+      tags = tags.filter(t => t[nodeType])
+    }
+
     tags.forEach(tag => { tag.lastmod = moment.unix(tag.lastmod).format('YYYY-MM-DD HH:mm:ss') })
 
     const sets = {}
