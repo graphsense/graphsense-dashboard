@@ -3,14 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## [0.5.0] - 2021-06-02
 ### Added
 - Ethereum support #176
 - Local address and entity tag tables
 - Search neighbors by local entity tags
 - Node coloring #158, #169
 - Logout button
-
 ### Changed
 - minor layout improvements
 - Possibility to tag entities instead of notes
@@ -20,7 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - change names of properties of nodes #162, align table buttons with properties
 - generate TITANIUM court report in browser
 - make tag categories linked to certain URI
-
 ### Removed
 - TITANIUM tag sharing options
 
