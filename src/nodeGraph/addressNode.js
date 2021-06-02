@@ -27,13 +27,19 @@ export default class AddressNode extends GraphNode {
       const g = this.root
         .append('g')
         .classed('addressNode', true)
+        .on('mouseup', () => {
+          event.stopPropagation()
+        })
+        .on('mousedown', () => {
+          event.stopPropagation()
+        })
         .on('click', () => {
           event.stopPropagation()
           this.dispatcher('selectNode', ['address', this.id])
         })
         .on('contextmenu', contextMenu(this.menu()))
-        .on('mouseover', () => this.dispatcher('tooltip', 'address'))
-        .on('mouseout', () => this.dispatcher('hideTooltip'))
+        .on('mouseover', () => this.dispatcher('hoverNode', ['address', this.id]))
+        .on('mouseout', () => this.dispatcher('leaveNode', ['address', this.id]))
       g.append('rect')
         .classed('addressNodeRect', true)
         .attr('x', x)

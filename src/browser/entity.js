@@ -1,25 +1,38 @@
 import entity from './entity.html'
 import Address from './address.js'
-import incomingNeighbors from '../icons/incomingNeighbors.html'
-import outgoingNeighbors from '../icons/outgoingNeighbors.html'
+import { t } from '../lang.js'
 
 export default class Entity extends Address {
-  constructor (dispatcher, data, index, currency) {
-    super(dispatcher, data, index, currency)
+  constructor (dispatcher, data, index, currency, categories) {
+    super(dispatcher, data, index, currency, categories)
     this.template = entity
     this.options =
       [
-        { html: incomingNeighbors, optionText: 'Incoming neighbors', message: 'initIndegreeTable' },
-        { html: outgoingNeighbors, optionText: 'Outgoing neighbors', message: 'initOutdegreeTable' },
-        { icon: 'at', optionText: 'Addresses', message: 'initAddressesTable' },
-        { icon: 'tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-incoming', optionText: 'Sending entities', message: 'initIndegreeTable' },
+        { inline: 'row-outgoing', optionText: 'Receiving entities', message: 'initOutdegreeTable' },
+        { inline: 'row-addresses', optionText: 'Addresses', message: 'initAddressesTable' },
+        { inline: 'row-tags', optionText: 'Address Tags', message: 'initTagsTable' },
+        { inline: 'row-entity-tags', optionText: 'Entity Tags', message: 'initEntityTagsTable' }
       ]
   }
 
   flattenData () {
     const flat = super.flattenData()
+    const esc = s => s.replace(' ', '&nbsp;')
     flat.no_addresses = this.data.reduce((sum, v) => sum + v.no_addresses, 0)
-
+    flat.label_receiving_entities = esc(t('Receiving entities'))
+    flat.label_sending_entities = esc(t('Sending entities'))
+    flat.label_tag_coherence = esc(t('Tag coherence'))
+    flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
+    flat.label = ''
+    if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
+      flat.label = this.data[0].tags.entity_tags[0].label
+      flat.id = this.data[0].id
+    }
     return flat
+  }
+
+  flattenTags () {
+    return this.data.reduce((tags, d) => tags.concat(d.tags.address_tags || []), [])
   }
 }

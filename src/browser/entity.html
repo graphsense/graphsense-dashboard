@@ -1,46 +1,68 @@
 <div class="prop-table">
   <div class="prop-row">
     <span class="prop-key">{{t:Entity}}</span>
-    <span class="prop-value">{{id}}</span>
+    <span class="prop-value">{{id}} <span class="text-grey-dark">{{label}}</span></span>
   </div>
   <div class="prop-row">
     <span class="prop-key">{{t:Currency}}</span>
     <span class="prop-value">{{keyspace}}</span>
   </div>
-  <div class="prop-row">
+  <div class="prop-row" id="row-addresses">
     <span class="prop-key">{{t:Addresses}}</span>
     <span class="prop-value id">{{no_addresses}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Transactions}}</span>
-    <span class="prop-value id"><i class="fas fa-long-arrow-alt-down text-gs-base"></i> {{no_incoming_txs}} <i class="fas fa-long-arrow-alt-up text-gs-red"></i> {{no_outgoing_txs}}</span>
+    <span class="prop-key">{{label_transfers}}</span>
+    <span class="prop-value id">{{no_transfers}}&nbsp;
+      <i class="fas fa-long-arrow-alt-down text-gs-base" title="{{t:Deposits}}"></i>
+      {{no_incoming_txs}}&nbsp;
+      <i class="fas fa-long-arrow-alt-up text-gs-red" title="{{t:Withdrawals}}"></i>
+      {{no_outgoing_txs}}
+    </span>
+  </div>
+  <div class="prop-row" id="row-outgoing">
+    <span class="prop-key">{{label_receiving_entities}}</span>
+    <span class="prop-value id">{{out_degree}}</span>
+  </div>
+  <div class="prop-row" id="row-incoming">
+    <span class="prop-key">{{label_sending_entities}}</span>
+    <span class="prop-value id">{{in_degree}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Neighbors}}</span>
-    <span class="prop-value id"><i class="fas fa-long-arrow-alt-down text-gs-base"></i> {{in_degree}} <i class="fas fa-long-arrow-alt-up text-gs-red"></i> {{out_degree}}</span>
-  </div>
-  <div class="prop-row">
-    <span class="prop-key">{{t:First usage}}</span>
+    <span class="prop-key">{{label_first_usage}}</span>
     <span class="prop-value id">{{first_usage}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Last usage}}</span>
+    <span class="prop-key">{{label_last_usage}}</span>
     <span class="prop-value id">{{last_usage}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Activity period}}</span>
+    <span class="prop-key">{{label_activity_period}}</span>
     <span class="prop-value id">{{activity_period}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Total received}}</span>
+    <span class="prop-key">{{label_total_received}}</span>
     <span class="prop-value id">{{total_received}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Final balance}}</span>
+    <span class="prop-key">{{label_final_balance}}</span>
     <span class="prop-value id">{{balance}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{t:Tag coherence}}</span>
+    <span class="prop-key"></span>
+    <span class="prop-value id note">{{external_txs_note}}</span>
+  </div>
+  <hr/>
+  <div class="prop-row" id="row-tags">
+    <span class="prop-key">{{t:Address tags}}</span>
+    <span class="prop-value id">{{no_tags}}</span>
+  </div>
+  <div class="prop-row" id="row-entity-tags">
+    <span class="prop-key">{{t:Entity tags}}</span>
+    <span class="prop-value id">{{no_entity_tags}}</span>
+  </div>
+  <div class="prop-row">
+    <span class="prop-key">{{label_tag_coherence}}</span>
     <span class="prop-value id">{{tagCoherence}}</span>
   </div>
 </div>

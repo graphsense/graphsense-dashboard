@@ -4,21 +4,26 @@ import Address from './browser/address.js'
 import Entity from './browser/entity.js'
 import Label from './browser/label.js'
 import Transaction from './browser/transaction.js'
+import AccountTransaction from './browser/account_transaction.js'
 import Block from './browser/block.js'
 import Link from './browser/link.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
+import AccountTransactionsTable from './browser/account_transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
+import MyTagsTable from './browser/my_tags_table.js'
 import LinkTransactionsTable from './browser/link_transactions_table.js'
 import TransactionAddressesTable from './browser/transaction_addresses_table.js'
 import NeighborsTable from './browser/neighbors_table.js'
 import Component from './component.js'
-import { addClass, removeClass } from './template_utils.js'
+import { addClass, removeClass, replace } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
 import { maxTransactionListSize } from './globals.js'
+import { tt } from './lang.js'
+import entityTag from './icons/entityTag.html'
 
 const logger = Logger.create('Browser') // eslint-disable-line no-unused-vars
 
@@ -39,8 +44,8 @@ export default class Browser extends Component {
   }
 
   addConcepts (concepts) {
-    concepts.forEach(({ label, uri }) => {
-      this.categories[label] = uri
+    concepts.forEach(concept => {
+      this.categories[concept.id] = concept
     })
     this.setUpdate('tagstable')
   }
@@ -125,7 +130,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Address(this.dispatcher, addresses, 0, this.currency)]
+    this.content = [new Address(this.dispatcher, addresses, 0, this.currency, this.categories)]
     this.setUpdate('content')
   }
 
@@ -133,8 +138,9 @@ export default class Browser extends Component {
     this.activeTab = 'transactions'
     this.visible = true
     this.destroyComponentsFrom(0)
+    const T = tx.currency_type === 'account' ? AccountTransaction : Transaction
     this.content = [
-      new Transaction(this.dispatcher, tx, 0, this.currency)
+      new T(this.dispatcher, tx, 0, this.currency)
     ]
     this.setUpdate('content')
   }
@@ -166,7 +172,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Entity(this.dispatcher, entities, 0, this.currency)]
+    this.content = [new Entity(this.dispatcher, entities, 0, this.currency, this.categories)]
     this.setUpdate('content')
   }
 
@@ -175,9 +181,9 @@ export default class Browser extends Component {
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
-      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency)
+      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency, this.categories)
     } else if (object.type === 'entity') {
-      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency)
+      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency, this.categories)
     }
     this.setUpdate('content')
   }
@@ -198,12 +204,14 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof TransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
     comp.setCurrentOption('initTransactionsTable')
     const total = comp.data[0].no_incoming_txs + comp.data[0].no_outgoing_txs
-    this.content.push(new TransactionsTable(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
+    const T = keyspace === 'eth' ? AccountTransactionsTable : TransactionsTable
+    this.content.push(new T(this.dispatcher, request.index + 1, total, request.id, request.type, this.currency, keyspace))
   }
 
   initBlockTransactionsTable (request) {
@@ -214,6 +222,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof BlockTransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -230,6 +239,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof AddressesTable) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -238,26 +248,86 @@ export default class Browser extends Component {
     this.content.push(new AddressesTable(this.dispatcher, request.index + 1, total, request.id, this.currency, keyspace, this.nodeChecker))
   }
 
-  initTagsTable (request) {
+  initEntityTagsTable (request) {
+    this.initTagsTable(request, 'entity')
+  }
+
+  initTagsTable (request, level = 'address') {
     if (request.index !== 0 && !request.index) return
     const last = this.content[request.index]
     const fromLabel = (last instanceof Label)
-    if (!(last instanceof Entity) && !(last instanceof Address) && !fromLabel) return
+    const fromEntity = (last instanceof Entity)
+    logger.debug('last', last)
+    if (!(last instanceof Address) && !fromEntity && !fromLabel) return
     let data = last.data
     if (!fromLabel) {
       if (last.data.length > 1) return
       data = last.data[0]
     }
     this.setUpdate('content')
-    if (this.content[request.index + 1] instanceof TagsTable) {
+    const newOption = level === 'address' ? 'initTagsTable' : 'initEntityTagsTable'
+    if (last.currentOption === newOption) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
-    last.setCurrentOption('initTagsTable')
+    last.setCurrentOption(newOption)
     const keyspace = data.keyspace
-    const total = data.tags.length
-    this.content.push(new TagsTable(this.dispatcher, request.index + 1, total, data.tags || [], request.id, request.type, this.currency, keyspace, this.nodeChecker, this.supportedKeyspaces, this.categories))
+    const total = fromEntity || fromLabel ? data.tags[level + '_tags'].length : data.tags.length
+    const tags = fromEntity || fromLabel ? data.tags[level + '_tags'] : data.tags
+    this.content.push(
+      new TagsTable(
+        this.dispatcher,
+        request.index + 1,
+        total,
+        tags || [],
+        request.id,
+        request.type,
+        this.currency,
+        keyspace,
+        this.nodeChecker,
+        this.supportedKeyspaces,
+        this.categories,
+        level))
+  }
+
+  initMyEntityTagsTable (tags) {
+    if ((this.content[0] instanceof MyTagsTable && this.content[0].nodeType === 'entity')) {
+      this.deselect()
+      return
+    }
+    this.visible = true
+    this.destroyComponentsFrom(0)
+    this.content.push(new MyTagsTable(
+      this.dispatcher,
+      0,
+      tags.length,
+      tags,
+      'entity',
+      this.nodeChecker,
+      this.supportedKeyspaces,
+      this.categories))
+    this.setUpdate('content')
+  }
+
+  initMyAddressTagsTable (tags) {
+    if ((this.content[0] instanceof MyTagsTable && this.content[0].nodeType === 'address')) {
+      this.deselect()
+      return
+    }
+    this.visible = true
+    this.destroyComponentsFrom(0)
+    this.content.push(new MyTagsTable(
+      this.dispatcher,
+      0,
+      tags.length,
+      tags,
+      'address',
+      this.nodeChecker,
+      this.supportedKeyspaces,
+      this.categories))
+    this.setUpdate('content')
   }
 
   initLinkTransactionsTable (request) {
@@ -267,6 +337,7 @@ export default class Browser extends Component {
     this.setUpdate('content')
     if (this.content[request.index + 1] instanceof LinkTransactionsTable) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -288,6 +359,7 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
@@ -307,6 +379,7 @@ export default class Browser extends Component {
         this.content[request.index + 1].isOutgoing == isOutgoing // eslint-disable-line eqeqeq
     ) {
       this.destroyComponentsFrom(request.index + 1)
+      last.setCurrentOption(null)
       return
     }
 
@@ -321,7 +394,13 @@ export default class Browser extends Component {
     if (!this.root) throw new Error('root not defined')
     logger.debug('shouldupdate', this.update)
     if (this.shouldUpdate(true)) {
-      this.root.innerHTML = layout
+      this.root.innerHTML = tt(replace(layout, { entityTag }))
+      this.root.querySelector('#sidebar-my-entity-tags').addEventListener('click', () => {
+        this.dispatcher('clickSidebarMyEntityTags')
+      })
+      this.root.querySelector('#sidebar-my-address-tags').addEventListener('click', () => {
+        this.dispatcher('clickSidebarMyAddressTags')
+      })
       this.renderVisibility()
       this.renderContent()
       super.render()
@@ -362,7 +441,7 @@ export default class Browser extends Component {
   }
 
   renderVisibility () {
-    const frame = this.root
+    const frame = this.root.querySelector('#browser-data')
     logger.debug('visibility', this.visible)
     if (!this.visible) {
       removeClass(frame, 'show')
@@ -381,8 +460,8 @@ export default class Browser extends Component {
       compEl.className = 'browser-component'
       data.appendChild(compEl)
       comp.render(compEl)
-      const options = comp.renderOptions()
-      if (!options) return
+      const options = comp.renderOuterOptions()
+      if (!options || !options.hasChildNodes()) return
       const el = document.createElement('div')
       el.className = 'browser-options ' + (c < this.content.length ? 'browser-options-short' : '')
       el.appendChild(options)

@@ -9,6 +9,8 @@ label: label
 labels: labels
 tag: tag
 tags: tags
+address tags: address tags
+entity tags: tags
 block: block
 blocks: blocks
 supported currencies: supported currencies
@@ -17,12 +19,21 @@ latest block: latest block
 loading_type_id: loading %0 %1  # results in eg. loading address xyz
 loading_thing: loading %0 
 currency: currency
+transfers: transfers
+withdrawals: withdrawals
+deposits: deposits
 neighbors: neighbors
+receiving neighbors: receiving neighbors
+sending neighbors: sending neighbors
+receiving entities: receiving entities
+sending entities: sending entities
+receiving addresses: receiving addresses
+sending addresses: sending addresses
 first usage: first usage
 last usage: last usage
 activity period: activity period
-total received: total received
-final balance: final balance
+total received: received
+final balance: balance
 category: category
 categories: categories
 abuse: abuse
@@ -79,7 +90,7 @@ full data: full data
 notes only: notes only
 titanium tag sharing schema: TITANIUM tag sharing schema
 rest calls: rest calls
-titanium report: titanium report
+audit log: audit log
 address label: address label
 transaction label: transaction label
 language: language
@@ -91,10 +102,10 @@ criterion: criterion
 depth: depth
 by category: by category
 for contained addresses: for contained addresses
-for final balance: for final balance
-for total received: for total received
+for final balance: for balance
+for total received: for received
 breadth: breadth
-skip entities with more neighbors than: skip entities with more neighbors than
+max. addresses: max. addresses
 search: search # as an imperative
 save: save
 title: title
@@ -145,8 +156,8 @@ searching criterion addresses_ids: addresses %0
 searching between: between %0 and %1
 searching min: from %0
 searching max: up to %1
-searching criterion final_balance: final balance %0 # one of searching between, min, max
-searching criterion total_received: total received %0 # one of searching between, min, max
+searching criterion final_balance: balance %0 # one of searching between, min, max
+searching criterion total_received: received %0 # one of searching between, min, max
 searching outgoing: outgoing
 searching incoming: incoming
 searching: "searching for %0 neighbors of %1 with %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
@@ -180,3 +191,5 @@ reorder to prioritize: reorder to prioritize
 tag coherence: tag coherence
 unknown: unknown
 API rate limit exceeded: Maximale Anzahl API Zugriffe erreicht. Bitte später nochmals versuchen.
+legend empty: legend empty
+balance from external transactions: without internal transactions and gas costs yet

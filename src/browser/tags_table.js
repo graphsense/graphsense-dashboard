@@ -1,21 +1,21 @@
 import { t } from '../lang.js'
 import Table from './table.js'
-import downloadTags from '../icons/downloadTags.html'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories) {
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories, level) {
     super(dispatcher, index, total, currency, keyspace)
     this.nodeId = nodeId
     this.data = data || []
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.categories = categories
+    this.level = nodeType === 'address' ? 'address' : (level || nodeType)
     this.columns = [
       {
-        name: t('Address'),
-        data: 'address',
+        name: t(this.level.charAt(0).toUpperCase() + this.level.slice(1)),
+        data: this.level,
         render: (value, type, row) => {
-          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, 'address', keyspace)(value, type))
+          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, this.level, keyspace)(value, type))
         }
       },
       {
@@ -42,13 +42,21 @@ export default class TagsTable extends Table {
         name: t('Category'),
         data: 'category',
         defaultContent: '',
-        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
+        render: (id, type, row) => {
+          const v = this.categories[id]
+          return this.formatActive(
+            row, v ? this.formatLink(v.uri, v.label, v.description) : id)
+        }
       },
       {
         name: t('Abuse'),
         data: 'abuse',
         defaultContent: '',
-        render: (value, type, row) => this.formatActive(row, this.categories[value] ? this.formatLink(this.categories[value], value) : value)
+        render: (id, type, row) => {
+          const v = this.categories[id]
+          return this.formatActive(
+            row, v ? this.formatLink(v.uri, v.label, v.description) : id)
+        }
       },
       {
         name: t('Last modified'),
@@ -65,9 +73,8 @@ export default class TagsTable extends Table {
     this.loadMessage = 'loadTags'
     this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
-    this.loadParams = [this.nodeId, this.nodeType]
+    this.loadParams = [this.nodeId, this.nodeType, this.level]
     this.addOption(this.downloadOption())
-    this.addOption({ html: downloadTags, optionText: t('Download tags as JSON'), message: 'downloadTagsAsJSON' })
     if (nodeType === 'label') this.options = []
   }
 
@@ -79,7 +86,8 @@ export default class TagsTable extends Table {
     return {
       id: this.loadParams[0],
       type: this.loadParams[1],
-      keyspace: this.keyspace
+      keyspace: this.keyspace,
+      level: this.loadParams[2]
     }
   }
 

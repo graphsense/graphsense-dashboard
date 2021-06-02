@@ -1,9 +1,10 @@
 import Logger from '../logger.js'
 import moment from 'moment'
-import { satoshiToCoin } from '../utils.js'
+import { coinToSatoshi, coinToWei } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
 import NeighborsTable from '../browser/neighbors_table.js'
+import Table from '../browser/table.js'
 import TagsTable from '../browser/tags_table.js'
 import TransactionsTable from '../browser/transactions_table.js'
 import BlockTransactionsTable from '../browser/block_transactions_table.js'
@@ -26,9 +27,11 @@ const historyPushState = (keyspace, type, id, target) => {
 
 const submitSearchResult = function ({ term, context }) {
   logger.debug('this.menu.search', this.menu.search)
-  const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
-  if (first) {
-    clickSearchResult.call(this, { ...first, context })
+  if (context === 'search' || context === 'neighborsearch') {
+    const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
+    if (first) {
+      clickSearchResult.call(this, { ...first, context })
+    }
     return
   }
   if (context === 'tagpack') {
@@ -136,10 +139,10 @@ const resultTransactionForBrowser = function ({ result }) {
 
 const resultLabelForBrowser = function ({ result, context }) {
   this.browser.setLabel(context, result)
-  historyPushState(null, 'label', result.label)
+  historyPushState(null, 'label', context)
   this.statusbar.removeLoading(context)
-  this.statusbar.addMsg('loaded', 'label', result.label)
-  initTagsTable.call(this, { id: result.label, type: 'label', index: 0 })
+  this.statusbar.addMsg('loaded', 'label', context)
+  initTagsTable.call(this, { id: context, type: 'label', index: 0 })
 }
 
 const resultLabelTagsForTag = function ({ result, context }) {
@@ -154,6 +157,10 @@ const resultBlockForBrowser = function ({ result }) {
 }
 
 const selectNode = function ([type, nodeId]) {
+  if (this.graph.highlightMode) {
+    this.graph.colorNode(type, nodeId)
+    return
+  }
   logger.debug('selectNode', type, nodeId, this.shiftPressed)
   const o = this.store.get(nodeId[2], type, nodeId[0])
   if (!o) {
@@ -171,19 +178,20 @@ const selectNode = function ([type, nodeId]) {
   this.graph.selectNode(type, nodeId, this.shiftPressed)
 }
 
-// user clicks address in a table
+// user clicks address/entity in a table
 const clickAddress = function (data) {
   if (!Array.isArray(data)) data = [data]
+  const type = data[0].address ? 'address' : 'entity'
   const found = new Set()
   data = data.filter(row => {
-    if (found.has(row.address)) return false
-    found.add(row.address)
+    if (found.has(row[type])) return false
+    found.add(row[type])
     return true
   })
   data.forEach(data => {
     if (this.keyspaces.indexOf(data.keyspace) === -1) return
-    this.statusbar.addLoading(data.address)
-    this.mapResult(this.rest.node(data.keyspace, { id: data.address, type: 'address' }), 'resultNode', data.address)
+    this.statusbar.addLoading(data[type])
+    this.mapResult(this.rest.node(data.keyspace, { id: data[type], type }), 'resultNode', data[type])
   })
 }
 
@@ -240,7 +248,13 @@ const resultTransactions = function ({ context, result }) {
 
 const loadTags = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'tags')
-  this.mapResult(this.rest.tags(keyspace, { id: params[0], type: params[1], nextPage, pagesize: request.length }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  this.mapResult(this.rest.tags(keyspace, {
+    id: params[0],
+    type: params[1],
+    level: params[2],
+    nextPage,
+    pagesize: request.length
+  }), 'resultTagsTable', { page: nextPage, request, drawCallback })
 }
 
 const resultTagsTable = function ({ context, result }) {
@@ -268,6 +282,10 @@ const initAddressesTableWithEntity = function ({ id, keyspace }) {
 
 const initTagsTable = function (request) {
   this.browser.initTagsTable(request)
+}
+
+const initEntityTagsTable = function (request) {
+  this.browser.initEntityTagsTable(request)
 }
 
 const initLinkTransactionsTable = function (request) {
@@ -436,9 +454,12 @@ const addNodeCont = function ({ context, result }) {
     } else {
       this.updateCategoriesByTags(o.tags)
     }
-    this.graph.add(o, context.anchor)
+    const node = this.graph.add(o, context.anchor)
     this.browser.setUpdate('tables_with_addresses')
     this.statusbar.removeLoading(o.id)
+    if (context.keyspace === 'eth' && context.type === 'entity') {
+      loadEntityAddresses.call(this, { id: node.id, keyspace: context.keyspace, limit: 1 })
+    }
   }
 }
 
@@ -572,19 +593,13 @@ const removeNode = function ([nodeType, nodeId]) {
   this.browser.setUpdate('tables_with_addresses')
 }
 
-const inputNotes = function ({ id, type, keyspace, note }) {
-  const o = this.store.get(keyspace, type, id)
-  o.notes = note
-  this.graph.setUpdateNodes(type, id, 'label')
-}
-
 const toggleConfig = function () {
   this.config.toggleConfig()
 }
 
 const noteDialog = function ({ x, y, nodeId, nodeType }) {
   const o = this.store.get(nodeId[2], nodeType, nodeId[0])
-  this.menu.showNodeDialog(x, y, { dialog: nodeType === 'entity' ? 'note' : 'tagpack', data: o })
+  this.menu.showNodeDialog(x, y, { dialog: 'tagpack', data: o })
   selectNode.call(this, [nodeType, nodeId])
 }
 
@@ -613,8 +628,6 @@ const blank = function () {
   if (this.isReplaying) return
   if (!this.promptUnsavedWork('start a new graph')) return
   this.createComponents()
-  this.loadCategories()
-  this.loadAbuses()
 }
 
 const save = function (stage) {
@@ -631,52 +644,40 @@ const save = function (stage) {
   this.download(filename, this.serialize())
 }
 
-const saveNotes = function (stage) {
-  if (this.isReplaying) return
-  if (!stage) {
-    // update status bar before starting serializing
-    this.statusbar.addMsg('saving')
-    this.config.hide()
-    saveNotes.call(this, true)
-    return
-  }
-  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.notes.gs'
-  this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.serializeNotes())
-}
-
-const exportYAML = function () {
-  const modal = new Export(this.call, { creator: this.meta.creator || this.meta.investigator }, 'tagpack')
+const exportYAML = function (nodeType) {
+  const modal = new Export(this.call, { creator: this.meta.creator || this.meta.investigator }, 'tagpack', nodeType)
   this.layout.showModal(modal)
 }
 
-const saveYAML = function (stage) {
+const exportYAMLentity = function () {
+  exportYAML.call(this, 'entity')
+}
+
+const exportYAMLaddress = function () {
+  exportYAML.call(this, 'address')
+}
+
+const saveYAML = function (stage, nodeType) {
   if (this.isReplaying) return
   if (!stage) {
     // update status bar before starting serializing
     this.statusbar.addMsg('saving')
     this.config.hide()
-    saveYAML.call(this, true)
+    saveYAML.call(this, true, nodeType)
     return
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.yaml'
   this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateTagpack())
+  this.download(filename, this.generateTagpack(nodeType))
   this.layout.hideModal()
 }
 
-const saveTagsJSON = function (stage) {
-  if (this.isReplaying) return
-  if (!stage) {
-    // update status bar before starting serializing
-    this.statusbar.addMsg('saving')
-    this.config.hide()
-    saveTagsJSON.call(this, true)
-    return
-  }
-  const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.json'
-  this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateTagsJSON())
+const saveYAMLentity = function () {
+  saveYAML.call(this, null, 'entity')
+}
+
+const saveYAMLaddress = function () {
+  saveYAML.call(this, null, 'address')
 }
 
 const inputMetaData = function (meta) {
@@ -702,7 +703,8 @@ const saveReport = function (stage) {
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.pdf'
   this.statusbar.addMsg('saved', filename)
-  this.generateReport().then(file => {
+  this.generateReportPDF().then(file => {
+    logger.debug('otuput', file)
     this.download(filename, file)
     this.call('hideModal')
   })
@@ -723,7 +725,7 @@ const saveReportJSON = function (stage) {
   }
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.report.json'
   this.statusbar.addMsg('saved', filename)
-  this.download(filename, this.generateReportJSON())
+  this.download(filename, JSON.stringify(this.generateReportJSON(), null, 2))
   this.layout.hideModal()
 }
 
@@ -776,21 +778,9 @@ const load = function () {
   this.config.hide()
 }
 
-const loadNotes = function () {
-  if (this.isReplaying) return
-  this.layout.triggerFileLoad('loadNotes')
-  this.config.hide()
-}
-
 const loadYAML = function () {
   if (this.isReplaying) return
   this.layout.triggerFileLoad('loadYAML')
-  this.config.hide()
-}
-
-const loadTagsJSON = function () {
-  if (this.isReplaying) return
-  this.layout.triggerFileLoad('loadTagsJSON')
   this.config.hide()
 }
 
@@ -807,12 +797,8 @@ const loadFile = function (params) {
   this.statusbar.addMsg('loadedFile', filename)
   if (type === 'load') {
     this.deserialize(data)
-  } else if (type === 'loadNotes') {
-    this.deserializeNotes(data)
   } else if (type === 'loadYAML') {
     this.loadTagpack(data)
-  } else if (type === 'loadTagsJSON') {
-    this.loadTagsJSON(data)
   }
   this.graph.dirty = true
   this.graph.createSnapshot()
@@ -880,11 +866,25 @@ const changeSkipNumAddresses = function (value) {
 const searchNeighbors = function (params) {
   this.statusbar.addSearching(params)
   params.params.currency = this.layout.currency
+  const convert = params.id[2] === 'eth' ? coinToWei : coinToSatoshi
   if (this.layout.currency === 'value') {
-    params.params.min = params.params.min ? satoshiToCoin(params.params.min) : null
-    params.params.max = params.params.max ? satoshiToCoin(params.params.max) : null
+    params.params.min = params.params.min ? convert(params.params.min) : null
+    params.params.max = params.params.max ? convert(params.params.max) : null
   }
   this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
+  // make another call for local matching entity tags
+  if (params.params.category) {
+    let ids = this.store.getUserDefinedTags2()
+    ids = ids
+      .filter(tag => !!tag.entity && tag.category === params.params.category)
+      .map(tag => tag.entity)
+    ids = [...new Set(ids)]
+    if (ids.length > 0) {
+      delete params.params.category
+      params.params.ids = ids
+      this.mapResult(this.rest.searchNeighbors(params), 'resultSearchNeighbors', params)
+    }
+  }
   this.menu.hideMenu()
 }
 
@@ -898,6 +898,7 @@ const resultSearchNeighbors = function ({ result, context }) {
     }
     paths.forEach(pathnode => {
       pathnode.node.keyspace = result.keyspace
+      pathnode.relation.keyspace = result.keyspace
 
       // store relations
       const node = this.store.add(pathnode.node)
@@ -974,7 +975,13 @@ const toggleImport = function () {
 
 const downloadTable = function () {
   if (this.isReplaying) return
-  const table = this.browser.content[1]
+  let table = null
+  for (let i = 0; i < this.browser.content.length; i++) {
+    if (this.browser.content[i] instanceof Table) {
+      table = this.browser.content[i]
+      break
+    }
+  }
   if (!table) return
   let url
   if (table instanceof NeighborsTable) {
@@ -999,18 +1006,6 @@ const downloadTable = function () {
   }
 }
 
-const downloadTagsAsJSON = function () {
-  if (this.isReplaying) return
-  const table = this.browser.content[1]
-  if (!table) return
-  if (!(table instanceof TagsTable)) return
-  const tags = table.data.map(this.tagToJSON)
-  const blob = new Blob([JSON.stringify(tags)], { type: 'text/json;charset=utf-8' }) // eslint-disable-line no-undef
-  const params = table.getParams()
-  const filename = `tags of ${params.type} ${params.id}.json`
-  FileSaver.saveAs(blob, filename)
-}
-
 const addAllToGraph = function () {
   const table = this.browser.content[1]
   if (!table) return
@@ -1025,19 +1020,42 @@ const addAllToGraph = function () {
   functions[table.selectMessage].call(this, rows)
 }
 
-const tooltip = function (type) {
-  this.statusbar.showTooltip(type)
+const hoverLink = function () {
+  this.statusbar.showTooltip('shadow')
 }
 
-const hideTooltip = function (type) {
+const leaveLink = function () {
   this.statusbar.showTooltip('')
+}
+
+const hoverShadow = function () {
+  this.statusbar.showTooltip('shadow')
+}
+
+const leaveShadow = function () {
+  this.statusbar.showTooltip('')
+}
+
+const hoverNode = function ([type, id]) {
+  this.debounce('hover' + id, () => {
+    this.graph.hoverNode(id, type, true)
+    this.statusbar.showTooltip(type)
+  }, 1)
+}
+
+const leaveNode = function ([type, id]) {
+  this.debounce('hover' + id, () => {
+    this.graph.hoverNode(id, type, false)
+    this.statusbar.showTooltip('')
+  }, 1)
 }
 
 const receiveConcepts = function ({ result, context }) {
   if (!Array.isArray(result)) return
   result.sort((a, b) => a.id - b.id)
   this.browser.addConcepts(result)
-  this.menu.setConcepts(result)
+  this.menu.setConcepts(result, context)
+  this.config.setConcepts(result)
 }
 
 const receiveConceptsColors = function ({ result }) {
@@ -1096,6 +1114,60 @@ const screenZoom = function (zoom) {
   this.graph.screenZoom(zoom)
 }
 
+const logout = function () {
+  this.mapResult(this.rest.logout(), 'loggedout')
+}
+
+const loggedout = function () {
+  window.history.go(0)
+}
+
+const toggleHighlight = function () {
+  if (!this.config.toggleHighlight()) {
+    this.graph.highlightModeOff()
+  }
+}
+
+const addHighlight = function (color) {
+  this.config.addHighlight(color)
+  this.graph.highlightModeOn(color)
+}
+
+const pickHighlight = function (color) {
+  this.config.pickHighlight(color)
+  this.graph.highlightModeOn(color)
+}
+
+const inputHighlight = function ([color, title]) {
+  this.config.inputHighlight(color, title)
+}
+
+const removeHighlight = function (color) {
+  this.config.removeHighlight(color)
+  this.graph.removeHighlight(color)
+}
+
+const editHighlight = function ([color, newColor]) {
+  this.config.editHighlight(color, newColor)
+  this.graph.editHighlight(color, newColor)
+}
+
+const colorNode = function ([type, id]) {
+  this.graph.colorNode(type, id)
+}
+
+const clickSidebarMyEntityTags = function () {
+  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity))
+}
+
+const clickSidebarMyAddressTags = function () {
+  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address))
+}
+
+const resize = function () {
+  this.graph.resize()
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1124,6 +1196,7 @@ const functions = {
   initAddressesTable,
   initAddressesTableWithEntity,
   initTagsTable,
+  initEntityTagsTable,
   initLinkTransactionsTable,
   initIndegreeTable,
   initOutdegreeTable,
@@ -1149,7 +1222,6 @@ const functions = {
   changeCurrency,
   changeTxLabel,
   removeNode,
-  inputNotes,
   toggleConfig,
   noteDialog,
   searchNeighborsDialog,
@@ -1159,17 +1231,15 @@ const functions = {
   hideContextmenu,
   blank,
   save,
-  saveNotes,
   exportReport,
   saveReport,
   saveReportJSON,
   saveYAML,
-  saveTagsJSON,
+  saveYAMLentity,
+  saveYAMLaddress,
   exportRestLogs,
   load,
-  loadNotes,
   loadYAML,
-  loadTagsJSON,
   loadFile,
   showLogs,
   hideLogs,
@@ -1195,10 +1265,13 @@ const functions = {
   toggleExport,
   toggleImport,
   downloadTable,
-  downloadTagsAsJSON,
   addAllToGraph,
-  tooltip,
-  hideTooltip,
+  hoverNode,
+  leaveNode,
+  hoverLink,
+  leaveLink,
+  hoverShadow,
+  leaveShadow,
   receiveConcepts,
   receiveConceptsColors,
   exportSvg,
@@ -1208,6 +1281,8 @@ const functions = {
   clickLink,
   hideModal,
   exportYAML,
+  exportYAMLentity,
+  exportYAMLaddress,
   changeMin,
   changeMax,
   receiveTaxonomies,
@@ -1215,7 +1290,19 @@ const functions = {
   screenDragStart,
   screenDragMove,
   screenDragStop,
-  screenZoom
+  screenZoom,
+  logout,
+  loggedout,
+  toggleHighlight,
+  addHighlight,
+  pickHighlight,
+  inputHighlight,
+  removeHighlight,
+  editHighlight,
+  colorNode,
+  clickSidebarMyEntityTags,
+  clickSidebarMyAddressTags,
+  resize
 }
 
 export default functions

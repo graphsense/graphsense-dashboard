@@ -24,7 +24,11 @@ export default class Table extends BrowserComponent {
     this.loading = null
     this.searchable = false
     if (this.isSmall()) {
-      this.addOption({ icon: 'search', optionText: t('Filter table contents'), message: 'toggleSearchTable' })
+      this.addOption({
+        icon: 'search',
+        optionText: t('Filter table contents'),
+        message: 'toggleSearchTable'
+      })
     }
   }
 
@@ -63,7 +67,7 @@ export default class Table extends BrowserComponent {
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
-        scrollY: browserHeight - rowHeight - 4 * browserPadding,
+        scrollY: Math.max(this.root.getBoundingClientRect().height, browserHeight) - 1.5 * rowHeight,
         searching: this.searchable && this.isSmall(),
         search: { smart: false },
         dom: 'fti',
@@ -72,7 +76,7 @@ export default class Table extends BrowserComponent {
         deferRender: true,
         scroller: {
           loadingIndicator: true,
-          displayBuffer: 20,
+          displayBuffer: 200,
           boundaryScale: 0
         },
         stateSave: false,
@@ -171,12 +175,13 @@ export default class Table extends BrowserComponent {
     return value ? `<span title="${value}">${value.substr(0, 20)}${value.length > 20 ? '...' : ''}</span>` : ''
   }
 
-  formatLink (url, title) {
-    if (!url) return ''
-    if (url.startsWith('http')) {
-      return `<a onClick="event.stopPropagation()" href="${url}" target=_blank>${title || this.truncateValue(url)}</a>`
+  formatLink (url, title, description) {
+    if (url && url.startsWith('http')) {
+      return `<a onClick="event.stopPropagation()" title="${description}" href="${url}" target="_blank">${title || this.truncateValue(url)}</a>`
+    } else if (title) {
+      return `<span title="${description}">${title}</span>`
     }
-    return url
+    return url || ''
   }
 
   formatValue (func) {

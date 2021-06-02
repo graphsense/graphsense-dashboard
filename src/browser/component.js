@@ -1,5 +1,5 @@
 import { t } from '../lang.js'
-import { replace } from '../template_utils.js'
+import { replace, addClass } from '../template_utils.js'
 import option from './option.html'
 import { formatCurrency } from '../utils.js'
 import moment from 'moment'
@@ -24,26 +24,57 @@ export default class BrowserComponent extends Component {
     this.options.push(option)
   }
 
-  renderOptions () {
+  optionEl (parent, optionData) {
+    parent.className = 'cursor-pointer ' +
+      (this.currentOption === optionData.message ||
+        !optionData.inline ? 'option-active' : '')
+    let optionHtml = option
+    if (optionData.html) {
+      optionHtml = optionData.html
+    }
+    optionData.optionText = t(optionData.optionText)
+    parent.innerHTML = replace(optionHtml, optionData)
+    parent.addEventListener('click', () => {
+      this.dispatcher(optionData.message, this.requestData())
+    })
+    return parent
+  }
+
+  renderOuterOptions () {
     if (!this.options || this.options.length === 0) return
+
     const ul = document.createElement('ul')
     ul.className = 'list-reset'
     this.options.forEach((optionData) => {
-      const li = document.createElement('li')
-      li.className = 'cursor-pointer py-1 ' +
-        (this.currentOption === optionData.message ? 'option-active' : '')
-      let optionHtml = option
-      if (optionData.html) {
-        optionHtml = optionData.html
-      }
-      optionData.optionText = t(optionData.optionText)
-      li.innerHTML = replace(optionHtml, optionData)
-      li.addEventListener('click', () => {
-        this.dispatcher(optionData.message, this.requestData())
-      })
-      ul.appendChild(li)
+      if (optionData.inline) return
+      const el = this.optionEl(document.createElement('li'), optionData)
+      addClass(el, 'py-1')
+      ul.appendChild(el)
     })
     return ul
+  }
+
+  renderInlineOptions () {
+    if (!this.options || this.options.length === 0) return
+
+    this.options.forEach((optionData) => {
+      if (!optionData.inline) return
+      const row = this.root.querySelector('#' + optionData.inline)
+      if (!row) return
+      const icon = { icon: 'ellipsis-h' }
+      const iconDiv = this.optionEl(document.createElement('div'), { ...optionData, ...icon })
+      const div = document.createElement('div')
+      div.className = 'option-inline-wrapper'
+      div.appendChild(iconDiv)
+      const arrowDiv = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      arrowDiv.setAttributeNS(null, 'viewBox', '0 0 10 20')
+      arrowDiv.setAttributeNS(null, 'class', 'option-arrow')
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+      path.setAttributeNS(null, 'd', 'M10 0 0 10 10 20')
+      if (this.currentOption === optionData.message) div.appendChild(arrowDiv)
+      row.appendChild(div)
+      arrowDiv.appendChild(path)
+    })
   }
 
   destroy () {

@@ -13,6 +13,5 @@ services:
       - 8000:8000
     environment:
       REST_ENDPOINT: "${REST_ENDPOINT}"
-      TITANIUM_REPORT_GENERATION_URL: "${TITANIUM_REPORT_GENERATION_URL}"
     command: ["nginx", "-g", "daemon off;"]
     restart: always

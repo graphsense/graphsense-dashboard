@@ -18,8 +18,13 @@ const normalizeTag = keyspace => tag => {
 }
 
 const normalizeNodeTags = keyspace => node => {
-  if (!node.tags || !Array.isArray(node.tags)) return node
-  node.tags.forEach(normalizeTag(keyspace))
+  if (!node.tags) return node
+  if (node.address) {
+    node.tags.forEach(normalizeTag(keyspace))
+  } else if (node.entity) {
+    node.tags.address_tags.forEach(normalizeTag(keyspace))
+    node.tags.entity_tags.forEach(normalizeTag(keyspace))
+  }
   return node
 }
 
@@ -127,14 +132,14 @@ export default class Rest {
   node (keyspace, { type, id }) {
     type = typeToEndpoint(type)
 
-    return this.json(keyspace, `/${type}/${id}`)
+    return this.json(keyspace, `/${type}/${id}?include_tags=true&tag_coherence=true`)
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
 
   entityForAddress (keyspace, id) {
     logger.debug('rest entityForAddress', id)
-    return this.json(keyspace, '/addresses/' + id + '/entity')
+    return this.json(keyspace, '/addresses/' + id + '/entity?include_tags=true&tag_coherence=true')
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
@@ -154,7 +159,7 @@ export default class Rest {
     const url =
        '/addresses/' + params.source + '/links?neighbor=' + params.target
     if (csv) return this.csv(keyspace, url)
-    return this.json(keyspace, url, 'links')
+    return this.json(keyspace, url)
   }
 
   addresses (keyspace, request, csv) {
@@ -167,12 +172,35 @@ export default class Rest {
       .then(result => { result.addresses.forEach(normalizeNode); return result })
   }
 
-  tags (keyspace, { id, type }, csv) {
-    type = typeToEndpoint(type)
+  tags (keyspace, params, csv) {
+    const id = params.id
+    const type = params.type
     logger.debug('fetch tags', keyspace)
-    const url = '/' + type + '/' + id + '/tags'
+    let url = '/' + typeToEndpoint(type) + '/' + id + '/tags'
+    const level = params.level
+    if (level) {
+      url += `?level=${level}`
+    }
+    logger.debug('level ', level)
     if (csv) return this.csv(keyspace, url)
-    return this.json(keyspace, url).then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
+    return this.json(keyspace, url)
+      .then(tags => {
+        if (type === 'entity') {
+          tags.address_tags.map(tag =>
+            normalizeTag(tag.currency.toLowerCase())(tag)
+          )
+          tags.entity_tags.map(tag =>
+            normalizeTag(tag.currency.toLowerCase())(tag)
+          )
+          logger.debug('level in clal', level)
+          if (level) return tags[level + '_tags']
+          return tags
+        } else {
+          return tags.map(tag =>
+            normalizeTag(tag.currency.toLowerCase())(tag)
+          )
+        }
+      })
   }
 
   entityAddresses (keyspace, id, limit) {
@@ -190,7 +218,15 @@ export default class Rest {
 
   label (id) {
     return this.json(null, `/tags?label=${id}`)
-      .then(tags => tags.map(tag => normalizeTag(tag.currency.toLowerCase())(tag)))
+      .then(tags => {
+        const norm = tag => normalizeTag(tag.currency.toLowerCase())(tag)
+        if (Array.isArray(tags)) {
+          return tags.map(norm)
+        }
+        tags.address_tags.map(norm)
+        tags.entity_tags.map(norm)
+        return tags
+      })
   }
 
   neighbors (keyspace, id, type, isOutgoing, targets, pagesize, nextPage, csv) {
@@ -229,6 +265,9 @@ export default class Rest {
       searchCrit = [params.currency, params.min ? params.min : 0]
       if (params.max) searchCrit.push(params.max)
       searchCrit = searchCrit.join(',')
+    } else if (params.ids) {
+      searchKey = 'entities'
+      searchCrit = params.ids.join(',')
     }
     const url =
       `/entities/${id}/search?direction=${dir}&key=${searchKey}&value=${searchCrit}&depth=${depth}&breadth=${breadth}&skip_num_addresses=${skipNumAddresses}`
@@ -236,11 +275,8 @@ export default class Rest {
       if (!node.paths) { return node }
       (node.paths || []).forEach(path => {
         path.node.keyspace = keyspace
-        path.node.nodeType = 'entity';
-        (path.node.tags || []).forEach(tag => {
-          tag.keyspace = keyspace
-          tag.currency = keyspace.toUpperCase()
-        })
+        path.node.nodeType = 'entity'
+        path.node = normalizeNodeTags(keyspace)(path.node)
         path.matching_addresses.forEach(address => {
           address.keyspace = keyspace
           address.nodeType = 'address'
@@ -260,13 +296,18 @@ export default class Rest {
 
     logger.debug('opt', opt)
     // using d3 json directly to pass options
-    return json(this.baseUrl + '/btc/blocks/1', opt)
+    return json(this.baseUrl + '/tags/taxonomies', opt)
       .then(result => ({ status: 'success' }))
       .catch(error => {
         // normalize message
         if (!error.message && error.msg) error.message = error.msg
         return Promise.reject(error)
       })
+  }
+
+  logout () {
+    // need to run logout against any existing endpoint
+    return window.fetch(this.baseUrl + '/search?logout', options())
   }
 
   getLogs () {

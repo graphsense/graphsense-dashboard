@@ -1,6 +1,5 @@
 import { t, tt } from './lang.js'
 import menuLayout from './config/menu.html'
-import notes from './config/notes.html'
 import tagpack from './config/tagpack.html'
 import Component from './component.js'
 import Logger from './logger.js'
@@ -8,7 +7,7 @@ import searchDialog from './config/searchDialog.html'
 import categoryForm from './config/categoryForm.html'
 import addressesForm from './config/addressesForm.html'
 import minmaxForm from './config/minmaxForm.html'
-import { maxSearchBreadth, maxSearchDepth } from './globals.js'
+import { maxSearchBreadth, maxSearchDepth, minSkipNumAddresses } from './globals.js'
 import { replace, addClass, removeClass } from './template_utils.js'
 import Search from './search/search.js'
 
@@ -34,14 +33,15 @@ export default class Menu extends Component {
     if (params.dialog === 'note') {
       this.view = { viewType: 'note', data: params.data }
     } else if (params.dialog === 'tagpack') {
-      const labels = params.data.tags
+      const tags = params.data.type === 'entity' ? params.data.tags.entity_tags : params.data.tags
+      const labels = tags
         .filter(tag => tag.isUserDefined)
         .reduce((labels, tag) => {
           labels[tag.label] = { ...tag }
           return labels
         }, {})
       this.view = { viewType: 'tagpack', data: params.data, labels }
-      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['labels', 'userdefinedlabels'], this.view.viewType, 'plus')
     } else if (params.dialog === 'neighborsearch') {
       this.view = {
         viewType: 'neighborsearch',
@@ -78,28 +78,22 @@ export default class Menu extends Component {
     return this.view.viewType
   }
 
-  setConcepts (concepts) {
-    const categories = concepts
-      .filter(({ taxonomy }) => taxonomy === 'entity')
-      .map(({ label }) => label)
-    const abuses = concepts
-      .filter(({ taxonomy }) => taxonomy === 'abuse')
-      .map(({ label }) => label)
-    this.addCategories(categories)
-    this.addAbuses(abuses)
+  setConcepts (concepts, context) {
+    if (context === 'entity') {
+      this.setCategories(concepts)
+    } else if (context === 'abuse') {
+      this.setAbuses(concepts)
+    }
+  }
+
+  setCategories (categories) {
+    this.categories = [...categories]
     this.setUpdate(true)
   }
 
-  addCategories (cats) {
-    cats.forEach(cat => {
-      if (this.categories.indexOf(cat) === -1) this.categories.push(cat)
-    })
-  }
-
-  addAbuses (abs) {
-    abs.forEach(ab => {
-      if (this.abuses.indexOf(ab) === -1) this.abuses.push(ab)
-    })
+  setAbuses (abuses) {
+    this.abuses = [...abuses]
+    this.setUpdate(true)
   }
 
   hideMenu () {
@@ -139,11 +133,7 @@ export default class Menu extends Component {
       })
       const el = this.root.querySelector('#config')
       let title
-      if (this.view.viewType === 'note') {
-        title = t('Notes')
-        el.innerHTML = tt(notes)
-        this.setupNotes(el)
-      } else if (this.view.viewType === 'tagpack') {
+      if (this.view.viewType === 'tagpack') {
         title = t('Add tag')
         el.innerHTML = tt(tagpack)
         this.setupTagpack(el)
@@ -154,9 +144,9 @@ export default class Menu extends Component {
           {
             searchDepth: this.view.depth,
             searchBreadth: this.view.breadth,
-            maxSearchBreadth: maxSearchBreadth,
-            maxSearchDepth: maxSearchDepth,
-            skipNumAddresses: this.view.skipNumAddresses
+            maxSearchBreadth,
+            maxSearchDepth,
+            minSkipNumAddresses
           }
         )
         this.setupSearch(el)
@@ -192,16 +182,6 @@ export default class Menu extends Component {
     })
   }
 
-  setupNotes (el) {
-    const data = this.view.data
-    const input = el.querySelector('textarea')
-    input.focus()
-    input.value = data.notes || ''
-    input.addEventListener('input', (e) => {
-      this.dispatcher('inputNotes', { id: data.id, type: data.type, keyspace: data.keyspace, note: e.target.value })
-    })
-  }
-
   setupTagpack (el) {
     const searchinput = el.querySelector('#input')
     this.search.setUpdate(true)
@@ -226,12 +206,12 @@ export default class Menu extends Component {
     let sel = el.querySelector('#category > select')
     this.categories.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].category) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].category) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.categories.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -242,12 +222,12 @@ export default class Menu extends Component {
     sel = el.querySelector('#abuse > select')
     this.abuses.forEach(category => {
       const option = document.createElement('option')
-      option.innerHTML = category
-      option.setAttribute('value', category)
-      if (category === this.view.labels[label].abuse) {
+      option.innerHTML = category.label
+      option.setAttribute('value', category.id)
+      if (category.id === this.view.labels[label].abuse) {
         option.setAttribute('selected', 'selected')
       }
-      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category)) {
+      if (this.view.labels[label].available && this.view.labels[label].available.abuses.has(category.label)) {
         addClass(option, 'font-bold')
       }
       sel.appendChild(option)
@@ -296,9 +276,9 @@ export default class Menu extends Component {
       const input = form.querySelector('select')
       this.categories.forEach(category => {
         const option = document.createElement('option')
-        option.innerHTML = category
-        option.setAttribute('value', category)
-        if (category === this.view.params.category) {
+        option.innerHTML = category.label
+        option.setAttribute('value', category.id)
+        if (category.id === this.view.params.category) {
           option.setAttribute('selected', 'selected')
         }
         input.appendChild(option)
@@ -359,7 +339,7 @@ export default class Menu extends Component {
             id: this.view.data.id,
             type: this.view.data.type,
             keyspace: this.view.data.keyspace,
-            labels: this.view.labels
+            labels: { ...this.view.labels }
           })
         })
         removeClass(button, 'disabled')
@@ -388,7 +368,7 @@ export default class Menu extends Component {
       this.view.params.field = this.view.criterion
     }
     if (criterion === 'addresses') {
-      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType)
+      this.search = new Search(this.dispatcher, ['addresses'], this.view.viewType, 'plus')
     }
     this.setUpdate(true)
   }
@@ -414,7 +394,6 @@ export default class Menu extends Component {
   setSearchBreadth (d) {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.breadth = Math.min(d, maxSearchBreadth)
-    this.view.skipNumAddresses = Math.max(this.view.breadth, this.view.skipNumAddresses)
     if (d > maxSearchBreadth) {
       this.setUpdate(true)
     }
@@ -423,10 +402,8 @@ export default class Menu extends Component {
 
   setSkipNumAddresses (d) {
     if (this.view.viewType !== 'neighborsearch') return
-    this.view.skipNumAddresses = Math.max(d, this.view.breadth || maxSearchBreadth)
-    if (d < this.view.skipNumAddresses) {
-      this.setUpdate(true)
-    }
+    this.view.skipNumAddresses = Math.max(d, minSkipNumAddresses)
+    this.setUpdate(true)
   }
 
   addSearchAddress (address) {
@@ -463,6 +440,9 @@ export default class Menu extends Component {
   labelTagsData (result) {
     if (this.view.viewType !== 'tagpack') return
     this.labelTagsLoading = false
+    if (result.entity_tags && result.address_tags) {
+      result = result.entity_tags.concat(result.address_tags)
+    }
     result.forEach(({ label, category, abuse, source }) => {
       const l = this.view.labels[label]
       if (!l) return

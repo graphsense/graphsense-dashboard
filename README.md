@@ -44,11 +44,6 @@ service, e.g.:
 
     REST_ENDPOINT="https://example.com:9000"
 
-Additional environment variables:
-
-* `TITANIUM_REPORT_GENERATION_URL`: The webservice URL for generating
-  Titanium JSON/PDF Reports (optional).
-
 ### Usage
 
 Build the Docker image:

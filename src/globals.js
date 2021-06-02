@@ -6,6 +6,7 @@ export const expandHandleWidth = 15
 export const maxAddableNodes = 100
 export const maxSearchDepth = 7
 export const maxSearchBreadth = 100
+export const minSkipNumAddresses = 1
 
 export const searchlimit = 100
 export const prefixLength = 3
@@ -21,3 +22,5 @@ export const currencies =
   }
 
 export const maxTransactionListSize = 100
+
+export const noCategory = '__none__'

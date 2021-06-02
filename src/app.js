@@ -31,12 +31,12 @@ const baseUrl = REST_ENDPOINT // eslint-disable-line no-undef
 const defaultLabelType =
       {
         entityLabel: 'category',
-        addressLabel: 'id'
+        addressLabel: 'tag'
       }
 
 const defaultCurrency = 'value'
 
-const defaultTxLabel = 'no_txs'
+const defaultTxLabel = 'estimated_value'
 
 const allowedUrlTypes = ['address', 'entity', 'transaction', 'block', 'label', 'addresslink', 'entitylink']
 
@@ -81,6 +81,7 @@ export default class Model extends Callable {
 
     this.statusbar = statusbar || new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
+    this.debouncing = {}
     this.createComponents()
     this.registerDispatchEvents(startactions)
     this.registerDispatchEvents(appactions)
@@ -209,25 +210,25 @@ export default class Model extends Callable {
     ])
   }
 
-  serializeNotes () {
-    return this.compress([
-      VERSION, // eslint-disable-line no-undef
-      this.store.serializeNotes()
-    ])
-  }
+  generateTagpack (nodeType) {
+    let tags = this.store.getUserDefinedTags2()
+    if (nodeType) {
+      tags = tags.filter(t => t[nodeType])
+    }
 
-  generateTagpack () {
-    const tags = this.store.getUserDefinedTags()
     tags.forEach(tag => { tag.lastmod = moment.unix(tag.lastmod).format('YYYY-MM-DD HH:mm:ss') })
 
-    const sets = { ...tags[0] } || {}
-
-    for (const key in sets) {
-      sets[key] = new Set()
-    }
+    const sets = {}
 
     tags.forEach(tag => {
       for (const key in tag) {
+        if (key === 'isUserDefined' || key === 'active' || key === 'keyspace') {
+          delete tag[key]
+          continue
+        }
+        if (sets[key] === undefined) {
+          sets[key] = new Set()
+        }
         sets[key].add(tag[key])
       }
     })
@@ -238,7 +239,7 @@ export default class Model extends Callable {
     }
 
     for (const key in sets) {
-      if (sets[key].size === 1) {
+      if (key !== 'entity' && key !== 'address' && sets[key].size === 1) {
         yaml[key] = sets[key].values().next().value
         tags.forEach(tag => { delete tag[key] })
       }
@@ -249,14 +250,10 @@ export default class Model extends Callable {
     return YAML.stringify(yaml)
   }
 
-  generateTagsJSON () {
-    return JSON.stringify(this.store.allAddressTags().map(this.tagToJSON), null, 2)
-  }
-
   generateReport () {
     return import('jszip').then(jszip => {
       let zip = new jszip.default() // eslint-disable-line new-cap
-      const json = this.generateReportJSON()
+      const json = JSON.stringify(this.generateReportJSON())
       zip.file('report.json', json)
       return zip.generateAsync({ type: 'blob' })
         .then(zipfile => {
@@ -286,6 +283,42 @@ export default class Model extends Callable {
     })
   }
 
+  generateReportPDF () {
+    return import('./pdf.js').then((PDFGenerator) => {
+      const json = this.generateReportJSON()
+      PDFGenerator = PDFGenerator.default
+      const doc = new PDFGenerator()
+      doc.titlepage(json.visible_name, json.user, json.institution, json.timestamp)
+      doc.heading('Summary')
+      doc.paragraph(json.summary)
+      doc.heading('Data sources')
+      doc.paragraph('The following data sources were used in the investigation:\n')
+      json.data_sources.forEach(ds => {
+        if (!ds) ds = { version: null }
+        if (!ds.version) ds.version = { nr: null, timestamp: null }
+        if (!ds.visible_name) return
+        doc.bulletpoint(ds.visible_name, `nr: ${ds.version.nr || ''}; time: ${ds.version.timestamp || ''}`)
+      })
+      doc.heading('Tools used')
+      doc.paragraph('This section lists tools that were used in the context of this investigation:\n')
+      json.tools.forEach(tool => {
+        doc.bulletpoint(tool.visible_name, `version: ${tool.version || ''}`)
+      })
+      doc.heading('Processing steps taken in the investigation')
+      json.recordings[0].processing_steps.forEach(step => {
+        doc.paragraph(step.timestamp, { style: 'bold' })
+        doc.paragraph(step.visible_data, { margin: 10 })
+      })
+      doc.heading('Notes')
+      json.notes.forEach((note) => {
+        if (!note) return
+        if (!note.note) return
+        doc.paragraph(note.note)
+      })
+      return doc.blob()
+    })
+  }
+
   generateReportJSON () {
     const keyspaces = new Set()
     this.store.entities.each(entity => {
@@ -303,9 +336,11 @@ export default class Model extends Callable {
       output: []
     }
     const concat = (keyspace, key) => {
-      report[key] = report[key].concat(this.stats.currencies[keyspace][key])
+      const currency = this.stats.currencies.filter(curr => curr.name === keyspace)
+      if (!currency || !currency[0]) return
+      report[key] = report[key].concat(currency[0][key])
     }
-    report.data_sources = [...this.stats.data_sources]
+    report.data_sources = []
     report.tools = [...this.stats.tools]
     report.notes = [...this.stats.notes]
 
@@ -316,15 +351,9 @@ export default class Model extends Callable {
 
     keyspaces.forEach(keyspace => {
       concat(keyspace, 'data_sources')
-      concat(keyspace, 'tools')
       concat(keyspace, 'notes')
+      concat(keyspace, 'tools')
     })
-    /*
-      report.data_sources.forEach(ds => {
-        ds.version = {nr: null, hash: null, timestamp: null, file: 'bla'}
-        ds.report_uuid = 'bla'
-      })
-      */
 
     report.recordings = [
       {
@@ -335,21 +364,7 @@ export default class Model extends Callable {
         processing_steps: this.reportLogger.getLogs()
       }
     ]
-    return JSON.stringify(report, null, 2)
-  }
-
-  loadTagsJSON (data) {
-    try {
-      data = JSON.parse(data)
-      if (!data) throw new Error('result is empty')
-      if (!Array.isArray(data)) data = [data]
-      this.store.addTagpack(this.keyspaces, { tags: data.map(this.tagJSONToTagpackTag) })
-      this.graph.setUpdate('layers')
-    } catch (e) {
-      const msg = 'Could not parse JSON file'
-      this.statusbar.addMsg('error', msg + ': ' + e.message)
-      console.error(msg)
-    }
+    return report
   }
 
   loadTagpack (yaml) {
@@ -363,62 +378,20 @@ export default class Model extends Callable {
       console.error(msg)
       return
     }
-    this.store.addNotes(data.tags)
     this.store.addTagpack(this.keyspaces, data)
     this.graph.setUpdate('layers')
-  }
-
-  tagToJSON (tag) {
-    return {
-      uuid: SHA256([tag.address, tag.currency, tag.label, tag.source, tag.tagpack_uri].join(',')).toString('hex'),
-      version: 1,
-      key_type: 'a',
-      key: tag.address,
-      tag: tag.label,
-      contributor: 'GraphSense',
-      tag_optional: {
-        actor_type: null,
-        currency: tag.currency,
-        tag_source_uri: tag.source,
-        tag_source_label: null,
-        post_date: null,
-        post_author: null
-      },
-      contributor_optional: {
-        contact_details: 'contact@graphsense.info',
-        insertion_date: moment.unix(tag.lastmod).format(),
-        software: 'GraphSense ' + VERSION, // eslint-disable-line no-undef
-        collection_type: 'm'
-      }
-    }
-  }
-
-  tagJSONToTagpackTag (tagJSON) {
-    return {
-      address: tagJSON.key,
-      label: tagJSON.tag,
-      currency: tagJSON.tag_optional && tagJSON.tag_optional.currency,
-      source: tagJSON.tag_optional && tagJSON.tag_optional.tag_source_uri,
-      lastmod: tagJSON.contributor_optional && tagJSON.contributor_optional.insertion_date,
-      category: null,
-      tagpack_uri: null
-    }
   }
 
   deserialize (buffer) {
     const data = this.decompress(buffer)
     this.createComponents()
+    data[0] = data[0].split(' ')[0]
+    logger.debug('Importing from version', data[0], data[1])
     this.store.deserialize(data[0], data[1])
     this.graph.deserialize(data[0], data[2], this.store)
     this.config.deserialize(data[0], data[3])
     this.layout.deserialize(data[0], data[4])
     this.layout.setUpdate(true)
-  }
-
-  deserializeNotes (buffer) {
-    const data = this.decompress(buffer)
-    this.store.deserializeNotes(data[0], data[1])
-    this.graph.setUpdate('layers')
   }
 
   download (filename, buffer) {
@@ -431,6 +404,7 @@ export default class Model extends Callable {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
     logger.debug('model', this)
+    logger.debug('exchange cat', this.menu.categories[15])
     if (this.showLandingpage) {
       return this.landingpage.render(this.root)
     }
@@ -440,6 +414,9 @@ export default class Model extends Callable {
   updateCategoriesByTags (tags) {
     let cats = new Set()
     let abs = new Set()
+    if (tags.address_tags && tags.entity_tags) {
+      tags = tags.address_tags.concat(tags.entity_tags)
+    }
     tags.forEach(({ category, abuse }) => {
       if (category) cats.add(category)
       if (abuse) abs.add(abuse)
@@ -448,8 +425,6 @@ export default class Model extends Callable {
     abs = [...abs]
     this.store.addCategories(cats)
     this.graph.addCategories(cats)
-    this.menu.addCategories(cats)
-    this.menu.addAbuses(abs)
     this.config.setCategoryColors(this.graph.getCategoryColors(), this.store.getCategories())
   }
 }

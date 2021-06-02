@@ -9,6 +9,8 @@ label: метка
 labels: метки
 tag: тэг
 tags: тэги
+address tags: address tags
+entity tags: tags
 block: блок
 blocks: блока(ов)
 supported currencies: поддерживаемые криптовалюты
@@ -79,7 +81,7 @@ full data: полные данные
 notes only: только заметки
 titanium tag sharing schema: Схема обмена тегами TITANIUM
 rest calls: вызовы REST
-titanium report: отчет TITANIUM
+audit log: audit log
 address label: адресная метка
 transaction label: метка транзакции
 language: язык
@@ -94,7 +96,7 @@ for contained addresses: для содержащихся адресов
 for final balance: для итог. баланса
 for total received: для всего получено
 breadth: широта
-skip entities with more neighbors than: пропустить объекты с большим количеством соседей, чем
+max. addresses: max. адреса
 search: поиск # as an imperative
 save: сохранить
 title: название
@@ -179,3 +181,5 @@ estimated value: ориентировочная стоимость
 reorder to prioritize: reorder to prioritize
 tag coherence: tag coherence
 unknown: unknown
+from: from
+to: to

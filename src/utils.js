@@ -8,23 +8,43 @@ export function nbsp (string) {
   return string.replace(' ', '&nbsp;')
 }
 
-export function satoshiToCoin (value) {
-  return value * 10000 * 10000
-}
-
 export function coinToSatoshi (value) {
-  return value / 10000 / 10000
+  return value * 1e+8
 }
 
-function formatBTC (valueValue, currencyCode, { dontAppendCurrency, keyspace }) {
-  const value = coinToSatoshi(valueValue)
+export function satoshiToCoin (value) {
+  return value / 1e+8
+}
+
+export function coinToWei (value) {
+  return value * 1e+18
+}
+
+export function weiToCoin (value) {
+  return value / 1e+18
+}
+
+function smallCurrency (keyspace) {
+  if (keyspace === 'ETH') return 'wei'
+  return 's'
+}
+
+function currencyFormat (keyspace, value) {
+  const zeros = Math.max(Math.floor(Math.log10(value)) - 3, 0)
+  const max = Math.max((keyspace === 'ETH' ? 18 : 8) - zeros, 2)
+  return '1,000.[' + ('0'.repeat(max)) + ']'
+}
+
+function formatCoin (valueValue, currencyCode, { dontAppendCurrency, keyspace }) {
+  keyspace = keyspace.toUpperCase()
+  const value = keyspace === 'ETH' ? weiToCoin(valueValue) : satoshiToCoin(valueValue)
   if (value === 0) {
     return '0 ' + (keyspace || currencyCode).toUpperCase()
   }
   if (Math.abs(value) < 0.0001) {
-    return valueValue + (!dontAppendCurrency ? ' s' : '')
+    return valueValue + (!dontAppendCurrency ? ' ' + smallCurrency(keyspace) : '')
   }
-  return numeral(value).format('1,000.[0000]') + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
+  return numeral(value).format(currencyFormat(keyspace, valueValue)) + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
 }
 
 function formatFiat (value, currencyCode, { dontAppendCurrency }) {
@@ -32,9 +52,9 @@ function formatFiat (value, currencyCode, { dontAppendCurrency }) {
 }
 
 export function formatCurrency (value, currencyCode, options) {
-  const options_ = { dontAppendCurrency: false, keyspace: 'btc', ...options }
+  const options_ = { dontAppendCurrency: false, keyspace: '', ...options }
   if (currencyCode === 'value') {
-    return formatBTC(value, currencyCode, options_)
+    return formatCoin(value, currencyCode, options_)
   } else {
     return formatFiat(value, currencyCode, options_)
   }

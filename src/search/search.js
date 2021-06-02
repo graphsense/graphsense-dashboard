@@ -13,7 +13,7 @@ const numShowResults = 7
 const byPrefix = term => addr => addr.toLowerCase().startsWith(term.trim().toLowerCase())
 
 export default class Search extends Component {
-  constructor (dispatcher, types, context) {
+  constructor (dispatcher, types, context, submitIcon = 'search') {
     super()
     this.types = types
     this.dispatcher = dispatcher
@@ -24,6 +24,7 @@ export default class Search extends Component {
     this.result = []
     this.resultLabels = []
     this.resultLocalLabels = []
+    this.submitIcon = submitIcon
   }
 
   setStats (stats) {
@@ -91,7 +92,7 @@ export default class Search extends Component {
     if (this.shouldUpdate(true)) {
       super.render()
       const placeholder = this.typesToPlaceholder()
-      this.root.innerHTML = replace(tt(search), { placeholder })
+      this.root.innerHTML = replace(tt(search), { placeholder, submitIcon: this.submitIcon })
       this.root.querySelector('.search-frame').style.width = Math.max(35, placeholder.length) + 10 + 'ex'
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
@@ -321,6 +322,9 @@ export default class Search extends Component {
     if (!this.stats) return []
     const curr = this.stats.filter(s => s.name === keyspace)[0]
     if (!curr) return []
+    if (prefix.substr(0, 2).toLowerCase() === '0x') {
+      prefix = prefix.substr(2)
+    }
     prefix = prefix * 1
     if (typeof prefix !== 'number') return []
     if (prefix <= 0) return []

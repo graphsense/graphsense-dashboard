@@ -13,7 +13,6 @@ const messages = {
   __fromURL: (payload) => !payload.target ? `load ${payload.type} ${decodeURIComponent(payload.id)} ${keyspace(payload.keyspace)}from URL` : `load ${payload.id} and ${payload.target} ${keyspace(payload.keyspace)}from URL`,
   changeLocale: (payload) => `change locale to ${payload}`,
   addAllToGraph: (payload) => 'add all from current table to graph',
-  downloadTagsAsJSON: (payload) => 'download tags table as JSON',
   downloadTable: (payload) => 'download current table',
   toggleSearchTable: (payload) => 'toggle search feature in table',
   redo: (payload) => 'redo',
@@ -32,12 +31,8 @@ const messages = {
     switch (type) {
       case 'load':
         return `load GS file ${filename}`
-      case 'loadNotes':
-        return `load GS notes file ${filename}`
       case 'loadYAML':
         return `load tagpack YAML file ${filename}`
-      case 'loadTagsJSON':
-        return `load titanium tags file ${filename}`
     }
   },
   blank: (payload) => 'start from scratch (clear graph)',
@@ -46,7 +41,6 @@ const messages = {
   searchNeighborsDialog: (payload) => `open dialog to deep search ${outg(payload.isOutgoing)} neighbors on ${payload.type} ${payload.id}`,
   noteDialog: (payload) => `open note dialog on ${payload.nodeType} ${payload.nodeId}`,
   toggleConfig: (payload) => 'toggle config',
-  inputNotes: (payload) => `add notes to ${payload.type} ${payload.id} of keyspace ${payload.keyspace}`,
   removeNode: (payload) => `remove ${payload[0]} ${payload[1]} from graph`,
   changeTxLabel: (payload) => `change transaction label display to ${payload}`,
   changeCurrency: (payload) => `change currency display to ${payload}`,

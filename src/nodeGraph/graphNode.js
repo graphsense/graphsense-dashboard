@@ -5,7 +5,7 @@ import { event } from 'd3-selection'
 import Component from '../component.js'
 import Logger from '../logger.js'
 import numeral from 'numeral'
-import { entityWidth, expandHandleWidth } from '../globals.js'
+import { entityWidth, expandHandleWidth, noCategory } from '../globals.js'
 
 const logger = Logger.create('GraphNode') // eslint-disable-line no-unused-vars
 
@@ -85,13 +85,15 @@ class GraphNode extends Component {
       this.x,
       this.y,
       0, // formerly dx
-      0 // formerly dy
+      0, // formerly dy
+      this.color
     ]
   }
 
-  deserialize ([x, y, dx, dy]) {
+  deserialize ([x, y, dx, dy, color]) {
     this.x = x + dx
     this.y = y + dy
+    this.color = color
   }
 
   renderLabel (root) {
@@ -223,18 +225,22 @@ class GraphNode extends Component {
     return ''
   }
 
+  tags () {
+    if (!this.data || !this.data.tags) return []
+    if (this.data.type === 'entity') return this.data.tags.entity_tags
+    return this.data.tags
+  }
+
   getTag () {
-    if (this.data.notes) {
-      return this.data.notes
-    }
-    const tags = (this.data || {}).tags || []
+    const tags = this.tags()
     const grouped = {}
     tags.forEach(tag => {
       if (!tag.label) return
       grouped[tag.label] = (grouped[tag.label] || 0) + 1
     })
     const entries = Object.entries(grouped)
-    if (entries.length < 2) return entries[0] && entries[0][0]
+    if (entries.length < 2) return (entries[0] && entries[0][0])
+    if (entries.length < 3) return (entries[0] && entries[0][0]) + (entries[1] ? ' ' + entries[1][0] : '')
     return entries.length + ' ' + t('tags')
   }
 
@@ -242,25 +248,12 @@ class GraphNode extends Component {
     return this.data.mainCategory
   }
 
-  getNote () {
-    return this.data.notes
-  }
-
   getLabel () {
     if (this.type === 'entity') {
       let label = ''
-      const tag = this.getNote() || this.getTag()
+      const tag = this.getTag()
       const category = this.getActorCategory()
-      if (tag) {
-        label = tag
-      }
-      if (category) {
-        if (tag) {
-          label += ' (' + category + ')'
-        } else {
-          label = category
-        }
-      }
+      label = tag || category
       if (!label) {
         return this.getName()
       }
@@ -270,11 +263,11 @@ class GraphNode extends Component {
       case 'no_addresses':
         return this.data.no_addresses
       case 'id':
-        return this.getNote() || this.getName()
+        return this.getName()
       case 'balance':
-        return this.formatCurrency(this.data.balance[this.currency], this.data.keyspace)
+        return this.formatCurrency(this.data.balance[this.currency])
       case 'tag':
-        return this.getNote() || this.getTag() || this.getName()
+        return this.getTag() || this.getName()
       case 'category':
         return this.getActorCategory() || this.getName()
     }
@@ -282,15 +275,16 @@ class GraphNode extends Component {
 
   coloring () {
     let tag
-    if (!this.data.tags || this.data.tags.length === 0) {
+    const tags = this.tags()
+    if (tags.length === 0) {
       tag = ''
     } else {
-      tag = this.getActorCategory() || ''
-      if (!tag && this.data.tags.length > 1) {
+      tag = this.getActorCategory() || noCategory
+      if (!tag && tags.length > 1) {
         tag = ''
       }
     }
-    const color = this.colors.categories(tag)
+    const color = this.color || this.colors.categories(tag)
     logger.debug('category color', this.data, tag, color)
     this.root
       .select('.addressNodeRect,.entityNodeRect')
@@ -305,7 +299,7 @@ class GraphNode extends Component {
   }
 
   formatCurrency (value) {
-    return formatCurrency(value, this.currency)
+    return formatCurrency(value, this.currency, { keyspace: this.data.keyspace })
   }
 
   select () {
@@ -347,6 +341,11 @@ class GraphNode extends Component {
 
   getInDegree () {
     return this.data.in_degree
+  }
+
+  setColoring (color) {
+    this.color = color
+    this.setUpdate(true)
   }
 }
 

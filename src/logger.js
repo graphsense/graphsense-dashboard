@@ -1,6 +1,7 @@
 const DEBUG = 0
 const ERROR = 1
 let logLevel = DEBUG
+const filter = ['Model', 'Callable', 'Actions', 'Store']
 export default {
   create: (name) => {
     const formatArgs = function (args, bold) {
@@ -14,7 +15,7 @@ export default {
     }
     const debugFunction = function (bold) {
       return function (string, object) {
-        if (logLevel <= DEBUG) {
+        if (logLevel <= DEBUG && (!filter || filter.indexOf(name) !== -1)) {
           const args = formatArgs([...arguments], bold)
           console.log.apply(null, args)
         }

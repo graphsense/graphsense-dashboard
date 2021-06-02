@@ -1,11 +1,5 @@
-<div class="h-screen">
-  <div class="absolute pin-t pin-l w-full header-height shadow-md z-22 invisible">
-    <input type="file" class="file-loader" accept=".gs" data-type="load">
-    <input type="file" class="file-loader" accept=".gs" data-type="loadNotes">
-    <input type="file" class="file-loader" accept=".yaml" data-type="loadYAML">
-    <input type="file" class="file-loader" accept=".json" data-type="loadTagsJSON">
-  </div>
-  <header class="p-2 w-full border-b layout-border flex flex-row justify-between z-30 relative header-height bg-white">
+<div class="h-screen flex flex-col">
+  <header class="p-2 w-full border-b layout-border flex flex-row justify-between relative header-height bg-white z-50 shadow">
     <div class="text-left"> 
       <img id="layout-logo" class="h-full cursor-pointer" src="../style/img/logo.svg"/>
     </div>
@@ -18,15 +12,24 @@
       <button id="navbar-export" title="{{t:Export}} ..." class="nav-btn"><i class="fas fa-download text-lg"></i></button>
       <button id="navbar-undo" title="{{t:Undo last graph change}}" class="nav-btn"><i class="fas fa-undo text-lg"></i></button>
       <button id="navbar-redo" title="{{t:Redo undone graph change}}" class="nav-btn"><i class="fas fa-redo text-lg"></i></button>
+      <button id="navbar-highlight" title="{{t:Highlight nodes}}" class="nav-btn"><i class="fas fa-pencil-alt text-lg"></i></button>
       <button id="navbar-config" title="{{t:Configuration options}}" class="nav-btn"><i class="fas fa-cog text-lg"></i></button>
       <button id="navbar-legend" title="{{t:Legend}}" class="nav-btn"><i class="fas fa-info text-lg"></i></button>
+      <button id="navbar-logout" title="{{t:Logout}}" class="nav-btn"><i class="fas fa-door-open text-lg"></i></button>
     </div>
   </header>
-  <section id="layout-graph" class="w-full z-20"></section>
+  <section class="flex flex-row flex-grow w-full">
+    <section id="layout-browser" class="h-full border layout-border bg-white shadow-md rounded-b text-sm"></section>
+    <section id="layout-graph" class="flex-grow overflow-hidden relative"></section>
+  </section>
+  <section id="layout-status" class="border layout-border bg-white shadow-md rounded-t text-sm w-full z-50"></section>
 </div>
-<section id="layout-status" class="absolute pin-b z-25 border layout-border bg-white shadow-md rounded-t text-sm w-full"></section>
-<section id="layout-config" class="absolute pin-r z-25 border layout-border bg-white shadow-md rounded-b text-sm"></section>
-<section id="layout-browser" class="absolute pin-l z-25 border layout-border bg-white shadow-md rounded-b text-sm"></section>
+<div class="absolute pin-t pin-l w-full header-height shadow-md z-22 invisible">
+  <input type="file" class="file-loader" accept=".gs" data-type="load">
+  <input type="file" class="file-loader" accept=".gs" data-type="loadNotes">
+  <input type="file" class="file-loader" accept=".yaml" data-type="loadYAML">
+</div>
+<section id="layout-config" class="absolute pin-r z-20 border layout-border bg-white shadow-md rounded-b text-sm"></section>
 <section id="layout-menu"></section>
 <a target="_blank" id="downloadCSV"></a>
 <section id="modal" class="absolute pin-t z-50 w-full h-full flex items-center justify-center" style="display: none; background-color:rgba(0,0,0,0.8)">

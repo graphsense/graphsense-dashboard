@@ -3,6 +3,8 @@ import configLayout from './config/layout.html'
 import graphConfig from './config/graph.html'
 import exportConfig from './config/export.html'
 import importConfig from './config/import.html'
+import highlightConfig from './config/highlight.html'
+import highlightRow from './config/highlightRow.html'
 import legendItem from './config/legendItem.html'
 import filter from './config/filter.html'
 import { addClass, removeClass, replace } from './template_utils.js'
@@ -11,8 +13,18 @@ import Component from './component.js'
 import Logger from './logger.js'
 import $ from 'jquery'
 import '../lib/jquery-ui/widgets/sortable'
+import { schemeSet1 } from 'd3-scale-chromatic'
+import { scaleOrdinal } from 'd3-scale'
 
 const logger = Logger.create('Config') // eslint-disable-line no-unused-vars
+
+const colors = []
+
+const scale = scaleOrdinal(schemeSet1)
+
+for (let i = 0; i < 8; i++) {
+  colors.push(scale(i))
+}
 
 export default class Config extends Component {
   constructor (dispatcher, labelType, txLabelType, locale) {
@@ -23,6 +35,8 @@ export default class Config extends Component {
     this.visible = false
     this.categoryColors = []
     this.locale = locale
+    this.concepts = new Map()
+    this.highlights = []
   }
 
   toggleConfig () {
@@ -45,6 +59,13 @@ export default class Config extends Component {
     this.setUpdate(true)
   }
 
+  toggleHighlight () {
+    this.visible = this.visible === 'highlight' ? null : 'highlight'
+    this.currentHighlight = null
+    this.setUpdate(true)
+    return this.visible === 'highlight'
+  }
+
   setLocale (locale) {
     this.locale = locale
     this.setUpdate(true)
@@ -52,7 +73,14 @@ export default class Config extends Component {
 
   hide () {
     this.visible = null
+    this.currentHighlight = null
     this.setUpdate(true)
+  }
+
+  setConcepts (concepts) {
+    concepts.forEach(concept => {
+      this.concepts.set(concept.id, concept)
+    })
   }
 
   setCategoryColors (colors, ordering) {
@@ -91,7 +119,9 @@ export default class Config extends Component {
           addClass(itemEl, 'cursor-grab')
         }
         itemEl.querySelector('.legendColor').style.backgroundColor = value
-        itemEl.querySelector('.legendItem').innerHTML = key
+        const concept = this.concepts.get(key)
+        const output = concept ? `<a ${concept.uri ? `href="${concept.uri}" target="_blank"` : ''} title="${concept.description}">${concept.label}</a>` : key
+        itemEl.querySelector('.legendItem').innerHTML = output
         el.appendChild(itemEl)
       })
       if (canSort) {
@@ -101,6 +131,9 @@ export default class Config extends Component {
           axis: 'y',
           update: (e, ui) => this.dispatcher('sortCategories', j.sortable('toArray'))
         })
+      }
+      if (this.categoryColors.length === 0) {
+        el.innerHTML = `<span class="note">${t('legend empty')}</span>`
       }
     } else if (this.visible === 'export') {
       el.innerHTML = tt(exportConfig)
@@ -116,9 +149,94 @@ export default class Config extends Component {
         if (!msg) return
         button.addEventListener('click', () => { this.dispatcher(msg) })
       })
+    } else if (this.visible === 'highlight') {
+      el.innerHTML = tt(highlightConfig)
+      let colorsEl = el.querySelector('#colors')
+      logger.debug('colors', colors)
+      colors.forEach(color => {
+        if (this.highlights.filter(([c, _]) => color === c).length === 1) return
+        const colorEl = document.createElement('button')
+        colorEl.className = 'highlightColor'
+        colorEl.style.backgroundColor = color
+        colorEl.addEventListener('click', () => { this.dispatcher('addHighlight', color) })
+        colorsEl.appendChild(colorEl)
+      })
+      colorsEl = el.querySelector('#highlights')
+      this.highlights.forEach(([color, title]) => {
+        const colorEl = document.createElement('div')
+        colorEl.className = 'flex flex-row mb-2'
+        colorEl.innerHTML = tt(highlightRow)
+        const button = colorEl.querySelector('button')
+        button.style.backgroundColor = color
+        button.addEventListener('click', () => { this.dispatcher('pickHighlight', color) })
+        const input = colorEl.querySelector('input')
+        input.value = title
+        if (this.currentHighlight === color) {
+          addClass(input, 'border')
+          removeClass(input, 'border-none')
+          input.removeAttribute('disabled')
+          input.addEventListener('input', (e) => { this.dispatcher('inputHighlight', [color, e.target.value]) })
+          addClass(button, 'current')
+          button.setAttribute('title', t('Click again to change'))
+          const trash = colorEl.querySelector('#trash')
+          trash.addEventListener('click', () => { this.dispatcher('removeHighlight', color) })
+          trash.style.visibility = 'visible'
+          colorEl.appendChild(trash)
+          if (this.editingHighlight) {
+            const wrapper = colorEl.querySelector('.highlightWrapper')
+            const freeColors = document.createElement('div')
+            colors.forEach(col => {
+              if (this.highlights.filter(([c, _]) => col === c).length === 1 || col === color) return
+              const colEl = document.createElement('button')
+              colEl.className = 'highlightColor'
+              colEl.style.backgroundColor = col
+              colEl.addEventListener('click', () => { this.dispatcher('editHighlight', [color, col]) })
+              freeColors.appendChild(colEl)
+            })
+            freeColors.style.position = 'absolute'
+            freeColors.style.width = '300px'
+            freeColors.style.left = '100%'
+            freeColors.style.top = '-4px'
+            wrapper.appendChild(freeColors)
+          }
+        }
+        colorsEl.appendChild(colorEl)
+      })
     }
     super.render()
     return this.root
+  }
+
+  addHighlight (color) {
+    this.highlights.push([color, ''])
+    this.currentHighlight = color
+    this.setUpdate(true)
+  }
+
+  inputHighlight (color, title) {
+    this.highlights = this.highlights.map(([c, t]) => color === c ? [c, title] : [c, t])
+  }
+
+  pickHighlight (color) {
+    this.setUpdate(true)
+    if (color === this.currentHighlight) {
+      this.editingHighlight = !this.editingHighlight
+      return
+    }
+    this.editingHighlight = false
+    this.currentHighlight = color
+  }
+
+  removeHighlight (color) {
+    if (color === this.currentHighlight) this.currentHighlight = null
+    this.highlights = this.highlights.filter(([c, _]) => color !== c)
+    this.setUpdate(true)
+  }
+
+  editHighlight (color, newColor) {
+    this.highlights = this.highlights.map(([c, t]) => color === c ? [newColor, t] : [c, t])
+    this.editingHighlight = false
+    this.setUpdate(true)
   }
 
   addFilter (id, type, value) {
@@ -206,12 +324,14 @@ export default class Config extends Component {
   serialize () {
     return [
       this.labelType,
-      this.txLabelType
+      this.txLabelType,
+      this.highlights
     ]
   }
 
   deserialize (version, values) {
     this.labelType = values[0]
     this.txLabelType = values[1]
+    this.highlights = values[2] || [] // backwards compat
   }
 }

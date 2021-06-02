@@ -3,6 +3,7 @@ import numeral from 'numeral'
 import { currencies } from '../globals.js'
 import statistics from './statistics.html'
 import currency from './currency.html'
+import entities from './entities.html'
 import { t } from '../lang.js'
 import { nbsp } from '../utils.js'
 import { replace } from '../template_utils.js'
@@ -20,7 +21,6 @@ function statsHtml (body) {
           lastUpdate: (time.format('L') + ' ' + time.format('LT')).replace(/ /g, '&nbsp;'),
           latestBlock: s.no_blocks - 1,
           no_addresses: numeral(s.no_addresses).format(format),
-          no_entities: numeral(s.no_entities).format(format),
           no_txs: numeral(s.no_txs).format(format),
           no_labels: numeral(s.no_labels).format(format),
           currency: currencies[keyspace],
@@ -28,9 +28,17 @@ function statsHtml (body) {
           t_latestBlock: nbsp(t('Latest block')),
           t_transactions: nbsp(t('Transactions')),
           t_addresses: nbsp(t('Addresses')),
-          t_entities: nbsp(t('Entities')),
-          t_tags: nbsp(t('Tags'))
+          t_tags: nbsp(t('Tags')),
+          entitiesPart: ''
         }
+    if (keyspace !== 'eth') {
+      flat.entitiesPart =
+        replace(entities, {
+          t_entities: nbsp(t('Entities')),
+          no_entities: numeral(s.no_entities).format(format)
+        })
+    }
+
     try {
       flat.imageUrl = imageContext(`./${keyspace}.svg`)
     } catch (e) {

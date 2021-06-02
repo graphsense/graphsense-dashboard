@@ -117,11 +117,11 @@ export default class Layout extends Component {
       }
     }
     this.browser.render(browserRoot)
-    this.graph.render(graphRoot)
     this.config.render(configRoot)
     this.menu.render(menuRoot)
     this.search.render(searchRoot)
     this.statusbar.render(statusRoot)
+    this.graph.render(graphRoot)
     this.renderCurrency()
     super.render()
     return this.root
@@ -134,8 +134,10 @@ export default class Layout extends Component {
           ['export', 'toggleExport'],
           ['config', 'toggleConfig'],
           ['legend', 'toggleLegend'],
+          ['logout', 'logout'],
           ['undo', 'undo'],
-          ['redo', 'redo']
+          ['redo', 'redo'],
+          ['highlight', 'toggleHighlight']
         ]
     navbarButtons.forEach(([name, msg]) => {
       const el = select('#navbar-' + name)

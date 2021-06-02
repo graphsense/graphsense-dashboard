@@ -80,20 +80,28 @@ li {
   min-height: 49px;
 }
 
-#layout-graph {
-  height: calc(100vh - 49px);
-}
-
-#layout-browser, #layout-config {
+#layout-config {
   top: -300px;
   opacity: 0;
   transition: top 0.5s, opacity step-end 0.5s;
 }
 
-#layout-browser.show, #layout-config.show {
+#layout-config.show {
   top: 49px;
   opacity: 1;
   transition: top 0.5s, opacity step-start 0.5s;
+}
+
+#browser-data {
+  left: 100%; 
+  overflow: visible; 
+  transform: translate(-110%);
+  transition: transform 0.5s;
+  min-width: 440px;
+}
+
+#browser-data.show {
+  transform: translate(0%);
 }
 
 .btn {
@@ -143,15 +151,23 @@ li {
   outline: 0;
 }
 
+#browser-leftbar .nav-btn {
+  @apply pb-0 pt-3;
+}
+
 select, input {
   @apply rounded-sm shadow bg-grey-light px-1 pt-1;
 }
 
 .prop-table {
-  @apply table border-collapse 
+  @apply table border-collapse w-full;
 }
 .prop-row {
-  @apply table-row 
+  @apply table-row pr-1
+}
+
+.prop-row:hover {
+  @apply bg-grey-lighter
 }
 
 .prop-key {
@@ -164,15 +180,35 @@ select, input {
 
 .browser-component {
   /* height set via globals.js */
-  @apply layout-border p-2 border-r h-full overflow-hidden
+  @apply layout-border p-2 border-r;
+  min-width: 440px;
 }
 
 .browser-options {
-  @apply h-full px-1 py-1 bg-grey-lighter text-center
+  @apply px-1 py-1 bg-grey-lighter text-center
 }
 
-li.option-active i {
-  @apply text-gs-base
+.option-active svg {
+  @apply text-gs-dark
+}
+
+.option-inline-wrapper {
+  position: relative;
+  @apply pr-1;
+}
+
+.option-inline-wrapper svg.option-arrow {
+  position: absolute;
+  top: calc(50% - 8px);
+  right: calc(config('padding.2') * -1 - 1px);
+  width: 8px;
+  height: 16px;
+}
+
+svg.option-arrow path {
+  stroke-width: 1px;
+  stroke: #e1e1e1;
+  fill: white;
 }
 
 .browser-options-short {
@@ -278,18 +314,24 @@ svg .linkRect {
 }
 
 svg .linkText {
-  fill: black;
+  fill: lightgrey;
   stroke-width: 0;
   cursor: default;
   font-weight: bold;
 }
 
-svg .linkPath {
-  /* defined inline to allow for export in svg file */
+svg .linkText.hover {
+  fill: black;
 }
 
-svg .linkPathFrame {
-  /* defined inline to allow for export in svg file */
+svg .linkPath {
+  stroke: lightgrey;
+  marker-end: url(#arrow1-lightgrey);
+}
+
+svg .linkPath.hover {
+  stroke: black;
+  marker-end: url(#arrow1-black);
 }
 
 svg .link {
@@ -478,7 +520,7 @@ svg.slash path {
 ul#log-messages {
   height: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-y: hidden;
   transition: height ease 0.5s;
 }
 
@@ -486,10 +528,14 @@ ul#log-messages li {
   @apply pb-1
 }
 
+#layout-status {
+  transition: overflow-y step-start 0.5s;
+}
+
 #layout-status.visible ul#log-messages {
-  height : 15ex;
+  height : 10rem;
+  @apply p-1;
   overflow-y: scroll;
-  @apply p-1
 }
 
 #layout-status #show {
@@ -528,7 +574,26 @@ div.d3-context-menu-theme ul li.is-parent:after {
   border-top-color: theme('colors.gs.base')
 }
 
-
 .cursor-grab {
   cursor: grab;
+}
+
+.highlightColor {
+  @apply mr-1 shadow rounded-sm;
+  width: 20px;
+  height: 20px;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.highlightColor:hover, .highlightColor.current {
+  @apply shadow-md;
+  transform: scale(1.15)
+}
+
+.highlightWrapper {
+  position: relative;
+}
+
+.note {
+  @apply text-grey italic;
 }

@@ -9,3 +9,4 @@ connect_cassandra.sh
 tags
 ctags_exclude
 .env
+test/*.gs

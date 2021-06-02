@@ -143,12 +143,15 @@ export default class EntityNode extends GraphNode {
 
   serialize () {
     const s = super.serialize()
-    s.push(this.nodes.keys())
+    const color = s[s.length - 1]
+    // keep nodes at this index for backwards compat
+    s[s.length - 1] = this.nodes.keys()
+    s.push(color)
     return s
   }
 
-  deserialize (version, [x, y, dx, dy, nodes], addressNodes) {
-    super.deserialize([x, y, dx, dy])
+  deserialize (version, [x, y, dx, dy, nodes, color], addressNodes) {
+    super.deserialize([x, y, dx, dy, color])
     nodes.forEach(key => {
       if (version === '0.4.0') {
         key += ',' + this.data.keyspace
@@ -198,8 +201,8 @@ export default class EntityNode extends GraphNode {
             this.dispatcher('selectNode', ['entity', this.id])
           })
           .on('contextmenu', contextMenu(this.menu()))
-          .on('mouseover', () => this.dispatcher('tooltip', 'entity'))
-          .on('mouseout', () => this.dispatcher('hideTooltip'))
+          .on('mouseover', () => this.dispatcher('hoverNode', ['entity', this.id]))
+          .on('mouseout', () => this.dispatcher('leaveNode', ['entity', this.id]))
         g.node().addEventListener('mousedown', (e) => {
           if (e.button !== 0) return
           e.stopPropagation()
@@ -271,6 +274,8 @@ export default class EntityNode extends GraphNode {
       .attr('font-size', noAddressesLabelHeight)
       .attr('title', this.expandCollapseOrShowAddressTableTitle())
       .text(t(translation, num(this.data.no_addresses), num(size)))
+      .on('mouseover', () => this.dispatcher('hoverNode', ['entity', this.id]))
+      .on('mouseout', () => this.dispatcher('leaveNode', ['entity', this.id]))
       .on('click', () => {
         event.stopPropagation()
         this.dispatcher('selectNode', ['entity', this.id])

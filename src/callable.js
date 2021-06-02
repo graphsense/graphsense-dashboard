@@ -40,6 +40,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'loadAddresses',
   'resultAddresses',
   'initTagsTable',
+  'initEntityTagsTable',
   'loadTags',
   'resultTags',
   'resultTagsTable',
@@ -63,7 +64,6 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'resultNeighbors',
   'selectNeighbor',
   'excourseLoadDegree',
-  'inputNotes',
   'toggleConfig',
   'toggleExport',
   'toggleImport',
@@ -72,13 +72,13 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'noteDialog',
   'hideContextmenu',
   'save',
-  'saveNotes',
   'saveYAML',
+  'saveYAMLentity',
+  'saveYAMLaddress',
   'exportReport',
   'saveReport',
   'saveReportJSON',
   'load',
-  'loadNotes',
   'loadYAML',
   'loadFile',
   'deselect',
@@ -108,13 +108,16 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'exportRestLogs',
   'toggleLegend',
   'downloadTable',
-  'downloadTagsAsJSON',
   'changeSearchCategory',
   'changeSearchCriterion',
   'changeUserDefinedTag',
   'addAllToGraph',
-  'tooltip',
-  'hideTooltip',
+  'hoverNode',
+  'leaveNode',
+  'hoverLink',
+  'leaveLink',
+  'hoverShadow',
+  'leaveShadow',
   'receiveCSV',
   'changeLocale',
   'localeLoaded',
@@ -125,8 +128,6 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'receiveTaxonomies',
   'receiveConcepts',
   'receiveConceptsColors',
-  'saveTagsJSON',
-  'loadTagsJSON',
   'jumpToApp',
   'inputMetaData',
   'pressShift',
@@ -134,6 +135,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'clickLink',
   'hideModal',
   'exportYAML',
+  'exportYAMLentity',
+  'exportYAMLaddress',
   'changeMin',
   'changeMax',
   'sortCategories',
@@ -141,7 +144,19 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'screenDragStop',
   'screenDragMove',
   'screenZoom',
-  'zoomToHighlightedNodes'
+  'zoomToHighlightedNodes',
+  'logout',
+  'loggedout',
+  'toggleHighlight',
+  'addHighlight',
+  'pickHighlight',
+  'inputHighlight',
+  'removeHighlight',
+  'editHighlight',
+  'colorNode',
+  'clickSidebarMyEntityTags',
+  'clickSidebarMyAddressTags',
+  'resize'
 )
 
 // synchronous messages
@@ -156,7 +171,8 @@ const syncMessages = [
   'screenDragStart',
   'screenDragStop',
   'screenDragMove',
-  'screenZoom'
+  'screenZoom',
+  'resize'
 ]
 
 // messages that change the graph
@@ -243,5 +259,17 @@ export default class Callable {
 
   omitUpdate () {
     this._omitUpdate = true
+  }
+
+  debounce (id, callback, timeout) {
+    if (this.debouncing[id]) {
+      clearTimeout(this.debouncing[id])
+      this.debouncing[id] = null
+    }
+    this.debouncing[id] = setTimeout(() => {
+      callback()
+      this.debouncing[id] = null
+      this.render()
+    })
   }
 }
