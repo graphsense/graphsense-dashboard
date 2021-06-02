@@ -440,6 +440,9 @@ export default class Menu extends Component {
   labelTagsData (result) {
     if (this.view.viewType !== 'tagpack') return
     this.labelTagsLoading = false
+    if (result.entity_tags && result.address_tags) {
+      result = result.entity_tags.concat(result.address_tags)
+    }
     result.forEach(({ label, category, abuse, source }) => {
       const l = this.view.labels[label]
       if (!l) return
