@@ -229,12 +229,14 @@ export default class Rest {
       })
   }
 
-  neighbors (keyspace, id, type, isOutgoing, targets, pagesize, nextPage, csv) {
+  neighbors ({ keyspace, id, type, isOutgoing, targets, includeLabels, pagesize, nextPage, csv }) {
     const dir = isOutgoing ? 'out' : 'in'
     type = typeToEndpoint(type)
     let url = `/${type}/${id}/neighbors?direction=${dir}`
+    url +=
+      (includeLabels ? '&include_labels=' + includeLabels : '')
     if (csv) return this.csv(keyspace, url)
-    url += '&' +
+    url +=
       (targets ? '&targets=' + targets.join(',') : '') +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
