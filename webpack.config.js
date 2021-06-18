@@ -11,7 +11,7 @@ const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 
 const VERSION = '0.5.0'
-const DEV_REST_ENDPOINT = 'http://localhost:5000'
+const DEV_REST_ENDPOINT = 'http://spark-master:9001'
 
 const src = path.join(__dirname, 'src')
 
@@ -37,7 +37,8 @@ module.exports = env => {
     devtool: IS_DEV ? 'inline-source-map' : false,
     devServer: IS_DEV ? {
       contentBase: false,
-      hot: true
+      hot: true,
+      host: '0.0.0.0'
     } : {},
     plugins: [
       new CleanWebpackPlugin(['dist']),
@@ -106,32 +107,19 @@ module.exports = env => {
     module: {
       rules: [
         {
-          test: /\[^(static)].m?js$/,
+          test: /\.m?js$/,
           exclude: /(node_modules|bower_components)/,
-          use: [
-            {
-              loader: 'webpack-strip-block'
-            },
-            {
+          use: (!IS_DEV ? [{ loader: 'webpack-strip-block' }] : []).concat(
+            [{
               loader: 'babel-loader',
               options: {
                 presets: [
                   [
-                    '@babel/preset-env',
-                    {
-                      targets: {
-                        edge: '17',
-                        firefox: '60',
-                        chrome: '67',
-                        safari: '11.1'
-                      },
-                      useBuiltIns: 'usage'
-                    }
+                    '@babel/preset-env'
                   ]
                 ]
               }
-            }
-          ]
+            }])
         },
         {
           test: /\.css$/,
