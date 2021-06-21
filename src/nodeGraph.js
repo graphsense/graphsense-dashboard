@@ -769,7 +769,7 @@ export default class NodeGraph extends Component {
     }
     if (!node.entity) return false
     for (let i = 0; i < this.layers.length; i++) {
-      if (this.layers[i].has([node.entity.id, this.layers[i].id])) {
+      if (this.layers[i].has([node.entity.id, this.layers[i].id, node.entity.keyspace])) {
         logger.debug('select layer by entity', this.layers[i], this.layers[i].id)
         ids.add(this.layers[i].id)
       }
