@@ -293,11 +293,7 @@ export default class NodeGraph extends Component {
     entity.x += entity.dx
     entity.y += entity.dy
     entity.dx = entity.dy = 0
-    entity.nodes.each(node => {
-      node.x += node.dx
-      node.y += node.dy
-      node.dx = node.dy = 0
-    })
+    entity.repositionNodes()
   }
 
   dragNode (clientX, clientY) {
@@ -346,10 +342,7 @@ export default class NodeGraph extends Component {
 
     entity.setUpdate('position')
 
-    entity.nodes.each(node => {
-      node.dx = dx
-      node.dy = dy
-    })
+    entity.repositionNodes()
     this.setUpdate('link', entity.id)
   }
 
@@ -360,11 +353,7 @@ export default class NodeGraph extends Component {
     entity.x += entity.dx
     entity.y += entity.dy
     entity.dx = entity.dy = 0
-    entity.nodes.each(node => {
-      node.x += node.dx
-      node.y += node.dy
-      node.dx = node.dy = 0
-    })
+    entity.repositionNodes()
     this.dirty = true
   }
 
