@@ -319,6 +319,7 @@ export default class Search extends Component {
   }
 
   blocklist (limit, keyspace, prefix) {
+    if (prefix === '') return []
     if (!this.stats) return []
     const curr = this.stats.filter(s => s.name === keyspace)[0]
     if (!curr) return []
@@ -327,7 +328,7 @@ export default class Search extends Component {
     }
     prefix = prefix * 1
     if (typeof prefix !== 'number') return []
-    if (prefix <= 0) return []
+    if (prefix < 0) return []
     if (prefix < curr.no_blocks) {
       return [prefix]
     }
