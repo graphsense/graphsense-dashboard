@@ -31,8 +31,8 @@ const submitSearchResult = function ({ term, context }) {
     const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
     if (first) {
       clickSearchResult.call(this, { ...first, context })
+      return
     }
-    return
   }
   if (context === 'tagpack') {
     this.menu.addSearchLabel(term)
