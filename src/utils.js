@@ -30,7 +30,7 @@ function smallCurrency (keyspace) {
 }
 
 function currencyFormat (keyspace, value) {
-  const zeros = Math.max(Math.floor(Math.log10(value)) - 3, 0)
+  const zeros = Math.max(Math.floor(Math.log10(Math.abs(value))) - 3, 0)
   const max = Math.max((keyspace === 'ETH' ? 18 : 8) - zeros, 2)
   return '1,000.[' + ('0'.repeat(max)) + ']'
 }
