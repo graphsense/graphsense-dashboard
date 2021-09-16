@@ -13,6 +13,7 @@ import Component from './component.js'
 import { formatCurrency, nodesIdentical } from './utils'
 import Logger from './logger.js'
 import { layerMargin, expandHandleWidth, noCategory } from './globals.js'
+import contextMenu from 'd3-context-menu'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -558,6 +559,10 @@ export default class NodeGraph extends Component {
 
   isSelectedLink (source, target) {
     return JSON.stringify([source.id, target.id]) == JSON.stringify(this.selectedLink) // eslint-disable-line eqeqeq
+  }
+
+  removeLink (source, target) {
+
   }
 
   setResultEntityAddresses (id, addresses) {
@@ -1155,6 +1160,13 @@ export default class NodeGraph extends Component {
       p.style('stroke', source.color)
       p.style('marker-end', `url(#${this.makeArrowSummitMarkerId(source.color)})`)
     }
+
+    g1.on('contextmenu', contextMenu({
+      title: t('Remove'),
+      action: () => {
+        this.dispatcher('removeLink', [source.id, target.id])
+      }
+    }))
     const sourceX = source.getXForLinks() + source.getWidthForLinks()
     const sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     const targetX = target.getXForLinks() - this.arrowSummit

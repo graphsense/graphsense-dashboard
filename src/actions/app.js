@@ -385,6 +385,7 @@ const addNode = function ({ id, type, keyspace, anchor }) {
 }
 
 const addNodeCont = function ({ context, result }) {
+  logger.debug('addNodeCont ', context, result)
   const anchor = context.anchor
   const keyspace = context.keyspace
   if (context.stage === 1 && context.type && context.id) {
@@ -1119,6 +1120,10 @@ const clickLink = function ({ source, target }) {
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
   if (source.data.type !== 'address') return
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
+}
+
+const removeLink = function ([source, target]) {
+  this.graph.removeLink(source, target)
 }
 
 const receiveTaxonomies = function ({ result }) {
