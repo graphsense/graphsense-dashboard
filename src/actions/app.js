@@ -1114,7 +1114,7 @@ const clickLink = function ({ source, target }) {
     source: source.id[0],
     target: target.id[0],
     no_txs: t.no_txs,
-    estimated_value: t.estimated_value
+    value: t.value
   })
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
   if (source.data.type !== 'address') return

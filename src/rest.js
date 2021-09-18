@@ -133,6 +133,13 @@ export default class Rest {
     type = typeToEndpoint(type)
 
     return this.json(keyspace, `/${type}/${id}?include_tags=true&tag_coherence=true`)
+      // set o.entity = null to not break further entity resolution
+      .then(o => {
+        if (o.address) {
+          o.entity = null
+        }
+        return o
+      })
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
@@ -152,7 +159,7 @@ export default class Rest {
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'address_txs')
+    return this.json(keyspace, url, 'txs')
   }
 
   linkTransactions (keyspace, params, csv) {

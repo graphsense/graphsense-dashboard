@@ -29,7 +29,7 @@ export default class Link extends BrowserComponent {
     const flat = {
       ...this.data,
       note: this.data.no_txs > maxTransactionListSize ? `(${t('show at most in links table', maxTransactionListSize)})` : '',
-      estimated_value: this.formatCurrency(this.data.estimated_value[this.currency], this.data.keyspace)
+      value: this.formatCurrency(this.data.value, this.data.keyspace)
     }
     this.root.innerHTML = replace(tt(this.template), flat)
     this.renderInlineOptions()

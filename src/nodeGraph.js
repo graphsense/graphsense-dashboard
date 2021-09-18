@@ -465,7 +465,7 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
     this.entityNodes.each(node => node.setCurrency(currency))
-    if (this.txLabelType === 'estimated_value') {
+    if (this.txLabelType === 'value') {
       this.setUpdate('links')
     }
   }
@@ -1202,9 +1202,9 @@ export default class NodeGraph extends Component {
 
   findValueAndLabel (tx) {
     let value, label
-    if (this.txLabelType === 'estimated_value') {
+    if (this.txLabelType === 'value') {
       value = tx[this.txLabelType].value
-      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
+      label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
     } else if (this.txLabelType === 'no_txs') {
       value = label = tx[this.txLabelType]
     } else {

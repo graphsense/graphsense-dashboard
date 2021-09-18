@@ -184,10 +184,10 @@ export default class Table extends BrowserComponent {
     return url || ''
   }
 
-  formatValue (func) {
+  formatValue (func, unformatted = null) {
     return (value, type) => {
       if (type === 'display') return func(value)
-      return value
+      return unformatted || value
     }
   }
 

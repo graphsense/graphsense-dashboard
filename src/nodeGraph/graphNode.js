@@ -265,7 +265,7 @@ class GraphNode extends Component {
       case 'id':
         return this.getName()
       case 'balance':
-        return this.formatCurrency(this.data.balance[this.currency])
+        return this.formatCurrency(this.data.balance)
       case 'tag':
         return this.getTag() || this.getName()
       case 'category':

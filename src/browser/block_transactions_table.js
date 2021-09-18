@@ -13,25 +13,27 @@ export default class BlockTransactionsTable extends Table {
       },
       {
         name: t('No. inputs'),
-        data: 'no_inputs'
+        data: 'inputs',
+        render: value => value.length
       },
       {
         name: t('No. outputs'),
-        data: 'no_outputs'
+        data: 'outputs',
+        render: value => value.length
       },
       {
         name: t('Total input'),
         data: 'total_input',
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       },
       {
         name: t('Total output'),
         data: 'total_output',
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       }
     ]
     this.loadMessage = 'loadTransactions'

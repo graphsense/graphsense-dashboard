@@ -5,7 +5,7 @@ export default class AccountTransactionsTable extends TransactionsTable {
   constructor (dispatcher, index, total, nodeId, nodeType, currency, keyspace) {
     super(dispatcher, index, total, nodeId, nodeType, currency, keyspace)
     this.loadMessage = 'loadTransactions'
-    this.resultField = 'address_txs'
+    this.resultField = 'txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
     this.columns.forEach(col => {

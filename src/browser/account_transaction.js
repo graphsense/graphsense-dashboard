@@ -18,7 +18,7 @@ export default class AccountTransaction extends BrowserComponent {
     const flat = {
       tx_hash: this.data.tx_hash,
       timestamp: this.formatTimestampWithAgo(this.data.timestamp),
-      value: this.formatCurrency(this.data.values[this.currency], this.data.keyspace),
+      value: this.formatCurrency(this.data.values, this.data.keyspace),
       height: this.data.height
     }
     this.root.innerHTML = replace(tt(this.template), { ...this.data, ...flat })

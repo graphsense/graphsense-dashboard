@@ -138,7 +138,7 @@ export default class Browser extends Component {
     this.activeTab = 'transactions'
     this.visible = true
     this.destroyComponentsFrom(0)
-    const T = tx.currency_type === 'account' ? AccountTransaction : Transaction
+    const T = tx.tx_type === 'account' ? AccountTransaction : Transaction
     this.content = [
       new T(this.dispatcher, tx, 0, this.currency)
     ]

@@ -3,6 +3,9 @@ import { replace } from '../template_utils'
 import BrowserComponent from './component.js'
 import { t, tt } from '../lang.js'
 import numeral from 'numeral'
+import Logger from '../logger.js'
+
+const logger = Logger.create('Address') // eslint-disable-line no-unused-vars
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency, categories) {
@@ -47,8 +50,28 @@ export default class Address extends BrowserComponent {
     const tags = this.flattenTags()
     const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => this.categories[abuse] ? this.categories[abuse].label : '').filter(a => a).values())]
     const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => this.categories[category] ? this.categories[category].label : '').filter(a => a).values())]
-    const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
-    const balance = this.data.reduce((sum, v) => sum + v.balance[this.currency], 0)
+    const totalReceived = this.data.reduce((sum, v) => {
+      v.total_received.fiat_values.forEach((f, i) => {
+        if (!sum.fiat_values[i]) {
+          sum.fiat_values[i] = f
+        } else {
+          sum.fiat_values[i].value += f.value
+        }
+      })
+      sum.value += v.total_received.value
+      return sum
+    }, { fiat_values: [], value: 0 })
+    const balance = this.data.reduce((sum, v) => {
+      v.balance.fiat_values.forEach((f, i) => {
+        if (!sum.fiat_values[i]) {
+          sum.fiat_values[i] = f
+        } else {
+          sum.fiat_values[i].value += f.value
+        }
+      })
+      sum.value += v.balance.value
+      return sum
+    }, { fiat_values: [], value: 0 })
     const noOutgoingTxs = this.data.reduce((sum, v) => sum + v.no_outgoing_txs, 0)
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)

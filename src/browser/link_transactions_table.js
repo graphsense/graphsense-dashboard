@@ -18,14 +18,14 @@ export default class LinkTransactionsTable extends Table {
         data: 'input_value',
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       },
       {
         name: t('Output value'),
         data: 'output_value',
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       },
       {
         name: t('Height'),
@@ -43,7 +43,7 @@ export default class LinkTransactionsTable extends Table {
         data: 'values',
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       }
       this.columns.splice(1, 2, col)
     }
