@@ -562,7 +562,8 @@ export default class NodeGraph extends Component {
   }
 
   removeLink (source, target) {
-
+    const link = this.root.querySelector(`g[data-target="${target}"][data-source="${source}"`)
+    link.parentNode.removeChild(link)
   }
 
   setResultEntityAddresses (id, addresses) {
@@ -1161,12 +1162,12 @@ export default class NodeGraph extends Component {
       p.style('marker-end', `url(#${this.makeArrowSummitMarkerId(source.color)})`)
     }
 
-    g1.on('contextmenu', contextMenu({
+    g1.on('contextmenu', contextMenu([{
       title: t('Remove'),
       action: () => {
         this.dispatcher('removeLink', [source.id, target.id])
       }
-    }))
+    }]))
     const sourceX = source.getXForLinks() + source.getWidthForLinks()
     const sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     const targetX = target.getXForLinks() - this.arrowSummit
@@ -1191,14 +1192,14 @@ export default class NodeGraph extends Component {
       return te
     }
 
-    const t = f()
+    const s = f()
 
-    const box = t.node().getBBox()
+    const box = s.node().getBBox()
 
     const width = box.width // (label + '').length * fontSize
     const height = box.height // fontSize * 1.2
 
-    t.remove()
+    s.remove()
 
     g2.append('rect')
       .classed('linkRect', true)

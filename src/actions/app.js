@@ -1341,7 +1341,8 @@ const functions = {
   colorNode,
   clickSidebarMyEntityTags,
   clickSidebarMyAddressTags,
-  resize
+  resize,
+  removeLink
 }
 
 export default functions
