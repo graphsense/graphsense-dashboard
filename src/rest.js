@@ -71,8 +71,23 @@ export default class Rest {
       opts.signal = abortController.signal
     }
     if (this.apiKey) opts.headers.Authorization = this.apiKey
-    return json(newurl, opts)
-      .then(result => {
+    return window.fetch(newurl, opts)
+      .then(response => {
+        const result = response.json()
+        this.ratelimitLimit = response.headers.get('ratelimit-Limit')
+        this.ratelimitRemaining = response.headers.get('ratelimit-Remaining')
+        this.ratelimitReset = response.headers.get('ratelimit-Reset')
+        if (!response.ok) {
+          if (result.message && result.message.startsWith('401')) {
+            return this.refreshToken()
+              .then(() => this.remoteJson(keyspace, url, field))
+          }
+          result.requestURL = newurl
+          // normalize message
+          if (!result.message && result.msg) result.message = result.msg
+          return Promise.reject(result)
+        }
+
         this.logs.push([+new Date(), newurl])
         if (field) {
         // result is an array
@@ -85,15 +100,9 @@ export default class Rest {
           result.keyspace = keyspace
         }
         return Promise.resolve(result)
-      }, error => {
-        if (error.message && error.message.startsWith('401')) {
-          return this.refreshToken()
-            .then(() => this.remoteJson(keyspace, url, field))
-        }
-        error.requestURL = newurl
-        // normalize message
-        if (!error.message && error.msg) error.message = error.msg
-        return Promise.reject(error)
+      })
+      .catch(error => {
+        logger.error(error)
       })
   }
 

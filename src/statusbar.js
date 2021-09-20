@@ -10,7 +10,7 @@ const logger = Logger.create('Statusbar') // eslint-disable-line no-unused-vars
 const logsDisplayLength = 100
 
 export default class Statusbar extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, rest) {
     super()
     this.dispatcher = dispatcher
     this.messages = []
@@ -20,6 +20,7 @@ export default class Statusbar extends Component {
     this.logsDisplayLength = logsDisplayLength
     this.numErrors = 0
     this.showErrorsLogs = false
+    this.rest = rest
   }
 
   showTooltip (type) {
@@ -86,6 +87,7 @@ export default class Statusbar extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
+    this.renderRatelimit()
     if (!this.shouldUpdate()) return this.root
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = tt(status)
@@ -122,6 +124,16 @@ export default class Statusbar extends Component {
       this.renderVisibility()
     }
     super.render()
+  }
+
+  renderRatelimit () {
+    const top = this.root.querySelector('#topmsg')
+    if (!top) return
+    let msg = t('Rate limit') + `: ${this.rest.ratelimitRemaining}/${this.rest.ratelimitLimit}`
+    if (this.rest.ratelimitRemaining === 0) {
+      msg += ` reset in ${this.rest.ratelimitReset}s`
+    }
+    top.innerHTML = msg
   }
 
   renderTooltip () {

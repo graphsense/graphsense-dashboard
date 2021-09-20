@@ -79,8 +79,8 @@ export default class Model extends Callable {
     logger.debug('keyspaces', this.keyspaces)
     this.snapshotTimeout = null
 
-    this.statusbar = statusbar || new Statusbar(this.call)
     this.rest = rest || new Rest(baseUrl, prefixLength)
+    this.statusbar = statusbar || new Statusbar(this.call, this.rest)
     this.debouncing = {}
     this.createComponents()
     this.registerDispatchEvents(startactions)
