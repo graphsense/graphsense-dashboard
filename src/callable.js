@@ -157,7 +157,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'clickSidebarMyEntityTags',
   'clickSidebarMyAddressTags',
   'resize',
-  'removeLink'
+  'removeLink',
+  'countdownRatelimitReset'
 )
 
 // synchronous messages

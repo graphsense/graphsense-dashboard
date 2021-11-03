@@ -73,11 +73,13 @@ export default class Rest {
     if (this.apiKey) opts.headers.Authorization = this.apiKey
     return window.fetch(newurl, opts)
       .then(response => {
-        const result = response.json()
         this.ratelimitLimit = response.headers.get('ratelimit-Limit')
         this.ratelimitRemaining = response.headers.get('ratelimit-Remaining')
-        this.ratelimitReset = response.headers.get('ratelimit-Reset')
-        if (!response.ok) {
+        this.ratelimitReset = Math.floor(Date.now() / 1000) + response.headers.get('ratelimit-Reset') * 1
+        return Promise.all([response.ok, response.json()])
+      })
+      .then(([ok, result]) => {
+        if (!ok) {
           if (result.message && result.message.startsWith('401')) {
             return this.refreshToken()
               .then(() => this.remoteJson(keyspace, url, field))

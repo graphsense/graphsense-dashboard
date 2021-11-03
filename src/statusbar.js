@@ -51,8 +51,7 @@ export default class Statusbar extends Component {
   add (msg) {
     if (msg[0] === 'error') this.numErrors++
     this.messages.push(msg)
-    if (msg[0] === 'loading' && this.isRateLimitExceeded) {
-      this.isRateLimitExceeded = false
+    if (msg[0] === 'loading') {
       this.setUpdate('loading')
     }
     this.setUpdate('add')
@@ -65,7 +64,6 @@ export default class Statusbar extends Component {
 
   addLoading (id) {
     this.loading.add(id + '')
-    this.isRateLimitExceeded = false
     this.setUpdate('loading')
   }
 
@@ -87,8 +85,6 @@ export default class Statusbar extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    this.renderRatelimit()
-    if (!this.shouldUpdate()) return this.root
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = tt(status)
 
@@ -104,6 +100,7 @@ export default class Statusbar extends Component {
       this.renderLoading()
       this.renderLogs()
       this.renderVisibility()
+      this.renderRatelimit()
       super.render()
       return
     }
@@ -123,15 +120,20 @@ export default class Statusbar extends Component {
     if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
     }
+    this.renderRatelimit()
     super.render()
   }
 
   renderRatelimit () {
     const top = this.root.querySelector('#topmsg')
-    if (!top) return
-    let msg = t('Rate limit') + `: ${this.rest.ratelimitRemaining}/${this.rest.ratelimitLimit}`
-    if (this.rest.ratelimitRemaining === 0) {
-      msg += ` reset in ${this.rest.ratelimitReset}s`
+    const rlm = t('API request limit')
+    if (top.innerHTML && !top.innerHTML.startsWith(rlm)) return
+    const countdown = Math.max(0, this.rest.ratelimitReset - Math.floor(Date.now() / 1000))
+    const remaining = countdown > 0 ? this.rest.ratelimitRemaining : this.rest.ratelimitLimit
+    let msg = rlm + `: ${remaining}/${this.rest.ratelimitLimit}`
+    if (remaining < 10) {
+      msg += ', ' + t('reset in %0 s', countdown)
+      setTimeout(() => this.dispatcher('countdownRatelimitReset'), 1000)
     }
     top.innerHTML = msg
   }
@@ -175,11 +177,7 @@ export default class Statusbar extends Component {
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
-      if (this.isRateLimitExceeded) {
-        top.innerHTML = this.printError(t('Rate limit exceeded!'))
-      } else {
-        top.innerHTML = ''
-      }
+      top.innerHTML = ''
     }
   }
 
@@ -270,7 +268,6 @@ export default class Statusbar extends Component {
 
   msg (type) {
     const args = Array.prototype.slice.call(arguments, 1)
-    logger.debug('msg', type, args)
     switch (type) {
       case 'loading' :
         args[0] = t(args[0])
@@ -330,13 +327,5 @@ export default class Statusbar extends Component {
 
   addMsg () {
     this.add([...arguments])
-  }
-
-  rateLimitExceeded (error) {
-    this.addMsg('error', error)
-    this.loading.clear()
-    this.searching.clear()
-    this.setUpdate('loading')
-    this.isRateLimitExceeded = true
   }
 }

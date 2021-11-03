@@ -185,3 +185,5 @@ from: from
 to: to
 pick a color: pick a color
 start highlighting addresses and entities: highlight addresses and entities
+api request limit: request limit
+reset in %0 s: reset in %0s

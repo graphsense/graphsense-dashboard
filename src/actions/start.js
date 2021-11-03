@@ -107,11 +107,6 @@ const fetchError = function ({ context, msg, error }) {
     }
     return
   }
-  if (error.message.startsWith('429')) {
-    logger.debug('ERRORMESSAGE', error)
-    this.statusbar.rateLimitExceeded(error)
-    return
-  }
   switch (msg) {
     case 'loginResult':
       this.login.error(error.message || 'Something went wrong')

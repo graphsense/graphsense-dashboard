@@ -1207,6 +1207,10 @@ const resize = function () {
   this.graph.resize()
 }
 
+const countdownRatelimitReset = function () {
+  this.statusbar.setUpdate('ratelimit')
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1342,7 +1346,8 @@ const functions = {
   clickSidebarMyEntityTags,
   clickSidebarMyAddressTags,
   resize,
-  removeLink
+  removeLink,
+  countdownRatelimitReset
 }
 
 export default functions
