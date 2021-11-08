@@ -403,7 +403,7 @@ export default class Menu extends Component {
   setSkipNumAddresses (d) {
     if (this.view.viewType !== 'neighborsearch') return
     this.view.skipNumAddresses = Math.max(d, minSkipNumAddresses)
-    this.setUpdate(true)
+    this.setUpdate('skipNumAddresses')
   }
 
   addSearchAddress (address) {
