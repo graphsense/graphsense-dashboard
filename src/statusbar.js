@@ -125,6 +125,8 @@ export default class Statusbar extends Component {
   }
 
   renderRatelimit () {
+    if (!this.rest.ratelimitLimit) return
+    console.log('ratelimit ', this.rest.ratelimitLimit)
     const top = this.root.querySelector('#topmsg')
     const rlm = t('API request limit')
     if (top.innerHTML && !top.innerHTML.startsWith(rlm)) return
