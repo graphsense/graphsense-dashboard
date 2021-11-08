@@ -148,7 +148,7 @@ nothing to display yet: noch nichts anzuzeigen!
 entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
 link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
-shadow_tooltip: Eine Schattenverbindung verbinden identische Adressen und Entitäten.
+shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Entitäten.
 searching criterion category_name: Kategorie %0
 searching criterion addresses_ids: Adressen %0
 searching between: zwischen %0 und %1
