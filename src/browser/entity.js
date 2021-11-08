@@ -8,6 +8,7 @@ export default class Entity extends Address {
     this.template = entity
     this.options =
       [
+        { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
         { inline: 'row-incoming', optionText: 'Sending entities', message: 'initIndegreeTable' },
         { inline: 'row-outgoing', optionText: 'Receiving entities', message: 'initOutdegreeTable' },
         { inline: 'row-addresses', optionText: 'Addresses', message: 'initAddressesTable' },

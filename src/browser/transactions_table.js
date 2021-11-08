@@ -30,7 +30,7 @@ export default class TransactionsTable extends Table {
       }
     ]
     this.loadMessage = 'loadTransactions'
-    this.resultField = 'txs'
+    this.resultField = 'address_txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
     this.addOption(this.downloadOption())

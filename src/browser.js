@@ -198,7 +198,6 @@ export default class Browser extends Component {
   initTransactionsTable (request) {
     if (request.index !== 0 && !request.index) return
     const comp = this.content[request.index]
-    if (!(comp instanceof Address)) return
     if (comp.data.length > 1) return
     const keyspace = comp.data[0].keyspace
     this.setUpdate('content')
