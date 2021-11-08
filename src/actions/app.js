@@ -1056,7 +1056,7 @@ const addAllToGraph = function () {
 }
 
 const hoverLink = function () {
-  this.statusbar.showTooltip('shadow')
+  this.statusbar.showTooltip('link')
 }
 
 const leaveLink = function () {
