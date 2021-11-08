@@ -255,7 +255,7 @@ export default class Rest {
       (includeLabels ? '&include_labels=' + includeLabels : '')
     if (csv) return this.csv(keyspace, url)
     url +=
-      (targets ? '&ids=' + targets.join(',') : '') +
+      (targets ? '&only_ids=' + targets.join(',') : '') +
       (nextPage ? 'page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')
