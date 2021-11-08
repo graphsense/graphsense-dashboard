@@ -17,8 +17,10 @@ export default class LinkTransactionsTable extends Table {
         name: t('Input value'),
         data: 'input_value',
         className: 'text-right',
-        render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+        render: (value, type) => {
+          console.log('VALUE ', value, type)
+          return this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+        }
       },
       {
         name: t('Output value'),
@@ -48,7 +50,7 @@ export default class LinkTransactionsTable extends Table {
       this.columns.splice(1, 2, col)
     }
     this.loadMessage = 'loadLinkTransactions'
-    this.resultField = null
+    this.resultField = 'links'
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
     this.addOption(this.downloadOption())

@@ -1118,7 +1118,6 @@ const clickLink = function ({ source, target }) {
     value: t.value
   })
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
-  if (source.data.type !== 'address') return
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
 }
 

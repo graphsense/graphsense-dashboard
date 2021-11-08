@@ -174,8 +174,9 @@ export default class Rest {
   }
 
   linkTransactions (keyspace, params, csv) {
+    const type = typeToEndpoint(params.type)
     const url =
-       '/addresses/' + params.source + '/links?neighbor=' + params.target
+       '/' + type + '/' + params.source + '/links?neighbor=' + params.target
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url)
   }
