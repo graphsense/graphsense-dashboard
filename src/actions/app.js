@@ -772,7 +772,10 @@ const exportRestLogs = function () {
 const exportSvg = function () {
   if (this.isReplaying) return
   const classMap = map()
-  const rules = document.styleSheets[document.styleSheets.length - 1].cssRules
+  let rules = ([...document.styleSheets]).filter(({ href }) => href)
+    .filter(({ href }) => href.includes('main.css'))
+  if (!rules) return
+  rules = rules[0].rules
   for (let i = 0; i < rules.length; i++) {
     const selectorText = rules[i].selectorText
     const cssText = rules[i].cssText
@@ -780,6 +783,8 @@ const exportSvg = function () {
     const s = selectorText.replace('.', '').replace('svg', '').trim()
     classMap.set(s, cssText.split('{')[1].replace('}', ''))
   }
+  classMap.set('linkPath', classMap.get('linkPath.hover'))
+  classMap.set('linkText', classMap.get('linkText.hover'))
   let svg = this.graph.getSvg()
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
