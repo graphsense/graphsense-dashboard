@@ -189,7 +189,7 @@ export default class Statusbar extends Component {
     const errorMsg = this.root.querySelector('#errorMsg')
     if (this.showErrorsLogs) {
       errorMsg.innerHTML = t('Errors only')
-      messages = messages.filter(msg => typeof msg !== 'string')
+      messages = messages.filter(msg => typeof msg !== 'string' && msg[0] === 'error')
     } else {
       errorMsg.innerHTML = ''
     }
