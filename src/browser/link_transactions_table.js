@@ -42,7 +42,7 @@ export default class LinkTransactionsTable extends Table {
     if (keyspace === 'eth') {
       const col = {
         name: t('Value'),
-        data: 'values',
+        data: 'value',
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
