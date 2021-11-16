@@ -96,7 +96,7 @@ const appLoaded = function () {
 }
 
 const fetchError = function ({ context, msg, error }) {
-  if (error.message.startsWith('401')) {
+  if (error.message && error.message.startsWith('401')) {
     this.login.loading(false)
     this.login.clear()
     this.login.error('Please fill in your credentials')

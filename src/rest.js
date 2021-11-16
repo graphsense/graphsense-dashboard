@@ -103,9 +103,6 @@ export default class Rest {
         }
         return Promise.resolve(result)
       })
-      .catch(error => {
-        logger.error(error)
-      })
   }
 
   csv (keyspace, url) {

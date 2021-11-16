@@ -240,7 +240,7 @@ export default class Statusbar extends Component {
     if (msg[0] === 'error') {
       let message
       if (msg[1].requestURL) {
-        let m = msg[1].message
+        let m = msg[1].message || msg[1].detail
         if (m.startsWith('429')) {
           m = t('API rate limit exceeded')
         }
