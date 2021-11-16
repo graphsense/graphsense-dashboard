@@ -39,7 +39,7 @@ function formatCoin (valueValue, currencyCode, { dontAppendCurrency, keyspace })
   keyspace = keyspace.toUpperCase()
   const value = keyspace === 'ETH' ? weiToCoin(valueValue) : satoshiToCoin(valueValue)
   if (value === 0) {
-    return '0 ' + (keyspace || currencyCode).toUpperCase()
+    return '0' + (!dontAppendCurrency ? ' ' + (keyspace || currencyCode).toUpperCase() : '')
   }
   if (Math.abs(value) < 0.0001) {
     return valueValue + (!dontAppendCurrency ? ' ' + smallCurrency(keyspace) : '')
