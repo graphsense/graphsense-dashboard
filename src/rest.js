@@ -228,7 +228,7 @@ export default class Rest {
   }
 
   transaction (keyspace, txHash) {
-    return this.json(keyspace, `/txs/${txHash}`)
+    return this.json(keyspace, `/txs/${txHash}?include_io=true`)
   }
 
   block (keyspace, height) {
