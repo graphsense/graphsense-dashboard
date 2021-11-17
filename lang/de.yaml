@@ -7,10 +7,10 @@ transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort
 labels: Schlagwörter
-tag: Tag
-tags: Tags
-address tags: Adressentags
-entity tags: Entität-Tags 
+tag: Schlagwort
+tags: Schlagwörter
+address tags: Adress-Schlagwörter
+entity tags: Entitäts-Schlagwörter
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen
@@ -57,7 +57,7 @@ minute: Minute
 minutes: Minuten
 second: Sekunde
 seconds: Sekunden
-addresses tagged: getaggte Adressen
+addresses tagged: beschlagwortete Adressen
 source: Quelle
 destination: Ziel
 value: Wert
@@ -80,7 +80,7 @@ add all to graph: alle zum Graph hinzufügen
 tagpack: Tagpack
 last modified: geändert
 active: aktiv
-download tags as json: Tags als JSON herunterladen
+download tags as json: Schlagwörter als JSON herunterladen
 included in block: enthalten in Block
 export: exportiere # as an imperative
 drawing: Zeichnung
@@ -141,7 +141,7 @@ user-defined labels: benutzerdefinierte Schlagwörter
 hide logs: Logs verstecken
 show logs: Logs anzeigen
 notes: Notizen
-add tag: Tag hinzufügen
+add tag: Schlagwort hinzufügen
 search incoming neighbors: suche eingehende Nachbarn
 search outgoing neighbors: suche ausgehende Nachbarn
 nothing to display yet: noch nichts anzuzeigen!
@@ -175,18 +175,18 @@ loaded file: Datei %0 geladen
 loading entity for: lade Entität von %0
 loaded entity for: Entiät von %0 geladen
 no entity for: keine Entität von %0 gefunden
-loading tags for: lade Tags für %0 %1
-loaded tags for: Tags für %0 %1 geladen
+loading tags for: lade Schlagwörter für %0 %1
+loaded tags for: Schlagwörter für %0 %1 geladen
 trying to load addresses for entity: versuche %1 Adressen für Entität %0 zu laden # %0 = id, %1 = number
 loaded addresses for entity: %1 Adressen für Entität %0 geladen
 removed node of: Knoten %1 von Typ %0 entfernt
 found paths to nodes: %0 Pfade gefunden
 go to dashboard: zum Dashboard
-remove tag: Tag löschen
+remove tag: Schlagwort löschen
 show at most in links table: maximal %0 Transaktionen gelistet
 estimated value: geschätzter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
-tag coherence: Tagkohärenz
+tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
 API rate limit exceeded: API rate limit exceeded. Please try again later.
 legend empty: Legende noch leer
