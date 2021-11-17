@@ -93,6 +93,9 @@ export default class Search extends Component {
       super.render()
       const placeholder = this.typesToPlaceholder()
       this.root.innerHTML = replace(tt(search), { placeholder, submitIcon: this.submitIcon })
+      if (this.submitIcon === null) {
+        this.root.querySelector('#browser-search-button').style.display = 'none'
+      }
       this.root.querySelector('.search-frame').style.width = Math.max(35, placeholder.length) + 10 + 'ex'
       this.input = this.root.querySelector('textarea')
       this.renderTerm()
@@ -116,7 +119,7 @@ export default class Search extends Component {
       })
       this.input.addEventListener('blur', () => {
       // wrap in timeout to let possible clicksearchresult event happen
-        setTimeout(() => this.dispatcher('blurSearch'), 200)
+        setTimeout(() => this.dispatcher('blurSearch', this.context), 200)
       })
       this.renderResult()
       return this.root

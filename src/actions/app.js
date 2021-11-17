@@ -83,7 +83,7 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
 }
 
 const blurSearch = function (context) {
-  const search = context === 'search' ? this.search : this.menu.search
+  const search = context === 'search' ? this.search : null
   if (!search) return
   search.clear()
 }
@@ -93,8 +93,11 @@ const removeLabel = function (label) {
   this.menu.removeSearchLabel(label)
 }
 
-const setLabels = function ({ labels, id, keyspace }) {
+const setLabels = function ({ labels, input, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
+  if (input.label && !labels[input.label]) {
+    labels[input.label] = input
+  }
   this.store.addTags(keyspace, id, labels)
   this.updateCategoriesByTags(Object.values(labels))
   this.graph.setUpdateNodes('address', id, true)

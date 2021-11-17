@@ -30,6 +30,9 @@ const search = function ({ term, context }) {
   if (!search) return
   search.setSearchTerm(term, prefixLength)
   search.hideLoading()
+  if (context === 'tagpack') {
+    this.menu.setSearchInput(term.trim())
+  }
   if (search.needsResults(searchlimit, prefixLength)) {
     if (search.timeout) clearTimeout(search.timeout)
     if (search.abortController) {
@@ -114,7 +117,7 @@ const fetchError = function ({ context, msg, error }) {
       break
     case 'searchresult':
       {
-        const search = context && context.isInDialog ? this.menu.search : this.search
+        const search = context && context.dialogContext === 'tagpack' ? this.menu.search : this.search
         if (!search) return
         if (error.name === 'AbortError') return
         search.hideLoading()
