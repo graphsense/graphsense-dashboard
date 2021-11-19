@@ -196,3 +196,5 @@ pick a color: Farbe wählen
 start highlighting addresses and entities: Adressen/Entitäten durch Klicken einfärben
 api request limit: Abfragelimit
 reset in %0 s: Reset in %0 Sek.
+from address: Sendende Adresse
+to address: Empfangende Adresse

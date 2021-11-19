@@ -18,8 +18,10 @@ export default class AccountTransaction extends BrowserComponent {
     const flat = {
       tx_hash: this.data.tx_hash,
       timestamp: this.formatTimestampWithAgo(this.data.timestamp),
-      value: this.formatCurrency(this.data.values, this.data.keyspace),
-      height: this.data.height
+      value: this.formatCurrency(this.data.value, this.data.keyspace),
+      height: this.data.height,
+      from_address: this.data.from_address,
+      to_address: this.data.to_address
     }
     this.root.innerHTML = replace(tt(this.template), { ...this.data, ...flat })
     this.renderInlineOptions()

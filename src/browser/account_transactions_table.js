@@ -5,14 +5,18 @@ export default class AccountTransactionsTable extends TransactionsTable {
   constructor (dispatcher, index, total, nodeId, nodeType, currency, keyspace) {
     super(dispatcher, index, total, nodeId, nodeType, currency, keyspace)
     this.loadMessage = 'loadTransactions'
-    this.resultField = 'txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
-    this.columns.forEach(col => {
-      if (col.data === 'value') {
-        col.data = 'values'
+    this.columns = this.columns.concat([
+      {
+        name: t('From address'),
+        data: 'from_address'
+      },
+      {
+        name: t('To address'),
+        data: 'to_address'
       }
-    })
+    ])
   }
 
   getParams () {

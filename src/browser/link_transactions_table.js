@@ -18,7 +18,6 @@ export default class LinkTransactionsTable extends Table {
         data: 'input_value',
         className: 'text-right',
         render: (value, type) => {
-          console.log('VALUE ', value, type)
           return this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
         }
       },

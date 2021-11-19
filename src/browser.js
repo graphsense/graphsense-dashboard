@@ -9,8 +9,8 @@ import Block from './browser/block.js'
 import Link from './browser/link.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
-import AccountTransactionsTable from './browser/account_transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
+import AccountTransactionsTable from './browser/account_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
 import MyTagsTable from './browser/my_tags_table.js'
@@ -219,14 +219,32 @@ export default class Browser extends Component {
     if (!(comp instanceof Block)) return
     const keyspace = comp.data.keyspace
     this.setUpdate('content')
-    if (this.content[request.index + 1] instanceof BlockTransactionsTable) {
+    const T = keyspace === 'eth' ? AccountTransactionsTable : BlockTransactionsTable
+    if (this.content[request.index + 1] instanceof T) {
       this.destroyComponentsFrom(request.index + 1)
       comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
     comp.setCurrentOption('initBlockTransactionsTable')
-    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.no_txs, request.id, this.currency, keyspace))
+    const t = keyspace === 'eth'
+      ? new AccountTransactionsTable(
+        this.dispatcher,
+        request.index + 1,
+        comp.data.no_txs,
+        request.id,
+        request.type,
+        this.currency,
+        keyspace)
+      : new BlockTransactionsTable(
+        this.dispatcher,
+        request.index + 1,
+        comp.data.no_txs,
+        request.id,
+        this.currency,
+        keyspace)
+    t.resultField = null
+    this.content.push(t)
   }
 
   initAddressesTable (request) {
