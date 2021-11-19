@@ -58,7 +58,7 @@ export function formatCurrency (value, currencyCode, options) {
   } else {
     const fiat = value.fiat_values.filter(({ code, value }) => code.toLowerCase() === currencyCode.toLowerCase())[0]
     if (fiat !== null) {
-      return formatFiat(fiat, currencyCode, options_)
+      return formatFiat(fiat.value, currencyCode, options_)
     }
     return formatCoin(value.value, currencyCode, options_)
   }
