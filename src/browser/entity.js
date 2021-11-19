@@ -20,11 +20,7 @@ export default class Entity extends Address {
 
   flattenData () {
     const flat = super.flattenData()
-    const esc = s => s.replace(' ', '&nbsp;')
     flat.no_addresses = this.data.reduce((sum, v) => sum + v.no_addresses, 0)
-    flat.label_receiving_entities = esc(t('Receiving entities'))
-    flat.label_sending_entities = esc(t('Sending entities'))
-    flat.label_tag_coherence = esc(t('Tag coherence'))
     flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
     flat.tagCoherence = this.data.length === 1 && (this.data[0].tags || {}).tag_coherence !== null
       ? numeral(this.data[0].tags.tag_coherence).format('0.[00]%')

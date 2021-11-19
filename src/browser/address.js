@@ -1,5 +1,5 @@
 import address from './address.html'
-import { replace } from '../template_utils'
+import { replace, esc } from '../template_utils'
 import BrowserComponent from './component.js'
 import { t, tt } from '../lang.js'
 import numeral from 'numeral'
@@ -77,7 +77,6 @@ export default class Address extends BrowserComponent {
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
-    const esc = s => s.replace(' ', '&nbsp;')
     return {
       id: '<div>' + this.data.map(d => d.id).join('</div><div>') + '</div>',
       first_usage: esc(this.formatTimestampWithAgo(first)),
@@ -93,15 +92,7 @@ export default class Address extends BrowserComponent {
       no_transfers: esc(numeral(noIncomingTxs + noOutgoingTxs).format('0,000')),
       out_degree: esc(numeral(noOutdegree).format('0,000')),
       in_degree: esc(numeral(noIndegree).format('0,000')),
-      no_tags: esc(numeral(tags.length).format('0,000')),
-      label_transfers: esc(t('Transfers')),
-      label_activity_period: esc(t('Activity period')),
-      label_receiving_addresses: esc(t('Receiving addresses')),
-      label_sending_addresses: esc(t('Sending addresses')),
-      label_first_usage: esc(t('First usage')),
-      label_last_usage: esc(t('Last usage')),
-      label_total_received: esc(t('Total received')),
-      label_final_balance: esc(t('Final balance'))
+      no_tags: esc(numeral(tags.length).format('0,000'))
     }
   }
 

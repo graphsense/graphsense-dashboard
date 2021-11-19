@@ -16,4 +16,7 @@ const removeClass = function (el, cl) {
   classes.delete(cl)
   el.className = [...classes].join(' ')
 }
-export { replace, addClass, removeClass }
+
+const esc = s => s.replaceAll(' ', '&nbsp;')
+
+export { replace, addClass, removeClass, esc }
