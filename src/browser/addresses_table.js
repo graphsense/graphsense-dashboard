@@ -24,14 +24,14 @@ export default class AddressesTable extends Table {
       },
       {
         name: t('Final balance'),
-        data: 'balance',
+        data: row => row.balance.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       },
       {
         name: t('Total received'),
-        data: 'total_received',
+        data: row => row.total_received.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)

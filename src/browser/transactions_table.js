@@ -14,7 +14,7 @@ export default class TransactionsTable extends Table {
       },
       {
         name: t('Value'),
-        data: 'value',
+        data: row => row.value.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)

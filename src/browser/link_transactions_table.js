@@ -15,7 +15,7 @@ export default class LinkTransactionsTable extends Table {
       },
       {
         name: t('Input value'),
-        data: 'input_value',
+        data: row => row.input_value.value,
         className: 'text-right',
         render: (value, type) => {
           return this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
@@ -23,7 +23,7 @@ export default class LinkTransactionsTable extends Table {
       },
       {
         name: t('Output value'),
-        data: 'output_value',
+        data: row => row.output_value.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
@@ -41,7 +41,7 @@ export default class LinkTransactionsTable extends Table {
     if (keyspace === 'eth') {
       const col = {
         name: t('Value'),
-        data: 'value',
+        data: row => row.value.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)

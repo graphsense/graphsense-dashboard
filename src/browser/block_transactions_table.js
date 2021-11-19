@@ -23,14 +23,14 @@ export default class BlockTransactionsTable extends Table {
       },
       {
         name: t('Total input'),
-        data: 'total_input',
+        data: row => row.total_input.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
       },
       {
         name: t('Total output'),
-        data: 'total_output',
+        data: row => row.total_output.value,
         className: 'text-right',
         render: (value, type) =>
           this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
