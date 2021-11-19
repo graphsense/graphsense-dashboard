@@ -76,7 +76,6 @@ export default class Address extends BrowserComponent {
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
-    const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
     const esc = s => s.replace(' ', '&nbsp;')
     return {
@@ -95,7 +94,6 @@ export default class Address extends BrowserComponent {
       out_degree: esc(numeral(noOutdegree).format('0,000')),
       in_degree: esc(numeral(noIndegree).format('0,000')),
       no_tags: esc(numeral(tags.length).format('0,000')),
-      tagCoherence,
       label_transfers: esc(t('Transfers')),
       label_activity_period: esc(t('Activity period')),
       label_receiving_addresses: esc(t('Receiving addresses')),

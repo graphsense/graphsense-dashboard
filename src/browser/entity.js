@@ -1,6 +1,7 @@
 import entity from './entity.html'
 import Address from './address.js'
 import { t } from '../lang.js'
+import numeral from 'numeral'
 
 export default class Entity extends Address {
   constructor (dispatcher, data, index, currency, categories) {
@@ -25,6 +26,9 @@ export default class Entity extends Address {
     flat.label_sending_entities = esc(t('Sending entities'))
     flat.label_tag_coherence = esc(t('Tag coherence'))
     flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
+    flat.tagCoherence = this.data.length === 1 && (this.data[0].tags || {}).tag_coherence !== null
+      ? numeral(this.data[0].tags.tag_coherence).format('0.[00]%')
+      : t('unknown')
     flat.label = ''
     if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
       flat.label = this.data[0].tags.entity_tags[0].label
