@@ -116,6 +116,7 @@ export default class NodeGraph extends Component {
     this.y = 0
     this.dy = 0
     this.dk = 0
+    this.removedLinks = set()
 
     window.addEventListener('resize', () => {
       this.dispatcher('resize')
@@ -562,8 +563,8 @@ export default class NodeGraph extends Component {
   }
 
   removeLink (source, target) {
-    const link = this.root.querySelector(`g[data-target="${target}"][data-source="${source}"`)
-    link.parentNode.removeChild(link)
+    this.removedLinks.add(source + target)
+    this.setUpdate('link', source)
   }
 
   setResultEntityAddresses (id, addresses) {
@@ -586,7 +587,6 @@ export default class NodeGraph extends Component {
   }
 
   add (object, anchor) {
-    logger.debug('add', object, anchor)
     this.adding.remove(object.id)
     let layerIds
     if (!anchor) {
@@ -605,6 +605,11 @@ export default class NodeGraph extends Component {
     layerIds.forEach(layerId => {
       node = this.addLayer(layerId, object, anchor)
     })
+    if (anchor) {
+      const source = anchor.isOutgoing ? anchor.nodeId : node.id
+      const target = anchor.isOutgoing ? node.id : anchor.nodeId
+      this.removedLinks.remove(source + target)
+    }
     this.setUpdate('layers')
     return node
   }
@@ -1133,6 +1138,7 @@ export default class NodeGraph extends Component {
   }
 
   drawLink (root, label, scale, source, target, clickable) {
+    if (this.removedLinks.has(source.id + target.id)) return
     const path = this.linker({ source: [source, true, scale], target: [target, false, scale] })
     const g1 = root.append('g')
       .attr('class', 'link')
