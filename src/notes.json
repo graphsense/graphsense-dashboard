@@ -1,0 +1,8 @@
+[
+  {
+    "note": "Please **note** that the clustering dataset is built with multi input address clustering to avoid false clustering results due to coinjoins (see TITANIUM glossary http://titanium-project.eu/glossary/#coinjoin), we exclude coinjoins prior to clustering. This does not eliminate the risk of false results, since coinjoin detection is also heuristic in nature, but it should decrease the potential for wrong cluster merges."
+  },
+  {
+    "note": "Our tags are all manually crawled or from credible sources, we do not use tags that where automatically extracted without human interaction. Origins of the tags have been saved for reproducibility please contact the GraphSense team (contact@graphsense.info) for more insight."
+  }
+]

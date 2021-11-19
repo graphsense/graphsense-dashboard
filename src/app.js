@@ -20,9 +20,9 @@ import startactions from './actions/start.js'
 import appactions from './actions/app.js'
 import { prefixLength } from './globals.js'
 import YAML from 'yaml'
-import { SHA256 } from 'sha2'
 import ReportLogger from './reportLogger.js'
 import { v4 as uuidv4 } from 'uuid'
+import notes from './notes.json'
 
 const logger = Logger.create('Model') // eslint-disable-line no-unused-vars
 
@@ -297,7 +297,7 @@ export default class Model extends Callable {
         if (!ds) ds = { version: null }
         if (!ds.version) ds.version = { nr: null, timestamp: null }
         if (!ds.visible_name) return
-        doc.bulletpoint(ds.visible_name, `nr: ${ds.version.nr || ''}; time: ${ds.version.timestamp || ''}`)
+        doc.bulletpoint(ds.visible_name, `version: ${ds.version.nr || ''}; time: ${ds.version.timestamp || ''}`)
       })
       doc.heading('Tools used')
       doc.paragraph('This section lists tools that were used in the context of this investigation:\n')
@@ -335,24 +335,19 @@ export default class Model extends Callable {
       summary: this.meta.summary || 'No summary provided',
       output: []
     }
-    const concat = (keyspace, key) => {
-      const currency = this.stats.currencies.filter(curr => curr.name === keyspace)
-      if (!currency || !currency[0]) return
-      report[key] = report[key].concat(currency[0][key])
-    }
-    report.data_sources = []
-    report.tools = [...this.stats.tools]
-    report.notes = [...this.stats.notes]
+    report.data_sources = [{
+      visible_name: baseUrl,
+      version: { nr: VERSION, timestamp: moment().format() } // eslint-disable-line no-undef
+    }]
+    report.tools = [{
+      visible_name: 'GraphSense Dashboard',
+      version: VERSION // eslint-disable-line no-undef
+    }]
+    report.notes = notes
 
     report.tools.forEach(tool => {
       if (tool.id !== 'ait:graphsense') return
       tool.responsible_for = [uuid]
-    })
-
-    keyspaces.forEach(keyspace => {
-      concat(keyspace, 'data_sources')
-      concat(keyspace, 'notes')
-      concat(keyspace, 'tools')
     })
 
     report.recordings = [
