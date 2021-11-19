@@ -188,8 +188,18 @@ class GraphNode extends Component {
 
   translate (x, y) {
     logger.debug('translate', x, y)
-    this.x += x
-    this.y += y
+    this.setX(this.x + x)
+    this.setY(this.y + y)
+  }
+
+  setX (x) {
+    this.x = x
+    this.hovered = false
+  }
+
+  setY (y) {
+    this.y = y
+    this.hovered = false
   }
 
   getX () {

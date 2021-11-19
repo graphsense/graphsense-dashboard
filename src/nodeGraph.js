@@ -291,8 +291,8 @@ export default class NodeGraph extends Component {
     const entity = this.entityNodes.get(id)
     if (!entity) return
     this.draggingNode = { entity, x, y }
-    entity.x += entity.dx
-    entity.y += entity.dy
+    entity.setX(entity.x + entity.dx)
+    entity.setY(entity.y + entity.dy)
     entity.dx = entity.dy = 0
     entity.repositionNodes()
   }
