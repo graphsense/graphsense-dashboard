@@ -40,7 +40,7 @@ export default class BlockTransactionsTable extends Table {
     this.resultField = null
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.height, 'block']
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Transactions file', t('block'), height) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

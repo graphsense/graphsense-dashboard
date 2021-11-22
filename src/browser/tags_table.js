@@ -74,7 +74,7 @@ export default class TagsTable extends Table {
     this.selectMessage = ['clickAddress', 'clickLabel']
     this.resultField = null
     this.loadParams = [this.nodeId, this.nodeType, this.level]
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Tags file', t(this.level), t(nodeType), nodeId) + ` (${keyspace ? keyspace.toUpperCase() : ''})`))
     if (nodeType === 'label') this.options = []
   }
 

@@ -6,9 +6,10 @@ export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
     super(dispatcher, index, total, currency, keyspace)
     this.isOutgoing = isOutgoing
+    const io = (isOutgoing ? 'Outgoing' : 'Incoming')
     this.columns = [
       {
-        name: t((isOutgoing ? 'Outgoing ' : 'Incoming ') + type),
+        name: t(`${io} ${type}`),
         data: 'id',
         render: this.formatIsInGraph(nodeIsInGraph, type, keyspace)
       },
@@ -64,7 +65,7 @@ export default class NeighborsTable extends Table {
     this.resultField = 'neighbors'
     this.selectMessage = 'selectNeighbor'
     this.loadParams = [id, type, isOutgoing]
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Neighbors file', `${io} neighbors`, t(type), id) + ` (${keyspace.toUpperCase()})`))
     if (total < maxAddableNodes) this.options.push(this.addAllOption())
   }
 

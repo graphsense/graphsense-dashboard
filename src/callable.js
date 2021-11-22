@@ -165,6 +165,7 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
 // get handled by model in current rendering frame
 const syncMessages = [
   'search',
+  'downloadTable',
   'changeSearchBreadth',
   'changeSearchDepth',
   'changeUserDefinedTag',

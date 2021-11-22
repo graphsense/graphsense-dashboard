@@ -1019,34 +1019,8 @@ const downloadTable = function () {
     }
   }
   if (!table) return
-  let url
-  if (table instanceof NeighborsTable) {
-    const params = table.getParams()
-    url = this.rest.neighbors({
-      keyspace: params.keyspace,
-      id: params.id,
-      type: params.type,
-      isOutgoing: params.isOutgoing,
-      includeLabels: true,
-      csv: true
-    })
-  } else if (table instanceof TagsTable) {
-    const params = table.getParams()
-    url = this.rest.tags(params.keyspace, params, true)
-  } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
-    const params = table.getParams()
-    url = this.rest.transactions(params.keyspace, { params: [params.id, params.type] }, true)
-  } else if (table instanceof AddressesTable) {
-    const params = table.getParams()
-    url = this.rest.addresses(params.keyspace, { params: params.id }, true)
-  } else if (table instanceof LinkTransactionsTable) {
-    logger.debug('table', table)
-    const params = table.getParams()
-    url = this.rest.linkTransactions(params.keyspace, params, true)
-  }
-  if (url) {
-    this.layout.triggerDownloadViaLink(url)
-  }
+
+  table.table.buttons('.buttons-csv').trigger()
 }
 
 const addAllToGraph = function () {

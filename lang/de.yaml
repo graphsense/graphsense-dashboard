@@ -198,3 +198,8 @@ api request limit: Abfragelimit
 reset in %0 s: Reset in %0 Sek.
 from address: Sendende Adresse
 to address: Empfangende Adresse
+transactions file: Transaktionen der %0 %1 # $0 = type, %1 = id
+neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
+tags file: %0-Tags der %1 %2 # %0 = type, %1 = id
+links file: Transaktionen zwischen %0 %1 und %2 # %0 = type, %1 = source, %2 = target
+addresses file: Adressen der Entität %0

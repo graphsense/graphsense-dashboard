@@ -3,6 +3,8 @@ import { nbsp } from '../utils.js'
 import $ from 'jquery'
 import 'datatables.net'
 import 'datatables.net-scroller'
+import '../../node_modules/datatables.net-buttons/js/buttons.html5'
+import 'datatables.net-buttons'
 import { browserHeight, browserPadding } from '../globals.js'
 import table from './table.html'
 import BrowserComponent from './component.js'
@@ -63,14 +65,13 @@ export default class Table extends BrowserComponent {
       const info = language.info ? 'info' : 'sInfo'
       language[info] = language[info] + (!this.isSmall() ? ` <span class="text-gs-red">(>${numeral(this.smallThreshold()).format('1,000')} - ${t('sort/filter disabled')})</span>` : '')
       const tab = this.table = $(this.root).children().first().DataTable({
-
         ajax: (request, drawCallback, settings) => {
           this.ajax(request, drawCallback, settings, this)
         },
         scrollY: Math.max(this.root.getBoundingClientRect().height, browserHeight) - 1.5 * rowHeight,
         searching: this.searchable && this.isSmall(),
         search: { smart: false },
-        dom: 'fti',
+        dom: 'Bfti',
         ordering: this.isSmall(),
         order: this.order,
         deferRender: true,
@@ -82,6 +83,10 @@ export default class Table extends BrowserComponent {
         stateSave: false,
         serverSide: !this.isSmall(),
         columns: this.columns,
+        buttons: [{
+          extend: 'csv',
+          filename: this.filename
+        }],
         language
       })
       // using es5 'function' to have 'this' bound to the triggering element
@@ -191,7 +196,8 @@ export default class Table extends BrowserComponent {
     }
   }
 
-  downloadOption () {
+  downloadOption (filename) {
+    this.filename = filename
     return { html: downloadCSV, optionText: t('Download table as CSV'), message: 'downloadTable' }
   }
 

@@ -52,7 +52,7 @@ export default class LinkTransactionsTable extends Table {
     this.resultField = 'links'
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('links file', t(this.nodeType), this.source, this.target) + ` (${keyspace.toUpperCase()})`))
   }
 
   isSmall () {

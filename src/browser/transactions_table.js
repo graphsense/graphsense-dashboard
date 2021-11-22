@@ -33,7 +33,7 @@ export default class TransactionsTable extends Table {
     this.resultField = 'address_txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Transactions file', t(this.nodeType), this.nodeId) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

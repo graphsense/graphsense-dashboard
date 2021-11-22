@@ -411,6 +411,10 @@ table.dataTable tbody tr {
   font-weight: bold;
 }
 
+.dataTables_wrapper .dt-buttons {
+  display: none;
+}
+
 textarea {
   width : 99%;
   height : 5em;
