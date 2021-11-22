@@ -254,7 +254,7 @@ export default class Rest {
     if (csv) return this.csv(keyspace, url)
     url +=
       (targets ? '&only_ids=' + targets.join(',') : '') +
-      (nextPage ? 'page=' + nextPage : '') +
+      (nextPage ? '&page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')
       .then(result => { result.neighbors.forEach(normalizeNode); return result })
