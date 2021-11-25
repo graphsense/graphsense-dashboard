@@ -194,6 +194,8 @@ select, input {
 
 .option-inline-wrapper {
   position: relative;
+  width: 20px;
+  display: table-cell;
   @apply pr-1;
 }
 

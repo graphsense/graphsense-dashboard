@@ -192,30 +192,22 @@ export default class Rest {
     const id = params.id
     const type = params.type
     logger.debug('fetch tags', keyspace)
-    let url = '/' + typeToEndpoint(type) + '/' + id + '/tags'
-    const level = params.level
-    if (level) {
-      url += `?level=${level}`
-    }
-    logger.debug('level ', level)
+    let url = `/${typeToEndpoint(type)}/${id}/tags?level=${params.level}`
+    url += (params.nextPage ? '&page=' + params.nextPage : '') +
+      (params.pagesize ? '&pagesize=' + params.pagesize : '')
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url)
       .then(tags => {
         if (type === 'entity') {
+          tags[params.level + '_tags'].map(tag =>
+            normalizeTag(tag.currency.toLowerCase())(tag)
+          )
+        } else {
           tags.address_tags.map(tag =>
             normalizeTag(tag.currency.toLowerCase())(tag)
           )
-          tags.entity_tags.map(tag =>
-            normalizeTag(tag.currency.toLowerCase())(tag)
-          )
-          logger.debug('level in clal', level)
-          if (level) return tags[level + '_tags']
-          return tags
-        } else {
-          return tags.map(tag =>
-            normalizeTag(tag.currency.toLowerCase())(tag)
-          )
         }
+        return tags
       })
   }
 
@@ -232,15 +224,14 @@ export default class Rest {
     return this.json(keyspace, `/blocks/${height}`)
   }
 
-  label (id) {
-    return this.json(null, `/tags?label=${id}`)
+  label (keyspace, { id, level, pagesize, nextPage }) {
+    const url = `/tags?label=${id}&level=${level}` +
+      (nextPage ? '&page=' + nextPage : '') +
+      (pagesize ? '&pagesize=' + pagesize : '')
+    return this.json(keyspace, url)
       .then(tags => {
         const norm = tag => normalizeTag(tag.currency.toLowerCase())(tag)
-        if (Array.isArray(tags)) {
-          return tags.map(norm)
-        }
-        tags.address_tags.map(norm)
-        tags.entity_tags.map(norm)
+        tags[level + '_tags'].map(norm)
         return tags
       })
   }

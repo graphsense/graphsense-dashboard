@@ -18,7 +18,7 @@ export default class Address extends BrowserComponent {
         { inline: 'row-incoming', optionText: 'Sending addresses', message: 'initIndegreeTable' },
         { inline: 'row-outgoing', optionText: 'Receiving addresses', message: 'initOutdegreeTable' },
         { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
-        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable', params: ['address', this.data[0].keyspace] }
       ]
   }
 

@@ -3,13 +3,7 @@ import moment from 'moment'
 import { coinToSatoshi, coinToWei } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
-import NeighborsTable from '../browser/neighbors_table.js'
 import Table from '../browser/table.js'
-import TagsTable from '../browser/tags_table.js'
-import TransactionsTable from '../browser/transactions_table.js'
-import BlockTransactionsTable from '../browser/block_transactions_table.js'
-import LinkTransactionsTable from '../browser/link_transactions_table.js'
-import AddressesTable from '../browser/addresses_table.js'
 import FileSaver from 'file-saver'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
@@ -62,8 +56,10 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     this.menu.search.clear()
     return
   }
-  this.browser.loading.add(id)
-  this.statusbar.addLoading(id)
+  if (type !== 'label') {
+    this.browser.loading.add(id)
+    this.statusbar.addLoading(id)
+  }
   if (this.showLandingpage) {
     this.showLandingpage = false
     this.layout.setUpdate(true)
@@ -75,11 +71,11 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
   } else if (type === 'transaction') {
     this.mapResult(this.rest.transaction(keyspace, id), 'resultTransactionForBrowser', id)
   } else if (type === 'label') {
-    this.mapResult(this.rest.label(id), 'resultLabelForBrowser', id)
+    labelForBrowser.call(this, id)
   } else if (type === 'block') {
     this.mapResult(this.rest.block(keyspace, id), 'resultBlockForBrowser', id)
   }
-  this.statusbar.addMsg('loading', type, id)
+  if (type !== 'label') this.statusbar.addMsg('loading', type, id)
 }
 
 const blurSearch = function (context) {
@@ -140,12 +136,9 @@ const resultTransactionForBrowser = function ({ result }) {
   this.statusbar.addMsg('loaded', 'transaction', result.tx_hash)
 }
 
-const resultLabelForBrowser = function ({ result, context }) {
-  this.browser.setLabel(context, result)
-  historyPushState(null, 'label', context)
-  this.statusbar.removeLoading(context)
-  this.statusbar.addMsg('loaded', 'label', context)
-  initTagsTable.call(this, { id: context, type: 'label', index: 0 })
+const labelForBrowser = function (label) {
+  this.browser.setLabel(label)
+  historyPushState(null, 'label', label)
 }
 
 const resultLabelTagsForTag = function ({ result, context }) {
@@ -201,7 +194,7 @@ const clickAddress = function (data) {
 // user clicks label in a table
 const clickLabel = function ({ label, keyspace }) {
   this.statusbar.addLoading(label)
-  this.mapResult(this.rest.label(label), 'resultLabelForBrowser', label)
+  labelForBrowser.call(this, label)
 }
 
 const deselect = function () {
@@ -251,13 +244,24 @@ const resultTransactions = function ({ context, result }) {
 
 const loadTags = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'tags')
-  this.mapResult(this.rest.tags(keyspace, {
-    id: params[0],
-    type: params[1],
-    level: params[2],
-    nextPage,
-    pagesize: request.length
-  }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  const type = params[1]
+  if (type === 'label') {
+    this.mapResult(this.rest.label(keyspace, {
+      id: params[0],
+      type,
+      level: params[2],
+      nextPage,
+      pagesize: request.length
+    }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  } else {
+    this.mapResult(this.rest.tags(keyspace, {
+      id: params[0],
+      type,
+      level: params[2],
+      nextPage,
+      pagesize: request.length
+    }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  }
 }
 
 const resultTagsTable = function ({ context, result }) {
@@ -1200,7 +1204,7 @@ const functions = {
   setLabels,
   resultNode,
   resultTransactionForBrowser,
-  resultLabelForBrowser,
+  labelForBrowser,
   resultBlockForBrowser,
   selectNode,
   clickAddress,

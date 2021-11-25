@@ -13,8 +13,8 @@ export default class Entity extends Address {
         { inline: 'row-incoming', optionText: 'Sending entities', message: 'initIndegreeTable' },
         { inline: 'row-outgoing', optionText: 'Receiving entities', message: 'initOutdegreeTable' },
         { inline: 'row-addresses', optionText: 'Addresses', message: 'initAddressesTable' },
-        { inline: 'row-tags', optionText: 'Address Tags', message: 'initTagsTable' },
-        { inline: 'row-entity-tags', optionText: 'Entity Tags', message: 'initEntityTagsTable' }
+        { inline: 'row-tags', optionText: 'Address Tags', message: 'initTagsTable', params: ['address', this.data[0].keyspace] },
+        { inline: 'row-entity-tags', optionText: 'Entity Tags', message: 'initTagsTable', params: ['entity', this.data[0].keyspace] }
       ]
   }
 

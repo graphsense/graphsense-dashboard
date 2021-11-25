@@ -91,12 +91,12 @@ export default class Browser extends Component {
     this.content.forEach(comp => comp.setCurrency(currency))
   }
 
-  setLabel (label, tags) {
+  setLabel (label) {
     this.visible = true
     this.setUpdate('visibility')
     if (this.content[0] instanceof Label && this.content[0].data.label === label.label) return
     this.destroyComponentsFrom(0)
-    this.content = [new Label(this.dispatcher, { label, tags }, 0, this.currency)]
+    this.content = [new Label(this.dispatcher, { label }, 0, this.currency, this.supportedKeyspaces)]
     this.setUpdate('content')
   }
 
@@ -271,6 +271,7 @@ export default class Browser extends Component {
 
   initTagsTable (request, level = 'address') {
     if (request.index !== 0 && !request.index) return
+    level = (request.optionParams && request.optionParams[0]) || level
     const last = this.content[request.index]
     const fromLabel = (last instanceof Label)
     const fromEntity = (last instanceof Entity)
@@ -282,23 +283,22 @@ export default class Browser extends Component {
       data = last.data[0]
     }
     this.setUpdate('content')
-    const newOption = level === 'address' ? 'initTagsTable' : 'initEntityTagsTable'
-    if (last.currentOption === newOption) {
+    const keyspace = (request.optionParams && request.optionParams[1]) || data.keyspace
+    const newOption = { message: 'initTagsTable', params: [level, keyspace] }
+    if (last.currentOptionMatches(newOption)) {
       this.destroyComponentsFrom(request.index + 1)
       last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption(newOption)
-    const keyspace = data.keyspace
-    const total = fromEntity || fromLabel ? data.tags[level + '_tags'].length : data.tags.length
-    const tags = fromEntity || fromLabel ? data.tags[level + '_tags'] : data.tags
+    const total = 0
     this.content.push(
       new TagsTable(
         this.dispatcher,
         request.index + 1,
         total,
-        tags || [],
+        [],
         request.id,
         request.type,
         this.currency,
