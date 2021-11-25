@@ -7,6 +7,7 @@ export default class LinkTransactionsTable extends Table {
     this.source = source
     this.target = target
     this.nodeType = nodeType
+    console.log('data', this.data)
     this.columns = [
       {
         name: t('Transaction'),
@@ -15,18 +16,15 @@ export default class LinkTransactionsTable extends Table {
       },
       {
         name: t('Input value'),
-        data: row => row.input_value.value,
+        data: row => this.getValueByCurrencyCode(row.input_value),
         className: 'text-right',
-        render: (value, type) => {
-          return this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
-        }
+        render: (value, type) => this.formatCurrency(value, keyspace, true)
       },
       {
         name: t('Output value'),
-        data: row => row.output_value.value,
+        data: row => this.getValueByCurrencyCode(row.output_value),
         className: 'text-right',
-        render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+        render: (value, type) => this.formatCurrency(value, keyspace, true)
       },
       {
         name: t('Height'),
@@ -41,10 +39,10 @@ export default class LinkTransactionsTable extends Table {
     if (keyspace === 'eth') {
       const col = {
         name: t('Value'),
-        data: row => row.value.value,
+        data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+          this.formatCurrency(value, keyspace, true)
       }
       this.columns.splice(1, 2, col)
     }
@@ -53,10 +51,6 @@ export default class LinkTransactionsTable extends Table {
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
     this.addOption(this.downloadOption(t('links file', t(this.nodeType), this.source, this.target) + ` (${keyspace.toUpperCase()})`))
-  }
-
-  isSmall () {
-    return true
   }
 
   getParams () {

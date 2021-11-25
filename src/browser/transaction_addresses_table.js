@@ -16,10 +16,10 @@ export default class TransactionAddressesTable extends Table {
       },
       {
         name: t('Value'),
-        data: row => row.value.value,
+        data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+          this.formatCurrency(value, keyspace, true)
       }
     ]
     this.data = addresses

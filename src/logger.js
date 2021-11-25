@@ -1,7 +1,7 @@
 const DEBUG = 0
 const ERROR = 1
 let logLevel = DEBUG
-const filter = ['Model', 'Callable', 'Actions', 'Rest', 'BrowserTable']
+const filter = ['Model', 'Callable', 'Actions', 'Rest', 'BrowserTable', 'LinkTransactionsTable']
 export default {
   create: (name) => {
     const formatArgs = function (args, bold) {

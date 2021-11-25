@@ -16,9 +16,6 @@ export default class Link extends BrowserComponent {
       [
         { inline: 'row-transactions', optionText: 'Transactions', message: 'initLinkTransactionsTable' }
       ]
-    if (this.data.type !== 'address') {
-      this.options = []
-    }
   }
 
   render (root) {

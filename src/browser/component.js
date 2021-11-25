@@ -1,7 +1,7 @@
 import { t } from '../lang.js'
 import { replace, addClass } from '../template_utils.js'
 import option from './option.html'
-import { formatCurrency } from '../utils.js'
+import { formatCurrency, getValueByCurrencyCode } from '../utils.js'
 import moment from 'moment'
 import Component from '../component.js'
 
@@ -94,6 +94,12 @@ export default class BrowserComponent extends Component {
     if (!colorful) return c
     const cl = value < 0 ? 'text-gs-red' : (value > 0 ? 'text-gs-base' : '')
     return `<span class="${cl}">${c}</span>`
+  }
+
+  getValueByCurrencyCode (value) {
+    const v = getValueByCurrencyCode(value, this.currency)
+    console.log('v', v)
+    return v
   }
 
   formatTimestamp (timestamp) {

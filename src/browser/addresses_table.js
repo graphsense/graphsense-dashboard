@@ -24,17 +24,17 @@ export default class AddressesTable extends Table {
       },
       {
         name: t('Final balance'),
-        data: row => row.balance.value,
+        data: row => this.getValueByCurrencyCode(row.balance),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+          this.formatCurrency(value, keyspace, true)
       },
       {
         name: t('Total received'),
-        data: row => row.total_received.value,
+        data: row => this.getValueByCurrencyCode(row.total_received),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true), value[keyspace])(value, type)
+          this.formatCurrency(value, keyspace, true)
       }
     ]
     this.loadMessage = 'loadAddresses'
