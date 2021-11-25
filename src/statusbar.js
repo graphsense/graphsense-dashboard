@@ -329,4 +329,10 @@ export default class Statusbar extends Component {
   addMsg () {
     this.add([...arguments])
   }
+
+  clear () {
+    this.loading = new Set()
+    this.searching = new Map()
+    this.setUpdate('loading')
+  }
 }
