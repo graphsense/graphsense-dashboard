@@ -84,7 +84,9 @@ export default class Config extends Component {
   }
 
   setCategoryColors (colors, ordering) {
-    this.categoryColors = ordering.map(cat => ({ key: cat, value: colors.get(cat) }))
+    this.categoryColors =
+      ordering.map(cat => ({ key: cat, value: colors.get(cat) }))
+        .filter(({ value }) => value)
     if (this.visible === 'legend') {
       this.setUpdate(true)
     }

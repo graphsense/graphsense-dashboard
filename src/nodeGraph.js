@@ -224,7 +224,16 @@ export default class NodeGraph extends Component {
   }
 
   getCategoryColors () {
-    return this.colorMapCategories
+    const onlyVisible = map()
+    const categories = []
+    this.entityNodes.each(node => categories.push(node.getActorCategory()))
+    this.addressNodes.each(node => categories.push(node.getActorCategory()))
+    logger.debug('categories', categories)
+    categories.forEach(cat => {
+      onlyVisible.set(cat, this.colorMapCategories.get(cat))
+    })
+    logger.debug('onlyVisible', onlyVisible)
+    return onlyVisible
   }
 
   createSnapshot () {
