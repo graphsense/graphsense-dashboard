@@ -21,7 +21,6 @@ import Component from './component.js'
 import { addClass, removeClass, replace } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
-import { maxTransactionListSize } from './globals.js'
 import { tt } from './lang.js'
 import entityTag from './icons/entityTag.html'
 
@@ -360,7 +359,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initLinkTransactionsTable')
     const keyspace = last.data.keyspace
-    const total = Math.min(last.data.no_txs, maxTransactionListSize)
+    const total = last.data.no_txs
     this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, last.data.source, last.data.target, total, last.data.type, this.currency, keyspace))
   }
 
