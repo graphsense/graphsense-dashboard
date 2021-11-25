@@ -21,6 +21,4 @@ export const currencies =
     eth: 'Ethereum'
   }
 
-export const maxTransactionListSize = 100
-
 export const noCategory = '__none__'

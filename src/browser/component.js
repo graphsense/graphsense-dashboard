@@ -97,9 +97,7 @@ export default class BrowserComponent extends Component {
   }
 
   getValueByCurrencyCode (value) {
-    const v = getValueByCurrencyCode(value, this.currency)
-    console.log('v', v)
-    return v
+    return getValueByCurrencyCode(value, this.currency)
   }
 
   formatTimestamp (timestamp) {
