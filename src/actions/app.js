@@ -48,7 +48,12 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     } else if (context === 'tagpack' && (type === 'label' || type === 'userdefinedlabel')) {
       this.menu.addSearchLabel(id, true)
       if (type === 'label') {
-        this.mapResult(this.rest.label(id), 'resultLabelTagsForTag', id)
+        const level = this.menu.view.data.type
+        this.mapResult(this.rest.label(this.keyspaces[0], {
+          id,
+          type,
+          level
+        }), 'resultLabelTagsForTag', id)
       } else {
         resultLabelTagsForTag.call(this, { result: this.store.getUserDefinedTagsForLabel(id), context: id })
       }

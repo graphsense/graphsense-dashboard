@@ -439,9 +439,9 @@ export default class Menu extends Component {
   labelTagsData (result) {
     if (this.view.viewType !== 'tagpack') return
     this.labelTagsLoading = false
-    if (result.entity_tags && result.address_tags) {
-      result = result.entity_tags.concat(result.address_tags)
-    }
+    result = result.entity_tags || result.address_tags
+    this.setUpdate(true)
+    if (result.length === 0) return
     result.forEach(({ label, category, abuse, source }) => {
       const l = this.view.labels[label]
       if (!l) return
@@ -459,7 +459,6 @@ export default class Menu extends Component {
       l.category = l.available.categories.values().next().value || null
       l.abuse = l.available.abuses.values().next().value || null
     }
-    this.setUpdate(true)
   }
 
   setMin (value) {

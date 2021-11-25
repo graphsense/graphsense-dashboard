@@ -224,14 +224,14 @@ export default class Rest {
     return this.json(keyspace, `/blocks/${height}`)
   }
 
-  label (keyspace, { id, level, pagesize, nextPage }) {
-    const url = `/tags?label=${id}&level=${level}` +
-      (nextPage ? '&page=' + nextPage : '') +
-      (pagesize ? '&pagesize=' + pagesize : '')
+  label (keyspace, params) {
+    const url = `/tags?label=${params.id}&level=${params.level}` +
+      (params.nextPage ? '&page=' + params.nextPage : '') +
+      (params.pagesize ? '&pagesize=' + params.pagesize : '')
     return this.json(keyspace, url)
       .then(tags => {
         const norm = tag => normalizeTag(tag.currency.toLowerCase())(tag)
-        tags[level + '_tags'].map(norm)
+        tags[params.level + '_tags'].map(norm)
         return tags
       })
   }
