@@ -10,7 +10,7 @@ export default class TagsTable extends Table {
     this.nodeType = nodeType
     this.categories = categories
     this.dom = 'Bft'
-    this.total = 0
+    this.total = total
     this.realTotal = -1 // unknown real total
     this.level = nodeType === 'address' ? 'address' : (level || nodeType)
     this.columns = [

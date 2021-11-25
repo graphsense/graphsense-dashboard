@@ -3,9 +3,10 @@ import TagsTable from './tags_table.js'
 import downloadTagpack from '../icons/downloadTagpack.html'
 
 export default class MyTagsTable extends TagsTable {
-  constructor (dispatcher, index, total, data, nodeType, nodeIsInGraph, supportedKeyspaces, categories) {
-    super(dispatcher, index, total, data, null, nodeType, nodeIsInGraph, supportedKeyspaces, categories)
+  constructor (dispatcher, index, total, data, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories) {
+    super(dispatcher, index, total, data, null, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories)
     this.data = data || []
+    this.realTotal = this.total = this.data.length
     this.nodeType = nodeType
     this.supportedKeyspaces = supportedKeyspaces
     this.categories = categories
@@ -61,5 +62,13 @@ export default class MyTagsTable extends TagsTable {
     this.order = [[6, 'desc']]
     this.options = []
     this.addOption({ html: downloadTagpack, optionText: t('Download tags as TagPack'), message: 'exportYAML' + nodeType })
+  }
+
+  serverSide () {
+    return false
+  }
+
+  isSmall () {
+    return true
   }
 }

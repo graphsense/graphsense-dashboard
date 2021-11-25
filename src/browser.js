@@ -291,13 +291,19 @@ export default class Browser extends Component {
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption(newOption)
-    const total = 0
+    let tags = []
+    if (fromEntity) {
+      tags = data.tags[level + '_tags'].filter(({ isUserDefined }) => isUserDefined)
+    } else if (!fromLabel) { // is from address
+      tags = data.tags.filter(({ isUserDefined }) => isUserDefined)
+    }
+    const total = tags.length
     this.content.push(
       new TagsTable(
         this.dispatcher,
         request.index + 1,
         total,
-        [],
+        tags,
         request.id,
         request.type,
         this.currency,
@@ -321,6 +327,8 @@ export default class Browser extends Component {
       tags.length,
       tags,
       'entity',
+      this.currency,
+      null,
       this.nodeChecker,
       this.supportedKeyspaces,
       this.categories))
@@ -340,6 +348,8 @@ export default class Browser extends Component {
       tags.length,
       tags,
       'address',
+      this.currency,
+      null,
       this.nodeChecker,
       this.supportedKeyspaces,
       this.categories))

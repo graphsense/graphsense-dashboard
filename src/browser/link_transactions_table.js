@@ -3,7 +3,6 @@ import Table from './table.js'
 
 export default class LinkTransactionsTable extends Table {
   constructor (dispatcher, index, source, target, total, nodeType, currency, keyspace) {
-    console.log('total', total)
     super(dispatcher, index, total, currency, keyspace)
     this.source = source
     this.target = target
