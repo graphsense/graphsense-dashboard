@@ -174,9 +174,9 @@ export default class Table extends BrowserComponent {
     this.total = this.data.length
     if (!this.isSmall()) {
       if (this.realTotal === -1) {
-        this.total += 1000
+        this.total += 100
       } else {
-        this.total = Math.min(this.total + 1000, this.realTotal)
+        this.total = Math.min(this.total + 100, this.realTotal)
       }
     }
     const data = {
