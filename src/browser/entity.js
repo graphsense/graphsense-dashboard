@@ -19,12 +19,10 @@ export default class Entity extends Address {
   }
 
   flattenData () {
+    const num = n => numeral(n).format('1,000')
     const flat = super.flattenData()
-    flat.no_addresses = this.data.reduce((sum, v) => sum + v.no_addresses, 0)
-    flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
-    flat.tagCoherence = this.data.length === 1 && (this.data[0].tags || {}).tag_coherence !== null
-      ? numeral(this.data[0].tags.tag_coherence).format('0.[00]%')
-      : t('unknown')
+    flat.no_addresses = num(this.data.reduce((sum, v) => sum + v.no_addresses, 0))
+    flat.no_entity_tags = num(this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0))
     flat.label = ''
     if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
       flat.label = this.data[0].tags.entity_tags[0].label

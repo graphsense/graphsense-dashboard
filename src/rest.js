@@ -140,7 +140,7 @@ export default class Rest {
   node (keyspace, { type, id }) {
     type = typeToEndpoint(type)
 
-    return this.json(keyspace, `/${type}/${id}?include_tags=true&tag_coherence=true`)
+    return this.json(keyspace, `/${type}/${id}?include_tags=true`)
       // set o.entity = null to not break further entity resolution
       .then(o => {
         if (o.address) {
@@ -154,7 +154,7 @@ export default class Rest {
 
   entityForAddress (keyspace, id) {
     logger.debug('rest entityForAddress', id)
-    return this.json(keyspace, '/addresses/' + id + '/entity?include_tags=true&tag_coherence=true')
+    return this.json(keyspace, '/addresses/' + id + '/entity?include_tags=true')
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
