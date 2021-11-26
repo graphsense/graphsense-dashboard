@@ -167,7 +167,7 @@ export default class Table extends BrowserComponent {
   }
 
   setResponse ({ page, request, drawCallback, result }) {
-    if (this.serverSide() && page !== this.nextPage) return
+    if (this.serverSide() && (page || null) !== this.nextPage) return
     this.data = this.data.concat(this.resultField ? result[this.resultField] : result)
     this.nextPage = result.next_page
     const loading = this.loading || request
