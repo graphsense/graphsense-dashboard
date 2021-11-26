@@ -50,20 +50,6 @@ export default class Rest {
     this.logs = []
   }
 
-  refreshToken () {
-    logger.debug('refreshToken')
-    if (this.refreshing) return Promise.reject(new Error('refresh in progress'))
-    logger.debug('refreshing Token')
-    this.refreshing = true
-    return json(this.baseUrl + '/refresh', options())
-      .then(result => {
-        if (result.status !== 'success') return Promise.reject(new Error('refreshed is false'))
-        logger.debug('refresh successful')
-        return result
-      })
-      .finally(() => { logger.debug('refresh cleanup'); this.refreshing = false })
-  }
-
   remoteJson (keyspace, url, field, abortController) {
     const newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
     const opts = options()
@@ -80,10 +66,6 @@ export default class Rest {
       })
       .then(([ok, result]) => {
         if (!ok) {
-          if (result.message && result.message.startsWith('401')) {
-            return this.refreshToken()
-              .then(() => this.remoteJson(keyspace, url, field))
-          }
           result.requestURL = newurl
           // normalize message
           if (!result.message && result.msg) result.message = result.msg
