@@ -95,6 +95,7 @@ export default class Rest {
         // result is an array
           if (!Array.isArray(result[field])) {
             logger.warn(`${field} is not in result or not an array, calling ${url}`)
+            console.trace()
           } else {
             result[field].forEach(item => { item.keyspace = keyspace })
           }
@@ -167,7 +168,7 @@ export default class Rest {
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(keyspace, url, 'txs')
+    return this.json(keyspace, url, 'address_txs')
   }
 
   linkTransactions (keyspace, params, csv) {
