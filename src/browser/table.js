@@ -187,6 +187,7 @@ export default class Table extends BrowserComponent {
     }
     this.loading = null
     drawCallback(data)
+    this.table.columns.adjust()
   }
 
   truncateValue (value) {
