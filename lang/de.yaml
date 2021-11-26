@@ -158,7 +158,7 @@ searching criterion final_balance: Bilanz %0 # one of searching between, min, ma
 searching criterion total_received: Eingänge %0 # one of searching between, min, max
 searching outgoing: ausgehenden
 searching incoming: eingehenden
-searching: "suche nach %0 Nachbarn von %1 mit %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
+searching: "suche nach %0 Nachbarn von %1 mit %2 (Tiefe: %3, Breite: %4, Entitäten mit mehr als %5 Adressen auslassen)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
 errors only: nur Fehler
 show more: zeige mehr
 error requesting: "Fehler beim Aufruf von %0: %1"
