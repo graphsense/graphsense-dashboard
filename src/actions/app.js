@@ -84,9 +84,11 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
 }
 
 const blurSearch = function (context) {
-  const search = context === 'search' ? this.search : null
-  if (!search) return
-  search.clear()
+  if (context === 'search') {
+    this.search.clear()
+  } else {
+    this.menu.search.clearResults()
+  }
 }
 
 const removeLabel = function (label) {

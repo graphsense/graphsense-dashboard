@@ -41,6 +41,7 @@ export default class Search extends Component {
     this.result = []
     this.resultLabels = []
     this.resultLocalLabels = []
+    this.setUpdate('result')
   }
 
   clear () {
