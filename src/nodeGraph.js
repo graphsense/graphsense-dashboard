@@ -1230,14 +1230,11 @@ export default class NodeGraph extends Component {
 
   findValueAndLabel (tx) {
     let value, label
-    if (this.txLabelType === 'value') {
-      value = tx[this.txLabelType].value
-      label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
-    } else if (this.txLabelType === 'no_txs') {
+    if (this.txLabelType === 'no_txs') {
       value = label = tx[this.txLabelType]
     } else {
-      value = 0
-      label = '?'
+      value = tx[this.txLabelType].value
+      label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
     }
     return [value, label]
   }
@@ -1337,7 +1334,7 @@ export default class NodeGraph extends Component {
   ], store) {
     this.currency = currency
     this.labelType = labelType
-    this.txLabelType = txLabelType
+    this.txLabelType = txLabelType === 'estimated_value' ? 'value' : txLabelType
     this.x = x || 0
     this.y = y || 0
     this.k = k || 1
