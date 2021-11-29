@@ -17,7 +17,7 @@ export default class TransactionsTable extends Table {
         data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatCurrency(value, keyspace, true)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Height'),

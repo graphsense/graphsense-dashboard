@@ -210,6 +210,11 @@ export default class Table extends BrowserComponent {
     }
   }
 
+  formatCurrencyInTable (type, value, keyspace, colorful) {
+    if (type !== 'display') return value
+    return this.formatCurrency(value, keyspace, colorful)
+  }
+
   downloadOption (filename) {
     this.filename = filename
     return { html: downloadCSV, optionText: t('Download table as CSV'), message: 'downloadTable' }

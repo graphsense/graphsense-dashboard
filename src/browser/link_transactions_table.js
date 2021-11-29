@@ -17,13 +17,13 @@ export default class LinkTransactionsTable extends Table {
         name: t('Input value'),
         data: row => this.getValueByCurrencyCode(row.input_value),
         className: 'text-right',
-        render: (value, type) => this.formatCurrency(value, keyspace, true)
+        render: (value, type) => this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Output value'),
         data: row => this.getValueByCurrencyCode(row.output_value),
         className: 'text-right',
-        render: (value, type) => this.formatCurrency(value, keyspace, true)
+        render: (value, type) => this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Height'),
@@ -41,7 +41,7 @@ export default class LinkTransactionsTable extends Table {
         data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatCurrency(value, keyspace, true)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       }
       this.columns.splice(1, 2, col)
     }
