@@ -18,7 +18,7 @@
     "js-base64": "2.4.9",
     "jspdf": "^2.3.1",
     "jstimezonedetect": "1.0.6",
-    "jszip": "^3.2.2",
+    "jszip": "^3.7.0",
     "lzwcompress": "0.4.0",
     "moment": "2.22.2",
     "moment-timezone": "0.5.25",
