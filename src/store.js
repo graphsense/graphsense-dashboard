@@ -299,9 +299,22 @@ export default class Store {
   }
 
   deserialize (version, [addresses, entities, alllinks, categories]) {
+    const fixFiat = (value) => {
+      return {
+        fiat_values: [{ code: 'eur', value: value.eur },
+          { code: 'usd', value: value.usd }
+        ],
+        value: value.value
+      }
+    }
     entities.forEach(entity => {
       entity.forAddresses = entity.addresses
       delete entity.addresses
+      if (version <= '0.5.0') {
+        entity.total_received = fixFiat(entity.total_received)
+        entity.total_spent = fixFiat(entity.total_spent)
+        entity.balance = fixFiat(entity.balance)
+      }
       if (version <= '0.4.5') {
         entity.tags = {
           address_tags: entity.tags,
@@ -318,6 +331,11 @@ export default class Store {
       }
     })
     addresses.forEach(address => {
+      if (version <= '0.5.0') {
+        address.total_received = fixFiat(address.total_received)
+        address.total_spent = fixFiat(address.total_spent)
+        address.balance = fixFiat(address.balance)
+      }
       this.add(address)
     })
     alllinks.forEach(([id, links]) => {
@@ -331,6 +349,17 @@ export default class Store {
         sp = unprefix(id)
       }
       links.forEach(({ key, value }) => {
+        if (version <= '0.5.0') {
+          value.value = value.estimated_value
+          delete value.estimated_value
+          value.value = fixFiat(value.value)
+        }
+        if (version === '0.5.0') {
+          value.received = fixFiat(value.received)
+        }
+        if (version <= '0.4.5') {
+          value.keyspace = sp[0]
+        }
         this.linkOutgoing(sp[1], key, sp[0], sp[0], value)
       })
     })
