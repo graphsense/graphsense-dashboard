@@ -201,8 +201,10 @@ export default class Model extends Callable {
   }
 
   serialize () {
+    let v = VERSION.split('-')[0] // eslint-disable-line no-undef
+    v = v.split(' ')[0]
     return this.compress([
-      VERSION, // eslint-disable-line no-undef
+      v,
       this.store.serialize(),
       this.graph.serialize(),
       this.config.serialize(),
@@ -248,39 +250,6 @@ export default class Model extends Callable {
     yaml.tags = tags
 
     return YAML.stringify(yaml)
-  }
-
-  generateReport () {
-    return import('jszip').then(jszip => {
-      let zip = new jszip.default() // eslint-disable-line new-cap
-      const json = JSON.stringify(this.generateReportJSON())
-      zip.file('report.json', json)
-      return zip.generateAsync({ type: 'blob' })
-        .then(zipfile => {
-          const formData = new FormData() // eslint-disable-line no-undef
-          formData.append('file', zipfile)
-          return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_timestamp', { // eslint-disable-line no-undef
-            method: 'POST',
-            body: formData
-          })
-        })
-        .then(response => response.blob())
-        .then(tsr => {
-          zip = new jszip.default() // eslint-disable-line new-cap
-          zip.file('report.json', json)
-          zip.file('report.tsr', tsr)
-          return zip.generateAsync({ type: 'blob' })
-        })
-        .then(zipfile => {
-          const formData = new FormData() // eslint-disable-line no-undef
-          formData.append('file', zipfile)
-          return fetch(TITANIUM_REPORT_GENERATION_URL + '/generate_report', { // eslint-disable-line no-undef
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.blob())
-        })
-    })
   }
 
   generateReportPDF () {
@@ -381,6 +350,7 @@ export default class Model extends Callable {
     const data = this.decompress(buffer)
     this.createComponents()
     data[0] = data[0].split(' ')[0]
+    data[0] = data[0].split('-')[0]
     logger.debug('Importing from version', data[0], data[1])
     this.store.deserialize(data[0], data[1])
     this.graph.deserialize(data[0], data[2], this.store)

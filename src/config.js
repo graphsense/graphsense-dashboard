@@ -342,7 +342,7 @@ export default class Config extends Component {
 
   deserialize (version, values) {
     this.labelType = values[0]
-    this.txLabelType = values[1]
+    this.txLabelType = values[1] === 'estimated_value' ? 'value' : values[1]
     this.highlights = values[2] || [] // backwards compat
   }
 }
