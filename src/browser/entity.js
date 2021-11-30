@@ -1,6 +1,7 @@
 import entity from './entity.html'
 import Address from './address.js'
 import { t } from '../lang.js'
+import numeral from 'numeral'
 
 export default class Entity extends Address {
   constructor (dispatcher, data, index, currency, categories) {
@@ -8,22 +9,20 @@ export default class Entity extends Address {
     this.template = entity
     this.options =
       [
+        { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
         { inline: 'row-incoming', optionText: 'Sending entities', message: 'initIndegreeTable' },
         { inline: 'row-outgoing', optionText: 'Receiving entities', message: 'initOutdegreeTable' },
         { inline: 'row-addresses', optionText: 'Addresses', message: 'initAddressesTable' },
-        { inline: 'row-tags', optionText: 'Address Tags', message: 'initTagsTable' },
-        { inline: 'row-entity-tags', optionText: 'Entity Tags', message: 'initEntityTagsTable' }
+        { inline: 'row-tags', optionText: 'Address Tags', message: 'initTagsTable', params: ['address', this.data[0].keyspace] },
+        { inline: 'row-entity-tags', optionText: 'Entity Tags', message: 'initTagsTable', params: ['entity', this.data[0].keyspace] }
       ]
   }
 
   flattenData () {
+    const num = n => numeral(n).format('1,000')
     const flat = super.flattenData()
-    const esc = s => s.replace(' ', '&nbsp;')
-    flat.no_addresses = this.data.reduce((sum, v) => sum + v.no_addresses, 0)
-    flat.label_receiving_entities = esc(t('Receiving entities'))
-    flat.label_sending_entities = esc(t('Sending entities'))
-    flat.label_tag_coherence = esc(t('Tag coherence'))
-    flat.no_entity_tags = this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0)
+    flat.no_addresses = num(this.data.reduce((sum, v) => sum + v.no_addresses, 0))
+    flat.no_entity_tags = num(this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0))
     flat.label = ''
     if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
       flat.label = this.data[0].tags.entity_tags[0].label

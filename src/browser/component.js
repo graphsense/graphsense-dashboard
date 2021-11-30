@@ -1,7 +1,7 @@
 import { t } from '../lang.js'
 import { replace, addClass } from '../template_utils.js'
 import option from './option.html'
-import { formatCurrency } from '../utils.js'
+import { formatCurrency, getValueByCurrencyCode } from '../utils.js'
 import moment from 'moment'
 import Component from '../component.js'
 
@@ -20,13 +20,20 @@ export default class BrowserComponent extends Component {
     this.setUpdate(true)
   }
 
+  currentOptionMatches (option) {
+    if (!this.currentOption) return false
+    if (typeof (option) === 'string') return this.currentOption === option
+    if (!option.params) return this.currentOption === option.message
+    return this.currentOption.message === option.message && this.currentOption.params[0] === option.params[0] && this.currentOption.params[1] === option.params[1]
+  }
+
   addOption (option) {
     this.options.push(option)
   }
 
   optionEl (parent, optionData) {
     parent.className = 'cursor-pointer ' +
-      (this.currentOption === optionData.message ||
+      (this.currentOptionMatches(optionData) ||
         !optionData.inline ? 'option-active' : '')
     let optionHtml = option
     if (optionData.html) {
@@ -35,7 +42,9 @@ export default class BrowserComponent extends Component {
     optionData.optionText = t(optionData.optionText)
     parent.innerHTML = replace(optionHtml, optionData)
     parent.addEventListener('click', () => {
-      this.dispatcher(optionData.message, this.requestData())
+      const r = this.requestData()
+      r.optionParams = optionData.params
+      this.dispatcher(optionData.message, r)
     })
     return parent
   }
@@ -71,7 +80,7 @@ export default class BrowserComponent extends Component {
       arrowDiv.setAttributeNS(null, 'class', 'option-arrow')
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path')
       path.setAttributeNS(null, 'd', 'M10 0 0 10 10 20')
-      if (this.currentOption === optionData.message) div.appendChild(arrowDiv)
+      if (this.currentOptionMatches(optionData)) div.appendChild(arrowDiv)
       row.appendChild(div)
       arrowDiv.appendChild(path)
     })
@@ -85,6 +94,10 @@ export default class BrowserComponent extends Component {
     if (!colorful) return c
     const cl = value < 0 ? 'text-gs-red' : (value > 0 ? 'text-gs-base' : '')
     return `<span class="${cl}">${c}</span>`
+  }
+
+  getValueByCurrencyCode (value) {
+    return getValueByCurrencyCode(value, this.currency)
   }
 
   formatTimestamp (timestamp) {

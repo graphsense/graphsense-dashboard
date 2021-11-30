@@ -13,32 +13,34 @@ export default class BlockTransactionsTable extends Table {
       },
       {
         name: t('No. inputs'),
-        data: 'no_inputs'
+        data: 'inputs',
+        render: value => value.length
       },
       {
         name: t('No. outputs'),
-        data: 'no_outputs'
+        data: 'outputs',
+        render: value => value.length
       },
       {
         name: t('Total input'),
-        data: 'total_input',
+        data: row => this.getValueByCurrencyCode(row.total_input),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Total output'),
-        data: 'total_output',
+        data: row => this.getValueByCurrencyCode(row.total_output),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       }
     ]
     this.loadMessage = 'loadTransactions'
-    this.resultField = 'txs'
+    this.resultField = null
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.height, 'block']
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Transactions file', t('block'), height) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

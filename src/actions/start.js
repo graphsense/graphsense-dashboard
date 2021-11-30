@@ -30,6 +30,9 @@ const search = function ({ term, context }) {
   if (!search) return
   search.setSearchTerm(term, prefixLength)
   search.hideLoading()
+  if (context === 'tagpack') {
+    this.menu.setSearchInput(term.trim())
+  }
   if (search.needsResults(searchlimit, prefixLength)) {
     if (search.timeout) clearTimeout(search.timeout)
     if (search.abortController) {
@@ -96,7 +99,11 @@ const appLoaded = function () {
 }
 
 const fetchError = function ({ context, msg, error }) {
-  if (error.message.startsWith('401')) {
+  if (error.message && error.message.startsWith('429')) {
+    this.statusbar.clear()
+  }
+  if (error.message && error.message.startsWith('401')) {
+    this.statusbar.clear()
     this.login.loading(false)
     this.login.clear()
     this.login.error('Please fill in your credentials')
@@ -107,11 +114,6 @@ const fetchError = function ({ context, msg, error }) {
     }
     return
   }
-  if (error.message.startsWith('429')) {
-    logger.debug('ERRORMESSAGE', error)
-    this.statusbar.rateLimitExceeded(error)
-    return
-  }
   switch (msg) {
     case 'loginResult':
       this.login.error(error.message || 'Something went wrong')
@@ -119,7 +121,7 @@ const fetchError = function ({ context, msg, error }) {
       break
     case 'searchresult':
       {
-        const search = context && context.isInDialog ? this.menu.search : this.search
+        const search = context && context.dialogContext === 'tagpack' ? this.menu.search : this.search
         if (!search) return
         if (error.name === 'AbortError') return
         search.hideLoading()

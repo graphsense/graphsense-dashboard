@@ -11,8 +11,8 @@
     <span class="prop-key">{{t:Addresses}}</span>
     <span class="prop-value id">{{no_addresses}}</span>
   </div>
-  <div class="prop-row">
-    <span class="prop-key">{{label_transfers}}</span>
+  <div class="prop-row" id="row-transactions">
+    <span class="prop-key">{{te:Transfers}}</span>
     <span class="prop-value id">{{no_transfers}}&nbsp;
       <i class="fas fa-long-arrow-alt-down text-gs-base" title="{{t:Deposits}}"></i>
       {{no_incoming_txs}}&nbsp;
@@ -21,36 +21,32 @@
     </span>
   </div>
   <div class="prop-row" id="row-outgoing">
-    <span class="prop-key">{{label_receiving_entities}}</span>
+    <span class="prop-key">{{te:Receiving entities}}</span>
     <span class="prop-value id">{{out_degree}}</span>
   </div>
   <div class="prop-row" id="row-incoming">
-    <span class="prop-key">{{label_sending_entities}}</span>
+    <span class="prop-key">{{te:Sending entities}}</span>
     <span class="prop-value id">{{in_degree}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{label_first_usage}}</span>
+    <span class="prop-key">{{te:First usage}}</span>
     <span class="prop-value id">{{first_usage}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{label_last_usage}}</span>
+    <span class="prop-key">{{te:Last usage}}</span>
     <span class="prop-value id">{{last_usage}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{label_activity_period}}</span>
+    <span class="prop-key">{{te:Activity period}}</span>
     <span class="prop-value id">{{activity_period}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{label_total_received}}</span>
+    <span class="prop-key">{{te:Total received}}</span>
     <span class="prop-value id">{{total_received}}</span>
   </div>
   <div class="prop-row">
-    <span class="prop-key">{{label_final_balance}}</span>
+    <span class="prop-key">{{te:Final balance}}</span>
     <span class="prop-value id">{{balance}}</span>
-  </div>
-  <div class="prop-row">
-    <span class="prop-key"></span>
-    <span class="prop-value id note">{{external_txs_note}}</span>
   </div>
   <hr/>
   <div class="prop-row" id="row-tags">
@@ -60,9 +56,5 @@
   <div class="prop-row" id="row-entity-tags">
     <span class="prop-key">{{t:Entity tags}}</span>
     <span class="prop-value id">{{no_entity_tags}}</span>
-  </div>
-  <div class="prop-row">
-    <span class="prop-key">{{label_tag_coherence}}</span>
-    <span class="prop-value id">{{tagCoherence}}</span>
   </div>
 </div>

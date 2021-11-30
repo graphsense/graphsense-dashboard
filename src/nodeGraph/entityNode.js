@@ -180,8 +180,8 @@ export default class EntityNode extends GraphNode {
         logger.debug('addressNode.y', addressNode.y)
         const x = padding + expandHandleWidth
         const y = cumY
-        addressNode.x = this.x + x + this.dx
-        addressNode.y = this.y + y + this.dy
+        addressNode.setX(this.x + x + this.dx)
+        addressNode.setY(this.y + y + this.dy)
         cumY += addressNode.getHeight()
       })
   }

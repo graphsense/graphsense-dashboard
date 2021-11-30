@@ -9,6 +9,9 @@ export default class TagsTable extends Table {
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.categories = categories
+    this.dom = 'Bft'
+    this.total = total
+    this.realTotal = -1 // unknown real total
     this.level = nodeType === 'address' ? 'address' : (level || nodeType)
     this.columns = [
       {
@@ -72,14 +75,14 @@ export default class TagsTable extends Table {
     this.order = [[8, 'desc']]
     this.loadMessage = 'loadTags'
     this.selectMessage = ['clickAddress', 'clickLabel']
-    this.resultField = null
+    this.resultField = this.level + '_tags'
     this.loadParams = [this.nodeId, this.nodeType, this.level]
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Tags file', t(this.level), t(nodeType), nodeId) + ` (${keyspace ? keyspace.toUpperCase() : ''})`))
     if (nodeType === 'label') this.options = []
   }
 
   isSmall () {
-    return true
+    return false
   }
 
   getParams () {
@@ -100,5 +103,9 @@ export default class TagsTable extends Table {
 
   isActiveRow (row) {
     return row.keyspace && this.supportedKeyspaces.indexOf(row.keyspace) !== -1 && row.active
+  }
+
+  serverSide () {
+    return true
   }
 }

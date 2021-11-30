@@ -13,6 +13,7 @@ import Component from './component.js'
 import { formatCurrency, nodesIdentical } from './utils'
 import Logger from './logger.js'
 import { layerMargin, expandHandleWidth, noCategory } from './globals.js'
+import contextMenu from 'd3-context-menu'
 
 const logger = Logger.create('NodeGraph') // eslint-disable-line no-unused-vars
 
@@ -115,6 +116,7 @@ export default class NodeGraph extends Component {
     this.y = 0
     this.dy = 0
     this.dk = 0
+    this.removedLinks = set()
 
     window.addEventListener('resize', () => {
       this.dispatcher('resize')
@@ -222,7 +224,16 @@ export default class NodeGraph extends Component {
   }
 
   getCategoryColors () {
-    return this.colorMapCategories
+    const onlyVisible = map()
+    const categories = []
+    this.entityNodes.each(node => categories.push(node.getActorCategory()))
+    this.addressNodes.each(node => categories.push(node.getActorCategory()))
+    logger.debug('categories', categories)
+    categories.forEach(cat => {
+      onlyVisible.set(cat, this.colorMapCategories.get(cat))
+    })
+    logger.debug('onlyVisible', onlyVisible)
+    return onlyVisible
   }
 
   createSnapshot () {
@@ -290,8 +301,8 @@ export default class NodeGraph extends Component {
     const entity = this.entityNodes.get(id)
     if (!entity) return
     this.draggingNode = { entity, x, y }
-    entity.x += entity.dx
-    entity.y += entity.dy
+    entity.setX(entity.x + entity.dx)
+    entity.setY(entity.y + entity.dy)
     entity.dx = entity.dy = 0
     entity.repositionNodes()
   }
@@ -465,7 +476,7 @@ export default class NodeGraph extends Component {
     this.currency = currency
     this.addressNodes.each(node => node.setCurrency(currency))
     this.entityNodes.each(node => node.setCurrency(currency))
-    if (this.txLabelType === 'estimated_value') {
+    if (this.txLabelType === 'value') {
       this.setUpdate('links')
     }
   }
@@ -560,6 +571,11 @@ export default class NodeGraph extends Component {
     return JSON.stringify([source.id, target.id]) == JSON.stringify(this.selectedLink) // eslint-disable-line eqeqeq
   }
 
+  removeLink (source, target) {
+    this.removedLinks.add(source + target)
+    this.setUpdate('link', source)
+  }
+
   setResultEntityAddresses (id, addresses) {
     const entity = this.entityNodes.get(id)
     addresses.forEach((address) => {
@@ -580,7 +596,6 @@ export default class NodeGraph extends Component {
   }
 
   add (object, anchor) {
-    logger.debug('add', object, anchor)
     this.adding.remove(object.id)
     let layerIds
     if (!anchor) {
@@ -599,6 +614,11 @@ export default class NodeGraph extends Component {
     layerIds.forEach(layerId => {
       node = this.addLayer(layerId, object, anchor)
     })
+    if (anchor) {
+      const source = anchor.isOutgoing ? anchor.nodeId : node.id
+      const target = anchor.isOutgoing ? node.id : anchor.nodeId
+      this.removedLinks.remove(source + target)
+    }
     this.setUpdate('layers')
     return node
   }
@@ -1127,6 +1147,7 @@ export default class NodeGraph extends Component {
   }
 
   drawLink (root, label, scale, source, target, clickable) {
+    if (this.removedLinks.has(source.id + target.id)) return
     const path = this.linker({ source: [source, true, scale], target: [target, false, scale] })
     const g1 = root.append('g')
       .attr('class', 'link')
@@ -1155,6 +1176,13 @@ export default class NodeGraph extends Component {
       p.style('stroke', source.color)
       p.style('marker-end', `url(#${this.makeArrowSummitMarkerId(source.color)})`)
     }
+
+    g1.on('contextmenu', contextMenu([{
+      title: t('Remove'),
+      action: () => {
+        this.dispatcher('removeLink', [source.id, target.id])
+      }
+    }]))
     const sourceX = source.getXForLinks() + source.getWidthForLinks()
     const sourceY = source.getYForLinks() + source.getHeightForLinks() / 2
     const targetX = target.getXForLinks() - this.arrowSummit
@@ -1179,14 +1207,14 @@ export default class NodeGraph extends Component {
       return te
     }
 
-    const t = f()
+    const s = f()
 
-    const box = t.node().getBBox()
+    const box = s.node().getBBox()
 
     const width = box.width // (label + '').length * fontSize
     const height = box.height // fontSize * 1.2
 
-    t.remove()
+    s.remove()
 
     g2.append('rect')
       .classed('linkRect', true)
@@ -1202,14 +1230,11 @@ export default class NodeGraph extends Component {
 
   findValueAndLabel (tx) {
     let value, label
-    if (this.txLabelType === 'estimated_value') {
-      value = tx[this.txLabelType].value
-      label = formatCurrency(tx[this.txLabelType][this.currency], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
-    } else if (this.txLabelType === 'no_txs') {
+    if (this.txLabelType === 'no_txs') {
       value = label = tx[this.txLabelType]
     } else {
-      value = 0
-      label = '?'
+      value = tx[this.txLabelType].value
+      label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
     }
     return [value, label]
   }
@@ -1309,7 +1334,7 @@ export default class NodeGraph extends Component {
   ], store) {
     this.currency = currency
     this.labelType = labelType
-    this.txLabelType = txLabelType
+    this.txLabelType = txLabelType === 'estimated_value' ? 'value' : txLabelType
     this.x = x || 0
     this.y = y || 0
     this.k = k || 1

@@ -150,6 +150,7 @@ export default class Store {
       .filter((value, index, self) => value && self.indexOf(value) === index)
       .sort((a, b) => (cats[a] || Infinity) - (cats[b] || Infinity))
     node.mainCategory = sorted[0]
+    return sorted[0]
   }
 
   get (keyspace, type, key) {
@@ -277,22 +278,24 @@ export default class Store {
         nodeTags.set(p, t)
       })
     })
+    const cats = []
     nodeTags.each((tags, p) => {
       const a = this.addresses.get(p)
       const e = this.entities.get(p)
       if (a) {
         a.tags = a.tags || []
         a.tags = a.tags.concat(tags)
-        this.calcMainCategory(a)
+        cats.push(this.calcMainCategory(a))
       } else if (e) {
         e.tags.entity_tags = e.tags.entity_tags.concat(tags)
-        this.calcMainCategory(e)
+        cats.push(this.calcMainCategory(e))
       } else {
         let t = this.tagsStore.get(p) || []
         t = t.concat(tags)
         this.tagsStore.set(p, t)
       }
     })
+    this.addCategories(cats)
   }
 
   deserialize (version, [addresses, entities, alllinks, categories]) {

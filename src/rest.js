@@ -50,20 +50,6 @@ export default class Rest {
     this.logs = []
   }
 
-  refreshToken () {
-    logger.debug('refreshToken')
-    if (this.refreshing) return Promise.reject(new Error('refresh in progress'))
-    logger.debug('refreshing Token')
-    this.refreshing = true
-    return json(this.baseUrl + '/refresh', options())
-      .then(result => {
-        if (result.status !== 'success') return Promise.reject(new Error('refreshed is false'))
-        logger.debug('refresh successful')
-        return result
-      })
-      .finally(() => { logger.debug('refresh cleanup'); this.refreshing = false })
-  }
-
   remoteJson (keyspace, url, field, abortController) {
     const newurl = this.keyspaceUrl(keyspace) + (url.startsWith('/') ? '' : '/') + url
     const opts = options()
@@ -71,13 +57,27 @@ export default class Rest {
       opts.signal = abortController.signal
     }
     if (this.apiKey) opts.headers.Authorization = this.apiKey
-    return json(newurl, opts)
-      .then(result => {
+    return window.fetch(newurl, opts)
+      .then(response => {
+        this.ratelimitLimit = response.headers.get('ratelimit-Limit')
+        this.ratelimitRemaining = response.headers.get('ratelimit-Remaining')
+        this.ratelimitReset = Math.floor(Date.now() / 1000) + response.headers.get('ratelimit-Reset') * 1
+        return Promise.all([response.ok, response.json()])
+      })
+      .then(([ok, result]) => {
+        if (!ok) {
+          result.requestURL = newurl
+          // normalize message
+          if (!result.message && result.msg) result.message = result.msg
+          return Promise.reject(result)
+        }
+
         this.logs.push([+new Date(), newurl])
         if (field) {
         // result is an array
           if (!Array.isArray(result[field])) {
             logger.warn(`${field} is not in result or not an array, calling ${url}`)
+            console.trace()
           } else {
             result[field].forEach(item => { item.keyspace = keyspace })
           }
@@ -85,15 +85,6 @@ export default class Rest {
           result.keyspace = keyspace
         }
         return Promise.resolve(result)
-      }, error => {
-        if (error.message && error.message.startsWith('401')) {
-          return this.refreshToken()
-            .then(() => this.remoteJson(keyspace, url, field))
-        }
-        error.requestURL = newurl
-        // normalize message
-        if (!error.message && error.msg) error.message = error.msg
-        return Promise.reject(error)
       })
   }
 
@@ -132,14 +123,21 @@ export default class Rest {
   node (keyspace, { type, id }) {
     type = typeToEndpoint(type)
 
-    return this.json(keyspace, `/${type}/${id}?include_tags=true&tag_coherence=true`)
+    return this.json(keyspace, `/${type}/${id}?include_tags=true`)
+      // set o.entity = null to not break further entity resolution
+      .then(o => {
+        if (o.address) {
+          o.entity = null
+        }
+        return o
+      })
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
 
   entityForAddress (keyspace, id) {
     logger.debug('rest entityForAddress', id)
-    return this.json(keyspace, '/addresses/' + id + '/entity?include_tags=true&tag_coherence=true')
+    return this.json(keyspace, '/addresses/' + id + '/entity?include_tags=true')
       .then(normalizeNode)
       .then(normalizeNodeTags(keyspace))
   }
@@ -152,12 +150,13 @@ export default class Rest {
     url += '?' +
       (request.nextPage ? 'page=' + request.nextPage : '') +
       (request.pagesize ? '&pagesize=' + request.pagesize : '')
-    return this.json(keyspace, url, request.params[1] === 'block' ? 'txs' : 'address_txs')
+    return this.json(keyspace, url, 'address_txs')
   }
 
   linkTransactions (keyspace, params, csv) {
+    const type = typeToEndpoint(params.type)
     const url =
-       '/addresses/' + params.source + '/links?neighbor=' + params.target
+       '/' + type + '/' + params.source + '/links?neighbor=' + params.target
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url)
   }
@@ -176,30 +175,22 @@ export default class Rest {
     const id = params.id
     const type = params.type
     logger.debug('fetch tags', keyspace)
-    let url = '/' + typeToEndpoint(type) + '/' + id + '/tags'
-    const level = params.level
-    if (level) {
-      url += `?level=${level}`
-    }
-    logger.debug('level ', level)
+    let url = `/${typeToEndpoint(type)}/${id}/tags?level=${params.level}`
+    url += (params.nextPage ? '&page=' + params.nextPage : '') +
+      (params.pagesize ? '&pagesize=' + params.pagesize : '')
     if (csv) return this.csv(keyspace, url)
     return this.json(keyspace, url)
       .then(tags => {
         if (type === 'entity') {
+          tags[params.level + '_tags'].map(tag =>
+            normalizeTag(tag.currency.toLowerCase())(tag)
+          )
+        } else {
           tags.address_tags.map(tag =>
             normalizeTag(tag.currency.toLowerCase())(tag)
           )
-          tags.entity_tags.map(tag =>
-            normalizeTag(tag.currency.toLowerCase())(tag)
-          )
-          logger.debug('level in clal', level)
-          if (level) return tags[level + '_tags']
-          return tags
-        } else {
-          return tags.map(tag =>
-            normalizeTag(tag.currency.toLowerCase())(tag)
-          )
         }
+        return tags
       })
   }
 
@@ -209,22 +200,21 @@ export default class Rest {
   }
 
   transaction (keyspace, txHash) {
-    return this.json(keyspace, `/txs/${txHash}`)
+    return this.json(keyspace, `/txs/${txHash}?include_io=true`)
   }
 
   block (keyspace, height) {
     return this.json(keyspace, `/blocks/${height}`)
   }
 
-  label (id) {
-    return this.json(null, `/tags?label=${id}`)
+  label (keyspace, params) {
+    const url = `/tags?label=${params.id}&level=${params.level}` +
+      (params.nextPage ? '&page=' + params.nextPage : '') +
+      (params.pagesize ? '&pagesize=' + params.pagesize : '')
+    return this.json(keyspace, url)
       .then(tags => {
         const norm = tag => normalizeTag(tag.currency.toLowerCase())(tag)
-        if (Array.isArray(tags)) {
-          return tags.map(norm)
-        }
-        tags.address_tags.map(norm)
-        tags.entity_tags.map(norm)
+        tags[params.level + '_tags'].map(norm)
         return tags
       })
   }
@@ -237,8 +227,8 @@ export default class Rest {
       (includeLabels ? '&include_labels=' + includeLabels : '')
     if (csv) return this.csv(keyspace, url)
     url +=
-      (targets ? '&ids=' + targets.join(',') : '') +
-      (nextPage ? 'page=' + nextPage : '') +
+      (targets ? '&only_ids=' + targets.join(',') : '') +
+      (nextPage ? '&page=' + nextPage : '') +
       (pagesize ? '&pagesize=' + pagesize : '')
     return this.json(keyspace, url, 'neighbors')
       .then(result => { result.neighbors.forEach(normalizeNode); return result })

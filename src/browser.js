@@ -9,8 +9,8 @@ import Block from './browser/block.js'
 import Link from './browser/link.js'
 import Table from './browser/table.js'
 import TransactionsTable from './browser/transactions_table.js'
-import AccountTransactionsTable from './browser/account_transactions_table.js'
 import BlockTransactionsTable from './browser/block_transactions_table.js'
+import AccountTransactionsTable from './browser/account_transactions_table.js'
 import AddressesTable from './browser/addresses_table.js'
 import TagsTable from './browser/tags_table.js'
 import MyTagsTable from './browser/my_tags_table.js'
@@ -21,7 +21,6 @@ import Component from './component.js'
 import { addClass, removeClass, replace } from './template_utils.js'
 import Logger from './logger.js'
 import { nodesIdentical } from './utils.js'
-import { maxTransactionListSize } from './globals.js'
 import { tt } from './lang.js'
 import entityTag from './icons/entityTag.html'
 
@@ -91,12 +90,12 @@ export default class Browser extends Component {
     this.content.forEach(comp => comp.setCurrency(currency))
   }
 
-  setLabel (label, tags) {
+  setLabel (label) {
     this.visible = true
     this.setUpdate('visibility')
     if (this.content[0] instanceof Label && this.content[0].data.label === label.label) return
     this.destroyComponentsFrom(0)
-    this.content = [new Label(this.dispatcher, { label, tags }, 0, this.currency)]
+    this.content = [new Label(this.dispatcher, { label }, 0, this.currency, this.supportedKeyspaces)]
     this.setUpdate('content')
   }
 
@@ -138,7 +137,7 @@ export default class Browser extends Component {
     this.activeTab = 'transactions'
     this.visible = true
     this.destroyComponentsFrom(0)
-    const T = tx.currency_type === 'account' ? AccountTransaction : Transaction
+    const T = tx.tx_type === 'account' ? AccountTransaction : Transaction
     this.content = [
       new T(this.dispatcher, tx, 0, this.currency)
     ]
@@ -198,7 +197,6 @@ export default class Browser extends Component {
   initTransactionsTable (request) {
     if (request.index !== 0 && !request.index) return
     const comp = this.content[request.index]
-    if (!(comp instanceof Address)) return
     if (comp.data.length > 1) return
     const keyspace = comp.data[0].keyspace
     this.setUpdate('content')
@@ -220,14 +218,32 @@ export default class Browser extends Component {
     if (!(comp instanceof Block)) return
     const keyspace = comp.data.keyspace
     this.setUpdate('content')
-    if (this.content[request.index + 1] instanceof BlockTransactionsTable) {
+    const T = keyspace === 'eth' ? AccountTransactionsTable : BlockTransactionsTable
+    if (this.content[request.index + 1] instanceof T) {
       this.destroyComponentsFrom(request.index + 1)
       comp.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
     comp.setCurrentOption('initBlockTransactionsTable')
-    this.content.push(new BlockTransactionsTable(this.dispatcher, request.index + 1, comp.data.no_txs, request.id, this.currency, keyspace))
+    const t = keyspace === 'eth'
+      ? new AccountTransactionsTable(
+        this.dispatcher,
+        request.index + 1,
+        comp.data.no_txs,
+        request.id,
+        request.type,
+        this.currency,
+        keyspace)
+      : new BlockTransactionsTable(
+        this.dispatcher,
+        request.index + 1,
+        comp.data.no_txs,
+        request.id,
+        this.currency,
+        keyspace)
+    t.resultField = null
+    this.content.push(t)
   }
 
   initAddressesTable (request) {
@@ -254,6 +270,7 @@ export default class Browser extends Component {
 
   initTagsTable (request, level = 'address') {
     if (request.index !== 0 && !request.index) return
+    level = (request.optionParams && request.optionParams[0]) || level
     const last = this.content[request.index]
     const fromLabel = (last instanceof Label)
     const fromEntity = (last instanceof Entity)
@@ -265,23 +282,28 @@ export default class Browser extends Component {
       data = last.data[0]
     }
     this.setUpdate('content')
-    const newOption = level === 'address' ? 'initTagsTable' : 'initEntityTagsTable'
-    if (last.currentOption === newOption) {
+    const keyspace = (request.optionParams && request.optionParams[1]) || data.keyspace
+    const newOption = { message: 'initTagsTable', params: [level, keyspace] }
+    if (last.currentOptionMatches(newOption)) {
       this.destroyComponentsFrom(request.index + 1)
       last.setCurrentOption(null)
       return
     }
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption(newOption)
-    const keyspace = data.keyspace
-    const total = fromEntity || fromLabel ? data.tags[level + '_tags'].length : data.tags.length
-    const tags = fromEntity || fromLabel ? data.tags[level + '_tags'] : data.tags
+    let tags = []
+    if (fromEntity) {
+      tags = data.tags[level + '_tags'].filter(({ isUserDefined }) => isUserDefined)
+    } else if (!fromLabel) { // is from address
+      tags = data.tags.filter(({ isUserDefined }) => isUserDefined)
+    }
+    const total = tags.length
     this.content.push(
       new TagsTable(
         this.dispatcher,
         request.index + 1,
         total,
-        tags || [],
+        tags,
         request.id,
         request.type,
         this.currency,
@@ -305,6 +327,8 @@ export default class Browser extends Component {
       tags.length,
       tags,
       'entity',
+      this.currency,
+      null,
       this.nodeChecker,
       this.supportedKeyspaces,
       this.categories))
@@ -324,6 +348,8 @@ export default class Browser extends Component {
       tags.length,
       tags,
       'address',
+      this.currency,
+      null,
       this.nodeChecker,
       this.supportedKeyspaces,
       this.categories))
@@ -343,7 +369,7 @@ export default class Browser extends Component {
     this.destroyComponentsFrom(request.index + 1)
     last.setCurrentOption('initLinkTransactionsTable')
     const keyspace = last.data.keyspace
-    const total = Math.min(last.data.no_txs, maxTransactionListSize)
+    const total = last.data.no_txs
     this.content.push(new LinkTransactionsTable(this.dispatcher, request.index + 1, last.data.source, last.data.target, total, last.data.type, this.currency, keyspace))
   }
 

@@ -14,10 +14,10 @@ export default class TransactionsTable extends Table {
       },
       {
         name: t('Value'),
-        data: 'value',
+        data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Height'),
@@ -33,7 +33,7 @@ export default class TransactionsTable extends Table {
     this.resultField = 'address_txs'
     this.selectMessage = 'clickTransaction'
     this.loadParams = [this.nodeId, this.nodeType]
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Transactions file', t(this.nodeType), this.nodeId) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

@@ -183,3 +183,14 @@ tag coherence: tag coherence
 unknown: unknown
 from: from
 to: to
+pick a color: pick a color
+start highlighting addresses and entities: highlight addresses and entities
+api request limit: request limit
+reset in %0 s: reset in %0s
+from address: from address
+to address: to address
+transactions file: transactions of %0 %1 # $0 = type, %1 = id
+neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
+tags file: %0 tags of %1 %2 # %0 = type, %1 = id
+links file: transactions between %0 %1 and %2 # %0 = type, %1 = source, %2 = target
+addresses file: addresses of entity %0

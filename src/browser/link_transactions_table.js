@@ -15,17 +15,15 @@ export default class LinkTransactionsTable extends Table {
       },
       {
         name: t('Input value'),
-        data: 'input_value',
+        data: row => this.getValueByCurrencyCode(row.input_value),
         className: 'text-right',
-        render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+        render: (value, type) => this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Output value'),
-        data: 'output_value',
+        data: row => this.getValueByCurrencyCode(row.output_value),
         className: 'text-right',
-        render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+        render: (value, type) => this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Height'),
@@ -40,22 +38,18 @@ export default class LinkTransactionsTable extends Table {
     if (keyspace === 'eth') {
       const col = {
         name: t('Value'),
-        data: 'values',
+        data: row => this.getValueByCurrencyCode(row.value),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       }
       this.columns.splice(1, 2, col)
     }
     this.loadMessage = 'loadLinkTransactions'
-    this.resultField = null
+    this.resultField = 'links'
     this.selectMessage = 'clickTransaction'
     this.loadParams = { source: this.source, target: this.target, type: this.nodeType }
-    this.addOption(this.downloadOption())
-  }
-
-  isSmall () {
-    return true
+    this.addOption(this.downloadOption(t('links file', t(this.nodeType), this.source, this.target) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

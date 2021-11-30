@@ -194,6 +194,8 @@ select, input {
 
 .option-inline-wrapper {
   position: relative;
+  width: 20px;
+  display: table-cell;
   @apply pr-1;
 }
 
@@ -409,6 +411,10 @@ table.dataTable tbody tr {
 
 .dataTables_wrapper .dataTables_filter label {
   font-weight: bold;
+}
+
+.dataTables_wrapper .dt-buttons {
+  display: none;
 }
 
 textarea {

@@ -1,8 +1,11 @@
 import address from './address.html'
-import { replace } from '../template_utils'
+import { replace, esc } from '../template_utils'
 import BrowserComponent from './component.js'
 import { t, tt } from '../lang.js'
 import numeral from 'numeral'
+import Logger from '../logger.js'
+
+const logger = Logger.create('Address') // eslint-disable-line no-unused-vars
 
 export default class Address extends BrowserComponent {
   constructor (dispatcher, data, index, currency, categories) {
@@ -15,7 +18,7 @@ export default class Address extends BrowserComponent {
         { inline: 'row-incoming', optionText: 'Sending addresses', message: 'initIndegreeTable' },
         { inline: 'row-outgoing', optionText: 'Receiving addresses', message: 'initOutdegreeTable' },
         { inline: 'row-transactions', optionText: 'Transactions', message: 'initTransactionsTable' },
-        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable' }
+        { inline: 'row-tags', optionText: 'Tags', message: 'initTagsTable', params: ['address', this.data[0].keyspace] }
       ]
   }
 
@@ -47,15 +50,33 @@ export default class Address extends BrowserComponent {
     const tags = this.flattenTags()
     const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => this.categories[abuse] ? this.categories[abuse].label : '').filter(a => a).values())]
     const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => this.categories[category] ? this.categories[category].label : '').filter(a => a).values())]
-    const totalReceived = this.data.reduce((sum, v) => sum + v.total_received[this.currency], 0)
-    const balance = this.data.reduce((sum, v) => sum + v.balance[this.currency], 0)
+    const totalReceived = this.data.reduce((sum, v) => {
+      v.total_received.fiat_values.forEach((f, i) => {
+        if (!sum.fiat_values[i]) {
+          sum.fiat_values[i] = f
+        } else {
+          sum.fiat_values[i].value += f.value
+        }
+      })
+      sum.value += v.total_received.value
+      return sum
+    }, { fiat_values: [], value: 0 })
+    const balance = this.data.reduce((sum, v) => {
+      v.balance.fiat_values.forEach((f, i) => {
+        if (!sum.fiat_values[i]) {
+          sum.fiat_values[i] = f
+        } else {
+          sum.fiat_values[i].value += f.value
+        }
+      })
+      sum.value += v.balance.value
+      return sum
+    }, { fiat_values: [], value: 0 })
     const noOutgoingTxs = this.data.reduce((sum, v) => sum + v.no_outgoing_txs, 0)
     const noIncomingTxs = this.data.reduce((sum, v) => sum + v.no_incoming_txs, 0)
     const noOutdegree = this.data.reduce((sum, v) => sum + v.out_degree, 0)
     const noIndegree = this.data.reduce((sum, v) => sum + v.in_degree, 0)
-    const tagCoherence = this.data.length === 1 && this.data[0].tag_coherence !== null ? numeral(this.data[0].tag_coherence).format('0.[00]%') : t('unknown')
     const keyspace = [...new Set(this.data.map(d => d.keyspace.toUpperCase()))].join(' ')
-    const esc = s => s.replace(' ', '&nbsp;')
     return {
       id: '<div>' + this.data.map(d => d.id).join('</div><div>') + '</div>',
       first_usage: esc(this.formatTimestampWithAgo(first)),
@@ -71,17 +92,7 @@ export default class Address extends BrowserComponent {
       no_transfers: esc(numeral(noIncomingTxs + noOutgoingTxs).format('0,000')),
       out_degree: esc(numeral(noOutdegree).format('0,000')),
       in_degree: esc(numeral(noIndegree).format('0,000')),
-      no_tags: esc(numeral(tags.length).format('0,000')),
-      tagCoherence,
-      label_transfers: esc(t('Transfers') + (keyspace.toLowerCase() === 'eth' ? ' (ext.)' : '')),
-      label_activity_period: esc(t('Activity period')),
-      label_receiving_addresses: esc(t('Receiving addresses')),
-      label_sending_addresses: esc(t('Sending addresses')),
-      label_first_usage: esc(t('First usage')),
-      label_last_usage: esc(t('Last usage')),
-      label_total_received: esc(t('Total received')),
-      label_final_balance: esc(t('Final balance')),
-      external_txs_note: keyspace.toLowerCase() === 'eth' ? t('balance from external transactions') : ''
+      no_tags: esc(numeral(tags.length).format('0,000'))
     }
   }
 

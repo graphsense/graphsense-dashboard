@@ -10,8 +10,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MomentTimezoneDataPlugin = require('moment-timezone-data-webpack-plugin')
 const CompressionPlugin = require('compression-webpack-plugin')
 
-const VERSION = '0.5.0'
-const DEV_REST_ENDPOINT = 'http://spark-master:9001'
+const VERSION = '0.5.1'
+const DEV_REST_ENDPOINT = 'http://localhost:9000'
 
 const src = path.join(__dirname, 'src')
 

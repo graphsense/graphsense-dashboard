@@ -7,10 +7,10 @@ transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort
 labels: Schlagwörter
-tag: Tag
-tags: Tags
-address tags: Adressentags
-entity tags: Entität-Tags 
+tag: Schlagwort
+tags: Schlagwörter
+address tags: Adress-Schlagwörter
+entity tags: Entitäts-Schlagwörter
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen
@@ -57,7 +57,7 @@ minute: Minute
 minutes: Minuten
 second: Sekunde
 seconds: Sekunden
-addresses tagged: getaggte Adressen
+addresses tagged: beschlagwortete Adressen
 source: Quelle
 destination: Ziel
 value: Wert
@@ -80,7 +80,7 @@ add all to graph: alle zum Graph hinzufügen
 tagpack: Tagpack
 last modified: geändert
 active: aktiv
-download tags as json: Tags als JSON herunterladen
+download tags as json: Schlagwörter als JSON herunterladen
 included in block: enthalten in Block
 export: exportiere # as an imperative
 drawing: Zeichnung
@@ -141,14 +141,14 @@ user-defined labels: benutzerdefinierte Schlagwörter
 hide logs: Logs verstecken
 show logs: Logs anzeigen
 notes: Notizen
-add tag: Tag hinzufügen
+add tag: Schlagwort hinzufügen
 search incoming neighbors: suche eingehende Nachbarn
 search outgoing neighbors: suche ausgehende Nachbarn
 nothing to display yet: noch nichts anzuzeigen!
 entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
 link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
-shadow_tooltip: Eine Schattenverbindung verbinden identische Adressen und Entitäten.
+shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Entitäten.
 searching criterion category_name: Kategorie %0
 searching criterion addresses_ids: Adressen %0
 searching between: zwischen %0 und %1
@@ -158,7 +158,7 @@ searching criterion final_balance: Bilanz %0 # one of searching between, min, ma
 searching criterion total_received: Eingänge %0 # one of searching between, min, max
 searching outgoing: ausgehenden
 searching incoming: eingehenden
-searching: "suche nach %0 Nachbarn von %1 mit %2 (depth: %3, breadth: %4, skip if more than %5 addresses)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
+searching: "suche nach %0 Nachbarn von %1 mit %2 (Tiefe: %3, Breite: %4, Entitäten mit mehr als %5 Adressen auslassen)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
 errors only: nur Fehler
 show more: zeige mehr
 error requesting: "Fehler beim Aufruf von %0: %1"
@@ -175,21 +175,31 @@ loaded file: Datei %0 geladen
 loading entity for: lade Entität von %0
 loaded entity for: Entiät von %0 geladen
 no entity for: keine Entität von %0 gefunden
-loading tags for: lade Tags für %0 %1
-loaded tags for: Tags für %0 %1 geladen
+loading tags for: lade Schlagwörter für %0 %1
+loaded tags for: Schlagwörter für %0 %1 geladen
 trying to load addresses for entity: versuche %1 Adressen für Entität %0 zu laden # %0 = id, %1 = number
 loaded addresses for entity: %1 Adressen für Entität %0 geladen
 removed node of: Knoten %1 von Typ %0 entfernt
 found paths to nodes: %0 Pfade gefunden
 go to dashboard: zum Dashboard
-remove tag: Tag löschen
+remove tag: Schlagwort löschen
 show at most in links table: maximal %0 Transaktionen gelistet
 estimated value: geschätzter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
-tag coherence: Tagkohärenz
+tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
 API rate limit exceeded: API rate limit exceeded. Please try again later.
 legend empty: Legende noch leer
-balance from external transactions: noch ohne interne Transaktionen und Gaskosten
 from: von
 to: bis
+pick a color: Farbe wählen
+start highlighting addresses and entities: Adressen/Entitäten durch Klicken einfärben
+api request limit: Abfragelimit
+reset in %0 s: Reset in %0 Sek.
+from address: Sendende Adresse
+to address: Empfangende Adresse
+transactions file: Transaktionen der %0 %1 # $0 = type, %1 = id
+neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
+tags file: %0-Tags der %1 %2 # %0 = type, %1 = id
+links file: Transaktionen zwischen %0 %1 und %2 # %0 = type, %1 = source, %2 = target
+addresses file: Adressen der Entität %0

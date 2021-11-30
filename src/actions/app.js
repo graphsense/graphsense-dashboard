@@ -3,13 +3,7 @@ import moment from 'moment'
 import { coinToSatoshi, coinToWei } from '../utils.js'
 import { map } from 'd3-collection'
 import Export from '../export/export.js'
-import NeighborsTable from '../browser/neighbors_table.js'
 import Table from '../browser/table.js'
-import TagsTable from '../browser/tags_table.js'
-import TransactionsTable from '../browser/transactions_table.js'
-import BlockTransactionsTable from '../browser/block_transactions_table.js'
-import LinkTransactionsTable from '../browser/link_transactions_table.js'
-import AddressesTable from '../browser/addresses_table.js'
 import FileSaver from 'file-saver'
 const logger = Logger.create('Actions') // eslint-disable-line no-unused-vars
 
@@ -31,8 +25,8 @@ const submitSearchResult = function ({ term, context }) {
     const first = (context === 'search' ? this.search : this.menu.search).getFirstResult()
     if (first) {
       clickSearchResult.call(this, { ...first, context })
+      return
     }
-    return
   }
   if (context === 'tagpack') {
     this.menu.addSearchLabel(term)
@@ -54,7 +48,12 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     } else if (context === 'tagpack' && (type === 'label' || type === 'userdefinedlabel')) {
       this.menu.addSearchLabel(id, true)
       if (type === 'label') {
-        this.mapResult(this.rest.label(id), 'resultLabelTagsForTag', id)
+        const level = this.menu.view.data.type
+        this.mapResult(this.rest.label(this.keyspaces[0], {
+          id,
+          type,
+          level
+        }), 'resultLabelTagsForTag', id)
       } else {
         resultLabelTagsForTag.call(this, { result: this.store.getUserDefinedTagsForLabel(id), context: id })
       }
@@ -62,8 +61,10 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
     this.menu.search.clear()
     return
   }
-  this.browser.loading.add(id)
-  this.statusbar.addLoading(id)
+  if (type !== 'label') {
+    this.browser.loading.add(id)
+    this.statusbar.addLoading(id)
+  }
   if (this.showLandingpage) {
     this.showLandingpage = false
     this.layout.setUpdate(true)
@@ -75,17 +76,19 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
   } else if (type === 'transaction') {
     this.mapResult(this.rest.transaction(keyspace, id), 'resultTransactionForBrowser', id)
   } else if (type === 'label') {
-    this.mapResult(this.rest.label(id), 'resultLabelForBrowser', id)
+    labelForBrowser.call(this, id)
   } else if (type === 'block') {
     this.mapResult(this.rest.block(keyspace, id), 'resultBlockForBrowser', id)
   }
-  this.statusbar.addMsg('loading', type, id)
+  if (type !== 'label') this.statusbar.addMsg('loading', type, id)
 }
 
 const blurSearch = function (context) {
-  const search = context === 'search' ? this.search : this.menu.search
-  if (!search) return
-  search.clear()
+  if (context === 'search') {
+    this.search.clear()
+  } else {
+    this.menu.search.clearResults()
+  }
 }
 
 const removeLabel = function (label) {
@@ -93,8 +96,11 @@ const removeLabel = function (label) {
   this.menu.removeSearchLabel(label)
 }
 
-const setLabels = function ({ labels, id, keyspace }) {
+const setLabels = function ({ labels, input, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
+  if (input.label && !labels[input.label]) {
+    labels[input.label] = input
+  }
   this.store.addTags(keyspace, id, labels)
   this.updateCategoriesByTags(Object.values(labels))
   this.graph.setUpdateNodes('address', id, true)
@@ -137,12 +143,9 @@ const resultTransactionForBrowser = function ({ result }) {
   this.statusbar.addMsg('loaded', 'transaction', result.tx_hash)
 }
 
-const resultLabelForBrowser = function ({ result, context }) {
-  this.browser.setLabel(context, result)
-  historyPushState(null, 'label', context)
-  this.statusbar.removeLoading(context)
-  this.statusbar.addMsg('loaded', 'label', context)
-  initTagsTable.call(this, { id: context, type: 'label', index: 0 })
+const labelForBrowser = function (label) {
+  this.browser.setLabel(label)
+  historyPushState(null, 'label', label)
 }
 
 const resultLabelTagsForTag = function ({ result, context }) {
@@ -198,7 +201,7 @@ const clickAddress = function (data) {
 // user clicks label in a table
 const clickLabel = function ({ label, keyspace }) {
   this.statusbar.addLoading(label)
-  this.mapResult(this.rest.label(label), 'resultLabelForBrowser', label)
+  labelForBrowser.call(this, label)
 }
 
 const deselect = function () {
@@ -248,13 +251,24 @@ const resultTransactions = function ({ context, result }) {
 
 const loadTags = function ({ keyspace, params, nextPage, request, drawCallback }) {
   this.statusbar.addMsg('loading', 'tags')
-  this.mapResult(this.rest.tags(keyspace, {
-    id: params[0],
-    type: params[1],
-    level: params[2],
-    nextPage,
-    pagesize: request.length
-  }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  const type = params[1]
+  if (type === 'label') {
+    this.mapResult(this.rest.label(keyspace, {
+      id: params[0],
+      type,
+      level: params[2],
+      nextPage,
+      pagesize: request.length
+    }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  } else {
+    this.mapResult(this.rest.tags(keyspace, {
+      id: params[0],
+      type,
+      level: params[2],
+      nextPage,
+      pagesize: request.length
+    }), 'resultTagsTable', { page: nextPage, request, drawCallback })
+  }
 }
 
 const resultTagsTable = function ({ context, result }) {
@@ -385,6 +399,7 @@ const addNode = function ({ id, type, keyspace, anchor }) {
 }
 
 const addNodeCont = function ({ context, result }) {
+  logger.debug('addNodeCont ', context, result)
   const anchor = context.anchor
   const keyspace = context.keyspace
   if (context.stage === 1 && context.type && context.id) {
@@ -771,7 +786,10 @@ const exportRestLogs = function () {
 const exportSvg = function () {
   if (this.isReplaying) return
   const classMap = map()
-  const rules = document.styleSheets[document.styleSheets.length - 1].cssRules
+  let rules = ([...document.styleSheets]).filter(({ href }) => href)
+    .filter(({ href }) => href.includes('main.css'))
+  if (!rules) return
+  rules = rules[0].rules
   for (let i = 0; i < rules.length; i++) {
     const selectorText = rules[i].selectorText
     const cssText = rules[i].cssText
@@ -779,6 +797,8 @@ const exportSvg = function () {
     const s = selectorText.replace('.', '').replace('svg', '').trim()
     classMap.set(s, cssText.split('{')[1].replace('}', ''))
   }
+  classMap.set('linkPath', classMap.get('linkPath.hover'))
+  classMap.set('linkText', classMap.get('linkText.hover'))
   let svg = this.graph.getSvg()
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
@@ -1010,34 +1030,8 @@ const downloadTable = function () {
     }
   }
   if (!table) return
-  let url
-  if (table instanceof NeighborsTable) {
-    const params = table.getParams()
-    url = this.rest.neighbors({
-      keyspace: params.keyspace,
-      id: params.id,
-      type: params.type,
-      isOutgoing: params.isOutgoing,
-      includeLabels: true,
-      csv: true
-    })
-  } else if (table instanceof TagsTable) {
-    const params = table.getParams()
-    url = this.rest.tags(params.keyspace, params, true)
-  } else if (table instanceof TransactionsTable || table instanceof BlockTransactionsTable) {
-    const params = table.getParams()
-    url = this.rest.transactions(params.keyspace, { params: [params.id, params.type] }, true)
-  } else if (table instanceof AddressesTable) {
-    const params = table.getParams()
-    url = this.rest.addresses(params.keyspace, { params: params.id }, true)
-  } else if (table instanceof LinkTransactionsTable) {
-    logger.debug('table', table)
-    const params = table.getParams()
-    url = this.rest.linkTransactions(params.keyspace, params, true)
-  }
-  if (url) {
-    this.layout.triggerDownloadViaLink(url)
-  }
+
+  table.table.buttons('.buttons-csv').trigger()
 }
 
 const addAllToGraph = function () {
@@ -1055,7 +1049,7 @@ const addAllToGraph = function () {
 }
 
 const hoverLink = function () {
-  this.statusbar.showTooltip('shadow')
+  this.statusbar.showTooltip('link')
 }
 
 const leaveLink = function () {
@@ -1114,11 +1108,14 @@ const clickLink = function ({ source, target }) {
     source: source.id[0],
     target: target.id[0],
     no_txs: t.no_txs,
-    estimated_value: t.estimated_value
+    value: t.value
   })
   historyPushState(source.id[2], source.data.type + 'link', source.id[0], target.id[0])
-  if (source.data.type !== 'address') return
   initLinkTransactionsTable.call(this, { source: source.id[0], target: target.id[0], type: source.data.type, index: 0 })
+}
+
+const removeLink = function ([source, target]) {
+  this.graph.removeLink(source, target)
 }
 
 const receiveTaxonomies = function ({ result }) {
@@ -1202,6 +1199,10 @@ const resize = function () {
   this.graph.resize()
 }
 
+const countdownRatelimitReset = function () {
+  this.statusbar.setUpdate('ratelimit')
+}
+
 const functions = {
   submitSearchResult,
   clickSearchResult,
@@ -1210,7 +1211,7 @@ const functions = {
   setLabels,
   resultNode,
   resultTransactionForBrowser,
-  resultLabelForBrowser,
+  labelForBrowser,
   resultBlockForBrowser,
   selectNode,
   clickAddress,
@@ -1336,7 +1337,9 @@ const functions = {
   colorNode,
   clickSidebarMyEntityTags,
   clickSidebarMyAddressTags,
-  resize
+  resize,
+  removeLink,
+  countdownRatelimitReset
 }
 
 export default functions

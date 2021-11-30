@@ -14,7 +14,8 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'fetchError',
   'resultNodeForBrowser',
   'resultTransactionForBrowser',
-  'resultLabelForBrowser',
+  'labelForBrowser',
+  'resultLabelTagsForBrowser',
   'resultLabelTagsForTag',
   'resultBlockForBrowser',
   'addNode',
@@ -156,13 +157,16 @@ const dispatcher = dispatch(IS_DEV, // eslint-disable-line no-undef
   'colorNode',
   'clickSidebarMyEntityTags',
   'clickSidebarMyAddressTags',
-  'resize'
+  'resize',
+  'removeLink',
+  'countdownRatelimitReset'
 )
 
 // synchronous messages
 // get handled by model in current rendering frame
 const syncMessages = [
   'search',
+  'downloadTable',
   'changeSearchBreadth',
   'changeSearchDepth',
   'changeUserDefinedTag',
@@ -186,7 +190,8 @@ const dirtyMessages = [
   'resultSearchNeighbors',
   'dragNodeEnd',
   'excourseLoadDegree',
-  'resultTags'
+  'resultTags',
+  'removeLink'
 ]
 
 // time to wait after a dirty message before creating a snapshot

@@ -24,17 +24,17 @@ export default class AddressesTable extends Table {
       },
       {
         name: t('Final balance'),
-        data: 'balance',
+        data: row => this.getValueByCurrencyCode(row.balance),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         name: t('Total received'),
-        data: 'total_received',
+        data: row => this.getValueByCurrencyCode(row.total_received),
         className: 'text-right',
         render: (value, type) =>
-          this.formatValue(value => this.formatCurrency(value, keyspace, true))(value[this.currency], type)
+          this.formatCurrencyInTable(type, value, keyspace, true)
       }
     ]
     this.loadMessage = 'loadAddresses'
@@ -42,7 +42,7 @@ export default class AddressesTable extends Table {
     this.selectMessage = 'selectAddress'
     this.loadParams = this.entityId
     if (total < maxAddableNodes) this.addOption(this.addAllOption())
-    this.addOption(this.downloadOption())
+    this.addOption(this.downloadOption(t('Addresses file', entityId) + ` (${keyspace.toUpperCase()})`))
   }
 
   getParams () {

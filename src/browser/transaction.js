@@ -22,8 +22,10 @@ export default class Transaction extends BrowserComponent {
     const flat = {
       tx_hash: this.data.tx_hash,
       timestamp: this.formatTimestampWithAgo(this.data.timestamp),
-      total_input: this.formatCurrency(this.data.total_input[this.currency], this.data.keyspace),
-      total_output: this.formatCurrency(this.data.total_output[this.currency], this.data.keyspace)
+      no_inputs: this.data.inputs.length,
+      no_outputs: this.data.outputs.length,
+      total_input: this.formatCurrency(this.data.total_input, this.data.keyspace),
+      total_output: this.formatCurrency(this.data.total_output, this.data.keyspace)
     }
     this.root.innerHTML = replace(tt(this.template), { ...this.data, ...flat })
     this.renderInlineOptions()

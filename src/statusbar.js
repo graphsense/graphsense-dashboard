@@ -10,7 +10,7 @@ const logger = Logger.create('Statusbar') // eslint-disable-line no-unused-vars
 const logsDisplayLength = 100
 
 export default class Statusbar extends Component {
-  constructor (dispatcher) {
+  constructor (dispatcher, rest) {
     super()
     this.dispatcher = dispatcher
     this.messages = []
@@ -20,6 +20,7 @@ export default class Statusbar extends Component {
     this.logsDisplayLength = logsDisplayLength
     this.numErrors = 0
     this.showErrorsLogs = false
+    this.rest = rest
   }
 
   showTooltip (type) {
@@ -50,8 +51,7 @@ export default class Statusbar extends Component {
   add (msg) {
     if (msg[0] === 'error') this.numErrors++
     this.messages.push(msg)
-    if (msg[0] === 'loading' && this.isRateLimitExceeded) {
-      this.isRateLimitExceeded = false
+    if (msg[0] === 'loading') {
       this.setUpdate('loading')
     }
     this.setUpdate('add')
@@ -64,7 +64,6 @@ export default class Statusbar extends Component {
 
   addLoading (id) {
     this.loading.add(id + '')
-    this.isRateLimitExceeded = false
     this.setUpdate('loading')
   }
 
@@ -86,7 +85,6 @@ export default class Statusbar extends Component {
   render (root) {
     if (root) this.root = root
     if (!this.root) throw new Error('root not defined')
-    if (!this.shouldUpdate()) return this.root
     if (this.shouldUpdate(true)) {
       this.root.innerHTML = tt(status)
 
@@ -102,6 +100,7 @@ export default class Statusbar extends Component {
       this.renderLoading()
       this.renderLogs()
       this.renderVisibility()
+      this.renderRatelimit()
       super.render()
       return
     }
@@ -121,7 +120,23 @@ export default class Statusbar extends Component {
     if (this.shouldUpdate('visibility')) {
       this.renderVisibility()
     }
+    this.renderRatelimit()
     super.render()
+  }
+
+  renderRatelimit () {
+    if (!this.rest.ratelimitLimit) return
+    const top = this.root.querySelector('#topmsg')
+    const rlm = t('API request limit')
+    if (top.innerHTML && !top.innerHTML.startsWith(rlm)) return
+    const countdown = Math.max(0, this.rest.ratelimitReset - Math.floor(Date.now() / 1000))
+    const remaining = countdown > 0 ? this.rest.ratelimitRemaining : this.rest.ratelimitLimit
+    let msg = rlm + `: ${remaining}/${this.rest.ratelimitLimit}`
+    if (remaining < 10) {
+      msg += ', ' + t('reset in %0 s', countdown)
+      setTimeout(() => this.dispatcher('countdownRatelimitReset'), 1000)
+    }
+    top.innerHTML = msg
   }
 
   renderTooltip () {
@@ -163,11 +178,7 @@ export default class Statusbar extends Component {
       top.innerHTML = msg
     } else {
       removeClass(this.root, 'loading')
-      if (this.isRateLimitExceeded) {
-        top.innerHTML = this.printError(t('Rate limit exceeded!'))
-      } else {
-        top.innerHTML = ''
-      }
+      top.innerHTML = ''
     }
   }
 
@@ -177,7 +188,7 @@ export default class Statusbar extends Component {
     const errorMsg = this.root.querySelector('#errorMsg')
     if (this.showErrorsLogs) {
       errorMsg.innerHTML = t('Errors only')
-      messages = messages.filter(msg => typeof msg !== 'string')
+      messages = messages.filter(msg => typeof msg !== 'string' && msg[0] === 'error')
     } else {
       errorMsg.innerHTML = ''
     }
@@ -228,7 +239,7 @@ export default class Statusbar extends Component {
     if (msg[0] === 'error') {
       let message
       if (msg[1].requestURL) {
-        let m = msg[1].message
+        let m = msg[1].message || msg[1].detail
         if (m.startsWith('429')) {
           m = t('API rate limit exceeded')
         }
@@ -258,7 +269,6 @@ export default class Statusbar extends Component {
 
   msg (type) {
     const args = Array.prototype.slice.call(arguments, 1)
-    logger.debug('msg', type, args)
     switch (type) {
       case 'loading' :
         args[0] = t(args[0])
@@ -320,11 +330,9 @@ export default class Statusbar extends Component {
     this.add([...arguments])
   }
 
-  rateLimitExceeded (error) {
-    this.addMsg('error', error)
-    this.loading.clear()
-    this.searching.clear()
+  clear () {
+    this.loading = new Set()
+    this.searching = new Map()
     this.setUpdate('loading')
-    this.isRateLimitExceeded = true
   }
 }

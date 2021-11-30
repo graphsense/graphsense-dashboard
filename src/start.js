@@ -23,7 +23,7 @@ export default class Start extends Callable {
     this.login = new Login(this.call)
     this.reportLogger = new ReportLogger()
     this.landingpage = new Landingpage(this.call)
-    this.statusbar = new Statusbar(this.call)
+    this.statusbar = new Statusbar(this.call, this.rest)
     this.landingpage.setLogin(this.login)
     this.registerDispatchEvents(actions)
     this.call('stats')

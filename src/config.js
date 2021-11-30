@@ -84,7 +84,9 @@ export default class Config extends Component {
   }
 
   setCategoryColors (colors, ordering) {
-    this.categoryColors = ordering.map(cat => ({ key: cat, value: colors.get(cat) }))
+    this.categoryColors =
+      ordering.map(cat => ({ key: cat, value: colors.get(cat) }))
+        .filter(({ value }) => value)
     if (this.visible === 'legend') {
       this.setUpdate(true)
     }
@@ -150,7 +152,16 @@ export default class Config extends Component {
         button.addEventListener('click', () => { this.dispatcher(msg) })
       })
     } else if (this.visible === 'highlight') {
-      el.innerHTML = tt(highlightConfig)
+      let note = ''
+      if (!this.highlightNoteShown) {
+        if (this.highlights.length === 0) {
+          note = t('Pick a color')
+        } else {
+          note = t('Start highlighting addresses and entities')
+          this.highlightNoteShown = true
+        }
+      }
+      el.innerHTML = replace(tt(highlightConfig), { note })
       let colorsEl = el.querySelector('#colors')
       logger.debug('colors', colors)
       colors.forEach(color => {

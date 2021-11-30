@@ -171,8 +171,10 @@ class GraphNode extends Component {
       .style('stroke-dasharray', this.data.type === 'entity' ? this.entityDash : '')
     const fontSize = expandHandleWidth * 0.8
     const fontX = (expandHandleWidth - fontSize)
+    const deg = this.getDegree(isOutgoing)
+    const fmt = deg > 99999 ? '1,000.0 a' : '1,000'
     g.append('text')
-      .text(numeral(this.getDegree(isOutgoing)).format('1,000'))
+      .text(numeral(deg).format(fmt))
       .attr('text-anchor', 'middle')
       .attr('font-size', fontSize + 'px')
       .attr('transform', `translate(${fontX}, ${h / 2}) rotate(90)`)
@@ -186,8 +188,18 @@ class GraphNode extends Component {
 
   translate (x, y) {
     logger.debug('translate', x, y)
-    this.x += x
-    this.y += y
+    this.setX(this.x + x)
+    this.setY(this.y + y)
+  }
+
+  setX (x) {
+    this.x = x
+    this.hovered = false
+  }
+
+  setY (y) {
+    this.y = y
+    this.hovered = false
   }
 
   getX () {
@@ -265,7 +277,7 @@ class GraphNode extends Component {
       case 'id':
         return this.getName()
       case 'balance':
-        return this.formatCurrency(this.data.balance[this.currency])
+        return this.formatCurrency(this.data.balance)
       case 'tag':
         return this.getTag() || this.getName()
       case 'category':

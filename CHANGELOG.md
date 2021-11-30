@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.5.1] - 2021-11-30
+### Added
+- View transactions between two entities #159 #226
+- Remove links on demand #217
+- Display rate limit in statusbar #173
+- Bug fixes
+### Changed
+- Label search result view
+- Draw edges in black on SVG export #229
+- improve usability of tag dialog, #204
+### Removed
+- Tag coherence
+
 ## [0.5.0] - 2021-06-02
 ### Added
 - Ethereum support #176

@@ -1,4 +1,5 @@
 import { firstToUpper } from './utils.js'
+import { esc } from './template_utils.js'
 let languagePack = null
 
 export const setLanguagePack = (pack) => {
@@ -15,7 +16,8 @@ export const t = (key, ...args) => {
 }
 
 export const tt = (template) => {
-  return template.replace(new RegExp('{{t:([^}]+)}}', 'g'), (match, key) => t(key))
+  const id = s => s
+  return template.replace(new RegExp('{{t(e?):([^}]+)}}', 'g'), (match, e, key) => (e ? esc : id)(t(key)))
 }
 
 export let dtLanguagePack = null
