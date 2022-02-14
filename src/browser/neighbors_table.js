@@ -37,14 +37,14 @@ export default class NeighborsTable extends Table {
         }
       },
       {
-        name: t('Final balance'),
+        name: t('address/entity balance', t(type)),
         data: row => this.getValueByCurrencyCode(row.balance),
         className: 'text-right',
         render: (value, type) =>
           this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
-        name: t('Total received'),
+        name: t('address/entity received', t(type)),
         data: row => this.getValueByCurrencyCode(row.received),
         className: 'text-right',
         render: (value, type) =>
@@ -52,7 +52,15 @@ export default class NeighborsTable extends Table {
       },
       {
         name: t('No. transactions'),
-        data: 'no_txs'
+        data: 'no_txs',
+        className: 'text-right'
+      },
+      {
+        name: t('Estimated value'),
+        data: row => this.getValueByCurrencyCode(row.value),
+        className: 'text-right',
+        render: (value, type) =>
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         // just to enable full search of lables
