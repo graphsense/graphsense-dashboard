@@ -1235,6 +1235,7 @@ export default class NodeGraph extends Component {
     } else {
       value = tx[this.txLabelType].value
       label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
+      label = '~' + label
     }
     return [value, label]
   }
