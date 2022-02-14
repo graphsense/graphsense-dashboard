@@ -1118,6 +1118,10 @@ const removeLink = function ([source, target]) {
   this.graph.removeLink(source, target)
 }
 
+const removeShadow = function ([source, target]) {
+  this.graph.removeShadow(source, target)
+}
+
 const receiveTaxonomies = function ({ result }) {
   if (!result) return
   result.forEach(({ taxonomy }) => this.mapResult(this.rest.concepts(taxonomy), 'receiveConcepts', taxonomy))
@@ -1339,6 +1343,7 @@ const functions = {
   clickSidebarMyAddressTags,
   resize,
   removeLink,
+  removeShadow,
   countdownRatelimitReset
 }
 

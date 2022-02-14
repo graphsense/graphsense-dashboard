@@ -117,6 +117,7 @@ export default class NodeGraph extends Component {
     this.dy = 0
     this.dk = 0
     this.removedLinks = set()
+    this.removedShadows = set()
 
     window.addEventListener('resize', () => {
       this.dispatcher('resize')
@@ -576,6 +577,11 @@ export default class NodeGraph extends Component {
     this.setUpdate('link', source)
   }
 
+  removeShadow (source, target) {
+    this.removedShadows.add(source + target)
+    this.setUpdate('link', source)
+  }
+
   setResultEntityAddresses (id, addresses) {
     const entity = this.entityNodes.get(id)
     addresses.forEach((address) => {
@@ -618,6 +624,7 @@ export default class NodeGraph extends Component {
       const source = anchor.isOutgoing ? anchor.nodeId : node.id
       const target = anchor.isOutgoing ? node.id : anchor.nodeId
       this.removedLinks.remove(source + target)
+      this.removedShadows.remove(source + target)
     }
     this.setUpdate('layers')
     return node
@@ -1119,10 +1126,17 @@ export default class NodeGraph extends Component {
   }
 
   drawShadow (root, source, target) {
+    if (this.removedShadows.has(source.id + target.id)) return
     const path = this.shadowLinker({ source: [source, true], target: [target, false] })
     root.append('path').classed('shadow', true).attr('d', path)
       .on('mouseover', () => this.dispatcher('hoverShadow'))
       .on('mouseout', () => this.dispatcher('leaveShadow'))
+      .on('contextmenu', contextMenu([{
+        title: t('Remove'),
+        action: () => {
+          this.dispatcher('removeShadow', [source.id, target.id])
+        }
+      }]))
   }
 
   renderLink (root, domain, source, target, tx) {
