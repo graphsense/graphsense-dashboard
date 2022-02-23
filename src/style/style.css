@@ -442,7 +442,7 @@ textarea {
 }
 
 .splash .tagline {
-  font-family: Conv_Octarine-Light;
+  font-family: DIN-OT;
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
 }
 
@@ -481,7 +481,8 @@ svg.slash path {
 }
 
 .landingpage h2 {
-  font-family: Conv_Octarine-Bold;
+  font-family: DIN-OT;
+  font-weight: bold;
   @apply pt-0 pb-6 w-full text-center text-gs-base text-3xl;
   @apply mb-4 mt-6;
 }
@@ -495,7 +496,7 @@ svg.slash path {
 }
 
 .currency h3 {
-  font-family: Conv_Octarine-Light;
+  font-family: DIN-OT;
   @apply text-3xl w-auto text-center pt-2 pb-4 border-b border-gs-dark font-hairline;
 }
 

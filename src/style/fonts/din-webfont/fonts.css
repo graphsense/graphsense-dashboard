@@ -1,0 +1,15 @@
+@font-face {
+	font-family: 'DIN-OT';
+	src: url('fonts/din-webfont.eot');
+	src: local('☺'), url('fonts/din-webfont.woff') format('woff'), url('fonts/din-webfont.ttf') format('truetype'), url('fonts/din-webfont.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'DIN-OT';
+	src: url('fonts/din_bold-webfont.eot');
+	src: local('☺'), url('fonts/din_bold-webfont.woff') format('woff'), url('fonts/din_bold-webfont.ttf') format('truetype'), url('fonts/din_bold-webfont.svg') format('svg');
+	font-weight: bold;
+	font-style: normal;
+}
