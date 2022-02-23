@@ -647,7 +647,7 @@ export default class NodeGraph extends Component {
       let addressNode = this.addressNodes.get([object.id, layerId, object.keyspace])
       if (addressNode) {
         this.selectNodeIfIsNextNode(addressNode)
-        return node
+        return addressNode
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType.addressLabel, this.colors.address, this.currency)
       this.setAddressNodes(addressNode)
