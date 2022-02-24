@@ -62,7 +62,8 @@
  */
 
 html, body {
-  @apply font-sans
+  font-family:DIN-OT, Arial, Helvetica, sans-serif;
+  color:#5c6f77;
 }
 
 ul {
@@ -444,8 +445,13 @@ textarea {
   font-size:15px;
 }
 
+.splash-footer img {
+  height:55px;
+}
+
 .splash-footer a[href] {
   color:#fff;
+  @apply no-underline
 }
 
 .splash .tagline {
@@ -453,12 +459,8 @@ textarea {
   filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
 }
 
-a[href] {
-  @apply text-black underline
-}
-
 a[href]:hover {
-  @apply text-black no-underline
+  @apply underline
 }
 
 body {
