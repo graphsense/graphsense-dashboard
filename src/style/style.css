@@ -424,18 +424,70 @@ textarea {
   @apply border border-grey-light
 }
 
-.splash {
-  height: 50vw;
-  min-height: 320px;
-  max-height: 600px;
+.splash-top {
   background-size: cover;
-  background-image: url("img/background.jpg");
-  background-position-x: 40%;
-  background-position-y: 60%;
+  background-image: url("img/background_slim.jpg");
   background-repeat: no-repeat;
   background-color: black;
   position: relative;
-  @apply flex flex-col content-center justify-center items-center;
+  text-align: center;
+}
+
+.splash-top > div {
+  text-align: left;
+  max-width: 1140px;
+  margin:0 auto;
+}
+
+.splash-top .logo-container {
+  padding:40px 0 20px 0;
+  border-bottom:2px solid #fff;
+}
+
+.splash-top .logo-container img {
+  height:55px;
+}
+
+.splash-top .tagline {
+  display:flex;
+  flex-direction:row;
+  justify-content:space-between;
+  align-items: baseline;
+  padding:30px 0;
+}
+
+.splash-top .tagline h1, 
+.splash-top .tagline h2 {
+  padding:0;
+  margin:0;
+  color: #FFFFFF;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 45px;
+  letter-spacing: -0.44px;
+  text-shadow: 0px 0px 7px rgb(0, 0, 0, .44);
+}
+
+.splash-top .tagline h1 {
+  font-size: 40px;
+}
+
+.splash-top .tagline h2 {
+  font-size: 20px;
+  text-align: right;
+}
+
+.splash .search {
+  display:flex;
+  justify-content:center;
+}
+
+.splash .search form {
+  width:400px;
+}
+
+.splash .search form input {
+  border:1px solid #5c6f77;
 }
 
 .splash-footer {
@@ -443,6 +495,13 @@ textarea {
   color:#fff;
   font-family:DIN-OT;
   font-size:15px;
+  text-align:center;
+}
+
+.splash-footer > div {
+  text-align: left;
+  max-width: 1140px;
+  margin: 0 auto;
 }
 
 .splash-footer img {
