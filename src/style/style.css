@@ -483,7 +483,11 @@ textarea {
 }
 
 .splash .search form {
-  width:400px;
+  width:460px;
+}
+
+.splash .search form .search-frame {
+  width:400px !important;
 }
 
 .splash .search form input {
