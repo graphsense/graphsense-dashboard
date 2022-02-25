@@ -28,7 +28,8 @@ function statsHtml (body) {
           t_latestBlock: nbsp(t('Latest block')),
           t_transactions: nbsp(t('Transactions')),
           t_addresses: nbsp(t('Addresses')),
-          t_tags: nbsp(t('Tags')),
+          t_tagged_addresses: nbsp(t('Tagged addresses')),
+          t_labels: nbsp(t('Labels')),
           entitiesPart: ''
         }
     if (keyspace !== 'eth') {
