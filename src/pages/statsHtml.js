@@ -23,6 +23,7 @@ function statsHtml (body) {
           no_addresses: numeral(s.no_addresses).format(format),
           no_txs: numeral(s.no_txs).format(format),
           no_labels: numeral(s.no_labels).format(format),
+          no_tagged_addresses: numeral(s.no_tagged_addresses).format(format),
           currency: currencies[keyspace],
           t_lastUpdate: nbsp(t('Last update')),
           t_latestBlock: nbsp(t('Latest block')),
