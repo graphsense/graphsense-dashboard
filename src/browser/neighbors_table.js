@@ -1,7 +1,7 @@
 import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
-import { getValueByCurrencyCode, firstToUpper } from '../utils.js'
+import { firstToUpper } from '../utils.js'
 
 export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
