@@ -1,7 +1,7 @@
 import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
-import { getValueByCurrencyCode } from '../utils.js'
+import { firstToUpper } from '../utils.js'
 
 export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
@@ -37,14 +37,14 @@ export default class NeighborsTable extends Table {
         }
       },
       {
-        name: t('address/entity balance', t(type)),
+        name: t('address/entity balance', t(firstToUpper(type))),
         data: row => this.getValueByCurrencyCode(row.balance),
         className: 'text-right',
         render: (value, type) =>
           this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
-        name: t('address/entity received', t(type)),
+        name: t('address/entity received', t(firstToUpper(type))),
         data: row => this.getValueByCurrencyCode(row.received),
         className: 'text-right',
         render: (value, type) =>

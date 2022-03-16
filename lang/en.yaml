@@ -205,3 +205,4 @@ links file: transactions between %0 %1 and %2 # %0 = type, %1 = source, %2 = tar
 addresses file: addresses of entity %0
 address/entity balance: %0 balance
 address/entity received: %0 received
+tagged addresses: tagged addresses

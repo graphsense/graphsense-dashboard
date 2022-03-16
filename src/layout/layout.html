@@ -18,9 +18,10 @@
       <button id="navbar-logout" title="{{t:Logout}}" class="nav-btn"><i class="fas fa-door-open text-lg"></i></button>
     </div>
   </header>
-  <section class="flex flex-row flex-grow w-full">
+  <section class="flex flex-row flex-grow w-full relative">
     <section id="layout-browser" class="h-full border layout-border bg-white shadow-md rounded-b text-sm"></section>
     <section id="layout-graph" class="flex-grow overflow-hidden relative"></section>
+    <section id="layout-config" class="absolute pin-r z-20 border layout-border bg-white shadow-md rounded-b text-sm"></section>
   </section>
   <section id="layout-status" class="border layout-border bg-white shadow-md rounded-t text-sm w-full z-50"></section>
 </div>
@@ -29,7 +30,6 @@
   <input type="file" class="file-loader" accept=".gs" data-type="loadNotes">
   <input type="file" class="file-loader" accept=".yaml" data-type="loadYAML">
 </div>
-<section id="layout-config" class="absolute pin-r z-20 border layout-border bg-white shadow-md rounded-b text-sm"></section>
 <section id="layout-menu"></section>
 <a target="_blank" id="downloadCSV"></a>
 <section id="modal" class="absolute pin-t z-50 w-full h-full flex items-center justify-center" style="display: none; background-color:rgba(0,0,0,0.8)">

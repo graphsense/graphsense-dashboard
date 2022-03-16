@@ -816,7 +816,7 @@ export default class NodeGraph extends Component {
 
   makeArrowSummitMarker (color) {
     return `<marker id="${this.makeArrowSummitMarkerId(color)}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
-       `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
+       `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: var(--link-${color});" />` +
      '</marker>'
   }
 
@@ -884,7 +884,7 @@ export default class NodeGraph extends Component {
         })
       this.arrowSummit = markerHeight
       this.svg.node().innerHTML = '<defs>' +
-        (['black', 'red', 'lightgrey'].map((color) => this.makeArrowSummitMarker(color))
+        (['strong', 'highlight', 'faded'].map((color) => this.makeArrowSummitMarker(color))
         ).join('') +
         '</defs>'
       this.graphRoot = this.svg.append('g')
