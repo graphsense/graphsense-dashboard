@@ -194,3 +194,6 @@ neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = 
 tags file: %0 tags of %1 %2 # %0 = type, %1 = id
 links file: transactions between %0 %1 and %2 # %0 = type, %1 = source, %2 = target
 addresses file: addresses of entity %0
+address/entity balance: %0 balance
+address/entity received: %0 received
+tagged addresses: tagged addresses

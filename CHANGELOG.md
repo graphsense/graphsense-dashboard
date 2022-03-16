@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+### Added
+- Show number of tagged addresses
+- Remove shadows on demand
+
+### Changed
+- Reduce table page size for faster data loading
+- Prepend ~ to estimated values in graph
+- Improve neighbor table, see #248
+- Fuzzy label search
+
 ## [0.5.1] - 2021-11-30
 ### Added
 - View transactions between two entities #159 #226
