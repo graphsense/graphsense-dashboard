@@ -17,8 +17,8 @@ const logger = Logger.create('BrowserTable') // eslint-disable-line no-unused-va
 const rowHeight = 24
 
 export default class Table extends BrowserComponent {
-  constructor (dispatcher, index, total, currency, keyspace) {
-    super(dispatcher, index, currency)
+  constructor (dispatcher, index, total, currency, keyspace, colors) {
+    super(dispatcher, index, currency, colors)
     this.keyspace = keyspace
     this.nextPage = null
     this.realTotal = total
@@ -28,6 +28,7 @@ export default class Table extends BrowserComponent {
     this.dom = 'Bfti'
     this.loading = null
     this.searchable = false
+    this.rowCallback = null
     if (this.isSmall()) {
       this.addOption({
         icon: 'search',
@@ -78,6 +79,7 @@ export default class Table extends BrowserComponent {
         dom: this.dom,
         ordering: this.isSmall(),
         order: this.order,
+        rowCallback: this.rowCallback,
         deferRender: true,
         scroller: {
           loadingIndicator: true,

@@ -479,6 +479,7 @@ const addNodeCont = function ({ context, result }) {
       this.updateCategoriesByTags(o.tags)
     }
     const node = this.graph.add(o, context.anchor)
+    this.browser.setCategoryColors(this.graph.getCategoryColors())
     this.browser.setUpdate('tables_with_addresses')
     this.statusbar.removeLoading(o.id)
     if (context.keyspace === 'eth' && context.type === 'entity') {
@@ -971,6 +972,7 @@ const resultSearchNeighbors = function ({ result, context }) {
   }
   add({ nodeId: context.id, isOutgoing: context.isOutgoing }, result.paths)
   this.statusbar.addMsg('searchResult', count)
+  this.browser.setCategoryColors(this.graph.getCategoryColors())
   this.browser.setUpdate('tables_with_addresses')
 }
 

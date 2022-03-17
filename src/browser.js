@@ -36,6 +36,7 @@ export default class Browser extends Component {
     this.content = []
     this.visible = false
     this.categories = {}
+    this.categoryColors = {}
   }
 
   setKeyspaces (keyspaces) {
@@ -47,6 +48,10 @@ export default class Browser extends Component {
       this.categories[concept.id] = concept
     })
     this.setUpdate('tagstable')
+  }
+
+  setCategoryColors (colors) {
+    colors.each((color, category) => { this.categoryColors[category] = color })
   }
 
   deselect () {
@@ -129,7 +134,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Address(this.dispatcher, addresses, 0, this.currency, this.categories)]
+    this.content = [new Address(this.dispatcher, addresses, 0, this.currency, this.categories, this.categoryColors)]
     this.setUpdate('content')
   }
 
@@ -171,7 +176,7 @@ export default class Browser extends Component {
       this.deselect()
       return
     }
-    this.content = [new Entity(this.dispatcher, entities, 0, this.currency, this.categories)]
+    this.content = [new Entity(this.dispatcher, entities, 0, this.currency, this.categories, this.categoryColors)]
     this.setUpdate('content')
   }
 
@@ -180,9 +185,9 @@ export default class Browser extends Component {
     this.loading.remove(object.id)
     this.destroyComponentsFrom(0)
     if (object.type === 'address') {
-      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency, this.categories)
+      this.content[0] = new Address(this.dispatcher, [object], 0, this.currency, this.categories, this.categoryColors)
     } else if (object.type === 'entity') {
-      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency, this.categories)
+      this.content[0] = new Entity(this.dispatcher, [object], 0, this.currency, this.categories, this.categoryColors)
     }
     this.setUpdate('content')
   }
@@ -281,6 +286,10 @@ export default class Browser extends Component {
       if (last.data.length > 1) return
       data = last.data[0]
     }
+    let entityTag = null
+    if (fromEntity) {
+      entityTag = data.tags.entity_tags[0]
+    }
     this.setUpdate('content')
     const keyspace = (request.optionParams && request.optionParams[1]) || data.keyspace
     const newOption = { message: 'initTagsTable', params: [level, keyspace] }
@@ -311,7 +320,9 @@ export default class Browser extends Component {
         this.nodeChecker,
         this.supportedKeyspaces,
         this.categories,
-        level))
+        this.categoryColors,
+        level,
+        entityTag))
   }
 
   initMyEntityTagsTable (tags) {
@@ -450,6 +461,10 @@ export default class Browser extends Component {
         comp instanceof NeighborsTable ||
         comp instanceof TransactionAddressesTable
       ).map(comp => comp.setUpdate('page'))
+      if (this.content[0] instanceof Address ||
+         this.content[0] instanceof Entity) {
+        this.content[0].setUpdate(true)
+      }
     }
     if (this.shouldUpdate('tagstable')) {
       this.content.filter(comp =>

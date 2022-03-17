@@ -5,14 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
 ### Added
-- Show number of tagged addresses
+- Show number of tagged addresses and tag coverage
 - Remove shadows on demand
+- Highlight cluster defining tag in tags table
+- Highlight category in graph category color
 
 ### Changed
 - Reduce table page size for faster data loading
 - Prepend ~ to estimated values in graph
 - Improve neighbor table, see #248
 - Fuzzy label search
+- Reorder properties in address/entity box
 
 ## [0.5.1] - 2021-11-30
 ### Added
