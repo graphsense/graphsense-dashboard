@@ -10,9 +10,14 @@ export default class Tag {
       category: null,
       abuse: null,
       keyspace: keyspace,
-      active: true
+      active: true,
+      address: id
     }
-    this.data[type] = id
+  }
+
+  isClusterDefiner (isClusterDefiner) {
+    this.data.is_cluster_definer = isClusterDefiner
+    return this
   }
 
   isUserDefined (isUserDefined) {
