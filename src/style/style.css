@@ -62,11 +62,8 @@
  */
 
 html, body {
-/**
   font-family:DIN-OT, Arial, Helvetica, sans-serif;
   color:#5c6f77;
-**/
-  @apply font-sans text-gs-text font-normal;
   --black: config('colors.black');
   --red: config('colors.red');
   --grey-darkest: config('colors.grey-darkest');
