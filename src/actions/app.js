@@ -819,6 +819,10 @@ const exportSvg = function () {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
+  svg = svg.replaceAll('var(--link-strong)', 'black')
+  svg = svg.replaceAll('var(--red)', 'red')
+  svg = svg.replaceAll('var(--graph-background)', 'white')
+  svg = svg.replaceAll('var(--gs-dark)', 'grey')
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
   this.download(filename, svg)
   this.config.hide()
