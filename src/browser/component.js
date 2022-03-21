@@ -6,13 +6,14 @@ import moment from 'moment'
 import Component from '../component.js'
 
 export default class BrowserComponent extends Component {
-  constructor (dispatcher, index, currency) {
+  constructor (dispatcher, index, currency, colors) {
     super()
     this.index = index
     this.dispatcher = dispatcher
     this.currency = currency
     this.currentOption = null
     this.options = []
+    this.colors = colors
   }
 
   setCurrentOption (option) {

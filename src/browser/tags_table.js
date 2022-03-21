@@ -1,14 +1,16 @@
 import { t } from '../lang.js'
 import Table from './table.js'
+import $ from 'jquery'
 
 export default class TagsTable extends Table {
-  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories, level) {
-    super(dispatcher, index, total, currency, keyspace)
+  constructor (dispatcher, index, total, data, nodeId, nodeType, currency, keyspace, nodeIsInGraph, supportedKeyspaces, categories, colors, level, entityTag) {
+    super(dispatcher, index, total, currency, keyspace, colors)
     this.nodeId = nodeId
     this.data = data || []
     this.supportedKeyspaces = supportedKeyspaces
     this.nodeType = nodeType
     this.categories = categories
+    this.entityTag = entityTag
     this.dom = 'Bft'
     this.total = total
     this.realTotal = -1 // unknown real total
@@ -79,6 +81,12 @@ export default class TagsTable extends Table {
     this.loadParams = [this.nodeId, this.nodeType, this.level]
     this.addOption(this.downloadOption(t('Tags file', t(this.level), t(nodeType), nodeId) + ` (${keyspace ? keyspace.toUpperCase() : ''})`))
     if (nodeType === 'label') this.options = []
+    this.rowCallback = (row, data) => {
+      if (this.entityTag && data.address === this.entityTag.address && data.category) {
+        const color = this.colors[data.category]
+        $('td', row).css('background-color', color)
+      }
+    }
   }
 
   isSmall () {

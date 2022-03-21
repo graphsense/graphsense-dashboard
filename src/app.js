@@ -224,7 +224,7 @@ export default class Model extends Callable {
 
     tags.forEach(tag => {
       for (const key in tag) {
-        if (key === 'isUserDefined' || key === 'active' || key === 'keyspace') {
+        if (key === 'isUserDefined' || key === 'active' || key === 'keyspace' || key === 'entity') {
           delete tag[key]
           continue
         }

@@ -14,6 +14,7 @@ entity tags: entity tags
 block: block
 blocks: blocks
 supported currencies: supported currencies
+ledger statistics: ledger statistics
 last update: last update
 latest block: latest block
 loading_type_id: loading %0 %1  # results in eg. loading address xyz
@@ -206,3 +207,6 @@ addresses file: addresses of entity %0
 address/entity balance: %0 balance
 address/entity received: %0 received
 tagged addresses: tagged addresses
+please provide an API key: please provide an API key
+invalid key: invalid key
+unlimited: unlimited

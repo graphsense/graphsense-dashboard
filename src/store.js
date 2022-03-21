@@ -8,7 +8,7 @@ const logger = Logger.create('Store') // eslint-disable-line no-unused-vars
 const sep = '|'
 
 const prefix = (keyspace, id) => {
-  return keyspace + sep + id
+  return keyspace.toLowerCase() + sep + id
 }
 const unprefix = (idPrefixed) => {
   const pos = idPrefixed.indexOf(sep)
@@ -68,12 +68,19 @@ export default class Store {
 
       // add existing tags eventually
       a.tags = (a.tags || []).concat(this.tagsStore.get(idPrefixed) || [])
+      this.userDefinedLabels.each(ts => {
+        ts.forEach(v => {
+          const id = prefix(v.currency, v.address)
+          if (id !== idPrefixed) return
+          a.tags.push(v)
+        })
+      })
       this.tagsStore.remove(idPrefixed)
       const labels = {}
       a.tags.filter(t => t.isUserDefined).forEach(tag => {
         labels[tag.label] = tag
       })
-      this.addTags(a.keyspace, a.id, labels)
+      this.addTags(a.keyspace, a.type, a.id, labels)
 
       // remove unneeded address field (is now id)
       delete a.address
@@ -112,7 +119,7 @@ export default class Store {
       c.tags.entity_tags.filter(t => t.isUserDefined).forEach(tag => {
         labels[tag.label] = tag
       })
-      this.addTags(c.keyspace, c.id, labels)
+      this.addTags(c.keyspace, c.type, c.id, labels)
 
       // remove unneeded entity field (is now id)
       delete c.entity
@@ -324,7 +331,7 @@ export default class Store {
         if (entity.notes) {
           const tag = {}
           tag[entity.notes] = new Tag(entity.keyspace, entity.notes, entity.id, 'entity').data
-          this.addTags(entity.keyspace, entity.id, tag)
+          this.addTags(entity.keyspace, 'entity', entity.id, tag)
         }
       } else {
         this.add(entity)
@@ -392,14 +399,16 @@ export default class Store {
     return this.categories
   }
 
-  addTags (keyspace, id, labels) {
-    let o = this.get(keyspace, 'address', id)
+  addTags (keyspace, type, id, labels) {
+    const o = this.get(keyspace, type, id)
     if (!o) {
-      o = this.get(keyspace, 'entity', id)
-      if (!o) {
-        console.error(`${keyspace} address/entity ${id} not found for tagging`)
-        return
-      }
+      console.error(`${keyspace} ${type} ${id} not found for tagging`)
+      return
+    }
+    let a = null
+    if (type === 'entity') {
+      id = o.root_address
+      a = this.get(keyspace, 'address', id)
     }
 
     const tagsWithoutUserDefined = []
@@ -421,13 +430,21 @@ export default class Store {
         tagsWithoutUserDefined.push(tag)
       }
     })
+    const nonClusterDefiners = []
+    if (a) {
+      a.tags.forEach(tag => {
+        if (tag.is_cluster_definer) return
+        nonClusterDefiners.push(tag)
+      })
+    }
     const newTags = []
     for (const l in labels) {
       const label = labels[l]
-      const newTag = new Tag(keyspace, label.label, o.id, o.type)
+      const newTag = new Tag(keyspace, label.label, id, type)
       newTag.source(label.source)
         .abuse(label.abuse)
         .category(label.category)
+        .isClusterDefiner(type === 'entity')
       newTags.push(newTag.data)
     }
     logger.debug('newTags', newTags)
@@ -443,6 +460,9 @@ export default class Store {
     tags = [...tagsWithoutUserDefined, ...userDefinedTags, ...newTags]
     if (o.type === 'entity') {
       o.tags.entity_tags = tags
+      if (a) {
+        a.tags = [...tags, ...nonClusterDefiners]
+      }
     } else {
       o.tags = tags
     }
@@ -451,7 +471,7 @@ export default class Store {
     removedTags.forEach(tag => {
       let tags = this.userDefinedLabels.get(tag.label)
       if (!tags) return
-      tags = tags.filter(t => o.type === 'entity' ? t.entity !== tag.entity : t.address !== tag.address)
+      tags = tags.filter(t => t.address !== tag.address)
       if (tags.length > 0) {
         this.userDefinedLabels.set(tag.label, tags)
       } else {
@@ -460,6 +480,7 @@ export default class Store {
     })
 
     this.calcMainCategory(o)
+    if (a) this.calcMainCategory(a)
   }
 
   searchUserDefinedLabels (term) {

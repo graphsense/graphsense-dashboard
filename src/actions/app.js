@@ -86,7 +86,7 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
 const blurSearch = function (context) {
   if (context === 'search') {
     this.search.clear()
-  } else {
+  } else if (this.menu.search) {
     this.menu.search.clearResults()
   }
 }
@@ -96,14 +96,20 @@ const removeLabel = function (label) {
   this.menu.removeSearchLabel(label)
 }
 
-const setLabels = function ({ labels, input, id, keyspace }) {
+const setLabels = function ({ labels, input, type, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
   if (input.label && !labels[input.label]) {
     labels[input.label] = input
   }
-  this.store.addTags(keyspace, id, labels)
+  this.store.addTags(keyspace, type, id, labels)
+  if (type === 'entity') {
+    const o = this.store.get(keyspace, type, id)
+    if (this.store.get(keyspace, 'address', o.root_address)) {
+      this.graph.setUpdateNodes('address', o.root_address, true)
+    }
+  }
   this.updateCategoriesByTags(Object.values(labels))
-  this.graph.setUpdateNodes('address', id, true)
+  this.graph.setUpdateNodes(type, id, true)
   this.menu.hideMenu()
 }
 
@@ -479,6 +485,7 @@ const addNodeCont = function ({ context, result }) {
       this.updateCategoriesByTags(o.tags)
     }
     const node = this.graph.add(o, context.anchor)
+    this.browser.setCategoryColors(this.graph.getCategoryColors())
     this.browser.setUpdate('tables_with_addresses')
     this.statusbar.removeLoading(o.id)
     if (context.keyspace === 'eth' && context.type === 'entity') {
@@ -971,6 +978,7 @@ const resultSearchNeighbors = function ({ result, context }) {
   }
   add({ nodeId: context.id, isOutgoing: context.isOutgoing }, result.paths)
   this.statusbar.addMsg('searchResult', count)
+  this.browser.setCategoryColors(this.graph.getCategoryColors())
   this.browser.setUpdate('tables_with_addresses')
 }
 
@@ -1192,11 +1200,11 @@ const colorNode = function ([type, id]) {
 }
 
 const clickSidebarMyEntityTags = function () {
-  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity))
+  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity || tag.is_cluster_definer))
 }
 
 const clickSidebarMyAddressTags = function () {
-  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address))
+  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address && !tag.is_cluster_definer))
 }
 
 const resize = function () {
