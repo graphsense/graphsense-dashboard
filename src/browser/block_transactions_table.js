@@ -8,18 +8,19 @@ export default class BlockTransactionsTable extends Table {
     this.columns = [
       {
         name: t('Transaction'),
-        data: 'tx_hash',
-        render: this.formatValue(this.truncateValue)
+        data: 'tx_hash'
       },
       {
         name: t('No. inputs'),
         data: 'inputs',
-        render: value => value.length
+        render: value => value.length,
+        className: 'text-right'
       },
       {
         name: t('No. outputs'),
         data: 'outputs',
-        render: value => value.length
+        render: value => value.length,
+        className: 'text-right'
       },
       {
         name: t('Total input'),
