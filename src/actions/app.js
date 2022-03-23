@@ -549,7 +549,7 @@ const resultTags = function ({ context, result }) {
   const o = this.store.get(context.keyspace, context.type, context.id)
   logger.debug('o', o)
   this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
-  o.tags = result || []
+  o.tags = (o.type === 'address' ? result.address_tags : result) || []
   this.graph.setUpdateNodes(context.type, context.id, true)
 
   this.updateCategoriesByTags(o.tags)
@@ -605,7 +605,8 @@ const resultEntityAddresses = function ({ context, result }) {
     const copy = { ...address, toEntity: id[0] }
     const a = this.store.add(copy)
     addresses.push(a)
-    if (!a.tags) {
+    logger.debug('address', address, !a.tags)
+    if (!a.tags || a.tags.length === 0) {
       const request = { id: a.id, type: 'address', keyspace }
       this.mapResult(this.rest.tags(keyspace, request), 'resultTags', request)
     }
@@ -819,6 +820,10 @@ const exportSvg = function () {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
+  svg = svg.replaceAll('var(--link-strong)', 'black')
+  svg = svg.replaceAll('var(--red)', 'red')
+  svg = svg.replaceAll('var(--graph-background)', 'white')
+  svg = svg.replaceAll('var(--gs-dark)', 'grey')
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
   this.download(filename, svg)
   this.config.hide()
