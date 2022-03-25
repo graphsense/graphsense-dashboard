@@ -10,8 +10,7 @@ export default class LinkTransactionsTable extends Table {
     this.columns = [
       {
         name: t('Transaction'),
-        data: 'tx_hash',
-        render: this.formatValue(this.truncateValue)
+        data: 'tx_hash'
       },
       {
         name: t('Input value'),
@@ -27,7 +26,8 @@ export default class LinkTransactionsTable extends Table {
       },
       {
         name: t('Height'),
-        data: 'height'
+        data: 'height',
+        className: 'text-right'
       },
       {
         name: t('Timestamp'),

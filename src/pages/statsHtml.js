@@ -23,12 +23,15 @@ function statsHtml (body) {
           no_addresses: numeral(s.no_addresses).format(format),
           no_txs: numeral(s.no_txs).format(format),
           no_labels: numeral(s.no_labels).format(format),
+          no_tagged_addresses: numeral(s.no_tagged_addresses).format(format),
+          tag_coverage: numeral(s.no_tagged_addresses / s.no_addresses).format('0.0%'),
           currency: currencies[keyspace],
           t_lastUpdate: nbsp(t('Last update')),
           t_latestBlock: nbsp(t('Latest block')),
           t_transactions: nbsp(t('Transactions')),
           t_addresses: nbsp(t('Addresses')),
-          t_tags: nbsp(t('Tags')),
+          t_tagged_addresses: nbsp(t('Tagged addresses')),
+          t_labels: nbsp(t('Labels')),
           entitiesPart: ''
         }
     if (keyspace !== 'eth') {

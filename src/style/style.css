@@ -62,7 +62,27 @@
  */
 
 html, body {
-  @apply font-sans
+  @apply font-sans text-gs-text font-normal;
+  --black: config('colors.black');
+  --red: config('colors.red');
+  --grey-darkest: config('colors.grey-darkest');
+  --grey-darker: config('colors.grey-darker');
+  --grey-dark: config('colors.grey-dark');
+  --grey: config('colors.grey');
+  --grey-light: config('colors.grey-light');
+  --grey-lighter: config('colors.grey-lighter');
+  --grey-lightest: config('colors.grey-lightest');
+  --white: config('colors.white');
+  --gs-text: config('colors.gs-text');
+  --gs-darker: config('colors.gs-darker');
+  --gs-dark: config('colors.gs-dark');
+  --gs-base: config('colors.gs-base');
+  --gs-light: config('colors.gs-light');
+  --gs-lighter: config('colors.gs-lighter');
+  --gs-lightest: config('colors.gs-lightest');
+  --gs-white: config('colors.white');
+  --gs-red: config('colors.gs-red');
+  --gs-red-light: config('colors.gs-red-light');
 }
 
 ul {
@@ -81,27 +101,25 @@ li {
 }
 
 #layout-config {
-  top: -300px;
-  opacity: 0;
-  transition: top 0.5s, opacity step-end 0.5s;
+  transform: translateY(-110%);
+  transition: transform 0.5s;
+  right: 0;
 }
 
 #layout-config.show {
-  top: 49px;
-  opacity: 1;
-  transition: top 0.5s, opacity step-start 0.5s;
+  transform: translateY(-1px);
 }
 
 #browser-data {
   left: 100%; 
   overflow: visible; 
-  transform: translate(-110%);
+  transform: translateY(-110%);
   transition: transform 0.5s;
   min-width: 440px;
 }
 
 #browser-data.show {
-  transform: translate(0%);
+  transform: translateY(-1px);
 }
 
 .btn {
@@ -117,7 +135,7 @@ li {
 }
 
 .btn-danger {
-  @apply bg-white text-gs-red;
+  @apply bg-gs-white text-gs-red;
 }
 
 .btn.disabled {
@@ -155,8 +173,9 @@ li {
   @apply pb-0 pt-3;
 }
 
-select, input {
-  @apply rounded-sm shadow bg-grey-light px-1 pt-1;
+select, input, textarea {
+  outline: none;
+  @apply rounded-sm text-sm shadow bg-grey-light px-1 pt-1;
 }
 
 .prop-table {
@@ -241,7 +260,7 @@ svg.option-arrow path {
 #browser-search-result {
   position: absolute;
   z-index:200;
-  @apply w-full p-2 rounded-b-sm  bg-white font-mono flex-initial shadow-md;
+  @apply w-full p-2 rounded-b-sm  bg-gs-white font-mono flex-initial shadow-md;
 }
 
 #browser-search-result li {
@@ -259,7 +278,12 @@ svg.option-arrow path {
 }
 
 svg.graph {
-  @apply font-sans bg-grey-lightest
+  @apply font-sans;
+  --link-faded: var(--grey);
+  --link-strong: var(--black);
+  --link-highlight: var(--red);
+  --graph-background: var(--grey-lightest);
+  background-color: var(--graph-background);
 }
 
 svg .addressNode {
@@ -279,7 +303,7 @@ svg .entityNodeRect{
 }
 
 svg .selected > rect {
-  stroke: red !important;
+  stroke: var(--red) !important;
   stroke-width: 3px !important;
 }
 
@@ -288,7 +312,7 @@ svg .expandHandlePath {
 }
 
 svg .selected .expandHandle > path {
-  stroke: red !important;
+  stroke: var(--red) !important;
   stroke-width: 3px !important;
 }
 
@@ -296,7 +320,7 @@ svg .addressExpand {
   cursor: pointer;
 }
 
-svg .expandHandleText {
+svg text {
   @apply text-black fill-current
 }
 
@@ -305,35 +329,35 @@ svg .expandHandle {
 }
 
 svg .expandHandleText:hover text {
-  font-weight: bold;
+  @apply font-bold
 }
 
 svg .linkRect {
-  fill: rgb(255,255,255);
+  fill: var(--graph-background);
   opacity: 0.8;
   stroke-width: 0px;
   stroke:black;
 }
 
 svg .linkText {
-  fill: lightgrey;
+  fill: var(--link-faded);
   stroke-width: 0;
-  cursor: default;
-  font-weight: bold;
+  cursor: pointer;
+  @apply font-bold
 }
 
 svg .linkText.hover {
-  fill: black;
+  fill: var(--link-strong);
 }
 
 svg .linkPath {
-  stroke: lightgrey;
-  marker-end: url(#arrow1-lightgrey);
+  stroke: var(--link-faded);
+  marker-end: url(#arrow1-faded);
 }
 
 svg .linkPath.hover {
-  stroke: black;
-  marker-end: url(#arrow1-black);
+  stroke: var(--link-strong);
+  marker-end: url(#arrow1-strong);
 }
 
 svg .link {
@@ -341,19 +365,18 @@ svg .link {
 }
 
 svg .link:hover *, svg .link.selected * {
-  stroke: red !important;
+  stroke: var(--link-highlight) !important;
 }
 svg .link:hover path, svg .link.selected path {
-  marker-end: url(#arrow1-red) !important;
+  marker-end: url(#arrow1-highlight) !important;
 }
 
 svg .link:hover text, svg .link.selected text {
-  fill: red;
+  fill: var(--link-highlight);
 }
 
 svg .shadow {
-  @apply text-gs-dark;
-  stroke: #71a1a5; /* gs-dark, defined plain to allow for export in svg file*/
+  stroke: var(--gs-dark); /* gs-dark, defined plain to allow for export in svg file*/
   opacity: 0.2;
   stroke-width: 20px;
   fill: none;
@@ -364,7 +387,7 @@ svg .shadow:hover {
 }
 
 svg .abuse {
-  fill: red;
+  fill: var(--red);
 }
 div.dataTables_wrapper {
   position: relative;
@@ -374,7 +397,7 @@ div.dataTables_wrapper div.dataTables_info {
   position: absolute;
   bottom: 1px;
   z-index: 29;
-  background: white;
+  background: var(--gs-white);
   padding-top: 0;
   padding: 4px;
   font-size: 78%;
@@ -383,14 +406,31 @@ div.dataTables_wrapper div.dataTables_info {
   border-radius: 3px;
   transition: opacity 0.3s;
   opacity: 1;
+  color: var(--gs-text);
 }
 
 div.dataTables_wrapper div.dataTables_info:hover {
   opacity: 0.2;
 }
 
+table.dataTable.stripe tbody tr.odd, table.dataTable.display tbody tr.odd {
+  background-color: var(--first)
+}
+
+table.dataTable.stripe tbody tr.even, table.dataTable.display tbody tr.even {
+  background-color: var(--second)
+}
+
+.dataTables_wrapper .dataTables_filter {
+  color: var(--gs-text)
+}
+
 table.dataTable thead th, table.dataTable thead td {
   @apply border-grey-light  
+}
+
+table.dataTable.compact thead th, table.dataTable.compact thead td {
+  @apply pt-0
 }
 
 table.dataTable tbody tr {
@@ -399,6 +439,17 @@ table.dataTable tbody tr {
 
 .dataTables_wrapper.no-footer .dataTables_scrollBody {
   border-bottom: 0;
+}
+
+div.DTS div.dataTables_scrollBody {
+  --first: var(--grey-lightest);
+  --second: var(--white);
+  background:repeating-linear-gradient(45deg, var(--first), var(--first) 10px, var(--second) 10px, var(--second) 20px); 
+  overflow-x: hidden;
+}
+
+table.dataTable thead th, table.dataTable tfoot th {
+  @apply font-bold
 }
 
 .searchwidth {
@@ -410,7 +461,7 @@ table.dataTable tbody tr {
 }
 
 .dataTables_wrapper .dataTables_filter label {
-  font-weight: bold;
+  @apply font-bold;
 }
 
 .dataTables_wrapper .dt-buttons {
@@ -420,7 +471,8 @@ table.dataTable tbody tr {
 textarea {
   width : 99%;
   height : 5em;
-  @apply border border-grey-light
+  box-shadow: none;
+  @apply bg-white border border-grey-light
 }
 
 .splash {
@@ -572,12 +624,12 @@ ul#log-messages li {
   @apply text-grey-dark;
 }
 
-div.d3-context-menu-theme {
-  @apply bg-grey-lighter shadow-md rounded border;
+div.d3-context-menu-theme,  .d3-context-menu-theme ul.is-children {
+  @apply bg-grey-lighter shadow-md rounded border text-gs-text;
 }
 
 div.d3-context-menu-theme ul li.is-parent:after {
-  border-top-color: theme('colors.gs.base')
+  border-top-color: var(--gs-red) 
 }
 
 .cursor-grab {

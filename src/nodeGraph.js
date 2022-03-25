@@ -117,6 +117,7 @@ export default class NodeGraph extends Component {
     this.dy = 0
     this.dk = 0
     this.removedLinks = set()
+    this.removedShadows = set()
 
     window.addEventListener('resize', () => {
       this.dispatcher('resize')
@@ -576,6 +577,11 @@ export default class NodeGraph extends Component {
     this.setUpdate('link', source)
   }
 
+  removeShadow (source, target) {
+    this.removedShadows.add(source + target)
+    this.setUpdate('link', source)
+  }
+
   setResultEntityAddresses (id, addresses) {
     const entity = this.entityNodes.get(id)
     addresses.forEach((address) => {
@@ -618,6 +624,7 @@ export default class NodeGraph extends Component {
       const source = anchor.isOutgoing ? anchor.nodeId : node.id
       const target = anchor.isOutgoing ? node.id : anchor.nodeId
       this.removedLinks.remove(source + target)
+      this.removedShadows.remove(source + target)
     }
     this.setUpdate('layers')
     return node
@@ -647,7 +654,7 @@ export default class NodeGraph extends Component {
       let addressNode = this.addressNodes.get([object.id, layerId, object.keyspace])
       if (addressNode) {
         this.selectNodeIfIsNextNode(addressNode)
-        return node
+        return addressNode
       }
       addressNode = new AddressNode(this.dispatcher, object, layerId, this.labelType.addressLabel, this.colors.address, this.currency)
       this.setAddressNodes(addressNode)
@@ -809,7 +816,7 @@ export default class NodeGraph extends Component {
 
   makeArrowSummitMarker (color) {
     return `<marker id="${this.makeArrowSummitMarkerId(color)}" markerWidth="${this.arrowSummit}" markerHeight="${markerHeight}" refX="0" refY="${markerHeight / 2}" orient="auto" markerUnits="userSpaceOnUse">` +
-       `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: ${color};" />` +
+       `<path d="M0,0 L0,${markerHeight} L${this.arrowSummit},${markerHeight / 2} Z" style="fill: var(--link-${color});" />` +
      '</marker>'
   }
 
@@ -877,7 +884,7 @@ export default class NodeGraph extends Component {
         })
       this.arrowSummit = markerHeight
       this.svg.node().innerHTML = '<defs>' +
-        (['black', 'red', 'lightgrey'].map((color) => this.makeArrowSummitMarker(color))
+        (['strong', 'highlight', 'faded'].map((color) => this.makeArrowSummitMarker(color))
         ).join('') +
         '</defs>'
       this.graphRoot = this.svg.append('g')
@@ -1119,10 +1126,17 @@ export default class NodeGraph extends Component {
   }
 
   drawShadow (root, source, target) {
+    if (this.removedShadows.has(source.id + target.id)) return
     const path = this.shadowLinker({ source: [source, true], target: [target, false] })
     root.append('path').classed('shadow', true).attr('d', path)
       .on('mouseover', () => this.dispatcher('hoverShadow'))
       .on('mouseout', () => this.dispatcher('leaveShadow'))
+      .on('contextmenu', contextMenu([{
+        title: t('Remove'),
+        action: () => {
+          this.dispatcher('removeShadow', [source.id, target.id])
+        }
+      }]))
   }
 
   renderLink (root, domain, source, target, tx) {
@@ -1235,6 +1249,7 @@ export default class NodeGraph extends Component {
     } else {
       value = tx[this.txLabelType].value
       label = formatCurrency(tx[this.txLabelType], this.currency, { dontAppendCurrency: true, keyspace: tx.keyspace })
+      label = '~' + label
     }
     return [value, label]
   }

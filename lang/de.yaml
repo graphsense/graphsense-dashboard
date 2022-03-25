@@ -14,6 +14,7 @@ entity tags: Entitäts-Schlagwörter
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen
+ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
 loading_type_id: lade %0 %1  # results in eg. loading address xyz
@@ -203,3 +204,10 @@ neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = 
 tags file: %0-Tags der %1 %2 # %0 = type, %1 = id
 links file: Transaktionen zwischen %0 %1 und %2 # %0 = type, %1 = source, %2 = target
 addresses file: Adressen der Entität %0
+address/entity balance: %0 Bilanz
+address/entity received: %0 Eingänge
+tagged addresses: Adressen mit Tags
+please provide an API key: Bitte einen API-Schlüssel eingeben
+invalid key: ungültiger Schlüssel
+unlimited: unlimitiert
+root address: Wurzeladresse

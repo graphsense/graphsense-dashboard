@@ -1,7 +1,7 @@
 import { t } from '../lang.js'
 import Table from './table.js'
 import { maxAddableNodes } from '../globals.js'
-import { getValueByCurrencyCode } from '../utils.js'
+import { firstToUpper } from '../utils.js'
 
 export default class NeighborsTable extends Table {
   constructor (dispatcher, index, total, id, type, isOutgoing, currency, keyspace, nodeIsInGraph) {
@@ -37,14 +37,14 @@ export default class NeighborsTable extends Table {
         }
       },
       {
-        name: t('Final balance'),
+        name: t('address/entity balance', t(firstToUpper(type))),
         data: row => this.getValueByCurrencyCode(row.balance),
         className: 'text-right',
         render: (value, type) =>
           this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
-        name: t('Total received'),
+        name: t('address/entity received', t(firstToUpper(type))),
         data: row => this.getValueByCurrencyCode(row.received),
         className: 'text-right',
         render: (value, type) =>
@@ -52,7 +52,15 @@ export default class NeighborsTable extends Table {
       },
       {
         name: t('No. transactions'),
-        data: 'no_txs'
+        data: 'no_txs',
+        className: 'text-right'
+      },
+      {
+        name: t('Estimated value'),
+        data: row => this.getValueByCurrencyCode(row.value),
+        className: 'text-right',
+        render: (value, type) =>
+          this.formatCurrencyInTable(type, value, keyspace, true)
       },
       {
         // just to enable full search of lables

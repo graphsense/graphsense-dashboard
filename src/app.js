@@ -224,9 +224,15 @@ export default class Model extends Callable {
 
     tags.forEach(tag => {
       for (const key in tag) {
-        if (key === 'isUserDefined' || key === 'active' || key === 'keyspace') {
+        if (key === 'isUserDefined' || key === 'active' || key === 'keyspace' || key === 'entity' || key === 'tagpack_uri') {
           delete tag[key]
           continue
+        }
+        if (!tag.abuse) {
+          delete tag.abuse
+        }
+        if (!tag.category) {
+          delete tag.category
         }
         if (sets[key] === undefined) {
           sets[key] = new Set()

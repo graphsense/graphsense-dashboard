@@ -9,8 +9,7 @@ export default class TransactionsTable extends Table {
     this.columns = [
       {
         name: t('Transaction'),
-        data: 'tx_hash',
-        render: this.formatValue(this.truncateValue)
+        data: 'tx_hash'
       },
       {
         name: t('Value'),
@@ -21,7 +20,8 @@ export default class TransactionsTable extends Table {
       },
       {
         name: t('Height'),
-        data: 'height'
+        data: 'height',
+        className: 'text-right'
       },
       {
         name: t('Timestamp'),

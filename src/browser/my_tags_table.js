@@ -12,10 +12,10 @@ export default class MyTagsTable extends TagsTable {
     this.categories = categories
     this.columns = [
       {
-        name: t(nodeType.charAt(0).toUpperCase() + nodeType.slice(1)),
-        data: nodeType,
+        name: t('Address'),
+        data: 'address',
         render: (value, type, row) => {
-          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, nodeType, row.keyspace)(value, type))
+          return this.formatActive(row, this.formatIsInGraph(nodeIsInGraph, 'address', row.keyspace)(value, type))
         }
       },
       {

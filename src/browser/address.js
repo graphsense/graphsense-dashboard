@@ -1,15 +1,15 @@
 import address from './address.html'
 import { replace, esc } from '../template_utils'
 import BrowserComponent from './component.js'
-import { t, tt } from '../lang.js'
+import { tt } from '../lang.js'
 import numeral from 'numeral'
 import Logger from '../logger.js'
 
 const logger = Logger.create('Address') // eslint-disable-line no-unused-vars
 
 export default class Address extends BrowserComponent {
-  constructor (dispatcher, data, index, currency, categories) {
-    super(dispatcher, index, currency)
+  constructor (dispatcher, data, index, currency, categories, colors) {
+    super(dispatcher, index, currency, colors)
     this.data = data
     this.template = address
     this.categories = categories
@@ -49,7 +49,14 @@ export default class Address extends BrowserComponent {
     const duration = (last - first) * 1000
     const tags = this.flattenTags()
     const abuses = [...new Set(tags.filter(({ abuse }) => abuse).map(({ abuse }) => this.categories[abuse] ? this.categories[abuse].label : '').filter(a => a).values())]
-    const categories = [...new Set(tags.filter(({ category }) => category).map(({ category }) => this.categories[category] ? this.categories[category].label : '').filter(a => a).values())]
+    const categories = [...new Set(
+      tags.filter(({ category }) => category)
+        .map(({ category }) =>
+          this.categories[category]
+            ? `<span style="background-color: ${this.colors[category]}">${esc(this.categories[category].label)}</span>`
+            : '')
+        .filter(a => a)
+        .values())]
     const totalReceived = this.data.reduce((sum, v) => {
       v.total_received.fiat_values.forEach((f, i) => {
         if (!sum.fiat_values[i]) {
@@ -86,7 +93,7 @@ export default class Address extends BrowserComponent {
       balance: esc(this.formatCurrency(balance, keyspace)),
       keyspace,
       abuses: esc(abuses.join(', ')),
-      categories: esc(categories.join(', ')),
+      categories: categories.join(',&nbsp;'),
       no_outgoing_txs: esc(numeral(noOutgoingTxs).format('0,000')),
       no_incoming_txs: esc(numeral(noIncomingTxs).format('0,000')),
       no_transfers: esc(numeral(noIncomingTxs + noOutgoingTxs).format('0,000')),

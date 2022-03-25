@@ -86,7 +86,7 @@ const clickSearchResult = function ({ id, type, keyspace, context }) {
 const blurSearch = function (context) {
   if (context === 'search') {
     this.search.clear()
-  } else {
+  } else if (this.menu.search) {
     this.menu.search.clearResults()
   }
 }
@@ -96,14 +96,20 @@ const removeLabel = function (label) {
   this.menu.removeSearchLabel(label)
 }
 
-const setLabels = function ({ labels, input, id, keyspace }) {
+const setLabels = function ({ labels, input, type, id, keyspace }) {
   if (this.menu.getType() !== 'tagpack') return
   if (input.label && !labels[input.label]) {
     labels[input.label] = input
   }
-  this.store.addTags(keyspace, id, labels)
+  this.store.addTags(keyspace, type, id, labels)
+  if (type === 'entity') {
+    const o = this.store.get(keyspace, type, id)
+    if (this.store.get(keyspace, 'address', o.root_address)) {
+      this.graph.setUpdateNodes('address', o.root_address, true)
+    }
+  }
   this.updateCategoriesByTags(Object.values(labels))
-  this.graph.setUpdateNodes('address', id, true)
+  this.graph.setUpdateNodes(type, id, true)
   this.menu.hideMenu()
 }
 
@@ -479,6 +485,7 @@ const addNodeCont = function ({ context, result }) {
       this.updateCategoriesByTags(o.tags)
     }
     const node = this.graph.add(o, context.anchor)
+    this.browser.setCategoryColors(this.graph.getCategoryColors())
     this.browser.setUpdate('tables_with_addresses')
     this.statusbar.removeLoading(o.id)
     if (context.keyspace === 'eth' && context.type === 'entity') {
@@ -542,7 +549,7 @@ const resultTags = function ({ context, result }) {
   const o = this.store.get(context.keyspace, context.type, context.id)
   logger.debug('o', o)
   this.statusbar.addMsg('loadedTagsFor', o.type, o.id)
-  o.tags = result || []
+  o.tags = (o.type === 'address' ? result.address_tags : result) || []
   this.graph.setUpdateNodes(context.type, context.id, true)
 
   this.updateCategoriesByTags(o.tags)
@@ -598,7 +605,8 @@ const resultEntityAddresses = function ({ context, result }) {
     const copy = { ...address, toEntity: id[0] }
     const a = this.store.add(copy)
     addresses.push(a)
-    if (!a.tags) {
+    logger.debug('address', address, !a.tags)
+    if (!a.tags || a.tags.length === 0) {
       const request = { id: a.id, type: 'address', keyspace }
       this.mapResult(this.rest.tags(keyspace, request), 'resultTags', request)
     }
@@ -812,6 +820,10 @@ const exportSvg = function () {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
+  svg = svg.replaceAll('var(--link-strong)', 'black')
+  svg = svg.replaceAll('var(--red)', 'red')
+  svg = svg.replaceAll('var(--graph-background)', 'white')
+  svg = svg.replaceAll('var(--gs-dark)', 'grey')
   const filename = moment().format('YYYY-MM-DD HH-mm-ss') + '.svg'
   this.download(filename, svg)
   this.config.hide()
@@ -971,6 +983,7 @@ const resultSearchNeighbors = function ({ result, context }) {
   }
   add({ nodeId: context.id, isOutgoing: context.isOutgoing }, result.paths)
   this.statusbar.addMsg('searchResult', count)
+  this.browser.setCategoryColors(this.graph.getCategoryColors())
   this.browser.setUpdate('tables_with_addresses')
 }
 
@@ -1118,6 +1131,10 @@ const removeLink = function ([source, target]) {
   this.graph.removeLink(source, target)
 }
 
+const removeShadow = function ([source, target]) {
+  this.graph.removeShadow(source, target)
+}
+
 const receiveTaxonomies = function ({ result }) {
   if (!result) return
   result.forEach(({ taxonomy }) => this.mapResult(this.rest.concepts(taxonomy), 'receiveConcepts', taxonomy))
@@ -1188,11 +1205,11 @@ const colorNode = function ([type, id]) {
 }
 
 const clickSidebarMyEntityTags = function () {
-  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity))
+  this.browser.initMyEntityTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.entity || tag.is_cluster_definer))
 }
 
 const clickSidebarMyAddressTags = function () {
-  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address))
+  this.browser.initMyAddressTagsTable(this.store.getUserDefinedTags2().filter(tag => tag.address && !tag.is_cluster_definer))
 }
 
 const resize = function () {
@@ -1339,6 +1356,7 @@ const functions = {
   clickSidebarMyAddressTags,
   resize,
   removeLink,
+  removeShadow,
   countdownRatelimitReset
 }
 

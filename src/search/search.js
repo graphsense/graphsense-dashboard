@@ -228,7 +228,6 @@ export default class Search extends Component {
       el.appendChild(ul)
     })
     let labels = this.resultLabels
-      .filter(byPrefix(this.term))
       .slice(0, numShowResults)
     if (this.types.indexOf('labels') !== -1 && labels.length > 0) {
       visible = true
@@ -306,7 +305,7 @@ export default class Search extends Component {
       }
     }
     if (this.types.indexOf('labels') !== -1 && this.resultLabels && this.resultLabels.length > 0) {
-      const labels = this.resultLabels.filter(byPrefix(this.term))
+      const labels = this.resultLabels
       return { id: labels[0], type: 'label' }
     }
     if (this.types.indexOf('userdefinedlabels') !== -1 && this.resultLocalLabels && this.resultLocalLabels.length > 0) {

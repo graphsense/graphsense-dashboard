@@ -1,11 +1,13 @@
 import entity from './entity.html'
 import Address from './address.js'
-import { t } from '../lang.js'
 import numeral from 'numeral'
+import Logger from '../logger.js'
+
+const logger = Logger.create('Entity') // eslint-disable-line no-unused-vars
 
 export default class Entity extends Address {
-  constructor (dispatcher, data, index, currency, categories) {
-    super(dispatcher, data, index, currency, categories)
+  constructor (dispatcher, data, index, currency, categories, colors) {
+    super(dispatcher, data, index, currency, categories, colors)
     this.template = entity
     this.options =
       [
@@ -24,9 +26,11 @@ export default class Entity extends Address {
     flat.no_addresses = num(this.data.reduce((sum, v) => sum + v.no_addresses, 0))
     flat.no_entity_tags = num(this.data.reduce((sum, v) => sum + ((v.tags || {}).entity_tags || []).length, 0))
     flat.label = ''
+    flat.root_address = '<div>' + this.data.map(d => d.root_address).join('</div><div>') + '</div>'
     if (this.data.length === 1 && this.data[0].tags.entity_tags.length === 1) {
       flat.label = this.data[0].tags.entity_tags[0].label
       flat.id = this.data[0].id
+      flat.style = `style="background-color: ${this.colors[this.data[0].tags.entity_tags[0].category] || 'unset'}"`
     }
     return flat
   }

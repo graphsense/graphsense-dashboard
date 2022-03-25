@@ -1,7 +1,11 @@
 <div class="prop-table">
   <div class="prop-row">
     <span class="prop-key">{{t:Entity}}</span>
-    <span class="prop-value">{{id}} <span class="text-grey-dark">{{label}}</span></span>
+    <span class="prop-value"><span {{style}}>{{label}}</span> <span class="text-gs-text">{{id}}</span></span>
+  </div>
+  <div class="prop-row">
+    <span class="prop-key">{{t:Root address}}</span>
+    <span class="prop-value">{{root_address}}</span>
   </div>
   <div class="prop-row">
     <span class="prop-key">{{t:Currency}}</span>
@@ -11,6 +15,11 @@
     <span class="prop-key">{{t:Addresses}}</span>
     <span class="prop-value id">{{no_addresses}}</span>
   </div>
+  <div class="prop-row" id="row-tags">
+    <span class="prop-key">{{t:Address tags}}</span>
+    <span class="prop-value id">{{no_tags}}</span>
+  </div>
+  <hr/>
   <div class="prop-row" id="row-transactions">
     <span class="prop-key">{{te:Transfers}}</span>
     <span class="prop-value id">{{no_transfers}}&nbsp;
@@ -28,6 +37,7 @@
     <span class="prop-key">{{te:Sending entities}}</span>
     <span class="prop-value id">{{in_degree}}</span>
   </div>
+  <hr/>
   <div class="prop-row">
     <span class="prop-key">{{te:First usage}}</span>
     <span class="prop-value id">{{first_usage}}</span>
@@ -40,6 +50,7 @@
     <span class="prop-key">{{te:Activity period}}</span>
     <span class="prop-value id">{{activity_period}}</span>
   </div>
+  <hr/>
   <div class="prop-row">
     <span class="prop-key">{{te:Total received}}</span>
     <span class="prop-value id">{{total_received}}</span>
@@ -47,14 +58,5 @@
   <div class="prop-row">
     <span class="prop-key">{{te:Final balance}}</span>
     <span class="prop-value id">{{balance}}</span>
-  </div>
-  <hr/>
-  <div class="prop-row" id="row-tags">
-    <span class="prop-key">{{t:Address tags}}</span>
-    <span class="prop-value id">{{no_tags}}</span>
-  </div>
-  <div class="prop-row" id="row-entity-tags">
-    <span class="prop-key">{{t:Entity tags}}</span>
-    <span class="prop-value id">{{no_entity_tags}}</span>
   </div>
 </div>
