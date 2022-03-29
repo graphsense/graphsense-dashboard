@@ -1,4 +1,4 @@
-FROM alpine:3.11
+FROM alpine:3.15
 LABEL maintainer="contact@graphsense.info"
 
 ENV WORKDIR=/app
@@ -12,7 +12,6 @@ COPY ./docker/docker-entrypoint.sh /
 COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src
 COPY ./lang $WORKDIR/lang
-COPY ./lib $WORKDIR/lib
 COPY ./*.js ./*package.json $WORKDIR/
 COPY ./docker/site.conf /etc/nginx/conf.d/
 

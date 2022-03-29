@@ -10,3 +10,6 @@ tags
 ctags_exclude
 .env
 test/*.gs
+elm-stuff
+.parcel-cache
+templates
