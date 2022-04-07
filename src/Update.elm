@@ -1,13 +1,32 @@
 module Update exposing (update)
 
+import Browser
+import Effect exposing (Effect(..), n)
+import Model exposing (Model)
 import Msg exposing (..)
+import Url exposing (Url)
 
 
-update : Msg -> number -> number
+update : Msg -> Model -> ( Model, Effect )
 update msg model =
     case msg of
-        Increment ->
-            model + 2
+        UserRequestsUrl request ->
+            case request of
+                Browser.Internal url ->
+                    ( model
+                    , Url.toString url
+                        |> NavPushUrlEffect model.key
+                    )
 
-        Decrement ->
-            model - 1
+                Browser.External url ->
+                    ( model
+                    , NavLoadEffect url
+                    )
+
+        BrowserChangedUrl url ->
+            updateByUrl url model
+
+
+updateByUrl : Url -> Model -> ( Model, Effect )
+updateByUrl _ model =
+    n model
