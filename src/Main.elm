@@ -1,19 +1,11 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser
-import Model exposing (..)
+import Msg exposing (Msg)
+import Update exposing (update)
 import View exposing (view)
 
 
+main : Program () Int Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
-
-
-update : Msg -> Model -> Model
-update msg model =
-    case msg of
-        Increment ->
-            model + 1
-
-        Decrement ->
-            model - 1
+    Browser.sandbox { init = 0, update = update, view = view }
