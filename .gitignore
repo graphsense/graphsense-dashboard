@@ -3,7 +3,6 @@ node_modules
 dist
 official
 .vimrc
-Makefile
 testdata
 connect_cassandra.sh
 tags
