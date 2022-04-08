@@ -1,4 +1,4 @@
-module Main exposing (exampleProgramTest, start)
+module Stats exposing (exampleProgramTest, start)
 
 import ProgramTest exposing (ProgramTest, clickButton, expectViewHas)
 import Test exposing (..)

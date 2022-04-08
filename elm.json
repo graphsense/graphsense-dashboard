@@ -2,7 +2,7 @@
     "type": "application",
     "source-directories": [
         "src",
-        "openapi",
+        "openapi/src",
         "themes"
     ],
     "elm-version": "0.19.1",

@@ -16,32 +16,23 @@
 module Api.Data exposing
     ( Address
     , AddressAndEntityTags
-    , AddressId
     , AddressTag
     , AddressTags
     , AddressTx(..)
     , AddressTxUtxo
     , AddressTxs
     , Block
-    , Coinbase
     , Concept
-    , Currency
     , CurrencyStats
     , Entity
     , EntityAddresses
-    , EntityId
     , EntityTag
     , EntityTags
-    , Height
-    , Label
     , Link(..)
     , LinkUtxo
     , Links
     , Neighbor, NeighborNodeType(..), neighborNodeTypeVariants
     , Neighbors
-    , NextPage
-    , NoAddresses
-    , NoTxs
     , Rate
     , Rates
     , SearchResult
@@ -57,44 +48,31 @@ module Api.Data exposing
     , Tag
     , Tags(..)
     , Taxonomy
-    , TaxonomyKey
-    , Timestamp
     , Tx(..)
     , TxAccount
-    , TxHash
     , TxSummary
     , TxUtxo
     , TxValue
-    , Uri
     , Values
     , encodeAddress
     , encodeAddressAndEntityTags
-    , encodeAddressId
     , encodeAddressTag
     , encodeAddressTags
     , encodeAddressTx
     , encodeAddressTxUtxo
     , encodeAddressTxs
     , encodeBlock
-    , encodeCoinbase
     , encodeConcept
-    , encodeCurrency
     , encodeCurrencyStats
     , encodeEntity
     , encodeEntityAddresses
-    , encodeEntityId
     , encodeEntityTag
     , encodeEntityTags
-    , encodeHeight
-    , encodeLabel
     , encodeLink
     , encodeLinkUtxo
     , encodeLinks
     , encodeNeighbor
     , encodeNeighbors
-    , encodeNextPage
-    , encodeNoAddresses
-    , encodeNoTxs
     , encodeRate
     , encodeRates
     , encodeSearchResult
@@ -110,44 +88,31 @@ module Api.Data exposing
     , encodeTag
     , encodeTags
     , encodeTaxonomy
-    , encodeTaxonomyKey
-    , encodeTimestamp
     , encodeTx
     , encodeTxAccount
-    , encodeTxHash
     , encodeTxSummary
     , encodeTxUtxo
     , encodeTxValue
-    , encodeUri
     , encodeValues
     , addressDecoder
     , addressAndEntityTagsDecoder
-    , addressIdDecoder
     , addressTagDecoder
     , addressTagsDecoder
     , addressTxDecoder
     , addressTxUtxoDecoder
     , addressTxsDecoder
     , blockDecoder
-    , coinbaseDecoder
     , conceptDecoder
-    , currencyDecoder
     , currencyStatsDecoder
     , entityDecoder
     , entityAddressesDecoder
-    , entityIdDecoder
     , entityTagDecoder
     , entityTagsDecoder
-    , heightDecoder
-    , labelDecoder
     , linkDecoder
     , linkUtxoDecoder
     , linksDecoder
     , neighborDecoder
     , neighborsDecoder
-    , nextPageDecoder
-    , noAddressesDecoder
-    , noTxsDecoder
     , rateDecoder
     , ratesDecoder
     , searchResultDecoder
@@ -163,15 +128,11 @@ module Api.Data exposing
     , tagDecoder
     , tagsDecoder
     , taxonomyDecoder
-    , taxonomyKeyDecoder
-    , timestampDecoder
     , txDecoder
     , txAccountDecoder
-    , txHashDecoder
     , txSummaryDecoder
     , txUtxoDecoder
     , txValueDecoder
-    , uriDecoder
     , valuesDecoder
     )
 
@@ -186,43 +147,37 @@ import Json.Encode
 
 type alias Address =
     { address : String
-    , entity : Int
     , balance : Values
+    , entity : Int
     , firstTx : TxSummary
-    , lastTx : TxSummary
     , inDegree : Int
-    , outDegree : Int
+    , lastTx : TxSummary
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
+    , outDegree : Int
+    , tags : Maybe (List (AddressTag))
     , totalReceived : Values
     , totalSpent : Values
-    , tags : Maybe (List (AddressTag))
     }
 
 
 type alias AddressAndEntityTags =
-    { entityTags : List (EntityTag)
-    , addressTags : List (AddressTag)
+    { addressTags : List (AddressTag)
+    , entityTags : List (EntityTag)
     }
 
 
-{-| Address
--}
-type alias AddressId =
-    { }
-
-
 type alias AddressTag =
-    { label : String
-    , category : Maybe String
-    , abuse : Maybe String
-    , tagpackUri : Maybe String
-    , source : Maybe String
-    , lastmod : Maybe Int
+    { abuse : Maybe String
     , active : Bool
-    , isPublic : Maybe Bool
-    , isClusterDefiner : Maybe Bool
+    , category : Maybe String
     , currency : String
+    , isClusterDefiner : Maybe Bool
+    , isPublic : Maybe Bool
+    , label : String
+    , lastmod : Maybe Int
+    , source : Maybe String
+    , tagpackUri : Maybe String
     , address : String
     }
 
@@ -240,18 +195,18 @@ type AddressTx
 
 
 type alias AddressTxUtxo =
-    { txType : String
-    , txHash : String
-    , coinbase : Bool
+    { coinbase : Bool
     , height : Int
     , timestamp : Int
+    , txHash : String
+    , txType : String
     , value : Values
     }
 
 
 type alias AddressTxs =
-    { nextPage : Maybe String
-    , addressTxs : Maybe (List (AddressTx))
+    { addressTxs : Maybe (List (AddressTx))
+    , nextPage : Maybe String
     }
 
 
@@ -263,82 +218,64 @@ type alias Block =
     }
 
 
-{-| Coinbase transaction flag
--}
-type alias Coinbase =
-    { }
-
-
 type alias Concept =
-    { label : String
+    { description : String
+    , id : String
+    , label : String
     , taxonomy : String
     , uri : String
-    , description : String
-    , id : String
     }
-
-
-{-| crypto currency code
--}
-type alias Currency =
-    { }
 
 
 type alias CurrencyStats =
     { name : Maybe String
-    , noBlocks : Maybe Int
     , noAddressRelations : Maybe Int
     , noAddresses : Maybe Int
+    , noBlocks : Maybe Int
     , noEntities : Maybe Int
-    , noTxs : Maybe Int
     , noLabels : Maybe Int
     , noTaggedAddresses : Maybe Int
+    , noTxs : Maybe Int
     , timestamp : Maybe Int
     }
 
 
 type alias Entity =
-    { entity : Int
-    , rootAddress : String
-    , balance : Values
+    { balance : Values
+    , entity : Int
     , firstTx : TxSummary
-    , lastTx : TxSummary
     , inDegree : Int
-    , outDegree : Int
+    , lastTx : TxSummary
     , noAddresses : Int
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
+    , outDegree : Int
+    , rootAddress : String
+    , tags : Maybe AddressAndEntityTags
     , totalReceived : Values
     , totalSpent : Values
-    , tags : Maybe AddressAndEntityTags
     }
 
 
 type alias EntityAddresses =
-    { nextPage : Maybe String
-    , addresses : Maybe (List (Address))
+    { addresses : Maybe (List (Address))
+    , nextPage : Maybe String
     }
 
 
-{-| Entity id
--}
-type alias EntityId =
-    { }
-
-
 type alias EntityTag =
-    { label : String
-    , category : Maybe String
-    , abuse : Maybe String
-    , tagpackUri : Maybe String
-    , source : Maybe String
-    , lastmod : Maybe Int
+    { abuse : Maybe String
     , active : Bool
-    , isPublic : Maybe Bool
-    , isClusterDefiner : Maybe Bool
+    , category : Maybe String
     , currency : String
-    , entity : Int
+    , isClusterDefiner : Maybe Bool
+    , isPublic : Maybe Bool
+    , label : String
+    , lastmod : Maybe Int
+    , source : Maybe String
+    , tagpackUri : Maybe String
     , address : Maybe String
+    , entity : Int
     }
 
 
@@ -348,18 +285,6 @@ type alias EntityTags =
     }
 
 
-{-| Height
--}
-type alias Height =
-    { }
-
-
-{-| Label
--}
-type alias Label =
-    { }
-
-
 type Link
     = LinkLinkUtxo LinkUtxo
     | LinkTxAccount TxAccount
@@ -367,29 +292,29 @@ type Link
 
 
 type alias LinkUtxo =
-    { txType : String
-    , txHash : String
-    , height : Int
-    , timestamp : Int
+    { height : Int
     , inputValue : Values
     , outputValue : Values
+    , timestamp : Int
+    , txHash : String
+    , txType : String
     }
 
 
 type alias Links =
-    { nextPage : Maybe String
-    , links : Maybe (List (Link))
+    { links : Maybe (List (Link))
+    , nextPage : Maybe String
     }
 
 
 type alias Neighbor =
-    { id : String
-    , nodeType : NeighborNodeType
+    { balance : Values
+    , id : String
     , labels : Maybe (List (String))
-    , balance : Values
+    , noTxs : Int
+    , nodeType : NeighborNodeType
     , received : Values
     , value : Values
-    , noTxs : Int
     }
 
 
@@ -406,25 +331,9 @@ neighborNodeTypeVariants =
 
 
 type alias Neighbors =
-    { nextPage : Maybe String
-    , neighbors : Maybe (List (Neighbor))
+    { neighbors : Maybe (List (Neighbor))
+    , nextPage : Maybe String
     }
-
-
-type alias NextPage =
-    { }
-
-
-{-| number of contained addresses
--}
-type alias NoAddresses =
-    { }
-
-
-{-| number of transactions
--}
-type alias NoTxs =
-    { }
 
 
 type alias Rate =
@@ -446,85 +355,85 @@ type alias SearchResult =
 
 
 type alias SearchResultByCurrency =
-    { currency : Maybe String
-    , addresses : Maybe (List (String))
+    { addresses : Maybe (List (String))
+    , currency : Maybe String
     , txs : Maybe (List (String))
     }
 
 
 type alias SearchResultLeaf =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     }
 
 
 type alias SearchResultLevel1 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLevel2))
     }
 
 
 type alias SearchResultLevel2 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLevel3))
     }
 
 
 type alias SearchResultLevel3 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLevel4))
     }
 
 
 type alias SearchResultLevel4 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLevel5))
     }
 
 
 type alias SearchResultLevel5 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLevel6))
     }
 
 
 type alias SearchResultLevel6 =
-    { node : Maybe Entity
+    { matchingAddresses : Maybe (List (Address))
+    , node : Maybe Entity
     , relation : Maybe Neighbor
-    , matchingAddresses : Maybe (List (Address))
     , paths : Maybe (List (SearchResultLeaf))
     }
 
 
 type alias Stats =
     { currencies : Maybe (List (CurrencyStats))
-    , version : Maybe String
     , requestTimestamp : Maybe String
+    , version : Maybe String
     }
 
 
 type alias Tag =
-    { label : String
-    , category : Maybe String
-    , abuse : Maybe String
-    , tagpackUri : Maybe String
-    , source : Maybe String
-    , lastmod : Maybe Int
+    { abuse : Maybe String
     , active : Bool
-    , isPublic : Maybe Bool
-    , isClusterDefiner : Maybe Bool
+    , category : Maybe String
     , currency : String
+    , isClusterDefiner : Maybe Bool
+    , isPublic : Maybe Bool
+    , label : String
+    , lastmod : Maybe Int
+    , source : Maybe String
+    , tagpackUri : Maybe String
     }
 
 
@@ -540,18 +449,6 @@ type alias Taxonomy =
     }
 
 
-{-| Taxonomy
--}
-type alias TaxonomyKey =
-    { }
-
-
-{-| Timestamp
--}
-type alias Timestamp =
-    { }
-
-
 type Tx
     = TxTxAccount TxAccount
     | TxTxUtxo TxUtxo
@@ -559,20 +456,14 @@ type Tx
 
 
 type alias TxAccount =
-    { txType : String
-    , txHash : String
+    { fromAddress : String
     , height : Int
     , timestamp : Int
-    , value : Values
-    , fromAddress : String
     , toAddress : String
+    , txHash : String
+    , txType : String
+    , value : Values
     }
-
-
-{-| Transaction hash
--}
-type alias TxHash =
-    { }
 
 
 type alias TxSummary =
@@ -583,15 +474,15 @@ type alias TxSummary =
 
 
 type alias TxUtxo =
-    { txType : String
-    , txHash : String
-    , coinbase : Bool
+    { coinbase : Bool
     , height : Int
     , inputs : Maybe (List (TxValue))
     , outputs : Maybe (List (TxValue))
     , timestamp : Int
     , totalInput : Values
     , totalOutput : Values
+    , txHash : String
+    , txType : String
     }
 
 
@@ -599,12 +490,6 @@ type alias TxValue =
     { address : List (String)
     , value : Values
     }
-
-
-{-| URI
--}
-type alias Uri =
-    { }
 
 
 type alias Values =
@@ -631,17 +516,17 @@ encodeAddressPairs model =
     let
         pairs =
             [ encode "address" Json.Encode.string model.address
-            , encode "entity" Json.Encode.int model.entity
             , encode "balance" encodeValues model.balance
+            , encode "entity" Json.Encode.int model.entity
             , encode "first_tx" encodeTxSummary model.firstTx
-            , encode "last_tx" encodeTxSummary model.lastTx
             , encode "in_degree" Json.Encode.int model.inDegree
-            , encode "out_degree" Json.Encode.int model.outDegree
+            , encode "last_tx" encodeTxSummary model.lastTx
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
+            , encode "out_degree" Json.Encode.int model.outDegree
+            , maybeEncode "tags" (Json.Encode.list encodeAddressTag) model.tags
             , encode "total_received" encodeValues model.totalReceived
             , encode "total_spent" encodeValues model.totalSpent
-            , maybeEncode "tags" (Json.Encode.list encodeAddressTag) model.tags
             ]
     in
     pairs
@@ -661,27 +546,8 @@ encodeAddressAndEntityTagsPairs : AddressAndEntityTags -> List EncodedField
 encodeAddressAndEntityTagsPairs model =
     let
         pairs =
-            [ encode "entity_tags" (Json.Encode.list encodeEntityTag) model.entityTags
-            , encode "address_tags" (Json.Encode.list encodeAddressTag) model.addressTags
-            ]
-    in
-    pairs
-
-
-encodeAddressId : AddressId -> Json.Encode.Value
-encodeAddressId =
-    encodeObject << encodeAddressIdPairs
-
-
-encodeAddressIdWithTag : ( String, String ) -> AddressId -> Json.Encode.Value
-encodeAddressIdWithTag (tagField, tag) model =
-    encodeObject (encodeAddressIdPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeAddressIdPairs : AddressId -> List EncodedField
-encodeAddressIdPairs model =
-    let
-        pairs =
+            [ encode "address_tags" (Json.Encode.list encodeAddressTag) model.addressTags
+            , encode "entity_tags" (Json.Encode.list encodeEntityTag) model.entityTags
             ]
     in
     pairs
@@ -701,16 +567,16 @@ encodeAddressTagPairs : AddressTag -> List EncodedField
 encodeAddressTagPairs model =
     let
         pairs =
-            [ encode "label" Json.Encode.string model.label
-            , maybeEncode "category" Json.Encode.string model.category
-            , maybeEncode "abuse" Json.Encode.string model.abuse
-            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
-            , maybeEncode "source" Json.Encode.string model.source
-            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            [ maybeEncode "abuse" Json.Encode.string model.abuse
             , encode "active" Json.Encode.bool model.active
-            , maybeEncode "is_public" Json.Encode.bool model.isPublic
-            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "category" Json.Encode.string model.category
             , encode "currency" Json.Encode.string model.currency
+            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "is_public" Json.Encode.bool model.isPublic
+            , encode "label" Json.Encode.string model.label
+            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            , maybeEncode "source" Json.Encode.string model.source
+            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
             , encode "address" Json.Encode.string model.address
             ]
     in
@@ -764,11 +630,11 @@ encodeAddressTxUtxoPairs : AddressTxUtxo -> List EncodedField
 encodeAddressTxUtxoPairs model =
     let
         pairs =
-            [ encode "tx_type" Json.Encode.string model.txType
-            , encode "tx_hash" Json.Encode.string model.txHash
-            , encode "coinbase" Json.Encode.bool model.coinbase
+            [ encode "coinbase" Json.Encode.bool model.coinbase
             , encode "height" Json.Encode.int model.height
             , encode "timestamp" Json.Encode.int model.timestamp
+            , encode "tx_hash" Json.Encode.string model.txHash
+            , encode "tx_type" Json.Encode.string model.txType
             , encode "value" encodeValues model.value
             ]
     in
@@ -789,8 +655,8 @@ encodeAddressTxsPairs : AddressTxs -> List EncodedField
 encodeAddressTxsPairs model =
     let
         pairs =
-            [ maybeEncode "next_page" Json.Encode.string model.nextPage
-            , maybeEncode "address_txs" (Json.Encode.list encodeAddressTx) model.addressTxs
+            [ maybeEncode "address_txs" (Json.Encode.list encodeAddressTx) model.addressTxs
+            , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
     pairs
@@ -819,25 +685,6 @@ encodeBlockPairs model =
     pairs
 
 
-encodeCoinbase : Coinbase -> Json.Encode.Value
-encodeCoinbase =
-    encodeObject << encodeCoinbasePairs
-
-
-encodeCoinbaseWithTag : ( String, String ) -> Coinbase -> Json.Encode.Value
-encodeCoinbaseWithTag (tagField, tag) model =
-    encodeObject (encodeCoinbasePairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeCoinbasePairs : Coinbase -> List EncodedField
-encodeCoinbasePairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
 encodeConcept : Concept -> Json.Encode.Value
 encodeConcept =
     encodeObject << encodeConceptPairs
@@ -852,30 +699,11 @@ encodeConceptPairs : Concept -> List EncodedField
 encodeConceptPairs model =
     let
         pairs =
-            [ encode "label" Json.Encode.string model.label
+            [ encode "description" Json.Encode.string model.description
+            , encode "id" Json.Encode.string model.id
+            , encode "label" Json.Encode.string model.label
             , encode "taxonomy" Json.Encode.string model.taxonomy
             , encode "uri" Json.Encode.string model.uri
-            , encode "description" Json.Encode.string model.description
-            , encode "id" Json.Encode.string model.id
-            ]
-    in
-    pairs
-
-
-encodeCurrency : Currency -> Json.Encode.Value
-encodeCurrency =
-    encodeObject << encodeCurrencyPairs
-
-
-encodeCurrencyWithTag : ( String, String ) -> Currency -> Json.Encode.Value
-encodeCurrencyWithTag (tagField, tag) model =
-    encodeObject (encodeCurrencyPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeCurrencyPairs : Currency -> List EncodedField
-encodeCurrencyPairs model =
-    let
-        pairs =
             ]
     in
     pairs
@@ -896,13 +724,13 @@ encodeCurrencyStatsPairs model =
     let
         pairs =
             [ maybeEncode "name" Json.Encode.string model.name
-            , maybeEncode "no_blocks" Json.Encode.int model.noBlocks
             , maybeEncode "no_address_relations" Json.Encode.int model.noAddressRelations
             , maybeEncode "no_addresses" Json.Encode.int model.noAddresses
+            , maybeEncode "no_blocks" Json.Encode.int model.noBlocks
             , maybeEncode "no_entities" Json.Encode.int model.noEntities
-            , maybeEncode "no_txs" Json.Encode.int model.noTxs
             , maybeEncode "no_labels" Json.Encode.int model.noLabels
             , maybeEncode "no_tagged_addresses" Json.Encode.int model.noTaggedAddresses
+            , maybeEncode "no_txs" Json.Encode.int model.noTxs
             , maybeEncode "timestamp" Json.Encode.int model.timestamp
             ]
     in
@@ -923,19 +751,19 @@ encodeEntityPairs : Entity -> List EncodedField
 encodeEntityPairs model =
     let
         pairs =
-            [ encode "entity" Json.Encode.int model.entity
-            , encode "root_address" Json.Encode.string model.rootAddress
-            , encode "balance" encodeValues model.balance
+            [ encode "balance" encodeValues model.balance
+            , encode "entity" Json.Encode.int model.entity
             , encode "first_tx" encodeTxSummary model.firstTx
-            , encode "last_tx" encodeTxSummary model.lastTx
             , encode "in_degree" Json.Encode.int model.inDegree
-            , encode "out_degree" Json.Encode.int model.outDegree
+            , encode "last_tx" encodeTxSummary model.lastTx
             , encode "no_addresses" Json.Encode.int model.noAddresses
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
+            , encode "out_degree" Json.Encode.int model.outDegree
+            , encode "root_address" Json.Encode.string model.rootAddress
+            , maybeEncode "tags" encodeAddressAndEntityTags model.tags
             , encode "total_received" encodeValues model.totalReceived
             , encode "total_spent" encodeValues model.totalSpent
-            , maybeEncode "tags" encodeAddressAndEntityTags model.tags
             ]
     in
     pairs
@@ -955,27 +783,8 @@ encodeEntityAddressesPairs : EntityAddresses -> List EncodedField
 encodeEntityAddressesPairs model =
     let
         pairs =
-            [ maybeEncode "next_page" Json.Encode.string model.nextPage
-            , maybeEncode "addresses" (Json.Encode.list encodeAddress) model.addresses
-            ]
-    in
-    pairs
-
-
-encodeEntityId : EntityId -> Json.Encode.Value
-encodeEntityId =
-    encodeObject << encodeEntityIdPairs
-
-
-encodeEntityIdWithTag : ( String, String ) -> EntityId -> Json.Encode.Value
-encodeEntityIdWithTag (tagField, tag) model =
-    encodeObject (encodeEntityIdPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeEntityIdPairs : EntityId -> List EncodedField
-encodeEntityIdPairs model =
-    let
-        pairs =
+            [ maybeEncode "addresses" (Json.Encode.list encodeAddress) model.addresses
+            , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
     pairs
@@ -995,18 +804,18 @@ encodeEntityTagPairs : EntityTag -> List EncodedField
 encodeEntityTagPairs model =
     let
         pairs =
-            [ encode "label" Json.Encode.string model.label
-            , maybeEncode "category" Json.Encode.string model.category
-            , maybeEncode "abuse" Json.Encode.string model.abuse
-            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
-            , maybeEncode "source" Json.Encode.string model.source
-            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            [ maybeEncode "abuse" Json.Encode.string model.abuse
             , encode "active" Json.Encode.bool model.active
-            , maybeEncode "is_public" Json.Encode.bool model.isPublic
-            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "category" Json.Encode.string model.category
             , encode "currency" Json.Encode.string model.currency
-            , encode "entity" Json.Encode.int model.entity
+            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "is_public" Json.Encode.bool model.isPublic
+            , encode "label" Json.Encode.string model.label
+            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            , maybeEncode "source" Json.Encode.string model.source
+            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
             , maybeEncode "address" Json.Encode.string model.address
+            , encode "entity" Json.Encode.int model.entity
             ]
     in
     pairs
@@ -1028,44 +837,6 @@ encodeEntityTagsPairs model =
         pairs =
             [ encode "entity_tags" (Json.Encode.list encodeEntityTag) model.entityTags
             , maybeEncode "next_page" Json.Encode.string model.nextPage
-            ]
-    in
-    pairs
-
-
-encodeHeight : Height -> Json.Encode.Value
-encodeHeight =
-    encodeObject << encodeHeightPairs
-
-
-encodeHeightWithTag : ( String, String ) -> Height -> Json.Encode.Value
-encodeHeightWithTag (tagField, tag) model =
-    encodeObject (encodeHeightPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeHeightPairs : Height -> List EncodedField
-encodeHeightPairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
-encodeLabel : Label -> Json.Encode.Value
-encodeLabel =
-    encodeObject << encodeLabelPairs
-
-
-encodeLabelWithTag : ( String, String ) -> Label -> Json.Encode.Value
-encodeLabelWithTag (tagField, tag) model =
-    encodeObject (encodeLabelPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeLabelPairs : Label -> List EncodedField
-encodeLabelPairs model =
-    let
-        pairs =
             ]
     in
     pairs
@@ -1097,12 +868,12 @@ encodeLinkUtxoPairs : LinkUtxo -> List EncodedField
 encodeLinkUtxoPairs model =
     let
         pairs =
-            [ encode "tx_type" Json.Encode.string model.txType
-            , encode "tx_hash" Json.Encode.string model.txHash
-            , encode "height" Json.Encode.int model.height
-            , encode "timestamp" Json.Encode.int model.timestamp
+            [ encode "height" Json.Encode.int model.height
             , encode "input_value" encodeValues model.inputValue
             , encode "output_value" encodeValues model.outputValue
+            , encode "timestamp" Json.Encode.int model.timestamp
+            , encode "tx_hash" Json.Encode.string model.txHash
+            , encode "tx_type" Json.Encode.string model.txType
             ]
     in
     pairs
@@ -1122,8 +893,8 @@ encodeLinksPairs : Links -> List EncodedField
 encodeLinksPairs model =
     let
         pairs =
-            [ maybeEncode "next_page" Json.Encode.string model.nextPage
-            , maybeEncode "links" (Json.Encode.list encodeLink) model.links
+            [ maybeEncode "links" (Json.Encode.list encodeLink) model.links
+            , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
     pairs
@@ -1143,13 +914,13 @@ encodeNeighborPairs : Neighbor -> List EncodedField
 encodeNeighborPairs model =
     let
         pairs =
-            [ encode "id" Json.Encode.string model.id
-            , encode "node_type"  model.nodeType
+            [ encode "balance" encodeValues model.balance
+            , encode "id" Json.Encode.string model.id
             , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
-            , encode "balance" encodeValues model.balance
+            , encode "no_txs" Json.Encode.int model.noTxs
+            , encode "node_type" encodeNeighborNodeType model.nodeType
             , encode "received" encodeValues model.received
             , encode "value" encodeValues model.value
-            , encode "no_txs" Json.Encode.int model.noTxs
             ]
     in
     pairs
@@ -1184,65 +955,8 @@ encodeNeighborsPairs : Neighbors -> List EncodedField
 encodeNeighborsPairs model =
     let
         pairs =
-            [ maybeEncode "next_page" Json.Encode.string model.nextPage
-            , maybeEncode "neighbors" (Json.Encode.list encodeNeighbor) model.neighbors
-            ]
-    in
-    pairs
-
-
-encodeNextPage : NextPage -> Json.Encode.Value
-encodeNextPage =
-    encodeObject << encodeNextPagePairs
-
-
-encodeNextPageWithTag : ( String, String ) -> NextPage -> Json.Encode.Value
-encodeNextPageWithTag (tagField, tag) model =
-    encodeObject (encodeNextPagePairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeNextPagePairs : NextPage -> List EncodedField
-encodeNextPagePairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
-encodeNoAddresses : NoAddresses -> Json.Encode.Value
-encodeNoAddresses =
-    encodeObject << encodeNoAddressesPairs
-
-
-encodeNoAddressesWithTag : ( String, String ) -> NoAddresses -> Json.Encode.Value
-encodeNoAddressesWithTag (tagField, tag) model =
-    encodeObject (encodeNoAddressesPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeNoAddressesPairs : NoAddresses -> List EncodedField
-encodeNoAddressesPairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
-encodeNoTxs : NoTxs -> Json.Encode.Value
-encodeNoTxs =
-    encodeObject << encodeNoTxsPairs
-
-
-encodeNoTxsWithTag : ( String, String ) -> NoTxs -> Json.Encode.Value
-encodeNoTxsWithTag (tagField, tag) model =
-    encodeObject (encodeNoTxsPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeNoTxsPairs : NoTxs -> List EncodedField
-encodeNoTxsPairs model =
-    let
-        pairs =
+            [ maybeEncode "neighbors" (Json.Encode.list encodeNeighbor) model.neighbors
+            , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
     pairs
@@ -1325,8 +1039,8 @@ encodeSearchResultByCurrencyPairs : SearchResultByCurrency -> List EncodedField
 encodeSearchResultByCurrencyPairs model =
     let
         pairs =
-            [ maybeEncode "currency" Json.Encode.string model.currency
-            , maybeEncode "addresses" (Json.Encode.list Json.Encode.string) model.addresses
+            [ maybeEncode "addresses" (Json.Encode.list Json.Encode.string) model.addresses
+            , maybeEncode "currency" Json.Encode.string model.currency
             , maybeEncode "txs" (Json.Encode.list Json.Encode.string) model.txs
             ]
     in
@@ -1347,9 +1061,9 @@ encodeSearchResultLeafPairs : SearchResultLeaf -> List EncodedField
 encodeSearchResultLeafPairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             ]
     in
     pairs
@@ -1369,9 +1083,9 @@ encodeSearchResultLevel1Pairs : SearchResultLevel1 -> List EncodedField
 encodeSearchResultLevel1Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel2) model.paths
             ]
     in
@@ -1392,9 +1106,9 @@ encodeSearchResultLevel2Pairs : SearchResultLevel2 -> List EncodedField
 encodeSearchResultLevel2Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel3) model.paths
             ]
     in
@@ -1415,9 +1129,9 @@ encodeSearchResultLevel3Pairs : SearchResultLevel3 -> List EncodedField
 encodeSearchResultLevel3Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel4) model.paths
             ]
     in
@@ -1438,9 +1152,9 @@ encodeSearchResultLevel4Pairs : SearchResultLevel4 -> List EncodedField
 encodeSearchResultLevel4Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel5) model.paths
             ]
     in
@@ -1461,9 +1175,9 @@ encodeSearchResultLevel5Pairs : SearchResultLevel5 -> List EncodedField
 encodeSearchResultLevel5Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel6) model.paths
             ]
     in
@@ -1484,9 +1198,9 @@ encodeSearchResultLevel6Pairs : SearchResultLevel6 -> List EncodedField
 encodeSearchResultLevel6Pairs model =
     let
         pairs =
-            [ maybeEncode "node" encodeEntity model.node
+            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , maybeEncode "node" encodeEntity model.node
             , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
             , maybeEncode "paths" (Json.Encode.list encodeSearchResultLeaf) model.paths
             ]
     in
@@ -1508,8 +1222,8 @@ encodeStatsPairs model =
     let
         pairs =
             [ maybeEncode "currencies" (Json.Encode.list encodeCurrencyStats) model.currencies
-            , maybeEncode "version" Json.Encode.string model.version
             , maybeEncode "request_timestamp" Json.Encode.string model.requestTimestamp
+            , maybeEncode "version" Json.Encode.string model.version
             ]
     in
     pairs
@@ -1529,16 +1243,16 @@ encodeTagPairs : Tag -> List EncodedField
 encodeTagPairs model =
     let
         pairs =
-            [ encode "label" Json.Encode.string model.label
-            , maybeEncode "category" Json.Encode.string model.category
-            , maybeEncode "abuse" Json.Encode.string model.abuse
-            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
-            , maybeEncode "source" Json.Encode.string model.source
-            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            [ maybeEncode "abuse" Json.Encode.string model.abuse
             , encode "active" Json.Encode.bool model.active
-            , maybeEncode "is_public" Json.Encode.bool model.isPublic
-            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "category" Json.Encode.string model.category
             , encode "currency" Json.Encode.string model.currency
+            , maybeEncode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
+            , maybeEncode "is_public" Json.Encode.bool model.isPublic
+            , encode "label" Json.Encode.string model.label
+            , maybeEncode "lastmod" Json.Encode.int model.lastmod
+            , maybeEncode "source" Json.Encode.string model.source
+            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
             ]
     in
     pairs
@@ -1578,44 +1292,6 @@ encodeTaxonomyPairs model =
     pairs
 
 
-encodeTaxonomyKey : TaxonomyKey -> Json.Encode.Value
-encodeTaxonomyKey =
-    encodeObject << encodeTaxonomyKeyPairs
-
-
-encodeTaxonomyKeyWithTag : ( String, String ) -> TaxonomyKey -> Json.Encode.Value
-encodeTaxonomyKeyWithTag (tagField, tag) model =
-    encodeObject (encodeTaxonomyKeyPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeTaxonomyKeyPairs : TaxonomyKey -> List EncodedField
-encodeTaxonomyKeyPairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
-encodeTimestamp : Timestamp -> Json.Encode.Value
-encodeTimestamp =
-    encodeObject << encodeTimestampPairs
-
-
-encodeTimestampWithTag : ( String, String ) -> Timestamp -> Json.Encode.Value
-encodeTimestampWithTag (tagField, tag) model =
-    encodeObject (encodeTimestampPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeTimestampPairs : Timestamp -> List EncodedField
-encodeTimestampPairs model =
-    let
-        pairs =
-            ]
-    in
-    pairs
-
-
 encodeTx : Tx -> Json.Encode.Value
 encodeTx model =
     case model of
@@ -1642,32 +1318,13 @@ encodeTxAccountPairs : TxAccount -> List EncodedField
 encodeTxAccountPairs model =
     let
         pairs =
-            [ encode "tx_type" Json.Encode.string model.txType
-            , encode "tx_hash" Json.Encode.string model.txHash
+            [ encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
             , encode "timestamp" Json.Encode.int model.timestamp
-            , encode "value" encodeValues model.value
-            , encode "from_address" Json.Encode.string model.fromAddress
             , encode "to_address" Json.Encode.string model.toAddress
-            ]
-    in
-    pairs
-
-
-encodeTxHash : TxHash -> Json.Encode.Value
-encodeTxHash =
-    encodeObject << encodeTxHashPairs
-
-
-encodeTxHashWithTag : ( String, String ) -> TxHash -> Json.Encode.Value
-encodeTxHashWithTag (tagField, tag) model =
-    encodeObject (encodeTxHashPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeTxHashPairs : TxHash -> List EncodedField
-encodeTxHashPairs model =
-    let
-        pairs =
+            , encode "tx_hash" Json.Encode.string model.txHash
+            , encode "tx_type" Json.Encode.string model.txType
+            , encode "value" encodeValues model.value
             ]
     in
     pairs
@@ -1709,15 +1366,15 @@ encodeTxUtxoPairs : TxUtxo -> List EncodedField
 encodeTxUtxoPairs model =
     let
         pairs =
-            [ encode "tx_type" Json.Encode.string model.txType
-            , encode "tx_hash" Json.Encode.string model.txHash
-            , encode "coinbase" Json.Encode.bool model.coinbase
+            [ encode "coinbase" Json.Encode.bool model.coinbase
             , encode "height" Json.Encode.int model.height
             , maybeEncode "inputs" (Json.Encode.list encodeTxValue) model.inputs
             , maybeEncode "outputs" (Json.Encode.list encodeTxValue) model.outputs
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "total_input" encodeValues model.totalInput
             , encode "total_output" encodeValues model.totalOutput
+            , encode "tx_hash" Json.Encode.string model.txHash
+            , encode "tx_type" Json.Encode.string model.txType
             ]
     in
     pairs
@@ -1739,25 +1396,6 @@ encodeTxValuePairs model =
         pairs =
             [ encode "address" (Json.Encode.list Json.Encode.string) model.address
             , encode "value" encodeValues model.value
-            ]
-    in
-    pairs
-
-
-encodeUri : Uri -> Json.Encode.Value
-encodeUri =
-    encodeObject << encodeUriPairs
-
-
-encodeUriWithTag : ( String, String ) -> Uri -> Json.Encode.Value
-encodeUriWithTag (tagField, tag) model =
-    encodeObject (encodeUriPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeUriPairs : Uri -> List EncodedField
-encodeUriPairs model =
-    let
-        pairs =
             ]
     in
     pairs
@@ -1791,44 +1429,39 @@ addressDecoder : Json.Decode.Decoder Address
 addressDecoder =
     Json.Decode.succeed Address
         |> decode "address" Json.Decode.string 
-        |> decode "entity" Json.Decode.int 
         |> decode "balance" valuesDecoder 
+        |> decode "entity" Json.Decode.int 
         |> decode "first_tx" txSummaryDecoder 
-        |> decode "last_tx" txSummaryDecoder 
         |> decode "in_degree" Json.Decode.int 
-        |> decode "out_degree" Json.Decode.int 
+        |> decode "last_tx" txSummaryDecoder 
         |> decode "no_incoming_txs" Json.Decode.int 
         |> decode "no_outgoing_txs" Json.Decode.int 
+        |> decode "out_degree" Json.Decode.int 
+        |> maybeDecode "tags" (Json.Decode.list addressTagDecoder) Nothing
         |> decode "total_received" valuesDecoder 
         |> decode "total_spent" valuesDecoder 
-        |> maybeDecode "tags" (Json.Decode.list addressTagDecoder) Nothing
 
 
 addressAndEntityTagsDecoder : Json.Decode.Decoder AddressAndEntityTags
 addressAndEntityTagsDecoder =
     Json.Decode.succeed AddressAndEntityTags
-        |> decode "entity_tags" (Json.Decode.list entityTagDecoder) 
         |> decode "address_tags" (Json.Decode.list addressTagDecoder) 
-
-
-addressIdDecoder : Json.Decode.Decoder AddressId
-addressIdDecoder =
-    Json.Decode.succeed AddressId
+        |> decode "entity_tags" (Json.Decode.list entityTagDecoder) 
 
 
 addressTagDecoder : Json.Decode.Decoder AddressTag
 addressTagDecoder =
     Json.Decode.succeed AddressTag
-        |> decode "label" Json.Decode.string 
-        |> maybeDecode "category" Json.Decode.string Nothing
         |> maybeDecode "abuse" Json.Decode.string Nothing
-        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-        |> maybeDecode "source" Json.Decode.string Nothing
-        |> maybeDecode "lastmod" Json.Decode.int Nothing
         |> decode "active" Json.Decode.bool 
-        |> maybeDecode "is_public" Json.Decode.bool Nothing
-        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "category" Json.Decode.string Nothing
         |> decode "currency" Json.Decode.string 
+        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "is_public" Json.Decode.bool Nothing
+        |> decode "label" Json.Decode.string 
+        |> maybeDecode "lastmod" Json.Decode.int Nothing
+        |> maybeDecode "source" Json.Decode.string Nothing
+        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
         |> decode "address" Json.Decode.string 
 
 
@@ -1862,19 +1495,19 @@ addressTxTagDecoder tag =
 addressTxUtxoDecoder : Json.Decode.Decoder AddressTxUtxo
 addressTxUtxoDecoder =
     Json.Decode.succeed AddressTxUtxo
-        |> decode "tx_type" Json.Decode.string 
-        |> decode "tx_hash" Json.Decode.string 
         |> decode "coinbase" Json.Decode.bool 
         |> decode "height" Json.Decode.int 
         |> decode "timestamp" Json.Decode.int 
+        |> decode "tx_hash" Json.Decode.string 
+        |> decode "tx_type" Json.Decode.string 
         |> decode "value" valuesDecoder 
 
 
 addressTxsDecoder : Json.Decode.Decoder AddressTxs
 addressTxsDecoder =
     Json.Decode.succeed AddressTxs
-        |> maybeDecode "next_page" Json.Decode.string Nothing
         |> maybeDecode "address_txs" (Json.Decode.list addressTxDecoder) Nothing
+        |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
 blockDecoder : Json.Decode.Decoder Block
@@ -1886,85 +1519,70 @@ blockDecoder =
         |> maybeDecode "timestamp" Json.Decode.int Nothing
 
 
-coinbaseDecoder : Json.Decode.Decoder Coinbase
-coinbaseDecoder =
-    Json.Decode.succeed Coinbase
-
-
 conceptDecoder : Json.Decode.Decoder Concept
 conceptDecoder =
     Json.Decode.succeed Concept
+        |> decode "description" Json.Decode.string 
+        |> decode "id" Json.Decode.string 
         |> decode "label" Json.Decode.string 
         |> decode "taxonomy" Json.Decode.string 
         |> decode "uri" Json.Decode.string 
-        |> decode "description" Json.Decode.string 
-        |> decode "id" Json.Decode.string 
-
-
-currencyDecoder : Json.Decode.Decoder Currency
-currencyDecoder =
-    Json.Decode.succeed Currency
 
 
 currencyStatsDecoder : Json.Decode.Decoder CurrencyStats
 currencyStatsDecoder =
     Json.Decode.succeed CurrencyStats
         |> maybeDecode "name" Json.Decode.string Nothing
-        |> maybeDecode "no_blocks" Json.Decode.int Nothing
         |> maybeDecode "no_address_relations" Json.Decode.int Nothing
         |> maybeDecode "no_addresses" Json.Decode.int Nothing
+        |> maybeDecode "no_blocks" Json.Decode.int Nothing
         |> maybeDecode "no_entities" Json.Decode.int Nothing
-        |> maybeDecode "no_txs" Json.Decode.int Nothing
         |> maybeDecode "no_labels" Json.Decode.int Nothing
         |> maybeDecode "no_tagged_addresses" Json.Decode.int Nothing
+        |> maybeDecode "no_txs" Json.Decode.int Nothing
         |> maybeDecode "timestamp" Json.Decode.int Nothing
 
 
 entityDecoder : Json.Decode.Decoder Entity
 entityDecoder =
     Json.Decode.succeed Entity
-        |> decode "entity" Json.Decode.int 
-        |> decode "root_address" Json.Decode.string 
         |> decode "balance" valuesDecoder 
+        |> decode "entity" Json.Decode.int 
         |> decode "first_tx" txSummaryDecoder 
-        |> decode "last_tx" txSummaryDecoder 
         |> decode "in_degree" Json.Decode.int 
-        |> decode "out_degree" Json.Decode.int 
+        |> decode "last_tx" txSummaryDecoder 
         |> decode "no_addresses" Json.Decode.int 
         |> decode "no_incoming_txs" Json.Decode.int 
         |> decode "no_outgoing_txs" Json.Decode.int 
+        |> decode "out_degree" Json.Decode.int 
+        |> decode "root_address" Json.Decode.string 
+        |> maybeDecode "tags" addressAndEntityTagsDecoder Nothing
         |> decode "total_received" valuesDecoder 
         |> decode "total_spent" valuesDecoder 
-        |> maybeDecode "tags" addressAndEntityTagsDecoder Nothing
 
 
 entityAddressesDecoder : Json.Decode.Decoder EntityAddresses
 entityAddressesDecoder =
     Json.Decode.succeed EntityAddresses
-        |> maybeDecode "next_page" Json.Decode.string Nothing
         |> maybeDecode "addresses" (Json.Decode.list addressDecoder) Nothing
-
-
-entityIdDecoder : Json.Decode.Decoder EntityId
-entityIdDecoder =
-    Json.Decode.succeed EntityId
+        |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
 entityTagDecoder : Json.Decode.Decoder EntityTag
 entityTagDecoder =
     Json.Decode.succeed EntityTag
-        |> decode "label" Json.Decode.string 
-        |> maybeDecode "category" Json.Decode.string Nothing
         |> maybeDecode "abuse" Json.Decode.string Nothing
-        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-        |> maybeDecode "source" Json.Decode.string Nothing
-        |> maybeDecode "lastmod" Json.Decode.int Nothing
         |> decode "active" Json.Decode.bool 
-        |> maybeDecode "is_public" Json.Decode.bool Nothing
-        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "category" Json.Decode.string Nothing
         |> decode "currency" Json.Decode.string 
-        |> decode "entity" Json.Decode.int 
+        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "is_public" Json.Decode.bool Nothing
+        |> decode "label" Json.Decode.string 
+        |> maybeDecode "lastmod" Json.Decode.int Nothing
+        |> maybeDecode "source" Json.Decode.string Nothing
+        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
         |> maybeDecode "address" Json.Decode.string Nothing
+        |> decode "entity" Json.Decode.int 
 
 
 entityTagsDecoder : Json.Decode.Decoder EntityTags
@@ -1972,16 +1590,6 @@ entityTagsDecoder =
     Json.Decode.succeed EntityTags
         |> decode "entity_tags" (Json.Decode.list entityTagDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
-
-
-heightDecoder : Json.Decode.Decoder Height
-heightDecoder =
-    Json.Decode.succeed Height
-
-
-labelDecoder : Json.Decode.Decoder Label
-labelDecoder =
-    Json.Decode.succeed Label
 
 
 linkDecoder : Json.Decode.Decoder Link
@@ -2007,31 +1615,31 @@ linkTagDecoder tag =
 linkUtxoDecoder : Json.Decode.Decoder LinkUtxo
 linkUtxoDecoder =
     Json.Decode.succeed LinkUtxo
-        |> decode "tx_type" Json.Decode.string 
-        |> decode "tx_hash" Json.Decode.string 
         |> decode "height" Json.Decode.int 
-        |> decode "timestamp" Json.Decode.int 
         |> decode "input_value" valuesDecoder 
         |> decode "output_value" valuesDecoder 
+        |> decode "timestamp" Json.Decode.int 
+        |> decode "tx_hash" Json.Decode.string 
+        |> decode "tx_type" Json.Decode.string 
 
 
 linksDecoder : Json.Decode.Decoder Links
 linksDecoder =
     Json.Decode.succeed Links
-        |> maybeDecode "next_page" Json.Decode.string Nothing
         |> maybeDecode "links" (Json.Decode.list linkDecoder) Nothing
+        |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
 neighborDecoder : Json.Decode.Decoder Neighbor
 neighborDecoder =
     Json.Decode.succeed Neighbor
-        |> decode "id" Json.Decode.string 
-        |> decode "node_type"  
-        |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "balance" valuesDecoder 
+        |> decode "id" Json.Decode.string 
+        |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "node_type" neighborNodeTypeDecoder 
         |> decode "received" valuesDecoder 
         |> decode "value" valuesDecoder 
-        |> decode "no_txs" Json.Decode.int 
 
 
 neighborNodeTypeDecoder : Json.Decode.Decoder NeighborNodeType
@@ -2055,23 +1663,8 @@ neighborNodeTypeDecoder =
 neighborsDecoder : Json.Decode.Decoder Neighbors
 neighborsDecoder =
     Json.Decode.succeed Neighbors
-        |> maybeDecode "next_page" Json.Decode.string Nothing
         |> maybeDecode "neighbors" (Json.Decode.list neighborDecoder) Nothing
-
-
-nextPageDecoder : Json.Decode.Decoder NextPage
-nextPageDecoder =
-    Json.Decode.succeed NextPage
-
-
-noAddressesDecoder : Json.Decode.Decoder NoAddresses
-noAddressesDecoder =
-    Json.Decode.succeed NoAddresses
-
-
-noTxsDecoder : Json.Decode.Decoder NoTxs
-noTxsDecoder =
-    Json.Decode.succeed NoTxs
+        |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
 rateDecoder : Json.Decode.Decoder Rate
@@ -2098,70 +1691,70 @@ searchResultDecoder =
 searchResultByCurrencyDecoder : Json.Decode.Decoder SearchResultByCurrency
 searchResultByCurrencyDecoder =
     Json.Decode.succeed SearchResultByCurrency
-        |> maybeDecode "currency" Json.Decode.string Nothing
         |> maybeDecode "addresses" (Json.Decode.list Json.Decode.string) Nothing
+        |> maybeDecode "currency" Json.Decode.string Nothing
         |> maybeDecode "txs" (Json.Decode.list Json.Decode.string) Nothing
 
 
 searchResultLeafDecoder : Json.Decode.Decoder SearchResultLeaf
 searchResultLeafDecoder =
     Json.Decode.succeed SearchResultLeaf
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
 
 
 searchResultLevel1Decoder : Json.Decode.Decoder SearchResultLevel1
 searchResultLevel1Decoder =
     Json.Decode.succeed SearchResultLevel1
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLevel2Decoder) Nothing
 
 
 searchResultLevel2Decoder : Json.Decode.Decoder SearchResultLevel2
 searchResultLevel2Decoder =
     Json.Decode.succeed SearchResultLevel2
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLevel3Decoder) Nothing
 
 
 searchResultLevel3Decoder : Json.Decode.Decoder SearchResultLevel3
 searchResultLevel3Decoder =
     Json.Decode.succeed SearchResultLevel3
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLevel4Decoder) Nothing
 
 
 searchResultLevel4Decoder : Json.Decode.Decoder SearchResultLevel4
 searchResultLevel4Decoder =
     Json.Decode.succeed SearchResultLevel4
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLevel5Decoder) Nothing
 
 
 searchResultLevel5Decoder : Json.Decode.Decoder SearchResultLevel5
 searchResultLevel5Decoder =
     Json.Decode.succeed SearchResultLevel5
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLevel6Decoder) Nothing
 
 
 searchResultLevel6Decoder : Json.Decode.Decoder SearchResultLevel6
 searchResultLevel6Decoder =
     Json.Decode.succeed SearchResultLevel6
+        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "node" entityDecoder Nothing
         |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
         |> maybeDecode "paths" (Json.Decode.list searchResultLeafDecoder) Nothing
 
 
@@ -2169,23 +1762,23 @@ statsDecoder : Json.Decode.Decoder Stats
 statsDecoder =
     Json.Decode.succeed Stats
         |> maybeDecode "currencies" (Json.Decode.list currencyStatsDecoder) Nothing
-        |> maybeDecode "version" Json.Decode.string Nothing
         |> maybeDecode "request_timestamp" Json.Decode.string Nothing
+        |> maybeDecode "version" Json.Decode.string Nothing
 
 
 tagDecoder : Json.Decode.Decoder Tag
 tagDecoder =
     Json.Decode.succeed Tag
-        |> decode "label" Json.Decode.string 
-        |> maybeDecode "category" Json.Decode.string Nothing
         |> maybeDecode "abuse" Json.Decode.string Nothing
-        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-        |> maybeDecode "source" Json.Decode.string Nothing
-        |> maybeDecode "lastmod" Json.Decode.int Nothing
         |> decode "active" Json.Decode.bool 
-        |> maybeDecode "is_public" Json.Decode.bool Nothing
-        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "category" Json.Decode.string Nothing
         |> decode "currency" Json.Decode.string 
+        |> maybeDecode "is_cluster_definer" Json.Decode.bool Nothing
+        |> maybeDecode "is_public" Json.Decode.bool Nothing
+        |> decode "label" Json.Decode.string 
+        |> maybeDecode "lastmod" Json.Decode.int Nothing
+        |> maybeDecode "source" Json.Decode.string Nothing
+        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
 
 
 tagsDecoder : Json.Decode.Decoder Tags
@@ -2202,16 +1795,6 @@ taxonomyDecoder =
     Json.Decode.succeed Taxonomy
         |> decode "taxonomy" Json.Decode.string 
         |> decode "uri" Json.Decode.string 
-
-
-taxonomyKeyDecoder : Json.Decode.Decoder TaxonomyKey
-taxonomyKeyDecoder =
-    Json.Decode.succeed TaxonomyKey
-
-
-timestampDecoder : Json.Decode.Decoder Timestamp
-timestampDecoder =
-    Json.Decode.succeed Timestamp
 
 
 txDecoder : Json.Decode.Decoder Tx
@@ -2237,18 +1820,13 @@ txTagDecoder tag =
 txAccountDecoder : Json.Decode.Decoder TxAccount
 txAccountDecoder =
     Json.Decode.succeed TxAccount
-        |> decode "tx_type" Json.Decode.string 
-        |> decode "tx_hash" Json.Decode.string 
+        |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "timestamp" Json.Decode.int 
-        |> decode "value" valuesDecoder 
-        |> decode "from_address" Json.Decode.string 
         |> decode "to_address" Json.Decode.string 
-
-
-txHashDecoder : Json.Decode.Decoder TxHash
-txHashDecoder =
-    Json.Decode.succeed TxHash
+        |> decode "tx_hash" Json.Decode.string 
+        |> decode "tx_type" Json.Decode.string 
+        |> decode "value" valuesDecoder 
 
 
 txSummaryDecoder : Json.Decode.Decoder TxSummary
@@ -2262,8 +1840,6 @@ txSummaryDecoder =
 txUtxoDecoder : Json.Decode.Decoder TxUtxo
 txUtxoDecoder =
     Json.Decode.succeed TxUtxo
-        |> decode "tx_type" Json.Decode.string 
-        |> decode "tx_hash" Json.Decode.string 
         |> decode "coinbase" Json.Decode.bool 
         |> decode "height" Json.Decode.int 
         |> maybeDecode "inputs" (Json.Decode.list txValueDecoder) Nothing
@@ -2271,6 +1847,8 @@ txUtxoDecoder =
         |> decode "timestamp" Json.Decode.int 
         |> decode "total_input" valuesDecoder 
         |> decode "total_output" valuesDecoder 
+        |> decode "tx_hash" Json.Decode.string 
+        |> decode "tx_type" Json.Decode.string 
 
 
 txValueDecoder : Json.Decode.Decoder TxValue
@@ -2278,11 +1856,6 @@ txValueDecoder =
     Json.Decode.succeed TxValue
         |> decode "address" (Json.Decode.list Json.Decode.string) 
         |> decode "value" valuesDecoder 
-
-
-uriDecoder : Json.Decode.Decoder Uri
-uriDecoder =
-    Json.Decode.succeed Uri
 
 
 valuesDecoder : Json.Decode.Decoder Values

@@ -1,10 +1,6 @@
 openapi:
-	docker run --rm \
-		-v "${PWD}/openapi:/build" 
-		openapitools/openapi-generator-cli:latest generate \
-			-i https://raw.githubusercontent.com/graphsense/graphsense-openapi/develop/graphsense.yaml \
-			-g elm \
-			-o /build \
-			--additional-properties=generateAliasAsModel=false
+	tools/generate-openapi.sh
+			#--global-property=debugModels \
+			#--global-property=debugOperations \
 
 .PHONY: openapi

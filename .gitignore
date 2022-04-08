@@ -11,4 +11,3 @@ ctags_exclude
 test/*.gs
 elm-stuff
 .parcel-cache
-templates
