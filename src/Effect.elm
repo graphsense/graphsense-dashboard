@@ -1,13 +1,16 @@
 module Effect exposing (Effect(..), n, perform)
 
+import Api
+import Api.Request.General
 import Browser.Navigation as Nav
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 
 
 type Effect
     = NoEffect
     | NavLoadEffect String
-    | NavPushUrlEffect Nav.Key String
+    | NavPushUrlEffect String
+    | GetStatisticsEffect
 
 
 n : model -> ( model, Effect )
@@ -15,8 +18,8 @@ n model =
     ( model, NoEffect )
 
 
-perform : Effect -> Cmd Msg
-perform effect =
+perform : Nav.Key -> Effect -> Cmd Msg
+perform key effect =
     case effect of
         NoEffect ->
             Cmd.none
@@ -24,5 +27,9 @@ perform effect =
         NavLoadEffect url ->
             Nav.load url
 
-        NavPushUrlEffect key url ->
+        NavPushUrlEffect url ->
             Nav.pushUrl key url
+
+        GetStatisticsEffect ->
+            Api.Request.General.getStatistics
+                |> Api.send BrowserGotStatistics

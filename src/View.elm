@@ -10,7 +10,7 @@ import Msg exposing (..)
 import View.Header as Header
 
 
-view : Model -> Document Msg
+view : Model key -> Document Msg
 view model =
     { title = model.locale.getString "Iknaio Dashboard"
     , body =
@@ -20,7 +20,7 @@ view model =
     }
 
 
-body : Model -> Html Msg
+body : Model key -> Html Msg
 body model =
     div
         [ css
@@ -62,7 +62,7 @@ body model =
                     [ flexGrow (num 1)
                     ]
                 ]
-                [ text "MAIN"
+                [ text <| Maybe.withDefault "no_version" <| model.stats.version
                 ]
             ]
         ]

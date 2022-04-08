@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Api.Data
 import Browser.Navigation as Nav
 import Locale.Model as Locale
 import Themes.Model exposing (Theme)
@@ -15,11 +16,12 @@ type alias Config =
     }
 
 
-type alias Model =
+type alias Model navigationKey =
     { url : Url
-    , key : Nav.Key
+    , key : navigationKey
     , locale : Locale.Model
     , theme : Theme
     , search : ()
     , user : ()
+    , stats : Api.Data.Stats
     }

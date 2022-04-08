@@ -1,5 +1,6 @@
 module Init exposing (init)
 
+import Api.Data
 import Browser.Navigation as Nav
 import Effect exposing (Effect(..), n)
 import Iknaio
@@ -8,13 +9,15 @@ import Model exposing (..)
 import Url exposing (Url)
 
 
-init : Flags -> Url -> Nav.Key -> ( Model, Effect )
+init : Flags -> Url -> key -> ( Model key, Effect )
 init _ url key =
-    n
-        { url = url
-        , key = key
-        , locale = Locale.init
-        , theme = Iknaio.theme
-        , search = ()
-        , user = ()
-        }
+    ( { url = url
+      , key = key
+      , locale = Locale.init
+      , theme = Iknaio.theme
+      , search = ()
+      , user = ()
+      , stats = Api.Data.Stats Nothing Nothing Nothing
+      }
+    , GetStatisticsEffect
+    )

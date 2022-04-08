@@ -2,14 +2,15 @@
 
 import yaml
 import sys
-import os
 
 input_filename = sys.argv[1]
 yaml.Dumper.ignore_aliases = lambda self, data: True
 
+
 def log(str):
-    #print(str)
+    # print(str)
     return
+
 
 def dereference(input, ref):
     if not isinstance(ref, dict):
@@ -48,6 +49,8 @@ with open(input_filename, 'r') as input_file:
     log('read file')
     input = yaml.safe_load(input_file)
 
+    input['servers'] = [{'url': 'http://localhost:9000'}]
+
     traverse(input, input['components']['parameters'])
     traverse(input, input['components']['schemas'])
 
@@ -69,5 +72,3 @@ with open(input_filename, 'r') as input_file:
     input['components']['schemas'] = new_schemas
 
     print(yaml.dump(input, Dumper=yaml.Dumper))
-
-

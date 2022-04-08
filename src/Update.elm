@@ -1,13 +1,14 @@
 module Update exposing (update)
 
 import Browser
+import Browser.Navigation as Nav
 import Effect exposing (Effect(..), n)
 import Model exposing (Model)
 import Msg exposing (..)
 import Url exposing (Url)
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model key -> ( Model key, Effect )
 update msg model =
     case msg of
         UserRequestsUrl request ->
@@ -15,7 +16,7 @@ update msg model =
                 Browser.Internal url ->
                     ( model
                     , Url.toString url
-                        |> NavPushUrlEffect model.key
+                        |> NavPushUrlEffect
                     )
 
                 Browser.External url ->
@@ -26,7 +27,15 @@ update msg model =
         BrowserChangedUrl url ->
             updateByUrl url model
 
+        BrowserGotStatistics result ->
+            case result of
+                Ok stats ->
+                    n { model | stats = stats }
 
-updateByUrl : Url -> Model -> ( Model, Effect )
+                Err _ ->
+                    n model
+
+
+updateByUrl : Url -> Model key -> ( Model key, Effect )
 updateByUrl _ model =
     n model
