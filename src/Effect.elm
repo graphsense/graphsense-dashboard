@@ -1,4 +1,4 @@
-module Effect exposing (Effect(..), n, perform)
+module Effect exposing (Effect(..), batch, n, perform)
 
 import Api
 import Api.Request.General
@@ -11,11 +11,17 @@ type Effect
     | NavLoadEffect String
     | NavPushUrlEffect String
     | GetStatisticsEffect
+    | BatchedEffects (List Effect)
 
 
 n : model -> ( model, Effect )
 n model =
     ( model, NoEffect )
+
+
+batch : List Effect -> Effect
+batch effs =
+    BatchedEffects effs
 
 
 perform : Nav.Key -> Effect -> Cmd Msg
@@ -33,3 +39,7 @@ perform key effect =
         GetStatisticsEffect ->
             Api.Request.General.getStatistics
                 |> Api.send BrowserGotStatistics
+
+        BatchedEffects effs ->
+            List.map (perform key) effs
+                |> Cmd.batch

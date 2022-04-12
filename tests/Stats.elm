@@ -1,11 +1,14 @@
-module Stats exposing (exampleProgramTest, start)
+module Stats exposing (start, statsTest)
 
+import Api
 import Api.Data
+import Api.Request.General
 import Effect exposing (Effect(..))
 import Expect
 import Init exposing (init)
 import Json.Decode as Dec
 import Json.Encode as Enc
+import Mockup.Stats
 import Model exposing (Flags, Model)
 import Msg exposing (Msg(..))
 import ProgramTest exposing (ProgramTest, clickButton, expectViewHas)
@@ -14,6 +17,7 @@ import SimulatedEffect.Http
 import Test exposing (..)
 import Test.Html.Selector exposing (class, text)
 import Update exposing (update)
+import Urls exposing (baseUrl)
 import View exposing (view)
 
 
@@ -31,19 +35,18 @@ start initialUrl flags =
         |> ProgramTest.start flags
 
 
-exampleProgramTest : Test
-exampleProgramTest =
+statsTest : Test
+statsTest =
     test "fetch stats on start up" <|
         \() ->
-            start "https://app" {}
+            start baseUrl {}
+                |> ProgramTest.ensureHttpRequestWasMade "GET" (Api.baseUrl ++ "/stats")
                 |> ProgramTest.simulateHttpOk
                     "GET"
-                    "http://localhost:9000/stats"
-                    (Api.Data.encodeStats (Api.Data.Stats Nothing Nothing <| Just "the_version")
-                        |> Enc.encode 0
-                    )
+                    (Api.baseUrl ++ "/stats")
+                    Mockup.Stats.statsEncoded
                 |> expectViewHas
-                    [ text "the_version"
+                    [ text <| Mockup.Stats.stats.version
                     ]
 
 
@@ -60,8 +63,9 @@ simulateEffects effect =
             SimulatedEffect.Cmd.none
 
         GetStatisticsEffect ->
-            SimulatedEffect.Http.get
-                { url = "http://localhost:9000/stats"
-                , expect =
-                    SimulatedEffect.Http.expectJson BrowserGotStatistics Api.Data.statsDecoder
-                }
+            Api.Request.General.getStatistics
+                |> Api.effect BrowserGotStatistics
+
+        BatchedEffects effs ->
+            List.map simulateEffects effs
+                |> SimulatedEffect.Cmd.batch

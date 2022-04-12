@@ -1,8 +1,8 @@
 module Model exposing (..)
 
 import Api.Data
-import Browser.Navigation as Nav
 import Locale.Model as Locale
+import RemoteData exposing (WebData)
 import Themes.Model exposing (Theme)
 import Url exposing (Url)
 
@@ -23,5 +23,5 @@ type alias Model navigationKey =
     , theme : Theme
     , search : ()
     , user : ()
-    , stats : Api.Data.Stats
+    , stats : WebData Api.Data.Stats
     }

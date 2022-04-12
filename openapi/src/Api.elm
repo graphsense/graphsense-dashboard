@@ -1,48 +1,57 @@
 module Api exposing
     ( Request
-    , map
     , request
     , send
+    , effect
     , sendWithCustomError
     , task
+    , map
+    , baseUrl
     , withBasePath
+    , withTimeout
+    , withTracker
     , withBearerToken
     , withHeader
     , withHeaders
-    , withTimeout
-    , withTracker
     )
 
 import Http
 import Json.Decode
 import Json.Encode
+import ProgramTest
+import SimulatedEffect.Http
 import Task
 import Url.Builder
 
 
-type Request a
-    = Request
+type Request a =
+    Request
         { method : String
-        , headers : List Http.Header
+        , headers : List ( String, Maybe String )
         , basePath : String
         , pathParams : List String
         , queryParams : List Url.Builder.QueryParameter
-        , body : Http.Body
+        , body : Maybe Json.Encode.Value
         , decoder : Json.Decode.Decoder a
         , timeout : Maybe Float
         , tracker : Maybe String
         }
 
 
-request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
+baseUrl : String
+baseUrl =
+    "http://localhost:9000"
+
+
+request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
 request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
-        , headers = headers headerParams
-        , basePath = "http://localhost:9000"
+        , headers = headerParams
+        , basePath = baseUrl
         , pathParams = interpolatePath path pathParams
         , queryParams = queries queryParams
-        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody body)
+        , body = body
         , decoder = decoder
         , timeout = Nothing
         , tracker = Nothing
@@ -54,13 +63,26 @@ send toMsg req =
     sendWithCustomError identity toMsg req
 
 
+effect : (Result Http.Error a -> msg) -> Request a -> ProgramTest.SimulatedEffect msg
+effect toMsg (Request req) =
+    SimulatedEffect.Http.request
+        { method = req.method
+        , headers = effectHeaders req.headers
+        , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
+        , body = Maybe.withDefault SimulatedEffect.Http.emptyBody (Maybe.map SimulatedEffect.Http.jsonBody req.body)
+        , expect = effectExpectJson identity toMsg req.decoder
+        , timeout = req.timeout
+        , tracker = req.tracker
+        }
+
+
 sendWithCustomError : (Http.Error -> e) -> (Result e a -> msg) -> Request a -> Cmd msg
 sendWithCustomError mapError toMsg (Request req) =
     Http.request
         { method = req.method
-        , headers = req.headers
+        , headers = headers req.headers
         , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
-        , body = req.body
+        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody req.body)
         , expect = expectJson mapError toMsg req.decoder
         , timeout = req.timeout
         , tracker = req.tracker
@@ -71,9 +93,9 @@ task : Request a -> Task.Task Http.Error a
 task (Request req) =
     Http.task
         { method = req.method
-        , headers = req.headers
+        , headers = headers req.headers
         , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
-        , body = req.body
+        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody req.body)
         , resolver = jsonResolver req.decoder
         , timeout = req.timeout
         }
@@ -111,47 +133,57 @@ withTracker tracker (Request req) =
 
 withBearerToken : String -> Request a -> Request a
 withBearerToken token (Request req) =
-    Request { req | headers = Http.header "Authorization" ("Bearer " ++ token) :: req.headers }
+    Request { req | headers = ( "Authorization", Just ("Bearer " ++ token) ) :: req.headers }
 
 
 withHeader : String -> String -> Request a -> Request a
 withHeader key value (Request req) =
-    Request { req | headers = req.headers ++ [ Http.header key value ] }
+    Request { req | headers = req.headers ++ [ ( key, Just value ) ] }
 
 
 withHeaders : List ( String, String ) -> Request a -> Request a
 withHeaders headers_ (Request req) =
-    Request { req | headers = req.headers ++ headers (List.map (Tuple.mapSecond Just) headers_) }
+    Request { req | headers = req.headers ++ List.map (Tuple.mapSecond Just) headers_ }
 
 
 
 -- HELPER
 
 
-headers : List ( String, Maybe String ) -> List Http.Header
+headers : List (String, Maybe String) -> List Http.Header
 headers =
-    List.filterMap (\( key, value ) -> Maybe.map (Http.header key) value)
+    List.filterMap (\(key, value) -> Maybe.map (Http.header key) value)
+
+
+effectHeaders : List ( String, Maybe String ) -> List SimulatedEffect.Http.Header
+effectHeaders =
+    List.filterMap (\( key, value ) -> Maybe.map (SimulatedEffect.Http.header key) value)
 
 
 interpolatePath : String -> List ( String, String ) -> List String
 interpolatePath rawPath pathParams =
     let
         interpolate =
-            \( name, value ) path -> String.replace ("{" ++ name ++ "}") value path
+            (\(name, value) path -> String.replace ("{" ++ name ++ "}") value path)
     in
     List.foldl interpolate rawPath pathParams
         |> String.split "/"
         |> List.drop 1
 
 
-queries : List ( String, Maybe String ) -> List Url.Builder.QueryParameter
+queries : List (String, Maybe String) -> List Url.Builder.QueryParameter
 queries =
-    List.filterMap (\( key, value ) -> Maybe.map (Url.Builder.string key) value)
+    List.filterMap (\(key, value) -> Maybe.map (Url.Builder.string key) value)
 
 
 expectJson : (Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
 expectJson mapError toMsg decoder =
     Http.expectStringResponse toMsg (Result.mapError mapError << decodeResponse decoder)
+
+
+effectExpectJson : (SimulatedEffect.Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> SimulatedEffect.Http.Expect msg
+effectExpectJson mapError toMsg decoder =
+    SimulatedEffect.Http.expectStringResponse toMsg (Result.mapError mapError << decodeResponse decoder)
 
 
 jsonResolver : Json.Decode.Decoder a -> Http.Resolver Http.Error a

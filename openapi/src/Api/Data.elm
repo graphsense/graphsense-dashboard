@@ -417,9 +417,9 @@ type alias SearchResultLevel6 =
 
 
 type alias Stats =
-    { currencies : Maybe (List (CurrencyStats))
-    , requestTimestamp : Maybe String
-    , version : Maybe String
+    { currencies : List (CurrencyStats)
+    , requestTimestamp : String
+    , version : String
     }
 
 
@@ -1221,9 +1221,9 @@ encodeStatsPairs : Stats -> List EncodedField
 encodeStatsPairs model =
     let
         pairs =
-            [ maybeEncode "currencies" (Json.Encode.list encodeCurrencyStats) model.currencies
-            , maybeEncode "request_timestamp" Json.Encode.string model.requestTimestamp
-            , maybeEncode "version" Json.Encode.string model.version
+            [ encode "currencies" (Json.Encode.list encodeCurrencyStats) model.currencies
+            , encode "request_timestamp" Json.Encode.string model.requestTimestamp
+            , encode "version" Json.Encode.string model.version
             ]
     in
     pairs
@@ -1761,9 +1761,9 @@ searchResultLevel6Decoder =
 statsDecoder : Json.Decode.Decoder Stats
 statsDecoder =
     Json.Decode.succeed Stats
-        |> maybeDecode "currencies" (Json.Decode.list currencyStatsDecoder) Nothing
-        |> maybeDecode "request_timestamp" Json.Decode.string Nothing
-        |> maybeDecode "version" Json.Decode.string Nothing
+        |> decode "currencies" (Json.Decode.list currencyStatsDecoder) 
+        |> decode "request_timestamp" Json.Decode.string 
+        |> decode "version" Json.Decode.string 
 
 
 tagDecoder : Json.Decode.Decoder Tag

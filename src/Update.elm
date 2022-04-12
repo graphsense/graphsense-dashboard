@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Effect exposing (Effect(..), n)
 import Model exposing (Model)
 import Msg exposing (..)
+import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 
 
@@ -30,10 +31,10 @@ update msg model =
         BrowserGotStatistics result ->
             case result of
                 Ok stats ->
-                    n { model | stats = stats }
+                    n { model | stats = Success stats }
 
-                Err _ ->
-                    n model
+                Err error ->
+                    n { model | stats = Failure error }
 
 
 updateByUrl : Url -> Model key -> ( Model key, Effect )

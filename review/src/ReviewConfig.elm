@@ -13,14 +13,21 @@ when inside the directory containing this file.
 
 import Docs.NoMissing
 import NoDuplicatePorts
+import NoMissingRecordFieldLens
 import Review.Rule exposing (Rule)
 
 
 config : List Rule
 config =
     [ NoDuplicatePorts.rule
-    , Docs.NoMissing.rule
-        { document = Docs.NoMissing.everything
-        , from = Docs.NoMissing.allModules
+
+    {- , Docs.NoMissing.rule
+       { document = Docs.NoMissing.everything
+       , from = Docs.NoMissing.allModules
+       }
+    -}
+    , NoMissingRecordFieldLens.rule
+        { generator = NoMissingRecordFieldLens.monocle
+        , generateIn = ( "Lenses", [] )
         }
     ]

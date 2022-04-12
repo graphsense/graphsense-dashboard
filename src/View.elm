@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
 import View.Header as Header
+import View.Main as Main
 
 
 view : Model key -> Document Msg
@@ -62,7 +63,7 @@ body model =
                     [ flexGrow (num 1)
                     ]
                 ]
-                [ text <| Maybe.withDefault "no_version" <| model.stats.version
+                [ Main.main_ model
                 ]
             ]
         ]
