@@ -10,6 +10,7 @@ import Sub exposing (subscriptions)
 import Tuple
 import Update exposing (update)
 import View exposing (view)
+import View.Env exposing (defaultEnv)
 
 
 main : Program Flags (Model Nav.Key) Msg
@@ -27,7 +28,7 @@ main =
             \msg model ->
                 update msg model
                     |> performEffect
-        , view = view
+        , view = view defaultEnv
         , subscriptions = subscriptions
         , onUrlChange = BrowserChangedUrl
         , onUrlRequest = UserRequestsUrl

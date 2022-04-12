@@ -13,7 +13,7 @@ watch:
 dev: $(API_ELM) $(wildcard src/**)
 	npx elm-test
 
-$(API_ELM): $(wildcard templates/*)
+$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	make openapi
 
 .PHONY: openapi

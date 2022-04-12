@@ -6,8 +6,6 @@ import Api.Request.General
 import Effect exposing (Effect(..))
 import Expect
 import Init exposing (init)
-import Json.Decode as Dec
-import Json.Encode as Enc
 import Mockup.Stats
 import Model exposing (Flags, Model)
 import Msg exposing (Msg(..))
@@ -15,22 +13,22 @@ import ProgramTest exposing (ProgramTest, clickButton, expectViewHas)
 import SimulatedEffect.Cmd
 import SimulatedEffect.Http
 import Test exposing (..)
-import Test.Html.Selector exposing (class, text)
+import Test.Html.Selector exposing (class, tag, text)
 import Update exposing (update)
-import Urls exposing (baseUrl)
 import View exposing (view)
+import View.Env exposing (defaultEnv)
 
 
 start : String -> Flags -> ProgramTest (Model ()) Msg Effect
-start initialUrl flags =
+start initialPath flags =
     ProgramTest.createApplication
         { onUrlChange = BrowserChangedUrl
         , onUrlRequest = UserRequestsUrl
         , init = init
         , update = update
-        , view = view
+        , view = view defaultEnv
         }
-        |> ProgramTest.withBaseUrl initialUrl
+        |> ProgramTest.withBaseUrl ("http://foo.bar" ++ initialPath)
         |> ProgramTest.withSimulatedEffects simulateEffects
         |> ProgramTest.start flags
 
@@ -39,14 +37,15 @@ statsTest : Test
 statsTest =
     test "fetch stats on start up" <|
         \() ->
-            start baseUrl {}
+            start "/" {}
                 |> ProgramTest.ensureHttpRequestWasMade "GET" (Api.baseUrl ++ "/stats")
                 |> ProgramTest.simulateHttpOk
                     "GET"
                     (Api.baseUrl ++ "/stats")
                     Mockup.Stats.statsEncoded
                 |> expectViewHas
-                    [ text <| Mockup.Stats.stats.version
+                    [ text "BTC"
+                    , text "LTC"
                     ]
 
 

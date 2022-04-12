@@ -7,22 +7,23 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
+import View.Env exposing (Env)
 import View.Header as Header
 import View.Main as Main
 
 
-view : Model key -> Document Msg
-view model =
-    { title = model.locale.getString "Iknaio Dashboard"
+view : Env -> Model key -> Document Msg
+view env model =
+    { title = env.getString "Iknaio Dashboard"
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
-        , body model |> toUnstyled
+        , body env model |> toUnstyled
         ]
     }
 
 
-body : Model key -> Html Msg
-body model =
+body : Env -> Model key -> Html Msg
+body env model =
     div
         [ css
             [ Css.height <| vh 100
@@ -32,7 +33,7 @@ body model =
             ]
         ]
         [ Header.header
-            { theme = model.theme
+            { theme = model.config.theme
             , search = model.search
             , user = model.user
             }
@@ -63,7 +64,7 @@ body model =
                     [ flexGrow (num 1)
                     ]
                 ]
-                [ Main.main_ model
+                [ Main.main_ env model
                 ]
             ]
         ]

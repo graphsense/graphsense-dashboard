@@ -18,11 +18,16 @@ type alias Config =
     }
 
 
+type alias Env =
+    { locale : Locale.Model
+    }
+
+
 type alias Model navigationKey =
     { url : Url
     , key : navigationKey
-    , locale : Locale.Model
     , config : Config
+    , locale : Locale.Model
     , search : ()
     , user : ()
     , stats : WebData Api.Data.Stats

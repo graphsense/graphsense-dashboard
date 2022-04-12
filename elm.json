@@ -10,6 +10,7 @@
     "dependencies": {
         "direct": {
             "BrianHicks/elm-css-reset": "1.0.2",
+            "avh4/elm-program-test": "3.6.3",
             "danyx23/elm-uuid": "2.1.2",
             "elm/browser": "1.0.2",
             "elm/core": "1.0.5",
@@ -34,7 +35,6 @@
     },
     "test-dependencies": {
         "direct": {
-            "avh4/elm-program-test": "3.6.3",
             "elm-explorations/test": "1.2.2"
         },
         "indirect": {

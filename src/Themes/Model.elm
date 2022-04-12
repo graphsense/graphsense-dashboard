@@ -4,5 +4,9 @@ import Css exposing (Style)
 
 
 type alias Theme =
-    { header : Style
+    { scale : Float
+    , header : Style
+    , stats :
+        { root : Style
+        }
     }

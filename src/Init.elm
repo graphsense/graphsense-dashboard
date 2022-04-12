@@ -2,7 +2,6 @@ module Init exposing (init)
 
 import Config exposing (config)
 import Effect exposing (Effect(..), n)
-import Iknaio
 import Locale.Init as Locale
 import Model exposing (..)
 import RemoteData exposing (RemoteData(..))
@@ -14,8 +13,8 @@ init _ url key =
     n
         { url = url
         , key = key
-        , locale = Locale.init
         , config = config
+        , locale = Locale.init
         , search = ()
         , user = ()
         , stats = NotAsked

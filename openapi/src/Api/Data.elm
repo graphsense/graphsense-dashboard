@@ -228,15 +228,15 @@ type alias Concept =
 
 
 type alias CurrencyStats =
-    { name : Maybe String
-    , noAddressRelations : Maybe Int
-    , noAddresses : Maybe Int
-    , noBlocks : Maybe Int
-    , noEntities : Maybe Int
-    , noLabels : Maybe Int
-    , noTaggedAddresses : Maybe Int
-    , noTxs : Maybe Int
-    , timestamp : Maybe Int
+    { name : String
+    , noAddressRelations : Int
+    , noAddresses : Int
+    , noBlocks : Int
+    , noEntities : Int
+    , noLabels : Int
+    , noTaggedAddresses : Int
+    , noTxs : Int
+    , timestamp : Int
     }
 
 
@@ -723,15 +723,15 @@ encodeCurrencyStatsPairs : CurrencyStats -> List EncodedField
 encodeCurrencyStatsPairs model =
     let
         pairs =
-            [ maybeEncode "name" Json.Encode.string model.name
-            , maybeEncode "no_address_relations" Json.Encode.int model.noAddressRelations
-            , maybeEncode "no_addresses" Json.Encode.int model.noAddresses
-            , maybeEncode "no_blocks" Json.Encode.int model.noBlocks
-            , maybeEncode "no_entities" Json.Encode.int model.noEntities
-            , maybeEncode "no_labels" Json.Encode.int model.noLabels
-            , maybeEncode "no_tagged_addresses" Json.Encode.int model.noTaggedAddresses
-            , maybeEncode "no_txs" Json.Encode.int model.noTxs
-            , maybeEncode "timestamp" Json.Encode.int model.timestamp
+            [ encode "name" Json.Encode.string model.name
+            , encode "no_address_relations" Json.Encode.int model.noAddressRelations
+            , encode "no_addresses" Json.Encode.int model.noAddresses
+            , encode "no_blocks" Json.Encode.int model.noBlocks
+            , encode "no_entities" Json.Encode.int model.noEntities
+            , encode "no_labels" Json.Encode.int model.noLabels
+            , encode "no_tagged_addresses" Json.Encode.int model.noTaggedAddresses
+            , encode "no_txs" Json.Encode.int model.noTxs
+            , encode "timestamp" Json.Encode.int model.timestamp
             ]
     in
     pairs
@@ -1532,15 +1532,15 @@ conceptDecoder =
 currencyStatsDecoder : Json.Decode.Decoder CurrencyStats
 currencyStatsDecoder =
     Json.Decode.succeed CurrencyStats
-        |> maybeDecode "name" Json.Decode.string Nothing
-        |> maybeDecode "no_address_relations" Json.Decode.int Nothing
-        |> maybeDecode "no_addresses" Json.Decode.int Nothing
-        |> maybeDecode "no_blocks" Json.Decode.int Nothing
-        |> maybeDecode "no_entities" Json.Decode.int Nothing
-        |> maybeDecode "no_labels" Json.Decode.int Nothing
-        |> maybeDecode "no_tagged_addresses" Json.Decode.int Nothing
-        |> maybeDecode "no_txs" Json.Decode.int Nothing
-        |> maybeDecode "timestamp" Json.Decode.int Nothing
+        |> decode "name" Json.Decode.string 
+        |> decode "no_address_relations" Json.Decode.int 
+        |> decode "no_addresses" Json.Decode.int 
+        |> decode "no_blocks" Json.Decode.int 
+        |> decode "no_entities" Json.Decode.int 
+        |> decode "no_labels" Json.Decode.int 
+        |> decode "no_tagged_addresses" Json.Decode.int 
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "timestamp" Json.Decode.int 
 
 
 entityDecoder : Json.Decode.Decoder Entity

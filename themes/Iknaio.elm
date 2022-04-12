@@ -6,8 +6,12 @@ import Themes.Model exposing (Theme)
 
 theme : Theme
 theme =
-    { header =
+    { scale = 10
+    , header =
         batch
             [ backgroundColor <| hex "ff0000"
             ]
+    , stats =
+        { root = batch []
+        }
     }
