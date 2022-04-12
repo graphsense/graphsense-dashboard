@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Addon exposing (Addon)
 import Api.Data
 import Locale.Model as Locale
 import RemoteData exposing (WebData)
@@ -12,7 +13,8 @@ type alias Flags =
 
 
 type alias Config =
-    { getString : String -> String
+    { theme : Theme
+    , addons : List Addon
     }
 
 
@@ -20,7 +22,7 @@ type alias Model navigationKey =
     { url : Url
     , key : navigationKey
     , locale : Locale.Model
-    , theme : Theme
+    , config : Config
     , search : ()
     , user : ()
     , stats : WebData Api.Data.Stats

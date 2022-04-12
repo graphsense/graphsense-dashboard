@@ -12,17 +12,22 @@ this repository:
 
     npm install
 
-Adapt `DEV_REST_ENDPOINT` in `webpack.config.js` to point to your
-development [graphsense-REST][graphsense-rest] service.
+Then start the [vite](https://vitejs.dev) development server:
 
-Additionally you may add the Titanium Report Generation Webservice through
-`DEV_TITANIUM_REPORT_GENERATION_URL`.
+    npm run dev
 
-Then start the development server:
+Point your browser to `localhost:3000`.
 
-    npm start
+## Testing
 
-Point your browser to `localhost:8080`.
+Run
+    
+    make watch
+
+to watch for changes in elm files and openapi templates. Also regenerates the openapi client (see `./openapi`).
+
+* TODO: explain directories
+* TODO: explain testing
 
 ## Production setup
 

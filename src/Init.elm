@@ -1,5 +1,6 @@
 module Init exposing (init)
 
+import Config exposing (config)
 import Effect exposing (Effect(..), n)
 import Iknaio
 import Locale.Init as Locale
@@ -14,7 +15,7 @@ init _ url key =
         { url = url
         , key = key
         , locale = Locale.init
-        , theme = Iknaio.theme
+        , config = config
         , search = ()
         , user = ()
         , stats = NotAsked
