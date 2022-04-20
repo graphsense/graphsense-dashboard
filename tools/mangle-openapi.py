@@ -4,6 +4,7 @@ import yaml
 import sys
 
 input_filename = sys.argv[1]
+rest_url = sys.argv[2] if len(sys.argv) > 2 else ''
 yaml.Dumper.ignore_aliases = lambda self, data: True
 
 
@@ -49,7 +50,8 @@ with open(input_filename, 'r') as input_file:
     log('read file')
     input = yaml.safe_load(input_file)
 
-    input['servers'] = [{'url': 'http://localhost:9000'}]
+    if rest_url:
+        input['servers'] = [{'url': rest_url}]
 
     traverse(input, input['components']['parameters'])
     traverse(input, input['components']['schemas'])

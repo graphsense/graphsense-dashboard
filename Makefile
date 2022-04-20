@@ -3,7 +3,7 @@ include .env
 API_ELM=openapi/src/Api.elm
 
 openapi:
-	tools/generate-openapi.sh $(OPENAPI_LOCATION)
+	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
 			#--global-property=debugOperations \
 

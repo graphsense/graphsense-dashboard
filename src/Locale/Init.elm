@@ -1,9 +1,10 @@
 module Locale.Init exposing (init)
 
+import Dict
 import Locale.Model as Model exposing (Model)
 
 
 init : Model
 init =
-    { getString = \str -> str
+    { mapping = Dict.empty
     }

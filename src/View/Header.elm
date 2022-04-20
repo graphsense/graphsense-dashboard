@@ -2,36 +2,33 @@ module View.Header exposing (header)
 
 import Css exposing (..)
 import Html.Styled as Html exposing (Attribute, Html, div, header, text)
-import Html.Styled.Attributes as Html
+import Html.Styled.Attributes as Html exposing (css)
 import Msg exposing (Msg)
-import Themes.Model exposing (Theme)
+import View.Config exposing (Config)
+import View.Css.Header as Css
 
 
 type alias Model =
-    { theme : Theme
-    , search : ()
+    { search : ()
     , user : ()
     }
 
 
-css : Style -> Attribute msg
-css custom =
-    Html.css
-        [ padding (px 10)
-        , backgroundColor <| hex "000000"
-        , displayFlex
-        , flexDirection row
-        , justifyContent spaceBetween
-        , custom
-        ]
-
-
-header : Model -> Html Msg
-header model =
+header : Config -> Model -> Html Msg
+header vc model =
     Html.header
-        [ css model.theme.header
+        [ Css.header vc |> css
         ]
-        [ div [] [ text "Dashboard" ]
+        [ logo vc
         , div [] [ text "Search" ]
         , div [] [ text "User" ]
         ]
+
+
+logo : Config -> Html Msg
+logo vc =
+    Html.img
+        [ Html.src vc.theme.logo
+        , Css.headerLogo vc |> css
+        ]
+        []

@@ -40,7 +40,7 @@ type Request a =
 
 baseUrl : String
 baseUrl =
-    "http://localhost:9000"
+    "https://api.graphsense.info"
 
 
 request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a

@@ -4,6 +4,7 @@ if [ -z "$openapi" ]; then
   echo "Pass a URL or file path to the openapi spec"
   exit 1
 fi
+resturl=$2
 temp=`mktemp`
 dir=$PWD/`dirname $0`
 if [[ "$openapi" =~ ^http ]]; then
@@ -15,7 +16,7 @@ else
 fi
 temp2=`mktemp`
 echo "Generating"
-python $dir/mangle-openapi.py $temp > $temp2
+python $dir/mangle-openapi.py $temp $resturl > $temp2
 docker run --rm \
     -v "${dir}/../openapi:/build"  \
     -v "${temp2}:/spec.yaml" \

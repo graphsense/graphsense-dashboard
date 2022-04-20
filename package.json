@@ -15,8 +15,9 @@
   "devDependencies": {
     "elm-review": "^2.7.1",
     "elm-tooling": "^1.7.0",
+    "setem": "^0.3.6",
     "vite": "^2.9.0",
-    "vite-plugin-elm": "^2.5.2"
+    "vite-plugin-elm": "^2.6.0"
   },
   "dependencies": {
     "@elm-tooling/elm-language-server": "^2.4.1",

@@ -13,7 +13,6 @@ init _ url key =
     n
         { url = url
         , key = key
-        , config = config
         , locale = Locale.init
         , search = ()
         , user = ()

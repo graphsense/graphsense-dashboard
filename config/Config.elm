@@ -5,5 +5,4 @@ import Iknaio
 
 config =
     { theme = Iknaio.theme
-    , addons = []
     }
