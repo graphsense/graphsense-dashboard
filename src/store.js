@@ -356,6 +356,7 @@ export default class Store {
         sp = unprefix(id)
       }
       links.forEach(({ key, value }) => {
+        if (!value) return
         if (version <= '0.5.0') {
           value.value = value.estimated_value
           delete value.estimated_value
