@@ -3,8 +3,10 @@ module Update exposing (update)
 import Browser
 import Browser.Navigation as Nav
 import Effect exposing (Effect(..), n)
+import Locale.Update as Locale
 import Model exposing (Model)
 import Msg exposing (..)
+import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 
@@ -35,6 +37,15 @@ update msg model =
 
                 Err error ->
                     n { model | stats = Failure error }
+
+        LocaleMsg m ->
+            let
+                ( locale, localeEffect ) =
+                    Locale.update m model.locale
+            in
+            ( { model | locale = locale }
+            , LocaleEffect localeEffect
+            )
 
 
 updateByUrl : Url -> Model key -> ( Model key, Effect )

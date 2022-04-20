@@ -9,7 +9,8 @@ import Url exposing (Url)
 
 
 type alias Flags =
-    {}
+    { locale : String
+    }
 
 
 type alias Config =

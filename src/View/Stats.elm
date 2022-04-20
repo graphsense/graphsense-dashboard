@@ -79,19 +79,19 @@ currency vc cs =
                     [ Css.statsTable vc |> css
                     ]
                     [ String.fromInt cs.timestamp
-                        |> statsRow vc "lastUpdate"
+                        |> statsRow vc "Last update"
                     , String.fromInt (cs.noBlocks - 1)
-                        |> statsRow vc "latestBlock"
+                        |> statsRow vc "Latest block"
                     , String.fromInt cs.noTxs
-                        |> statsRow vc "noTxs"
+                        |> statsRow vc "Transactions"
                     , String.fromInt cs.noAddresses
-                        |> statsRow vc "noAddresses"
+                        |> statsRow vc "Addresses"
                     , String.fromInt cs.noEntities
-                        |> statsRow vc "noEntities"
+                        |> statsRow vc "Entities"
                     , String.fromInt cs.noLabels
-                        |> statsRow vc "noLabels"
+                        |> statsRow vc "Labels"
                     , String.fromInt cs.noTaggedAddresses
-                        |> statsRow vc "noTaggedAddresses"
+                        |> statsRow vc "Tagged addresses"
                     ]
                 ]
             , div
@@ -126,7 +126,7 @@ statsRow vc label value =
         [ span
             [ Css.statsTableCellKey vc |> css
             ]
-            [ text label
+            [ vc.getString label |> text
             ]
         , span
             [ Css.statsTableCellValue vc |> css

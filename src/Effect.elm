@@ -3,6 +3,7 @@ module Effect exposing (Effect(..), batch, n, perform)
 import Api
 import Api.Request.General
 import Browser.Navigation as Nav
+import Locale.Effect
 import Msg exposing (Msg(..))
 
 
@@ -12,6 +13,7 @@ type Effect
     | NavPushUrlEffect String
     | GetStatisticsEffect
     | BatchedEffects (List Effect)
+    | LocaleEffect Locale.Effect.Effect
 
 
 n : model -> ( model, Effect )
@@ -43,3 +45,7 @@ perform key effect =
         BatchedEffects effs ->
             List.map (perform key) effs
                 |> Cmd.batch
+
+        LocaleEffect eff ->
+            Locale.Effect.perform eff
+                |> Cmd.map LocaleMsg

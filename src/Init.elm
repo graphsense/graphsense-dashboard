@@ -9,15 +9,20 @@ import Url exposing (Url)
 
 
 init : Flags -> Url -> key -> ( Model key, Effect )
-init _ url key =
-    n
-        { url = url
-        , key = key
-        , locale = Locale.init
-        , search = ()
-        , user = ()
-        , stats = NotAsked
-        }
+init flags url key =
+    let
+        ( locale, localeEffect ) =
+            Locale.init flags.locale
+    in
+    ( { url = url
+      , key = key
+      , locale = locale
+      , search = ()
+      , user = ()
+      , stats = NotAsked
+      }
+    , LocaleEffect localeEffect
+    )
         |> getStatistics
 
 

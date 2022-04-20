@@ -10,6 +10,7 @@
     "dependencies": {
         "direct": {
             "BrianHicks/elm-css-reset": "1.0.2",
+            "MaybeJustJames/yaml": "2.1.1",
             "avh4/elm-program-test": "3.6.3",
             "danyx23/elm-uuid": "2.1.2",
             "elm/browser": "1.0.2",
