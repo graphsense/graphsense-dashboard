@@ -1,10 +1,12 @@
 module Sub exposing (subscriptions)
 
 import Browser.Navigation as Nav
+import Locale.Subscriptions as Locale
 import Model exposing (Model)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 
 
 subscriptions : Model Nav.Key -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    Locale.subscriptions model.locale
+        |> Sub.map LocaleMsg

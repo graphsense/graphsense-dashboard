@@ -6,3 +6,4 @@ import Http
 
 type Msg
     = BrowserLoadedTranslation String (Result Http.Error (Dict String String))
+    | RuntimeTick Float

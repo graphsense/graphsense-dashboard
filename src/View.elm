@@ -5,6 +5,7 @@ import Css exposing (..)
 import Css.Reset
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Locale.View as Locale
 import Model exposing (..)
 import Msg exposing (..)
 import Plugin exposing (Plugin)
@@ -20,7 +21,7 @@ view :
     -> Model key
     -> Document Msg
 view vc model =
-    { title = vc.getString "Iknaio Dashboard"
+    { title = Locale.string vc.locale "Iknaio Dashboard"
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled

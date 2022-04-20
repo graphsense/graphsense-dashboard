@@ -6,6 +6,7 @@ import Config exposing (config)
 import Effect exposing (perform)
 import Init exposing (init)
 import Locale.Model as Locale
+import Locale.View as Locale
 import Model exposing (Flags, Model)
 import Msg exposing (Msg(..))
 import Sub exposing (subscriptions)
@@ -19,11 +20,6 @@ main =
     let
         performEffect ( model, effect ) =
             ( model, perform model.key effect )
-
-        vc =
-            { theme = config.theme
-            , getString = identity
-            }
     in
     Browser.application
         { init =
@@ -37,7 +33,9 @@ main =
         , view =
             \model ->
                 view
-                    { vc | getString = Locale.getString model.locale }
+                    { theme = config.theme
+                    , locale = model.locale
+                    }
                     model
         , subscriptions = subscriptions
         , onUrlChange = BrowserChangedUrl

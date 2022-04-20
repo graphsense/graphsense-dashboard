@@ -6,6 +6,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
 import Locale.Model as Locale
+import Locale.View as Locale
 import Model exposing (..)
 import Msg exposing (..)
 import RemoteData as RD exposing (WebData)
@@ -25,7 +26,7 @@ stats vc sts =
         [ h2
             [ Css.heading2 vc |> css
             ]
-            [ vc.getString "ledger statistics" |> text
+            [ Locale.text vc.locale "ledger statistics"
             ]
         , sts
             |> webdata
@@ -126,7 +127,7 @@ statsRow vc label value =
         [ span
             [ Css.statsTableCellKey vc |> css
             ]
-            [ vc.getString label |> text
+            [ Locale.text vc.locale label
             ]
         , span
             [ Css.statsTableCellValue vc |> css

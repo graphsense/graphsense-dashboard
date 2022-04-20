@@ -36,7 +36,7 @@ theme =
     , body =
         batch
             [ color colors.brandText
-            , fontFamilies [ "Roboto", "sans-serif" ]
+            , fontFamilies [ "monospace" ]
             , scaled 3.5 |> rem |> fontSize
             ]
     , header =
@@ -90,7 +90,7 @@ theme =
                 ]
         , table =
             batch
-                [ scaled 0.2 |> rem |> letterSpacing
+                [ scaled 0.1 |> rem |> letterSpacing
                 , currencyPadding / 2 |> scaled |> rem |> borderSpacing
                 ]
         , tableRow = batch []
