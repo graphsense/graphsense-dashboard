@@ -434,6 +434,16 @@ s_day value__ record__ =
     { record__ | day = value__ }
 
 
+s_decimalSeparator : a -> { b | decimalSeparator : a } -> { b | decimalSeparator : a }
+s_decimalSeparator value__ record__ =
+    { record__ | decimalSeparator = value__ }
+
+
+s_decimals : a -> { b | decimals : a } -> { b | decimals : a }
+s_decimals value__ record__ =
+    { record__ | decimals = value__ }
+
+
 s_declaration : a -> { b | declaration : a } -> { b | declaration : a }
 s_declaration value__ record__ =
     { record__ | declaration = value__ }
@@ -719,11 +729,6 @@ s_getOption value__ record__ =
     { record__ | getOption = value__ }
 
 
-s_getString : a -> { b | getString : a } -> { b | getString : a }
-s_getString value__ record__ =
-    { record__ | getString = value__ }
-
-
 s_githubFlavored : a -> { b | githubFlavored : a } -> { b | githubFlavored : a }
 s_githubFlavored value__ record__ =
     { record__ | githubFlavored = value__ }
@@ -812,6 +817,11 @@ s_height value__ record__ =
 s_hex : a -> { b | hex : a } -> { b | hex : a }
 s_hex value__ record__ =
     { record__ | hex = value__ }
+
+
+s_hint : a -> { b | hint : a } -> { b | hint : a }
+s_hint value__ record__ =
+    { record__ | hint = value__ }
 
 
 s_history : a -> { b | history : a } -> { b | history : a }
@@ -912,6 +922,11 @@ s_int value__ record__ =
 s_intOrAuto : a -> { b | intOrAuto : a } -> { b | intOrAuto : a }
 s_intOrAuto value__ record__ =
     { record__ | intOrAuto = value__ }
+
+
+s_integers : a -> { b | integers : a } -> { b | integers : a }
+s_integers value__ record__ =
+    { record__ | integers = value__ }
 
 
 s_invalid : a -> { b | invalid : a } -> { b | invalid : a }
@@ -1154,6 +1169,16 @@ s_navigation value__ record__ =
     { record__ | navigation = value__ }
 
 
+s_negativePrefix : a -> { b | negativePrefix : a } -> { b | negativePrefix : a }
+s_negativePrefix value__ record__ =
+    { record__ | negativePrefix = value__ }
+
+
+s_negativeSuffix : a -> { b | negativeSuffix : a } -> { b | negativeSuffix : a }
+s_negativeSuffix value__ record__ =
+    { record__ | negativeSuffix = value__ }
+
+
 s_neighbors : a -> { b | neighbors : a } -> { b | neighbors : a }
 s_neighbors value__ record__ =
     { record__ | neighbors = value__ }
@@ -1284,6 +1309,11 @@ s_number value__ record__ =
     { record__ | number = value__ }
 
 
+s_numberFormat : a -> { b | numberFormat : a } -> { b | numberFormat : a }
+s_numberFormat value__ record__ =
+    { record__ | numberFormat = value__ }
+
+
 s_numberOrInfinite : a -> { b | numberOrInfinite : a } -> { b | numberOrInfinite : a }
 s_numberOrInfinite value__ record__ =
     { record__ | numberOrInfinite = value__ }
@@ -1372,6 +1402,11 @@ s_options value__ record__ =
 s_orientation : a -> { b | orientation : a } -> { b | orientation : a }
 s_orientation value__ record__ =
     { record__ | orientation = value__ }
+
+
+s_original : a -> { b | original : a } -> { b | original : a }
+s_original value__ record__ =
+    { record__ | original = value__ }
 
 
 s_originalActual : a -> { b | originalActual : a } -> { b | originalActual : a }
@@ -1482,6 +1517,16 @@ s_port_ value__ record__ =
 s_position : a -> { b | position : a } -> { b | position : a }
 s_position value__ record__ =
     { record__ | position = value__ }
+
+
+s_positivePrefix : a -> { b | positivePrefix : a } -> { b | positivePrefix : a }
+s_positivePrefix value__ record__ =
+    { record__ | positivePrefix = value__ }
+
+
+s_positiveSuffix : a -> { b | positiveSuffix : a } -> { b | positiveSuffix : a }
+s_positiveSuffix value__ record__ =
+    { record__ | positiveSuffix = value__ }
 
 
 s_postdocComments : a -> { b | postdocComments : a } -> { b | postdocComments : a }
@@ -1699,6 +1744,11 @@ s_search value__ record__ =
     { record__ | search = value__ }
 
 
+s_sectionBelowHeader : a -> { b | sectionBelowHeader : a } -> { b | sectionBelowHeader : a }
+s_sectionBelowHeader value__ record__ =
+    { record__ | sectionBelowHeader = value__ }
+
+
 s_seed : a -> { b | seed : a } -> { b | seed : a }
 s_seed value__ record__ =
     { record__ | seed = value__ }
@@ -1824,6 +1874,16 @@ s_subscriptions value__ record__ =
     { record__ | subscriptions = value__ }
 
 
+s_suffix : a -> { b | suffix : a } -> { b | suffix : a }
+s_suffix value__ record__ =
+    { record__ | suffix = value__ }
+
+
+s_system : a -> { b | system : a } -> { b | system : a }
+s_system value__ record__ =
+    { record__ | system = value__ }
+
+
 s_table : a -> { b | table : a } -> { b | table : a }
 s_table value__ record__ =
     { record__ | table = value__ }
@@ -1944,6 +2004,11 @@ s_theme value__ record__ =
     { record__ | theme = value__ }
 
 
+s_thousandSeparator : a -> { b | thousandSeparator : a } -> { b | thousandSeparator : a }
+s_thousandSeparator value__ record__ =
+    { record__ | thousandSeparator = value__ }
+
+
 s_timeout : a -> { b | timeout : a } -> { b | timeout : a }
 s_timeout value__ record__ =
     { record__ | timeout = value__ }
@@ -1972,6 +2037,11 @@ s_title value__ record__ =
 s_toAddress : a -> { b | toAddress : a } -> { b | toAddress : a }
 s_toAddress value__ record__ =
     { record__ | toAddress = value__ }
+
+
+s_toMsg : a -> { b | toMsg : a } -> { b | toMsg : a }
+s_toMsg value__ record__ =
+    { record__ | toMsg = value__ }
 
 
 s_totalInput : a -> { b | totalInput : a } -> { b | totalInput : a }
@@ -2177,3 +2247,13 @@ s_y value__ record__ =
 s_year : a -> { b | year : a } -> { b | year : a }
 s_year value__ record__ =
     { record__ | year = value__ }
+
+
+s_zeroPrefix : a -> { b | zeroPrefix : a } -> { b | zeroPrefix : a }
+s_zeroPrefix value__ record__ =
+    { record__ | zeroPrefix = value__ }
+
+
+s_zeroSuffix : a -> { b | zeroSuffix : a } -> { b | zeroSuffix : a }
+s_zeroSuffix value__ record__ =
+    { record__ | zeroSuffix = value__ }

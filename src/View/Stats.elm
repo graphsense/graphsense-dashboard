@@ -79,19 +79,19 @@ currency vc cs =
                 [ div
                     [ Css.statsTable vc |> css
                     ]
-                    [ String.fromInt cs.timestamp
+                    [ Locale.timestamp vc.locale cs.timestamp
                         |> statsRow vc "Last update"
-                    , String.fromInt (cs.noBlocks - 1)
+                    , Locale.int vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
-                    , String.fromInt cs.noTxs
+                    , Locale.int vc.locale cs.noTxs
                         |> statsRow vc "Transactions"
-                    , String.fromInt cs.noAddresses
+                    , Locale.int vc.locale cs.noAddresses
                         |> statsRow vc "Addresses"
-                    , String.fromInt cs.noEntities
+                    , Locale.int vc.locale cs.noEntities
                         |> statsRow vc "Entities"
-                    , String.fromInt cs.noLabels
+                    , Locale.int vc.locale cs.noLabels
                         |> statsRow vc "Labels"
-                    , String.fromInt cs.noTaggedAddresses
+                    , Locale.int vc.locale cs.noTaggedAddresses
                         |> statsRow vc "Tagged addresses"
                     ]
                 ]

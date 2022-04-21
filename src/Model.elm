@@ -4,7 +4,7 @@ import Api.Data
 import Html exposing (Attribute, Html)
 import Locale.Model as Locale
 import RemoteData exposing (WebData)
-import Theme exposing (Theme)
+import Theme.Theme exposing (Theme)
 import Url exposing (Url)
 
 

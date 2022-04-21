@@ -1,13 +1,16 @@
 module Locale.Effect exposing (Effect(..), n, perform)
 
 import Http
-import Locale.Msg exposing (Msg(..))
-import Yaml.Decode exposing (dict, fromString, string)
+import Locale.Msg exposing (Msg)
+import Task
+import Time
 
 
 type Effect
     = NoEffect
-    | GetTranslationEffect String
+    | GetTranslationEffect { url : String, toMsg : Result Http.Error String -> Msg }
+    | GetTimezoneEffect (Time.Zone -> Msg)
+    | BatchEffect (List Effect)
 
 
 n : model -> ( model, Effect )
@@ -21,25 +24,16 @@ perform effect =
         NoEffect ->
             Cmd.none
 
-        GetTranslationEffect locale ->
+        GetTranslationEffect { url, toMsg } ->
             Http.get
-                { url = "/lang/" ++ locale ++ ".yaml"
-                , expect =
-                    Http.expectString
-                        (Result.andThen
-                            (fromString (dict string)
-                                >> Result.mapError toHttpError
-                            )
-                            >> BrowserLoadedTranslation locale
-                        )
+                { url = url
+                , expect = Http.expectString toMsg
                 }
 
+        GetTimezoneEffect toMsg ->
+            Time.here
+                |> Task.perform toMsg
 
-toHttpError : Yaml.Decode.Error -> Http.Error
-toHttpError err =
-    case err of
-        Yaml.Decode.Parsing e ->
-            "Error when parsing YAML: " ++ e |> Http.BadBody
-
-        Yaml.Decode.Decoding e ->
-            "Error when decoding YAML: " ++ e |> Http.BadBody
+        BatchEffect effs ->
+            List.map perform effs
+                |> Cmd.batch

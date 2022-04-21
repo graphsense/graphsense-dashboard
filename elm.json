@@ -12,6 +12,7 @@
             "BrianHicks/elm-css-reset": "1.0.2",
             "MaybeJustJames/yaml": "2.1.1",
             "avh4/elm-program-test": "3.6.3",
+            "cuducos/elm-format-number": "9.0.1",
             "danyx23/elm-uuid": "2.1.2",
             "elm/browser": "1.0.2",
             "elm/core": "1.0.5",
@@ -25,7 +26,8 @@
             "jasonliang-dev/elm-heroicons": "1.1.0",
             "krisajenkins/remotedata": "6.0.1",
             "rtfeldman/elm-css": "16.1.1",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4",
+            "ryannhg/date-format": "2.3.0"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",
@@ -40,6 +42,7 @@
             "elm-explorations/test": "1.2.2",
             "hecrj/html-parser": "2.4.0",
             "mgold/elm-nonempty-list": "4.2.0",
+            "myrho/elm-round": "1.0.4",
             "rtfeldman/elm-hex": "1.0.0"
         }
     },

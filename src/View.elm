@@ -36,13 +36,7 @@ body :
     -> Html Msg
 body vc model =
     div
-        [ css
-            [ Css.height <| vh 100
-            , displayFlex
-            , flexDirection column
-            , overflow Css.hidden
-            , vc.theme.body
-            ]
+        [ Css.body vc |> css
         ]
         [ Header.header
             vc
@@ -50,11 +44,7 @@ body vc model =
             , user = model.user
             }
         , section
-            [ css
-                [ displayFlex
-                , flexDirection row
-                , flexGrow (num 1)
-                ]
+            [ Css.sectionBelowHeader vc |> css
             ]
             [ AddonsNav.nav vc
             , main_

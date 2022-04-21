@@ -1,13 +1,18 @@
-module Locale.View exposing (string, text)
+module Locale.View exposing (float, int, string, text, timestamp)
 
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
+import DateFormat exposing (..)
 import Dict
 import Ease
+import FormatNumber
+import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
 import Locale.Model exposing (Model, State(..))
 import Locale.Update exposing (duration)
+import RecordSetter exposing (..)
+import Time
 
 
 string : Model -> String -> String
@@ -15,7 +20,6 @@ string model key =
     let
         lower =
             String.toLower key
-                |> Debug.log "lower"
 
         raise s =
             if String.left 1 key /= String.left 1 lower then
@@ -84,3 +88,54 @@ text model key =
         [ string model key
             |> Html.Styled.text
         ]
+
+
+float : Model -> Float -> String
+float { numberFormat } x =
+    FormatNumber.format numberFormat x
+
+
+int : Model -> Int -> String
+int model =
+    toFloat
+        >> float
+            { model
+                | numberFormat =
+                    model.numberFormat |> s_decimals (FormatNumber.Locales.Exact 0)
+            }
+
+
+timestamp : Model -> Int -> String
+timestamp { locale, timeLang, zone } =
+    let
+        format =
+            case locale of
+                "de" ->
+                    [ dayOfMonthNumber
+                    , DateFormat.text ". "
+                    , monthNameFull
+                    , DateFormat.text " "
+                    , yearNumber
+                    , DateFormat.text " "
+                    , hourFixed
+                    , DateFormat.text ":"
+                    , minuteFixed
+                    ]
+
+                _ ->
+                    [ monthFixed
+                    , DateFormat.text "/"
+                    , dayOfMonthFixed
+                    , DateFormat.text "/"
+                    , yearNumber
+                    , DateFormat.text " "
+                    , hourNumber
+                    , DateFormat.text ":"
+                    , minuteFixed
+                    , DateFormat.text " "
+                    , amPmUppercase
+                    ]
+    in
+    (*) 1000
+        >> Time.millisToPosix
+        >> formatWithLanguage timeLang format zone

@@ -8,63 +8,59 @@ root : Config -> List Style
 root vc =
     [ displayFlex
     , flexWrap wrap
-    , vc.theme.stats.root
     ]
+        ++ vc.theme.stats.root
 
 
 currency : Config -> List Style
 currency vc =
-    [ vc.theme.stats.currency
-    ]
+    vc.theme.stats.currency
 
 
 currencyHeading : Config -> List Style
 currencyHeading vc =
-    [ vc.theme.stats.currencyHeading
-    ]
+    vc.theme.stats.currencyHeading
 
 
 statsTableWrapper : Config -> List Style
 statsTableWrapper vc =
-    [ position relative
-    , vc.theme.stats.tableWrapper
-    ]
+    [ position relative ] ++ vc.theme.stats.tableWrapper
 
 
 statsTableInnerWrapper : Config -> List Style
 statsTableInnerWrapper vc =
     [ zIndex <| int 20
     , position relative
-    , vc.theme.stats.tableWrapperInner
     ]
+        ++ vc.theme.stats.tableWrapperInner
 
 
 statsTable : Config -> List Style
 statsTable vc =
     [ display table
-    , vc.theme.stats.table
     ]
+        ++ vc.theme.stats.table
 
 
 statsTableRow : Config -> List Style
 statsTableRow vc =
     [ display tableRow
-    , vc.theme.stats.tableRow
     ]
+        ++ vc.theme.stats.tableRow
 
 
 statsTableCellValue : Config -> List Style
 statsTableCellValue vc =
     [ display tableCell
-    , vc.theme.stats.tableCellValue
     ]
+        ++ vc.theme.stats.tableCellValue
 
 
 statsTableCellKey : Config -> List Style
 statsTableCellKey vc =
     [ display tableCell
-    , vc.theme.stats.tableCellKey
     ]
+        ++ vc.theme.stats.tableCellKey
 
 
 currencyBackground : Config -> List Style
@@ -77,15 +73,15 @@ currencyBackground vc =
     , px 0 |> top
     , justifyContent center
     , alignItems stretch
-    , vc.theme.stats.currencyBackground
     ]
+        ++ vc.theme.stats.currencyBackground
 
 
 currencyBackgroundPath : Config -> List Style
 currencyBackgroundPath vc =
     [ fill currentColor
-    , vc.theme.stats.currencyBackgroundPath
     ]
+        ++ vc.theme.stats.currencyBackgroundPath
 
 
 

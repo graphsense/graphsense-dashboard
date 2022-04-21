@@ -1,7 +1,9 @@
 module Locale.Model exposing (..)
 
+import DateFormat.Language
 import Dict exposing (Dict)
-import RemoteData as RD exposing (WebData)
+import FormatNumber.Locales
+import Time
 
 
 type State
@@ -10,7 +12,22 @@ type State
     | Settled (Dict String String)
 
 
+{-|
+
+    locale : the two digit locale id
+    hint : a number formatted via JS toLocaleString to derive number formatting
+           rules from (see https://package.elm-lang.org/packages/cuducos/elm-format-number/latest/FormatNumber-Locales)
+
+-}
+type alias Flags =
+    { locale : String
+    }
+
+
 type alias Model =
     { mapping : State
+    , numberFormat : FormatNumber.Locales.Locale
     , locale : String
+    , zone : Time.Zone
+    , timeLang : DateFormat.Language.Language
     }

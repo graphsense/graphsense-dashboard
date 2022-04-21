@@ -9,11 +9,10 @@ header vc =
     [ displayFlex
     , flexDirection row
     , justifyContent spaceBetween
-    , vc.theme.header
     ]
+        ++ vc.theme.header
 
 
 headerLogo : Config -> List Style
 headerLogo vc =
-    [ vc.theme.headerLogo
-    ]
+    vc.theme.headerLogo

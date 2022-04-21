@@ -1,8 +1,33 @@
 module Iknaio exposing (theme)
 
 import Css exposing (..)
-import Theme exposing (Colors, Theme)
+import RecordSetter exposing (..)
+import Theme.Stats as Stats
+import Theme.Theme as Theme exposing (Theme, default)
 import VitePluginHelper
+
+
+type alias Colors =
+    { black : Color
+    , greyDarkest : Color
+    , greyDarker : Color
+    , greyDark : Color
+    , grey : Color
+    , greyLight : Color
+    , greyLighter : Color
+    , greyLightest : Color
+    , white : Color
+    , brandText : Color
+    , brandDarker : Color
+    , brandDark : Color
+    , brandBase : Color
+    , brandLight : Color
+    , brandLighter : Color
+    , brandLightest : Color
+    , brandRed : Color
+    , brandRedLight : Color
+    , brandWhite : Color
+    }
 
 
 colors : Colors
@@ -31,86 +56,70 @@ colors =
 
 theme : Theme
 theme =
-    { scaled = scaled
-    , logo = "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
-    , body =
-        batch
+    Theme.default
+        |> s_scaled scaled
+        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
+        |> s_body
             [ color colors.brandText
-            , fontFamilies [ "monospace" ]
+            , fontFamilies [ "Roboto", "sans-serif" ]
             , scaled 3.5 |> rem |> fontSize
             ]
-    , header =
-        batch
+        |> s_header
             [ backgroundColor colors.white
             , scaled 3 |> rem |> padding
             ]
-    , heading2 =
-        batch
+        |> s_heading2
             [ fontFamilies [ "Conv_Octarine-Light" ]
             , scaled 0.2 |> rem |> letterSpacing
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
             ]
-    , headerLogo =
-        batch
+        |> s_headerLogo
             [ maxWidth <| px 190
             ]
-    , addonsNav = batch []
-    , main =
-        batch
+        |> s_main
             [ backgroundColor colors.brandLightest
             , scaled mainMargin |> rem |> padding
             ]
-    , stats =
-        { root =
-            batch
-                [ scaled -mainMargin |> rem |> marginLeft
-                ]
-        , currency =
-            batch
-                [ backgroundColor colors.greyLight
-                , scaled mainMargin |> rem |> margin
-                ]
-        , currencyHeading =
-            batch
-                [ backgroundColor colors.brandLight
-                , fontHairline
-                , scaled 2 |> rem |> padding
-                , scaled 5 |> rem |> fontSize
-                , scaled 3.5 |> rem |> paddingTop
-                , scaled currencyPadding |> rem |> paddingLeft
-                , width auto
-                , fontFamilies [ "Conv_Octarine-Light" ]
-                ]
-        , tableWrapper =
-            batch []
-        , tableWrapperInner =
-            batch
-                [ currencyPadding / 2 |> scaled |> rem |> padding
-                ]
-        , table =
-            batch
-                [ scaled 0.1 |> rem |> letterSpacing
-                , currencyPadding / 2 |> scaled |> rem |> borderSpacing
-                ]
-        , tableRow = batch []
-        , tableCellKey =
-            batch
-                [ int 500 |> fontWeight
-                , scaled 2 |> rem |> paddingRight
-                ]
-        , tableCellValue = batch []
-        , currencyBackground =
-            batch
-                [ rgba 0 0 0 0.2 |> color
-                ]
-        , currencyBackgroundPath = batch []
-        }
-    , custom =
-        -- need to put these special references in separate string expressions to make the vite resolution work
-        "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Light/fonts.css]"
-            ++ "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Bold/fonts.css]"
-    }
+        |> s_stats
+            (Stats.default
+                |> s_root
+                    [ scaled -mainMargin |> rem |> marginLeft
+                    ]
+                |> s_currency
+                    [ backgroundColor colors.greyLight
+                    , scaled mainMargin |> rem |> margin
+                    ]
+                |> s_currencyHeading
+                    [ backgroundColor colors.brandLight
+                    , fontHairline
+                    , scaled 2 |> rem |> padding
+                    , scaled 5 |> rem |> fontSize
+                    , scaled 3.5 |> rem |> paddingTop
+                    , scaled currencyPadding |> rem |> paddingLeft
+                    , width auto
+                    , fontFamilies [ "Conv_Octarine-Light" ]
+                    ]
+                |> s_tableWrapperInner
+                    [ currencyPadding / 2 |> scaled |> rem |> padding
+                    ]
+                |> s_table
+                    [ scaled 0.1 |> rem |> letterSpacing
+                    , currencyPadding / 2 |> scaled |> rem |> borderSpacing
+                    ]
+                |> s_tableCellKey
+                    [ int 500 |> fontWeight
+                    , scaled 2 |> rem |> paddingRight
+                    ]
+                |> s_currencyBackground
+                    [ rgba 0 0 0 0.2 |> color
+                    ]
+            )
+        |> s_custom
+            -- need to put these special references in separate string expressions to make the vite resolution work
+            ("[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Light/fonts.css]"
+                ++ "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Bold/fonts.css]"
+            )
 
 
 scaled : Float -> Float

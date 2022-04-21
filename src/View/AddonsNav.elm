@@ -12,9 +12,10 @@ nav : Config -> Html Msg
 nav config =
     Html.Styled.nav
         [ css
-            [ displayFlex
-            , flexDirection column
-            , config.theme.addonsNav
-            ]
+            ([ displayFlex
+             , flexDirection column
+             ]
+                ++ config.theme.addonsNav
+            )
         ]
         []

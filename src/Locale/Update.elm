@@ -15,6 +15,9 @@ duration =
 update : Msg -> Model -> ( Model, Effect )
 update msg model =
     case msg of
+        BrowserSentTimezone zone ->
+            n { model | zone = zone }
+
         BrowserLoadedTranslation locale result ->
             result
                 |> Result.map

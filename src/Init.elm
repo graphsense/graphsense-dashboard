@@ -12,7 +12,9 @@ init : Flags -> Url -> key -> ( Model key, Effect )
 init flags url key =
     let
         ( locale, localeEffect ) =
-            Locale.init flags.locale
+            Locale.init
+                { locale = flags.locale
+                }
     in
     ( { url = url
       , key = key
