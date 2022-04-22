@@ -89,6 +89,7 @@ theme =
                 |> s_currency
                     [ backgroundColor colors.greyLight
                     , scaled mainMargin |> rem |> margin
+                    , borderRadius (rem <| scaled 0.5)
                     ]
                 |> s_currencyHeading
                     [ backgroundColor colors.brandLight
@@ -110,6 +111,9 @@ theme =
                 |> s_tableCellKey
                     [ int 500 |> fontWeight
                     , scaled 2 |> rem |> paddingRight
+                    ]
+                |> s_tableCellValue
+                    [ fontWeight (int 300)
                     ]
                 |> s_currencyBackground
                     [ rgba 0 0 0 0.2 |> color

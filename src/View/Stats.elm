@@ -91,7 +91,7 @@ currency vc cs =
                         |> statsRow vc "Entities"
                     , Locale.int vc.locale cs.noLabels
                         |> statsRow vc "Labels"
-                    , Locale.int vc.locale cs.noTaggedAddresses
+                    , taggedAddressesWithPercentage vc cs
                         |> statsRow vc "Tagged addresses"
                     ]
                 ]
@@ -135,3 +135,12 @@ statsRow vc label value =
             [ text value
             ]
         ]
+
+
+taggedAddressesWithPercentage : Config -> Api.Data.CurrencyStats -> String
+taggedAddressesWithPercentage vc cs =
+    Locale.int vc.locale cs.noTaggedAddresses
+        ++ " ("
+        ++ Locale.percentage vc.locale
+            (toFloat cs.noTaggedAddresses / toFloat cs.noAddresses)
+        ++ "%)"

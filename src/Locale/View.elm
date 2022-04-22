@@ -1,4 +1,4 @@
-module Locale.View exposing (float, int, string, text, timestamp)
+module Locale.View exposing (float, int, percentage, string, text, timestamp)
 
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
@@ -99,10 +99,7 @@ int : Model -> Int -> String
 int model =
     toFloat
         >> float
-            { model
-                | numberFormat =
-                    model.numberFormat |> s_decimals (FormatNumber.Locales.Exact 0)
-            }
+            (setDecimals model (FormatNumber.Locales.Exact 0))
 
 
 timestamp : Model -> Int -> String
@@ -139,3 +136,15 @@ timestamp { locale, timeLang, zone } =
     (*) 1000
         >> Time.millisToPosix
         >> formatWithLanguage timeLang format zone
+
+
+percentage : Model -> Float -> String
+percentage model fl =
+    fl
+        * 100
+        |> float (setDecimals model (FormatNumber.Locales.Max 2))
+
+
+setDecimals : Model -> FormatNumber.Locales.Decimals -> Model
+setDecimals model dec =
+    { model | numberFormat = model.numberFormat |> s_decimals dec }
