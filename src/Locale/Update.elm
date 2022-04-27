@@ -45,7 +45,6 @@ update msg model =
                         now =
                             curr
                                 + delta
-                                |> Debug.log "now"
                     in
                     { model
                         | mapping =

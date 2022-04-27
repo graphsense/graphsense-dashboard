@@ -5,6 +5,7 @@ import Effect exposing (Effect(..), n)
 import Locale.Init as Locale
 import Model exposing (..)
 import RemoteData exposing (RemoteData(..))
+import Search.Init as Search
 import Url exposing (Url)
 
 
@@ -19,7 +20,7 @@ init flags url key =
     ( { url = url
       , key = key
       , locale = locale
-      , search = ()
+      , search = Search.init
       , user = ()
       , stats = NotAsked
       }

@@ -5,6 +5,7 @@ import Api.Request.General
 import Browser.Navigation as Nav
 import Locale.Effect
 import Msg exposing (Msg(..))
+import Search.Effect
 
 
 type Effect
@@ -14,6 +15,7 @@ type Effect
     | GetStatisticsEffect
     | BatchedEffects (List Effect)
     | LocaleEffect Locale.Effect.Effect
+    | SearchEffect Search.Effect.Effect
 
 
 n : model -> ( model, Effect )
@@ -49,3 +51,7 @@ perform key effect =
         LocaleEffect eff ->
             Locale.Effect.perform eff
                 |> Cmd.map LocaleMsg
+
+        SearchEffect eff ->
+            Search.Effect.perform eff
+                |> Cmd.map SearchMsg

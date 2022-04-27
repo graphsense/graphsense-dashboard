@@ -17,6 +17,7 @@ supported currencies: unterstützte Währungen
 ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
+addresses, transaction, label, block: Adressen, Transaktion, Schlagwort, Block
 loading_type_id: lade %0 %1  # results in eg. loading address xyz
 loading_thing: lade %0 
 currency: Währung
@@ -137,7 +138,7 @@ num_address: %0 Adresse
 num_addresses: %0 Adressen
 num_of_address: %1/%0 Adresse
 num_of_addresses: %1/%0 Adressen
-the_search: Suche # as a noun
+the search: Suche # as a noun
 user-defined labels: benutzerdefinierte Schlagwörter
 hide logs: Logs verstecken
 show logs: Logs anzeigen

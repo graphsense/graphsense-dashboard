@@ -31,10 +31,3 @@ stats =
     , version = "1.0.0"
     , requestTimestamp = "123"
     }
-
-
-statsEncoded : String
-statsEncoded =
-    stats
-        |> Api.Data.encodeStats
-        |> encode 0

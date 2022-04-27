@@ -4,7 +4,6 @@ import Css exposing (..)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Msg exposing (Msg)
-import Plugin exposing (Plugin)
 import View.Config exposing (Config)
 
 

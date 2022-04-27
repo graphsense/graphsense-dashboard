@@ -154,6 +154,11 @@ s_backgroundRepeatShorthand value__ record__ =
     { record__ | backgroundRepeatShorthand = value__ }
 
 
+s_badge : a -> { b | badge : a } -> { b | badge : a }
+s_badge value__ record__ =
+    { record__ | badge = value__ }
+
+
 s_bads : a -> { b | bads : a } -> { b | bads : a }
 s_bads value__ record__ =
     { record__ | bads = value__ }
@@ -162,6 +167,11 @@ s_bads value__ record__ =
 s_balance : a -> { b | balance : a } -> { b | balance : a }
 s_balance value__ record__ =
     { record__ | balance = value__ }
+
+
+s_base : a -> { b | base : a } -> { b | base : a }
+s_base value__ record__ =
+    { record__ | base = value__ }
 
 
 s_basePath : a -> { b | basePath : a } -> { b | basePath : a }
@@ -229,6 +239,11 @@ s_borderStyle value__ record__ =
     { record__ | borderStyle = value__ }
 
 
+s_bounce : a -> { b | bounce : a } -> { b | bounce : a }
+s_bounce value__ record__ =
+    { record__ | bounce = value__ }
+
+
 s_boxSizing : a -> { b | boxSizing : a } -> { b | boxSizing : a }
 s_boxSizing value__ record__ =
     { record__ | boxSizing = value__ }
@@ -292,6 +307,11 @@ s_breaks value__ record__ =
 s_browserHistory : a -> { b | browserHistory : a } -> { b | browserHistory : a }
 s_browserHistory value__ record__ =
     { record__ | browserHistory = value__ }
+
+
+s_button : a -> { b | button : a } -> { b | button : a }
+s_button value__ record__ =
+    { record__ | button = value__ }
 
 
 s_calc : a -> { b | calc : a } -> { b | calc : a }
@@ -429,9 +449,19 @@ s_custom value__ record__ =
     { record__ | custom = value__ }
 
 
+s_danger : a -> { b | danger : a } -> { b | danger : a }
+s_danger value__ record__ =
+    { record__ | danger = value__ }
+
+
 s_day : a -> { b | day : a } -> { b | day : a }
 s_day value__ record__ =
     { record__ | day = value__ }
+
+
+s_days : a -> { b | days : a } -> { b | days : a }
+s_days value__ record__ =
+    { record__ | days = value__ }
 
 
 s_decimalSeparator : a -> { b | decimalSeparator : a } -> { b | decimalSeparator : a }
@@ -487,6 +517,11 @@ s_description value__ record__ =
 s_dim : a -> { b | dim : a } -> { b | dim : a }
 s_dim value__ record__ =
     { record__ | dim = value__ }
+
+
+s_disabled : a -> { b | disabled : a } -> { b | disabled : a }
+s_disabled value__ record__ =
+    { record__ | disabled = value__ }
 
 
 s_display : a -> { b | display : a } -> { b | display : a }
@@ -699,6 +734,11 @@ s_fontWeight value__ record__ =
     { record__ | fontWeight = value__ }
 
 
+s_form : a -> { b | form : a } -> { b | form : a }
+s_form value__ record__ =
+    { record__ | form = value__ }
+
+
 s_foundAny : a -> { b | foundAny : a } -> { b | foundAny : a }
 s_foundAny value__ record__ =
     { record__ | foundAny = value__ }
@@ -712,6 +752,11 @@ s_frag value__ record__ =
 s_fragment : a -> { b | fragment : a } -> { b | fragment : a }
 s_fragment value__ record__ =
     { record__ | fragment = value__ }
+
+
+s_frame : a -> { b | frame : a } -> { b | frame : a }
+s_frame value__ record__ =
+    { record__ | frame = value__ }
 
 
 s_fromAddress : a -> { b | fromAddress : a } -> { b | fromAddress : a }
@@ -819,11 +864,6 @@ s_hex value__ record__ =
     { record__ | hex = value__ }
 
 
-s_hint : a -> { b | hint : a } -> { b | hint : a }
-s_hint value__ record__ =
-    { record__ | hint = value__ }
-
-
 s_history : a -> { b | history : a } -> { b | history : a }
 s_history value__ record__ =
     { record__ | history = value__ }
@@ -832,6 +872,11 @@ s_history value__ record__ =
 s_host : a -> { b | host : a } -> { b | host : a }
 s_host value__ record__ =
     { record__ | host = value__ }
+
+
+s_hours : a -> { b | hours : a } -> { b | hours : a }
+s_hours value__ record__ =
+    { record__ | hours = value__ }
 
 
 s_hoverCapability : a -> { b | hoverCapability : a } -> { b | hoverCapability : a }
@@ -874,6 +919,36 @@ s_inDegree value__ record__ =
     { record__ | inDegree = value__ }
 
 
+s_inSomeDays : a -> { b | inSomeDays : a } -> { b | inSomeDays : a }
+s_inSomeDays value__ record__ =
+    { record__ | inSomeDays = value__ }
+
+
+s_inSomeHours : a -> { b | inSomeHours : a } -> { b | inSomeHours : a }
+s_inSomeHours value__ record__ =
+    { record__ | inSomeHours = value__ }
+
+
+s_inSomeMinutes : a -> { b | inSomeMinutes : a } -> { b | inSomeMinutes : a }
+s_inSomeMinutes value__ record__ =
+    { record__ | inSomeMinutes = value__ }
+
+
+s_inSomeMonths : a -> { b | inSomeMonths : a } -> { b | inSomeMonths : a }
+s_inSomeMonths value__ record__ =
+    { record__ | inSomeMonths = value__ }
+
+
+s_inSomeSeconds : a -> { b | inSomeSeconds : a } -> { b | inSomeSeconds : a }
+s_inSomeSeconds value__ record__ =
+    { record__ | inSomeSeconds = value__ }
+
+
+s_inSomeYears : a -> { b | inSomeYears : a } -> { b | inSomeYears : a }
+s_inSomeYears value__ record__ =
+    { record__ | inSomeYears = value__ }
+
+
 s_indent : a -> { b | indent : a } -> { b | indent : a }
 s_indent value__ record__ =
     { record__ | indent = value__ }
@@ -902,6 +977,11 @@ s_inlineAxisOverflow value__ record__ =
 s_inner : a -> { b | inner : a } -> { b | inner : a }
 s_inner value__ record__ =
     { record__ | inner = value__ }
+
+
+s_input : a -> { b | input : a } -> { b | input : a }
+s_input value__ record__ =
+    { record__ | input = value__ }
 
 
 s_inputValue : a -> { b | inputValue : a } -> { b | inputValue : a }
@@ -1004,6 +1084,11 @@ s_lastmod value__ record__ =
     { record__ | lastmod = value__ }
 
 
+s_latestBlocks : a -> { b | latestBlocks : a } -> { b | latestBlocks : a }
+s_latestBlocks value__ record__ =
+    { record__ | latestBlocks = value__ }
+
+
 s_layout : a -> { b | layout : a } -> { b | layout : a }
 s_layout value__ record__ =
     { record__ | layout = value__ }
@@ -1049,6 +1134,11 @@ s_lengthOrNumberOrAutoOrNoneOrContent value__ record__ =
     { record__ | lengthOrNumberOrAutoOrNoneOrContent = value__ }
 
 
+s_limit : a -> { b | limit : a } -> { b | limit : a }
+s_limit value__ record__ =
+    { record__ | limit = value__ }
+
+
 s_links : a -> { b | links : a } -> { b | links : a }
 s_links value__ record__ =
     { record__ | links = value__ }
@@ -1067,6 +1157,16 @@ s_listStyleType value__ record__ =
 s_listStyleTypeOrPositionOrImage : a -> { b | listStyleTypeOrPositionOrImage : a } -> { b | listStyleTypeOrPositionOrImage : a }
 s_listStyleTypeOrPositionOrImage value__ record__ =
     { record__ | listStyleTypeOrPositionOrImage = value__ }
+
+
+s_loadingSpinner : a -> { b | loadingSpinner : a } -> { b | loadingSpinner : a }
+s_loadingSpinner value__ record__ =
+    { record__ | loadingSpinner = value__ }
+
+
+s_loadingSpinnerUrl : a -> { b | loadingSpinnerUrl : a } -> { b | loadingSpinnerUrl : a }
+s_loadingSpinnerUrl value__ record__ =
+    { record__ | loadingSpinnerUrl = value__ }
 
 
 s_locale : a -> { b | locale : a } -> { b | locale : a }
@@ -1129,6 +1229,11 @@ s_minMaxDimension value__ record__ =
     { record__ | minMaxDimension = value__ }
 
 
+s_minutes : a -> { b | minutes : a } -> { b | minutes : a }
+s_minutes value__ record__ =
+    { record__ | minutes = value__ }
+
+
 s_missing : a -> { b | missing : a } -> { b | missing : a }
 s_missing value__ record__ =
     { record__ | missing = value__ }
@@ -1142,6 +1247,11 @@ s_model value__ record__ =
 s_month : a -> { b | month : a } -> { b | month : a }
 s_month value__ record__ =
     { record__ | month = value__ }
+
+
+s_months : a -> { b | months : a } -> { b | months : a }
+s_months value__ record__ =
+    { record__ | months = value__ }
 
 
 s_multiline : a -> { b | multiline : a } -> { b | multiline : a }
@@ -1554,6 +1664,11 @@ s_preventDefault value__ record__ =
     { record__ | preventDefault = value__ }
 
 
+s_primary : a -> { b | primary : a } -> { b | primary : a }
+s_primary value__ record__ =
+    { record__ | primary = value__ }
+
+
 s_priority : a -> { b | priority : a } -> { b | priority : a }
 s_priority value__ record__ =
     { record__ | priority = value__ }
@@ -1674,6 +1789,36 @@ s_resolver value__ record__ =
     { record__ | resolver = value__ }
 
 
+s_result : a -> { b | result : a } -> { b | result : a }
+s_result value__ record__ =
+    { record__ | result = value__ }
+
+
+s_resultGroup : a -> { b | resultGroup : a } -> { b | resultGroup : a }
+s_resultGroup value__ record__ =
+    { record__ | resultGroup = value__ }
+
+
+s_resultGroupList : a -> { b | resultGroupList : a } -> { b | resultGroupList : a }
+s_resultGroupList value__ record__ =
+    { record__ | resultGroupList = value__ }
+
+
+s_resultGroupTitle : a -> { b | resultGroupTitle : a } -> { b | resultGroupTitle : a }
+s_resultGroupTitle value__ record__ =
+    { record__ | resultGroupTitle = value__ }
+
+
+s_resultLine : a -> { b | resultLine : a } -> { b | resultLine : a }
+s_resultLine value__ record__ =
+    { record__ | resultLine = value__ }
+
+
+s_resultLineIcon : a -> { b | resultLineIcon : a } -> { b | resultLineIcon : a }
+s_resultLineIcon value__ record__ =
+    { record__ | resultLineIcon = value__ }
+
+
 s_resume : a -> { b | resume : a } -> { b | resume : a }
 s_resume value__ record__ =
     { record__ | resume = value__ }
@@ -1682,6 +1827,11 @@ s_resume value__ record__ =
 s_reverseGet : a -> { b | reverseGet : a } -> { b | reverseGet : a }
 s_reverseGet value__ record__ =
     { record__ | reverseGet = value__ }
+
+
+s_rightNow : a -> { b | rightNow : a } -> { b | rightNow : a }
+s_rightNow value__ record__ =
+    { record__ | rightNow = value__ }
 
 
 s_root : a -> { b | root : a } -> { b | root : a }
@@ -1744,6 +1894,11 @@ s_search value__ record__ =
     { record__ | search = value__ }
 
 
+s_seconds : a -> { b | seconds : a } -> { b | seconds : a }
+s_seconds value__ record__ =
+    { record__ | seconds = value__ }
+
+
 s_sectionBelowHeader : a -> { b | sectionBelowHeader : a } -> { b | sectionBelowHeader : a }
 s_sectionBelowHeader value__ record__ =
     { record__ | sectionBelowHeader = value__ }
@@ -1797,6 +1952,36 @@ s_snapshots value__ record__ =
 s_snippets : a -> { b | snippets : a } -> { b | snippets : a }
 s_snippets value__ record__ =
     { record__ | snippets = value__ }
+
+
+s_someDaysAgo : a -> { b | someDaysAgo : a } -> { b | someDaysAgo : a }
+s_someDaysAgo value__ record__ =
+    { record__ | someDaysAgo = value__ }
+
+
+s_someHoursAgo : a -> { b | someHoursAgo : a } -> { b | someHoursAgo : a }
+s_someHoursAgo value__ record__ =
+    { record__ | someHoursAgo = value__ }
+
+
+s_someMinutesAgo : a -> { b | someMinutesAgo : a } -> { b | someMinutesAgo : a }
+s_someMinutesAgo value__ record__ =
+    { record__ | someMinutesAgo = value__ }
+
+
+s_someMonthsAgo : a -> { b | someMonthsAgo : a } -> { b | someMonthsAgo : a }
+s_someMonthsAgo value__ record__ =
+    { record__ | someMonthsAgo = value__ }
+
+
+s_someSecondsAgo : a -> { b | someSecondsAgo : a } -> { b | someSecondsAgo : a }
+s_someSecondsAgo value__ record__ =
+    { record__ | someSecondsAgo = value__ }
+
+
+s_someYearsAgo : a -> { b | someYearsAgo : a } -> { b | someYearsAgo : a }
+s_someYearsAgo value__ record__ =
+    { record__ | someYearsAgo = value__ }
 
 
 s_source : a -> { b | source : a } -> { b | source : a }
@@ -1999,6 +2184,11 @@ s_textTransform value__ record__ =
     { record__ | textTransform = value__ }
 
 
+s_textarea : a -> { b | textarea : a } -> { b | textarea : a }
+s_textarea value__ record__ =
+    { record__ | textarea = value__ }
+
+
 s_theme : a -> { b | theme : a } -> { b | theme : a }
 s_theme value__ record__ =
     { record__ | theme = value__ }
@@ -2007,6 +2197,11 @@ s_theme value__ record__ =
 s_thousandSeparator : a -> { b | thousandSeparator : a } -> { b | thousandSeparator : a }
 s_thousandSeparator value__ record__ =
     { record__ | thousandSeparator = value__ }
+
+
+s_timeLang : a -> { b | timeLang : a } -> { b | timeLang : a }
+s_timeLang value__ record__ =
+    { record__ | timeLang = value__ }
 
 
 s_timeout : a -> { b | timeout : a } -> { b | timeout : a }
@@ -2039,9 +2234,39 @@ s_toAddress value__ record__ =
     { record__ | toAddress = value__ }
 
 
+s_toAmPm : a -> { b | toAmPm : a } -> { b | toAmPm : a }
+s_toAmPm value__ record__ =
+    { record__ | toAmPm = value__ }
+
+
+s_toMonthAbbreviation : a -> { b | toMonthAbbreviation : a } -> { b | toMonthAbbreviation : a }
+s_toMonthAbbreviation value__ record__ =
+    { record__ | toMonthAbbreviation = value__ }
+
+
+s_toMonthName : a -> { b | toMonthName : a } -> { b | toMonthName : a }
+s_toMonthName value__ record__ =
+    { record__ | toMonthName = value__ }
+
+
 s_toMsg : a -> { b | toMsg : a } -> { b | toMsg : a }
 s_toMsg value__ record__ =
     { record__ | toMsg = value__ }
+
+
+s_toOrdinalSuffix : a -> { b | toOrdinalSuffix : a } -> { b | toOrdinalSuffix : a }
+s_toOrdinalSuffix value__ record__ =
+    { record__ | toOrdinalSuffix = value__ }
+
+
+s_toWeekdayAbbreviation : a -> { b | toWeekdayAbbreviation : a } -> { b | toWeekdayAbbreviation : a }
+s_toWeekdayAbbreviation value__ record__ =
+    { record__ | toWeekdayAbbreviation = value__ }
+
+
+s_toWeekdayName : a -> { b | toWeekdayName : a } -> { b | toWeekdayName : a }
+s_toWeekdayName value__ record__ =
+    { record__ | toWeekdayName = value__ }
 
 
 s_totalInput : a -> { b | totalInput : a } -> { b | totalInput : a }
@@ -2249,6 +2474,11 @@ s_year value__ record__ =
     { record__ | year = value__ }
 
 
+s_years : a -> { b | years : a } -> { b | years : a }
+s_years value__ record__ =
+    { record__ | years = value__ }
+
+
 s_zeroPrefix : a -> { b | zeroPrefix : a } -> { b | zeroPrefix : a }
 s_zeroPrefix value__ record__ =
     { record__ | zeroPrefix = value__ }
@@ -2257,3 +2487,8 @@ s_zeroPrefix value__ record__ =
 s_zeroSuffix : a -> { b | zeroSuffix : a } -> { b | zeroSuffix : a }
 s_zeroSuffix value__ record__ =
     { record__ | zeroSuffix = value__ }
+
+
+s_zone : a -> { b | zone : a } -> { b | zone : a }
+s_zone value__ record__ =
+    { record__ | zone = value__ }

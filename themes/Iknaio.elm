@@ -2,6 +2,8 @@ module Iknaio exposing (theme)
 
 import Css exposing (..)
 import RecordSetter exposing (..)
+import Theme.Button as Button
+import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Theme as Theme exposing (Theme, default)
 import VitePluginHelper
@@ -58,14 +60,15 @@ theme : Theme
 theme =
     Theme.default
         |> s_scaled scaled
-        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
+        |> s_logo "/themes/Iknaio/logo.svg"
+        |> s_loadingSpinnerUrl "/themes/Iknaio/loading.gif"
         |> s_body
             [ color colors.brandText
             , fontFamilies [ "Roboto", "sans-serif" ]
             , scaled 3.5 |> rem |> fontSize
             ]
         |> s_header
-            [ backgroundColor colors.white
+            [ backgroundColor colors.brandWhite
             , scaled 3 |> rem |> padding
             ]
         |> s_heading2
@@ -89,7 +92,7 @@ theme =
                 |> s_currency
                     [ backgroundColor colors.greyLight
                     , scaled mainMargin |> rem |> margin
-                    , borderRadius (rem <| scaled 0.5)
+                    , borderRadiusSm
                     ]
                 |> s_currencyHeading
                     [ backgroundColor colors.brandLight
@@ -119,10 +122,89 @@ theme =
                     [ rgba 0 0 0 0.2 |> color
                     ]
             )
+        |> s_search
+            (Search.default
+                |> s_form
+                    [ scaled 3 |> rem |> fontSize
+                    ]
+                |> s_frame
+                    [ scaled 1 |> rem |> marginRight
+                    , fontFamily monospace
+                    ]
+                |> s_textarea
+                    [ scaled 1 |> rem |> padding
+                    , outline none
+                    , inputStyle
+                    , scaled 5 |> rem |> height
+                    ]
+                |> s_result
+                    [ calc (pct 100) minus (scaled 4 |> rem) |> width
+                    , scaled 2 |> rem |> padding
+                    , borderRadius4
+                        zero
+                        zero
+                        (scaled 1 |> rem)
+                        (scaled 1 |> rem)
+                    , backgroundColor colors.brandWhite
+                    , spinnerHeight |> scaled |> rem |> minHeight
+                    ]
+                |> s_loadingSpinner
+                    [ top zero
+                    , right zero
+                    , scaled spinnerHeight |> rem |> height
+                    , scaled spinnerPadding |> rem |> padding
+                    ]
+                |> s_resultGroupTitle
+                    [ fontWeight bold
+                    , paddingY (scaled 1 |> rem)
+                    ]
+                |> s_resultLine
+                    [ textDecoration none
+                    , color colors.black
+                    , display block
+                    , scaled 0.5 |> rem |> paddingY
+                    , hover
+                        [ backgroundColor colors.brandLighter
+                        ]
+                    ]
+                |> s_resultLineIcon
+                    [ opacity <| num 0.5
+                    , scaled 1 |> rem |> paddingRight
+                    ]
+            )
+        |> s_button
+            (Button.default
+                |> s_base
+                    [ fontWeight bold
+                    , scaled 1 |> rem |> paddingY
+                    , scaled 2 |> rem |> paddingX
+                    , borderRadiusSm
+                    , calc (pct 100) minus (px 1) |> height
+                    , border zero
+                    , hover
+                        [ backgroundColor colors.brandLighter
+                        ]
+                    ]
+                |> s_primary
+                    [ backgroundColor colors.greyLight
+                    , color colors.brandDark
+                    ]
+                |> s_danger
+                    [ backgroundColor colors.brandWhite
+                    , color colors.brandRed
+                    ]
+                |> s_danger
+                    [ backgroundColor colors.brandWhite
+                    , color colors.brandRed
+                    ]
+                |> s_disabled
+                    [ color colors.brandLight
+                    ]
+            )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work
             ("[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Light/fonts.css]"
-                ++ "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Bold/fonts.css]"
+                ++ " ::placeholder { color: inherit; opacity: 0.5 }"
             )
 
 
@@ -144,3 +226,52 @@ currencyPadding =
 mainMargin : Float
 mainMargin =
     5
+
+
+wFull : Style
+wFull =
+    width <| pct 100
+
+
+paddingY : Length compatibleB unitsB -> Style
+paddingY y =
+    batch
+        [ paddingTop y
+        , paddingBottom y
+        ]
+
+
+paddingX : Length compatibleB unitsB -> Style
+paddingX x =
+    batch
+        [ paddingLeft x
+        , paddingRight x
+        ]
+
+
+borderRadiusSm : Style
+borderRadiusSm =
+    scaled 0.5 |> rem |> borderRadius
+
+
+inputStyle : Style
+inputStyle =
+    batch
+        [ backgroundColor colors.greyLight
+        , scaled 2 |> rem |> paddingX
+        , scaled 2 |> rem |> paddingTop
+        , scaled 1 |> rem |> paddingBottom
+        , color colors.black
+        , borderRadiusSm
+        , border zero
+        ]
+
+
+spinnerHeight : Float
+spinnerHeight =
+    4
+
+
+spinnerPadding : Float
+spinnerPadding =
+    1.5

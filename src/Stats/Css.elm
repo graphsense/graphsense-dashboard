@@ -1,4 +1,4 @@
-module View.Css.Stats exposing (..)
+module Stats.Css exposing (..)
 
 import Css exposing (..)
 import View.Config exposing (Config)

@@ -4,6 +4,7 @@ import Api.Data
 import Html exposing (Attribute, Html)
 import Locale.Model as Locale
 import RemoteData exposing (WebData)
+import Search.Model as Search
 import Theme.Theme exposing (Theme)
 import Url exposing (Url)
 
@@ -22,7 +23,7 @@ type alias Model navigationKey =
     { url : Url
     , key : navigationKey
     , locale : Locale.Model
-    , search : ()
+    , search : Search.Model
     , user : ()
     , stats : WebData Api.Data.Stats
     }

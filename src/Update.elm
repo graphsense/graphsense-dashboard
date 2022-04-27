@@ -8,6 +8,7 @@ import Model exposing (Model)
 import Msg exposing (..)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
+import Search.Update as Search
 import Url exposing (Url)
 
 
@@ -45,6 +46,15 @@ update msg model =
             in
             ( { model | locale = locale }
             , LocaleEffect localeEffect
+            )
+
+        SearchMsg m ->
+            let
+                ( search, searchEffect ) =
+                    Search.update m model.search
+            in
+            ( { model | search = search }
+            , SearchEffect searchEffect
             )
 
 

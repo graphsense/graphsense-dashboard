@@ -349,15 +349,15 @@ type alias Rates =
 
 
 type alias SearchResult =
-    { currencies : Maybe (List (SearchResultByCurrency))
-    , labels : Maybe (List (String))
+    { currencies : List (SearchResultByCurrency)
+    , labels : List (String)
     }
 
 
 type alias SearchResultByCurrency =
-    { addresses : Maybe (List (String))
-    , currency : Maybe String
-    , txs : Maybe (List (String))
+    { addresses : List (String)
+    , currency : String
+    , txs : List (String)
     }
 
 
@@ -1018,8 +1018,8 @@ encodeSearchResultPairs : SearchResult -> List EncodedField
 encodeSearchResultPairs model =
     let
         pairs =
-            [ maybeEncode "currencies" (Json.Encode.list encodeSearchResultByCurrency) model.currencies
-            , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
+            [ encode "currencies" (Json.Encode.list encodeSearchResultByCurrency) model.currencies
+            , encode "labels" (Json.Encode.list Json.Encode.string) model.labels
             ]
     in
     pairs
@@ -1039,9 +1039,9 @@ encodeSearchResultByCurrencyPairs : SearchResultByCurrency -> List EncodedField
 encodeSearchResultByCurrencyPairs model =
     let
         pairs =
-            [ maybeEncode "addresses" (Json.Encode.list Json.Encode.string) model.addresses
-            , maybeEncode "currency" Json.Encode.string model.currency
-            , maybeEncode "txs" (Json.Encode.list Json.Encode.string) model.txs
+            [ encode "addresses" (Json.Encode.list Json.Encode.string) model.addresses
+            , encode "currency" Json.Encode.string model.currency
+            , encode "txs" (Json.Encode.list Json.Encode.string) model.txs
             ]
     in
     pairs
@@ -1684,16 +1684,16 @@ ratesDecoder =
 searchResultDecoder : Json.Decode.Decoder SearchResult
 searchResultDecoder =
     Json.Decode.succeed SearchResult
-        |> maybeDecode "currencies" (Json.Decode.list searchResultByCurrencyDecoder) Nothing
-        |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "currencies" (Json.Decode.list searchResultByCurrencyDecoder) 
+        |> decode "labels" (Json.Decode.list Json.Decode.string) 
 
 
 searchResultByCurrencyDecoder : Json.Decode.Decoder SearchResultByCurrency
 searchResultByCurrencyDecoder =
     Json.Decode.succeed SearchResultByCurrency
-        |> maybeDecode "addresses" (Json.Decode.list Json.Decode.string) Nothing
-        |> maybeDecode "currency" Json.Decode.string Nothing
-        |> maybeDecode "txs" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "addresses" (Json.Decode.list Json.Decode.string) 
+        |> decode "currency" Json.Decode.string 
+        |> decode "txs" (Json.Decode.list Json.Decode.string) 
 
 
 searchResultLeafDecoder : Json.Decode.Decoder SearchResultLeaf

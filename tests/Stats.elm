@@ -1,6 +1,7 @@
 module Stats exposing (statsTest)
 
 import Api
+import Api.Data
 import Effect exposing (Effect(..))
 import Expect exposing (Expectation)
 import Mockup.Stats
@@ -11,6 +12,7 @@ import Setup
 import Test exposing (..)
 import Test.Html.Query as Query
 import Test.Html.Selector exposing (..)
+import Util exposing (ensureAndSimulateHttp)
 
 
 type alias Program =
@@ -20,11 +22,10 @@ type alias Program =
 base : String -> Program
 base locale =
     Setup.start "/" { locale = locale }
-        |> ProgramTest.ensureHttpRequestWasMade "GET" (Api.baseUrl ++ "/stats")
-        |> ProgramTest.simulateHttpOk
-            "GET"
+        |> ensureAndSimulateHttp "GET"
             (Api.baseUrl ++ "/stats")
-            Mockup.Stats.statsEncoded
+            Mockup.Stats.stats
+            Api.Data.encodeStats
 
 
 statsTest : Test

@@ -1,4 +1,4 @@
-module View.Css.Header exposing (..)
+module Header.Css exposing (..)
 
 import Css exposing (..)
 import View.Config exposing (Config)

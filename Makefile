@@ -16,4 +16,7 @@ dev: $(API_ELM) $(wildcard src/**)
 $(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	make openapi
 
+setem:
+	yarn setem --output src/
+
 .PHONY: openapi

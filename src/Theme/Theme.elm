@@ -1,6 +1,8 @@
 module Theme.Theme exposing (Theme, default)
 
 import Css exposing (Style)
+import Theme.Button as Button exposing (Button)
+import Theme.Search as Search exposing (Search)
 import Theme.Stats as Stats exposing (Stats)
 
 
@@ -14,7 +16,10 @@ type alias Theme =
     , heading2 : List Style
     , addonsNav : List Style
     , main : List Style
+    , loadingSpinnerUrl : String
     , stats : Stats
+    , search : Search
+    , button : Button
     , custom : String
     }
 
@@ -30,6 +35,9 @@ default =
     , headerLogo = []
     , addonsNav = []
     , main = []
+    , loadingSpinnerUrl = ""
     , stats = Stats.default
+    , search = Search.default
+    , button = Button.default
     , custom = ""
     }

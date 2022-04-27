@@ -33,3 +33,23 @@ main_ vc =
     [ flexGrow (num 1)
     ]
         ++ vc.theme.main
+
+
+button : Config -> List Style
+button vc =
+    cursor pointer :: vc.theme.button.base
+
+
+primary : Config -> List Style
+primary vc =
+    button vc ++ vc.theme.button.primary
+
+
+danger : Config -> List Style
+danger vc =
+    button vc ++ vc.theme.button.primary
+
+
+disabled : Config -> List Style
+disabled vc =
+    cursor notAllowed :: vc.theme.button.disabled

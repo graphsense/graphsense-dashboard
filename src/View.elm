@@ -3,16 +3,16 @@ module View exposing (view)
 import Browser exposing (Document)
 import Css exposing (..)
 import Css.Reset
+import Header.View as Header
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Locale.View as Locale
 import Model exposing (..)
 import Msg exposing (..)
-import Plugin exposing (Plugin)
+import RemoteData
 import View.AddonsNav as AddonsNav
 import View.Config exposing (Config)
 import View.Css as Css
-import View.Header as Header
 import View.Main as Main
 
 
@@ -42,6 +42,11 @@ body vc model =
             vc
             { search = model.search
             , user = model.user
+            , latestBlocks =
+                model.stats
+                    |> RemoteData.map .currencies
+                    |> RemoteData.withDefault []
+                    |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
             }
         , section
             [ Css.sectionBelowHeader vc |> css

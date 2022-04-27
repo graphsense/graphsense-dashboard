@@ -1,4 +1,4 @@
-module View.Stats exposing (stats)
+module Stats.View exposing (stats)
 
 import Api.Data
 import Dict
@@ -10,12 +10,12 @@ import Locale.View as Locale
 import Model exposing (..)
 import Msg exposing (..)
 import RemoteData as RD exposing (WebData)
+import Stats.Css as Css
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
 import Util.RemoteData exposing (webdata)
 import View.Config exposing (Config)
 import View.Css as Css
-import View.Css.Stats as Css
 import View.CurrencyMeta exposing (currencies)
 
 

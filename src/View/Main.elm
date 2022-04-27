@@ -4,9 +4,8 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (..)
 import Msg exposing (..)
-import Plugin exposing (Plugin)
+import Stats.View as Stats
 import View.Config exposing (Config)
-import View.Stats as Stats
 
 
 main_ :

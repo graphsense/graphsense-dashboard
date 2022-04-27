@@ -9,6 +9,7 @@ import Locale.Setup as Locale
 import Model exposing (Flags, Model)
 import Msg exposing (Msg(..))
 import ProgramTest exposing (ProgramTest)
+import Search.Setup as Search
 import SimulatedEffect.Cmd
 import SimulatedEffect.Http as Http
 import Theme.Theme as Theme
@@ -62,3 +63,7 @@ simulateEffects effect =
         LocaleEffect eff ->
             Locale.simulateEffects eff
                 |> SimulatedEffect.Cmd.map LocaleMsg
+
+        SearchEffect eff ->
+            Search.simulateEffects eff
+                |> SimulatedEffect.Cmd.map SearchMsg
