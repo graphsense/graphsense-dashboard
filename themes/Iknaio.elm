@@ -1,59 +1,71 @@
 module Iknaio exposing (theme)
 
+import Color exposing (rgb255)
 import Css exposing (..)
 import RecordSetter exposing (..)
 import Theme.Button as Button
+import Theme.Hovercard as Hovercard
+import Theme.Modal as Modal
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Theme as Theme exposing (Theme, default)
+import Theme.User as User
 import VitePluginHelper
 
 
 type alias Colors =
-    { black : Color
-    , greyDarkest : Color
-    , greyDarker : Color
-    , greyDark : Color
-    , grey : Color
-    , greyLight : Color
-    , greyLighter : Color
-    , greyLightest : Color
-    , white : Color
-    , brandText : Color
-    , brandDarker : Color
-    , brandDark : Color
-    , brandBase : Color
-    , brandLight : Color
-    , brandLighter : Color
-    , brandLightest : Color
-    , brandRed : Color
-    , brandRedLight : Color
-    , brandWhite : Color
+    { black : Color.Color
+    , greyDarkest : Color.Color
+    , greyDarker : Color.Color
+    , greyDark : Color.Color
+    , grey : Color.Color
+    , greyLight : Color.Color
+    , greyLighter : Color.Color
+    , greyLightest : Color.Color
+    , white : Color.Color
+    , brandText : Color.Color
+    , brandDarker : Color.Color
+    , brandDark : Color.Color
+    , brandBase : Color.Color
+    , brandLight : Color.Color
+    , brandLighter : Color.Color
+    , brandLightest : Color.Color
+    , brandRed : Color.Color
+    , brandRedLight : Color.Color
+    , brandWhite : Color.Color
     }
 
 
 colors : Colors
 colors =
-    { black = hex "fff"
-    , greyDarkest = hex "d2d5d7"
-    , greyDarker = hex "b9c4cc"
-    , greyDark = hex "889eae"
-    , grey = hex "586d7d"
-    , greyLight = hex "2d465b"
-    , greyLighter = hex "2d465b"
-    , greyLightest = hex "053254"
-    , white = hex "22292F"
-    , brandText = hex "ecf3f9"
-    , brandDarker = hex "ecf3f9"
-    , brandDark = hex "d3e3f1"
-    , brandBase = hex "84a5c2"
-    , brandLight = hex "466d91"
-    , brandLighter = hex "074574"
-    , brandLightest = hex "053254"
-    , brandRed = hex "b95656"
-    , brandRedLight = hex "f1b6b6"
-    , brandWhite = hex "031f35"
+    { black = Color.rgb255 255 255 255
+    , greyDarkest = rgb255 210 213 215
+    , greyDarker = rgb255 185 196 204
+    , greyDark = rgb255 136 158 174
+    , grey = rgb255 88 109 125
+    , greyLight = rgb255 45 70 91
+    , greyLighter = rgb255 45 70 91
+    , greyLightest = rgb255 5 50 84
+    , white = rgb255 34 41 47
+    , brandText = rgb255 236 243 249
+    , brandDarker = rgb255 236 243 249
+    , brandDark = rgb255 211 227 241
+    , brandBase = rgb255 132 165 194
+    , brandLight = rgb255 70 109 145
+    , brandLighter = rgb255 7 69 116
+    , brandLightest = rgb255 5 50 84
+    , brandRed = rgb255 185 86 86
+    , brandRedLight = rgb255 241 182 182
+    , brandWhite = rgb255 3 31 53
     }
+
+
+toCssColor : Color.Color -> Color
+toCssColor color =
+    Color.toRgba color
+        |> (\{ red, green, blue, alpha } ->
+                Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
+           )
 
 
 theme : Theme
@@ -63,25 +75,30 @@ theme =
         |> s_logo "/themes/Iknaio/logo.svg"
         |> s_loadingSpinnerUrl "/themes/Iknaio/loading.gif"
         |> s_body
-            [ color colors.brandText
+            [ color <| toCssColor colors.brandText
             , fontFamilies [ "Roboto", "sans-serif" ]
             , scaled 3.5 |> rem |> fontSize
             ]
         |> s_header
-            [ backgroundColor colors.brandWhite
+            [ backgroundColor <| toCssColor colors.brandWhite
             , scaled 3 |> rem |> padding
+            , alignItems center
             ]
         |> s_heading2
             [ fontFamilies [ "Conv_Octarine-Light" ]
-            , scaled 0.2 |> rem |> letterSpacing
+            , letterSpacingWide
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
+            ]
+        |> s_input
+            [ outline none
+            , inputStyle
             ]
         |> s_headerLogo
             [ maxWidth <| px 190
             ]
         |> s_main
-            [ backgroundColor colors.brandLightest
+            [ backgroundColor <| toCssColor colors.brandLightest
             , scaled mainMargin |> rem |> padding
             ]
         |> s_stats
@@ -90,12 +107,12 @@ theme =
                     [ scaled -mainMargin |> rem |> marginLeft
                     ]
                 |> s_currency
-                    [ backgroundColor colors.greyLight
+                    [ backgroundColor <| toCssColor colors.greyLight
                     , scaled mainMargin |> rem |> margin
                     , borderRadiusSm
                     ]
                 |> s_currencyHeading
-                    [ backgroundColor colors.brandLight
+                    [ backgroundColor <| toCssColor colors.brandLight
                     , fontHairline
                     , scaled 2 |> rem |> padding
                     , scaled 5 |> rem |> fontSize
@@ -126,6 +143,7 @@ theme =
             (Search.default
                 |> s_form
                     [ scaled 3 |> rem |> fontSize
+                    , scaled 8 |> rem |> height
                     ]
                 |> s_frame
                     [ scaled 1 |> rem |> marginRight
@@ -133,9 +151,11 @@ theme =
                     ]
                 |> s_textarea
                     [ scaled 1 |> rem |> padding
-                    , outline none
-                    , inputStyle
                     , scaled 5 |> rem |> height
+                    , inputStyle
+                    , scaled 2 |> rem |> paddingX
+                    , scaled 2 |> rem |> paddingTop
+                    , scaled 1 |> rem |> paddingBottom
                     ]
                 |> s_result
                     [ calc (pct 100) minus (scaled 4 |> rem) |> width
@@ -145,7 +165,7 @@ theme =
                         zero
                         (scaled 1 |> rem)
                         (scaled 1 |> rem)
-                    , backgroundColor colors.brandWhite
+                    , backgroundColor <| toCssColor colors.brandWhite
                     , spinnerHeight |> scaled |> rem |> minHeight
                     ]
                 |> s_loadingSpinner
@@ -160,11 +180,11 @@ theme =
                     ]
                 |> s_resultLine
                     [ textDecoration none
-                    , color colors.black
+                    , color <| toCssColor colors.black
                     , display block
                     , scaled 0.5 |> rem |> paddingY
                     , hover
-                        [ backgroundColor colors.brandLighter
+                        [ backgroundColor <| toCssColor colors.brandLighter
                         ]
                     ]
                 |> s_resultLineIcon
@@ -182,23 +202,54 @@ theme =
                     , calc (pct 100) minus (px 1) |> height
                     , border zero
                     , hover
-                        [ backgroundColor colors.brandLighter
+                        [ backgroundColor <| toCssColor colors.brandLighter
                         ]
                     ]
                 |> s_primary
-                    [ backgroundColor colors.greyLight
-                    , color colors.brandDark
+                    [ backgroundColor <| toCssColor colors.greyLight
+                    , color <| toCssColor colors.brandDark
                     ]
                 |> s_danger
-                    [ backgroundColor colors.brandWhite
-                    , color colors.brandRed
+                    [ backgroundColor <| toCssColor colors.brandWhite
+                    , color <| toCssColor colors.brandRed
                     ]
                 |> s_danger
-                    [ backgroundColor colors.brandWhite
-                    , color colors.brandRed
+                    [ backgroundColor <| toCssColor colors.brandWhite
+                    , color <| toCssColor colors.brandRed
                     ]
                 |> s_disabled
-                    [ color colors.brandLight
+                    [ color <| toCssColor colors.brandLight
+                    ]
+            )
+        |> s_hovercard
+            (Hovercard.default
+                |> s_borderColor colors.greyLight
+                |> s_backgroundColor colors.brandWhite
+                |> s_borderWidth 1
+                |> s_root
+                    [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
+                    , ( "border-radius", scaled borderRadiusSmValue |> String.fromFloat |> (\s -> s ++ "rem") )
+                    ]
+            )
+        |> s_user
+            (User.default
+                |> s_root
+                    [ scaled 5 |> rem |> fontSize
+                    ]
+                |> s_hovercardRoot
+                    [ scaled 3 |> rem |> padding
+                    ]
+            )
+        |> s_modal
+            (Modal.default
+                |> s_part
+                    [ scaled 2 |> rem |> paddingBottom
+                    ]
+                |> s_heading
+                    [ fontWeight bold
+                    , scaled 0.1 |> rem |> letterSpacing
+                    , scaled 2 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingTop
                     ]
             )
         |> s_custom
@@ -249,21 +300,24 @@ paddingX x =
         ]
 
 
+borderRadiusSmValue : Float
+borderRadiusSmValue =
+    0.5
+
+
 borderRadiusSm : Style
 borderRadiusSm =
-    scaled 0.5 |> rem |> borderRadius
+    scaled borderRadiusSmValue |> rem |> borderRadius
 
 
 inputStyle : Style
 inputStyle =
     batch
-        [ backgroundColor colors.greyLight
-        , scaled 2 |> rem |> paddingX
-        , scaled 2 |> rem |> paddingTop
-        , scaled 1 |> rem |> paddingBottom
-        , color colors.black
+        [ backgroundColor <| toCssColor colors.greyLight
+        , color <| toCssColor colors.black
         , borderRadiusSm
         , border zero
+        , scaled 0.5 |> rem |> padding
         ]
 
 
@@ -275,3 +329,8 @@ spinnerHeight =
 spinnerPadding : Float
 spinnerPadding =
     1.5
+
+
+letterSpacingWide : Style
+letterSpacingWide =
+    scaled 0.2 |> rem |> letterSpacing

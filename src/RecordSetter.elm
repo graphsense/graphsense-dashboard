@@ -99,6 +99,11 @@ s_animation value__ record__ =
     { record__ | animation = value__ }
 
 
+s_apiKey : a -> { b | apiKey : a } -> { b | apiKey : a }
+s_apiKey value__ record__ =
+    { record__ | apiKey = value__ }
+
+
 s_args : a -> { b | args : a } -> { b | args : a }
 s_args value__ record__ =
     { record__ | args = value__ }
@@ -114,6 +119,11 @@ s_attributeNamespace value__ record__ =
     { record__ | attributeNamespace = value__ }
 
 
+s_auth : a -> { b | auth : a } -> { b | auth : a }
+s_auth value__ record__ =
+    { record__ | auth = value__ }
+
+
 s_backgroundAttachment : a -> { b | backgroundAttachment : a } -> { b | backgroundAttachment : a }
 s_backgroundAttachment value__ record__ =
     { record__ | backgroundAttachment = value__ }
@@ -127,6 +137,11 @@ s_backgroundBlendMode value__ record__ =
 s_backgroundClip : a -> { b | backgroundClip : a } -> { b | backgroundClip : a }
 s_backgroundClip value__ record__ =
     { record__ | backgroundClip = value__ }
+
+
+s_backgroundColor : a -> { b | backgroundColor : a } -> { b | backgroundColor : a }
+s_backgroundColor value__ record__ =
+    { record__ | backgroundColor = value__ }
 
 
 s_backgroundImage : a -> { b | backgroundImage : a } -> { b | backgroundImage : a }
@@ -199,6 +214,11 @@ s_black value__ record__ =
     { record__ | black = value__ }
 
 
+s_block : a -> { b | block : a } -> { b | block : a }
+s_block value__ record__ =
+    { record__ | block = value__ }
+
+
 s_blockAxisOverflow : a -> { b | blockAxisOverflow : a } -> { b | blockAxisOverflow : a }
 s_blockAxisOverflow value__ record__ =
     { record__ | blockAxisOverflow = value__ }
@@ -234,9 +254,19 @@ s_borderCollapse value__ record__ =
     { record__ | borderCollapse = value__ }
 
 
+s_borderColor : a -> { b | borderColor : a } -> { b | borderColor : a }
+s_borderColor value__ record__ =
+    { record__ | borderColor = value__ }
+
+
 s_borderStyle : a -> { b | borderStyle : a } -> { b | borderStyle : a }
 s_borderStyle value__ record__ =
     { record__ | borderStyle = value__ }
+
+
+s_borderWidth : a -> { b | borderWidth : a } -> { b | borderWidth : a }
+s_borderWidth value__ record__ =
+    { record__ | borderWidth = value__ }
 
 
 s_bounce : a -> { b | bounce : a } -> { b | bounce : a }
@@ -624,6 +654,11 @@ s_expecting value__ record__ =
     { record__ | expecting = value__ }
 
 
+s_expiration : a -> { b | expiration : a } -> { b | expiration : a }
+s_expiration value__ record__ =
+    { record__ | expiration = value__ }
+
+
 s_exportHistory : a -> { b | exportHistory : a } -> { b | exportHistory : a }
 s_exportHistory value__ record__ =
     { record__ | exportHistory = value__ }
@@ -684,6 +719,11 @@ s_flexWrap value__ record__ =
     { record__ | flexWrap = value__ }
 
 
+s_flip : a -> { b | flip : a } -> { b | flip : a }
+s_flip value__ record__ =
+    { record__ | flip = value__ }
+
+
 s_float : a -> { b | float : a } -> { b | float : a }
 s_float value__ record__ =
     { record__ | float = value__ }
@@ -737,6 +777,11 @@ s_fontWeight value__ record__ =
 s_form : a -> { b | form : a } -> { b | form : a }
 s_form value__ record__ =
     { record__ | form = value__ }
+
+
+s_found : a -> { b | found : a } -> { b | found : a }
+s_found value__ record__ =
+    { record__ | found = value__ }
 
 
 s_foundAny : a -> { b | foundAny : a } -> { b | foundAny : a }
@@ -849,6 +894,11 @@ s_headers value__ record__ =
     { record__ | headers = value__ }
 
 
+s_heading : a -> { b | heading : a } -> { b | heading : a }
+s_heading value__ record__ =
+    { record__ | heading = value__ }
+
+
 s_heading2 : a -> { b | heading2 : a } -> { b | heading2 : a }
 s_heading2 value__ record__ =
     { record__ | heading2 = value__ }
@@ -884,9 +934,29 @@ s_hoverCapability value__ record__ =
     { record__ | hoverCapability = value__ }
 
 
+s_hovercard : a -> { b | hovercard : a } -> { b | hovercard : a }
+s_hovercard value__ record__ =
+    { record__ | hovercard = value__ }
+
+
+s_hovercardElement : a -> { b | hovercardElement : a } -> { b | hovercardElement : a }
+s_hovercardElement value__ record__ =
+    { record__ | hovercardElement = value__ }
+
+
+s_hovercardRoot : a -> { b | hovercardRoot : a } -> { b | hovercardRoot : a }
+s_hovercardRoot value__ record__ =
+    { record__ | hovercardRoot = value__ }
+
+
 s_http : a -> { b | http : a } -> { b | http : a }
 s_http value__ record__ =
     { record__ | http = value__ }
+
+
+s_hue : a -> { b | hue : a } -> { b | hue : a }
+s_hue value__ record__ =
+    { record__ | hue = value__ }
 
 
 s_icon : a -> { b | icon : a } -> { b | icon : a }
@@ -1134,6 +1204,11 @@ s_lengthOrNumberOrAutoOrNoneOrContent value__ record__ =
     { record__ | lengthOrNumberOrAutoOrNoneOrContent = value__ }
 
 
+s_lightness : a -> { b | lightness : a } -> { b | lightness : a }
+s_lightness value__ record__ =
+    { record__ | lightness = value__ }
+
+
 s_limit : a -> { b | limit : a } -> { b | limit : a }
 s_limit value__ record__ =
     { record__ | limit = value__ }
@@ -1157,6 +1232,11 @@ s_listStyleType value__ record__ =
 s_listStyleTypeOrPositionOrImage : a -> { b | listStyleTypeOrPositionOrImage : a } -> { b | listStyleTypeOrPositionOrImage : a }
 s_listStyleTypeOrPositionOrImage value__ record__ =
     { record__ | listStyleTypeOrPositionOrImage = value__ }
+
+
+s_loading : a -> { b | loading : a } -> { b | loading : a }
+s_loading value__ record__ =
+    { record__ | loading = value__ }
 
 
 s_loadingSpinner : a -> { b | loadingSpinner : a } -> { b | loadingSpinner : a }
@@ -1204,6 +1284,16 @@ s_matchingAddresses value__ record__ =
     { record__ | matchingAddresses = value__ }
 
 
+s_maxHeight : a -> { b | maxHeight : a } -> { b | maxHeight : a }
+s_maxHeight value__ record__ =
+    { record__ | maxHeight = value__ }
+
+
+s_maxWidth : a -> { b | maxWidth : a } -> { b | maxWidth : a }
+s_maxWidth value__ record__ =
+    { record__ | maxWidth = value__ }
+
+
 s_message : a -> { b | message : a } -> { b | message : a }
 s_message value__ record__ =
     { record__ | message = value__ }
@@ -1239,6 +1329,11 @@ s_missing value__ record__ =
     { record__ | missing = value__ }
 
 
+s_modal : a -> { b | modal : a } -> { b | modal : a }
+s_modal value__ record__ =
+    { record__ | modal = value__ }
+
+
 s_model : a -> { b | model : a } -> { b | model : a }
 s_model value__ record__ =
     { record__ | model = value__ }
@@ -1252,6 +1347,11 @@ s_month value__ record__ =
 s_months : a -> { b | months : a } -> { b | months : a }
 s_months value__ record__ =
     { record__ | months = value__ }
+
+
+s_msg : a -> { b | msg : a } -> { b | msg : a }
+s_msg value__ record__ =
+    { record__ | msg = value__ }
 
 
 s_multiline : a -> { b | multiline : a } -> { b | multiline : a }
@@ -1584,6 +1684,11 @@ s_params value__ record__ =
     { record__ | params = value__ }
 
 
+s_part : a -> { b | part : a } -> { b | part : a }
+s_part value__ record__ =
+    { record__ | part = value__ }
+
+
 s_path : a -> { b | path : a } -> { b | path : a }
 s_path value__ record__ =
     { record__ | path = value__ }
@@ -1749,6 +1854,11 @@ s_relation value__ record__ =
     { record__ | relation = value__ }
 
 
+s_remaining : a -> { b | remaining : a } -> { b | remaining : a }
+s_remaining value__ record__ =
+    { record__ | remaining = value__ }
+
+
 s_removed : a -> { b | removed : a } -> { b | removed : a }
 s_removed value__ record__ =
     { record__ | removed = value__ }
@@ -1764,6 +1874,21 @@ s_request value__ record__ =
     { record__ | request = value__ }
 
 
+s_requestLimit : a -> { b | requestLimit : a } -> { b | requestLimit : a }
+s_requestLimit value__ record__ =
+    { record__ | requestLimit = value__ }
+
+
+s_requestLimitRoot : a -> { b | requestLimitRoot : a } -> { b | requestLimitRoot : a }
+s_requestLimitRoot value__ record__ =
+    { record__ | requestLimitRoot = value__ }
+
+
+s_requestReset : a -> { b | requestReset : a } -> { b | requestReset : a }
+s_requestReset value__ record__ =
+    { record__ | requestReset = value__ }
+
+
 s_requestTimestamp : a -> { b | requestTimestamp : a } -> { b | requestTimestamp : a }
 s_requestTimestamp value__ record__ =
     { record__ | requestTimestamp = value__ }
@@ -1772,6 +1897,11 @@ s_requestTimestamp value__ record__ =
 s_reserved : a -> { b | reserved : a } -> { b | reserved : a }
 s_reserved value__ record__ =
     { record__ | reserved = value__ }
+
+
+s_reset : a -> { b | reset : a } -> { b | reset : a }
+s_reset value__ record__ =
+    { record__ | reset = value__ }
 
 
 s_resize : a -> { b | resize : a } -> { b | resize : a }
@@ -1862,6 +1992,11 @@ s_runs value__ record__ =
 s_sanitize : a -> { b | sanitize : a } -> { b | sanitize : a }
 s_sanitize value__ record__ =
     { record__ | sanitize = value__ }
+
+
+s_saturation : a -> { b | saturation : a } -> { b | saturation : a }
+s_saturation value__ record__ =
+    { record__ | saturation = value__ }
 
 
 s_scaled : a -> { b | scaled : a } -> { b | scaled : a }
@@ -2199,6 +2334,11 @@ s_thousandSeparator value__ record__ =
     { record__ | thousandSeparator = value__ }
 
 
+s_tickLength : a -> { b | tickLength : a } -> { b | tickLength : a }
+s_tickLength value__ record__ =
+    { record__ | tickLength = value__ }
+
+
 s_timeLang : a -> { b | timeLang : a } -> { b | timeLang : a }
 s_timeLang value__ record__ =
     { record__ | timeLang = value__ }
@@ -2269,6 +2409,11 @@ s_toWeekdayName value__ record__ =
     { record__ | toWeekdayName = value__ }
 
 
+s_tool : a -> { b | tool : a } -> { b | tool : a }
+s_tool value__ record__ =
+    { record__ | tool = value__ }
+
+
 s_totalInput : a -> { b | totalInput : a } -> { b | totalInput : a }
 s_totalInput value__ record__ =
     { record__ | totalInput = value__ }
@@ -2317,6 +2462,11 @@ s_transformBox value__ record__ =
 s_transformStyle : a -> { b | transformStyle : a } -> { b | transformStyle : a }
 s_transformStyle value__ record__ =
     { record__ | transformStyle = value__ }
+
+
+s_tx : a -> { b | tx : a } -> { b | tx : a }
+s_tx value__ record__ =
+    { record__ | tx = value__ }
 
 
 s_txHash : a -> { b | txHash : a } -> { b | txHash : a }

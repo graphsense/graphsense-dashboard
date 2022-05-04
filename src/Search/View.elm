@@ -24,13 +24,11 @@ type alias SearchConfig =
     }
 
 
-search : Config -> SearchConfig -> List (Attribute Msg) -> Model -> Html Msg
-search vc sc attributes model =
+search : Config -> SearchConfig -> Model -> Html Msg
+search vc sc model =
     Html.Styled.form
-        (attributes
-            ++ [ Css.form vc |> css
-               ]
-        )
+        [ Css.form vc |> css
+        ]
         [ div
             [ Css.frame vc |> css
             ]
@@ -82,7 +80,7 @@ searchResult vc sc model =
             [ id "search-result"
             , css (Css.result vc)
             ]
-            (loadingSpinner vc (model.result == Loading)
+            (loadingSpinner vc model.loading
                 :: rl
             )
 

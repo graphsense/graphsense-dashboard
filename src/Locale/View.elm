@@ -1,4 +1,4 @@
-module Locale.View exposing (float, int, percentage, string, text, timestamp)
+module Locale.View exposing (float, int, interpolated, percentage, string, text, timestamp)
 
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
@@ -12,6 +12,7 @@ import Html.Styled.Attributes exposing (css)
 import Locale.Model exposing (Model, State(..))
 import Locale.Update exposing (duration)
 import RecordSetter exposing (..)
+import String.Interpolate
 import Time
 
 
@@ -48,6 +49,11 @@ string model key =
                 / duration
                 |> Ease.inOutQuad
                 |> mix (fix start) (fix end)
+
+
+interpolated : Model -> String -> List String -> String
+interpolated model key =
+    String.Interpolate.interpolate (string model key)
 
 
 mix : String -> String -> Float -> String

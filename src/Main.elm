@@ -7,8 +7,7 @@ import Effect exposing (perform)
 import Init exposing (init)
 import Locale.Model as Locale
 import Locale.View as Locale
-import Model exposing (Flags, Model)
-import Msg exposing (Msg(..))
+import Model exposing (Flags, Model, Msg(..))
 import Sub exposing (subscriptions)
 import Tuple
 import Update exposing (update)
@@ -19,7 +18,7 @@ main : Program Flags (Model Nav.Key) Msg
 main =
     let
         performEffect ( model, effect ) =
-            ( model, perform model.key effect )
+            ( model, perform model.key model.user.apiKey effect )
     in
     Browser.application
         { init =

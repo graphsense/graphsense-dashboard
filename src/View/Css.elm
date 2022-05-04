@@ -53,3 +53,18 @@ danger vc =
 disabled : Config -> List Style
 disabled vc =
     cursor notAllowed :: vc.theme.button.disabled
+
+
+tool : Config -> List Style
+tool vc =
+    vc.theme.tool
+
+
+hovercard : Config -> List ( String, String )
+hovercard vc =
+    vc.theme.hovercard.root
+
+
+input : Config -> List Style
+input vc =
+    vc.theme.input

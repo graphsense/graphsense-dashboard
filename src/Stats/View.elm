@@ -8,7 +8,6 @@ import Http
 import Locale.Model as Locale
 import Locale.View as Locale
 import Model exposing (..)
-import Msg exposing (..)
 import RemoteData as RD exposing (WebData)
 import Stats.Css as Css
 import Svg.Styled exposing (path, svg)

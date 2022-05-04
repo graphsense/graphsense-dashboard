@@ -6,6 +6,11 @@ import FormatNumber.Locales
 import Time
 
 
+locales : List ( String, String )
+locales =
+    [ ( "de", "german" ), ( "en", "english" ) ]
+
+
 type State
     = Empty
     | Transition (Dict String String) (Dict String String) Float

@@ -3,7 +3,6 @@ module View.Config exposing (Config)
 import Html.Styled exposing (Html)
 import Locale.Model as Locale
 import Model exposing (Model)
-import Msg exposing (Msg)
 import Theme.Theme exposing (Theme)
 
 

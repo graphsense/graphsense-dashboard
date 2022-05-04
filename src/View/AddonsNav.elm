@@ -3,7 +3,7 @@ module View.AddonsNav exposing (nav)
 import Css exposing (..)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Msg exposing (Msg)
+import Model exposing (Msg)
 import View.Config exposing (Config)
 
 

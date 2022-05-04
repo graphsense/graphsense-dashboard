@@ -15,10 +15,8 @@ update msg model =
         BrowserGotSearchResult result ->
             n
                 { model
-                    | result = RE.unpack Failure Success result
-                    , found =
-                        Result.map Just result
-                            |> Result.withDefault model.found
+                    | loading = False
+                    , found = Just result
                 }
 
         UserInputsSearch input ->
@@ -27,7 +25,7 @@ update msg model =
                 , bounce = Bounce.push model.bounce
               }
             , [ BounceEffect 200 RuntimeBounced
-              , if model.result == Loading then
+              , if model.loading then
                     CancelEffect
 
                 else
@@ -59,7 +57,7 @@ maybeTriggerSearch ( model, cmd ) =
             && (List.length multi == 1)
     then
         ( { model
-            | result = Loading
+            | loading = True
           }
         , SearchEffect
             { query = model.input

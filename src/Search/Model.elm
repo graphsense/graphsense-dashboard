@@ -6,7 +6,7 @@ import RemoteData exposing (WebData)
 
 
 type alias Model =
-    { result : WebData Api.Data.SearchResult
+    { loading : Bool
     , found : Maybe Api.Data.SearchResult
     , input : String
     , bounce : Bounce

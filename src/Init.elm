@@ -1,7 +1,6 @@
 module Init exposing (init)
 
 import Config exposing (config)
-import Effect exposing (Effect(..), n)
 import Locale.Init as Locale
 import Model exposing (..)
 import RemoteData exposing (RemoteData(..))
@@ -21,7 +20,11 @@ init flags url key =
       , key = key
       , locale = locale
       , search = Search.init
-      , user = ()
+      , user =
+            { apiKey = ""
+            , auth = Unknown
+            , hovercardElement = Nothing
+            }
       , stats = NotAsked
       }
     , LocaleEffect localeEffect
@@ -32,8 +35,8 @@ init flags url key =
 getStatistics : ( Model key, Effect ) -> ( Model key, Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
-        ( { model | stats = Loading }
-        , Effect.batch [ eff, GetStatisticsEffect ]
+        ( { model | stats = RemoteData.Loading }
+        , BatchedEffects [ eff, GetStatisticsEffect ]
         )
 
     else

@@ -15,6 +15,7 @@ import SimulatedEffect.Http as Http
 import Theme.Theme as Theme
 import Tuple exposing (first)
 import Update exposing (update)
+import Util.Debug
 import View exposing (view)
 
 
@@ -24,16 +25,18 @@ start initialPath flags =
         { onUrlChange = BrowserChangedUrl
         , onUrlRequest = UserRequestsUrl
         , init = init
-        , update = update
+        , update = Util.Debug.addDebugToUpdate update
         , view =
-            view
-                { theme = Theme.default
-                , locale =
-                    Locale.init
-                        { locale = flags.locale
-                        }
-                        |> first
-                }
+            \model ->
+                let
+                    _ =
+                        Debug.log "VIEW" model
+                in
+                view
+                    { theme = Theme.default
+                    , locale = model.locale
+                    }
+                    model
         }
         |> ProgramTest.withBaseUrl ("http://foo.bar" ++ initialPath)
         |> ProgramTest.withSimulatedEffects simulateEffects

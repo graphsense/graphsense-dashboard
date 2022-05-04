@@ -7,7 +7,7 @@ import Search.Model exposing (Model)
 
 init : Model
 init =
-    { result = NotAsked
+    { loading = False
     , found = Nothing
     , input = ""
     , bounce = Bounce.init

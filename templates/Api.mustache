@@ -89,6 +89,45 @@ sendWithCustomError mapError toMsg (Request req) =
         }
 
 
+sendAndAlsoReceiveHeaders : (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Request a -> Cmd msg
+sendAndAlsoReceiveHeaders wrapMsg eff toMsg (Request req) =
+    Http.riskyRequest
+        { method = req.method
+        , headers = headers req.headers
+        , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
+        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody req.body)
+        , expect = expectJsonWithHeaders toMsg eff wrapMsg req.decoder
+        , timeout = req.timeout
+        , tracker = req.tracker
+        }
+
+
+expectJsonWithHeaders : (a -> msg) -> eff -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
+expectJsonWithHeaders toMsg eff wrapMsg decoder =
+    Http.expectStringResponse wrapMsg <|
+        \response ->
+            case response of
+                Http.BadUrl_ url ->
+                    Err ( Http.BadUrl url, eff )
+
+                Http.Timeout_ ->
+                    Err ( Http.Timeout, eff )
+
+                Http.NetworkError_ ->
+                    Err ( Http.NetworkError, eff )
+
+                Http.BadStatus_ metadata body ->
+                    Err ( Http.BadStatus metadata.statusCode, eff )
+
+                Http.GoodStatus_ metadata body ->
+                    case Json.Decode.decodeString decoder body of
+                        Ok value ->
+                            Ok ( metadata.headers, toMsg value )
+
+                        Err err ->
+                            Err ( Http.BadBody (Json.Decode.errorToString err), eff )
+
+
 task : Request a -> Task.Task Http.Error a
 task (Request req) =
     Http.task

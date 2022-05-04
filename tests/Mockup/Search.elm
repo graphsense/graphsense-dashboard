@@ -8,8 +8,8 @@ abcd =
     { currencies =
         [ { currency = "btc"
           , addresses =
-                [ "abcdefg"
-                , "abcdxyz"
+                [ "abcdefg123456"
+                , "abcdxyz789012"
                 ]
           , txs = []
           }

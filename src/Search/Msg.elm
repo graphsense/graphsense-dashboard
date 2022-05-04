@@ -5,6 +5,6 @@ import Http
 
 
 type Msg
-    = BrowserGotSearchResult (Result Http.Error Api.Data.SearchResult)
+    = BrowserGotSearchResult Api.Data.SearchResult
     | UserInputsSearch String
     | RuntimeBounced

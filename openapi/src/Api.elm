@@ -1,20 +1,22 @@
 module Api exposing
     ( Request
+    , baseUrl
+    , effect
+    , map
     , request
     , send
-    , effect
+    , sendAndAlsoReceiveHeaders
     , sendWithCustomError
     , task
-    , map
-    , baseUrl
     , withBasePath
-    , withTimeout
-    , withTracker
     , withBearerToken
     , withHeader
     , withHeaders
+    , withTimeout
+    , withTracker
     )
 
+import Dict exposing (Dict)
 import Http
 import Json.Decode
 import Json.Encode
@@ -24,8 +26,8 @@ import Task
 import Url.Builder
 
 
-type Request a =
-    Request
+type Request a
+    = Request
         { method : String
         , headers : List ( String, Maybe String )
         , basePath : String
@@ -43,7 +45,7 @@ baseUrl =
     "http://localhost:9000"
 
 
-request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
+request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
 request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
@@ -78,7 +80,7 @@ effect toMsg (Request req) =
 
 sendWithCustomError : (Http.Error -> e) -> (Result e a -> msg) -> Request a -> Cmd msg
 sendWithCustomError mapError toMsg (Request req) =
-    Http.request
+    Http.riskyRequest
         { method = req.method
         , headers = headers req.headers
         , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
@@ -87,6 +89,45 @@ sendWithCustomError mapError toMsg (Request req) =
         , timeout = req.timeout
         , tracker = req.tracker
         }
+
+
+sendAndAlsoReceiveHeaders : (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Request a -> Cmd msg
+sendAndAlsoReceiveHeaders wrapMsg eff toMsg (Request req) =
+    Http.riskyRequest
+        { method = req.method
+        , headers = headers req.headers
+        , url = Url.Builder.crossOrigin req.basePath req.pathParams req.queryParams
+        , body = Maybe.withDefault Http.emptyBody (Maybe.map Http.jsonBody req.body)
+        , expect = expectJsonWithHeaders toMsg eff wrapMsg req.decoder
+        , timeout = req.timeout
+        , tracker = req.tracker
+        }
+
+
+expectJsonWithHeaders : (a -> msg) -> eff -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
+expectJsonWithHeaders toMsg eff wrapMsg decoder =
+    Http.expectStringResponse wrapMsg <|
+        \response ->
+            case response of
+                Http.BadUrl_ url ->
+                    Err ( Http.BadUrl url, eff )
+
+                Http.Timeout_ ->
+                    Err ( Http.Timeout, eff )
+
+                Http.NetworkError_ ->
+                    Err ( Http.NetworkError, eff )
+
+                Http.BadStatus_ metadata body ->
+                    Err ( Http.BadStatus metadata.statusCode, eff )
+
+                Http.GoodStatus_ metadata body ->
+                    case Json.Decode.decodeString decoder body of
+                        Ok value ->
+                            Ok ( metadata.headers, toMsg value )
+
+                        Err err ->
+                            Err ( Http.BadBody (Json.Decode.errorToString err), eff )
 
 
 task : Request a -> Task.Task Http.Error a
@@ -150,9 +191,9 @@ withHeaders headers_ (Request req) =
 -- HELPER
 
 
-headers : List (String, Maybe String) -> List Http.Header
+headers : List ( String, Maybe String ) -> List Http.Header
 headers =
-    List.filterMap (\(key, value) -> Maybe.map (Http.header key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Http.header key) value)
 
 
 effectHeaders : List ( String, Maybe String ) -> List SimulatedEffect.Http.Header
@@ -164,16 +205,16 @@ interpolatePath : String -> List ( String, String ) -> List String
 interpolatePath rawPath pathParams =
     let
         interpolate =
-            (\(name, value) path -> String.replace ("{" ++ name ++ "}") value path)
+            \( name, value ) path -> String.replace ("{" ++ name ++ "}") value path
     in
     List.foldl interpolate rawPath pathParams
         |> String.split "/"
         |> List.drop 1
 
 
-queries : List (String, Maybe String) -> List Url.Builder.QueryParameter
+queries : List ( String, Maybe String ) -> List Url.Builder.QueryParameter
 queries =
-    List.filterMap (\(key, value) -> Maybe.map (Url.Builder.string key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Url.Builder.string key) value)
 
 
 expectJson : (Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
