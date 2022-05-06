@@ -4,22 +4,22 @@ import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Dict exposing (Dict)
-import Graph.Effect
-import Graph.Model
-import Graph.Msg
+import Effect.Graph
+import Effect.Locale
+import Effect.Search
+import Effect.Store
 import Html exposing (Attribute, Html)
 import Http
-import Locale.Effect
-import Locale.Model
-import Locale.Msg
+import Model.Graph
+import Model.Locale
+import Model.Search
+import Model.Store
+import Msg.Graph
+import Msg.Locale
+import Msg.Search
+import Msg.Store
 import Page
 import RemoteData exposing (WebData)
-import Search.Effect
-import Search.Model
-import Search.Msg
-import Store.Effect
-import Store.Model
-import Store.Msg
 import Theme.Theme exposing (Theme)
 import Time
 import Url exposing (Url)
@@ -39,10 +39,10 @@ type alias Model navigationKey =
     { url : Url
     , key : navigationKey
     , page : Page.Page
-    , locale : Locale.Model.Model
-    , search : Search.Model.Model
-    , graph : Graph.Model.Model
-    , store : Store.Model.Model
+    , locale : Model.Locale.Model
+    , search : Model.Search.Model
+    , graph : Model.Graph.Model
+    , store : Model.Store.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
     }
@@ -59,10 +59,10 @@ type Msg
     | UserHoversUserIcon String
     | UserLeftUserHovercard
     | BrowserGotElement (Result Dom.Error Dom.Element)
-    | LocaleMsg Locale.Msg.Msg
-    | SearchMsg Search.Msg.Msg
-    | GraphMsg Graph.Msg.Msg
-    | StoreMsg Store.Msg.Msg
+    | LocaleMsg Msg.Locale.Msg
+    | SearchMsg Msg.Search.Msg
+    | GraphMsg Msg.Graph.Msg
+    | StoreMsg Msg.Store.Msg
 
 
 type RequestLimit
@@ -94,10 +94,10 @@ type Effect
     | GetStatisticsEffect
     | GetElementEffect { id : String, msg : Result Dom.Error Dom.Element -> Msg }
     | BatchedEffects (List Effect)
-    | LocaleEffect Locale.Effect.Effect
-    | SearchEffect Search.Effect.Effect
-    | GraphEffect Graph.Effect.Effect
-    | StoreEffect Store.Effect.Effect
+    | LocaleEffect Effect.Locale.Effect
+    | SearchEffect Effect.Search.Effect
+    | GraphEffect Effect.Graph.Effect
+    | StoreEffect Effect.Store.Effect
 
 
 n : model -> ( model, Effect )

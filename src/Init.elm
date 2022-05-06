@@ -1,13 +1,13 @@
 module Init exposing (init)
 
 import Config exposing (config)
-import Graph.Init as Graph
-import Locale.Init as Locale
+import Init.Graph as Graph
+import Init.Locale as Locale
+import Init.Search as Search
+import Init.Store as Store
 import Model exposing (..)
 import Page
 import RemoteData exposing (RemoteData(..))
-import Search.Init as Search
-import Store.Init as Store
 import Url exposing (Url)
 
 

@@ -1,21 +1,20 @@
 module View exposing (view)
 
 import Browser exposing (Document)
+import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Reset
-import Header.View as Header
+import Css.View as Css
 import Hovercard
 import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Locale.View as Locale
-import Model exposing (..)
+import Model exposing (Model, Msg(..))
 import RemoteData
-import User.View as User
-import View.AddonsNav as AddonsNav
-import View.Config exposing (Config)
-import View.Css as Css
+import View.Header as Header
+import View.Locale as Locale
 import View.Main as Main
+import View.User as User
 
 
 view :
@@ -53,8 +52,7 @@ body vc model =
          , section
             [ Css.sectionBelowHeader vc |> css
             ]
-            [ AddonsNav.nav vc
-            , main_
+            [ main_
                 [ Css.main_ vc |> css
                 ]
                 [ Main.main_ vc model

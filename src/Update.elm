@@ -3,18 +3,18 @@ module Update exposing (update)
 import Browser
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
-import Graph.Update as Graph
-import Graph.Update.Adding as Adding
+import Effect.Locale as Locale
 import Http exposing (Error(..))
-import Locale.Effect as Locale
-import Locale.Update as Locale
 import Model exposing (..)
 import Page
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
-import Search.Update as Search
-import Store.Update as Store
+import Update.Graph as Graph
+import Update.Graph.Adding as Adding
+import Update.Locale as Locale
+import Update.Search as Search
+import Update.Store as Store
 import Url exposing (Url)
 
 

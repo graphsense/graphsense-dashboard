@@ -5,13 +5,13 @@ import Browser.Navigation as Nav
 import Config exposing (config)
 import Effect exposing (perform)
 import Init exposing (init)
-import Locale.Model as Locale
-import Locale.View as Locale
 import Model exposing (Flags, Model, Msg(..))
+import Model.Locale as Locale
 import Sub exposing (subscriptions)
 import Tuple
 import Update exposing (update)
 import View exposing (view)
+import View.Locale as Locale
 
 
 main : Program Flags (Model Nav.Key) Msg

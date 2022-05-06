@@ -6,12 +6,12 @@ import Api.Request.General
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
-import Graph.Effect as Graph
+import Effect.Graph as Graph
+import Effect.Locale as Locale
+import Effect.Search as Search
+import Effect.Store as Store
 import Http
-import Locale.Effect as Locale
 import Model exposing (Auth(..), Effect(..), Msg(..))
-import Search.Effect as Search
-import Store.Effect as Store
 import Task
 
 

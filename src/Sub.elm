@@ -1,8 +1,8 @@
 module Sub exposing (subscriptions)
 
 import Browser.Navigation as Nav
-import Locale.Subscriptions as Locale
 import Model exposing (Model, Msg(..))
+import Sub.Locale as Locale
 
 
 subscriptions : Model Nav.Key -> Sub Msg

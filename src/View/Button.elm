@@ -1,12 +1,12 @@
 module View.Button exposing (tool)
 
+import Config.View exposing (Config)
+import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick, onMouseOver)
 import Util.View exposing (aa)
-import View.Config exposing (Config)
-import View.Css as Css
 
 
 tool :

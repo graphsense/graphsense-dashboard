@@ -1,12 +1,12 @@
 module View.Main exposing (main_)
 
-import Graph.View.View as Graph
+import Config.View exposing (Config)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model exposing (..)
+import Model exposing (Model, Msg(..))
 import Page
-import Stats.View as Stats
-import View.Config exposing (Config)
+import View.Graph.View as Graph
+import View.Stats as Stats
 
 
 main_ :
