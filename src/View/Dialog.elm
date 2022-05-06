@@ -1,7 +1,7 @@
-module View.Modal exposing (part)
+module View.Dialog exposing (part)
 
 import Config.View exposing (Config)
-import Css.Modal as Css
+import Css.Dialog as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 

@@ -88,26 +88,14 @@ type Auth
 
 
 type Effect
-    = NoEffect
-    | NavLoadEffect String
+    = NavLoadEffect String
     | NavPushUrlEffect String
     | GetStatisticsEffect
     | GetElementEffect { id : String, msg : Result Dom.Error Dom.Element -> Msg }
-    | BatchedEffects (List Effect)
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
     | StoreEffect Effect.Store.Effect
-
-
-n : model -> ( model, Effect )
-n model =
-    ( model, NoEffect )
-
-
-batch : List Effect -> Effect
-batch effs =
-    BatchedEffects effs
 
 
 type Thing

@@ -4,8 +4,8 @@ import Color exposing (rgb255)
 import Css exposing (..)
 import RecordSetter exposing (..)
 import Theme.Button as Button
+import Theme.Dialog as Dialog
 import Theme.Hovercard as Hovercard
-import Theme.Modal as Modal
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Theme as Theme exposing (Theme, default)
@@ -241,7 +241,7 @@ theme =
                     ]
             )
         |> s_modal
-            (Modal.default
+            (Dialog.default
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
                     ]

@@ -2,14 +2,15 @@ module Update.Search exposing (update)
 
 import Api.Data
 import Bounce
-import Effect.Search as Effect exposing (Effect(..), n)
+import Effect exposing (n)
+import Effect.Search as Effect exposing (Effect(..))
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import RemoteData exposing (RemoteData(..))
 import Result.Extra as RE
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
         BrowserGotSearchResult result ->
@@ -30,14 +31,13 @@ update msg model =
                 | input = input
                 , bounce = Bounce.push model.bounce
               }
-            , [ BounceEffect 200 RuntimeBounced
-              , if model.loading then
-                    CancelEffect
+            , BounceEffect 200 RuntimeBounced
+                :: (if model.loading then
+                        [ CancelEffect ]
 
-                else
-                    NoEffect
-              ]
-                |> BatchEffect
+                    else
+                        []
+                   )
             )
 
         RuntimeBounced ->
@@ -48,7 +48,7 @@ update msg model =
                 |> maybeTriggerSearch
 
 
-maybeTriggerSearch : ( Model, Effect ) -> ( Model, Effect )
+maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
 maybeTriggerSearch ( model, cmd ) =
     let
         limit =
@@ -71,6 +71,7 @@ maybeTriggerSearch ( model, cmd ) =
             , limit = Just limit
             , toMsg = BrowserGotSearchResult
             }
+            :: cmd
         )
 
     else

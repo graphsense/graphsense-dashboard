@@ -1,7 +1,8 @@
 module Update.Locale exposing (..)
 
 import Dict
-import Effect.Locale as Effect exposing (Effect(..), n)
+import Effect exposing (n)
+import Effect.Locale as Effect exposing (Effect(..))
 import Model.Locale as Model exposing (..)
 import Msg.Locale as Msg exposing (Msg(..))
 import RemoteData
@@ -12,7 +13,7 @@ duration =
     700
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
         BrowserSentTimezone zone ->

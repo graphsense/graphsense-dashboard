@@ -11,7 +11,7 @@ import Msg.Locale exposing (Msg(..))
 import Time
 
 
-init : Flags -> ( Model, Effect )
+init : Flags -> ( Model, List Effect )
 init { locale } =
     ( { mapping = Empty
       , locale = locale
@@ -29,7 +29,6 @@ init { locale } =
     , [ Effect.Locale.getTranslationEffect locale
       , GetTimezoneEffect BrowserSentTimezone
       ]
-        |> BatchEffect
     )
 
 

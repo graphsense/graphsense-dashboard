@@ -12,8 +12,8 @@ import Model.Locale as Locale
 import Time
 import Util.View exposing (nona, none)
 import View.Button as Button
+import View.Dialog as Dialog
 import View.Locale as Locale
-import View.Modal as Modal
 
 
 user : Config -> UserModel -> Html Msg
@@ -47,7 +47,7 @@ hovercard vc model =
             [ apiKeyForm vc model
             ]
     )
-        ++ [ Modal.part vc
+        ++ [ Dialog.part vc
                 (Locale.string vc.locale "language")
                 [ localeSwitch vc ]
            ]
@@ -60,7 +60,7 @@ hovercard vc model =
 
 requestLimit : Config -> RequestLimit -> Html Msg
 requestLimit vc rl =
-    Modal.part vc
+    Dialog.part vc
         (Locale.string vc.locale "Request limit")
         [ div
             [ Css.requestLimitRoot vc |> css
@@ -127,7 +127,7 @@ localeSwitch vc =
 
 apiKeyForm : Config -> UserModel -> Html Msg
 apiKeyForm vc model =
-    Modal.part vc
+    Dialog.part vc
         (Locale.string vc.locale "API key")
         [ Html.Styled.form
             [ Events.onSubmit UserSubmitsApiKeyForm

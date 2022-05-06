@@ -11,7 +11,7 @@ import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 
 
-init : Flags -> Url -> key -> ( Model key, Effect )
+init : Flags -> Url -> key -> ( Model key, List Effect )
 init flags url key =
     let
         ( locale, localeEffect ) =
@@ -33,16 +33,16 @@ init flags url key =
             }
       , stats = NotAsked
       }
-    , LocaleEffect localeEffect
+    , List.map LocaleEffect localeEffect
     )
         |> getStatistics
 
 
-getStatistics : ( Model key, Effect ) -> ( Model key, Effect )
+getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
         ( { model | stats = RemoteData.Loading }
-        , BatchedEffects [ eff, GetStatisticsEffect ]
+        , GetStatisticsEffect :: eff
         )
 
     else

@@ -1,4 +1,4 @@
-module Css.Modal exposing (..)
+module Css.Dialog exposing (..)
 
 import Config.View exposing (Config)
 import Css exposing (..)

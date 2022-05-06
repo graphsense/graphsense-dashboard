@@ -1,14 +1,10 @@
-module Effect.Graph exposing (Effect(..), n)
-
-import Api.Data
-import Msg.Graph exposing (..)
+module Effect.Graph exposing (Effect(..), perform)
 
 
 type Effect
     = NoEffect
-    | BatchEffect (List Effect)
 
 
-n : model -> ( model, Effect )
-n model =
-    ( model, NoEffect )
+perform : Effect -> Cmd msg
+perform eff =
+    Cmd.none

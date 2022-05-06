@@ -1,15 +1,15 @@
-module Theme.Modal exposing (Modal, default)
+module Theme.Dialog exposing (Dialog, default)
 
 import Css exposing (Style)
 
 
-type alias Modal =
+type alias Dialog =
     { heading : List Style
     , part : List Style
     }
 
 
-default : Modal
+default : Dialog
 default =
     { heading = []
     , part = []

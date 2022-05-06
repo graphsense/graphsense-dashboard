@@ -1,7 +1,8 @@
 module Update.Graph exposing (..)
 
 import Api.Data
-import Effect.Graph exposing (Effect(..), n)
+import Effect exposing (n)
+import Effect.Graph exposing (Effect(..))
 import Model.Graph exposing (..)
 import Msg.Graph as Msg exposing (Msg(..))
 import Route
@@ -10,7 +11,7 @@ import Update.Graph.Adding as Adding
 import Update.Graph.Layer as Layer
 
 
-addAddress : Api.Data.Address -> Model -> ( Model, Effect )
+addAddress : Api.Data.Address -> Model -> ( Model, List Effect )
 addAddress address model =
     case Adding.checkAddress { currency = address.currency, address = address.address } model.adding of
         Nothing ->
@@ -28,7 +29,7 @@ addAddress address model =
                 |> n
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
         UserClickedAddress id ->
@@ -47,7 +48,7 @@ update msg model =
             n model
 
 
-addingAddress : { currency : String, address : String } -> Model -> ( Model, Effect )
+addingAddress : { currency : String, address : String } -> Model -> ( Model, List Effect )
 addingAddress { currency, address } model =
     { model
         | adding = Adding.addAddress { currency = currency, address = address } model.adding
@@ -55,7 +56,7 @@ addingAddress { currency, address } model =
         |> n
 
 
-addingLabel : String -> Model -> ( Model, Effect )
+addingLabel : String -> Model -> ( Model, List Effect )
 addingLabel label model =
     { model
         | adding = Adding.addLabel label model.adding

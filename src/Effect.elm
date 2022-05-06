@@ -1,4 +1,4 @@
-module Effect exposing (perform)
+module Effect exposing (n, perform)
 
 import Api
 import Api.Request.Addresses
@@ -15,12 +15,14 @@ import Model exposing (Auth(..), Effect(..), Msg(..))
 import Task
 
 
+n : m -> ( m, List eff )
+n m =
+    ( m, [] )
+
+
 perform : Nav.Key -> String -> Effect -> Cmd Msg
 perform key apiKey effect =
     case effect of
-        NoEffect ->
-            Cmd.none
-
         NavLoadEffect url ->
             Nav.load url
 
@@ -35,20 +37,13 @@ perform key apiKey effect =
             Dom.getElement id
                 |> Task.attempt msg
 
-        BatchedEffects effs ->
-            List.map (perform key apiKey) effs
-                |> Cmd.batch
-
         LocaleEffect eff ->
             Locale.perform eff
                 |> Cmd.map LocaleMsg
 
-        SearchEffect Search.NoEffect ->
-            Cmd.none
-
-        SearchEffect (Search.BatchEffect eff) ->
-            List.map (SearchEffect >> perform key apiKey) eff
-                |> Cmd.batch
+        GraphEffect eff ->
+            Graph.perform eff
+                |> Cmd.map GraphMsg
 
         SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
             Api.Request.General.search query currency limit
@@ -63,19 +58,9 @@ perform key apiKey effect =
             Bounce.delay delay msg
                 |> Cmd.map SearchMsg
 
-        GraphEffect Graph.NoEffect ->
-            Cmd.none
-
-        GraphEffect (Graph.BatchEffect eff) ->
-            List.map (GraphEffect >> perform key apiKey) eff
-                |> Cmd.batch
-
         StoreEffect (Store.GetAddressEffect { currency, address, toMsg }) ->
             Api.Request.Addresses.getAddress currency address (Just True)
                 |> send apiKey effect (toMsg >> StoreMsg)
-
-        StoreEffect Store.NoEffect ->
-            Cmd.none
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

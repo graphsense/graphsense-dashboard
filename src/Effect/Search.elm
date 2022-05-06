@@ -1,4 +1,4 @@
-module Effect.Search exposing (Effect(..), n)
+module Effect.Search exposing (Effect(..))
 
 import Api
 import Api.Data
@@ -11,18 +11,11 @@ import Util.Http exposing (Headers)
 
 
 type Effect
-    = NoEffect
-    | SearchEffect
+    = SearchEffect
         { query : String
         , currency : Maybe String
         , limit : Maybe Int
         , toMsg : Api.Data.SearchResult -> Msg
         }
     | CancelEffect
-    | BatchEffect (List Effect)
     | BounceEffect Float Msg
-
-
-n : model -> ( model, Effect )
-n model =
-    ( model, NoEffect )

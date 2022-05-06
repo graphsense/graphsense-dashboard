@@ -17,8 +17,8 @@ import View.Locale as Locale
 main : Program Flags (Model Nav.Key) Msg
 main =
     let
-        performEffect ( model, effect ) =
-            ( model, perform model.key model.user.apiKey effect )
+        performEffect ( model, effects ) =
+            ( model, List.map (perform model.key model.user.apiKey) effects |> Cmd.batch )
     in
     Browser.application
         { init =

@@ -2,9 +2,9 @@ module Theme.Theme exposing (Theme, default)
 
 import Css exposing (Style)
 import Theme.Button as Button exposing (Button)
+import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
-import Theme.Modal as Modal exposing (Modal)
 import Theme.Search as Search exposing (Search)
 import Theme.Stats as Stats exposing (Stats)
 import Theme.User as User exposing (User)
@@ -27,7 +27,7 @@ type alias Theme =
     , button : Button
     , graph : Graph
     , tool : List Style
-    , modal : Modal
+    , modal : Dialog
     , user : User
     , hovercard : Hovercard
     , custom : String
@@ -52,7 +52,7 @@ default =
     , button = Button.default
     , tool = []
     , hovercard = Hovercard.default
-    , modal = Modal.default
+    , modal = Dialog.default
     , user = User.default
     , graph = Graph.default
     , custom = ""

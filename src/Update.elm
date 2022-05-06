@@ -3,6 +3,7 @@ module Update exposing (update)
 import Browser
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
+import Effect exposing (n)
 import Effect.Locale as Locale
 import Http exposing (Error(..))
 import Model exposing (..)
@@ -18,7 +19,7 @@ import Update.Store as Store
 import Url exposing (Url)
 
 
-update : Msg -> Model key -> ( Model key, Effect )
+update : Msg -> Model key -> ( Model key, List Effect )
 update msg model =
     case msg of
         UserRequestsUrl request ->
@@ -27,11 +28,13 @@ update msg model =
                     ( model
                     , Url.toString url
                         |> NavPushUrlEffect
+                        |> List.singleton
                     )
 
                 Browser.External url ->
                     ( model
                     , NavLoadEffect url
+                        |> List.singleton
                     )
 
         BrowserChangedUrl url ->
@@ -78,6 +81,7 @@ update msg model =
                 { id = id
                 , msg = BrowserGotElement
                 }
+                |> List.singleton
             )
 
         UserLeftUserHovercard ->
@@ -90,6 +94,7 @@ update msg model =
             ( { model | locale = model.locale |> s_locale locale }
             , Locale.getTranslationEffect locale
                 |> LocaleEffect
+                |> List.singleton
             )
 
         UserInputsApiKeyForm input ->
@@ -121,7 +126,7 @@ update msg model =
                                 Loading
                             )
               }
-            , BatchedEffects effs
+            , effs
             )
 
         BrowserGotElement result ->
@@ -134,42 +139,42 @@ update msg model =
 
         LocaleMsg m ->
             let
-                ( locale, localeEffect ) =
+                ( locale, localeEffects ) =
                     Locale.update m model.locale
             in
             ( { model | locale = locale }
-            , LocaleEffect localeEffect
+            , List.map LocaleEffect localeEffects
             )
 
         SearchMsg m ->
             let
-                ( search, searchEffect ) =
+                ( search, searchEffects ) =
                     Search.update m model.search
             in
             ( { model | search = search }
-            , SearchEffect searchEffect
+            , List.map SearchEffect searchEffects
             )
 
         GraphMsg m ->
             let
-                ( graph, graphEffect ) =
+                ( graph, graphEffects ) =
                     Graph.update m model.graph
             in
             ( { model | graph = graph }
-            , GraphEffect graphEffect
+            , List.map GraphEffect graphEffects
             )
 
         StoreMsg m ->
             let
-                ( store, storeEffect ) =
+                ( store, storeEffects ) =
                     Store.update m model.store
             in
             ( { model | store = store }
-            , StoreEffect storeEffect
+            , List.map StoreEffect storeEffects
             )
 
 
-updateByUrl : Url -> Model key -> ( Model key, Effect )
+updateByUrl : Url -> Model key -> ( Model key, List Effect )
 updateByUrl url model =
     let
         routeConfig =
@@ -193,7 +198,7 @@ updateByUrl url model =
                                     | page = Page.Graph
                                     , graph = graph
                                   }
-                                , GraphEffect graphEffect
+                                , List.map GraphEffect graphEffect
                                 )
 
                             Store.NotFound effect ->
@@ -205,10 +210,8 @@ updateByUrl url model =
                                     | page = Page.Graph
                                     , graph = graph
                                   }
-                                , [ GraphEffect graphEffect
-                                  , StoreEffect effect
-                                  ]
-                                    |> BatchedEffects
+                                , List.map GraphEffect graphEffect
+                                    ++ List.map StoreEffect effect
                                 )
 
                     _ ->

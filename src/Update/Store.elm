@@ -2,6 +2,7 @@ module Update.Store exposing (..)
 
 import Api.Data
 import Dict
+import Effect exposing (n)
 import Effect.Store exposing (..)
 import Model.Store exposing (..)
 import Msg.Store exposing (..)
@@ -9,10 +10,10 @@ import Msg.Store exposing (..)
 
 type Retrieved a
     = Found a
-    | NotFound Effect
+    | NotFound (List Effect)
 
 
-update : Msg -> Model -> ( Model, Effect )
+update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
         BrowserGotAddress address ->
@@ -32,5 +33,6 @@ getAddress { currency, address } { addresses } =
              , toMsg = BrowserGotAddress
              }
                 |> GetAddressEffect
+                |> List.singleton
                 |> NotFound
             )
