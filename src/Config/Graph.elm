@@ -1,9 +1,14 @@
-module View.Graph.Config exposing (..)
+module Config.Graph exposing (..)
 
 
 entityWidth : Float
 entityWidth =
     190
+
+
+layerMargin : Float
+layerMargin =
+    300
 
 
 addressWidth : Float
@@ -29,6 +34,11 @@ padding =
 labelHeight : Float
 labelHeight =
     20
+
+
+noAddressesLabelHeight : Float
+noAddressesLabelHeight =
+    16
 
 
 type AddressLabelType

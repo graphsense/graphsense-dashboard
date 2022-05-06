@@ -1,5 +1,6 @@
 module View.Graph.Label exposing (label, split)
 
+import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css exposing (..)
 import List.Extra
@@ -9,7 +10,6 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events exposing (..)
 import Tuple exposing (mapSecond)
-import View.Graph.Config as Graph
 import View.Graph.Util as Util exposing (translate)
 
 

@@ -1,5 +1,6 @@
 module View.Graph.Graph exposing (graph)
 
+import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css.Graph as Css
 import Html.Styled as Html exposing (Html)
@@ -10,7 +11,6 @@ import Msg.Graph exposing (Msg(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import View.Graph.Address as Address
-import View.Graph.Config as Graph
 import View.Graph.Navbar as Navbar
 
 

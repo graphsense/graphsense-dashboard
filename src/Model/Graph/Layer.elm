@@ -5,7 +5,9 @@ import Model.Graph.Entity exposing (..)
 
 
 type alias Layer =
-    { entities : List Entity
+    { id : Int
+    , entities : List Entity
+    , x : Float
     }
 
 

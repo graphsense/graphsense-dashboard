@@ -1,5 +1,6 @@
 module View.Graph.Address exposing (address)
 
+import Config.Graph as Graph exposing (AddressLabelType(..))
 import Config.View exposing (Config)
 import Css.Graph as Css
 import Json.Decode as Dec
@@ -9,7 +10,6 @@ import Msg.Graph exposing (Msg(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
-import View.Graph.Config as Graph exposing (AddressLabelType(..))
 import View.Graph.Label as Label
 import View.Graph.Util exposing (translate)
 import View.Locale as Locale

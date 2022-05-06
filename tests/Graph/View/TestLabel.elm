@@ -1,8 +1,8 @@
 module Graph.View.TestLabel exposing (..)
 
 import Expect
-import Graph.View.Label as Label
 import Test exposing (..)
+import View.Graph.Label as Label
 
 
 data : List ( String, List String )

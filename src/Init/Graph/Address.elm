@@ -1,11 +1,11 @@
 module Init.Graph.Address exposing (init)
 
 import Api.Data
+import Config.Graph exposing (addressHeight, addressWidth, expandHandleWidth, labelHeight, padding)
 import Init.Graph.Id as Id exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
-import View.Graph.Config exposing (addressHeight, addressWidth, expandHandleWidth, labelHeight, padding)
 
 
 init : Entity -> Api.Data.Address -> Address
@@ -28,4 +28,5 @@ init entity address =
             + 2
             * padding
             + labelHeight
+            + (toFloat (List.length entity.addresses) * addressHeight)
     }
