@@ -6,10 +6,15 @@ import View.Config exposing (Config)
 
 root : Config -> List Style
 root vc =
+    vc.theme.stats.root
+
+
+stats : Config -> List Style
+stats vc =
     [ displayFlex
     , flexWrap wrap
     ]
-        ++ vc.theme.stats.root
+        ++ vc.theme.stats.stats
 
 
 currency : Config -> List Style

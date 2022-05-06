@@ -3,13 +3,18 @@ module Update exposing (update)
 import Browser
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
+import Graph.Update as Graph
+import Graph.Update.Adding as Adding
 import Http exposing (Error(..))
 import Locale.Effect as Locale
 import Locale.Update as Locale
 import Model exposing (..)
+import Page
 import RecordSetter exposing (..)
 import RemoteData as RD
+import Route
 import Search.Update as Search
+import Store.Update as Store
 import Url exposing (Url)
 
 
@@ -145,10 +150,71 @@ update msg model =
             , SearchEffect searchEffect
             )
 
+        GraphMsg m ->
+            let
+                ( graph, graphEffect ) =
+                    Graph.update m model.graph
+            in
+            ( { model | graph = graph }
+            , GraphEffect graphEffect
+            )
+
+        StoreMsg m ->
+            let
+                ( store, storeEffect ) =
+                    Store.update m model.store
+            in
+            ( { model | store = store }
+            , StoreEffect storeEffect
+            )
+
 
 updateByUrl : Url -> Model key -> ( Model key, Effect )
-updateByUrl _ model =
-    n model
+updateByUrl url model =
+    let
+        routeConfig =
+            model.stats
+                |> RD.map (.currencies >> List.map .name)
+                |> RD.withDefault []
+                |> (\c -> { currencies = c })
+    in
+    Route.parse routeConfig url
+        |> Maybe.map
+            (\route ->
+                case route of
+                    Route.Currency curr (Route.Address a) ->
+                        case Store.getAddress { currency = curr, address = a } model.store of
+                            Store.Found address ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.addAddress address model.graph
+                                in
+                                ( { model
+                                    | page = Page.Graph
+                                    , graph = graph
+                                  }
+                                , GraphEffect graphEffect
+                                )
+
+                            Store.NotFound effect ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.addingAddress { currency = curr, address = a } model.graph
+                                in
+                                ( { model
+                                    | page = Page.Graph
+                                    , graph = graph
+                                  }
+                                , [ GraphEffect graphEffect
+                                  , StoreEffect effect
+                                  ]
+                                    |> BatchedEffects
+                                )
+
+                    _ ->
+                        n model
+            )
+        |> Maybe.withDefault (n model)
 
 
 updateRequestLimit : Dict String String -> UserModel -> UserModel

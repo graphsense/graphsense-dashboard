@@ -1,5 +1,6 @@
-module Locale.View exposing (float, int, interpolated, percentage, string, text, timestamp)
+module Locale.View exposing (currency, float, int, interpolated, percentage, string, text, timestamp)
 
+import Api.Data
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
@@ -9,7 +10,7 @@ import FormatNumber
 import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
-import Locale.Model exposing (Model, State(..))
+import Locale.Model exposing (..)
 import Locale.Update exposing (duration)
 import RecordSetter exposing (..)
 import String.Interpolate
@@ -154,3 +155,39 @@ percentage model fl =
 setDecimals : Model -> FormatNumber.Locales.Decimals -> Model
 setDecimals model dec =
     { model | numberFormat = model.numberFormat |> s_decimals dec }
+
+
+currency : Model -> String -> Api.Data.Values -> String
+currency model coinCode values =
+    case model.currency of
+        Coin ->
+            coin model coinCode values.value
+
+        Fiat code ->
+            values.fiatValues
+                |> List.filter (.code >> String.toLower >> (==) code)
+                |> List.head
+                |> Maybe.map (fiat model)
+                |> Maybe.withDefault ""
+
+
+fiat : Model -> Api.Data.Rate -> String
+fiat model { code, value } =
+    float model value ++ " " ++ String.toUpper code
+
+
+coin : Model -> String -> Int -> String
+coin model code v =
+    let
+        ( value, sc ) =
+            if code == "eth" then
+                ( toFloat v / 1.0e18, "wei" )
+
+            else
+                ( toFloat v / 1.0e8, "s" )
+    in
+    if abs value < 0.0001 then
+        int model v ++ " " ++ sc
+
+    else
+        float model value ++ " " ++ String.toUpper code

@@ -6,7 +6,7 @@ import FontAwesome
 import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onInput)
+import Html.Styled.Events exposing (onClick, onInput)
 import Locale.View as Locale
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (Route)
@@ -144,13 +144,13 @@ resultLineToHtml vc title resultLine =
         ( route, icon, label ) =
             case resultLine of
                 Address a ->
-                    ( Route.Address { currency = currency, address = a }, FontAwesome.at, a )
+                    ( Route.Currency currency (Route.Address a), FontAwesome.at, a )
 
                 Tx a ->
-                    ( Route.Tx { currency = currency, tx = a }, FontAwesome.exchangeAlt, a )
+                    ( Route.Currency currency (Route.Tx a), FontAwesome.exchangeAlt, a )
 
                 Block a ->
-                    ( Route.Block { currency = currency, block = a }, FontAwesome.cube, String.fromInt a )
+                    ( Route.Currency currency (Route.Block a), FontAwesome.cube, String.fromInt a )
 
                 Label a ->
                     ( Route.Label a, FontAwesome.tag, a )
@@ -159,6 +159,7 @@ resultLineToHtml vc title resultLine =
         [ Route.toUrl route
             |> href
         , Css.resultLine vc |> css
+        , onClick UserClicksResultLine
         ]
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled

@@ -99,16 +99,16 @@ theme =
             ]
         |> s_main
             [ backgroundColor <| toCssColor colors.brandLightest
-            , scaled mainMargin |> rem |> padding
             ]
         |> s_stats
             (Stats.default
                 |> s_root
-                    [ scaled -mainMargin |> rem |> marginLeft
-                    ]
+                    [ scaled statsMargin |> rem |> padding ]
+                |> s_stats
+                    [ scaled -statsMargin |> rem |> marginLeft ]
                 |> s_currency
                     [ backgroundColor <| toCssColor colors.greyLight
-                    , scaled mainMargin |> rem |> margin
+                    , scaled statsMargin |> rem |> margin
                     , borderRadiusSm
                     ]
                 |> s_currencyHeading
@@ -274,8 +274,8 @@ currencyPadding =
     4
 
 
-mainMargin : Float
-mainMargin =
+statsMargin : Float
+statsMargin =
     5
 
 

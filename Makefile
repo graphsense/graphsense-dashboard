@@ -11,7 +11,7 @@ watch:
 	find . -name \*.elm | entr make dev
 
 dev: $(API_ELM) $(wildcard src/**)
-	npx elm-test
+	npx elm-test-rs tests/Graph/View/TestLabel.elm
 
 $(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	make openapi

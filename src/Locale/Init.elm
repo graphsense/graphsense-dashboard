@@ -24,6 +24,7 @@ init { locale } =
 
                 _ ->
                     DateFormat.Language.english
+      , currency = Coin
       }
     , [ Locale.Effect.getTranslationEffect locale
       , GetTimezoneEffect BrowserSentTimezone

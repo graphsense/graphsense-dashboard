@@ -35,4 +35,10 @@ type alias Model =
     , locale : String
     , zone : Time.Zone
     , timeLang : DateFormat.Language.Language
+    , currency : Currency
     }
+
+
+type Currency
+    = Coin
+    | Fiat String

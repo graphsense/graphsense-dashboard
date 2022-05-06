@@ -1,14 +1,17 @@
 module Effect exposing (perform)
 
 import Api
+import Api.Request.Addresses
 import Api.Request.General
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Graph.Effect as Graph
 import Http
-import Locale.Effect
+import Locale.Effect as Locale
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Search.Effect as Search
+import Store.Effect as Store
 import Task
 
 
@@ -37,7 +40,7 @@ perform key apiKey effect =
                 |> Cmd.batch
 
         LocaleEffect eff ->
-            Locale.Effect.perform eff
+            Locale.perform eff
                 |> Cmd.map LocaleMsg
 
         SearchEffect Search.NoEffect ->
@@ -50,8 +53,7 @@ perform key apiKey effect =
         SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
             Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
-                |> withAuthorization apiKey
-                |> Api.sendAndAlsoReceiveHeaders BrowserGotResponseWithHeaders effect (toMsg >> SearchMsg)
+                |> send apiKey effect (toMsg >> SearchMsg)
 
         SearchEffect Search.CancelEffect ->
             Http.cancel "search"
@@ -61,7 +63,27 @@ perform key apiKey effect =
             Bounce.delay delay msg
                 |> Cmd.map SearchMsg
 
+        GraphEffect Graph.NoEffect ->
+            Cmd.none
+
+        GraphEffect (Graph.BatchEffect eff) ->
+            List.map (GraphEffect >> perform key apiKey) eff
+                |> Cmd.batch
+
+        StoreEffect (Store.GetAddressEffect { currency, address, toMsg }) ->
+            Api.Request.Addresses.getAddress currency address (Just True)
+                |> send apiKey effect (toMsg >> StoreMsg)
+
+        StoreEffect Store.NoEffect ->
+            Cmd.none
+
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =
     Api.withHeader "Authorization" apiKey request
+
+
+send : String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
+send apiKey effect toMsg =
+    withAuthorization apiKey
+        >> Api.sendAndAlsoReceiveHeaders BrowserGotResponseWithHeaders effect toMsg

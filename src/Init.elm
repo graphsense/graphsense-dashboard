@@ -1,10 +1,13 @@
 module Init exposing (init)
 
 import Config exposing (config)
+import Graph.Init as Graph
 import Locale.Init as Locale
 import Model exposing (..)
+import Page
 import RemoteData exposing (RemoteData(..))
 import Search.Init as Search
+import Store.Init as Store
 import Url exposing (Url)
 
 
@@ -19,7 +22,10 @@ init flags url key =
     ( { url = url
       , key = key
       , locale = locale
+      , page = Page.Stats
       , search = Search.init
+      , graph = Graph.init
+      , store = Store.init
       , user =
             { apiKey = ""
             , auth = Unknown

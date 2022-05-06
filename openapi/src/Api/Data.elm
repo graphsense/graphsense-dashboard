@@ -148,6 +148,7 @@ import Json.Encode
 type alias Address =
     { address : String
     , balance : Values
+    , currency : String
     , entity : Int
     , firstTx : TxSummary
     , inDegree : Int
@@ -242,6 +243,7 @@ type alias CurrencyStats =
 
 type alias Entity =
     { balance : Values
+    , currency : String
     , entity : Int
     , firstTx : TxSummary
     , inDegree : Int
@@ -337,8 +339,8 @@ type alias Neighbors =
 
 
 type alias Rate =
-    { code : Maybe String
-    , value : Maybe Float
+    { code : String
+    , value : Float
     }
 
 
@@ -493,8 +495,8 @@ type alias TxValue =
 
 
 type alias Values =
-    { fiatValues : Maybe (List (Rate))
-    , value : Maybe Int
+    { fiatValues : List (Rate)
+    , value : Int
     }
 
 
@@ -517,6 +519,7 @@ encodeAddressPairs model =
         pairs =
             [ encode "address" Json.Encode.string model.address
             , encode "balance" encodeValues model.balance
+            , encode "currency" Json.Encode.string model.currency
             , encode "entity" Json.Encode.int model.entity
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
@@ -752,6 +755,7 @@ encodeEntityPairs model =
     let
         pairs =
             [ encode "balance" encodeValues model.balance
+            , encode "currency" Json.Encode.string model.currency
             , encode "entity" Json.Encode.int model.entity
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
@@ -976,8 +980,8 @@ encodeRatePairs : Rate -> List EncodedField
 encodeRatePairs model =
     let
         pairs =
-            [ maybeEncode "code" Json.Encode.string model.code
-            , maybeEncode "value" Json.Encode.float model.value
+            [ encode "code" Json.Encode.string model.code
+            , encode "value" Json.Encode.float model.value
             ]
     in
     pairs
@@ -1415,8 +1419,8 @@ encodeValuesPairs : Values -> List EncodedField
 encodeValuesPairs model =
     let
         pairs =
-            [ maybeEncode "fiat_values" (Json.Encode.list encodeRate) model.fiatValues
-            , maybeEncode "value" Json.Encode.int model.value
+            [ encode "fiat_values" (Json.Encode.list encodeRate) model.fiatValues
+            , encode "value" Json.Encode.int model.value
             ]
     in
     pairs
@@ -1430,6 +1434,7 @@ addressDecoder =
     Json.Decode.succeed Address
         |> decode "address" Json.Decode.string 
         |> decode "balance" valuesDecoder 
+        |> decode "currency" Json.Decode.string 
         |> decode "entity" Json.Decode.int 
         |> decode "first_tx" txSummaryDecoder 
         |> decode "in_degree" Json.Decode.int 
@@ -1547,6 +1552,7 @@ entityDecoder : Json.Decode.Decoder Entity
 entityDecoder =
     Json.Decode.succeed Entity
         |> decode "balance" valuesDecoder 
+        |> decode "currency" Json.Decode.string 
         |> decode "entity" Json.Decode.int 
         |> decode "first_tx" txSummaryDecoder 
         |> decode "in_degree" Json.Decode.int 
@@ -1670,8 +1676,8 @@ neighborsDecoder =
 rateDecoder : Json.Decode.Decoder Rate
 rateDecoder =
     Json.Decode.succeed Rate
-        |> maybeDecode "code" Json.Decode.string Nothing
-        |> maybeDecode "value" Json.Decode.float Nothing
+        |> decode "code" Json.Decode.string 
+        |> decode "value" Json.Decode.float 
 
 
 ratesDecoder : Json.Decode.Decoder Rates
@@ -1861,8 +1867,8 @@ txValueDecoder =
 valuesDecoder : Json.Decode.Decoder Values
 valuesDecoder =
     Json.Decode.succeed Values
-        |> maybeDecode "fiat_values" (Json.Decode.list rateDecoder) Nothing
-        |> maybeDecode "value" Json.Decode.int Nothing
+        |> decode "fiat_values" (Json.Decode.list rateDecoder) 
+        |> decode "value" Json.Decode.int 
 
 
 

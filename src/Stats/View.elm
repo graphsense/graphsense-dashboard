@@ -21,7 +21,7 @@ import View.CurrencyMeta exposing (currencies)
 stats : Config -> WebData Api.Data.Stats -> Html Msg
 stats vc sts =
     div
-        []
+        [ Css.root vc |> css ]
         [ h2
             [ Css.heading2 vc |> css
             ]
@@ -52,8 +52,7 @@ statsLoaded vc sts =
     sts.currencies
         |> List.map (currency vc)
         |> div
-            [ Css.root vc |> css
-            ]
+            [ Css.stats vc |> css ]
 
 
 currency : Config -> Api.Data.CurrencyStats -> Html Msg

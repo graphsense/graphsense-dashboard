@@ -5,6 +5,7 @@ import Css exposing (Style)
 
 type alias Stats =
     { root : List Style
+    , stats : List Style
     , currency : List Style
     , currencyHeading : List Style
     , tableWrapper : List Style
@@ -21,6 +22,7 @@ type alias Stats =
 default : Stats
 default =
     { root = []
+    , stats = []
     , currency = []
     , currencyHeading = []
     , tableWrapper = []

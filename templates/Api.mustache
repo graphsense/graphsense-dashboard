@@ -4,6 +4,7 @@ module Api exposing
     , send
     , effect
     , sendWithCustomError
+    , sendAndAlsoReceiveHeaders
     , task
     , map
     , baseUrl
@@ -15,6 +16,7 @@ module Api exposing
     , withHeaders
     )
 
+import Dict exposing (Dict)
 import Http
 import Json.Decode
 import Json.Encode

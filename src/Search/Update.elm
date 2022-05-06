@@ -19,6 +19,12 @@ update msg model =
                     , found = Just result
                 }
 
+        UserClicksResultLine ->
+            n
+                { model
+                    | found = Nothing
+                }
+
         UserInputsSearch input ->
             ( { model
                 | input = input

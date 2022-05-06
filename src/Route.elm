@@ -1,14 +1,25 @@
-module Route exposing (Route(..), toUrl)
+module Route exposing (Route(..), Thing(..), parse, toUrl)
 
+import List.Extra
 import Url exposing (..)
-import Url.Builder exposing (..)
+import Url.Builder as B exposing (..)
+import Url.Parser as P exposing (..)
+
+
+type alias Config =
+    { currencies : List String
+    }
 
 
 type Route
-    = Address { currency : String, address : String }
-    | Block { currency : String, block : Int }
-    | Tx { currency : String, tx : String }
+    = Currency String Thing
     | Label String
+
+
+type Thing
+    = Address String
+    | Block Int
+    | Tx String
 
 
 addressSegment : String
@@ -34,14 +45,49 @@ labelSegment =
 toUrl : Route -> String
 toUrl route =
     case route of
-        Address { currency, address } ->
-            absolute [ currency, addressSegment, address ] []
+        Currency curr (Address address) ->
+            absolute [ curr, addressSegment, address ] []
 
-        Block { currency, block } ->
-            absolute [ currency, blockSegment, String.fromInt block ] []
+        Currency curr (Block block) ->
+            absolute [ curr, blockSegment, String.fromInt block ] []
 
-        Tx { currency, tx } ->
-            absolute [ currency, txSegment, tx ] []
+        Currency curr (Tx tx) ->
+            absolute [ curr, txSegment, tx ] []
 
         Label l ->
             absolute [ labelSegment, l ] []
+
+
+parse : Config -> Url -> Maybe Route
+parse c =
+    P.parse (parser c)
+
+
+parser : Config -> Parser (Route -> a) a
+parser c =
+    oneOf
+        [ map Currency (currency c </> thing)
+        , map Label P.string
+        ]
+
+
+currency : Config -> Parser (String -> a) a
+currency c =
+    P.custom "CURRENCY" <|
+        \segment ->
+            List.Extra.find ((==) segment) c.currencies
+
+
+thing : Parser (Thing -> a) a
+thing =
+    oneOf
+        [ s addressSegment
+            </> P.string
+            |> map Address
+        , s blockSegment
+            </> P.int
+            |> map Block
+        , s txSegment
+            </> P.string
+            |> map Tx
+        ]

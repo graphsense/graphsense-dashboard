@@ -4,15 +4,22 @@ import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
 import Dict exposing (Dict)
+import Graph.Effect
+import Graph.Model
+import Graph.Msg
 import Html exposing (Attribute, Html)
 import Http
 import Locale.Effect
 import Locale.Model
 import Locale.Msg
+import Page
 import RemoteData exposing (WebData)
 import Search.Effect
 import Search.Model
 import Search.Msg
+import Store.Effect
+import Store.Model
+import Store.Msg
 import Theme.Theme exposing (Theme)
 import Time
 import Url exposing (Url)
@@ -31,8 +38,11 @@ type alias Config =
 type alias Model navigationKey =
     { url : Url
     , key : navigationKey
+    , page : Page.Page
     , locale : Locale.Model.Model
     , search : Search.Model.Model
+    , graph : Graph.Model.Model
+    , store : Store.Model.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
     }
@@ -43,14 +53,16 @@ type Msg
     | BrowserChangedUrl Url
     | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
     | BrowserGotResponseWithHeaders (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
-    | LocaleMsg Locale.Msg.Msg
-    | SearchMsg Search.Msg.Msg
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
     | UserHoversUserIcon String
     | UserLeftUserHovercard
     | BrowserGotElement (Result Dom.Error Dom.Element)
+    | LocaleMsg Locale.Msg.Msg
+    | SearchMsg Search.Msg.Msg
+    | GraphMsg Graph.Msg.Msg
+    | StoreMsg Store.Msg.Msg
 
 
 type RequestLimit
@@ -84,6 +96,8 @@ type Effect
     | BatchedEffects (List Effect)
     | LocaleEffect Locale.Effect.Effect
     | SearchEffect Search.Effect.Effect
+    | GraphEffect Graph.Effect.Effect
+    | StoreEffect Store.Effect.Effect
 
 
 n : model -> ( model, Effect )
@@ -94,3 +108,8 @@ n model =
 batch : List Effect -> Effect
 batch effs =
     BatchedEffects effs
+
+
+type Thing
+    = Address Api.Data.Address
+    | Entity Api.Data.Entity
