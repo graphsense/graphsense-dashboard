@@ -3,11 +3,12 @@ module Init.Locale exposing (init)
 import DateFormat.Language
 import Dict
 import Effect.Locale exposing (Effect(..))
-import FormatNumber.Locales
 import Http
+import Languages.German
 import Locale.German
 import Model.Locale as Model exposing (..)
 import Msg.Locale exposing (Msg(..))
+import Numeral
 import Time
 
 
@@ -32,21 +33,11 @@ init { locale } =
     )
 
 
-initNumberFormat : String -> FormatNumber.Locales.Locale
+initNumberFormat : String -> String -> Float -> String
 initNumberFormat locale =
     case locale of
         "de" ->
-            { decimals = FormatNumber.Locales.Exact 2
-            , system = FormatNumber.Locales.Western
-            , thousandSeparator = "."
-            , decimalSeparator = ","
-            , negativePrefix = "-"
-            , negativeSuffix = ""
-            , positivePrefix = ""
-            , positiveSuffix = ""
-            , zeroPrefix = ""
-            , zeroSuffix = ""
-            }
+            Numeral.formatWithLanguage Languages.German.lang
 
         _ ->
-            FormatNumber.Locales.usLocale
+            Numeral.format

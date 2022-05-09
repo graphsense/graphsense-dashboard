@@ -2,6 +2,7 @@ module Effect exposing (n, perform)
 
 import Api
 import Api.Request.Addresses
+import Api.Request.Entities
 import Api.Request.General
 import Bounce
 import Browser.Dom as Dom
@@ -60,6 +61,14 @@ perform key apiKey effect =
 
         StoreEffect (Store.GetAddressEffect { currency, address, toMsg }) ->
             Api.Request.Addresses.getAddress currency address (Just True)
+                |> send apiKey effect (toMsg >> StoreMsg)
+
+        StoreEffect (Store.GetEntityEffect { currency, entity, toMsg }) ->
+            Api.Request.Entities.getEntity currency entity (Just True)
+                |> send apiKey effect (toMsg >> StoreMsg)
+
+        StoreEffect (Store.GetEntityForAddressEffect { currency, address, toMsg }) ->
+            Api.Request.Addresses.getAddressEntity currency address (Just True)
                 |> send apiKey effect (toMsg >> StoreMsg)
 
 

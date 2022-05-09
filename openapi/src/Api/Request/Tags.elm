@@ -52,7 +52,7 @@ stringFromLevel model =
 
 
 
-listConcepts : String -> Api.Request (List Api.Data.Concept)
+listConcepts : (String) -> Api.Request (List Api.Data.Concept)
 listConcepts taxonomy_path =
     Api.request
         "GET"
@@ -65,13 +65,13 @@ listConcepts taxonomy_path =
 
 
 
-listTags : String -> String -> Level -> Maybe String -> Maybe Int -> Api.Request Api.Data.Tags
+listTags : (String) -> (String) -> (Level) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Tags
 listTags currency_path label_query level_query page_query pagesize_query =
     Api.request
         "GET"
         "/{currency}/tags"
         [ ( "currency", identity currency_path ) ]
-        [ ( "label", Just <| identity label_query ), ( "level", Just <| stringFromLevel level_query ), ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
+        [ ( "label", Just <| (identity) label_query ), ( "level", Just <| (stringFromLevel) level_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
         Api.Data.tagsDecoder
@@ -88,3 +88,4 @@ listTaxonomies =
         []
         Nothing
         (Json.Decode.list Api.Data.taxonomyDecoder)
+

@@ -24,6 +24,7 @@ update msg model =
             n
                 { model
                     | found = Nothing
+                    , input = ""
                 }
 
         UserInputsSearch input ->

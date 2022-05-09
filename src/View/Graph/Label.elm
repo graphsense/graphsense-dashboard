@@ -1,6 +1,6 @@
 module View.Graph.Label exposing (label, split)
 
-import Config.Graph as Graph
+import Config.Graph as Graph exposing (addressesCountHeight, labelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
 import List.Extra
@@ -23,7 +23,7 @@ label vc gc title =
             String.length lbl
 
         height =
-            Graph.labelHeight
+            labelHeight
                 * 1.3
                 * (if ll > gc.maxLettersPerLabelRow then
                     0.5
@@ -36,7 +36,7 @@ label vc gc title =
             split gc.maxLettersPerLabelRow lbl
 
         dy =
-            toFloat (List.length spl - 1) * Graph.labelHeight / 2.5 |> negate
+            toFloat (List.length spl - 1) * labelHeight / 2.5 |> negate
     in
     spl
         |> List.indexedMap
@@ -49,8 +49,7 @@ label vc gc title =
                     ]
             )
         |> Svg.text_
-            [ css [ px Graph.labelHeight |> Css.fontSize ]
-            , Util.translate 0 dy |> Svg.transform
+            [ Util.translate 0 dy |> Svg.transform
             ]
 
 

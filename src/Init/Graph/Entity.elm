@@ -10,6 +10,9 @@ init { x, y, layer } entity =
     { id = initEntityId { layer = layer, currency = entity.currency, id = entity.entity }
     , entity = entity
     , addresses = []
+    , category =
+        entity.tags
+            |> Maybe.andThen (.entityTags >> List.head >> Maybe.andThen .category)
     , x = x
     , y = y
     , dx = 0

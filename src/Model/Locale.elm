@@ -31,7 +31,7 @@ type alias Flags =
 
 type alias Model =
     { mapping : State
-    , numberFormat : FormatNumber.Locales.Locale
+    , numberFormat : String -> Float -> String
     , locale : String
     , zone : Time.Zone
     , timeLang : DateFormat.Language.Language

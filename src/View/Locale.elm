@@ -1,4 +1,4 @@
-module View.Locale exposing (currency, float, int, interpolated, percentage, string, text, timestamp)
+module View.Locale exposing (currency, float, floatWithFormat, int, intWithFormat, interpolated, percentage, string, text, timestamp)
 
 import Api.Data
 import Css exposing (num, opacity)
@@ -99,14 +99,23 @@ text model key =
 
 float : Model -> Float -> String
 float { numberFormat } x =
-    FormatNumber.format numberFormat x
+    numberFormat "1,000.0" x
+
+
+floatWithFormat : Model -> String -> Float -> String
+floatWithFormat { numberFormat } =
+    numberFormat
 
 
 int : Model -> Int -> String
 int model =
     toFloat
-        >> float
-            (setDecimals model (FormatNumber.Locales.Exact 0))
+        >> floatWithFormat model "1,000"
+
+
+intWithFormat : Model -> String -> Int -> String
+intWithFormat model format =
+    toFloat >> floatWithFormat model format
 
 
 timestamp : Model -> Int -> String
@@ -146,15 +155,8 @@ timestamp { locale, timeLang, zone } =
 
 
 percentage : Model -> Float -> String
-percentage model fl =
-    fl
-        * 100
-        |> float (setDecimals model (FormatNumber.Locales.Max 2))
-
-
-setDecimals : Model -> FormatNumber.Locales.Decimals -> Model
-setDecimals model dec =
-    { model | numberFormat = model.numberFormat |> s_decimals dec }
+percentage model =
+    floatWithFormat model "100[.00]%"
 
 
 currency : Model -> String -> Api.Data.Values -> String

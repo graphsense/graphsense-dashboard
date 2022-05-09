@@ -30,11 +30,6 @@ type alias Flags =
     }
 
 
-type alias Config =
-    { theme : Theme
-    }
-
-
 type alias Model navigationKey =
     { url : Url
     , key : navigationKey

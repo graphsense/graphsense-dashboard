@@ -1,16 +1,20 @@
-module Update exposing (update)
+module Update exposing (update, updateByUrl)
 
 import Browser
 import Browser.Navigation as Nav
+import Config.Update exposing (Config)
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Locale as Locale
+import Effect.Store as Store
 import Http exposing (Error(..))
 import Model exposing (..)
+import Msg.Store as Store
 import Page
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
+import Tuple exposing (..)
 import Update.Graph as Graph
 import Update.Graph.Adding as Adding
 import Update.Locale as Locale
@@ -19,9 +23,9 @@ import Update.Store as Store
 import Url exposing (Url)
 
 
-update : Msg -> Model key -> ( Model key, List Effect )
-update msg model =
-    case msg of
+update : Config -> Msg -> Model key -> ( Model key, List Effect )
+update uc msg model =
+    case Debug.log "msg" msg of
         UserRequestsUrl request ->
             case request of
                 Browser.Internal url ->
@@ -38,12 +42,12 @@ update msg model =
                     )
 
         BrowserChangedUrl url ->
-            updateByUrl url model
+            updateByUrl uc url model
 
         BrowserGotStatistics result ->
             case result of
                 Ok stats ->
-                    n { model | stats = RD.Success stats }
+                    updateByUrl uc model.url { model | stats = RD.Success stats }
 
                 Err error ->
                     n { model | stats = RD.Failure error }
@@ -51,7 +55,8 @@ update msg model =
         BrowserGotResponseWithHeaders result ->
             case result of
                 Ok ( headers, message ) ->
-                    update message
+                    update uc
+                        message
                         { model
                             | user =
                                 updateRequestLimit headers model.user
@@ -164,18 +169,67 @@ update msg model =
             , List.map GraphEffect graphEffects
             )
 
-        StoreMsg m ->
+        StoreMsg (Store.BrowserGotAddress address) ->
             let
                 ( store, storeEffects ) =
-                    Store.update m model.store
+                    Store.update (Store.BrowserGotAddress address) model.store
+
+                ( graph, effects ) =
+                    case
+                        Store.getEntity
+                            { currency = address.currency
+                            , entity = address.entity
+                            , forAddress = address.address
+                            }
+                            model.store
+                    of
+                        Store.Found entity ->
+                            Graph.addAddressAndEntity uc address entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+
+                        Store.NotFound eff ->
+                            Graph.addAddress uc address model.graph
+                                |> mapSecond (List.map GraphEffect)
+                                |> mapSecond ((++) (List.map StoreEffect eff))
             in
-            ( { model | store = store }
+            ( { model
+                | store = store
+                , graph = graph
+              }
             , List.map StoreEffect storeEffects
+                ++ effects
             )
 
+        StoreMsg (Store.BrowserGotEntity a entity) ->
+            let
+                ( store, storeEffects ) =
+                    Store.update (Store.BrowserGotEntity a entity) model.store
 
-updateByUrl : Url -> Model key -> ( Model key, List Effect )
-updateByUrl url model =
+                ( graph, effects ) =
+                    case Store.getAddress { currency = entity.currency, address = a } model.store of
+                        Store.Found address ->
+                            Graph.addAddressAndEntity uc address entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+
+                        Store.NotFound eff ->
+                            Graph.addEntity uc entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+                                |> mapSecond ((++) (List.map StoreEffect eff))
+            in
+            ( { model
+                | store = store
+                , graph = graph
+              }
+            , List.map StoreEffect storeEffects
+                ++ effects
+            )
+
+        StoreMsg (Store.BrowserGotEntityForAddress a entity) ->
+            update uc (Store.BrowserGotEntity a entity |> StoreMsg) model
+
+
+updateByUrl : Config -> Url -> Model key -> ( Model key, List Effect )
+updateByUrl uc url model =
     let
         routeConfig =
             model.stats
@@ -188,31 +242,45 @@ updateByUrl url model =
             (\route ->
                 case route of
                     Route.Currency curr (Route.Address a) ->
-                        case Store.getAddress { currency = curr, address = a } model.store of
-                            Store.Found address ->
-                                let
-                                    ( graph, graphEffect ) =
-                                        Graph.addAddress address model.graph
-                                in
-                                ( { model
-                                    | page = Page.Graph
-                                    , graph = graph
-                                  }
-                                , List.map GraphEffect graphEffect
-                                )
+                        let
+                            ( ( graph, graphEffect ), storeEffect ) =
+                                case Store.getAddress { currency = curr, address = a } model.store of
+                                    Store.Found address ->
+                                        case
+                                            Store.getEntity
+                                                { currency = curr
+                                                , entity = address.entity
+                                                , forAddress = address.address
+                                                }
+                                                model.store
+                                        of
+                                            Store.Found entity ->
+                                                ( Graph.addAddressAndEntity uc address entity model.graph
+                                                , []
+                                                )
 
-                            Store.NotFound effect ->
-                                let
-                                    ( graph, graphEffect ) =
-                                        Graph.addingAddress { currency = curr, address = a } model.graph
-                                in
-                                ( { model
-                                    | page = Page.Graph
-                                    , graph = graph
-                                  }
-                                , List.map GraphEffect graphEffect
-                                    ++ List.map StoreEffect effect
-                                )
+                                            Store.NotFound effect ->
+                                                ( Graph.addingEntity { currency = curr, entity = address.entity } model.graph
+                                                , effect
+                                                )
+
+                                    Store.NotFound effect ->
+                                        ( Graph.addingAddress { currency = curr, address = a } model.graph
+                                        , Store.GetEntityForAddressEffect
+                                            { address = a
+                                            , currency = curr
+                                            , toMsg = Store.BrowserGotEntityForAddress a
+                                            }
+                                            :: effect
+                                        )
+                        in
+                        ( { model
+                            | page = Page.Graph
+                            , graph = graph
+                          }
+                        , List.map GraphEffect graphEffect
+                            ++ List.map StoreEffect storeEffect
+                        )
 
                     _ ->
                         n model

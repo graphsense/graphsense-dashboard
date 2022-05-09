@@ -23,3 +23,12 @@ addresses =
                 layer.entities
         )
         []
+
+
+entities : List Layer -> List Entity
+entities =
+    List.foldl
+        (\layer ents ->
+            ents ++ layer.entities
+        )
+        []

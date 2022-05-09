@@ -27,7 +27,7 @@ import Json.Encode
 
 
 
-getBlock : String -> Int -> Api.Request Api.Data.Block
+getBlock : (String) -> (Int) -> Api.Request Api.Data.Block
 getBlock currency_path height_path =
     Api.request
         "GET"
@@ -40,7 +40,7 @@ getBlock currency_path height_path =
 
 
 
-listBlockTxs : String -> Int -> Api.Request (List Api.Data.Tx)
+listBlockTxs : (String) -> (Int) -> Api.Request (List Api.Data.Tx)
 listBlockTxs currency_path height_path =
     Api.request
         "GET"
@@ -50,3 +50,4 @@ listBlockTxs currency_path height_path =
         []
         Nothing
         (Json.Decode.list Api.Data.txDecoder)
+

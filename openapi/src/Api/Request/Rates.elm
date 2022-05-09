@@ -26,7 +26,7 @@ import Json.Encode
 
 
 
-getExchangeRates : String -> Int -> Api.Request Api.Data.Rates
+getExchangeRates : (String) -> (Int) -> Api.Request Api.Data.Rates
 getExchangeRates currency_path height_path =
     Api.request
         "GET"
@@ -36,3 +36,4 @@ getExchangeRates currency_path height_path =
         []
         Nothing
         Api.Data.ratesDecoder
+

@@ -1,5 +1,8 @@
 module Config.Graph exposing (..)
 
+import Color exposing (Color)
+import Dict exposing (Dict)
+
 
 entityWidth : Float
 entityWidth =
@@ -36,8 +39,8 @@ labelHeight =
     20
 
 
-noAddressesLabelHeight : Float
-noAddressesLabelHeight =
+addressesCountHeight : Float
+addressesCountHeight =
     16
 
 
@@ -50,6 +53,7 @@ type AddressLabelType
 type alias Config =
     { maxLettersPerLabelRow : Int
     , addressLabelType : AddressLabelType
+    , colors : Dict String Color
     }
 
 
@@ -57,4 +61,5 @@ default : Config
 default =
     { addressLabelType = ID
     , maxLettersPerLabelRow = 8
+    , colors = Dict.empty
     }

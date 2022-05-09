@@ -2,14 +2,17 @@ module Iknaio exposing (theme)
 
 import Color exposing (rgb255)
 import Css exposing (..)
+import Model.Graph exposing (NodeType(..))
 import RecordSetter exposing (..)
 import Theme.Button as Button
 import Theme.Dialog as Dialog
+import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
+import Util.View exposing (toCssColor)
 import VitePluginHelper
 
 
@@ -38,7 +41,7 @@ type alias Colors =
 
 colors : Colors
 colors =
-    { black = Color.rgb255 255 255 255
+    { black = rgb255 255 255 255
     , greyDarkest = rgb255 210 213 215
     , greyDarker = rgb255 185 196 204
     , greyDark = rgb255 136 158 174
@@ -60,14 +63,6 @@ colors =
     }
 
 
-toCssColor : Color.Color -> Color
-toCssColor color =
-    Color.toRgba color
-        |> (\{ red, green, blue, alpha } ->
-                Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
-           )
-
-
 theme : Theme
 theme =
     Theme.default
@@ -76,7 +71,7 @@ theme =
         |> s_loadingSpinnerUrl "/themes/Iknaio/loading.gif"
         |> s_body
             [ color <| toCssColor colors.brandText
-            , fontFamilies [ "Roboto", "sans-serif" ]
+            , property "font-family" "system-ui, BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif"
             , scaled 3.5 |> rem |> fontSize
             ]
         |> s_header
@@ -252,6 +247,68 @@ theme =
                     , scaled 0.5 |> rem |> paddingTop
                     ]
             )
+        |> s_graph
+            (Graph.default
+                |> s_colorScheme
+                    [ rgb255 228 148 68
+                    , rgb255 209 97 93
+                    , rgb255 133 182 178
+                    , rgb255 106 159 88
+                    , rgb255 231 202 96
+                    , rgb255 168 124 159
+                    , rgb255 241 162 169
+                    , rgb255 150 118 98
+                    , rgb255 184 176 172
+                    , rgb255 87 120 164
+                    ]
+                |> s_lightnessFactor
+                    { entity = 1
+                    , address = 0.9
+                    }
+                |> s_saturationFactor
+                    { entity = 1
+                    , address = 0.9
+                    }
+                |> s_defaultColor
+                    (rgb255 128 128 128)
+                |> s_svgRoot
+                    [ colors.black
+                        |> Color.toCssString
+                        |> property "color"
+                    , fontWeight (int 300)
+                    ]
+                |> s_entityCurrency
+                    [ px 10 |> fontSize
+                    ]
+                |> s_entityAddressesCount
+                    [ px 14 |> fontSize ]
+                |> s_expandHandlePath
+                    (\_ ->
+                        [ colors.white
+                            |> Color.toCssString
+                            |> property "stroke"
+                        ]
+                    )
+                |> s_entityFrame
+                    [ colors.white
+                        |> Color.toCssString
+                        |> property "stroke"
+                    ]
+                |> s_addressFrame
+                    [ colors.white
+                        |> Color.toCssString
+                        |> property "stroke"
+                    ]
+                |> s_nodeSeparatorToExpandHandle
+                    (\_ ->
+                        [ colors.white
+                            |> Color.toCssString
+                            |> property "stroke"
+                        , opacity <| num 0.5
+                        , property "stroke-width" "0.5"
+                        ]
+                    )
+            )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work
             ("[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/fonts/Octarine-Light/fonts.css]"
@@ -334,3 +391,8 @@ spinnerPadding =
 letterSpacingWide : Style
 letterSpacingWide =
     scaled 0.2 |> rem |> letterSpacing
+
+
+entityStrokeDashArray : String
+entityStrokeDashArray =
+    "4 1"

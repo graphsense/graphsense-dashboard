@@ -5,7 +5,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..))
 import Page
-import View.Graph.View as Graph
+import View.Graph as Graph
 import View.Stats as Stats
 
 

@@ -14,13 +14,19 @@
 
 
 module Api.Request.Entities exposing
-    ( getEntity
+    ( Direction(..)
+    , Key(..)
+    , Level(..)
+    , directionVariants
+    , getEntity
+    , keyVariants
+    , levelVariants
     , listEntityAddresses
     , listEntityLinks
-    , listEntityNeighbors, Direction(..), directionVariants
+    , listEntityNeighbors
     , listEntityTxs
-    , listTagsByEntity, Level(..), levelVariants
-    , searchEntityNeighbors, Direction(..), directionVariants, Key(..), keyVariants
+    , listTagsByEntity
+    , searchEntityNeighbors
     )
 
 import Api
@@ -53,8 +59,6 @@ stringFromDirection model =
             "out"
 
 
-
-
 type Level
     = LevelAddress
     | LevelEntity
@@ -75,32 +79,6 @@ stringFromLevel model =
 
         LevelEntity ->
             "entity"
-
-
-
-
-type Direction
-    = DirectionIn
-    | DirectionOut
-
-
-directionVariants : List Direction
-directionVariants =
-    [ DirectionIn
-    , DirectionOut
-    ]
-
-
-stringFromDirection : Direction -> String
-stringFromDirection model =
-    case model of
-        DirectionIn ->
-            "in"
-
-        DirectionOut ->
-            "out"
-
-
 
 
 type Key
@@ -140,20 +118,27 @@ stringFromKey model =
             "balance"
 
 
-
-
-
 getEntity : String -> Int -> Maybe Bool -> Api.Request Api.Data.Entity
 getEntity currency_path entity_path includeTags_query =
     Api.request
         "GET"
         "/{currency}/entities/{entity}"
         [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "include_tags", Maybe.map (\val -> if val then "true" else "false") includeTags_query ) ]
+        [ ( "include_tags"
+          , Maybe.map
+                (\val ->
+                    if val then
+                        "true"
+
+                    else
+                        "false"
+                )
+                includeTags_query
+          )
+        ]
         []
         Nothing
         Api.Data.entityDecoder
-
 
 
 listEntityAddresses : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.EntityAddresses
@@ -168,7 +153,6 @@ listEntityAddresses currency_path entity_path page_query pagesize_query =
         Api.Data.entityAddressesDecoder
 
 
-
 listEntityLinks : String -> Int -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.Links
 listEntityLinks currency_path entity_path neighbor_query page_query pagesize_query =
     Api.request
@@ -181,18 +165,31 @@ listEntityLinks currency_path entity_path neighbor_query page_query pagesize_que
         Api.Data.linksDecoder
 
 
-
-listEntityNeighbors : String -> Int -> Direction -> Maybe List Int -> Maybe Bool -> Maybe String -> Maybe Int -> Api.Request Api.Data.Neighbors
+listEntityNeighbors : String -> Int -> Direction -> Maybe (List Int) -> Maybe Bool -> Maybe String -> Maybe Int -> Api.Request Api.Data.Neighbors
 listEntityNeighbors currency_path entity_path direction_query onlyIds_query includeLabels_query page_query pagesize_query =
     Api.request
         "GET"
         "/{currency}/entities/{entity}/neighbors"
         [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "direction", Just <| stringFromDirection direction_query ), ( "only_ids", Maybe.map String.join "," << List.map String.fromInt onlyIds_query ), ( "include_labels", Maybe.map (\val -> if val then "true" else "false") includeLabels_query ), ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
+        [ ( "direction", Just <| stringFromDirection direction_query )
+        , ( "only_ids", Maybe.map (String.join "," << List.map String.fromInt) onlyIds_query )
+        , ( "include_labels"
+          , Maybe.map
+                (\val ->
+                    if val then
+                        "true"
+
+                    else
+                        "false"
+                )
+                includeLabels_query
+          )
+        , ( "page", Maybe.map identity page_query )
+        , ( "pagesize", Maybe.map String.fromInt pagesize_query )
+        ]
         []
         Nothing
         Api.Data.neighborsDecoder
-
 
 
 listEntityTxs : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTxs
@@ -207,7 +204,6 @@ listEntityTxs currency_path entity_path page_query pagesize_query =
         Api.Data.addressTxsDecoder
 
 
-
 listTagsByEntity : String -> Int -> Level -> Maybe String -> Maybe Int -> Api.Request Api.Data.Tags
 listTagsByEntity currency_path entity_path level_query page_query pagesize_query =
     Api.request
@@ -220,14 +216,13 @@ listTagsByEntity currency_path entity_path level_query page_query pagesize_query
         Api.Data.tagsDecoder
 
 
-
 searchEntityNeighbors : String -> Int -> Direction -> Key -> List String -> Int -> Maybe Int -> Maybe Int -> Api.Request Api.Data.SearchResultLevel1
 searchEntityNeighbors currency_path entity_path direction_query key_query value_query depth_query breadth_query skipNumAddresses_query =
     Api.request
         "GET"
         "/{currency}/entities/{entity}/search"
         [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "direction", Just <| stringFromDirection direction_query ), ( "key", Just <| stringFromKey key_query ), ( "value", Just <| String.join "," << List.map identity value_query ), ( "depth", Just <| String.fromInt depth_query ), ( "breadth", Maybe.map String.fromInt breadth_query ), ( "skip_num_addresses", Maybe.map String.fromInt skipNumAddresses_query ) ]
+        [ ( "direction", Just <| stringFromDirection direction_query ), ( "key", Just <| stringFromKey key_query ), ( "value", Just <| (String.join "," << List.map identity) value_query ), ( "depth", Just <| String.fromInt depth_query ), ( "breadth", Maybe.map String.fromInt breadth_query ), ( "skip_num_addresses", Maybe.map String.fromInt skipNumAddresses_query ) ]
         []
         Nothing
         Api.Data.searchResultLevel1Decoder

@@ -2,6 +2,7 @@ module Init.Graph.Address exposing (init)
 
 import Api.Data
 import Config.Graph exposing (addressHeight, addressWidth, expandHandleWidth, labelHeight, padding)
+import Config.Update exposing (Config)
 import Init.Graph.Id as Id exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
@@ -17,6 +18,9 @@ init entity address =
             , id = address.address
             }
     , address = address
+    , category =
+        address.tags
+            |> Maybe.andThen (List.head >> Maybe.andThen .category)
     , x =
         entity.x
             + entity.dx

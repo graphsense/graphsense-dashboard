@@ -1,4 +1,4 @@
-module Update.Graph.Adding exposing (addAddress, addLabel, checkAddress)
+module Update.Graph.Adding exposing (addAddress, addEntity, addLabel, checkAddress, checkEntity)
 
 import Model.Graph.Adding exposing (Model)
 import Set exposing (Set)
@@ -11,6 +11,13 @@ addAddress { currency, address } model =
     }
 
 
+addEntity : { currency : String, entity : Int } -> Model -> Model
+addEntity { currency, entity } model =
+    { model
+        | entities = Set.insert ( currency, entity ) model.entities
+    }
+
+
 addLabel : String -> Model -> Model
 addLabel label model =
     { model
@@ -18,13 +25,15 @@ addLabel label model =
     }
 
 
-checkAddress : { currency : String, address : String } -> Model -> Maybe Model
+checkAddress : { currency : String, address : String } -> Model -> Model
 checkAddress { currency, address } model =
-    if Set.member ( currency, address ) model.addresses then
-        { model
-            | addresses = Set.remove ( currency, address ) model.addresses
-        }
-            |> Just
+    { model
+        | addresses = Set.remove ( currency, address ) model.addresses
+    }
 
-    else
-        Nothing
+
+checkEntity : { currency : String, entity : Int } -> Model -> Model
+checkEntity { currency, entity } model =
+    { model
+        | entities = Set.remove ( currency, entity ) model.entities
+    }

@@ -72,7 +72,7 @@ searchResult vc sc model =
         rl =
             resultList vc sc model
     in
-    if String.length model.input < 4 || List.isEmpty rl then
+    if String.length model.input < 4 then
         span [] []
 
     else

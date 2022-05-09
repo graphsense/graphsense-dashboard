@@ -4,6 +4,16 @@
 module RecordSetter exposing (..)
 
 
+s_abbreviation : a -> { b | abbreviation : a } -> { b | abbreviation : a }
+s_abbreviation value__ record__ =
+    { record__ | abbreviation = value__ }
+
+
+s_abbreviations : a -> { b | abbreviations : a } -> { b | abbreviations : a }
+s_abbreviations value__ record__ =
+    { record__ | abbreviations = value__ }
+
+
 s_absoluteLength : a -> { b | absoluteLength : a } -> { b | absoluteLength : a }
 s_absoluteLength value__ record__ =
     { record__ | absoluteLength = value__ }
@@ -29,6 +39,11 @@ s_added value__ record__ =
     { record__ | added = value__ }
 
 
+s_adding : a -> { b | adding : a } -> { b | adding : a }
+s_adding value__ record__ =
+    { record__ | adding = value__ }
+
+
 s_addonsNav : a -> { b | addonsNav : a } -> { b | addonsNav : a }
 s_addonsNav value__ record__ =
     { record__ | addonsNav = value__ }
@@ -37,6 +52,36 @@ s_addonsNav value__ record__ =
 s_address : a -> { b | address : a } -> { b | address : a }
 s_address value__ record__ =
     { record__ | address = value__ }
+
+
+s_addressFlags : a -> { b | addressFlags : a } -> { b | addressFlags : a }
+s_addressFlags value__ record__ =
+    { record__ | addressFlags = value__ }
+
+
+s_addressFrame : a -> { b | addressFrame : a } -> { b | addressFrame : a }
+s_addressFrame value__ record__ =
+    { record__ | addressFrame = value__ }
+
+
+s_addressLabel : a -> { b | addressLabel : a } -> { b | addressLabel : a }
+s_addressLabel value__ record__ =
+    { record__ | addressLabel = value__ }
+
+
+s_addressLabelType : a -> { b | addressLabelType : a } -> { b | addressLabelType : a }
+s_addressLabelType value__ record__ =
+    { record__ | addressLabelType = value__ }
+
+
+s_addressRect : a -> { b | addressRect : a } -> { b | addressRect : a }
+s_addressRect value__ record__ =
+    { record__ | addressRect = value__ }
+
+
+s_addressRoot : a -> { b | addressRoot : a } -> { b | addressRoot : a }
+s_addressRoot value__ record__ =
+    { record__ | addressRoot = value__ }
 
 
 s_addressTags : a -> { b | addressTags : a } -> { b | addressTags : a }
@@ -199,6 +244,11 @@ s_baseUrl value__ record__ =
     { record__ | baseUrl = value__ }
 
 
+s_billion : a -> { b | billion : a } -> { b | billion : a }
+s_billion value__ record__ =
+    { record__ | billion = value__ }
+
+
 s_binary : a -> { b | binary : a } -> { b | binary : a }
 s_binary value__ record__ =
     { record__ | binary = value__ }
@@ -212,11 +262,6 @@ s_bits value__ record__ =
 s_black : a -> { b | black : a } -> { b | black : a }
 s_black value__ record__ =
     { record__ | black = value__ }
-
-
-s_block : a -> { b | block : a } -> { b | block : a }
-s_block value__ record__ =
-    { record__ | block = value__ }
 
 
 s_blockAxisOverflow : a -> { b | blockAxisOverflow : a } -> { b | blockAxisOverflow : a }
@@ -277,6 +322,11 @@ s_bounce value__ record__ =
 s_boxSizing : a -> { b | boxSizing : a } -> { b | boxSizing : a }
 s_boxSizing value__ record__ =
     { record__ | boxSizing = value__ }
+
+
+s_branchingBit : a -> { b | branchingBit : a } -> { b | branchingBit : a }
+s_branchingBit value__ record__ =
+    { record__ | branchingBit = value__ }
 
 
 s_brandBase : a -> { b | brandBase : a } -> { b | brandBase : a }
@@ -344,6 +394,11 @@ s_button value__ record__ =
     { record__ | button = value__ }
 
 
+s_bytes : a -> { b | bytes : a } -> { b | bytes : a }
+s_bytes value__ record__ =
+    { record__ | bytes = value__ }
+
+
 s_calc : a -> { b | calc : a } -> { b | calc : a }
 s_calc value__ record__ =
     { record__ | calc = value__ }
@@ -402,6 +457,16 @@ s_color value__ record__ =
 s_colorGamut : a -> { b | colorGamut : a } -> { b | colorGamut : a }
 s_colorGamut value__ record__ =
     { record__ | colorGamut = value__ }
+
+
+s_colorScheme : a -> { b | colorScheme : a } -> { b | colorScheme : a }
+s_colorScheme value__ record__ =
+    { record__ | colorScheme = value__ }
+
+
+s_colors : a -> { b | colors : a } -> { b | colors : a }
+s_colors value__ record__ =
+    { record__ | colors = value__ }
 
 
 s_command : a -> { b | command : a } -> { b | command : a }
@@ -479,6 +544,11 @@ s_custom value__ record__ =
     { record__ | custom = value__ }
 
 
+s_customSuffix : a -> { b | customSuffix : a } -> { b | customSuffix : a }
+s_customSuffix value__ record__ =
+    { record__ | customSuffix = value__ }
+
+
 s_danger : a -> { b | danger : a } -> { b | danger : a }
 s_danger value__ record__ =
     { record__ | danger = value__ }
@@ -492,6 +562,11 @@ s_day value__ record__ =
 s_days : a -> { b | days : a } -> { b | days : a }
 s_days value__ record__ =
     { record__ | days = value__ }
+
+
+s_decimal : a -> { b | decimal : a } -> { b | decimal : a }
+s_decimal value__ record__ =
+    { record__ | decimal = value__ }
 
 
 s_decimalSeparator : a -> { b | decimalSeparator : a } -> { b | decimalSeparator : a }
@@ -524,14 +599,29 @@ s_deconstructEffect value__ record__ =
     { record__ | deconstructEffect = value__ }
 
 
+s_defaultColor : a -> { b | defaultColor : a } -> { b | defaultColor : a }
+s_defaultColor value__ record__ =
+    { record__ | defaultColor = value__ }
+
+
 s_defaultHighlighting : a -> { b | defaultHighlighting : a } -> { b | defaultHighlighting : a }
 s_defaultHighlighting value__ record__ =
     { record__ | defaultHighlighting = value__ }
 
 
+s_degree : a -> { b | degree : a } -> { b | degree : a }
+s_degree value__ record__ =
+    { record__ | degree = value__ }
+
+
 s_delay : a -> { b | delay : a } -> { b | delay : a }
 s_delay value__ record__ =
     { record__ | delay = value__ }
+
+
+s_delimiters : a -> { b | delimiters : a } -> { b | delimiters : a }
+s_delimiters value__ record__ =
+    { record__ | delimiters = value__ }
 
 
 s_descendantsCount : a -> { b | descendantsCount : a } -> { b | descendantsCount : a }
@@ -579,6 +669,16 @@ s_duration value__ record__ =
     { record__ | duration = value__ }
 
 
+s_dx : a -> { b | dx : a } -> { b | dx : a }
+s_dx value__ record__ =
+    { record__ | dx = value__ }
+
+
+s_dy : a -> { b | dy : a } -> { b | dy : a }
+s_dy value__ record__ =
+    { record__ | dy = value__ }
+
+
 s_effectSimulation : a -> { b | effectSimulation : a } -> { b | effectSimulation : a }
 s_effectSimulation value__ record__ =
     { record__ | effectSimulation = value__ }
@@ -604,9 +704,49 @@ s_ending value__ record__ =
     { record__ | ending = value__ }
 
 
+s_entities : a -> { b | entities : a } -> { b | entities : a }
+s_entities value__ record__ =
+    { record__ | entities = value__ }
+
+
 s_entity : a -> { b | entity : a } -> { b | entity : a }
 s_entity value__ record__ =
     { record__ | entity = value__ }
+
+
+s_entityAddressesCount : a -> { b | entityAddressesCount : a } -> { b | entityAddressesCount : a }
+s_entityAddressesCount value__ record__ =
+    { record__ | entityAddressesCount = value__ }
+
+
+s_entityCurrency : a -> { b | entityCurrency : a } -> { b | entityCurrency : a }
+s_entityCurrency value__ record__ =
+    { record__ | entityCurrency = value__ }
+
+
+s_entityFlags : a -> { b | entityFlags : a } -> { b | entityFlags : a }
+s_entityFlags value__ record__ =
+    { record__ | entityFlags = value__ }
+
+
+s_entityFrame : a -> { b | entityFrame : a } -> { b | entityFrame : a }
+s_entityFrame value__ record__ =
+    { record__ | entityFrame = value__ }
+
+
+s_entityLabel : a -> { b | entityLabel : a } -> { b | entityLabel : a }
+s_entityLabel value__ record__ =
+    { record__ | entityLabel = value__ }
+
+
+s_entityRect : a -> { b | entityRect : a } -> { b | entityRect : a }
+s_entityRect value__ record__ =
+    { record__ | entityRect = value__ }
+
+
+s_entityRoot : a -> { b | entityRoot : a } -> { b | entityRoot : a }
+s_entityRoot value__ record__ =
+    { record__ | entityRoot = value__ }
 
 
 s_entityTags : a -> { b | entityTags : a } -> { b | entityTags : a }
@@ -627,6 +767,21 @@ s_events value__ record__ =
 s_exactly : a -> { b | exactly : a } -> { b | exactly : a }
 s_exactly value__ record__ =
     { record__ | exactly = value__ }
+
+
+s_expandHandle : a -> { b | expandHandle : a } -> { b | expandHandle : a }
+s_expandHandle value__ record__ =
+    { record__ | expandHandle = value__ }
+
+
+s_expandHandlePath : a -> { b | expandHandlePath : a } -> { b | expandHandlePath : a }
+s_expandHandlePath value__ record__ =
+    { record__ | expandHandlePath = value__ }
+
+
+s_expandHandleText : a -> { b | expandHandleText : a } -> { b | expandHandleText : a }
+s_expandHandleText value__ record__ =
+    { record__ | expandHandleText = value__ }
 
 
 s_expandoModel : a -> { b | expandoModel : a } -> { b | expandoModel : a }
@@ -774,9 +929,19 @@ s_fontWeight value__ record__ =
     { record__ | fontWeight = value__ }
 
 
+s_forAddress : a -> { b | forAddress : a } -> { b | forAddress : a }
+s_forAddress value__ record__ =
+    { record__ | forAddress = value__ }
+
+
 s_form : a -> { b | form : a } -> { b | form : a }
 s_form value__ record__ =
     { record__ | form = value__ }
+
+
+s_format_value : a -> { b | format_value : a } -> { b | format_value : a }
+s_format_value value__ record__ =
+    { record__ | format_value = value__ }
 
 
 s_found : a -> { b | found : a } -> { b | found : a }
@@ -832,6 +997,16 @@ s_given value__ record__ =
 s_good : a -> { b | good : a } -> { b | good : a }
 s_good value__ record__ =
     { record__ | good = value__ }
+
+
+s_graph : a -> { b | graph : a } -> { b | graph : a }
+s_graph value__ record__ =
+    { record__ | graph = value__ }
+
+
+s_graphRoot : a -> { b | graphRoot : a } -> { b | graphRoot : a }
+s_graphRoot value__ record__ =
+    { record__ | graphRoot = value__ }
 
 
 s_green : a -> { b | green : a } -> { b | green : a }
@@ -1089,6 +1264,11 @@ s_isClusterDefiner value__ record__ =
     { record__ | isClusterDefiner = value__ }
 
 
+s_isOutgoing : a -> { b | isOutgoing : a } -> { b | isOutgoing : a }
+s_isOutgoing value__ record__ =
+    { record__ | isOutgoing = value__ }
+
+
 s_isPublic : a -> { b | isPublic : a } -> { b | isPublic : a }
 s_isPublic value__ record__ =
     { record__ | isPublic = value__ }
@@ -1134,6 +1314,11 @@ s_labels value__ record__ =
     { record__ | labels = value__ }
 
 
+s_language : a -> { b | language : a } -> { b | language : a }
+s_language value__ record__ =
+    { record__ | language = value__ }
+
+
 s_larger : a -> { b | larger : a } -> { b | larger : a }
 s_larger value__ record__ =
     { record__ | larger = value__ }
@@ -1159,9 +1344,29 @@ s_latestBlocks value__ record__ =
     { record__ | latestBlocks = value__ }
 
 
+s_layer : a -> { b | layer : a } -> { b | layer : a }
+s_layer value__ record__ =
+    { record__ | layer = value__ }
+
+
+s_layers : a -> { b | layers : a } -> { b | layers : a }
+s_layers value__ record__ =
+    { record__ | layers = value__ }
+
+
 s_layout : a -> { b | layout : a } -> { b | layout : a }
 s_layout value__ record__ =
     { record__ | layout = value__ }
+
+
+s_leadingZeros : a -> { b | leadingZeros : a } -> { b | leadingZeros : a }
+s_leadingZeros value__ record__ =
+    { record__ | leadingZeros = value__ }
+
+
+s_left : a -> { b | left : a } -> { b | left : a }
+s_left value__ record__ =
+    { record__ | left = value__ }
 
 
 s_length : a -> { b | length : a } -> { b | length : a }
@@ -1207,6 +1412,11 @@ s_lengthOrNumberOrAutoOrNoneOrContent value__ record__ =
 s_lightness : a -> { b | lightness : a } -> { b | lightness : a }
 s_lightness value__ record__ =
     { record__ | lightness = value__ }
+
+
+s_lightnessFactor : a -> { b | lightnessFactor : a } -> { b | lightnessFactor : a }
+s_lightnessFactor value__ record__ =
+    { record__ | lightnessFactor = value__ }
 
 
 s_limit : a -> { b | limit : a } -> { b | limit : a }
@@ -1289,6 +1499,11 @@ s_maxHeight value__ record__ =
     { record__ | maxHeight = value__ }
 
 
+s_maxLettersPerLabelRow : a -> { b | maxLettersPerLabelRow : a } -> { b | maxLettersPerLabelRow : a }
+s_maxLettersPerLabelRow value__ record__ =
+    { record__ | maxLettersPerLabelRow = value__ }
+
+
 s_maxWidth : a -> { b | maxWidth : a } -> { b | maxWidth : a }
 s_maxWidth value__ record__ =
     { record__ | maxWidth = value__ }
@@ -1314,9 +1529,19 @@ s_method value__ record__ =
     { record__ | method = value__ }
 
 
+s_million : a -> { b | million : a } -> { b | million : a }
+s_million value__ record__ =
+    { record__ | million = value__ }
+
+
 s_minMaxDimension : a -> { b | minMaxDimension : a } -> { b | minMaxDimension : a }
 s_minMaxDimension value__ record__ =
     { record__ | minMaxDimension = value__ }
+
+
+s_minus : a -> { b | minus : a } -> { b | minus : a }
+s_minus value__ record__ =
+    { record__ | minus = value__ }
 
 
 s_minutes : a -> { b | minutes : a } -> { b | minutes : a }
@@ -1374,9 +1599,34 @@ s_namespaces value__ record__ =
     { record__ | namespaces = value__ }
 
 
+s_navbar : a -> { b | navbar : a } -> { b | navbar : a }
+s_navbar value__ record__ =
+    { record__ | navbar = value__ }
+
+
+s_navbarLeft : a -> { b | navbarLeft : a } -> { b | navbarLeft : a }
+s_navbarLeft value__ record__ =
+    { record__ | navbarLeft = value__ }
+
+
+s_navbarRight : a -> { b | navbarRight : a } -> { b | navbarRight : a }
+s_navbarRight value__ record__ =
+    { record__ | navbarRight = value__ }
+
+
 s_navigation : a -> { b | navigation : a } -> { b | navigation : a }
 s_navigation value__ record__ =
     { record__ | navigation = value__ }
+
+
+s_neg : a -> { b | neg : a } -> { b | neg : a }
+s_neg value__ record__ =
+    { record__ | neg = value__ }
+
+
+s_negP : a -> { b | negP : a } -> { b | negP : a }
+s_negP value__ record__ =
+    { record__ | negP = value__ }
 
 
 s_negativePrefix : a -> { b | negativePrefix : a } -> { b | negativePrefix : a }
@@ -1392,6 +1642,11 @@ s_negativeSuffix value__ record__ =
 s_neighbors : a -> { b | neighbors : a } -> { b | neighbors : a }
 s_neighbors value__ record__ =
     { record__ | neighbors = value__ }
+
+
+s_new : a -> { b | new : a } -> { b | new : a }
+s_new value__ record__ =
+    { record__ | new = value__ }
 
 
 s_newLines : a -> { b | newLines : a } -> { b | newLines : a }
@@ -1462,6 +1717,11 @@ s_nodeList value__ record__ =
 s_nodeListSize : a -> { b | nodeListSize : a } -> { b | nodeListSize : a }
 s_nodeListSize value__ record__ =
     { record__ | nodeListSize = value__ }
+
+
+s_nodeSeparatorToExpandHandle : a -> { b | nodeSeparatorToExpandHandle : a } -> { b | nodeSeparatorToExpandHandle : a }
+s_nodeSeparatorToExpandHandle value__ record__ =
+    { record__ | nodeSeparatorToExpandHandle = value__ }
 
 
 s_nodeType : a -> { b | nodeType : a } -> { b | nodeType : a }
@@ -1549,6 +1809,11 @@ s_oldTime value__ record__ =
     { record__ | oldTime = value__ }
 
 
+s_onClick : a -> { b | onClick : a } -> { b | onClick : a }
+s_onClick value__ record__ =
+    { record__ | onClick = value__ }
+
+
 s_onError : a -> { b | onError : a } -> { b | onError : a }
 s_onError value__ record__ =
     { record__ | onError = value__ }
@@ -1604,9 +1869,19 @@ s_open value__ record__ =
     { record__ | open = value__ }
 
 
+s_optionalDecimal : a -> { b | optionalDecimal : a } -> { b | optionalDecimal : a }
+s_optionalDecimal value__ record__ =
+    { record__ | optionalDecimal = value__ }
+
+
 s_options : a -> { b | options : a } -> { b | options : a }
 s_options value__ record__ =
     { record__ | options = value__ }
+
+
+s_ordinal : a -> { b | ordinal : a } -> { b | ordinal : a }
+s_ordinal value__ record__ =
+    { record__ | ordinal = value__ }
 
 
 s_orientation : a -> { b | orientation : a } -> { b | orientation : a }
@@ -1679,9 +1954,19 @@ s_overlay value__ record__ =
     { record__ | overlay = value__ }
 
 
+s_page : a -> { b | page : a } -> { b | page : a }
+s_page value__ record__ =
+    { record__ | page = value__ }
+
+
 s_params : a -> { b | params : a } -> { b | params : a }
 s_params value__ record__ =
     { record__ | params = value__ }
+
+
+s_parens : a -> { b | parens : a } -> { b | parens : a }
+s_parens value__ record__ =
+    { record__ | parens = value__ }
 
 
 s_part : a -> { b | part : a } -> { b | part : a }
@@ -1707,6 +1992,11 @@ s_paths value__ record__ =
 s_pids : a -> { b | pids : a } -> { b | pids : a }
 s_pids value__ record__ =
     { record__ | pids = value__ }
+
+
+s_plus : a -> { b | plus : a } -> { b | plus : a }
+s_plus value__ record__ =
+    { record__ | plus = value__ }
 
 
 s_pointerDevice : a -> { b | pointerDevice : a } -> { b | pointerDevice : a }
@@ -1754,6 +2044,11 @@ s_preambleComments value__ record__ =
     { record__ | preambleComments = value__ }
 
 
+s_precision : a -> { b | precision : a } -> { b | precision : a }
+s_precision value__ record__ =
+    { record__ | precision = value__ }
+
+
 s_predocComments : a -> { b | predocComments : a } -> { b | predocComments : a }
 s_predocComments value__ record__ =
     { record__ | predocComments = value__ }
@@ -1762,6 +2057,11 @@ s_predocComments value__ record__ =
 s_prefix : a -> { b | prefix : a } -> { b | prefix : a }
 s_prefix value__ record__ =
     { record__ | prefix = value__ }
+
+
+s_prefixBits : a -> { b | prefixBits : a } -> { b | prefixBits : a }
+s_prefixBits value__ record__ =
+    { record__ | prefixBits = value__ }
 
 
 s_preventDefault : a -> { b | preventDefault : a } -> { b | preventDefault : a }
@@ -1959,6 +2259,11 @@ s_reverseGet value__ record__ =
     { record__ | reverseGet = value__ }
 
 
+s_right : a -> { b | right : a } -> { b | right : a }
+s_right value__ record__ =
+    { record__ | right = value__ }
+
+
 s_rightNow : a -> { b | rightNow : a } -> { b | rightNow : a }
 s_rightNow value__ record__ =
     { record__ | rightNow = value__ }
@@ -1997,6 +2302,11 @@ s_sanitize value__ record__ =
 s_saturation : a -> { b | saturation : a } -> { b | saturation : a }
 s_saturation value__ record__ =
     { record__ | saturation = value__ }
+
+
+s_saturationFactor : a -> { b | saturationFactor : a } -> { b | saturationFactor : a }
+s_saturationFactor value__ record__ =
+    { record__ | saturationFactor = value__ }
 
 
 s_scaled : a -> { b | scaled : a } -> { b | scaled : a }
@@ -2057,6 +2367,11 @@ s_separator value__ record__ =
 s_shift : a -> { b | shift : a } -> { b | shift : a }
 s_shift value__ record__ =
     { record__ | shift = value__ }
+
+
+s_signed : a -> { b | signed : a } -> { b | signed : a }
+s_signed value__ record__ =
+    { record__ | signed = value__ }
 
 
 s_size : a -> { b | size : a } -> { b | size : a }
@@ -2164,6 +2479,16 @@ s_stopPropagation value__ record__ =
     { record__ | stopPropagation = value__ }
 
 
+s_store : a -> { b | store : a } -> { b | store : a }
+s_store value__ record__ =
+    { record__ | store = value__ }
+
+
+s_strValue : a -> { b | strValue : a } -> { b | strValue : a }
+s_strValue value__ record__ =
+    { record__ | strValue = value__ }
+
+
 s_stringAttributes : a -> { b | stringAttributes : a } -> { b | stringAttributes : a }
 s_stringAttributes value__ record__ =
     { record__ | stringAttributes = value__ }
@@ -2197,6 +2522,16 @@ s_subscriptions value__ record__ =
 s_suffix : a -> { b | suffix : a } -> { b | suffix : a }
 s_suffix value__ record__ =
     { record__ | suffix = value__ }
+
+
+s_svgRoot : a -> { b | svgRoot : a } -> { b | svgRoot : a }
+s_svgRoot value__ record__ =
+    { record__ | svgRoot = value__ }
+
+
+s_symbol : a -> { b | symbol : a } -> { b | symbol : a }
+s_symbol value__ record__ =
+    { record__ | symbol = value__ }
 
 
 s_system : a -> { b | system : a } -> { b | system : a }
@@ -2329,9 +2664,19 @@ s_theme value__ record__ =
     { record__ | theme = value__ }
 
 
+s_thousand : a -> { b | thousand : a } -> { b | thousand : a }
+s_thousand value__ record__ =
+    { record__ | thousand = value__ }
+
+
 s_thousandSeparator : a -> { b | thousandSeparator : a } -> { b | thousandSeparator : a }
 s_thousandSeparator value__ record__ =
     { record__ | thousandSeparator = value__ }
+
+
+s_thousands : a -> { b | thousands : a } -> { b | thousands : a }
+s_thousands value__ record__ =
+    { record__ | thousands = value__ }
 
 
 s_tickLength : a -> { b | tickLength : a } -> { b | tickLength : a }
@@ -2464,9 +2809,9 @@ s_transformStyle value__ record__ =
     { record__ | transformStyle = value__ }
 
 
-s_tx : a -> { b | tx : a } -> { b | tx : a }
-s_tx value__ record__ =
-    { record__ | tx = value__ }
+s_trillion : a -> { b | trillion : a } -> { b | trillion : a }
+s_trillion value__ record__ =
+    { record__ | trillion = value__ }
 
 
 s_txHash : a -> { b | txHash : a } -> { b | txHash : a }
@@ -2517,6 +2862,11 @@ s_update value__ record__ =
 s_updateFrequency : a -> { b | updateFrequency : a } -> { b | updateFrequency : a }
 s_updateFrequency value__ record__ =
     { record__ | updateFrequency = value__ }
+
+
+s_updatedEntity : a -> { b | updatedEntity : a } -> { b | updatedEntity : a }
+s_updatedEntity value__ record__ =
+    { record__ | updatedEntity = value__ }
 
 
 s_uri : a -> { b | uri : a } -> { b | uri : a }
@@ -2597,6 +2947,11 @@ s_withinFocus value__ record__ =
 s_without : a -> { b | without : a } -> { b | without : a }
 s_without value__ record__ =
     { record__ | without = value__ }
+
+
+s_word : a -> { b | word : a } -> { b | word : a }
+s_word value__ record__ =
+    { record__ | word = value__ }
 
 
 s_workQueue : a -> { b | workQueue : a } -> { b | workQueue : a }

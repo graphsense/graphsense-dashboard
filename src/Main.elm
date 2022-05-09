@@ -8,8 +8,8 @@ import Init exposing (init)
 import Model exposing (Flags, Model, Msg(..))
 import Model.Locale as Locale
 import Sub exposing (subscriptions)
-import Tuple
-import Update exposing (update)
+import Tuple exposing (..)
+import Update exposing (update, updateByUrl)
 import View exposing (view)
 import View.Locale as Locale
 
@@ -19,15 +19,28 @@ main =
     let
         performEffect ( model, effects ) =
             ( model, List.map (perform model.key model.user.apiKey) effects |> Cmd.batch )
+
+        uc =
+            { defaultColor = config.theme.graph.defaultColor
+            , colorScheme = config.theme.graph.colorScheme
+            }
     in
     Browser.application
         { init =
             \flags url key ->
-                init flags url key
+                let
+                    ( model, effects ) =
+                        init flags url key
+                in
+                updateByUrl uc url model
+                    |> mapSecond ((++) effects)
                     |> performEffect
         , update =
             \msg model ->
-                update msg model
+                update
+                    uc
+                    msg
+                    model
                     |> performEffect
         , view =
             \model ->

@@ -5,6 +5,6 @@ import Set exposing (Set)
 
 type alias Model =
     { addresses : Set ( String, String )
-    , entities : Set ( Int, String )
+    , entities : Set ( String, Int )
     , labels : Set String
     }

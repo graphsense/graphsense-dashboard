@@ -1,6 +1,8 @@
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: Adresse
 addresses: Adressen
+'{0}/{1} address': '1 Adresse'
+'{0}/{1} addresses': '{0}/{1} Adressen'
 entity: Entität
 entities: Entitäten
 transaction: Transaktion
