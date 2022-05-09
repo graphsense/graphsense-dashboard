@@ -664,6 +664,11 @@ s_down value__ record__ =
     { record__ | down = value__ }
 
 
+s_dragging : a -> { b | dragging : a } -> { b | dragging : a }
+s_dragging value__ record__ =
+    { record__ | dragging = value__ }
+
+
 s_duration : a -> { b | duration : a } -> { b | duration : a }
 s_duration value__ record__ =
     { record__ | duration = value__ }

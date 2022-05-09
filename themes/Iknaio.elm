@@ -278,7 +278,7 @@ theme =
                     , fontWeight (int 300)
                     ]
                 |> s_entityCurrency
-                    [ px 10 |> fontSize
+                    [ px 12 |> fontSize
                     ]
                 |> s_entityAddressesCount
                     [ px 14 |> fontSize ]

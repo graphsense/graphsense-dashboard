@@ -32,6 +32,8 @@ init flags url key =
             , hovercardElement = Nothing
             }
       , stats = NotAsked
+      , width = flags.width
+      , height = flags.height
       }
     , List.map LocaleEffect localeEffect
     )

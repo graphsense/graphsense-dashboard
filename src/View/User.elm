@@ -112,8 +112,8 @@ localeSwitch vc =
             (\( locale, language ) ->
                 option
                     [ value locale
-                    , Debug.log "locale" locale
-                        == Debug.log "vc.locale" vc.locale.locale
+                    , locale
+                        == vc.locale.locale
                         |> selected
                     ]
                     [ Locale.string vc.locale language |> text

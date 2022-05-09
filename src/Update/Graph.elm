@@ -6,11 +6,13 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Model.Graph exposing (..)
 import Msg.Graph as Msg exposing (Msg(..))
+import RecordSetter exposing (..)
 import Route
 import Set exposing (Set)
 import Update.Graph.Adding as Adding
 import Update.Graph.Color as Color
 import Update.Graph.Layer as Layer
+import Update.Graph.Transform as Transform
 
 
 addAddressAndEntity : Update.Config -> Api.Data.Address -> Api.Data.Entity -> Model -> ( Model, List Effect )
@@ -65,6 +67,36 @@ addEntity uc entity model =
 update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        BrowserGotSvgElement result ->
+            result
+                |> Result.map
+                    (\{ element } ->
+                        { model
+                            | width = element.width
+                            , height = element.height
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
+        UserPushesLeftMouseButtonOnGraph coords ->
+            { model
+                | transform = Transform.dragStart coords model.transform
+            }
+                |> n
+
+        UserMovesMouseOnGraph coords ->
+            { model
+                | transform = Transform.drag coords model.transform
+            }
+                |> n
+
+        UserReleasesMouseButton ->
+            { model
+                | transform = Transform.dragEnd model.transform
+            }
+                |> n
+
         UserClickedAddress id ->
             n model
 
@@ -121,3 +153,11 @@ addingLabel label model =
         | adding = Adding.addLabel label model.adding
     }
         |> n
+
+
+updateSize : Int -> Int -> Model -> Model
+updateSize w h model =
+    { model
+        | width = model.width + toFloat w
+        , height = model.height + toFloat h
+    }

@@ -145,11 +145,11 @@ currency vc gc ent =
     g
         [ Css.entityCurrency vc |> css
         , (Graph.padding / 2 + labelHeight / 2)
-            |> translate (Entity.getWidth ent - Graph.padding)
+            |> translate Graph.padding
             |> transform
         ]
         [ text_
-            [ textAnchor "end"
+            [ textAnchor "start"
             ]
             [ text (String.toUpper ent.entity.currency) ]
         ]

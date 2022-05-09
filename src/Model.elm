@@ -27,6 +27,8 @@ import Url exposing (Url)
 
 type alias Flags =
     { locale : String
+    , width : Int
+    , height : Int
     }
 
 
@@ -40,6 +42,8 @@ type alias Model navigationKey =
     , store : Model.Store.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
+    , width : Int
+    , height : Int
     }
 
 
@@ -54,6 +58,7 @@ type Msg
     | UserHoversUserIcon String
     | UserLeftUserHovercard
     | BrowserGotElement (Result Dom.Error Dom.Element)
+    | BrowserChangedWindowSize Int Int
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg

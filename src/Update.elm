@@ -5,6 +5,7 @@ import Browser.Navigation as Nav
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
 import Effect exposing (n)
+import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Store as Store
 import Http exposing (Error(..))
@@ -25,7 +26,7 @@ import Url exposing (Url)
 
 update : Config -> Msg -> Model key -> ( Model key, List Effect )
 update uc msg model =
-    case Debug.log "msg" msg of
+    case msg of
         UserRequestsUrl request ->
             case request of
                 Browser.Internal url ->
@@ -139,6 +140,14 @@ update uc msg model =
                 | user =
                     model.user
                         |> s_hovercardElement (Result.toMaybe result)
+            }
+                |> n
+
+        BrowserChangedWindowSize w h ->
+            { model
+                | graph = Graph.updateSize (w - model.width) (h - model.height) model.graph
+                , width = w
+                , height = h
             }
                 |> n
 
@@ -278,7 +287,7 @@ updateByUrl uc url model =
                             | page = Page.Graph
                             , graph = graph
                           }
-                        , List.map GraphEffect graphEffect
+                        , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
                             ++ List.map StoreEffect storeEffect
                         )
 

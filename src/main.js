@@ -10,4 +10,9 @@ const getNavigatorLanguage = () => {
 
 const locale = getNavigatorLanguage().split('-')[0]
 
-const app = Elm.Main.init({flags: {locale}});
+const docElem = document.documentElement
+const body = document.getElementsByTagName('body')[0]
+const width = window.innerWidth || docElem.clientWidth || body.clientWidth
+const height = window.innerHeight || docElem.clientHeight || body.clientHeight
+
+const app = Elm.Main.init({flags: {locale, width, height}});

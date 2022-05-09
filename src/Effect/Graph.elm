@@ -1,10 +1,17 @@
 module Effect.Graph exposing (Effect(..), perform)
 
+import Browser.Dom
+import Msg.Graph exposing (Msg(..))
+import Task
+
 
 type Effect
-    = NoEffect
+    = GetSvgElementEffect
 
 
-perform : Effect -> Cmd msg
+perform : Effect -> Cmd Msg
 perform eff =
-    Cmd.none
+    case eff of
+        GetSvgElementEffect ->
+            Browser.Dom.getElement "graph"
+                |> Task.attempt BrowserGotSvgElement
