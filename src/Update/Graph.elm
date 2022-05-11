@@ -79,6 +79,12 @@ update msg model =
                 |> Result.withDefault model
                 |> n
 
+        UserWheeledOnGraph x y z ->
+            { model
+                | transform = Transform.wheel { height = model.height, width = model.width } x y z model.transform
+            }
+                |> n
+
         UserPushesLeftMouseButtonOnGraph coords ->
             { model
                 | transform = Transform.dragStart coords model.transform
@@ -87,7 +93,7 @@ update msg model =
 
         UserMovesMouseOnGraph coords ->
             { model
-                | transform = Transform.drag coords model.transform
+                | transform = Transform.mousemove coords model.transform
             }
                 |> n
 

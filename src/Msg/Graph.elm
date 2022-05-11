@@ -20,4 +20,5 @@ type Msg
     | UserMovesMouseOnGraph { x : Float, y : Float }
     | UserReleasesMouseButton
     | BrowserGotSvgElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | UserWheeledOnGraph Float Float Float
     | NoOp

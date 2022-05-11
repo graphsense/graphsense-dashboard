@@ -8,6 +8,7 @@ type alias Model =
         , z : Float
         }
     , dragging : Dragging
+    , mouse : Coords
     }
 
 

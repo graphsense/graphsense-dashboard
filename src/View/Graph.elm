@@ -6,6 +6,7 @@ import Css.Graph as Css
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Html exposing (..)
 import Json.Decode
+import List.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Layer as Layer
 import Model.Graph.Transform as Transform
@@ -14,10 +15,10 @@ import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
-import Update.Graph.Transform as Transform
 import View.Graph.Address as Address
 import View.Graph.Entity as Entity
 import View.Graph.Navbar as Navbar
+import View.Graph.Transform as Transform
 
 
 view : Config -> Model -> Html Msg
@@ -33,8 +34,8 @@ view vc model =
 decodeCoords : Json.Decode.Decoder Transform.Coords
 decodeCoords =
     Json.Decode.map2 Transform.Coords
-        (Json.Decode.field "clientX" Json.Decode.float)
-        (Json.Decode.field "clientY" Json.Decode.float)
+        (Json.Decode.field "offsetX" Json.Decode.float)
+        (Json.Decode.field "offsetY" Json.Decode.float)
 
 
 graph : Config -> Graph.Config -> Model -> Html Msg
@@ -43,38 +44,26 @@ graph vc gc model =
         [ Css.graphRoot vc |> Html.css
         ]
         [ svg
-            ([ preserveAspectRatio "xMidYMid slice"
-             , Svg.id "graph"
-             , let
-                transform =
-                    Transform.get model.transform
-               in
-               [ transform.x
-               , transform.y
-               , model.width
-               , model.height
-               ]
-                |> List.map String.fromFloat
-                |> List.intersperse " "
-                |> String.concat
-                |> viewBox
-             , Css.svgRoot vc |> Svg.css
-             , Svg.on "mousedown"
+            [ preserveAspectRatio "xMidYMid slice"
+            , Svg.id "graph"
+            , Transform.viewBox { width = model.width, height = model.height } model.transform |> viewBox
+            , Css.svgRoot vc |> Svg.css
+            , Svg.on "wheel"
+                (Json.Decode.map3
+                    UserWheeledOnGraph
+                    (Json.Decode.field "deltaX" Json.Decode.float)
+                    (Json.Decode.field "deltaY" Json.Decode.float)
+                    (Json.Decode.field "deltaZ" Json.Decode.float)
+                )
+            , Svg.on "mousedown"
                 (decodeCoords
                     |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
                 )
-             ]
-                ++ (if model.transform.dragging /= Transform.NoDragging then
-                        [ Svg.preventDefaultOn "mousemove"
-                            (decodeCoords
-                                |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
-                            )
-                        ]
-
-                    else
-                        []
-                   )
-            )
+            , Svg.preventDefaultOn "mousemove"
+                (decodeCoords
+                    |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
+                )
+            ]
             [ entities vc gc model
             , addresses vc gc model
             ]

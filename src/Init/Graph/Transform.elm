@@ -11,4 +11,5 @@ init =
         , z = 1
         }
     , dragging = NoDragging
+    , mouse = { x = 0, y = 0 }
     }

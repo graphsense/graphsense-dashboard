@@ -2989,6 +2989,11 @@ s_years value__ record__ =
     { record__ | years = value__ }
 
 
+s_z : a -> { b | z : a } -> { b | z : a }
+s_z value__ record__ =
+    { record__ | z = value__ }
+
+
 s_zeroPrefix : a -> { b | zeroPrefix : a } -> { b | zeroPrefix : a }
 s_zeroPrefix value__ record__ =
     { record__ | zeroPrefix = value__ }
