@@ -24,6 +24,11 @@ s_abuse value__ record__ =
     { record__ | abuse = value__ }
 
 
+s_accumulatedFaces : a -> { b | accumulatedFaces : a } -> { b | accumulatedFaces : a }
+s_accumulatedFaces value__ record__ =
+    { record__ | accumulatedFaces = value__ }
+
+
 s_active : a -> { b | active : a } -> { b | active : a }
 s_active value__ record__ =
     { record__ | active = value__ }
@@ -167,6 +172,21 @@ s_attributeNamespace value__ record__ =
 s_auth : a -> { b | auth : a } -> { b | auth : a }
 s_auth value__ record__ =
     { record__ | auth = value__ }
+
+
+s_axes : a -> { b | axes : a } -> { b | axes : a }
+s_axes value__ record__ =
+    { record__ | axes = value__ }
+
+
+s_axialDirection : a -> { b | axialDirection : a } -> { b | axialDirection : a }
+s_axialDirection value__ record__ =
+    { record__ | axialDirection = value__ }
+
+
+s_axis : a -> { b | axis : a } -> { b | axis : a }
+s_axis value__ record__ =
+    { record__ | axis = value__ }
 
 
 s_backgroundAttachment : a -> { b | backgroundAttachment : a } -> { b | backgroundAttachment : a }
@@ -314,9 +334,29 @@ s_borderWidth value__ record__ =
     { record__ | borderWidth = value__ }
 
 
+s_bottomEdge : a -> { b | bottomEdge : a } -> { b | bottomEdge : a }
+s_bottomEdge value__ record__ =
+    { record__ | bottomEdge = value__ }
+
+
+s_bottomLeftVertex : a -> { b | bottomLeftVertex : a } -> { b | bottomLeftVertex : a }
+s_bottomLeftVertex value__ record__ =
+    { record__ | bottomLeftVertex = value__ }
+
+
+s_bottomRightVertex : a -> { b | bottomRightVertex : a } -> { b | bottomRightVertex : a }
+s_bottomRightVertex value__ record__ =
+    { record__ | bottomRightVertex = value__ }
+
+
 s_bounce : a -> { b | bounce : a } -> { b | bounce : a }
 s_bounce value__ record__ =
     { record__ | bounce = value__ }
+
+
+s_boundingBox : a -> { b | boundingBox : a } -> { b | boundingBox : a }
+s_boundingBox value__ record__ =
+    { record__ | boundingBox = value__ }
 
 
 s_boxSizing : a -> { b | boxSizing : a } -> { b | boxSizing : a }
@@ -414,6 +454,26 @@ s_category value__ record__ =
     { record__ | category = value__ }
 
 
+s_centerPoint : a -> { b | centerPoint : a } -> { b | centerPoint : a }
+s_centerPoint value__ record__ =
+    { record__ | centerPoint = value__ }
+
+
+s_chainEnd : a -> { b | chainEnd : a } -> { b | chainEnd : a }
+s_chainEnd value__ record__ =
+    { record__ | chainEnd = value__ }
+
+
+s_chainInterior : a -> { b | chainInterior : a } -> { b | chainInterior : a }
+s_chainInterior value__ record__ =
+    { record__ | chainInterior = value__ }
+
+
+s_chainStart : a -> { b | chainStart : a } -> { b | chainStart : a }
+s_chainStart value__ record__ =
+    { record__ | chainStart = value__ }
+
+
 s_changed : a -> { b | changed : a } -> { b | changed : a }
 s_changed value__ record__ =
     { record__ | changed = value__ }
@@ -432,6 +492,11 @@ s_charset value__ record__ =
 s_children : a -> { b | children : a } -> { b | children : a }
 s_children value__ record__ =
     { record__ | children = value__ }
+
+
+s_circumcircle : a -> { b | circumcircle : a } -> { b | circumcircle : a }
+s_circumcircle value__ record__ =
+    { record__ | circumcircle = value__ }
 
 
 s_code : a -> { b | code : a } -> { b | code : a }
@@ -609,9 +674,29 @@ s_defaultHighlighting value__ record__ =
     { record__ | defaultHighlighting = value__ }
 
 
+s_defines : a -> { b | defines : a } -> { b | defines : a }
+s_defines value__ record__ =
+    { record__ | defines = value__ }
+
+
 s_degree : a -> { b | degree : a } -> { b | degree : a }
 s_degree value__ record__ =
     { record__ | degree = value__ }
+
+
+s_degrees : a -> { b | degrees : a } -> { b | degrees : a }
+s_degrees value__ record__ =
+    { record__ | degrees = value__ }
+
+
+s_delaunayTriangulation : a -> { b | delaunayTriangulation : a } -> { b | delaunayTriangulation : a }
+s_delaunayTriangulation value__ record__ =
+    { record__ | delaunayTriangulation = value__ }
+
+
+s_delaunayVertices : a -> { b | delaunayVertices : a } -> { b | delaunayVertices : a }
+s_delaunayVertices value__ record__ =
+    { record__ | delaunayVertices = value__ }
 
 
 s_delay : a -> { b | delay : a } -> { b | delay : a }
@@ -622,6 +707,11 @@ s_delay value__ record__ =
 s_delimiters : a -> { b | delimiters : a } -> { b | delimiters : a }
 s_delimiters value__ record__ =
     { record__ | delimiters = value__ }
+
+
+s_derivativeMagnitude : a -> { b | derivativeMagnitude : a } -> { b | derivativeMagnitude : a }
+s_derivativeMagnitude value__ record__ =
+    { record__ | derivativeMagnitude = value__ }
 
 
 s_descendantsCount : a -> { b | descendantsCount : a } -> { b | descendantsCount : a }
@@ -639,6 +729,16 @@ s_dim value__ record__ =
     { record__ | dim = value__ }
 
 
+s_dimensions : a -> { b | dimensions : a } -> { b | dimensions : a }
+s_dimensions value__ record__ =
+    { record__ | dimensions = value__ }
+
+
+s_direction : a -> { b | direction : a } -> { b | direction : a }
+s_direction value__ record__ =
+    { record__ | direction = value__ }
+
+
 s_disabled : a -> { b | disabled : a } -> { b | disabled : a }
 s_disabled value__ record__ =
     { record__ | disabled = value__ }
@@ -647,6 +747,11 @@ s_disabled value__ record__ =
 s_display : a -> { b | display : a } -> { b | display : a }
 s_display value__ record__ =
     { record__ | display = value__ }
+
+
+s_distance : a -> { b | distance : a } -> { b | distance : a }
+s_distance value__ record__ =
+    { record__ | distance = value__ }
 
 
 s_doctype : a -> { b | doctype : a } -> { b | doctype : a }
@@ -684,6 +789,21 @@ s_dy value__ record__ =
     { record__ | dy = value__ }
 
 
+s_edgeDict : a -> { b | edgeDict : a } -> { b | edgeDict : a }
+s_edgeDict value__ record__ =
+    { record__ | edgeDict = value__ }
+
+
+s_edgeSet : a -> { b | edgeSet : a } -> { b | edgeSet : a }
+s_edgeSet value__ record__ =
+    { record__ | edgeSet = value__ }
+
+
+s_edges : a -> { b | edges : a } -> { b | edges : a }
+s_edges value__ record__ =
+    { record__ | edges = value__ }
+
+
 s_effectSimulation : a -> { b | effectSimulation : a } -> { b | effectSimulation : a }
 s_effectSimulation value__ record__ =
     { record__ | effectSimulation = value__ }
@@ -694,6 +814,11 @@ s_element value__ record__ =
     { record__ | element = value__ }
 
 
+s_ellipse : a -> { b | ellipse : a } -> { b | ellipse : a }
+s_ellipse value__ record__ =
+    { record__ | ellipse = value__ }
+
+
 s_elm : a -> { b | elm : a } -> { b | elm : a }
 s_elm value__ record__ =
     { record__ | elm = value__ }
@@ -702,6 +827,21 @@ s_elm value__ record__ =
 s_end : a -> { b | end : a } -> { b | end : a }
 s_end value__ record__ =
     { record__ | end = value__ }
+
+
+s_endDirection : a -> { b | endDirection : a } -> { b | endDirection : a }
+s_endDirection value__ record__ =
+    { record__ | endDirection = value__ }
+
+
+s_endPoint : a -> { b | endPoint : a } -> { b | endPoint : a }
+s_endPoint value__ record__ =
+    { record__ | endPoint = value__ }
+
+
+s_endVertexIndex : a -> { b | endVertexIndex : a } -> { b | endVertexIndex : a }
+s_endVertexIndex value__ record__ =
+    { record__ | endVertexIndex = value__ }
 
 
 s_ending : a -> { b | ending : a } -> { b | ending : a }
@@ -829,6 +969,16 @@ s_extra value__ record__ =
     { record__ | extra = value__ }
 
 
+s_faceIndices : a -> { b | faceIndices : a } -> { b | faceIndices : a }
+s_faceIndices value__ record__ =
+    { record__ | faceIndices = value__ }
+
+
+s_faces : a -> { b | faces : a } -> { b | faces : a }
+s_faces value__ record__ =
+    { record__ | faces = value__ }
+
+
 s_facts : a -> { b | facts : a } -> { b | facts : a }
 s_facts value__ record__ =
     { record__ | facts = value__ }
@@ -854,9 +1004,24 @@ s_filename value__ record__ =
     { record__ | filename = value__ }
 
 
+s_firstControlPoint : a -> { b | firstControlPoint : a } -> { b | firstControlPoint : a }
+s_firstControlPoint value__ record__ =
+    { record__ | firstControlPoint = value__ }
+
+
+s_firstEdge : a -> { b | firstEdge : a } -> { b | firstEdge : a }
+s_firstEdge value__ record__ =
+    { record__ | firstEdge = value__ }
+
+
 s_firstTx : a -> { b | firstTx : a } -> { b | firstTx : a }
 s_firstTx value__ record__ =
     { record__ | firstTx = value__ }
+
+
+s_firstWeight : a -> { b | firstWeight : a } -> { b | firstWeight : a }
+s_firstWeight value__ record__ =
+    { record__ | firstWeight = value__ }
 
 
 s_flexBasis : a -> { b | flexBasis : a } -> { b | flexBasis : a }
@@ -957,6 +1122,16 @@ s_found value__ record__ =
 s_foundAny : a -> { b | foundAny : a } -> { b | foundAny : a }
 s_foundAny value__ record__ =
     { record__ | foundAny = value__ }
+
+
+s_fourthControlPoint : a -> { b | fourthControlPoint : a } -> { b | fourthControlPoint : a }
+s_fourthControlPoint value__ record__ =
+    { record__ | fourthControlPoint = value__ }
+
+
+s_fourthWeight : a -> { b | fourthWeight : a } -> { b | fourthWeight : a }
+s_fourthWeight value__ record__ =
+    { record__ | fourthWeight = value__ }
 
 
 s_frag : a -> { b | frag : a } -> { b | frag : a }
@@ -1087,6 +1262,11 @@ s_heading2 value__ record__ =
 s_height : a -> { b | height : a } -> { b | height : a }
 s_height value__ record__ =
     { record__ | height = value__ }
+
+
+s_helpers : a -> { b | helpers : a } -> { b | helpers : a }
+s_helpers value__ record__ =
+    { record__ | helpers = value__ }
 
 
 s_hex : a -> { b | hex : a } -> { b | hex : a }
@@ -1229,6 +1409,11 @@ s_inner value__ record__ =
     { record__ | inner = value__ }
 
 
+s_innerLoops : a -> { b | innerLoops : a } -> { b | innerLoops : a }
+s_innerLoops value__ record__ =
+    { record__ | innerLoops = value__ }
+
+
 s_input : a -> { b | input : a } -> { b | input : a }
 s_input value__ record__ =
     { record__ | input = value__ }
@@ -1269,6 +1454,11 @@ s_isClusterDefiner value__ record__ =
     { record__ | isClusterDefiner = value__ }
 
 
+s_isMerge : a -> { b | isMerge : a } -> { b | isMerge : a }
+s_isMerge value__ record__ =
+    { record__ | isMerge = value__ }
+
+
 s_isOutgoing : a -> { b | isOutgoing : a } -> { b | isOutgoing : a }
 s_isOutgoing value__ record__ =
     { record__ | isOutgoing = value__ }
@@ -1307,6 +1497,11 @@ s_keyframes value__ record__ =
 s_kids : a -> { b | kids : a } -> { b | kids : a }
 s_kids value__ record__ =
     { record__ | kids = value__ }
+
+
+s_kind : a -> { b | kind : a } -> { b | kind : a }
+s_kind value__ record__ =
+    { record__ | kind = value__ }
 
 
 s_label : a -> { b | label : a } -> { b | label : a }
@@ -1374,9 +1569,74 @@ s_left value__ record__ =
     { record__ | left = value__ }
 
 
+s_leftBranch : a -> { b | leftBranch : a } -> { b | leftBranch : a }
+s_leftBranch value__ record__ =
+    { record__ | leftBranch = value__ }
+
+
+s_leftEdge : a -> { b | leftEdge : a } -> { b | leftEdge : a }
+s_leftEdge value__ record__ =
+    { record__ | leftEdge = value__ }
+
+
 s_length : a -> { b | length : a } -> { b | length : a }
 s_length value__ record__ =
     { record__ | length = value__ }
+
+
+s_length0 : a -> { b | length0 : a } -> { b | length0 : a }
+s_length0 value__ record__ =
+    { record__ | length0 = value__ }
+
+
+s_length1 : a -> { b | length1 : a } -> { b | length1 : a }
+s_length1 value__ record__ =
+    { record__ | length1 = value__ }
+
+
+s_length2 : a -> { b | length2 : a } -> { b | length2 : a }
+s_length2 value__ record__ =
+    { record__ | length2 = value__ }
+
+
+s_length3 : a -> { b | length3 : a } -> { b | length3 : a }
+s_length3 value__ record__ =
+    { record__ | length3 = value__ }
+
+
+s_length4 : a -> { b | length4 : a } -> { b | length4 : a }
+s_length4 value__ record__ =
+    { record__ | length4 = value__ }
+
+
+s_length5 : a -> { b | length5 : a } -> { b | length5 : a }
+s_length5 value__ record__ =
+    { record__ | length5 = value__ }
+
+
+s_length6 : a -> { b | length6 : a } -> { b | length6 : a }
+s_length6 value__ record__ =
+    { record__ | length6 = value__ }
+
+
+s_length7 : a -> { b | length7 : a } -> { b | length7 : a }
+s_length7 value__ record__ =
+    { record__ | length7 = value__ }
+
+
+s_length8 : a -> { b | length8 : a } -> { b | length8 : a }
+s_length8 value__ record__ =
+    { record__ | length8 = value__ }
+
+
+s_lengthAtEnd : a -> { b | lengthAtEnd : a } -> { b | lengthAtEnd : a }
+s_lengthAtEnd value__ record__ =
+    { record__ | lengthAtEnd = value__ }
+
+
+s_lengthAtStart : a -> { b | lengthAtStart : a } -> { b | lengthAtStart : a }
+s_lengthAtStart value__ record__ =
+    { record__ | lengthAtStart = value__ }
 
 
 s_lengthOrAuto : a -> { b | lengthOrAuto : a } -> { b | lengthOrAuto : a }
@@ -1412,6 +1672,11 @@ s_lengthOrNumber value__ record__ =
 s_lengthOrNumberOrAutoOrNoneOrContent : a -> { b | lengthOrNumberOrAutoOrNoneOrContent : a } -> { b | lengthOrNumberOrAutoOrNoneOrContent : a }
 s_lengthOrNumberOrAutoOrNoneOrContent value__ record__ =
     { record__ | lengthOrNumberOrAutoOrNoneOrContent = value__ }
+
+
+s_level : a -> { b | level : a } -> { b | level : a }
+s_level value__ record__ =
+    { record__ | level = value__ }
 
 
 s_lightness : a -> { b | lightness : a } -> { b | lightness : a }
@@ -1499,6 +1764,11 @@ s_matchingAddresses value__ record__ =
     { record__ | matchingAddresses = value__ }
 
 
+s_maxError : a -> { b | maxError : a } -> { b | maxError : a }
+s_maxError value__ record__ =
+    { record__ | maxError = value__ }
+
+
 s_maxHeight : a -> { b | maxHeight : a } -> { b | maxHeight : a }
 s_maxHeight value__ record__ =
     { record__ | maxHeight = value__ }
@@ -1509,9 +1779,29 @@ s_maxLettersPerLabelRow value__ record__ =
     { record__ | maxLettersPerLabelRow = value__ }
 
 
+s_maxSecondDerivativeMagnitude : a -> { b | maxSecondDerivativeMagnitude : a } -> { b | maxSecondDerivativeMagnitude : a }
+s_maxSecondDerivativeMagnitude value__ record__ =
+    { record__ | maxSecondDerivativeMagnitude = value__ }
+
+
 s_maxWidth : a -> { b | maxWidth : a } -> { b | maxWidth : a }
 s_maxWidth value__ record__ =
     { record__ | maxWidth = value__ }
+
+
+s_maxX : a -> { b | maxX : a } -> { b | maxX : a }
+s_maxX value__ record__ =
+    { record__ | maxX = value__ }
+
+
+s_maxY : a -> { b | maxY : a } -> { b | maxY : a }
+s_maxY value__ record__ =
+    { record__ | maxY = value__ }
+
+
+s_maxZ : a -> { b | maxZ : a } -> { b | maxZ : a }
+s_maxZ value__ record__ =
+    { record__ | maxZ = value__ }
 
 
 s_message : a -> { b | message : a } -> { b | message : a }
@@ -1542,6 +1832,21 @@ s_million value__ record__ =
 s_minMaxDimension : a -> { b | minMaxDimension : a } -> { b | minMaxDimension : a }
 s_minMaxDimension value__ record__ =
     { record__ | minMaxDimension = value__ }
+
+
+s_minX : a -> { b | minX : a } -> { b | minX : a }
+s_minX value__ record__ =
+    { record__ | minX = value__ }
+
+
+s_minY : a -> { b | minY : a } -> { b | minY : a }
+s_minY value__ record__ =
+    { record__ | minY = value__ }
+
+
+s_minZ : a -> { b | minZ : a } -> { b | minZ : a }
+s_minZ value__ record__ =
+    { record__ | minZ = value__ }
 
 
 s_minus : a -> { b | minus : a } -> { b | minus : a }
@@ -1577,6 +1882,11 @@ s_month value__ record__ =
 s_months : a -> { b | months : a } -> { b | months : a }
 s_months value__ record__ =
     { record__ | months = value__ }
+
+
+s_mouse : a -> { b | mouse : a } -> { b | mouse : a }
+s_mouse value__ record__ =
+    { record__ | mouse = value__ }
 
 
 s_msg : a -> { b | msg : a } -> { b | msg : a }
@@ -1659,9 +1969,19 @@ s_newLines value__ record__ =
     { record__ | newLines = value__ }
 
 
+s_nextEdgeIndex : a -> { b | nextEdgeIndex : a } -> { b | nextEdgeIndex : a }
+s_nextEdgeIndex value__ record__ =
+    { record__ | nextEdgeIndex = value__ }
+
+
 s_nextPage : a -> { b | nextPage : a } -> { b | nextPage : a }
 s_nextPage value__ record__ =
     { record__ | nextPage = value__ }
+
+
+s_nextVertexIndex : a -> { b | nextVertexIndex : a } -> { b | nextVertexIndex : a }
+s_nextVertexIndex value__ record__ =
+    { record__ | nextVertexIndex = value__ }
 
 
 s_noAddressRelations : a -> { b | noAddressRelations : a } -> { b | noAddressRelations : a }
@@ -1764,9 +2084,24 @@ s_nodeTypeThunk value__ record__ =
     { record__ | nodeTypeThunk = value__ }
 
 
+s_nondegenerateArc : a -> { b | nondegenerateArc : a } -> { b | nondegenerateArc : a }
+s_nondegenerateArc value__ record__ =
+    { record__ | nondegenerateArc = value__ }
+
+
+s_nondegenerateSpline : a -> { b | nondegenerateSpline : a } -> { b | nondegenerateSpline : a }
+s_nondegenerateSpline value__ record__ =
+    { record__ | nondegenerateSpline = value__ }
+
+
 s_none : a -> { b | none : a } -> { b | none : a }
 s_none value__ record__ =
     { record__ | none = value__ }
+
+
+s_normalDirection : a -> { b | normalDirection : a } -> { b | normalDirection : a }
+s_normalDirection value__ record__ =
+    { record__ | normalDirection = value__ }
 
 
 s_nowMs : a -> { b | nowMs : a } -> { b | nowMs : a }
@@ -1894,6 +2229,11 @@ s_orientation value__ record__ =
     { record__ | orientation = value__ }
 
 
+s_originPoint : a -> { b | originPoint : a } -> { b | originPoint : a }
+s_originPoint value__ record__ =
+    { record__ | originPoint = value__ }
+
+
 s_original : a -> { b | original : a } -> { b | original : a }
 s_original value__ record__ =
     { record__ | original = value__ }
@@ -1917,6 +2257,16 @@ s_otherwise value__ record__ =
 s_outDegree : a -> { b | outDegree : a } -> { b | outDegree : a }
 s_outDegree value__ record__ =
     { record__ | outDegree = value__ }
+
+
+s_outerLoop : a -> { b | outerLoop : a } -> { b | outerLoop : a }
+s_outerLoop value__ record__ =
+    { record__ | outerLoop = value__ }
+
+
+s_outgoingEdgeIndex : a -> { b | outgoingEdgeIndex : a } -> { b | outgoingEdgeIndex : a }
+s_outgoingEdgeIndex value__ record__ =
+    { record__ | outgoingEdgeIndex = value__ }
 
 
 s_outgoingPortValues : a -> { b | outgoingPortValues : a } -> { b | outgoingPortValues : a }
@@ -1962,6 +2312,61 @@ s_overlay value__ record__ =
 s_page : a -> { b | page : a } -> { b | page : a }
 s_page value__ record__ =
     { record__ | page = value__ }
+
+
+s_param0 : a -> { b | param0 : a } -> { b | param0 : a }
+s_param0 value__ record__ =
+    { record__ | param0 = value__ }
+
+
+s_param1 : a -> { b | param1 : a } -> { b | param1 : a }
+s_param1 value__ record__ =
+    { record__ | param1 = value__ }
+
+
+s_param2 : a -> { b | param2 : a } -> { b | param2 : a }
+s_param2 value__ record__ =
+    { record__ | param2 = value__ }
+
+
+s_param3 : a -> { b | param3 : a } -> { b | param3 : a }
+s_param3 value__ record__ =
+    { record__ | param3 = value__ }
+
+
+s_param4 : a -> { b | param4 : a } -> { b | param4 : a }
+s_param4 value__ record__ =
+    { record__ | param4 = value__ }
+
+
+s_param5 : a -> { b | param5 : a } -> { b | param5 : a }
+s_param5 value__ record__ =
+    { record__ | param5 = value__ }
+
+
+s_param6 : a -> { b | param6 : a } -> { b | param6 : a }
+s_param6 value__ record__ =
+    { record__ | param6 = value__ }
+
+
+s_param7 : a -> { b | param7 : a } -> { b | param7 : a }
+s_param7 value__ record__ =
+    { record__ | param7 = value__ }
+
+
+s_param8 : a -> { b | param8 : a } -> { b | param8 : a }
+s_param8 value__ record__ =
+    { record__ | param8 = value__ }
+
+
+s_paramAtStart : a -> { b | paramAtStart : a } -> { b | paramAtStart : a }
+s_paramAtStart value__ record__ =
+    { record__ | paramAtStart = value__ }
+
+
+s_parameterization : a -> { b | parameterization : a } -> { b | parameterization : a }
+s_parameterization value__ record__ =
+    { record__ | parameterization = value__ }
 
 
 s_params : a -> { b | params : a } -> { b | params : a }
@@ -2012,6 +2417,11 @@ s_pointerDevice value__ record__ =
 s_pointerEvents : a -> { b | pointerEvents : a } -> { b | pointerEvents : a }
 s_pointerEvents value__ record__ =
     { record__ | pointerEvents = value__ }
+
+
+s_points : a -> { b | points : a } -> { b | points : a }
+s_points value__ record__ =
+    { record__ | points = value__ }
 
 
 s_popout : a -> { b | popout : a } -> { b | popout : a }
@@ -2074,6 +2484,11 @@ s_preventDefault value__ record__ =
     { record__ | preventDefault = value__ }
 
 
+s_previousEdgeIndex : a -> { b | previousEdgeIndex : a } -> { b | previousEdgeIndex : a }
+s_previousEdgeIndex value__ record__ =
+    { record__ | previousEdgeIndex = value__ }
+
+
 s_primary : a -> { b | primary : a } -> { b | primary : a }
 s_primary value__ record__ =
     { record__ | primary = value__ }
@@ -2099,6 +2514,11 @@ s_processes value__ record__ =
     { record__ | processes = value__ }
 
 
+s_profile : a -> { b | profile : a } -> { b | profile : a }
+s_profile value__ record__ =
+    { record__ | profile = value__ }
+
+
 s_program : a -> { b | program : a } -> { b | program : a }
 s_program value__ record__ =
     { record__ | program = value__ }
@@ -2117,6 +2537,11 @@ s_query value__ record__ =
 s_queryParams : a -> { b | queryParams : a } -> { b | queryParams : a }
 s_queryParams value__ record__ =
     { record__ | queryParams = value__ }
+
+
+s_radius : a -> { b | radius : a } -> { b | radius : a }
+s_radius value__ record__ =
+    { record__ | radius = value__ }
 
 
 s_rates : a -> { b | rates : a } -> { b | rates : a }
@@ -2152,6 +2577,11 @@ s_red value__ record__ =
 s_refs : a -> { b | refs : a } -> { b | refs : a }
 s_refs value__ record__ =
     { record__ | refs = value__ }
+
+
+s_regions : a -> { b | regions : a } -> { b | regions : a }
+s_regions value__ record__ =
+    { record__ | regions = value__ }
 
 
 s_relation : a -> { b | relation : a } -> { b | relation : a }
@@ -2269,6 +2699,16 @@ s_right value__ record__ =
     { record__ | right = value__ }
 
 
+s_rightBranch : a -> { b | rightBranch : a } -> { b | rightBranch : a }
+s_rightBranch value__ record__ =
+    { record__ | rightBranch = value__ }
+
+
+s_rightEdge : a -> { b | rightEdge : a } -> { b | rightEdge : a }
+s_rightEdge value__ record__ =
+    { record__ | rightEdge = value__ }
+
+
 s_rightNow : a -> { b | rightNow : a } -> { b | rightNow : a }
 s_rightNow value__ record__ =
     { record__ | rightNow = value__ }
@@ -2344,6 +2784,21 @@ s_search value__ record__ =
     { record__ | search = value__ }
 
 
+s_secondControlPoint : a -> { b | secondControlPoint : a } -> { b | secondControlPoint : a }
+s_secondControlPoint value__ record__ =
+    { record__ | secondControlPoint = value__ }
+
+
+s_secondEdge : a -> { b | secondEdge : a } -> { b | secondEdge : a }
+s_secondEdge value__ record__ =
+    { record__ | secondEdge = value__ }
+
+
+s_secondWeight : a -> { b | secondWeight : a } -> { b | secondWeight : a }
+s_secondWeight value__ record__ =
+    { record__ | secondWeight = value__ }
+
+
 s_seconds : a -> { b | seconds : a } -> { b | seconds : a }
 s_seconds value__ record__ =
     { record__ | seconds = value__ }
@@ -2374,14 +2829,29 @@ s_shift value__ record__ =
     { record__ | shift = value__ }
 
 
+s_sign : a -> { b | sign : a } -> { b | sign : a }
+s_sign value__ record__ =
+    { record__ | sign = value__ }
+
+
 s_signed : a -> { b | signed : a } -> { b | signed : a }
 s_signed value__ record__ =
     { record__ | signed = value__ }
 
 
+s_signedLength : a -> { b | signedLength : a } -> { b | signedLength : a }
+s_signedLength value__ record__ =
+    { record__ | signedLength = value__ }
+
+
 s_size : a -> { b | size : a } -> { b | size : a }
 s_size value__ record__ =
     { record__ | size = value__ }
+
+
+s_sketchPlane : a -> { b | sketchPlane : a } -> { b | sketchPlane : a }
+s_sketchPlane value__ record__ =
+    { record__ | sketchPlane = value__ }
 
 
 s_skipped : a -> { b | skipped : a } -> { b | skipped : a }
@@ -2459,6 +2929,26 @@ s_start value__ record__ =
     { record__ | start = value__ }
 
 
+s_startAngle : a -> { b | startAngle : a } -> { b | startAngle : a }
+s_startAngle value__ record__ =
+    { record__ | startAngle = value__ }
+
+
+s_startDirection : a -> { b | startDirection : a } -> { b | startDirection : a }
+s_startDirection value__ record__ =
+    { record__ | startDirection = value__ }
+
+
+s_startPoint : a -> { b | startPoint : a } -> { b | startPoint : a }
+s_startPoint value__ record__ =
+    { record__ | startPoint = value__ }
+
+
+s_startVertexIndex : a -> { b | startVertexIndex : a } -> { b | startVertexIndex : a }
+s_startVertexIndex value__ record__ =
+    { record__ | startVertexIndex = value__ }
+
+
 s_state : a -> { b | state : a } -> { b | state : a }
 s_state value__ record__ =
     { record__ | state = value__ }
@@ -2477,6 +2967,11 @@ s_statusCode value__ record__ =
 s_statusText : a -> { b | statusText : a } -> { b | statusText : a }
 s_statusText value__ record__ =
     { record__ | statusText = value__ }
+
+
+s_steps : a -> { b | steps : a } -> { b | steps : a }
+s_steps value__ record__ =
+    { record__ | steps = value__ }
 
 
 s_stopPropagation : a -> { b | stopPropagation : a } -> { b | stopPropagation : a }
@@ -2532,6 +3027,11 @@ s_suffix value__ record__ =
 s_svgRoot : a -> { b | svgRoot : a } -> { b | svgRoot : a }
 s_svgRoot value__ record__ =
     { record__ | svgRoot = value__ }
+
+
+s_sweptAngle : a -> { b | sweptAngle : a } -> { b | sweptAngle : a }
+s_sweptAngle value__ record__ =
+    { record__ | sweptAngle = value__ }
 
 
 s_symbol : a -> { b | symbol : a } -> { b | symbol : a }
@@ -2669,6 +3169,16 @@ s_theme value__ record__ =
     { record__ | theme = value__ }
 
 
+s_thirdControlPoint : a -> { b | thirdControlPoint : a } -> { b | thirdControlPoint : a }
+s_thirdControlPoint value__ record__ =
+    { record__ | thirdControlPoint = value__ }
+
+
+s_thirdWeight : a -> { b | thirdWeight : a } -> { b | thirdWeight : a }
+s_thirdWeight value__ record__ =
+    { record__ | thirdWeight = value__ }
+
+
 s_thousand : a -> { b | thousand : a } -> { b | thousand : a }
 s_thousand value__ record__ =
     { record__ | thousand = value__ }
@@ -2707,6 +3217,11 @@ s_timestamp value__ record__ =
 s_timing : a -> { b | timing : a } -> { b | timing : a }
 s_timing value__ record__ =
     { record__ | timing = value__ }
+
+
+s_tip : a -> { b | tip : a } -> { b | tip : a }
+s_tip value__ record__ =
+    { record__ | tip = value__ }
 
 
 s_tipe : a -> { b | tipe : a } -> { b | tipe : a }
@@ -2764,6 +3279,21 @@ s_tool value__ record__ =
     { record__ | tool = value__ }
 
 
+s_topEdge : a -> { b | topEdge : a } -> { b | topEdge : a }
+s_topEdge value__ record__ =
+    { record__ | topEdge = value__ }
+
+
+s_topLeftVertex : a -> { b | topLeftVertex : a } -> { b | topLeftVertex : a }
+s_topLeftVertex value__ record__ =
+    { record__ | topLeftVertex = value__ }
+
+
+s_topRightVertex : a -> { b | topRightVertex : a } -> { b | topRightVertex : a }
+s_topRightVertex value__ record__ =
+    { record__ | topRightVertex = value__ }
+
+
 s_totalInput : a -> { b | totalInput : a } -> { b | totalInput : a }
 s_totalInput value__ record__ =
     { record__ | totalInput = value__ }
@@ -2814,6 +3344,11 @@ s_transformStyle value__ record__ =
     { record__ | transformStyle = value__ }
 
 
+s_triangle : a -> { b | triangle : a } -> { b | triangle : a }
+s_triangle value__ record__ =
+    { record__ | triangle = value__ }
+
+
 s_trillion : a -> { b | trillion : a } -> { b | trillion : a }
 s_trillion value__ record__ =
     { record__ | trillion = value__ }
@@ -2837,6 +3372,16 @@ s_txs value__ record__ =
 s_types : a -> { b | types : a } -> { b | types : a }
 s_types value__ record__ =
     { record__ | types = value__ }
+
+
+s_underlyingArc : a -> { b | underlyingArc : a } -> { b | underlyingArc : a }
+s_underlyingArc value__ record__ =
+    { record__ | underlyingArc = value__ }
+
+
+s_underlyingSpline : a -> { b | underlyingSpline : a } -> { b | underlyingSpline : a }
+s_underlyingSpline value__ record__ =
+    { record__ | underlyingSpline = value__ }
 
 
 s_unions : a -> { b | unions : a } -> { b | unions : a }
@@ -2902,6 +3447,26 @@ s_version value__ record__ =
 s_versions : a -> { b | versions : a } -> { b | versions : a }
 s_versions value__ record__ =
     { record__ | versions = value__ }
+
+
+s_vertex : a -> { b | vertex : a } -> { b | vertex : a }
+s_vertex value__ record__ =
+    { record__ | vertex = value__ }
+
+
+s_vertexCount : a -> { b | vertexCount : a } -> { b | vertexCount : a }
+s_vertexCount value__ record__ =
+    { record__ | vertexCount = value__ }
+
+
+s_vertexStack : a -> { b | vertexStack : a } -> { b | vertexStack : a }
+s_vertexStack value__ record__ =
+    { record__ | vertexStack = value__ }
+
+
+s_vertices : a -> { b | vertices : a } -> { b | vertices : a }
+s_vertices value__ record__ =
+    { record__ | vertices = value__ }
 
 
 s_view : a -> { b | view : a } -> { b | view : a }
@@ -2974,9 +3539,49 @@ s_x value__ record__ =
     { record__ | x = value__ }
 
 
+s_x1 : a -> { b | x1 : a } -> { b | x1 : a }
+s_x1 value__ record__ =
+    { record__ | x1 = value__ }
+
+
+s_x2 : a -> { b | x2 : a } -> { b | x2 : a }
+s_x2 value__ record__ =
+    { record__ | x2 = value__ }
+
+
+s_xDirection : a -> { b | xDirection : a } -> { b | xDirection : a }
+s_xDirection value__ record__ =
+    { record__ | xDirection = value__ }
+
+
+s_xRadius : a -> { b | xRadius : a } -> { b | xRadius : a }
+s_xRadius value__ record__ =
+    { record__ | xRadius = value__ }
+
+
 s_y : a -> { b | y : a } -> { b | y : a }
 s_y value__ record__ =
     { record__ | y = value__ }
+
+
+s_y1 : a -> { b | y1 : a } -> { b | y1 : a }
+s_y1 value__ record__ =
+    { record__ | y1 = value__ }
+
+
+s_y2 : a -> { b | y2 : a } -> { b | y2 : a }
+s_y2 value__ record__ =
+    { record__ | y2 = value__ }
+
+
+s_yDirection : a -> { b | yDirection : a } -> { b | yDirection : a }
+s_yDirection value__ record__ =
+    { record__ | yDirection = value__ }
+
+
+s_yRadius : a -> { b | yRadius : a } -> { b | yRadius : a }
+s_yRadius value__ record__ =
+    { record__ | yRadius = value__ }
 
 
 s_year : a -> { b | year : a } -> { b | year : a }
@@ -2992,6 +3597,26 @@ s_years value__ record__ =
 s_z : a -> { b | z : a } -> { b | z : a }
 s_z value__ record__ =
     { record__ | z = value__ }
+
+
+s_z1 : a -> { b | z1 : a } -> { b | z1 : a }
+s_z1 value__ record__ =
+    { record__ | z1 = value__ }
+
+
+s_z2 : a -> { b | z2 : a } -> { b | z2 : a }
+s_z2 value__ record__ =
+    { record__ | z2 = value__ }
+
+
+s_zDirection : a -> { b | zDirection : a } -> { b | zDirection : a }
+s_zDirection value__ record__ =
+    { record__ | zDirection = value__ }
+
+
+s_zRadius : a -> { b | zRadius : a } -> { b | zRadius : a }
+s_zRadius value__ record__ =
+    { record__ | zRadius = value__ }
 
 
 s_zeroPrefix : a -> { b | zeroPrefix : a } -> { b | zeroPrefix : a }

@@ -17,6 +17,7 @@ init entity address =
             , currency = address.currency
             , id = address.address
             }
+    , entityId = entity.id
     , address = address
     , category =
         address.tags
@@ -33,4 +34,6 @@ init entity address =
             * padding
             + labelHeight
             + (toFloat (List.length entity.addresses) * addressHeight)
+    , dx = 0
+    , dy = 0
     }

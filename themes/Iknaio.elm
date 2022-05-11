@@ -287,17 +287,20 @@ theme =
                         [ colors.white
                             |> Color.toCssString
                             |> property "stroke"
+                        , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
                         ]
                     )
                 |> s_entityFrame
                     [ colors.white
                         |> Color.toCssString
                         |> property "stroke"
+                    , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
                     ]
                 |> s_addressFrame
                     [ colors.white
                         |> Color.toCssString
                         |> property "stroke"
+                    , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
                     ]
                 |> s_nodeSeparatorToExpandHandle
                     (\_ ->
@@ -396,3 +399,8 @@ letterSpacingWide =
 entityStrokeDashArray : String
 entityStrokeDashArray =
     "4 1"
+
+
+nodeStrokeWidth : Float
+nodeStrokeWidth =
+    0.5

@@ -8,6 +8,7 @@ import Html.Styled.Attributes as Html exposing (..)
 import Json.Decode
 import List.Extra
 import Model.Graph exposing (..)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Layer as Layer
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
@@ -15,6 +16,7 @@ import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Util.Graph as Util
 import View.Graph.Address as Address
 import View.Graph.Entity as Entity
 import View.Graph.Navbar as Navbar
@@ -29,13 +31,6 @@ view vc model =
         [ Navbar.navbar vc
         , graph vc (Graph.default |> s_colors model.colors) model
         ]
-
-
-decodeCoords : Json.Decode.Decoder Transform.Coords
-decodeCoords =
-    Json.Decode.map2 Transform.Coords
-        (Json.Decode.field "offsetX" Json.Decode.float)
-        (Json.Decode.field "offsetY" Json.Decode.float)
 
 
 graph : Config -> Graph.Config -> Model -> Html Msg
@@ -56,11 +51,11 @@ graph vc gc model =
                     (Json.Decode.field "deltaZ" Json.Decode.float)
                 )
             , Svg.on "mousedown"
-                (decodeCoords
+                (Util.decodeCoords Coords
                     |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
                 )
             , Svg.preventDefaultOn "mousemove"
-                (decodeCoords
+                (Util.decodeCoords Coords
                     |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
                 )
             ]

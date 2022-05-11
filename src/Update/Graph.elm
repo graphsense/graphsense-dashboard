@@ -81,26 +81,81 @@ update msg model =
 
         UserWheeledOnGraph x y z ->
             { model
-                | transform = Transform.wheel { height = model.height, width = model.width } x y z model.transform
+                | transform =
+                    Transform.wheel
+                        { height = model.height
+                        , width = model.width
+                        , mouse = model.mouse
+                        }
+                        x
+                        y
+                        z
+                        model.transform
             }
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
             { model
-                | transform = Transform.dragStart coords model.transform
+                | dragging =
+                    case model.dragging of
+                        NoDragging ->
+                            Dragging model.transform coords
+
+                        x ->
+                            x
+            }
+                |> n
+
+        UserPushesLeftMouseButtonOnEntity id coords ->
+            { model
+                | dragging =
+                    case model.dragging of
+                        NoDragging ->
+                            DraggingNode id coords
+
+                        x ->
+                            x
             }
                 |> n
 
         UserMovesMouseOnGraph coords ->
-            { model
-                | transform = Transform.mousemove coords model.transform
-            }
+            (case model.dragging of
+                NoDragging ->
+                    model
+
+                Dragging transform start ->
+                    { model
+                        | transform = Transform.update start coords transform
+                    }
+
+                DraggingNode id start ->
+                    let
+                        vector =
+                            Transform.vector start coords model.transform
+                    in
+                    { model
+                        | layers = Layer.moveEntity id vector model.layers
+                    }
+            )
+                |> s_mouse coords
                 |> n
 
         UserReleasesMouseButton ->
-            { model
-                | transform = Transform.dragEnd model.transform
-            }
+            (case model.dragging of
+                NoDragging ->
+                    model
+
+                Dragging _ _ ->
+                    { model
+                        | dragging = NoDragging
+                    }
+
+                DraggingNode id _ ->
+                    { model
+                        | layers = Layer.releaseEntity id model.layers
+                        , dragging = NoDragging
+                    }
+            )
                 |> n
 
         UserClickedAddress id ->

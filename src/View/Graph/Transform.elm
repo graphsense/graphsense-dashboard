@@ -7,14 +7,10 @@ import Update.Graph.Transform exposing (..)
 
 viewBox : { width : Float, height : Float } -> Model -> String
 viewBox { width, height } model =
-    let
-        transform =
-            get model
-    in
-    [ transform.x
-    , transform.y
-    , max 0 <| width * transform.z
-    , max 0 <| height * transform.z
+    [ model.x
+    , model.y
+    , max 0 <| width * model.z
+    , max 0 <| height * model.z
     ]
         |> List.map String.fromFloat
         |> List.intersperse " "

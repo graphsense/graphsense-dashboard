@@ -15,10 +15,10 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
+import Util.Graph exposing (translate)
 import Util.View as Util
 import View.Graph.Label as Label
 import View.Graph.Node as Node
-import View.Graph.Util exposing (translate)
 import View.Locale as Locale
 
 
@@ -51,8 +51,10 @@ address vc gc addr =
             |> onMouseOver
         , UserLeavesAddress addr.id
             |> onMouseOut
-        , translate addr.x addr.y
+        , translate (addr.x + addr.dx) (addr.y + addr.dy)
             |> transform
+        , UserPushesLeftMouseButtonOnEntity addr.entityId
+            |> Util.Graph.mousedown
         ]
         [ rect
             [ width <| String.fromFloat Graph.addressWidth

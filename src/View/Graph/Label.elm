@@ -10,7 +10,7 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events exposing (..)
 import Tuple exposing (mapSecond)
-import View.Graph.Util as Util exposing (translate)
+import Util.Graph as Util exposing (translate)
 
 
 label : Config -> Graph.Config -> String -> Svg Msg

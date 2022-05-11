@@ -7,10 +7,13 @@ import Model.Graph.Id exposing (..)
 
 type alias Address =
     { id : AddressId
+    , entityId : EntityId
     , address : Api.Data.Address
     , category : Maybe String
     , x : Float
     , y : Float
+    , dx : Float
+    , dy : Float
     }
 
 

@@ -10,7 +10,7 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Events exposing (..)
-import View.Graph.Util exposing (rotate, translate)
+import Util.Graph exposing (rotate, translate)
 import View.Locale as Locale
 
 
@@ -87,7 +87,7 @@ expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color } =
             , height
                 / 2
                 |> translate (expandHandleWidth - fs)
-                |> View.Graph.Util.rotate 90
+                |> Util.Graph.rotate 90
                 |> transform
             ]
             [ Locale.intWithFormat vc.locale fmt degree |> text

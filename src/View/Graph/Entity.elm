@@ -6,19 +6,21 @@ import Config.View exposing (Config)
 import Css exposing (fill)
 import Css.Graph as Css
 import Dict
-import Json.Decode as Dec
+import Json.Decode
 import Model.Graph exposing (NodeType(..))
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Events exposing (..)
+import Svg.Styled.Events as Svg exposing (..)
+import Util.Graph exposing (rotate, translate)
 import Util.View as Util
 import View.Graph.Label as Label
 import View.Graph.Node as Node
-import View.Graph.Util exposing (rotate, translate)
 import View.Locale as Locale
 
 
@@ -45,13 +47,15 @@ entity vc gc ent =
         , UserClickedEntity ent.id
             |> onClick
         , UserRightClickedEntity ent.id
-            |> Dec.succeed
+            |> Json.Decode.succeed
             |> on "contextmenu"
         , UserHoversEntity ent.id
             |> onMouseOver
         , UserLeavesEntity ent.id
             |> onMouseOut
-        , translate ent.x ent.y |> transform
+        , translate (ent.x + ent.dx) (ent.y + ent.dy) |> transform
+        , UserPushesLeftMouseButtonOnEntity ent.id
+            |> Util.Graph.mousedown
         ]
         [ rect
             [ width <| String.fromFloat <| Entity.getWidth ent

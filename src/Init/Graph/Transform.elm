@@ -5,11 +5,7 @@ import Model.Graph.Transform exposing (..)
 
 init : Model
 init =
-    { transform =
-        { x = 0
-        , y = 0
-        , z = 1
-        }
-    , dragging = NoDragging
-    , mouse = { x = 0, y = 0 }
+    { x = 0
+    , y = 0
+    , z = 1
     }

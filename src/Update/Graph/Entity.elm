@@ -1,4 +1,4 @@
-module Update.Graph.Entity exposing (addAddress)
+module Update.Graph.Entity exposing (addAddress, move, release, updateEntity)
 
 import Api.Data
 import Color exposing (Color)
@@ -7,8 +7,10 @@ import Dict exposing (Dict)
 import Init.Graph.Address as Address
 import List.Extra as List
 import Model.Graph.Address exposing (..)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
+import Update.Graph.Address as Address
 import Update.Graph.Color as Color
 
 
@@ -77,3 +79,51 @@ addAddressToEntity uc colors address entity =
 
     else
         Nothing
+
+
+updateEntity : EntityId -> (Entity -> ( Entity, a )) -> List Entity -> List Entity -> ( List Entity, Maybe a )
+updateEntity id update entities newEntities =
+    case entities of
+        entity :: rest ->
+            if id == entity.id then
+                let
+                    ( updatedEntity, newA ) =
+                        update entity
+                in
+                ( newEntities
+                    ++ [ updatedEntity ]
+                    ++ rest
+                , Just newA
+                )
+
+            else
+                updateEntity id update rest <| newEntities ++ [ entity ]
+
+        [] ->
+            ( newEntities, Nothing )
+
+
+move : Coords -> Entity -> ( Entity, () )
+move vector entity =
+    ( { entity
+        | dx = vector.x
+        , dy = vector.y
+        , addresses =
+            List.map (Address.move vector) entity.addresses
+      }
+    , ()
+    )
+
+
+release : Entity -> ( Entity, () )
+release entity =
+    ( { entity
+        | x = entity.x + entity.dx
+        , y = entity.y + entity.dy
+        , dx = 0
+        , dy = 0
+        , addresses =
+            List.map Address.release entity.addresses
+      }
+    , ()
+    )

@@ -1,4 +1,4 @@
-module Update.Graph.Layer exposing (Added, addAddress, addEntity)
+module Update.Graph.Layer exposing (Added, addAddress, addEntity, moveEntity, releaseEntity)
 
 import Api.Data
 import Color exposing (Color)
@@ -8,8 +8,8 @@ import Dict exposing (Dict)
 import Init.Graph.Entity as Entity
 import Init.Graph.Layer as Layer
 import List.Extra
-import Model.Graph exposing (..)
-import Model.Graph.Entity as Entity
+import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Graph.Layer exposing (Layer)
 import Tuple exposing (..)
@@ -126,3 +126,44 @@ addEntityHere uc colors entity layer =
              , newColors
              )
             )
+
+
+moveEntity : EntityId -> Coords -> List Layer -> List Layer
+moveEntity id vector layers =
+    updateEntity id (Entity.move vector) layers []
+        |> first
+
+
+releaseEntity : EntityId -> List Layer -> List Layer
+releaseEntity id layers =
+    updateEntity id Entity.release layers []
+        |> first
+
+
+updateEntity : EntityId -> (Entity -> ( Entity, a )) -> List Layer -> List Layer -> ( List Layer, Maybe a )
+updateEntity id update layers newLayers =
+    case layers of
+        layer :: rest ->
+            let
+                ( newEntities, maybeA ) =
+                    Entity.updateEntity id update layer.entities []
+            in
+            case maybeA of
+                Nothing ->
+                    updateEntity id
+                        update
+                        rest
+                        (newLayers ++ [ layer ])
+
+                Just newA ->
+                    ( newLayers
+                        ++ [ { layer
+                                | entities = newEntities
+                             }
+                           ]
+                        ++ rest
+                    , Just newA
+                    )
+
+        [] ->
+            ( newLayers, Nothing )

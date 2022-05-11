@@ -82,7 +82,7 @@ addressRect vc =
 addressFrame : Config -> List Style
 addressFrame vc =
     [ property "stroke" "currentColor"
-    , property "stroke-width" "0.5px"
+    , property "stroke-width" "1px"
     ]
         ++ vc.theme.graph.addressFrame
 
@@ -120,7 +120,7 @@ frameStyle =
 entityFrame : Config -> List Style
 entityFrame vc =
     [ property "stroke" "currentColor"
-    , property "stroke-width" "0.5px"
+    , property "stroke-width" "1px"
     ]
         ++ vc.theme.graph.entityFrame
 
