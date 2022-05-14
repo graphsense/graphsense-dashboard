@@ -15,6 +15,7 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
+import Svg.Styled.Lazy as Svg exposing (..)
 import Util.Graph exposing (translate)
 import Util.View as Util
 import View.Graph.Label as Label

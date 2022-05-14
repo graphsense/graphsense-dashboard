@@ -3,6 +3,7 @@ module Init.Graph.Address exposing (init)
 import Api.Data
 import Config.Graph exposing (addressHeight, addressWidth, expandHandleWidth, labelHeight, padding)
 import Config.Update exposing (Config)
+import Dict
 import Init.Graph.Id as Id exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
@@ -33,7 +34,7 @@ init entity address =
             + 2
             * padding
             + labelHeight
-            + (toFloat (List.length entity.addresses) * addressHeight)
+            + (toFloat (Dict.size entity.addresses) * addressHeight)
     , dx = 0
     , dy = 0
     }

@@ -19,6 +19,8 @@ type alias Graph =
     , entityRect : List Style
     , entityFrame : List Style
     , entityRoot : List Style
+    , entityLink : List Style
+    , entityLinkThickness : Float
     , expandHandle : NodeType -> List Style
     , expandHandlePath : NodeType -> List Style
     , expandHandleText : NodeType -> List Style
@@ -57,6 +59,8 @@ default =
     , entityRect = []
     , entityFrame = []
     , entityRoot = []
+    , entityLink = []
+    , entityLinkThickness = 1
     , expandHandle = always []
     , expandHandlePath = always []
     , expandHandleText = always []

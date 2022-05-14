@@ -94,7 +94,7 @@ listAddressLinks currency_path address_path neighbor_query page_query pagesize_q
 
 
 
-listAddressNeighbors : (String) -> (String) -> (Direction) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Neighbors
+listAddressNeighbors : (String) -> (String) -> (Direction) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.NeighborAddresses
 listAddressNeighbors currency_path address_path direction_query includeLabels_query page_query pagesize_query =
     Api.request
         "GET"
@@ -103,7 +103,7 @@ listAddressNeighbors currency_path address_path direction_query includeLabels_qu
         [ ( "direction", Just <| (stringFromDirection) direction_query ), ( "include_labels", Maybe.map ((\val -> if val then "true" else "false")) includeLabels_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
-        Api.Data.neighborsDecoder
+        Api.Data.neighborAddressesDecoder
 
 
 

@@ -165,7 +165,7 @@ listEntityLinks currency_path entity_path neighbor_query page_query pagesize_que
         Api.Data.linksDecoder
 
 
-listEntityNeighbors : String -> Int -> Direction -> Maybe (List Int) -> Maybe Bool -> Maybe String -> Maybe Int -> Api.Request Api.Data.Neighbors
+listEntityNeighbors : String -> Int -> Direction -> Maybe (List Int) -> Maybe Bool -> Maybe String -> Maybe Int -> Api.Request Api.Data.NeighborEntities
 listEntityNeighbors currency_path entity_path direction_query onlyIds_query includeLabels_query page_query pagesize_query =
     Api.request
         "GET"
@@ -189,7 +189,7 @@ listEntityNeighbors currency_path entity_path direction_query onlyIds_query incl
         ]
         []
         Nothing
-        Api.Data.neighborsDecoder
+        Api.Data.neighborEntitiesDecoder
 
 
 listEntityTxs : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTxs

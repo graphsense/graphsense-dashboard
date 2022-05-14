@@ -45,9 +45,7 @@ main =
         , view =
             \model ->
                 view
-                    { theme = config.theme
-                    , locale = model.locale
-                    }
+                    model.config
                     model
         , subscriptions = subscriptions
         , onUrlChange = BrowserChangedUrl

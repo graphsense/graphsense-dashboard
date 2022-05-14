@@ -57,7 +57,7 @@ with open(input_filename, 'r') as input_file:
     traverse(input, input['components']['schemas'])
 
     input['paths'] = {p: input['paths'][p] for p in input['paths']
-                      if 'bulk' not in p}
+                      }
 
     # remove unused references:
 

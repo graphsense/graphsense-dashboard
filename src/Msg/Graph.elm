@@ -24,4 +24,6 @@ type Msg
     | BrowserGotSvgElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
+    | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
+    | BrowserGotEntityEgonet Int Bool Api.Data.NeighborEntities
     | NoOp

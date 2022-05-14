@@ -172,3 +172,11 @@ nodeSeparatorToExpandHandle : Config -> NodeType -> List Style
 nodeSeparatorToExpandHandle vc nodeType =
     frameStyle
         ++ vc.theme.graph.nodeSeparatorToExpandHandle nodeType
+
+
+entityLink : Config -> List Style
+entityLink vc =
+    [ property "stroke" "currentColor"
+    , property "fill" "none"
+    ]
+        ++ vc.theme.graph.entityLink

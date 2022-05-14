@@ -31,8 +31,11 @@ module Api.Data exposing
     , Link(..)
     , LinkUtxo
     , Links
-    , Neighbor, NeighborNodeType(..), neighborNodeTypeVariants
-    , Neighbors
+    , Neighbor
+    , NeighborAddress
+    , NeighborAddresses
+    , NeighborEntities
+    , NeighborEntity
     , Rate
     , Rates
     , SearchResult
@@ -72,7 +75,10 @@ module Api.Data exposing
     , encodeLinkUtxo
     , encodeLinks
     , encodeNeighbor
-    , encodeNeighbors
+    , encodeNeighborAddress
+    , encodeNeighborAddresses
+    , encodeNeighborEntities
+    , encodeNeighborEntity
     , encodeRate
     , encodeRates
     , encodeSearchResult
@@ -112,7 +118,10 @@ module Api.Data exposing
     , linkUtxoDecoder
     , linksDecoder
     , neighborDecoder
-    , neighborsDecoder
+    , neighborAddressDecoder
+    , neighborAddressesDecoder
+    , neighborEntitiesDecoder
+    , neighborEntityDecoder
     , rateDecoder
     , ratesDecoder
     , searchResultDecoder
@@ -310,31 +319,37 @@ type alias Links =
 
 
 type alias Neighbor =
-    { balance : Values
-    , id : String
-    , labels : Maybe (List (String))
+    { labels : Maybe (List (String))
     , noTxs : Int
-    , nodeType : NeighborNodeType
-    , received : Values
     , value : Values
     }
 
 
-type NeighborNodeType
-    = NeighborNodeTypeAddress
-    | NeighborNodeTypeEntity
+type alias NeighborAddress =
+    { address : Address
+    , labels : Maybe (List (String))
+    , noTxs : Int
+    , value : Values
+    }
 
 
-neighborNodeTypeVariants : List NeighborNodeType
-neighborNodeTypeVariants =
-    [ NeighborNodeTypeAddress
-    , NeighborNodeTypeEntity
-    ]
-
-
-type alias Neighbors =
-    { neighbors : Maybe (List (Neighbor))
+type alias NeighborAddresses =
+    { neighbors : List (NeighborAddress)
     , nextPage : Maybe String
+    }
+
+
+type alias NeighborEntities =
+    { neighbors : List (NeighborEntity)
+    , nextPage : Maybe String
+    }
+
+
+type alias NeighborEntity =
+    { entity : Entity
+    , labels : Maybe (List (String))
+    , noTxs : Int
+    , value : Values
     }
 
 
@@ -918,49 +933,97 @@ encodeNeighborPairs : Neighbor -> List EncodedField
 encodeNeighborPairs model =
     let
         pairs =
-            [ encode "balance" encodeValues model.balance
-            , encode "id" Json.Encode.string model.id
-            , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
+            [ maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
             , encode "no_txs" Json.Encode.int model.noTxs
-            , encode "node_type" encodeNeighborNodeType model.nodeType
-            , encode "received" encodeValues model.received
             , encode "value" encodeValues model.value
             ]
     in
     pairs
 
-stringFromNeighborNodeType : NeighborNodeType -> String
-stringFromNeighborNodeType model =
-    case model of
-        NeighborNodeTypeAddress ->
-            "address"
 
-        NeighborNodeTypeEntity ->
-            "entity"
+encodeNeighborAddress : NeighborAddress -> Json.Encode.Value
+encodeNeighborAddress =
+    encodeObject << encodeNeighborAddressPairs
 
 
-encodeNeighborNodeType : NeighborNodeType -> Json.Encode.Value
-encodeNeighborNodeType =
-    Json.Encode.string << stringFromNeighborNodeType
+encodeNeighborAddressWithTag : ( String, String ) -> NeighborAddress -> Json.Encode.Value
+encodeNeighborAddressWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborAddressPairs model ++ [ encode tagField Json.Encode.string tag ])
 
 
-
-encodeNeighbors : Neighbors -> Json.Encode.Value
-encodeNeighbors =
-    encodeObject << encodeNeighborsPairs
-
-
-encodeNeighborsWithTag : ( String, String ) -> Neighbors -> Json.Encode.Value
-encodeNeighborsWithTag (tagField, tag) model =
-    encodeObject (encodeNeighborsPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeNeighborsPairs : Neighbors -> List EncodedField
-encodeNeighborsPairs model =
+encodeNeighborAddressPairs : NeighborAddress -> List EncodedField
+encodeNeighborAddressPairs model =
     let
         pairs =
-            [ maybeEncode "neighbors" (Json.Encode.list encodeNeighbor) model.neighbors
+            [ encode "address" encodeAddress model.address
+            , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
+            , encode "no_txs" Json.Encode.int model.noTxs
+            , encode "value" encodeValues model.value
+            ]
+    in
+    pairs
+
+
+encodeNeighborAddresses : NeighborAddresses -> Json.Encode.Value
+encodeNeighborAddresses =
+    encodeObject << encodeNeighborAddressesPairs
+
+
+encodeNeighborAddressesWithTag : ( String, String ) -> NeighborAddresses -> Json.Encode.Value
+encodeNeighborAddressesWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborAddressesPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeNeighborAddressesPairs : NeighborAddresses -> List EncodedField
+encodeNeighborAddressesPairs model =
+    let
+        pairs =
+            [ encode "neighbors" (Json.Encode.list encodeNeighborAddress) model.neighbors
             , maybeEncode "next_page" Json.Encode.string model.nextPage
+            ]
+    in
+    pairs
+
+
+encodeNeighborEntities : NeighborEntities -> Json.Encode.Value
+encodeNeighborEntities =
+    encodeObject << encodeNeighborEntitiesPairs
+
+
+encodeNeighborEntitiesWithTag : ( String, String ) -> NeighborEntities -> Json.Encode.Value
+encodeNeighborEntitiesWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborEntitiesPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeNeighborEntitiesPairs : NeighborEntities -> List EncodedField
+encodeNeighborEntitiesPairs model =
+    let
+        pairs =
+            [ encode "neighbors" (Json.Encode.list encodeNeighborEntity) model.neighbors
+            , maybeEncode "next_page" Json.Encode.string model.nextPage
+            ]
+    in
+    pairs
+
+
+encodeNeighborEntity : NeighborEntity -> Json.Encode.Value
+encodeNeighborEntity =
+    encodeObject << encodeNeighborEntityPairs
+
+
+encodeNeighborEntityWithTag : ( String, String ) -> NeighborEntity -> Json.Encode.Value
+encodeNeighborEntityWithTag (tagField, tag) model =
+    encodeObject (encodeNeighborEntityPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeNeighborEntityPairs : NeighborEntity -> List EncodedField
+encodeNeighborEntityPairs model =
+    let
+        pairs =
+            [ encode "entity" encodeEntity model.entity
+            , maybeEncode "labels" (Json.Encode.list Json.Encode.string) model.labels
+            , encode "no_txs" Json.Encode.int model.noTxs
+            , encode "value" encodeValues model.value
             ]
     in
     pairs
@@ -1639,38 +1702,41 @@ linksDecoder =
 neighborDecoder : Json.Decode.Decoder Neighbor
 neighborDecoder =
     Json.Decode.succeed Neighbor
-        |> decode "balance" valuesDecoder 
-        |> decode "id" Json.Decode.string 
         |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
         |> decode "no_txs" Json.Decode.int 
-        |> decode "node_type" neighborNodeTypeDecoder 
-        |> decode "received" valuesDecoder 
         |> decode "value" valuesDecoder 
 
 
-neighborNodeTypeDecoder : Json.Decode.Decoder NeighborNodeType
-neighborNodeTypeDecoder =
-    Json.Decode.string
-        |> Json.Decode.andThen
-            (\value ->
-                case value of
-                    "address" ->
-                        Json.Decode.succeed NeighborNodeTypeAddress
-
-                    "entity" ->
-                        Json.Decode.succeed NeighborNodeTypeEntity
-
-                    other ->
-                        Json.Decode.fail <| "Unknown type: " ++ other
-            )
+neighborAddressDecoder : Json.Decode.Decoder NeighborAddress
+neighborAddressDecoder =
+    Json.Decode.succeed NeighborAddress
+        |> decode "address" addressDecoder 
+        |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "value" valuesDecoder 
 
 
-
-neighborsDecoder : Json.Decode.Decoder Neighbors
-neighborsDecoder =
-    Json.Decode.succeed Neighbors
-        |> maybeDecode "neighbors" (Json.Decode.list neighborDecoder) Nothing
+neighborAddressesDecoder : Json.Decode.Decoder NeighborAddresses
+neighborAddressesDecoder =
+    Json.Decode.succeed NeighborAddresses
+        |> decode "neighbors" (Json.Decode.list neighborAddressDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
+
+
+neighborEntitiesDecoder : Json.Decode.Decoder NeighborEntities
+neighborEntitiesDecoder =
+    Json.Decode.succeed NeighborEntities
+        |> decode "neighbors" (Json.Decode.list neighborEntityDecoder) 
+        |> maybeDecode "next_page" Json.Decode.string Nothing
+
+
+neighborEntityDecoder : Json.Decode.Decoder NeighborEntity
+neighborEntityDecoder =
+    Json.Decode.succeed NeighborEntity
+        |> decode "entity" entityDecoder 
+        |> maybeDecode "labels" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "value" valuesDecoder 
 
 
 rateDecoder : Json.Decode.Decoder Rate

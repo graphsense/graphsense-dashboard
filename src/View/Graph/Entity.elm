@@ -1,4 +1,4 @@
-module View.Graph.Entity exposing (entity)
+module View.Graph.Entity exposing (entity, links)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
@@ -17,9 +17,11 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Lazy as Svg exposing (..)
 import Util.Graph exposing (rotate, translate)
 import Util.View as Util
 import View.Graph.Label as Label
+import View.Graph.Link as Link
 import View.Graph.Node as Node
 import View.Locale as Locale
 
@@ -129,7 +131,7 @@ label vc gc ent =
 
 getLabel : Config -> Graph.Config -> Entity -> String
 getLabel vc gc ent =
-    ""
+    ent.entity.entity |> String.fromInt
 
 
 flags : Config -> Graph.Config -> Entity -> Svg Msg
@@ -163,7 +165,7 @@ addresses : Config -> Graph.Config -> Entity -> Svg Msg
 addresses vc gc ent =
     let
         size =
-            List.length ent.addresses
+            Dict.size ent.addresses
                 |> Locale.int vc.locale
 
         total =
@@ -195,3 +197,17 @@ addresses vc gc ent =
             [ text string
             ]
         ]
+
+
+links : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
+links vc gc mn mx ent =
+    case ent.links of
+        Entity.Links lnks ->
+            lnks
+                |> Dict.foldl
+                    (\_ link svg ->
+                        Svg.lazy6 Link.entityLink vc gc mn mx ent link
+                            :: svg
+                    )
+                    []
+                |> g []

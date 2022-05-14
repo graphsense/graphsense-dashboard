@@ -1,7 +1,6 @@
 module Config.View exposing (Config)
 
 import Html.Styled exposing (Html)
-import Model exposing (Model)
 import Model.Locale as Locale
 import Theme.Theme exposing (Theme)
 

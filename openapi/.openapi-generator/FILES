@@ -5,6 +5,7 @@ src/Api.elm
 src/Api/Data.elm
 src/Api/Request/Addresses.elm
 src/Api/Request/Blocks.elm
+src/Api/Request/Bulk.elm
 src/Api/Request/Entities.elm
 src/Api/Request/General.elm
 src/Api/Request/Rates.elm

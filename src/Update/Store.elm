@@ -7,6 +7,7 @@ import Effect.Store exposing (..)
 import Model.Store exposing (..)
 import Msg.Store exposing (..)
 import RemoteData exposing (WebData)
+import Tuple exposing (..)
 
 
 type Retrieved a
@@ -51,10 +52,11 @@ remoteDataToRetreived a =
             Nothing
 
 
-getAddress : { currency : String, address : String } -> Model -> Retrieved Api.Data.Address
-getAddress { currency, address } { addresses } =
-    Dict.get ( currency, address ) addresses
+getAddress : { currency : String, address : String } -> Model -> ( Model, Retrieved Api.Data.Address )
+getAddress { currency, address } model =
+    Dict.get ( currency, address ) model.addresses
         |> Maybe.andThen remoteDataToRetreived
+        |> Maybe.map (pair model)
         |> Maybe.withDefault
             ({ currency = currency
              , address = address
@@ -63,13 +65,18 @@ getAddress { currency, address } { addresses } =
                 |> GetAddressEffect
                 |> List.singleton
                 |> NotFound
+                |> pair
+                    { model
+                        | addresses = Dict.insert ( currency, address ) RemoteData.Loading model.addresses
+                    }
             )
 
 
-getEntity : { currency : String, entity : Int, forAddress : String } -> Model -> Retrieved Api.Data.Entity
-getEntity { currency, entity, forAddress } { entities } =
-    Dict.get ( currency, entity ) entities
+getEntity : { currency : String, entity : Int, forAddress : String } -> Model -> ( Model, Retrieved Api.Data.Entity )
+getEntity { currency, entity, forAddress } model =
+    Dict.get ( currency, entity ) model.entities
         |> Maybe.andThen remoteDataToRetreived
+        |> Maybe.map (pair model)
         |> Maybe.withDefault
             ({ currency = currency
              , entity = entity
@@ -78,4 +85,8 @@ getEntity { currency, entity, forAddress } { entities } =
                 |> GetEntityEffect
                 |> List.singleton
                 |> NotFound
+                |> pair
+                    { model
+                        | entities = Dict.insert ( currency, entity ) RemoteData.Loading model.entities
+                    }
             )

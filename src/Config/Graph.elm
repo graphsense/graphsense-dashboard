@@ -44,15 +44,39 @@ addressesCountHeight =
     16
 
 
+maxExpandableNeighbors : Int
+maxExpandableNeighbors =
+    25
+
+
+txMaxWidth : Float
+txMaxWidth =
+    7
+
+
+entityMinHeight : Float
+entityMinHeight =
+    (2 * padding)
+        + labelHeight
+        + addressesCountHeight
+        + padding
+
+
 type AddressLabelType
     = ID
     | Balance
     | Tag
 
 
+type TxLabelType
+    = NoTxs
+    | Value
+
+
 type alias Config =
-    { maxLettersPerLabelRow : Int
-    , addressLabelType : AddressLabelType
+    { addressLabelType : AddressLabelType
+    , txLabelType : TxLabelType
+    , maxLettersPerLabelRow : Int
     , colors : Dict String Color
     }
 
@@ -60,6 +84,7 @@ type alias Config =
 default : Config
 default =
     { addressLabelType = ID
+    , txLabelType = Value
     , maxLettersPerLabelRow = 8
     , colors = Dict.empty
     }

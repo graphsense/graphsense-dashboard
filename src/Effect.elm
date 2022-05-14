@@ -43,8 +43,23 @@ perform key apiKey effect =
                 |> Cmd.map LocaleMsg
 
         GraphEffect eff ->
-            Graph.perform eff
-                |> Cmd.map GraphMsg
+            case eff of
+                Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, toMsg } ->
+                    let
+                        direction =
+                            case isOutgoing of
+                                True ->
+                                    Api.Request.Entities.DirectionOut
+
+                                False ->
+                                    Api.Request.Entities.DirectionIn
+                    in
+                    Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds Nothing Nothing (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
+                _ ->
+                    Graph.perform eff
+                        |> Cmd.map GraphMsg
 
         SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
             Api.Request.General.search query currency limit

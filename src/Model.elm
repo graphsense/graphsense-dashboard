@@ -3,6 +3,7 @@ module Model exposing (..)
 import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom as Dom
+import Config.View
 import Dict exposing (Dict)
 import Effect.Graph
 import Effect.Locale
@@ -35,6 +36,7 @@ type alias Flags =
 type alias Model navigationKey =
     { url : Url
     , key : navigationKey
+    , config : Config.View.Config
     , page : Page.Page
     , locale : Model.Locale.Model
     , search : Model.Search.Model

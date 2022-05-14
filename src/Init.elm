@@ -21,6 +21,7 @@ init flags url key =
     in
     ( { url = url
       , key = key
+      , config = { locale = locale, theme = config.theme }
       , locale = locale
       , page = Page.Stats
       , search = Search.init

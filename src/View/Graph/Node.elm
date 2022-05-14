@@ -4,6 +4,7 @@ import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeigh
 import Config.View exposing (Config)
 import Css exposing (fill)
 import Css.Graph as Css
+import Json.Decode
 import Model.Graph exposing (NodeType(..))
 import Msg.Graph exposing (Msg(..))
 import String.Interpolate
@@ -29,7 +30,7 @@ expand : Config -> Graph.Config -> ExpandConfig -> Svg Msg
 expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color } =
     g
         [ Css.expandHandle vc nodeType |> css
-        , Events.onClick (onClick isOutgoing)
+        , Events.stopPropagationOn "click" (Json.Decode.succeed ( onClick isOutgoing, True ))
         , translate
             (if isOutgoing then
                 width

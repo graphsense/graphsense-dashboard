@@ -1,20 +1,33 @@
 module Graph.Update.TestLayer exposing (..)
 
 import Api.Data
+import Color
+import Config.Update as Update
+import Dict
 import Expect
 import Init.Graph.Id as Id
+import Init.Graph.Layer as Layer
+import IntDict exposing (IntDict)
 import List.Extra
-import Model.Graph.Entity as Graph
-import Model.Graph.Id as Id
+import Model.Graph.Entity as Entity exposing (Entity)
+import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer exposing (Layer)
+import RecordSetter exposing (..)
 import Test exposing (..)
 import Tuple exposing (..)
 import Update.Graph.Layer as Layer
 
 
 type TestRow
-    = Address ( String, Api.Data.Address, List Layer -> Layer.Added Id.AddressId )
-    | Entity ( String, Api.Data.Entity, List Layer -> Layer.Added Id.EntityId )
+    = Address ( String, Api.Data.Address, IntDict Layer -> Layer.Acc Id.AddressId )
+    | Entity ( String, Api.Data.Entity, IntDict Layer -> Layer.Acc Entity )
+    | EntityNeighbors
+        { title : String
+        , anchor : EntityId
+        , isOutgoing : Bool
+        , neighbors : List Api.Data.Entity
+        , output : IntDict Layer -> Layer.Acc Entity
+        }
 
 
 addr : { currency : String, address : String, entity : Int } -> Api.Data.Address
@@ -70,14 +83,16 @@ ent { currency, entity } =
     }
 
 
-updateEntity : Int -> Int -> (Graph.Entity -> Graph.Entity) -> List Layer -> List Layer
+updateEntity : Int -> Id.EntityId -> (Entity -> Entity) -> IntDict Layer -> IntDict Layer
 updateEntity l e upd =
-    List.Extra.updateAt l
-        (\layer ->
-            { layer
-                | entities =
-                    List.Extra.updateAt e upd layer.entities
-            }
+    IntDict.update l
+        (Maybe.map
+            (\layer ->
+                { layer
+                    | entities =
+                        Dict.update e (Maybe.map upd) layer.entities
+                }
+            )
         )
 
 
@@ -92,12 +107,44 @@ data =
 
         entity1 =
             ent { currency = "btc", entity = 1 }
+
+        entityNode =
+            { id = entityId
+            , entity = entity1
+            , addresses = Dict.empty
+            , category = Nothing
+            , x = 0
+            , y = 0
+            , dx = 0
+            , dy = 0
+            , links = Entity.Links Dict.empty
+            }
+
+        entity2 =
+            { entity1 | currency = "ltc" }
+
+        entityId2 =
+            Id.initEntityId { currency = "ltc", layer = 0, id = 1 }
+
+        entityNode2 =
+            { id = entityId2
+            , entity = entity2
+            , addresses = Dict.empty
+            , category = Nothing
+            , x = 0
+            , y = 186
+            , dx = 0
+            , dy = 0
+            , links = Entity.Links Dict.empty
+            }
     in
     [ ( "add single address to empty graph"
       , addrA
       , \_ ->
-            { layers = []
+            { layers = IntDict.empty
             , new = []
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Address
@@ -105,21 +152,15 @@ data =
       , entity1
       , \_ ->
             { layers =
-                [ { entities =
-                        [ { id = entityId
-                          , entity = entity1
-                          , addresses = []
-                          , x = 0
-                          , y = 0
-                          , dx = 0
-                          , dy = 0
-                          }
-                        ]
-                  , id = 0
-                  , x = 0
-                  }
-                ]
-            , new = [ entityId ]
+                IntDict.singleton 0
+                    { entities =
+                        Dict.singleton entityId entityNode
+                    , id = 0
+                    , x = 0
+                    }
+            , new = [ entityNode ]
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Entity
@@ -132,20 +173,26 @@ data =
       , \previous ->
             { layers =
                 updateEntity 0
-                    0
+                    entityId
                     (\entity ->
                         { entity
                             | addresses =
-                                [ { id = id
-                                  , address = addrA
-                                  , x = 25
-                                  , y = 40
-                                  }
-                                ]
+                                Dict.singleton id
+                                    { id = id
+                                    , entityId = entityId
+                                    , address = addrA
+                                    , category = Nothing
+                                    , x = 25
+                                    , y = 40
+                                    , dx = 0
+                                    , dy = 0
+                                    }
                         }
                     )
                     previous
             , new = [ id ]
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Address
@@ -163,54 +210,46 @@ data =
       , \previous ->
             { layers =
                 updateEntity 0
-                    0
+                    entityId
                     (\entity ->
                         { entity
                             | addresses =
-                                entity.addresses
-                                    ++ [ { id = id
-                                         , address = addrB
-                                         , x = 25
-                                         , y = 90
-                                         }
-                                       ]
+                                Dict.insert id
+                                    { id = id
+                                    , entityId = entityId
+                                    , address = addrB
+                                    , category = Nothing
+                                    , x = 25
+                                    , y = 90
+                                    , dx = 0
+                                    , dy = 0
+                                    }
+                                    entity.addresses
                         }
                     )
                     previous
             , new = [ id ]
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Address
-    , let
-        entity2 =
-            { entity1 | currency = "ltc" }
-      in
-      ( "add another entity"
+    , ( "add another entity"
       , entity2
       , \previous ->
-            let
-                entityId2 =
-                    Id.initEntityId { currency = "ltc", layer = 0, id = 1 }
-            in
             { layers =
-                List.Extra.updateAt 0
-                    (\layer ->
-                        { layer
-                            | entities =
-                                layer.entities
-                                    ++ [ { id = entityId2
-                                         , entity = entity2
-                                         , addresses = []
-                                         , x = 0
-                                         , y = 176
-                                         , dx = 0
-                                         , dy = 0
-                                         }
-                                       ]
-                        }
+                IntDict.update 0
+                    (Maybe.map
+                        (\layer ->
+                            { layer
+                                | entities = Dict.insert entityId2 entityNode2 layer.entities
+                            }
+                        )
                     )
                     previous
-            , new = [ entityId2 ]
+            , new = [ entityNode2 ]
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Entity
@@ -228,25 +267,142 @@ data =
       , \previous ->
             { layers =
                 updateEntity 0
-                    1
+                    entityId2
                     (\entity ->
                         { entity
                             | addresses =
-                                entity.addresses
-                                    ++ [ { id = id
-                                         , address = addrB
-                                         , x = 25
-                                         , y = 216
-                                         }
-                                       ]
+                                Dict.insert id
+                                    { id = id
+                                    , entityId = entityId2
+                                    , address = addrB
+                                    , category = Nothing
+                                    , x = 25
+                                    , y = 226
+                                    , dx = 0
+                                    , dy = 0
+                                    }
+                                    entity.addresses
                         }
                     )
                     previous
             , new = [ id ]
+            , repositioned = []
+            , colors = Dict.empty
             }
       )
         |> Address
+    , let
+        entity3 =
+            { entity1
+                | entity = 3
+            }
+
+        entity3Id =
+            Id.initEntityId
+                { currency = entity3.currency
+                , layer = 1
+                , id = entity3.entity
+                }
+
+        entityNode3 =
+            { id = entity3Id
+            , addresses = Dict.empty
+            , x = 490
+            , y = 362
+            , dx = 0
+            , dy = 0
+            , category = Nothing
+            , entity = entity3
+            , links = Entity.Links Dict.empty
+            }
+
+        entity4 =
+            { entity1
+                | entity = 4
+            }
+
+        entity4Id =
+            Id.initEntityId
+                { currency = entity4.currency
+                , layer = 1
+                , id = entity4.entity
+                }
+
+        entityNode4 =
+            { id = entity4Id
+            , addresses = Dict.empty
+            , x = 490
+            , y = 262
+            , dx = 0
+            , dy = 0
+            , category = Nothing
+            , entity = entity4
+            , links = Entity.Links Dict.empty
+            }
+
+        entity5 =
+            { entity1
+                | entity = 5
+            }
+
+        entity5Id =
+            Id.initEntityId
+                { currency = entity5.currency
+                , layer = 1
+                , id = entity5.entity
+                }
+
+        entityNode5 =
+            { id = entity5Id
+            , addresses = Dict.empty
+            , x = 490
+            , y = entityNode2.y
+            , dx = 0
+            , dy = 0
+            , category = Nothing
+            , entity = entity4
+            , links = Entity.Links Dict.empty
+            }
+      in
+      { title = "add 2 neighbors to second entity"
+      , anchor = entityId2
+      , isOutgoing = True
+      , neighbors =
+            [ entity3, entity4, entity5 ]
+      , output =
+            \previous ->
+                { layers =
+                    IntDict.insert 1
+                        (Layer.init 1
+                            |> s_entities
+                                (Dict.fromList
+                                    [ ( entity3Id
+                                      , entityNode3
+                                      )
+                                    , ( entity4Id
+                                      , entityNode4
+                                      )
+                                    , ( entity5Id
+                                      , entityNode5
+                                      )
+                                    ]
+                                )
+                        )
+                        previous
+                , new = [ entityNode5, entityNode4, entityNode3 ]
+                , repositioned = [ entityNode3, entityNode4 ]
+                , colors = Dict.empty
+                }
+      }
+        |> EntityNeighbors
     ]
+
+
+config : Update.Config
+config =
+    { defaultColor = Color.grey
+    , colorScheme = [ Color.red, Color.blue, Color.green ]
+    }
 
 
 suite : Test
@@ -263,7 +419,7 @@ suite =
                             in
                             (test title <|
                                 \_ ->
-                                    Expect.equal o (Layer.addAddress input layers)
+                                    Expect.equal o (Layer.addAddress config Dict.empty input layers)
                             )
                                 :: tests
                                 |> pair o.layers
@@ -275,11 +431,30 @@ suite =
                             in
                             (test title <|
                                 \_ ->
-                                    Expect.equal o (Layer.addEntity input layers)
+                                    Expect.equal o (Layer.addEntity config Dict.empty input layers)
+                            )
+                                :: tests
+                                |> pair o.layers
+
+                        EntityNeighbors { title, anchor, isOutgoing, neighbors, output } ->
+                            let
+                                o =
+                                    output layers
+                            in
+                            (test title <|
+                                \_ ->
+                                    Layer.addNeighbors
+                                        config
+                                        anchor
+                                        isOutgoing
+                                        Dict.empty
+                                        neighbors
+                                        layers
+                                        |> Expect.equal o
                             )
                                 :: tests
                                 |> pair o.layers
                 )
-                ( [], [] )
+                ( IntDict.empty, [] )
             |> second
         )
