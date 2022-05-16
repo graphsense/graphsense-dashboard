@@ -30,3 +30,13 @@ id ( _, _, i ) =
 entityId : EntityId -> Int
 entityId ( _, _, i ) =
     i
+
+
+entityIdToString : EntityId -> String
+entityIdToString ( l, c, i ) =
+    String.fromInt l ++ c ++ String.fromInt i
+
+
+addressIdToString : AddressId -> String
+addressIdToString ( l, c, i ) =
+    String.fromInt l ++ c ++ i

@@ -44,6 +44,24 @@ getEntity id =
         >> Maybe.andThen (.entities >> Dict.get id)
 
 
+getAddress : AddressId -> IntDict Layer -> Maybe Address
+getAddress id =
+    IntDict.get (Id.layer id)
+        >> Maybe.andThen
+            (.entities
+                >> Dict.foldl
+                    (\_ entity found ->
+                        case found of
+                            Nothing ->
+                                Dict.get id entity.addresses
+
+                            Just f ->
+                                Just f
+                    )
+                    Nothing
+            )
+
+
 getEntities : { currency : String, entity : Int } -> IntDict Layer -> List Entity
 getEntities { currency, entity } =
     IntDict.foldl

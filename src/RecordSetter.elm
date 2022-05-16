@@ -64,11 +64,6 @@ s_addressFlags value__ record__ =
     { record__ | addressFlags = value__ }
 
 
-s_addressFrame : a -> { b | addressFrame : a } -> { b | addressFrame : a }
-s_addressFrame value__ record__ =
-    { record__ | addressFrame = value__ }
-
-
 s_addressLabel : a -> { b | addressLabel : a } -> { b | addressLabel : a }
 s_addressLabel value__ record__ =
     { record__ | addressLabel = value__ }
@@ -427,6 +422,11 @@ s_brandWhite value__ record__ =
 s_breaks : a -> { b | breaks : a } -> { b | breaks : a }
 s_breaks value__ record__ =
     { record__ | breaks = value__ }
+
+
+s_browser : a -> { b | browser : a } -> { b | browser : a }
+s_browser value__ record__ =
+    { record__ | browser = value__ }
 
 
 s_browserHistory : a -> { b | browserHistory : a } -> { b | browserHistory : a }
@@ -892,11 +892,6 @@ s_entityCurrency value__ record__ =
 s_entityFlags : a -> { b | entityFlags : a } -> { b | entityFlags : a }
 s_entityFlags value__ record__ =
     { record__ | entityFlags = value__ }
-
-
-s_entityFrame : a -> { b | entityFrame : a } -> { b | entityFrame : a }
-s_entityFrame value__ record__ =
-    { record__ | entityFrame = value__ }
 
 
 s_entityId : a -> { b | entityId : a } -> { b | entityId : a }
@@ -1519,6 +1514,11 @@ s_isPublic value__ record__ =
     { record__ | isPublic = value__ }
 
 
+s_isSelected : a -> { b | isSelected : a } -> { b | isSelected : a }
+s_isSelected value__ record__ =
+    { record__ | isSelected = value__ }
+
+
 s_item : a -> { b | item : a } -> { b | item : a }
 s_item value__ record__ =
     { record__ | item = value__ }
@@ -1964,11 +1964,6 @@ s_months value__ record__ =
     { record__ | months = value__ }
 
 
-s_mouse : a -> { b | mouse : a } -> { b | mouse : a }
-s_mouse value__ record__ =
-    { record__ | mouse = value__ }
-
-
 s_msg : a -> { b | msg : a } -> { b | msg : a }
 s_msg value__ record__ =
     { record__ | msg = value__ }
@@ -2127,6 +2122,11 @@ s_noTxs value__ record__ =
 s_node : a -> { b | node : a } -> { b | node : a }
 s_node value__ record__ =
     { record__ | node = value__ }
+
+
+s_nodeFrame : a -> { b | nodeFrame : a } -> { b | nodeFrame : a }
+s_nodeFrame value__ record__ =
+    { record__ | nodeFrame = value__ }
 
 
 s_nodeList : a -> { b | nodeList : a } -> { b | nodeList : a }
@@ -2649,6 +2649,26 @@ s_program value__ record__ =
     { record__ | program = value__ }
 
 
+s_propertyBoxKey : a -> { b | propertyBoxKey : a } -> { b | propertyBoxKey : a }
+s_propertyBoxKey value__ record__ =
+    { record__ | propertyBoxKey = value__ }
+
+
+s_propertyBoxRow : a -> { b | propertyBoxRow : a } -> { b | propertyBoxRow : a }
+s_propertyBoxRow value__ record__ =
+    { record__ | propertyBoxRow = value__ }
+
+
+s_propertyBoxTable : a -> { b | propertyBoxTable : a } -> { b | propertyBoxTable : a }
+s_propertyBoxTable value__ record__ =
+    { record__ | propertyBoxTable = value__ }
+
+
+s_propertyBoxValue : a -> { b | propertyBoxValue : a } -> { b | propertyBoxValue : a }
+s_propertyBoxValue value__ record__ =
+    { record__ | propertyBoxValue = value__ }
+
+
 s_protocol : a -> { b | protocol : a } -> { b | protocol : a }
 s_protocol value__ record__ =
     { record__ | protocol = value__ }
@@ -2957,6 +2977,11 @@ s_sectionBelowHeader value__ record__ =
 s_seed : a -> { b | seed : a } -> { b | seed : a }
 s_seed value__ record__ =
     { record__ | seed = value__ }
+
+
+s_selected : a -> { b | selected : a } -> { b | selected : a }
+s_selected value__ record__ =
+    { record__ | selected = value__ }
 
 
 s_sent : a -> { b | sent : a } -> { b | sent : a }
@@ -3519,6 +3544,11 @@ s_txs value__ record__ =
     { record__ | txs = value__ }
 
 
+s_type_ : a -> { b | type_ : a } -> { b | type_ : a }
+s_type_ value__ record__ =
+    { record__ | type_ = value__ }
+
+
 s_types : a -> { b | types : a } -> { b | types : a }
 s_types value__ record__ =
     { record__ | types = value__ }
@@ -3642,6 +3672,11 @@ s_virtualDom value__ record__ =
 s_visibility : a -> { b | visibility : a } -> { b | visibility : a }
 s_visibility value__ record__ =
     { record__ | visibility = value__ }
+
+
+s_visible : a -> { b | visible : a } -> { b | visible : a }
+s_visible value__ record__ =
+    { record__ | visible = value__ }
 
 
 s_visited : a -> { b | visited : a } -> { b | visited : a }

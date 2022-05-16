@@ -17,11 +17,13 @@ import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Util.Graph as Util
 import View.Graph.Address as Address
+import View.Graph.Browser exposing (browser)
 import View.Graph.Entity as Entity
-import View.Graph.Layer as Layer
+import View.Graph.Layer as ViewLayer
 import View.Graph.Link as Link
 import View.Graph.Navbar as Navbar
 import View.Graph.Transform as Transform
@@ -42,65 +44,104 @@ graph vc gc model =
     Html.section
         [ Css.graphRoot vc |> Html.css
         ]
-        [ svg
-            [ preserveAspectRatio "xMidYMid slice"
-            , Svg.id "graph"
-            , Transform.viewBox { width = model.width, height = model.height } model.transform |> viewBox
-            , Css.svgRoot vc |> Svg.css
-            , Svg.custom "wheel"
+        [ browser vc gc model.browser
+        , svg
+            ([ preserveAspectRatio "xMidYMid slice"
+             , Svg.id "graph"
+             , Transform.viewBox { width = model.width, height = model.height } model.transform |> viewBox
+             , Css.svgRoot vc |> Svg.css
+             , Svg.custom "wheel"
                 (Json.Decode.map3
-                    (\x y z ->
-                        { message = UserWheeledOnGraph x y z
+                    (\y mx my ->
+                        { message = UserWheeledOnGraph mx my y
                         , stopPropagation = True
                         , preventDefault = False
                         }
                     )
-                    (Json.Decode.field "deltaX" Json.Decode.float)
                     (Json.Decode.field "deltaY" Json.Decode.float)
-                    (Json.Decode.field "deltaZ" Json.Decode.float)
+                    (Json.Decode.field "offsetX" Json.Decode.float)
+                    (Json.Decode.field "offsetY" Json.Decode.float)
                 )
-            , Svg.on "mousedown"
+             , Svg.on "mousedown"
                 (Util.decodeCoords Coords
                     |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
                 )
+             ]
+                ++ (if model.dragging /= NoDragging then
+                        Svg.preventDefaultOn "mousemove"
+                            (Util.decodeCoords Coords
+                                |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
+                            )
+                            |> List.singleton
 
-            {- , Svg.preventDefaultOn "mousemove"
-               (Util.decodeCoords Coords
-                   |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
+                    else
+                        []
                    )
-            -}
-            ]
+            )
             [ Svg.lazy2 arrowMarkers vc gc
-            , Svg.lazy3 entities vc gc model.layers
-            , Svg.lazy3 addresses vc gc model.layers
-            , Svg.lazy3 entityLinks vc gc model.layers
+            , Svg.lazy3 entities vc gc model
+            , Svg.lazy3 addresses vc gc model
+            , Svg.lazy3 entityLinks vc gc model
             ]
         ]
 
 
-addresses : Config -> Graph.Config -> IntDict Layer -> Svg Msg
-addresses vc gc =
-    Layer.addresses
-        >> List.map (Address.address vc gc)
-        >> g []
+addresses : Config -> Graph.Config -> Model -> Svg Msg
+addresses vc gc model =
+    let
+        selected =
+            case model.selected of
+                Just (AddressId id) ->
+                    Just id
+
+                _ ->
+                    Nothing
+    in
+    model.layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                ( "layer" ++ String.fromInt layerId
+                , Svg.lazy4 ViewLayer.addresses vc gc selected layer
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
 
 
-entities : Config -> Graph.Config -> IntDict Layer -> Svg Msg
-entities vc gc =
-    Layer.entities
-        >> List.map (Entity.entity vc gc)
-        >> g []
+entities : Config -> Graph.Config -> Model -> Svg Msg
+entities vc gc model =
+    let
+        selected =
+            case model.selected of
+                Just (EntityId id) ->
+                    Just id
+
+                _ ->
+                    Nothing
+    in
+    model.layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                ( "layer" ++ String.fromInt layerId
+                , Svg.lazy4 ViewLayer.entities vc gc selected layer
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
 
 
-entityLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
-entityLinks vc gc =
-    IntDict.foldl
-        (\layerId layer svg ->
-            Svg.lazy3 Layer.entityLinks vc gc layer
-                :: svg
-        )
-        []
-        >> g []
+entityLinks : Config -> Graph.Config -> Model -> Svg Msg
+entityLinks vc gc model =
+    model.layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                Svg.lazy3 ViewLayer.entityLinks vc gc layer
+                    :: svg
+            )
+            []
+        |> g []
 
 
 arrowMarkers : Config -> Graph.Config -> Svg Msg

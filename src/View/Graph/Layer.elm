@@ -4,14 +4,44 @@ import Config.Graph as Graph
 import Config.View as View
 import Dict
 import Model.Graph.Entity as Entity
+import Model.Graph.Id as Id
 import Model.Graph.Layer exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import View.Graph.Entity as Entity
 import View.Graph.Link as Link
+
+
+addresses : View.Config -> Graph.Config -> Maybe Id.AddressId -> Layer -> Svg Msg
+addresses vc gc selected layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity svg ->
+                ( Id.entityIdToString entity.id
+                , Svg.lazy4 Entity.addresses vc gc selected entity
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+entities : View.Config -> Graph.Config -> Maybe Id.EntityId -> Layer -> Svg Msg
+entities vc gc selected layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity svg ->
+                ( Id.entityIdToString entity.id
+                , Svg.lazy4 Entity.entity vc gc selected entity
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
 
 
 entityLinks : View.Config -> Graph.Config -> Layer -> Svg Msg

@@ -1,4 +1,4 @@
-module View.Graph.Entity exposing (entity, links)
+module View.Graph.Entity exposing (addresses, entity, links)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
@@ -17,17 +17,33 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
 import Util.Graph exposing (rotate, translate)
 import Util.View as Util
+import View.Graph.Address as Address
 import View.Graph.Label as Label
 import View.Graph.Link as Link
 import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-entity : Config -> Graph.Config -> Entity -> Svg Msg
-entity vc gc ent =
+addresses : Config -> Graph.Config -> Maybe Id.AddressId -> Entity -> Svg Msg
+addresses vc gc selected ent =
+    ent.addresses
+        |> Dict.foldl
+            (\_ address svg ->
+                ( Id.addressIdToString address.id
+                , Svg.lazy4 Address.address vc gc selected address
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+entity : Config -> Graph.Config -> Maybe Id.EntityId -> Entity -> Svg Msg
+entity vc gc selected ent =
     let
         color =
             ent.category
@@ -43,6 +59,9 @@ entity vc gc ent =
                    )
                 |> Color.fromHsla
                 |> Util.toCssColor
+
+        isSelected =
+            selected == Just ent.id
     in
     g
         [ Css.entityRoot vc |> css
@@ -68,7 +87,9 @@ entity vc gc ent =
             ]
             []
         , Svg.path
-            [ Css.entityFrame vc |> css
+            [ isSelected
+                |> Css.nodeFrame vc Model.Graph.Entity
+                |> css
             , String.Interpolate.interpolate
                 "M 0 0 H {0} Z M 0 {1} H {0} Z"
                 [ Entity.getWidth ent |> String.fromFloat
@@ -90,7 +111,7 @@ entity vc gc ent =
         , label vc gc ent
         , flags vc gc ent
         , currency vc gc ent
-        , addresses vc gc ent
+        , addressesCount vc gc ent
         , Node.expand vc
             gc
             { isOutgoing = False
@@ -100,6 +121,7 @@ entity vc gc ent =
             , width = Entity.getWidth ent
             , height = Entity.getHeight ent
             , color = color
+            , isSelected = isSelected
             }
         , Node.expand vc
             gc
@@ -110,6 +132,7 @@ entity vc gc ent =
             , width = Entity.getWidth ent
             , height = Entity.getHeight ent
             , color = color
+            , isSelected = isSelected
             }
         ]
 
@@ -162,8 +185,8 @@ currency vc gc ent =
         ]
 
 
-addresses : Config -> Graph.Config -> Entity -> Svg Msg
-addresses vc gc ent =
+addressesCount : Config -> Graph.Config -> Entity -> Svg Msg
+addressesCount vc gc ent =
     let
         size =
             Dict.size ent.addresses

@@ -16,27 +16,27 @@ update start current transform =
         |> s_y ((start.y - current.y) * transform.z + transform.y)
 
 
-wheel : { width : Float, height : Float, mouse : Coords } -> Float -> Float -> Float -> Model -> Model
-wheel { width, height, mouse } _ y _ model =
+wheel : { width : Float, height : Float } -> Float -> Float -> Float -> Model -> Model
+wheel { width, height } x y w model =
     let
         factor =
             0.01
 
         z =
-            y
+            w
                 * factor
                 |> max -0.9
 
         moveX =
-            mouse.x / width * z
+            x / width * z
 
         moveY =
-            mouse.y / height * z
+            y / height * z
     in
     { model
         | z = model.z * (1 + z)
-        , x = model.x - width * model.z * moveX
-        , y = model.y - height * model.z * moveY
+        , x = x - width * model.z * moveX
+        , y = y - height * model.z * moveY
     }
 
 

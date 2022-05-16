@@ -7,6 +7,7 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Id as Id
 import Model.Graph exposing (..)
+import Model.Graph.Browser as Browser
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer
@@ -96,7 +97,6 @@ update uc msg model =
                     Transform.wheel
                         { height = model.height
                         , width = model.width
-                        , mouse = model.mouse
                         }
                         x
                         y
@@ -148,7 +148,6 @@ update uc msg model =
                         | layers = Layer.moveEntity id vector model.layers
                     }
             )
-                |> s_mouse coords
                 |> n
 
         UserReleasesMouseButton ->
@@ -170,7 +169,19 @@ update uc msg model =
                 |> n
 
         UserClickedAddress id ->
-            n model
+            Layer.getAddress id model.layers
+                |> Maybe.map
+                    (\address ->
+                        { model
+                            | browser =
+                                model.browser
+                                    |> s_visible True
+                                    |> s_type_ (Browser.Address address)
+                            , selected = AddressId id |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserRightClickedAddress id ->
             n model
@@ -182,7 +193,19 @@ update uc msg model =
             n model
 
         UserClickedEntity id ->
-            n model
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\entity ->
+                        { model
+                            | browser =
+                                model.browser
+                                    |> s_visible True
+                                    |> s_type_ (Browser.Entity entity)
+                            , selected = EntityId id |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserRightClickedEntity id ->
             n model

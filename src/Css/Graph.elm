@@ -79,12 +79,12 @@ addressRect vc =
     vc.theme.graph.addressRect
 
 
-addressFrame : Config -> List Style
-addressFrame vc =
+nodeFrame : Config -> NodeType -> Bool -> List Style
+nodeFrame vc nodeType isSelected =
     [ property "stroke" "currentColor"
     , property "stroke-width" "1px"
     ]
-        ++ vc.theme.graph.addressFrame
+        ++ vc.theme.graph.nodeFrame nodeType isSelected
 
 
 addressFlags : Config -> List Style
@@ -115,14 +115,6 @@ frameStyle =
     [ property "stroke" "currentColor"
     , property "stroke-width" "1px"
     ]
-
-
-entityFrame : Config -> List Style
-entityFrame vc =
-    [ property "stroke" "currentColor"
-    , property "stroke-width" "1px"
-    ]
-        ++ vc.theme.graph.entityFrame
 
 
 entityFlags : Config -> List Style
@@ -156,10 +148,10 @@ expandHandle vc nodeType =
         :: vc.theme.graph.expandHandle nodeType
 
 
-expandHandlePath : Config -> NodeType -> List Style
-expandHandlePath vc nodeType =
+expandHandlePath : Config -> NodeType -> Bool -> List Style
+expandHandlePath vc nodeType isSelected =
     frameStyle
-        ++ vc.theme.graph.expandHandlePath nodeType
+        ++ vc.theme.graph.expandHandlePath nodeType isSelected
 
 
 expandHandleText : Config -> NodeType -> List Style

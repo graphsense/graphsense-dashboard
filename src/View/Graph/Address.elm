@@ -23,8 +23,8 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-address : Config -> Graph.Config -> Address -> Svg Msg
-address vc gc addr =
+address : Config -> Graph.Config -> Maybe Id.AddressId -> Address -> Svg Msg
+address vc gc selected addr =
     let
         color =
             addr.category
@@ -40,6 +40,9 @@ address vc gc addr =
                    )
                 |> Color.fromHsla
                 |> Util.toCssColor
+
+        isSelected =
+            selected == Just addr.id
     in
     g
         [ Css.addressRoot vc |> css
@@ -66,7 +69,7 @@ address vc gc addr =
             ]
             []
         , Svg.path
-            [ Css.addressFrame vc |> css
+            [ Css.nodeFrame vc Model.Graph.Address isSelected |> css
             , String.Interpolate.interpolate
                 "M 0 0 H {0} Z M 0 {1} H {0} Z"
                 [ Address.getWidth addr |> String.fromFloat
@@ -96,6 +99,7 @@ address vc gc addr =
             , width = Address.getWidth addr
             , height = Address.getHeight addr
             , color = color
+            , isSelected = isSelected
             }
         , Node.expand vc
             gc
@@ -106,6 +110,7 @@ address vc gc addr =
             , width = Address.getWidth addr
             , height = Address.getHeight addr
             , color = color
+            , isSelected = isSelected
             }
         ]
 

@@ -2,8 +2,10 @@ module Iknaio exposing (theme)
 
 import Color exposing (rgb255)
 import Css exposing (..)
+import Css.Transitions
 import Model.Graph exposing (NodeType(..))
 import RecordSetter exposing (..)
+import Theme.Browser as Browser
 import Theme.Button as Button
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
@@ -26,6 +28,7 @@ type alias Colors =
     , greyLighter : Color.Color
     , greyLightest : Color.Color
     , white : Color.Color
+    , red : Color.Color
     , brandText : Color.Color
     , brandDarker : Color.Color
     , brandDark : Color.Color
@@ -50,6 +53,7 @@ colors =
     , greyLighter = rgb255 45 70 91
     , greyLightest = rgb255 5 50 84
     , white = rgb255 34 41 47
+    , red = rgb255 227 52 47
     , brandText = rgb255 236 243 249
     , brandDarker = rgb255 236 243 249
     , brandDark = rgb255 211 227 241
@@ -283,25 +287,37 @@ theme =
                 |> s_entityAddressesCount
                     [ px 14 |> fontSize ]
                 |> s_expandHandlePath
-                    (\_ ->
-                        [ colors.white
+                    (\_ isSelected ->
+                        let
+                            ( color, width ) =
+                                if isSelected then
+                                    ( colors.red, nodeStrokeWidth * 4 )
+
+                                else
+                                    ( colors.white, nodeStrokeWidth )
+                        in
+                        [ color
                             |> Color.toCssString
                             |> property "stroke"
-                        , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
+                        , property "stroke-width" <| String.fromFloat width
                         ]
                     )
-                |> s_entityFrame
-                    [ colors.white
-                        |> Color.toCssString
-                        |> property "stroke"
-                    , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
-                    ]
-                |> s_addressFrame
-                    [ colors.white
-                        |> Color.toCssString
-                        |> property "stroke"
-                    , property "stroke-width" <| String.fromFloat nodeStrokeWidth ++ "px"
-                    ]
+                |> s_nodeFrame
+                    (\_ isSelected ->
+                        let
+                            ( color, width ) =
+                                if isSelected then
+                                    ( colors.red, nodeStrokeWidth * 4 )
+
+                                else
+                                    ( colors.white, nodeStrokeWidth )
+                        in
+                        [ color
+                            |> Color.toCssString
+                            |> property "stroke"
+                        , property "stroke-width" <| String.fromFloat width
+                        ]
+                    )
                 |> s_nodeSeparatorToExpandHandle
                     (\_ ->
                         [ colors.white
@@ -327,6 +343,41 @@ theme =
                     , num 0.8 |> opacity
                     , property "stroke-width" "0"
                     ]
+                |> s_navbar
+                    [ toCssColor colors.brandWhite |> backgroundColor
+                    ]
+            )
+        |> s_browser
+            (Browser.default
+                |> s_propertyBoxTable
+                    [ letterSpacingWide
+                    ]
+                |> s_propertyBoxKey
+                    [ fontWeight (int 500)
+                    , scaled 2 |> rem |> paddingRight
+                    , scaled 1 |> rem |> paddingBottom
+                    ]
+                |> s_propertyBoxValue
+                    [ fontHairline
+                    ]
+                |> s_frame
+                    (\visible ->
+                        [ Css.Transitions.transition
+                            [ Css.Transitions.transform 200
+                            ]
+                        , display block
+                        , if visible then
+                            translateY (px -1) |> transform
+
+                          else
+                            translateY (pct -110) |> transform
+                        , colors.brandWhite |> toCssColor |> backgroundColor
+                        , scaled 2 |> rem |> padding
+                        , shadowMd
+
+                        --<section id="layout-browser" class="border layout-border bg-gs-white shadow-md rounded-b text-sm absolute"></section>
+                        ]
+                    )
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work
@@ -420,3 +471,8 @@ entityStrokeDashArray =
 nodeStrokeWidth : Float
 nodeStrokeWidth =
     0.5
+
+
+shadowMd : Style
+shadowMd =
+    property "box-shadow" "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)"

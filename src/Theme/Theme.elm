@@ -1,6 +1,7 @@
 module Theme.Theme exposing (Theme, default)
 
 import Css exposing (Style)
+import Theme.Browser as Browser exposing (Browser)
 import Theme.Button as Button exposing (Button)
 import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
@@ -26,6 +27,7 @@ type alias Theme =
     , search : Search
     , button : Button
     , graph : Graph
+    , browser : Browser
     , tool : List Style
     , modal : Dialog
     , user : User
@@ -55,5 +57,6 @@ default =
     , modal = Dialog.default
     , user = User.default
     , graph = Graph.default
+    , browser = Browser.default
     , custom = ""
     }

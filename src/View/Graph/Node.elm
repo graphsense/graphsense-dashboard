@@ -23,11 +23,12 @@ type alias ExpandConfig =
     , height : Float
     , onClick : Bool -> Msg
     , color : Css.Color
+    , isSelected : Bool
     }
 
 
 expand : Config -> Graph.Config -> ExpandConfig -> Svg Msg
-expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color } =
+expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color, isSelected } =
     g
         [ Css.expandHandle vc nodeType |> css
         , Events.stopPropagationOn "click" (Json.Decode.succeed ( onClick isOutgoing, True ))
@@ -52,7 +53,7 @@ expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color } =
             |> transform
         ]
         [ Svg.path
-            [ Css.expandHandlePath vc nodeType
+            [ Css.expandHandlePath vc nodeType isSelected
                 ++ [ Css.fill color ]
                 |> css
             , String.Interpolate.interpolate

@@ -10,14 +10,13 @@ type alias Graph =
     , addressFlags : List Style
     , addressLabel : List Style
     , addressRect : List Style
-    , addressFrame : List Style
+    , nodeFrame : NodeType -> Bool -> List Style
     , addressRoot : List Style
     , entityFlags : List Style
     , entityLabel : List Style
     , entityCurrency : List Style
     , entityAddressesCount : List Style
     , entityRect : List Style
-    , entityFrame : List Style
     , entityRoot : List Style
     , entityLink : List Style
     , entityLinkThickness : Float
@@ -27,7 +26,7 @@ type alias Graph =
     , linkLabel : List Style
     , linkLabelBox : List Style
     , expandHandle : NodeType -> List Style
-    , expandHandlePath : NodeType -> List Style
+    , expandHandlePath : NodeType -> Bool -> List Style
     , expandHandleText : NodeType -> List Style
     , nodeSeparatorToExpandHandle : NodeType -> List Style
     , graphRoot : List Style
@@ -55,14 +54,13 @@ default =
     , addressFlags = []
     , addressLabel = []
     , addressRect = []
-    , addressFrame = []
+    , nodeFrame = \_ _ -> []
     , addressRoot = []
     , entityFlags = []
     , entityLabel = []
     , entityCurrency = []
     , entityAddressesCount = []
     , entityRect = []
-    , entityFrame = []
     , entityRoot = []
     , entityLink = []
     , entityLinkThickness = 1
@@ -72,7 +70,7 @@ default =
     , linkLabel = []
     , linkLabelBox = []
     , expandHandle = always []
-    , expandHandlePath = always []
+    , expandHandlePath = \_ _ -> []
     , expandHandleText = always []
     , nodeSeparatorToExpandHandle = always []
     , graphRoot = []
