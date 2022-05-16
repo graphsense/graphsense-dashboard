@@ -311,6 +311,22 @@ theme =
                         , property "stroke-width" "0.5"
                         ]
                     )
+                |> s_entityLink
+                    [ colors.grey
+                        |> Color.toCssString
+                        |> property "stroke"
+                    ]
+                |> s_linkColorFaded colors.grey
+                |> s_linkColorStrong colors.black
+                |> s_linkColorSelected colors.brandRed
+                |> s_linkLabel
+                    [ fontFamilies [ "monospace" ] ]
+                |> s_linkLabelBox
+                    [ Color.toCssString colors.brandLightest
+                        |> property "fill"
+                    , num 0.8 |> opacity
+                    , property "stroke-width" "0"
+                    ]
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work

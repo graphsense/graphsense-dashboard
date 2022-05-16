@@ -134,6 +134,11 @@ s_alpha value__ record__ =
     { record__ | alpha = value__ }
 
 
+s_anchor : a -> { b | anchor : a } -> { b | anchor : a }
+s_anchor value__ record__ =
+    { record__ | anchor = value__ }
+
+
 s_angle : a -> { b | angle : a } -> { b | angle : a }
 s_angle value__ record__ =
     { record__ | angle = value__ }
@@ -534,9 +539,19 @@ s_colors value__ record__ =
     { record__ | colors = value__ }
 
 
+s_column : a -> { b | column : a } -> { b | column : a }
+s_column value__ record__ =
+    { record__ | column = value__ }
+
+
 s_command : a -> { b | command : a } -> { b | command : a }
 s_command value__ record__ =
     { record__ | command = value__ }
+
+
+s_config : a -> { b | config : a } -> { b | config : a }
+s_config value__ record__ =
+    { record__ | config = value__ }
 
 
 s_content : a -> { b | content : a } -> { b | content : a }
@@ -824,6 +839,11 @@ s_elm value__ record__ =
     { record__ | elm = value__ }
 
 
+s_encoder : a -> { b | encoder : a } -> { b | encoder : a }
+s_encoder value__ record__ =
+    { record__ | encoder = value__ }
+
+
 s_end : a -> { b | end : a } -> { b | end : a }
 s_end value__ record__ =
     { record__ | end = value__ }
@@ -879,9 +899,24 @@ s_entityFrame value__ record__ =
     { record__ | entityFrame = value__ }
 
 
+s_entityId : a -> { b | entityId : a } -> { b | entityId : a }
+s_entityId value__ record__ =
+    { record__ | entityId = value__ }
+
+
 s_entityLabel : a -> { b | entityLabel : a } -> { b | entityLabel : a }
 s_entityLabel value__ record__ =
     { record__ | entityLabel = value__ }
+
+
+s_entityLink : a -> { b | entityLink : a } -> { b | entityLink : a }
+s_entityLink value__ record__ =
+    { record__ | entityLink = value__ }
+
+
+s_entityLinkThickness : a -> { b | entityLinkThickness : a } -> { b | entityLinkThickness : a }
+s_entityLinkThickness value__ record__ =
+    { record__ | entityLinkThickness = value__ }
 
 
 s_entityRect : a -> { b | entityRect : a } -> { b | entityRect : a }
@@ -897,6 +932,11 @@ s_entityRoot value__ record__ =
 s_entityTags : a -> { b | entityTags : a } -> { b | entityTags : a }
 s_entityTags value__ record__ =
     { record__ | entityTags = value__ }
+
+
+s_error : a -> { b | error : a } -> { b | error : a }
+s_error value__ record__ =
+    { record__ | error = value__ }
 
 
 s_event : a -> { b | event : a } -> { b | event : a }
@@ -997,6 +1037,11 @@ s_featureTagValue value__ record__ =
 s_fiatValues : a -> { b | fiatValues : a } -> { b | fiatValues : a }
 s_fiatValues value__ record__ =
     { record__ | fiatValues = value__ }
+
+
+s_fieldSeparator : a -> { b | fieldSeparator : a } -> { b | fieldSeparator : a }
+s_fieldSeparator value__ record__ =
+    { record__ | fieldSeparator = value__ }
 
 
 s_filename : a -> { b | filename : a } -> { b | filename : a }
@@ -1394,6 +1439,11 @@ s_infinite value__ record__ =
     { record__ | infinite = value__ }
 
 
+s_info : a -> { b | info : a } -> { b | info : a }
+s_info value__ record__ =
+    { record__ | info = value__ }
+
+
 s_init : a -> { b | init : a } -> { b | init : a }
 s_init value__ record__ =
     { record__ | init = value__ }
@@ -1694,6 +1744,31 @@ s_limit value__ record__ =
     { record__ | limit = value__ }
 
 
+s_linkColorFaded : a -> { b | linkColorFaded : a } -> { b | linkColorFaded : a }
+s_linkColorFaded value__ record__ =
+    { record__ | linkColorFaded = value__ }
+
+
+s_linkColorSelected : a -> { b | linkColorSelected : a } -> { b | linkColorSelected : a }
+s_linkColorSelected value__ record__ =
+    { record__ | linkColorSelected = value__ }
+
+
+s_linkColorStrong : a -> { b | linkColorStrong : a } -> { b | linkColorStrong : a }
+s_linkColorStrong value__ record__ =
+    { record__ | linkColorStrong = value__ }
+
+
+s_linkLabel : a -> { b | linkLabel : a } -> { b | linkLabel : a }
+s_linkLabel value__ record__ =
+    { record__ | linkLabel = value__ }
+
+
+s_linkLabelBox : a -> { b | linkLabelBox : a } -> { b | linkLabelBox : a }
+s_linkLabelBox value__ record__ =
+    { record__ | linkLabelBox = value__ }
+
+
 s_links : a -> { b | links : a } -> { b | links : a }
 s_links value__ record__ =
     { record__ | links = value__ }
@@ -1737,6 +1812,11 @@ s_locale value__ record__ =
 s_logo : a -> { b | logo : a } -> { b | logo : a }
 s_logo value__ record__ =
     { record__ | logo = value__ }
+
+
+s_lower : a -> { b | lower : a } -> { b | lower : a }
+s_lower value__ record__ =
+    { record__ | lower = value__ }
 
 
 s_main : a -> { b | main : a } -> { b | main : a }
@@ -1934,6 +2014,11 @@ s_navigation value__ record__ =
     { record__ | navigation = value__ }
 
 
+s_nearest : a -> { b | nearest : a } -> { b | nearest : a }
+s_nearest value__ record__ =
+    { record__ | nearest = value__ }
+
+
 s_neg : a -> { b | neg : a } -> { b | neg : a }
 s_neg value__ record__ =
     { record__ | neg = value__ }
@@ -1952,6 +2037,11 @@ s_negativePrefix value__ record__ =
 s_negativeSuffix : a -> { b | negativeSuffix : a } -> { b | negativeSuffix : a }
 s_negativeSuffix value__ record__ =
     { record__ | negativeSuffix = value__ }
+
+
+s_neighbor : a -> { b | neighbor : a } -> { b | neighbor : a }
+s_neighbor value__ record__ =
+    { record__ | neighbor = value__ }
 
 
 s_neighbors : a -> { b | neighbors : a } -> { b | neighbors : a }
@@ -1982,6 +2072,11 @@ s_nextPage value__ record__ =
 s_nextVertexIndex : a -> { b | nextVertexIndex : a } -> { b | nextVertexIndex : a }
 s_nextVertexIndex value__ record__ =
     { record__ | nextVertexIndex = value__ }
+
+
+s_nh : a -> { b | nh : a } -> { b | nh : a }
+s_nh value__ record__ =
+    { record__ | nh = value__ }
 
 
 s_noAddressRelations : a -> { b | noAddressRelations : a } -> { b | noAddressRelations : a }
@@ -2134,6 +2229,11 @@ s_numericValue value__ record__ =
     { record__ | numericValue = value__ }
 
 
+s_ny : a -> { b | ny : a } -> { b | ny : a }
+s_ny value__ record__ =
+    { record__ | ny = value__ }
+
+
 s_octal : a -> { b | octal : a } -> { b | octal : a }
 s_octal value__ record__ =
     { record__ | octal = value__ }
@@ -2202,6 +2302,11 @@ s_onUrlRequest value__ record__ =
 s_only : a -> { b | only : a } -> { b | only : a }
 s_only value__ record__ =
     { record__ | only = value__ }
+
+
+s_onlyIds : a -> { b | onlyIds : a } -> { b | onlyIds : a }
+s_onlyIds value__ record__ =
+    { record__ | onlyIds = value__ }
 
 
 s_open : a -> { b | open : a } -> { b | open : a }
@@ -2279,6 +2384,11 @@ s_outline value__ record__ =
     { record__ | outline = value__ }
 
 
+s_output : a -> { b | output : a } -> { b | output : a }
+s_output value__ record__ =
+    { record__ | output = value__ }
+
+
 s_outputValue : a -> { b | outputValue : a } -> { b | outputValue : a }
 s_outputValue value__ record__ =
     { record__ | outputValue = value__ }
@@ -2312,6 +2422,11 @@ s_overlay value__ record__ =
 s_page : a -> { b | page : a } -> { b | page : a }
 s_page value__ record__ =
     { record__ | page = value__ }
+
+
+s_pagesize : a -> { b | pagesize : a } -> { b | pagesize : a }
+s_pagesize value__ record__ =
+    { record__ | pagesize = value__ }
 
 
 s_param0 : a -> { b | param0 : a } -> { b | param0 : a }
@@ -2399,9 +2514,19 @@ s_paths value__ record__ =
     { record__ | paths = value__ }
 
 
+s_ph : a -> { b | ph : a } -> { b | ph : a }
+s_ph value__ record__ =
+    { record__ | ph = value__ }
+
+
 s_pids : a -> { b | pids : a } -> { b | pids : a }
 s_pids value__ record__ =
     { record__ | pids = value__ }
+
+
+s_pivot : a -> { b | pivot : a } -> { b | pivot : a }
+s_pivot value__ record__ =
+    { record__ | pivot = value__ }
 
 
 s_plus : a -> { b | plus : a } -> { b | plus : a }
@@ -2529,6 +2654,11 @@ s_protocol value__ record__ =
     { record__ | protocol = value__ }
 
 
+s_py : a -> { b | py : a } -> { b | py : a }
+s_py value__ record__ =
+    { record__ | py = value__ }
+
+
 s_query : a -> { b | query : a } -> { b | query : a }
 s_query value__ record__ =
     { record__ | query = value__ }
@@ -2599,6 +2729,11 @@ s_removed value__ record__ =
     { record__ | removed = value__ }
 
 
+s_repositioned : a -> { b | repositioned : a } -> { b | repositioned : a }
+s_repositioned value__ record__ =
+    { record__ | repositioned = value__ }
+
+
 s_reqs : a -> { b | reqs : a } -> { b | reqs : a }
 s_reqs value__ record__ =
     { record__ | reqs = value__ }
@@ -2607,6 +2742,16 @@ s_reqs value__ record__ =
 s_request : a -> { b | request : a } -> { b | request : a }
 s_request value__ record__ =
     { record__ | request = value__ }
+
+
+s_requestDirection : a -> { b | requestDirection : a } -> { b | requestDirection : a }
+s_requestDirection value__ record__ =
+    { record__ | requestDirection = value__ }
+
+
+s_requestEntity : a -> { b | requestEntity : a } -> { b | requestEntity : a }
+s_requestEntity value__ record__ =
+    { record__ | requestEntity = value__ }
 
 
 s_requestLimit : a -> { b | requestLimit : a } -> { b | requestLimit : a }
@@ -3359,6 +3504,11 @@ s_txHash value__ record__ =
     { record__ | txHash = value__ }
 
 
+s_txLabelType : a -> { b | txLabelType : a } -> { b | txLabelType : a }
+s_txLabelType value__ record__ =
+    { record__ | txLabelType = value__ }
+
+
 s_txType : a -> { b | txType : a } -> { b | txType : a }
 s_txType value__ record__ =
     { record__ | txType = value__ }
@@ -3417,6 +3567,11 @@ s_updateFrequency value__ record__ =
 s_updatedEntity : a -> { b | updatedEntity : a } -> { b | updatedEntity : a }
 s_updatedEntity value__ record__ =
     { record__ | updatedEntity = value__ }
+
+
+s_upper : a -> { b | upper : a } -> { b | upper : a }
+s_upper value__ record__ =
+    { record__ | upper = value__ }
 
 
 s_uri : a -> { b | uri : a } -> { b | uri : a }

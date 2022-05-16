@@ -131,7 +131,8 @@ label vc gc ent =
 
 getLabel : Config -> Graph.Config -> Entity -> String
 getLabel vc gc ent =
-    ent.entity.entity |> String.fromInt
+    --ent.entity.entity |> String.fromInt
+    ""
 
 
 flags : Config -> Graph.Config -> Entity -> Svg Msg
@@ -204,7 +205,7 @@ links vc gc mn mx ent =
     case ent.links of
         Entity.Links lnks ->
             lnks
-                |> Dict.foldl
+                |> Dict.foldr
                     (\_ link svg ->
                         Svg.lazy6 Link.entityLink vc gc mn mx ent link
                             :: svg

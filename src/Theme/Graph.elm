@@ -21,6 +21,11 @@ type alias Graph =
     , entityRoot : List Style
     , entityLink : List Style
     , entityLinkThickness : Float
+    , linkColorFaded : Color
+    , linkColorStrong : Color
+    , linkColorSelected : Color
+    , linkLabel : List Style
+    , linkLabelBox : List Style
     , expandHandle : NodeType -> List Style
     , expandHandlePath : NodeType -> List Style
     , expandHandleText : NodeType -> List Style
@@ -61,6 +66,11 @@ default =
     , entityRoot = []
     , entityLink = []
     , entityLinkThickness = 1
+    , linkColorFaded = Color.grey
+    , linkColorStrong = Color.black
+    , linkColorSelected = Color.red
+    , linkLabel = []
+    , linkLabelBox = []
     , expandHandle = always []
     , expandHandlePath = always []
     , expandHandleText = always []

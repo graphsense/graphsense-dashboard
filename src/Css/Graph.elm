@@ -1,6 +1,6 @@
 module Css.Graph exposing (..)
 
-import Config.Graph exposing (addressesCountHeight, labelHeight)
+import Config.Graph exposing (addressesCountHeight, labelHeight, linkLabelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
 import Model.Graph exposing (NodeType)
@@ -180,3 +180,15 @@ entityLink vc =
     , property "fill" "none"
     ]
         ++ vc.theme.graph.entityLink
+
+
+linkLabel : Config -> List Style
+linkLabel vc =
+    (px linkLabelHeight |> fontSize)
+        :: property "fill" "currentColor"
+        :: vc.theme.graph.linkLabel
+
+
+linkLabelBox : Config -> List Style
+linkLabelBox vc =
+    vc.theme.graph.linkLabelBox

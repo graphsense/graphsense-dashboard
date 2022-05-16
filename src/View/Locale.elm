@@ -1,4 +1,4 @@
-module View.Locale exposing (currency, float, floatWithFormat, int, intWithFormat, interpolated, percentage, string, text, timestamp)
+module View.Locale exposing (currency, currencyWithoutCode, float, floatWithFormat, int, intWithFormat, interpolated, percentage, string, text, timestamp)
 
 import Api.Data
 import Css exposing (num, opacity)
@@ -160,26 +160,42 @@ percentage model =
 
 
 currency : Model -> String -> Api.Data.Values -> String
-currency model coinCode values =
+currency =
+    currencyWithOptions False
+
+
+currencyWithoutCode : Model -> String -> Api.Data.Values -> String
+currencyWithoutCode =
+    currencyWithOptions True
+
+
+currencyWithOptions : Bool -> Model -> String -> Api.Data.Values -> String
+currencyWithOptions hideCode model coinCode values =
     case model.currency of
         Coin ->
-            coin model coinCode values.value
+            coin model hideCode coinCode values.value
 
         Fiat code ->
             values.fiatValues
                 |> List.filter (.code >> String.toLower >> (==) code)
                 |> List.head
-                |> Maybe.map (fiat model)
+                |> Maybe.map (fiat model hideCode)
                 |> Maybe.withDefault ""
 
 
-fiat : Model -> Api.Data.Rate -> String
-fiat model { code, value } =
-    float model value ++ " " ++ String.toUpper code
+fiat : Model -> Bool -> Api.Data.Rate -> String
+fiat model hideCode { code, value } =
+    float model value
+        ++ (if hideCode then
+                ""
+
+            else
+                " " ++ String.toUpper code
+           )
 
 
-coin : Model -> String -> Int -> String
-coin model code v =
+coin : Model -> Bool -> String -> Int -> String
+coin model hideCode code v =
     let
         ( value, sc ) =
             if code == "eth" then
@@ -189,7 +205,19 @@ coin model code v =
                 ( toFloat v / 1.0e8, "s" )
     in
     if abs value < 0.0001 then
-        int model v ++ " " ++ sc
+        int model v
+            ++ (if hideCode then
+                    ""
+
+                else
+                    " " ++ sc
+               )
 
     else
-        float model value ++ " " ++ String.toUpper code
+        float model value
+            ++ (if hideCode then
+                    ""
+
+                else
+                    " " ++ String.toUpper code
+               )

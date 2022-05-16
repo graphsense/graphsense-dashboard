@@ -22,6 +22,7 @@ import Util.Graph as Util
 import View.Graph.Address as Address
 import View.Graph.Entity as Entity
 import View.Graph.Layer as Layer
+import View.Graph.Link as Link
 import View.Graph.Navbar as Navbar
 import View.Graph.Transform as Transform
 
@@ -69,7 +70,8 @@ graph vc gc model =
                    )
             -}
             ]
-            [ Svg.lazy3 entities vc gc model.layers
+            [ Svg.lazy2 arrowMarkers vc gc
+            , Svg.lazy3 entities vc gc model.layers
             , Svg.lazy3 addresses vc gc model.layers
             , Svg.lazy3 entityLinks vc gc model.layers
             ]
@@ -99,3 +101,13 @@ entityLinks vc gc =
         )
         []
         >> g []
+
+
+arrowMarkers : Config -> Graph.Config -> Svg Msg
+arrowMarkers vc gc =
+    [ vc.theme.graph.linkColorFaded
+    , vc.theme.graph.linkColorStrong
+    , vc.theme.graph.linkColorSelected
+    ]
+        |> List.map (Link.arrowMarker vc gc)
+        |> defs []

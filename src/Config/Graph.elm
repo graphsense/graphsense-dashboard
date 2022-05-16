@@ -54,6 +54,21 @@ txMaxWidth =
     7
 
 
+arrowHeight : Float
+arrowHeight =
+    txMaxWidth
+
+
+arrowWidth : Float
+arrowWidth =
+    arrowHeight
+
+
+linkLabelHeight : Float
+linkLabelHeight =
+    12
+
+
 entityMinHeight : Float
 entityMinHeight =
     (2 * padding)
