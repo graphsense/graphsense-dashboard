@@ -7,6 +7,7 @@ import Css exposing (fill)
 import Css.Graph as Css
 import Dict
 import Json.Decode
+import Log
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
@@ -28,7 +29,7 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-addresses : Config -> Graph.Config -> Maybe Id.AddressId -> Entity -> Svg Msg
+addresses : Config -> Graph.Config -> Id.AddressId -> Entity -> Svg Msg
 addresses vc gc selected ent =
     ent.addresses
         |> Dict.foldl
@@ -42,9 +43,12 @@ addresses vc gc selected ent =
         |> Keyed.node "g" []
 
 
-entity : Config -> Graph.Config -> Maybe Id.EntityId -> Entity -> Svg Msg
+entity : Config -> Graph.Config -> Id.EntityId -> Entity -> Svg Msg
 entity vc gc selected ent =
     let
+        _ =
+            Log.log "rednerEntity" ent.id
+
         color =
             ent.category
                 |> Maybe.andThen
@@ -61,7 +65,7 @@ entity vc gc selected ent =
                 |> Util.toCssColor
 
         isSelected =
-            selected == Just ent.id
+            selected == ent.id
     in
     g
         [ Css.entityRoot vc |> css

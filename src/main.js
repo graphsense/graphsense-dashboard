@@ -15,4 +15,6 @@ const body = document.getElementsByTagName('body')[0]
 const width = window.innerWidth || docElem.clientWidth || body.clientWidth
 const height = window.innerHeight || docElem.clientHeight || body.clientHeight
 
-const app = Elm.Main.init({flags: {locale, width, height}});
+const now = +(new Date())
+
+const app = Elm.Main.init({flags: {locale, width, height, now}});

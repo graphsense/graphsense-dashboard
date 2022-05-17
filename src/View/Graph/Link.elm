@@ -6,6 +6,7 @@ import Config.View as View
 import Css exposing (..)
 import Css.Graph as Css
 import List.Extra
+import Log
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Link exposing (Link)
 import Model.Locale as Locale
@@ -184,7 +185,7 @@ arrowMarker vc gc color =
 arrowMarkerId : Color.Color -> String
 arrowMarkerId =
     Color.toCssString
-        >> Debug.log "before replaced"
+        >> Log.log "before replaced"
         >> Regex.replace (Regex.fromString "[^a-z0-9]" |> Maybe.withDefault Regex.never) (\_ -> "")
-        >> Debug.log "replaced"
+        >> Log.log "replaced"
         >> (++) "arrow"

@@ -10,6 +10,7 @@ import Init.Graph.Id as Id
 import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
 import List.Extra
+import Log
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity, Links(..))
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
@@ -324,7 +325,7 @@ syncLinks updatedIds layers =
                                 (\updEnt layer__ ->
                                     case entity.links of
                                         Entity.Links links ->
-                                            case Dict.get (Debug.log "updEnt.id" updEnt.id) links |> Debug.log "updEnt " of
+                                            case Dict.get (Log.log "updEnt.id" updEnt.id) links |> Log.log "updEnt " of
                                                 Nothing ->
                                                     layer__
 

@@ -7,6 +7,7 @@ import Css
 import Css.Graph as Css
 import Dict
 import Json.Decode as Dec
+import Log
 import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Id as Id
@@ -23,9 +24,12 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-address : Config -> Graph.Config -> Maybe Id.AddressId -> Address -> Svg Msg
+address : Config -> Graph.Config -> Id.AddressId -> Address -> Svg Msg
 address vc gc selected addr =
     let
+        _ =
+            Log.log "rednerAddress" addr.id
+
         color =
             addr.category
                 |> Maybe.andThen
@@ -42,7 +46,7 @@ address vc gc selected addr =
                 |> Util.toCssColor
 
         isSelected =
-            selected == Just addr.id
+            selected == addr.id
     in
     g
         [ Css.addressRoot vc |> css

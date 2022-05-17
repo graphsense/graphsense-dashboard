@@ -1,10 +1,16 @@
 module Update.Locale exposing (..)
 
+import DateFormat.Language
+import DateFormat.Relative
 import Dict
 import Effect exposing (n)
 import Effect.Locale as Effect exposing (Effect(..))
+import Languages.German
+import Locale.English
+import Locale.German
 import Model.Locale as Model exposing (..)
 import Msg.Locale as Msg exposing (Msg(..))
+import Numeral
 import RemoteData
 
 
@@ -59,3 +65,38 @@ update msg model =
 
                 _ ->
                     n model
+
+
+switch : String -> Model -> Model
+switch locale model =
+    { model
+        | locale = locale
+        , numberFormat =
+            case locale of
+                "de" ->
+                    Numeral.formatWithLanguage Languages.German.lang
+
+                _ ->
+                    Numeral.format
+        , timeLang =
+            case locale of
+                "de" ->
+                    Locale.German.german
+
+                _ ->
+                    DateFormat.Language.english
+        , relativeTimeOptions =
+            case locale of
+                "de" ->
+                    Locale.German.relativeTimeOptions
+
+                _ ->
+                    DateFormat.Relative.defaultRelativeOptions
+        , unitToString =
+            case locale of
+                "de" ->
+                    Locale.German.unitToString
+
+                _ ->
+                    Locale.English.unitToString
+    }

@@ -9,15 +9,14 @@ import IntDict
 import Model.Graph exposing (..)
 
 
-init : Model
-init =
+init : Int -> Model
+init now =
     { config = Config.default
     , layers = IntDict.empty
-    , browser = Browser.init
+    , browser = Browser.init now
     , adding = Adding.init
     , dragging = NoDragging
     , transform = Transform.init
-    , width = 1200
-    , height = 800
+    , size = Nothing
     , selected = Nothing
     }

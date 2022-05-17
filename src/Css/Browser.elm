@@ -52,3 +52,33 @@ propertyBoxValue vc =
 propertyBoxEntityId : Config -> List Style
 propertyBoxEntityId vc =
     vc.theme.browser.propertyBoxEntityId
+
+
+propertyBoxRule : Config -> List Style
+propertyBoxRule vc =
+    vc.theme.browser.propertyBoxRule
+
+
+propertyBoxIncomingTxs : Config -> List Style
+propertyBoxIncomingTxs vc =
+    vc.theme.browser.propertyBoxIncomingTxs
+
+
+propertyBoxOutgoingTxs : Config -> List Style
+propertyBoxOutgoingTxs vc =
+    vc.theme.browser.propertyBoxOutgoingTxs
+
+
+propertyBoxUsageTimestamp : Config -> List Style
+propertyBoxUsageTimestamp vc =
+    vc.theme.browser.propertyBoxUsageTimestamp
+
+
+propertyBoxUsageRelative : Config -> List Style
+propertyBoxUsageRelative vc =
+    vc.theme.browser.propertyBoxUsageRelative
+
+
+propertyBoxActivityPeriod : Config -> List Style
+propertyBoxActivityPeriod vc =
+    vc.theme.browser.propertyBoxActivityPeriod

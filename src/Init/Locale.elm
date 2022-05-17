@@ -1,43 +1,33 @@
 module Init.Locale exposing (init)
 
 import DateFormat.Language
+import DateFormat.Relative
 import Dict
 import Effect.Locale exposing (Effect(..))
 import Http
 import Languages.German
+import Locale.English
 import Locale.German
 import Model.Locale as Model exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
+import Update.Locale exposing (switch)
 
 
 init : Flags -> ( Model, List Effect )
 init { locale } =
     ( { mapping = Empty
       , locale = locale
-      , numberFormat = initNumberFormat locale
+      , numberFormat = Numeral.format
       , zone = Time.utc
-      , timeLang =
-            case locale of
-                "de" ->
-                    Locale.German.german
-
-                _ ->
-                    DateFormat.Language.english
+      , timeLang = DateFormat.Language.english
       , currency = Coin
+      , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
+      , unitToString = Locale.English.unitToString
       }
+        |> switch locale
     , [ Effect.Locale.getTranslationEffect locale
       , GetTimezoneEffect BrowserSentTimezone
       ]
     )
-
-
-initNumberFormat : String -> String -> Float -> String
-initNumberFormat locale =
-    case locale of
-        "de" ->
-            Numeral.formatWithLanguage Languages.German.lang
-
-        _ ->
-            Numeral.format

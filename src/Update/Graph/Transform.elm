@@ -1,5 +1,6 @@
 module Update.Graph.Transform exposing (update, vector, wheel)
 
+import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
 import List.Extra
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Transform exposing (..)
@@ -19,6 +20,12 @@ update start current transform =
 wheel : { width : Float, height : Float } -> Float -> Float -> Float -> Model -> Model
 wheel { width, height } x y w model =
     let
+        x_ =
+            x - width / 2
+
+        y_ =
+            y - height / 2
+
         factor =
             0.01
 
@@ -28,15 +35,15 @@ wheel { width, height } x y w model =
                 |> max -0.9
 
         moveX =
-            x / width * z
+            Debug.log "x" x_ / Debug.log "width" width * z |> Debug.log "moveX"
 
         moveY =
-            y / height * z
+            Debug.log "y" y_ / height * z
     in
     { model
         | z = model.z * (1 + z)
-        , x = x - width * model.z * moveX
-        , y = y - height * model.z * moveY
+        , x = model.x - width * model.z * moveX
+        , y = model.y - height * model.z * moveY
     }
 
 

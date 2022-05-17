@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Init.Graph.Address as Address
 import Init.Graph.Id as Id
 import List.Extra
+import Log
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
@@ -134,7 +135,7 @@ repositionAround pivot entities =
             { id = e.id, y = e.y }
 
         _ =
-            Debug.log "repositionAround"
+            Log.log "repositionAround"
                 { pivot = pivot.id
                 , entities =
                     Dict.values entities
@@ -159,7 +160,7 @@ repositionAround pivot entities =
                 nearest :: rest ->
                     let
                         _ =
-                            Debug.log
+                            Log.log
                                 "repo"
                                 { nearest = nearest.id
                                 , py = py
@@ -180,14 +181,14 @@ repositionAround pivot entities =
                         nh =
                             Entity.getHeight nearest
                     in
-                    if py + ph >= ny && py + ph <= ny + nh |> Debug.log "overlapping below" then
+                    if py + ph >= ny && py + ph <= ny + nh |> Log.log "overlapping below" then
                         let
                             newEntity =
                                 translate { x = 0, y = (py + ph - ny) + padding } nearest
                         in
                         reposition newEntity rest (p :: ready) (Set.insert newEntity.id repositioned)
 
-                    else if py >= ny && py <= ny + nh |> Debug.log "overlapping above" then
+                    else if py >= ny && py <= ny + nh |> Log.log "overlapping above" then
                         let
                             newEntity =
                                 translate { x = 0, y = -(ny + nh - py) - padding } nearest
@@ -212,7 +213,7 @@ repositionAround pivot entities =
         |> (\l ->
                 let
                     _ =
-                        Debug.log "new" (List.map first l)
+                        Log.log "new" (List.map first l)
                 in
                 l
            )

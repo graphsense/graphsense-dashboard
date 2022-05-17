@@ -2199,6 +2199,11 @@ s_normalDirection value__ record__ =
     { record__ | normalDirection = value__ }
 
 
+s_now : a -> { b | now : a } -> { b | now : a }
+s_now value__ record__ =
+    { record__ | now = value__ }
+
+
 s_nowMs : a -> { b | nowMs : a } -> { b | nowMs : a }
 s_nowMs value__ record__ =
     { record__ | nowMs = value__ }
@@ -2649,9 +2654,24 @@ s_program value__ record__ =
     { record__ | program = value__ }
 
 
+s_propertyBoxEntityId : a -> { b | propertyBoxEntityId : a } -> { b | propertyBoxEntityId : a }
+s_propertyBoxEntityId value__ record__ =
+    { record__ | propertyBoxEntityId = value__ }
+
+
+s_propertyBoxIncomingTxs : a -> { b | propertyBoxIncomingTxs : a } -> { b | propertyBoxIncomingTxs : a }
+s_propertyBoxIncomingTxs value__ record__ =
+    { record__ | propertyBoxIncomingTxs = value__ }
+
+
 s_propertyBoxKey : a -> { b | propertyBoxKey : a } -> { b | propertyBoxKey : a }
 s_propertyBoxKey value__ record__ =
     { record__ | propertyBoxKey = value__ }
+
+
+s_propertyBoxOutgoingTxs : a -> { b | propertyBoxOutgoingTxs : a } -> { b | propertyBoxOutgoingTxs : a }
+s_propertyBoxOutgoingTxs value__ record__ =
+    { record__ | propertyBoxOutgoingTxs = value__ }
 
 
 s_propertyBoxRow : a -> { b | propertyBoxRow : a } -> { b | propertyBoxRow : a }
@@ -2659,9 +2679,24 @@ s_propertyBoxRow value__ record__ =
     { record__ | propertyBoxRow = value__ }
 
 
+s_propertyBoxRule : a -> { b | propertyBoxRule : a } -> { b | propertyBoxRule : a }
+s_propertyBoxRule value__ record__ =
+    { record__ | propertyBoxRule = value__ }
+
+
 s_propertyBoxTable : a -> { b | propertyBoxTable : a } -> { b | propertyBoxTable : a }
 s_propertyBoxTable value__ record__ =
     { record__ | propertyBoxTable = value__ }
+
+
+s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }
+s_propertyBoxUsageRelative value__ record__ =
+    { record__ | propertyBoxUsageRelative = value__ }
+
+
+s_propertyBoxUsageTimestamp : a -> { b | propertyBoxUsageTimestamp : a } -> { b | propertyBoxUsageTimestamp : a }
+s_propertyBoxUsageTimestamp value__ record__ =
+    { record__ | propertyBoxUsageTimestamp = value__ }
 
 
 s_propertyBoxValue : a -> { b | propertyBoxValue : a } -> { b | propertyBoxValue : a }
@@ -2737,6 +2772,11 @@ s_regions value__ record__ =
 s_relation : a -> { b | relation : a } -> { b | relation : a }
 s_relation value__ record__ =
     { record__ | relation = value__ }
+
+
+s_relativeTimeOptions : a -> { b | relativeTimeOptions : a } -> { b | relativeTimeOptions : a }
+s_relativeTimeOptions value__ record__ =
+    { record__ | relativeTimeOptions = value__ }
 
 
 s_remaining : a -> { b | remaining : a } -> { b | remaining : a }

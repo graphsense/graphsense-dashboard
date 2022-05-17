@@ -1,15 +1,31 @@
-module View.Locale exposing (currency, currencyWithoutCode, float, floatWithFormat, int, intWithFormat, interpolated, percentage, string, text, timestamp)
+module View.Locale exposing
+    ( currency
+    , currencyWithoutCode
+    , durationToString
+    , float
+    , floatWithFormat
+    , int
+    , intWithFormat
+    , interpolated
+    , percentage
+    , relativeTime
+    , string
+    , text
+    , timestamp
+    )
 
 import Api.Data
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
+import DateFormat.Relative
 import Dict
 import Ease
 import FormatNumber
 import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
+import Locale.Durations
 import Model.Locale exposing (..)
 import RecordSetter exposing (..)
 import String.Interpolate
@@ -154,6 +170,13 @@ timestamp { locale, timeLang, zone } =
         >> formatWithLanguage timeLang format zone
 
 
+relativeTime : Model -> Time.Posix -> Int -> String
+relativeTime { relativeTimeOptions } from to =
+    DateFormat.Relative.relativeTimeWithOptions relativeTimeOptions
+        from
+        (Time.millisToPosix <| to * 1000)
+
+
 percentage : Model -> Float -> String
 percentage model =
     floatWithFormat model "100[.00]%"
@@ -221,3 +244,13 @@ coin model hideCode code v =
                 else
                     " " ++ String.toUpper code
                )
+
+
+durationToString : Model -> Int -> String
+durationToString { unitToString } dur =
+    Locale.Durations.durationToString
+        { unitToString = unitToString
+        , precision = 3
+        , separator = " "
+        }
+        dur

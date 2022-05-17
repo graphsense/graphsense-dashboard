@@ -75,7 +75,7 @@ theme =
         |> s_loadingSpinnerUrl "/themes/Iknaio/loading.gif"
         |> s_body
             [ color <| toCssColor colors.brandText
-            , property "font-family" "system-ui, BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif"
+            , fontFamilies [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
             , scaled 3.5 |> rem |> fontSize
             ]
         |> s_header
@@ -275,6 +275,16 @@ theme =
                     }
                 |> s_defaultColor
                     (rgb255 128 128 128)
+                |> s_tool
+                    [ scaled 2 |> rem |> padding
+                    , scaled 4 |> rem |> fontSize
+                    , textAlign center
+                    , colors.brandBase
+                        |> toCssColor
+                        |> color
+                    , backgroundColor transparent
+                    , border (px 0)
+                    ]
                 |> s_svgRoot
                     [ colors.black
                         |> Color.toCssString
@@ -336,7 +346,8 @@ theme =
                 |> s_linkColorStrong colors.black
                 |> s_linkColorSelected colors.brandRed
                 |> s_linkLabel
-                    [ fontFamilies [ "monospace" ] ]
+                    [ fontFamily monospace
+                    ]
                 |> s_linkLabelBox
                     [ Color.toCssString colors.brandLightest
                         |> property "fill"
@@ -374,10 +385,18 @@ theme =
                         , colors.brandWhite |> toCssColor |> backgroundColor
                         , scaled 2 |> rem |> padding
                         , shadowMd
-
-                        --<section id="layout-browser" class="border layout-border bg-gs-white shadow-md rounded-b text-sm absolute"></section>
                         ]
                     )
+                |> s_propertyBoxRule
+                    [ borderWidth (px 0)
+                    , scaled 1 |> rem |> margin
+                    ]
+                |> s_propertyBoxOutgoingTxs
+                    [ toCssColor colors.brandRed |> color
+                    ]
+                |> s_propertyBoxIncomingTxs
+                    [ toCssColor colors.brandBase |> color
+                    ]
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work

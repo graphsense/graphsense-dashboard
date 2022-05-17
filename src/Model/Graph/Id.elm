@@ -40,3 +40,13 @@ entityIdToString ( l, c, i ) =
 addressIdToString : AddressId -> String
 addressIdToString ( l, c, i ) =
     String.fromInt l ++ c ++ i
+
+
+noEntityId : EntityId
+noEntityId =
+    ( 0, "", -1 )
+
+
+noAddressId : AddressId
+noAddressId =
+    ( 0, "", "" )

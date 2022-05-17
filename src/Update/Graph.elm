@@ -6,6 +6,7 @@ import Config.Update as Update
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Id as Id
+import Log
 import Model.Graph exposing (..)
 import Model.Graph.Browser as Browser
 import Model.Graph.Entity exposing (Entity)
@@ -84,25 +85,33 @@ update uc msg model =
                 |> Result.map
                     (\{ element } ->
                         { model
-                            | width = element.width
-                            , height = element.height
+                            | size =
+                                { x = element.width
+                                , y = element.height
+                                }
+                                    |> Just
                         }
                     )
                 |> Result.withDefault model
                 |> n
 
         UserWheeledOnGraph x y z ->
-            { model
-                | transform =
-                    Transform.wheel
-                        { height = model.height
-                        , width = model.width
+            model.size
+                |> Maybe.map
+                    (\size ->
+                        { model
+                            | transform =
+                                Transform.wheel
+                                    { width = size.x
+                                    , height = size.y
+                                    }
+                                    x
+                                    y
+                                    z
+                                    model.transform
                         }
-                        x
-                        y
-                        z
-                        model.transform
-            }
+                    )
+                |> Maybe.withDefault model
                 |> n
 
         UserPushesLeftMouseButtonOnGraph coords ->
@@ -290,7 +299,7 @@ update uc msg model =
                             )
 
                 _ =
-                    Debug.log "entityids" (List.map (first >> (\e -> ( e.id, e.y ))) aligned)
+                    Log.log "entityids" (List.map (first >> (\e -> ( e.id, e.y ))) aligned)
             in
             ( addLinks id isOutgoing aligned newModel
             , neighbors.neighbors
@@ -308,6 +317,14 @@ update uc msg model =
 
         UserClickedAddressExpandHandle id isOutgoing ->
             n model
+
+        BrowserGotNow time ->
+            { model
+                | browser =
+                    model.browser
+                        |> s_now time
+            }
+                |> n
 
         NoOp ->
             n model
@@ -340,8 +357,14 @@ addingLabel label model =
 updateSize : Int -> Int -> Model -> Model
 updateSize w h model =
     { model
-        | width = model.width + toFloat w
-        , height = model.height + toFloat h
+        | size =
+            model.size
+                |> Maybe.map
+                    (\{ x, y } ->
+                        { x = x + toFloat w
+                        , y = y + toFloat h
+                        }
+                    )
     }
 
 

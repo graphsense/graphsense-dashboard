@@ -20,8 +20,7 @@ type alias Model =
     , adding : Adding.Model
     , dragging : Dragging
     , transform : Transform.Model
-    , width : Float
-    , height : Float
+    , size : Maybe Coords
     , selected : Maybe Selected
     }
 

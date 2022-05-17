@@ -1,6 +1,8 @@
-module Locale.German exposing (german)
+module Locale.German exposing (german, relativeTimeOptions, unitToString)
 
 import DateFormat.Language exposing (Language)
+import DateFormat.Relative exposing (RelativeTimeOptions)
+import Locale.Durations exposing (Unit(..))
 import Time exposing (Month(..), Weekday(..))
 
 
@@ -124,3 +126,78 @@ toGermanWeekdayName weekday =
 
         Sun ->
             "Sonntag"
+
+
+relative : String -> String -> String -> Int -> String
+relative pronoun singular plural t =
+    pronoun
+        ++ " "
+        ++ String.fromInt t
+        ++ " "
+        ++ (if t == 1 then
+                singular
+
+            else
+                plural
+           )
+
+
+past : String -> String -> Int -> String
+past =
+    relative "vor"
+
+
+future : String -> String -> Int -> String
+future =
+    relative "in"
+
+
+relativeTimeOptions : RelativeTimeOptions
+relativeTimeOptions =
+    { someSecondsAgo = past "Sekunde" "Sekunden"
+    , someMinutesAgo = past "Minute" "Minuten"
+    , someHoursAgo = past "Stunde" "Stunden"
+    , someDaysAgo = past "Tag" "Tagen"
+    , someMonthsAgo = past "Monat" "Monaten"
+    , someYearsAgo = past "Jahr" "Jahren"
+    , rightNow = "jetzt"
+    , inSomeSeconds = past "Sekunde" "Sekunden"
+    , inSomeMinutes = past "MinSomeute" "MinSomeuten"
+    , inSomeHours = past "Stunde" "Stunden"
+    , inSomeDays = past "Tag" "Tagen"
+    , inSomeMonths = past "Monat" "Monaten"
+    , inSomeYears = past "Jahr" "Jahren"
+    }
+
+
+unitToString : Int -> Unit -> String
+unitToString i unit =
+    let
+        ( singular, plural ) =
+            case unit of
+                Seconds ->
+                    ( "Sekunde", "Sekunden" )
+
+                Minutes ->
+                    ( "Minute", "Minuten" )
+
+                Hours ->
+                    ( "Stunde", "Stunden" )
+
+                Days ->
+                    ( "Tag", "Tage" )
+
+                Months ->
+                    ( "Monat", "Monate" )
+
+                Years ->
+                    ( "Jahr", "Jahre" )
+    in
+    String.fromInt i
+        ++ " "
+        ++ (if i == 1 then
+                singular
+
+            else
+                plural
+           )

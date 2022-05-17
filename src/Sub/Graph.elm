@@ -4,6 +4,7 @@ import Browser.Events
 import Json.Decode
 import Model.Graph exposing (Dragging(..), Model)
 import Msg.Graph exposing (Msg(..))
+import Time
 
 
 subscriptions : Model -> Sub Msg
@@ -14,5 +15,10 @@ subscriptions model =
 
         _ ->
             Browser.Events.onMouseUp (Json.Decode.succeed UserReleasesMouseButton)
+    , if model.browser.visible then
+        Time.every 1000 BrowserGotNow
+
+      else
+        Sub.none
     ]
         |> Sub.batch

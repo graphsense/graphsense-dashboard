@@ -1,8 +1,10 @@
 module Model.Locale exposing (..)
 
 import DateFormat.Language
+import DateFormat.Relative
 import Dict exposing (Dict)
 import FormatNumber.Locales
+import Locale.Durations
 import Time
 
 
@@ -36,6 +38,8 @@ type alias Model =
     , zone : Time.Zone
     , timeLang : DateFormat.Language.Language
     , currency : Currency
+    , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
+    , unitToString : Int -> Locale.Durations.Unit -> String
     }
 
 

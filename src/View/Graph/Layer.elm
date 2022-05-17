@@ -3,6 +3,7 @@ module View.Graph.Layer exposing (..)
 import Config.Graph as Graph
 import Config.View as View
 import Dict
+import Log
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer exposing (..)
@@ -16,8 +17,12 @@ import View.Graph.Entity as Entity
 import View.Graph.Link as Link
 
 
-addresses : View.Config -> Graph.Config -> Maybe Id.AddressId -> Layer -> Svg Msg
+addresses : View.Config -> Graph.Config -> Id.AddressId -> Layer -> Svg Msg
 addresses vc gc selected layer =
+    let
+        _ =
+            Log.log "Graph.addresses" ""
+    in
     layer.entities
         |> Dict.foldl
             (\_ entity svg ->
@@ -30,8 +35,12 @@ addresses vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entities : View.Config -> Graph.Config -> Maybe Id.EntityId -> Layer -> Svg Msg
+entities : View.Config -> Graph.Config -> Id.EntityId -> Layer -> Svg Msg
 entities vc gc selected layer =
+    let
+        _ =
+            Log.log "Graph.entities" ""
+    in
     layer.entities
         |> Dict.foldl
             (\_ entity svg ->
@@ -49,6 +58,9 @@ entityLinks vc gc layer =
     let
         ( mn, mx ) =
             calcRange vc gc layer
+
+        _ =
+            Log.log "Graph.entityLinks" ""
     in
     layer.entities
         |> Dict.foldl

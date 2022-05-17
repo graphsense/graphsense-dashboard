@@ -12,6 +12,12 @@ type alias Browser =
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
     , propertyBoxEntityId : List Style
+    , propertyBoxRule : List Style
+    , propertyBoxIncomingTxs : List Style
+    , propertyBoxOutgoingTxs : List Style
+    , propertyBoxUsageTimestamp : List Style
+    , propertyBoxUsageRelative : List Style
+    , propertyBoxActivityPeriod : List Style
     }
 
 
@@ -24,4 +30,10 @@ default =
     , propertyBoxKey = []
     , propertyBoxValue = []
     , propertyBoxEntityId = []
+    , propertyBoxRule = []
+    , propertyBoxIncomingTxs = []
+    , propertyBoxOutgoingTxs = []
+    , propertyBoxUsageTimestamp = []
+    , propertyBoxUsageRelative = []
+    , propertyBoxActivityPeriod = []
     }

@@ -52,17 +52,16 @@ tool vc =
 
 graphRoot : Config -> List Style
 graphRoot vc =
-    [ pct 100 |> height
-    , overflow hidden
+    [ overflow hidden
     , position relative
+    , pct 100 |> height
     ]
         ++ vc.theme.graph.graphRoot
 
 
 svgRoot : Config -> List Style
 svgRoot vc =
-    [ pct 100 |> height
-    , pct 100 |> width
+    [ pct 100 |> width
     , property "color" "black"
     ]
         ++ vc.theme.graph.svgRoot

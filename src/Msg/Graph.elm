@@ -5,6 +5,7 @@ import Browser.Dom
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Graph.Transform as Transform
+import Time
 
 
 type Msg
@@ -26,4 +27,5 @@ type Msg
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonet Int Bool Api.Data.NeighborEntities
+    | BrowserGotNow Time.Posix
     | NoOp

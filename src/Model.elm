@@ -28,6 +28,7 @@ import Url exposing (Url)
 
 type alias Flags =
     { locale : String
+    , now : Int
     , width : Int
     , height : Int
     }

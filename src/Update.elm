@@ -98,7 +98,7 @@ update uc msg model =
                 |> n
 
         UserSwitchesLocale locale ->
-            ( { model | locale = model.locale |> s_locale locale }
+            ( { model | locale = Locale.switch locale model.locale }
             , Locale.getTranslationEffect locale
                 |> LocaleEffect
                 |> List.singleton
