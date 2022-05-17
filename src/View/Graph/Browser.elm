@@ -237,6 +237,7 @@ browseEntity vc gc now entity =
     browse vc
         gc
         [ Row ( "Entity", EntityId entity )
+        , Row ( "Root address", String entity.entity.rootAddress )
         , Row ( "Currency", entity.entity.currency |> String.toUpper |> String )
         , Row
             ( "Address Tags"
