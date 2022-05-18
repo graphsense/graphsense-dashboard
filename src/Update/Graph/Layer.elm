@@ -57,10 +57,10 @@ addEntity uc colors entity layers =
 
 {-| Add neighbors next to an entity
 -}
-addNeighbors : Update.Config -> EntityId -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addNeighbors uc entityId isOutgoing colors neighbors layers =
+addNeighbors : Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addNeighbors uc entity isOutgoing colors neighbors layers =
     addEntitiesAt uc
-        (anchorsToPositions (IntDict.singleton (Id.layer entityId) ( entityId, isOutgoing )) layers)
+        (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing )) layers)
         neighbors
         { layers = layers
         , new = Set.empty
@@ -69,7 +69,7 @@ addNeighbors uc entityId isOutgoing colors neighbors layers =
         }
 
 
-anchorsToPositions : IntDict ( EntityId, Bool ) -> IntDict Layer -> IntDict Position
+anchorsToPositions : IntDict ( Entity, Bool ) -> IntDict Layer -> IntDict Position
 anchorsToPositions anchors layers =
     if IntDict.isEmpty anchors then
         let
@@ -102,31 +102,26 @@ anchorsToPositions anchors layers =
     else
         anchors
             |> IntDict.foldl
-                (\i ( entityId, isOutgoing ) positions ->
-                    Layer.getEntity entityId layers
-                        |> Maybe.map
-                            (\entity ->
-                                let
-                                    id =
-                                        Id.layer entityId
-                                            + (if isOutgoing then
-                                                1
+                (\i ( entity, isOutgoing ) positions ->
+                    let
+                        id =
+                            Id.layer entity.id
+                                + (if isOutgoing then
+                                    1
 
-                                               else
-                                                -1
-                                              )
-                                in
-                                IntDict.insert id
-                                    { y =
-                                        entity.y
-                                            + entity.dy
-                                            + (Entity.getHeight entity / 2)
-                                            - Graph.entityMinHeight
-                                            / 2
-                                    }
-                                    positions
-                            )
-                        |> Maybe.withDefault positions
+                                   else
+                                    -1
+                                  )
+                    in
+                    IntDict.insert id
+                        { y =
+                            entity.y
+                                + entity.dy
+                                + (Entity.getHeight entity / 2)
+                                - Graph.entityMinHeight
+                                / 2
+                        }
+                        positions
                 )
                 IntDict.empty
 
@@ -264,18 +259,18 @@ addAddressHelp uc address acc =
             acc
 
 
-updateLinks : { currency : String, entity : Int } -> List ( Entity, Api.Data.NeighborEntity ) -> IntDict Layer -> IntDict Layer
+updateLinks : { currency : String, entity : Int } -> List ( Api.Data.NeighborEntity, Entity ) -> IntDict Layer -> IntDict Layer
 updateLinks { currency, entity } neighbors layers =
     IntDict.foldl
         (\_ layer ( neighbors_, layers_ ) ->
             let
                 neighbors__ =
                     neighbors_
-                        |> List.filter (first >> .id >> Id.layer >> (<) layer.id)
+                        |> List.filter (second >> .id >> Id.layer >> (<) layer.id)
 
                 relevant =
                     neighbors__
-                        |> List.filter (first >> .id >> Id.layer >> (==) (layer.id + 1))
+                        |> List.filter (second >> .id >> Id.layer >> (==) (layer.id + 1))
             in
             ( neighbors__
             , case Dict.get (Id.initEntityId { currency = currency, id = entity, layer = layer.id }) layer.entities of
@@ -301,11 +296,11 @@ updateLinks { currency, entity } neighbors layers =
         |> second
 
 
-insertLinks : List ( Entity, Api.Data.NeighborEntity ) -> Entity.Links -> Entity.Links
+insertLinks : List ( Api.Data.NeighborEntity, Entity ) -> Entity.Links -> Entity.Links
 insertLinks neighbors (Links links) =
     neighbors
         |> List.foldl
-            (\( entity, link ) li ->
+            (\( link, entity ) li ->
                 Dict.insert entity.id
                     { value = link.value
                     , noTxs = link.noTxs

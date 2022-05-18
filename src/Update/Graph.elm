@@ -266,69 +266,16 @@ update uc msg model =
                         n model
 
         BrowserGotEntityNeighbors id isOutgoing neighbors ->
-            let
-                -- TODO optimize which only_ids to get for which direction
-                onlyIds =
-                    model.layers
-                        |> Layer.entities
-                        |> List.map (.entity >> .entity)
-
-                effect isOut entity =
-                    GetEntityNeighborsEffect
-                        { currency = Id.currency id
-                        , entity = entity
-                        , isOutgoing = isOut
-                        , onlyIds = Just onlyIds
-                        , pagesize = List.length onlyIds
-                        , toMsg = BrowserGotEntityEgonet entity isOut
-                        }
-
-                ( newModel, new ) =
-                    addNeighbors uc id isOutgoing neighbors model
-
-                aligned =
-                    neighbors.neighbors
-                        |> List.filterMap
-                            (\neighbor ->
-                                let
-                                    entityId =
-                                        Id.initEntityId
-                                            { currency = Id.currency id
-                                            , layer =
-                                                Id.layer id
-                                                    + (if isOutgoing then
-                                                        1
-
-                                                       else
-                                                        -1
-                                                      )
-                                            , id = neighbor.entity.entity
-                                            }
-                                in
-                                if Set.member entityId new then
-                                    Layer.getEntity entityId newModel.layers
-                                        |> Maybe.map (\entity -> ( entity, neighbor ))
-
-                                else
-                                    Nothing
-                            )
-
-                _ =
-                    Log.log "entityids" (List.map (first >> (\e -> ( e.id, e.y ))) aligned)
-            in
-            ( addLinks id isOutgoing aligned newModel
-            , neighbors.neighbors
-                |> List.map
-                    (\entity ->
-                        [ effect True entity.entity.entity
-                        , effect False entity.entity.entity
-                        ]
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\anchor ->
+                        handleEntityNeighbors uc anchor isOutgoing neighbors.neighbors model
                     )
-                |> List.concat
-            )
+                |> Maybe.withDefault (n model)
 
-        BrowserGotEntityEgonet id isOutgoing neighbors ->
-            n model
+        BrowserGotEntityEgonet currency id isOutgoing neighbors ->
+            addEgonet currency id isOutgoing neighbors.neighbors model
+                |> n
 
         UserClickedAddressExpandHandle id isOutgoing ->
             n model
@@ -383,11 +330,11 @@ updateSize w h model =
     }
 
 
-addNeighbors : Update.Config -> EntityId -> Bool -> Api.Data.NeighborEntities -> Model -> ( Model, Set EntityId )
-addNeighbors uc id isOutgoing { neighbors } model =
+addNeighbors : Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, Set EntityId )
+addNeighbors uc anchor isOutgoing neighbors model =
     let
         acc =
-            Layer.addNeighbors uc id isOutgoing model.config.colors (List.map .entity neighbors) model.layers
+            Layer.addNeighbors uc anchor isOutgoing model.config.colors (List.map .entity neighbors) model.layers
     in
     ( { model
         | layers = acc.layers
@@ -399,29 +346,107 @@ addNeighbors uc id isOutgoing { neighbors } model =
     )
 
 
-addLinks : EntityId -> Bool -> List ( Entity, Api.Data.NeighborEntity ) -> Model -> Model
+addLinks : Entity -> Bool -> List ( Api.Data.NeighborEntity, Entity ) -> Model -> Model
 addLinks anchor isOutgoing neighbors model =
     let
         layers =
             if isOutgoing then
-                Layer.updateLinks { currency = Id.currency anchor, entity = Id.entityId anchor } neighbors model.layers
+                Layer.updateLinks { currency = Id.currency anchor.id, entity = Id.entityId anchor.id } neighbors model.layers
 
             else
-                model.layers
-                    |> Layer.getEntity anchor
-                    |> Maybe.map
-                        (\entity ->
-                            neighbors
-                                |> List.foldl
-                                    (\( neighbor, neighborEntity ) ->
-                                        Layer.updateLinks
-                                            { currency = Id.currency neighbor.id, entity = Id.entityId neighbor.id }
-                                            [ ( entity, neighborEntity ) ]
-                                    )
-                                    model.layers
+                neighbors
+                    |> List.foldl
+                        (\( neighborEntity, neighbor ) ->
+                            Layer.updateLinks
+                                { currency = Id.currency neighbor.id, entity = Id.entityId neighbor.id }
+                                [ ( neighborEntity, anchor ) ]
                         )
-                    |> Maybe.withDefault model.layers
+                        model.layers
     in
     { model
         | layers = layers
     }
+
+
+addEgonet : String -> Int -> Bool -> List Api.Data.NeighborEntity -> Model -> Model
+addEgonet currency entity isOutgoing neighbors model =
+    let
+        entities =
+            List.map
+                (\neighbor ->
+                    Layer.getEntities neighbor.entity.currency neighbor.entity.entity model.layers
+                        |> List.map (pair neighbor)
+                )
+                neighbors
+                |> List.concat
+
+        anchors =
+            Layer.getEntities currency entity model.layers
+    in
+    List.foldl
+        (\anchor model_ ->
+            addLinks anchor isOutgoing entities model_
+        )
+        model
+        anchors
+
+
+handleEntityNeighbors : Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, List Effect )
+handleEntityNeighbors uc anchor isOutgoing neighbors model =
+    let
+        -- TODO optimize which only_ids to get for which direction
+        onlyIds =
+            model.layers
+                |> Layer.entities
+                |> List.map (.entity >> .entity)
+
+        effect isOut entity =
+            GetEntityNeighborsEffect
+                { currency = anchor.entity.currency
+                , entity = entity
+                , isOutgoing = isOut
+                , onlyIds = Just onlyIds
+                , pagesize = List.length onlyIds
+                , toMsg = BrowserGotEntityEgonet anchor.entity.currency entity isOut
+                }
+
+        ( newModel, new ) =
+            addNeighbors uc anchor isOutgoing neighbors model
+
+        aligned =
+            neighbors
+                |> List.filterMap
+                    (\neighbor ->
+                        let
+                            entityId =
+                                Id.initEntityId
+                                    { currency = anchor.entity.currency
+                                    , layer =
+                                        Id.layer anchor.id
+                                            + (if isOutgoing then
+                                                1
+
+                                               else
+                                                -1
+                                              )
+                                    , id = neighbor.entity.entity
+                                    }
+                        in
+                        if Set.member entityId new then
+                            Layer.getEntity entityId newModel.layers
+                                |> Maybe.map (pair neighbor)
+
+                        else
+                            Nothing
+                    )
+    in
+    ( addLinks anchor isOutgoing aligned newModel
+    , neighbors
+        |> List.map
+            (\entity ->
+                [ effect True entity.entity.entity
+                , effect False entity.entity.entity
+                ]
+            )
+        |> List.concat
+    )

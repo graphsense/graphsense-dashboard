@@ -27,6 +27,6 @@ type Msg
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
-    | BrowserGotEntityEgonet Int Bool Api.Data.NeighborEntities
+    | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
     | BrowserGotNow Time.Posix
     | NoOp

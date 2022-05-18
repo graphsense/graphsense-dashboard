@@ -62,8 +62,8 @@ getAddress id =
             )
 
 
-getEntities : { currency : String, entity : Int } -> IntDict Layer -> List Entity
-getEntities { currency, entity } =
+getEntities : String -> Int -> IntDict Layer -> List Entity
+getEntities currency entity =
     IntDict.foldl
         (\_ layer acc ->
             layer.entities
