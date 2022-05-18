@@ -7,6 +7,7 @@ import Css exposing (..)
 root : Config -> List Style
 root vc =
     position absolute
+        :: height (px 0)
         :: vc.theme.browser.root
 
 
