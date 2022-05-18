@@ -6,6 +6,7 @@ import Config.View exposing (Config)
 import Css exposing (fill)
 import Css.Graph as Css
 import Dict
+import Init.Graph.Id as Id
 import Json.Decode
 import Log
 import Model.Graph exposing (NodeType(..))
@@ -20,6 +21,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
+import Tuple exposing (..)
 import Util.Graph exposing (rotate, translate)
 import Util.View as Util
 import View.Graph.Address as Address
@@ -69,14 +71,14 @@ entity vc gc selected ent =
     in
     g
         [ Css.entityRoot vc |> css
-        , UserClickedEntity ent.id
-            |> onClick
+        , Json.Decode.succeed ( UserClickedEntity ent.id, True )
+            |> stopPropagationOn "click"
         , UserRightClickedEntity ent.id
             |> Json.Decode.succeed
             |> on "contextmenu"
         , UserHoversEntity ent.id
             |> onMouseOver
-        , UserLeavesEntity ent.id
+        , UserLeavesThing
             |> onMouseOut
         , translate (ent.x + ent.dx) (ent.y + ent.dy) |> transform
         , UserPushesLeftMouseButtonOnEntity ent.id
@@ -227,15 +229,56 @@ addressesCount vc gc ent =
         ]
 
 
-links : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
-links vc gc mn mx ent =
+links : Config -> Graph.Config -> Float -> Float -> Id.LinkId Id.EntityId -> Entity -> Svg Msg
+links vc gc mn mx hoveredLink ent =
     case ent.links of
         Entity.Links lnks ->
             lnks
                 |> Dict.foldr
-                    (\_ link svg ->
-                        Svg.lazy6 Link.entityLink vc gc mn mx ent link
-                            :: svg
+                    (\_ link ( svg, theHovered ) ->
+                        let
+                            id =
+                                Id.initEntityLinkId ent.id link.node.id
+
+                            key =
+                                Link.linkId id
+
+                            theHovered_ =
+                                case theHovered of
+                                    Nothing ->
+                                        if id == hoveredLink then
+                                            Just link
+
+                                        else
+                                            Nothing
+
+                                    Just _ ->
+                                        theHovered
+                        in
+                        ( if id == hoveredLink then
+                            svg
+
+                          else
+                            ( key
+                            , Svg.lazy7 Link.entityLink vc gc mn mx hoveredLink ent link
+                            )
+                                :: svg
+                        , theHovered_
+                        )
                     )
-                    []
-                |> g []
+                    ( [], Nothing )
+                |> (\( svg, theHovered ) ->
+                        svg
+                            ++ -- place the hoveredlink at the end to make it be layered above the other links
+                               (case theHovered of
+                                    Just link ->
+                                        ( Link.linkId2 ent.id link.node.id
+                                        , Svg.lazy7 Link.entityLink vc gc mn mx hoveredLink ent link
+                                        )
+                                            |> List.singleton
+
+                                    Nothing ->
+                                        []
+                               )
+                   )
+                |> Keyed.node "g" []

@@ -13,12 +13,6 @@ root vc =
 frame : Config -> Bool -> List Style
 frame vc visible =
     backgroundColor (rgb 255 255 255)
-        :: (if visible then
-                display block
-
-            else
-                display none
-           )
         :: vc.theme.browser.frame visible
 
 

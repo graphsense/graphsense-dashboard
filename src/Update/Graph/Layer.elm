@@ -266,24 +266,39 @@ addAddressHelp uc address acc =
 
 updateLinks : { currency : String, entity : Int } -> List ( Entity, Api.Data.NeighborEntity ) -> IntDict Layer -> IntDict Layer
 updateLinks { currency, entity } neighbors layers =
-    IntDict.map
-        (\_ layer ->
-            case Dict.get (Id.initEntityId { currency = currency, id = entity, layer = layer.id }) layer.entities of
+    IntDict.foldl
+        (\_ layer ( neighbors_, layers_ ) ->
+            let
+                neighbors__ =
+                    neighbors_
+                        |> List.filter (first >> .id >> Id.layer >> (<) layer.id)
+
+                relevant =
+                    neighbors__
+                        |> List.filter (first >> .id >> Id.layer >> (==) (layer.id + 1))
+            in
+            ( neighbors__
+            , case Dict.get (Id.initEntityId { currency = currency, id = entity, layer = layer.id }) layer.entities of
                 Nothing ->
-                    layer
+                    layers_
 
                 Just found ->
-                    { layer
-                        | entities =
-                            Dict.insert found.id
-                                { found
-                                    | links =
-                                        insertLinks neighbors found.links
-                                }
-                                layer.entities
-                    }
+                    layers_
+                        |> IntDict.insert layer.id
+                            { layer
+                                | entities =
+                                    Dict.insert found.id
+                                        { found
+                                            | links =
+                                                insertLinks relevant found.links
+                                        }
+                                        layer.entities
+                            }
+            )
         )
+        ( neighbors, layers )
         layers
+        |> second
 
 
 insertLinks : List ( Entity, Api.Data.NeighborEntity ) -> Entity.Links -> Entity.Links

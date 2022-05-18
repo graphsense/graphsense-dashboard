@@ -338,22 +338,42 @@ theme =
                         ]
                     )
                 |> s_entityLink
-                    [ colors.grey
-                        |> Color.toCssString
-                        |> property "stroke"
-                    ]
+                    (\hovered ->
+                        [ (if hovered then
+                            colors.black
+
+                           else
+                            colors.grey
+                          )
+                            |> Color.toCssString
+                            |> property "stroke"
+                        ]
+                    )
                 |> s_linkColorFaded colors.grey
                 |> s_linkColorStrong colors.black
                 |> s_linkColorSelected colors.brandRed
                 |> s_linkLabel
-                    [ fontFamily monospace
-                    ]
+                    (\hovered ->
+                        [ fontFamily monospace
+                        , (if hovered then
+                            colors.black
+
+                           else
+                            colors.grey
+                          )
+                            |> Color.toCssString
+                            |> property "fill"
+                        , cursor pointer
+                        ]
+                    )
                 |> s_linkLabelBox
-                    [ Color.toCssString colors.brandLightest
-                        |> property "fill"
-                    , num 0.8 |> opacity
-                    , property "stroke-width" "0"
-                    ]
+                    (\_ ->
+                        [ Color.toCssString colors.brandLightest
+                            |> property "fill"
+                        , num 0.8 |> opacity
+                        , property "stroke-width" "0"
+                        ]
+                    )
                 |> s_navbar
                     [ toCssColor colors.brandWhite |> backgroundColor
                     ]
@@ -373,16 +393,22 @@ theme =
                     ]
                 |> s_frame
                     (\visible ->
+                        let
+                            p =
+                                if visible then
+                                    0
+
+                                else
+                                    -110
+                        in
                         [ Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
                         , display block
-                        , if visible then
-                            translateY (px -1) |> transform
-
-                          else
-                            translateY (pct -110) |> transform
-                        , colors.brandWhite |> toCssColor |> backgroundColor
+                        , translateY (pct p) |> transform
+                        , colors.brandWhite
+                            |> toCssColor
+                            |> backgroundColor
                         , scaled 2 |> rem |> padding
                         , shadowMd
                         ]

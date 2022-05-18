@@ -53,8 +53,8 @@ entities vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entityLinks : View.Config -> Graph.Config -> Layer -> Svg Msg
-entityLinks vc gc layer =
+entityLinks : View.Config -> Graph.Config -> Id.LinkId Id.EntityId -> Layer -> Svg Msg
+entityLinks vc gc hoveredLink layer =
     let
         ( mn, mx ) =
             calcRange vc gc layer
@@ -65,7 +65,7 @@ entityLinks vc gc layer =
     layer.entities
         |> Dict.foldl
             (\_ entity svg ->
-                Svg.lazy5 Entity.links vc gc mn mx entity
+                Svg.lazy6 Entity.links vc gc mn mx hoveredLink entity
                     :: svg
             )
             []

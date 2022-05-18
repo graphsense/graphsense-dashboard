@@ -12,6 +12,10 @@ type alias EntityId =
     ( Int, String, Int )
 
 
+type alias LinkId id =
+    ( id, id )
+
+
 layer : ( Int, currency, id ) -> Int
 layer ( i, _, _ ) =
     i
@@ -42,9 +46,20 @@ addressIdToString ( l, c, i ) =
     String.fromInt l ++ c ++ i
 
 
+entityLinkIdToString : LinkId EntityId -> String
+entityLinkIdToString ( s, t ) =
+    entityIdToString s
+        ++ entityIdToString t
+
+
 noEntityId : EntityId
 noEntityId =
     ( 0, "", -1 )
+
+
+noEntityLinkId : LinkId EntityId
+noEntityLinkId =
+    ( noEntityId, noEntityId )
 
 
 noAddressId : AddressId

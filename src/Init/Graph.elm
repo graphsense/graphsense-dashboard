@@ -18,5 +18,6 @@ init now =
     , dragging = NoDragging
     , transform = Transform.init
     , size = Nothing
-    , selected = Nothing
+    , selected = SelectedNone
+    , hovered = HoveredNone
     }

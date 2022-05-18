@@ -7,7 +7,7 @@ import IntDict exposing (IntDict)
 import Model.Graph.Adding as Adding
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
-import Model.Graph.Id exposing (AddressId, EntityId)
+import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Transform as Transform
 import Set exposing (Set)
@@ -21,7 +21,8 @@ type alias Model =
     , dragging : Dragging
     , transform : Transform.Model
     , size : Maybe Coords
-    , selected : Maybe Selected
+    , selected : Selected
+    , hovered : Hovered
     }
 
 
@@ -31,8 +32,14 @@ type NodeType
 
 
 type Selected
-    = AddressId AddressId
-    | EntityId EntityId
+    = SelectedAddress AddressId
+    | SelectedEntity EntityId
+    | SelectedNone
+
+
+type Hovered
+    = HoveredEntityLink (LinkId EntityId)
+    | HoveredNone
 
 
 type Dragging

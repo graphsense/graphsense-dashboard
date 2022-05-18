@@ -6,7 +6,7 @@ import Config.View exposing (Config)
 import Css
 import Css.Graph as Css
 import Dict
-import Json.Decode as Dec
+import Json.Decode
 import Log
 import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
@@ -50,14 +50,14 @@ address vc gc selected addr =
     in
     g
         [ Css.addressRoot vc |> css
-        , UserClickedAddress addr.id
-            |> onClick
+        , Json.Decode.succeed ( UserClickedAddress addr.id, True )
+            |> stopPropagationOn "click"
         , UserRightClickedAddress addr.id
-            |> Dec.succeed
+            |> Json.Decode.succeed
             |> on "contextmenu"
         , UserHoversAddress addr.id
             |> onMouseOver
-        , UserLeavesAddress addr.id
+        , UserLeavesThing
             |> onMouseOut
         , translate (addr.x + addr.dx) (addr.y + addr.dy)
             |> transform

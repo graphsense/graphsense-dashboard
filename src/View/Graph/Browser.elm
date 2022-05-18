@@ -9,6 +9,7 @@ import Dict
 import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
@@ -95,9 +96,10 @@ browseValue vc gc value =
         EntityId entity ->
             div
                 []
-                [ entity.category
-                    |> Maybe.andThen
-                        (\cat ->
+                [ entity.entity.tags
+                    |> Maybe.andThen (.entityTags >> List.head)
+                    |> Maybe.Extra.andThen2
+                        (\cat tag ->
                             Dict.get cat gc.colors
                                 |> Maybe.map
                                     (\color ->
@@ -107,10 +109,11 @@ browseValue vc gc value =
                                                     |> CssStyled.color
                                                 ]
                                             ]
-                                            [ text <| cat ++ " "
+                                            [ text tag.label
                                             ]
                                     )
                         )
+                        entity.category
                     |> Maybe.withDefault none
                 , span
                     [ Css.propertyBoxEntityId vc |> css

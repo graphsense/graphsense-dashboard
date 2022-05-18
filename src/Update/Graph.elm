@@ -95,6 +95,15 @@ update uc msg model =
                 |> Result.withDefault model
                 |> n
 
+        UserClickedGraph ->
+            { model
+                | selected = SelectedNone
+                , browser =
+                    model.browser
+                        |> s_visible False
+            }
+                |> n
+
         UserWheeledOnGraph x y z ->
             model.size
                 |> Maybe.map
@@ -186,7 +195,7 @@ update uc msg model =
                                 model.browser
                                     |> s_visible True
                                     |> s_type_ (Browser.Address address)
-                            , selected = AddressId id |> Just
+                            , selected = SelectedAddress id
                         }
                     )
                 |> Maybe.withDefault model
@@ -198,9 +207,6 @@ update uc msg model =
         UserHoversAddress id ->
             n model
 
-        UserLeavesAddress id ->
-            n model
-
         UserClickedEntity id ->
             Layer.getEntity id model.layers
                 |> Maybe.map
@@ -210,7 +216,7 @@ update uc msg model =
                                 model.browser
                                     |> s_visible True
                                     |> s_type_ (Browser.Entity entity)
-                            , selected = EntityId id |> Just
+                            , selected = SelectedEntity id
                         }
                     )
                 |> Maybe.withDefault model
@@ -222,8 +228,17 @@ update uc msg model =
         UserHoversEntity id ->
             n model
 
-        UserLeavesEntity id ->
-            n model
+        UserHoversEntityLink id ->
+            { model
+                | hovered = HoveredEntityLink id
+            }
+                |> n
+
+        UserLeavesThing ->
+            { model
+                | hovered = HoveredNone
+            }
+                |> n
 
         UserClickedEntityExpandHandle id isOutgoing ->
             case Layer.getEntity id model.layers of

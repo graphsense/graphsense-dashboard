@@ -50,69 +50,79 @@ graph vc gc model =
         ]
         [ browser vc gc model.browser
         , model.size
-            |> Maybe.map
-                (\size ->
-                    let
-                        dim =
-                            { width = size.x, height = size.y }
-                    in
-                    svg
-                        ([ preserveAspectRatio "xMidYMid meet"
-                         , Transform.viewBox dim model.transform |> viewBox
-                         , Css.svgRoot vc |> Svg.css
-                         , Svg.custom "wheel"
-                            (Json.Decode.map3
-                                (\y mx my ->
-                                    { message = UserWheeledOnGraph mx my y
-                                    , stopPropagation = False
-                                    , preventDefault = False
-                                    }
-                                )
-                                (Json.Decode.field "deltaY" Json.Decode.float)
-                                (Json.Decode.field "offsetX" Json.Decode.float)
-                                (Json.Decode.field "offsetY" Json.Decode.float)
-                            )
-                         , Svg.on "mousedown"
-                            (Util.decodeCoords Coords
-                                |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
-                            )
-                         ]
-                            ++ (if model.dragging /= NoDragging then
-                                    Svg.preventDefaultOn "mousemove"
-                                        (Util.decodeCoords Coords
-                                            |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
-                                        )
-                                        |> List.singleton
-
-                                else
-                                    []
-                               )
-                        )
-                        (let
-                            -- avoid Maybe EntityId/AddressId to make the selected
-                            -- value work with lazy
-                            ( selectedEntity, selectedAddress ) =
-                                case model.selected of
-                                    Just x ->
-                                        case x of
-                                            EntityId id ->
-                                                ( id, Id.noAddressId )
-
-                                            AddressId id ->
-                                                ( Id.noEntityId, id )
-
-                                    Nothing ->
-                                        ( Id.noEntityId, Id.noAddressId )
-                         in
-                         [ Svg.lazy2 arrowMarkers vc gc
-                         , Svg.lazy4 entities vc gc selectedEntity model.layers
-                         , Svg.lazy4 addresses vc gc selectedAddress model.layers
-                         , Svg.lazy3 entityLinks vc gc model.layers
-                         ]
-                        )
-                )
+            |> Maybe.map (graphSvg vc gc model)
             |> Maybe.withDefault none
         ]
+
+
+graphSvg : Config -> Graph.Config -> Model -> Coords -> Svg Msg
+graphSvg vc gc model size =
+    let
+        dim =
+            { width = size.x, height = size.y }
+    in
+    svg
+        ([ preserveAspectRatio "xMidYMid meet"
+         , Transform.viewBox dim model.transform |> viewBox
+         , Css.svgRoot vc |> Svg.css
+         , UserClickedGraph
+            |> onClick
+         , Svg.custom "wheel"
+            (Json.Decode.map3
+                (\y mx my ->
+                    { message = UserWheeledOnGraph mx my y
+                    , stopPropagation = False
+                    , preventDefault = False
+                    }
+                )
+                (Json.Decode.field "deltaY" Json.Decode.float)
+                (Json.Decode.field "offsetX" Json.Decode.float)
+                (Json.Decode.field "offsetY" Json.Decode.float)
+            )
+         , Svg.on "mousedown"
+            (Util.decodeCoords Coords
+                |> Json.Decode.map UserPushesLeftMouseButtonOnGraph
+            )
+         ]
+            ++ (if model.dragging /= NoDragging then
+                    Svg.preventDefaultOn "mousemove"
+                        (Util.decodeCoords Coords
+                            |> Json.Decode.map (\c -> ( UserMovesMouseOnGraph c, True ))
+                        )
+                        |> List.singleton
+
+                else
+                    []
+               )
+        )
+        (let
+            -- avoid Maybe EntityId/AddressId to make the selected
+            -- value work with lazy
+            ( selectedEntity, selectedAddress ) =
+                case model.selected of
+                    SelectedEntity id ->
+                        ( id, Id.noAddressId )
+
+                    SelectedAddress id ->
+                        ( Id.noEntityId, id )
+
+                    SelectedNone ->
+                        ( Id.noEntityId, Id.noAddressId )
+
+            hoveredEntityLink =
+                case model.hovered of
+                    HoveredEntityLink id ->
+                        id
+
+                    HoveredNone ->
+                        Id.noEntityLinkId
+         in
+         [ Svg.lazy2 arrowMarkers vc gc
+         , Svg.lazy4 entityLinks vc gc hoveredEntityLink model.layers
+         , Svg.lazy4 entities vc gc selectedEntity model.layers
+         , Svg.lazy4 addresses vc gc selectedAddress model.layers
+         ]
+        )
 
 
 addresses : Config -> Graph.Config -> Id.AddressId -> IntDict Layer -> Svg Msg
@@ -151,8 +161,8 @@ entities vc gc selected layers =
         |> Keyed.node "g" []
 
 
-entityLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
-entityLinks vc gc layers =
+entityLinks : Config -> Graph.Config -> Id.LinkId Id.EntityId -> IntDict Layer -> Svg Msg
+entityLinks vc gc hoveredLink layers =
     let
         _ =
             Log.log "Graph.entityLinks" ""
@@ -160,7 +170,7 @@ entityLinks vc gc layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                Svg.lazy3 ViewLayer.entityLinks vc gc layer
+                Svg.lazy4 ViewLayer.entityLinks vc gc hoveredLink layer
                     :: svg
             )
             []

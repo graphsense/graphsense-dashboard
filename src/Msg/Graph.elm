@@ -3,20 +3,21 @@ module Msg.Graph exposing (..)
 import Api.Data
 import Browser.Dom
 import Model.Graph.Coords exposing (Coords)
-import Model.Graph.Id exposing (AddressId, EntityId)
+import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Transform as Transform
 import Time
 
 
 type Msg
-    = UserClickedAddress AddressId
+    = UserClickedGraph
+    | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId
     | UserHoversAddress AddressId
-    | UserLeavesAddress AddressId
     | UserClickedEntity EntityId
     | UserRightClickedEntity EntityId
     | UserHoversEntity EntityId
-    | UserLeavesEntity EntityId
+    | UserHoversEntityLink (LinkId EntityId)
+    | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool
     | UserPushesLeftMouseButtonOnGraph Coords
