@@ -1,8 +1,18 @@
-module Update.Graph.Layer exposing (Acc, addAddress, addEntity, addNeighbors, moveEntity, releaseEntity, updateLinks)
+module Update.Graph.Layer exposing
+    ( Acc
+    , addAddress
+    , addEntity
+    , addEntityNeighbors
+    , moveEntity
+    , releaseEntity
+    , syncEntityLinks
+    , updateAddressLinks
+    , updateEntityLinks
+    )
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph as Graph exposing (padding, txMaxWidth)
+import Config.Graph as Graph exposing (entityWidth, expandHandleWidth, padding, txMaxWidth)
 import Config.Update as Update
 import Dict exposing (Dict)
 import Init.Graph.Entity as Entity
@@ -11,8 +21,9 @@ import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
 import List.Extra
 import Log
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
-import Model.Graph.Entity as Entity exposing (Entity, Links(..))
+import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Locale as Locale
@@ -57,8 +68,8 @@ addEntity uc colors entity layers =
 
 {-| Add neighbors next to an entity
 -}
-addNeighbors : Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addNeighbors uc entity isOutgoing colors neighbors layers =
+addEntityNeighbors : Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntityNeighbors uc entity isOutgoing colors neighbors layers =
     addEntitiesAt uc
         (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing )) layers)
         neighbors
@@ -202,8 +213,65 @@ addEntityHere uc position entity { layer, colors, new, repositioned } =
 
 moveEntity : EntityId -> Coords -> IntDict Layer -> IntDict Layer
 moveEntity id vector layers =
-    updateEntity id (Entity.move vector) layers
-        |> first
+    IntDict.get (Id.layer id) layers
+        |> Maybe.map
+            (\layer ->
+                let
+                    leftBound =
+                        IntDict.get (Id.layer id - 1) layers
+                            |> Maybe.map getRightBound
+
+                    rightBound =
+                        IntDict.get (Id.layer id + 1) layers
+                            |> Maybe.map getLeftBound
+
+                    boundingBox =
+                        { left = leftBound
+                        , right = rightBound
+                        , upper = Nothing
+                        , lower = Nothing
+                        }
+                in
+                updateEntity id (Entity.move boundingBox vector) layers
+                    |> first
+            )
+        |> Maybe.withDefault layers
+
+
+getLeftBound : Layer -> Float
+getLeftBound layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity mn ->
+                let
+                    x =
+                        Entity.getX entity
+                in
+                mn
+                    |> Maybe.map (min x)
+                    |> Maybe.withDefault x
+                    |> Just
+            )
+            Nothing
+        |> Maybe.withDefault (Layer.getX layer)
+
+
+getRightBound : Layer -> Float
+getRightBound layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity mn ->
+                let
+                    x =
+                        Entity.getX entity + Entity.getWidth entity
+                in
+                mn
+                    |> Maybe.map (min x)
+                    |> Maybe.withDefault x
+                    |> Just
+            )
+            Nothing
+        |> Maybe.withDefault (Layer.getX layer + entityWidth + 2 * expandHandleWidth)
 
 
 releaseEntity : EntityId -> IntDict Layer -> IntDict Layer
@@ -259,8 +327,13 @@ addAddressHelp uc address acc =
             acc
 
 
-updateLinks : { currency : String, entity : Int } -> List ( Api.Data.NeighborEntity, Entity ) -> IntDict Layer -> IntDict Layer
-updateLinks { currency, entity } neighbors layers =
+updateAddressLinks : { currency : String, address : String } -> List ( Api.Data.NeighborAddress, Address ) -> IntDict Layer -> IntDict Layer
+updateAddressLinks { currency, address } neighbors layers =
+    layers
+
+
+updateEntityLinks : { currency : String, entity : Int } -> List ( Api.Data.NeighborEntity, Entity ) -> IntDict Layer -> IntDict Layer
+updateEntityLinks { currency, entity } neighbors layers =
     IntDict.foldl
         (\_ layer ( neighbors_, layers_ ) ->
             let
@@ -285,7 +358,7 @@ updateLinks { currency, entity } neighbors layers =
                                     Dict.insert found.id
                                         { found
                                             | links =
-                                                insertLinks relevant found.links
+                                                insertEntityLinks relevant found.links
                                         }
                                         layer.entities
                             }
@@ -296,8 +369,8 @@ updateLinks { currency, entity } neighbors layers =
         |> second
 
 
-insertLinks : List ( Api.Data.NeighborEntity, Entity ) -> Entity.Links -> Entity.Links
-insertLinks neighbors (Links links) =
+insertEntityLinks : List ( Api.Data.NeighborEntity, Entity ) -> Entity.Links -> Entity.Links
+insertEntityLinks neighbors (Entity.Links links) =
     neighbors
         |> List.foldl
             (\( link, entity ) li ->
@@ -313,46 +386,73 @@ insertLinks neighbors (Links links) =
         |> Entity.Links
 
 
-syncLinks : Set EntityId -> IntDict Layer -> IntDict Layer
-syncLinks updatedIds layers =
+syncEntityLinks : Set EntityId -> IntDict Layer -> IntDict Layer
+syncEntityLinks updatedIds layers =
     let
-        updated =
+        updatedEntities =
             Set.toList updatedIds
                 |> List.filterMap (\e -> Layer.getEntity e layers)
     in
-    IntDict.map
-        (\_ layer ->
-            let
-                relevant =
-                    updated
-                        |> List.filter (.id >> Id.layer >> (<) layer.id)
-            in
-            layer.entities
-                |> Dict.foldl
-                    (\_ entity layer_ ->
-                        relevant
-                            |> List.foldl
-                                (\updEnt layer__ ->
-                                    case entity.links of
-                                        Entity.Links links ->
-                                            case Dict.get (Log.log "updEnt.id" updEnt.id) links |> Log.log "updEnt " of
-                                                Nothing ->
-                                                    layer__
+    layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                let
+                    relevant =
+                        updatedEntities
+                            |> List.filter (.id >> Id.layer >> (<) layer.id)
 
-                                                Just link ->
-                                                    { layer__
-                                                        | entities =
-                                                            Dict.insert entity.id
-                                                                { entity
-                                                                    | links =
-                                                                        Dict.insert updEnt.id { link | node = updEnt } links
-                                                                            |> Entity.Links
-                                                                }
-                                                                layer__.entities
-                                                    }
+                    ( entities, updated ) =
+                        syncLinksOnEntities layer.entities relevant
+                in
+                if updated then
+                    IntDict.insert layer.id
+                        { layer
+                            | entities = entities
+                        }
+                        layers_
+
+                else
+                    layers_
+            )
+            layers
+
+
+syncLinksOnEntities : Dict EntityId Entity -> List Entity -> ( Dict EntityId Entity, Bool )
+syncLinksOnEntities entities relevant =
+    entities
+        |> Dict.foldl
+            (\_ entity ( entities_, updated ) ->
+                let
+                    ( entity_, updated_ ) =
+                        syncLinksOnEntity entity relevant
+                in
+                if updated_ then
+                    ( Dict.insert entity.id entity_ entities_, True )
+
+                else
+                    ( entities_, updated )
+            )
+            ( entities, False )
+
+
+syncLinksOnEntity : Entity -> List Entity -> ( Entity, Bool )
+syncLinksOnEntity entity relevant =
+    relevant
+        |> List.foldl
+            (\updEnt ( entity_, updated ) ->
+                case entity_.links of
+                    Entity.Links links ->
+                        case Dict.get (Log.log "updEnt.id" updEnt.id) links |> Log.log "updEnt " of
+                            Nothing ->
+                                ( entity_, updated )
+
+                            Just link ->
+                                ( { entity_
+                                    | links =
+                                        Dict.insert updEnt.id { link | node = updEnt } links
+                                            |> Entity.Links
+                                  }
+                                , True
                                 )
-                                layer_
-                    )
-                    layer
-        )
-        layers
+            )
+            ( entity, False )

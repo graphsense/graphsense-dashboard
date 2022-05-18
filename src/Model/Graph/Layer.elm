@@ -1,5 +1,6 @@
 module Model.Graph.Layer exposing (..)
 
+import Config.Graph exposing (entityWidth, expandHandleWidth)
 import Dict exposing (Dict)
 import IntDict exposing (IntDict)
 import List.Extra
@@ -78,3 +79,31 @@ getEntities currency entity =
                     acc
         )
         []
+
+
+getAddresses : { currency : String, address : String } -> IntDict Layer -> List Address
+getAddresses { currency, address } =
+    IntDict.foldl
+        (\_ layer acc ->
+            layer.entities
+                |> Dict.foldl
+                    (\_ entityNode acc_ ->
+                        entityNode.addresses
+                            |> Dict.foldl
+                                (\_ addressNode acc__ ->
+                                    if currency == addressNode.address.currency && address == addressNode.address.address then
+                                        addressNode :: acc__
+
+                                    else
+                                        acc__
+                                )
+                                acc_
+                    )
+                    acc
+        )
+        []
+
+
+getX : Layer -> Float
+getX { x } =
+    x - expandHandleWidth

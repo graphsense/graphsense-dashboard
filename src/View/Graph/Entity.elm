@@ -68,6 +68,9 @@ entity vc gc selected ent =
 
         isSelected =
             selected == ent.id
+
+        rectX =
+            String.fromFloat expandHandleWidth
     in
     g
         [ Css.entityRoot vc |> css
@@ -80,16 +83,17 @@ entity vc gc selected ent =
             |> onMouseOver
         , UserLeavesThing
             |> onMouseOut
-        , translate (ent.x + ent.dx) (ent.y + ent.dy) |> transform
+        , translate (Entity.getX ent) (Entity.getY ent) |> transform
         , UserPushesLeftMouseButtonOnEntity ent.id
             |> Util.Graph.mousedown
         ]
         [ rect
-            [ width <| String.fromFloat <| Entity.getWidth ent
+            [ width <| String.fromFloat <| Entity.getInnerWidth ent
             , height <| String.fromFloat <| Entity.getHeight ent
             , Css.entityRect vc
                 ++ [ Css.fill color ]
                 |> css
+            , x rectX
             ]
             []
         , Svg.path
@@ -97,9 +101,10 @@ entity vc gc selected ent =
                 |> Css.nodeFrame vc Model.Graph.Entity
                 |> css
             , String.Interpolate.interpolate
-                "M 0 0 H {0} Z M 0 {1} H {0} Z"
-                [ Entity.getWidth ent |> String.fromFloat
+                "M {2} 0 H {0} Z M {2} {1} H {0} Z"
+                [ Entity.getInnerWidth ent + expandHandleWidth |> String.fromFloat
                 , Entity.getHeight ent |> String.fromFloat
+                , rectX
                 ]
                 |> d
             ]
@@ -107,9 +112,10 @@ entity vc gc selected ent =
         , Svg.path
             [ Css.nodeSeparatorToExpandHandle vc Model.Graph.Entity |> css
             , String.Interpolate.interpolate
-                "M 0 0 V {0} Z M {1} 0 V {0} Z"
+                "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Entity.getHeight ent |> String.fromFloat
-                , Entity.getWidth ent |> String.fromFloat
+                , Entity.getInnerWidth ent + expandHandleWidth |> String.fromFloat
+                , rectX
                 ]
                 |> d
             ]
@@ -124,7 +130,7 @@ entity vc gc selected ent =
             , nodeType = Model.Graph.Entity
             , degree = ent.entity.inDegree
             , onClick = UserClickedEntityExpandHandle ent.id
-            , width = Entity.getWidth ent
+            , width = Entity.getInnerWidth ent
             , height = Entity.getHeight ent
             , color = color
             , isSelected = isSelected
@@ -135,7 +141,7 @@ entity vc gc selected ent =
             , nodeType = Model.Graph.Entity
             , degree = ent.entity.outDegree
             , onClick = UserClickedEntityExpandHandle ent.id
-            , width = Entity.getWidth ent
+            , width = Entity.getInnerWidth ent
             , height = Entity.getHeight ent
             , color = color
             , isSelected = isSelected
@@ -181,7 +187,7 @@ currency vc gc ent =
     g
         [ Css.entityCurrency vc |> css
         , (Graph.padding / 2 + labelHeight / 2)
-            |> translate Graph.padding
+            |> translate (Graph.padding + expandHandleWidth)
             |> transform
         ]
         [ text_
@@ -218,7 +224,7 @@ addressesCount vc gc ent =
             |> css
         , Entity.getHeight ent
             - Graph.padding
-            |> translate (Entity.getWidth ent / 2)
+            |> translate (Entity.getInnerWidth ent / 2)
             |> transform
         ]
         [ text_

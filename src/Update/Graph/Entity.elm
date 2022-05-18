@@ -1,4 +1,4 @@
-module Update.Graph.Entity exposing (addAddress, move, release, repositionAround, translate, updateEntity)
+module Update.Graph.Entity exposing (BoundingBox, addAddress, move, release, repositionAround, translate, updateEntity)
 
 import Api.Data
 import Color exposing (Color)
@@ -94,13 +94,58 @@ updateEntity id update entities newEntities =
             ( newEntities, Nothing )
 
 
-move : Coords -> Entity -> ( Entity, () )
-move vector entity =
+type alias BoundingBox =
+    { left : Maybe Float
+    , right : Maybe Float
+    , lower : Maybe Float
+    , upper : Maybe Float
+    }
+
+
+toLeftBound : BoundingBox -> Entity -> Float -> Float
+toLeftBound { left } entity x =
+    left
+        |> Maybe.map
+            (\l ->
+                x
+                    + (l
+                        - (Entity.getX entity + x)
+                        |> max 0
+                      )
+            )
+        |> Maybe.withDefault x
+
+
+toRightBound : BoundingBox -> Entity -> Float -> Float
+toRightBound { right } entity x =
+    right
+        |> Maybe.map
+            (\r ->
+                x
+                    - ((Entity.getX entity + Entity.getWidth entity + x)
+                        - r
+                        |> max 0
+                        |> Debug.log "adapt"
+                      )
+            )
+        |> Maybe.withDefault x
+
+
+move : BoundingBox -> Coords -> Entity -> ( Entity, () )
+move bb vector entity =
+    let
+        v =
+            { x =
+                toLeftBound (Debug.log "bb" bb) entity vector.x
+                    |> toRightBound bb entity
+            , y = vector.y
+            }
+    in
     ( { entity
-        | dx = vector.x
-        , dy = vector.y
+        | dx = v.x
+        , dy = v.y
         , addresses =
-            Dict.map (\_ -> Address.move vector) entity.addresses
+            Dict.map (\_ -> Address.move v) entity.addresses
       }
     , ()
     )
@@ -122,10 +167,10 @@ release entity =
 
 translate : Coords -> Entity -> Entity
 translate vector entity =
-    move vector entity
-        |> first
-        |> release
-        |> first
+    { entity
+        | x = entity.x + vector.x
+        , y = entity.y + vector.y
+    }
 
 
 repositionAround : Entity -> Dict EntityId Entity -> ( Dict EntityId Entity, Set EntityId )

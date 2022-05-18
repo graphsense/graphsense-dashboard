@@ -37,4 +37,5 @@ init entity address =
             + (toFloat (Dict.size entity.addresses) * addressHeight)
     , dx = 0
     , dy = 0
+    , links = Model.Graph.Address.Links Dict.empty
     }

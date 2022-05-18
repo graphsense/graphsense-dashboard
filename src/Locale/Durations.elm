@@ -24,10 +24,9 @@ type Unit
 
 durationToString : Config -> Int -> String
 durationToString { unitToString, precision, separator } dur =
-    toFloat (Debug.log "dur" dur)
+    toFloat dur
         / 1000
         |> abs
-        |> Debug.log "abs"
         |> (\d ->
                 [ ( Years, 12 )
                 , ( Months, 30.44 )
@@ -43,12 +42,10 @@ durationToString { unitToString, precision, separator } dur =
                                 , rest
                                     / range
                                     |> floor
-                                    |> Debug.log "div"
                                 )
                                     :: found
                             , rest =
                                 modBy (round range) (round rest)
-                                    |> Debug.log "rest"
                                     |> toFloat
                             , range = range / base
                             }
@@ -58,7 +55,6 @@ durationToString { unitToString, precision, separator } dur =
                         , found = []
                         }
                     |> .found
-                    |> Debug.log "found"
                     |> List.reverse
                     |> List.Extra.dropWhile (second >> (==) 0)
                     |> List.take precision

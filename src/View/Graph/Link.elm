@@ -52,13 +52,13 @@ entityLink : View.Config -> Graph.Config -> Float -> Float -> Id.LinkId Id.Entit
 entityLink vc gc mn mx hoveredLink entity link =
     let
         sx =
-            Entity.getX entity + Entity.getWidth entity + expandHandleWidth
+            Entity.getX entity + Entity.getWidth entity
 
         sy =
             Entity.getY entity + Entity.getHeight entity / 2
 
         tx =
-            Entity.getX link.node - expandHandleWidth - Graph.arrowHeight
+            Entity.getX link.node - Graph.arrowHeight
 
         ty =
             Entity.getY link.node + Entity.getHeight link.node / 2

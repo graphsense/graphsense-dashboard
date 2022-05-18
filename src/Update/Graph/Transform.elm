@@ -35,10 +35,10 @@ wheel { width, height } x y w model =
                 |> max -0.9
 
         moveX =
-            Debug.log "x" x_ / Debug.log "width" width * z |> Debug.log "moveX"
+            x_ / width * z
 
         moveY =
-            Debug.log "y" y_ / height * z
+            y_ / height * z
     in
     { model
         | z = model.z * (1 + z)

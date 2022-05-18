@@ -28,5 +28,6 @@ type Msg
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
+    | BrowserGotAddressNeighbors AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix
     | NoOp

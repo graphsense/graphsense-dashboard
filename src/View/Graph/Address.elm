@@ -1,7 +1,7 @@
 module View.Graph.Address exposing (address)
 
 import Color
-import Config.Graph as Graph exposing (AddressLabelType(..), labelHeight)
+import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth, labelHeight)
 import Config.View exposing (Config)
 import Css
 import Css.Graph as Css
@@ -47,6 +47,9 @@ address vc gc selected addr =
 
         isSelected =
             selected == addr.id
+
+        rectX =
+            String.fromFloat expandHandleWidth
     in
     g
         [ Css.addressRoot vc |> css
@@ -59,7 +62,7 @@ address vc gc selected addr =
             |> onMouseOver
         , UserLeavesThing
             |> onMouseOut
-        , translate (addr.x + addr.dx) (addr.y + addr.dy)
+        , translate (Address.getX addr) (Address.getY addr)
             |> transform
         , UserPushesLeftMouseButtonOnEntity addr.entityId
             |> Util.Graph.mousedown
@@ -70,14 +73,16 @@ address vc gc selected addr =
             , Css.addressRect vc
                 ++ [ Css.fill color ]
                 |> css
+            , x rectX
             ]
             []
         , Svg.path
             [ Css.nodeFrame vc Model.Graph.Address isSelected |> css
             , String.Interpolate.interpolate
-                "M 0 0 H {0} Z M 0 {1} H {0} Z"
-                [ Address.getWidth addr |> String.fromFloat
+                "M {2} 0 H {0} Z M {2} {1} H {0} Z"
+                [ Address.getInnerWidth addr + expandHandleWidth |> String.fromFloat
                 , Address.getHeight addr |> String.fromFloat
+                , rectX
                 ]
                 |> d
             ]
@@ -85,9 +90,10 @@ address vc gc selected addr =
         , Svg.path
             [ Css.nodeSeparatorToExpandHandle vc Model.Graph.Address |> css
             , String.Interpolate.interpolate
-                "M 0 0 V {0} Z M {1} 0 V {0} Z"
+                "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Address.getHeight addr |> String.fromFloat
-                , Address.getWidth addr |> String.fromFloat
+                , Address.getInnerWidth addr + expandHandleWidth |> String.fromFloat
+                , rectX
                 ]
                 |> d
             ]
@@ -100,7 +106,7 @@ address vc gc selected addr =
             , nodeType = Model.Graph.Address
             , degree = addr.address.inDegree
             , onClick = UserClickedAddressExpandHandle addr.id
-            , width = Address.getWidth addr
+            , width = Address.getInnerWidth addr
             , height = Address.getHeight addr
             , color = color
             , isSelected = isSelected
@@ -111,7 +117,7 @@ address vc gc selected addr =
             , nodeType = Model.Graph.Address
             , degree = addr.address.outDegree
             , onClick = UserClickedAddressExpandHandle addr.id
-            , width = Address.getWidth addr
+            , width = Address.getInnerWidth addr
             , height = Address.getHeight addr
             , color = color
             , isSelected = isSelected
@@ -127,7 +133,7 @@ label vc gc addr =
             / 2
             + labelHeight
             / 3
-            |> translate Graph.padding
+            |> translate (Graph.padding + expandHandleWidth)
             |> transform
         ]
         [ getLabel vc gc addr

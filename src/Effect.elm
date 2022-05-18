@@ -57,6 +57,19 @@ perform key apiKey effect =
                     Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds Nothing Nothing (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, toMsg } ->
+                    let
+                        direction =
+                            case isOutgoing of
+                                True ->
+                                    Api.Request.Addresses.DirectionOut
+
+                                False ->
+                                    Api.Request.Addresses.DirectionIn
+                    in
+                    Api.Request.Addresses.listAddressNeighbors currency address direction Nothing Nothing (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
                 _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg

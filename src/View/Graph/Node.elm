@@ -34,10 +34,10 @@ expand vc gc { nodeType, degree, isOutgoing, width, height, onClick, color, isSe
         , Events.stopPropagationOn "click" (Json.Decode.succeed ( onClick isOutgoing, True ))
         , translate
             (if isOutgoing then
-                width
+                width + expandHandleWidth
 
              else
-                0
+                expandHandleWidth
             )
             0
             ++ " rotate("

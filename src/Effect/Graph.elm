@@ -16,6 +16,13 @@ type Effect
         , onlyIds : Maybe (List Int)
         , toMsg : Api.Data.NeighborEntities -> Msg
         }
+    | GetAddressNeighborsEffect
+        { currency : String
+        , address : String
+        , isOutgoing : Bool
+        , pagesize : Int
+        , toMsg : Api.Data.NeighborAddresses -> Msg
+        }
 
 
 perform : Effect -> Cmd Msg
@@ -25,6 +32,10 @@ perform eff =
             Browser.Dom.getElement "graph"
                 |> Task.attempt BrowserGotSvgElement
 
-        -- managed in Update.elm
+        -- managed in Effect.elm
         GetEntityNeighborsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetAddressNeighborsEffect _ ->
             Cmd.none

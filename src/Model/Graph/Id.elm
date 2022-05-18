@@ -26,8 +26,8 @@ currency ( _, i, _ ) =
     i
 
 
-id : AddressId -> String
-id ( _, _, i ) =
+addressId : AddressId -> String
+addressId ( _, _, i ) =
     i
 
 
