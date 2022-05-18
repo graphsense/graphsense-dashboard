@@ -5,7 +5,7 @@ import Dict exposing (Dict)
 import IntDict exposing (IntDict)
 import List.Extra
 import Model.Graph.Address exposing (..)
-import Model.Graph.Entity exposing (..)
+import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 
 
@@ -104,6 +104,42 @@ getAddresses { currency, address } =
         []
 
 
+getLeftBound : Layer -> Float
+getLeftBound =
+    getX
+
+
 getX : Layer -> Float
-getX { x } =
-    x - expandHandleWidth
+getX layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity mn ->
+                let
+                    x =
+                        Entity.getX entity
+                in
+                mn
+                    |> Maybe.map (min x)
+                    |> Maybe.withDefault x
+                    |> Just
+            )
+            Nothing
+        |> Maybe.withDefault layer.x
+
+
+getRightBound : Layer -> Float
+getRightBound layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity mn ->
+                let
+                    x =
+                        Entity.getX entity + Entity.getWidth entity
+                in
+                mn
+                    |> Maybe.map (min x)
+                    |> Maybe.withDefault x
+                    |> Just
+            )
+            Nothing
+        |> Maybe.withDefault (layer.x + entityWidth + 2 * expandHandleWidth)

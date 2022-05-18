@@ -170,6 +170,8 @@ translate vector entity =
     { entity
         | x = entity.x + vector.x
         , y = entity.y + vector.y
+        , addresses =
+            Dict.map (\_ -> Address.translate vector) entity.addresses
     }
 
 

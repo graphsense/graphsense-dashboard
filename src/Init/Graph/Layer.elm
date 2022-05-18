@@ -5,9 +5,9 @@ import Dict
 import Model.Graph.Layer exposing (..)
 
 
-init : Int -> Layer
-init id =
+init : Float -> Int -> Layer
+init x id =
     { id = id
     , entities = Dict.empty
-    , x = toFloat id * (entityWidth + layerMargin)
+    , x = x
     }

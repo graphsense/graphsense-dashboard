@@ -12,7 +12,7 @@ module Update.Graph.Layer exposing
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph as Graph exposing (entityWidth, expandHandleWidth, padding, txMaxWidth)
+import Config.Graph as Graph exposing (entityWidth, expandHandleWidth, layerMargin, padding, txMaxWidth)
 import Config.Update as Update
 import Dict exposing (Dict)
 import Init.Graph.Entity as Entity
@@ -21,6 +21,7 @@ import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
 import List.Extra
 import Log
+import Maybe.Extra
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
@@ -34,7 +35,9 @@ import Update.Graph.Entity as Entity
 
 
 type alias Position =
-    { y : Float }
+    { x : Float
+    , y : Float
+    }
 
 
 type alias Acc comparable =
@@ -108,7 +111,7 @@ anchorsToPositions anchors layers =
                         )
                     |> Maybe.withDefault 0
         in
-        IntDict.singleton 0 { y = y }
+        IntDict.singleton 0 { x = 0, y = y }
 
     else
         anchors
@@ -123,9 +126,29 @@ anchorsToPositions anchors layers =
                                    else
                                     -1
                                   )
+
+                        x =
+                            IntDict.get id layers
+                                |> Maybe.map Layer.getX
+                                |> Maybe.Extra.withDefaultLazy
+                                    (\_ ->
+                                        IntDict.get (Id.layer entity.id) layers
+                                            |> Maybe.map
+                                                (\l ->
+                                                    Debug.log "getX" (Layer.getX l)
+                                                        + (if isOutgoing then
+                                                            entityWidth + layerMargin
+
+                                                           else
+                                                            -entityWidth - layerMargin
+                                                          )
+                                                )
+                                            |> Maybe.withDefault 0
+                                    )
                     in
                     IntDict.insert id
-                        { y =
+                        { x = x
+                        , y =
                             entity.y
                                 + entity.dy
                                 + (Entity.getHeight entity / 2)
@@ -142,7 +165,7 @@ addEntitiesAt uc positions entities acc =
     IntDict.foldl
         (\layerId position acc_ ->
             IntDict.get layerId acc_.layers
-                |> Maybe.withDefault (Layer.init layerId)
+                |> Maybe.withDefault (Layer.init position.x layerId)
                 |> (\layer ->
                         let
                             accToLayer =
@@ -189,9 +212,15 @@ addEntityHere uc position entity { layer, colors, new, repositioned } =
 
                 Nothing ->
                     let
+                        leftBound =
+                            Layer.getRightBound layer
+
+                        rightBound =
+                            Layer.getLeftBound layer
+
                         newEnt =
                             Entity.init
-                                { x = layer.x
+                                { x = position.x
                                 , y = position.y
                                 , layer = layer.id
                                 }
@@ -219,11 +248,11 @@ moveEntity id vector layers =
                 let
                     leftBound =
                         IntDict.get (Id.layer id - 1) layers
-                            |> Maybe.map getRightBound
+                            |> Maybe.map Layer.getRightBound
 
                     rightBound =
                         IntDict.get (Id.layer id + 1) layers
-                            |> Maybe.map getLeftBound
+                            |> Maybe.map Layer.getLeftBound
 
                     boundingBox =
                         { left = leftBound
@@ -236,42 +265,6 @@ moveEntity id vector layers =
                     |> first
             )
         |> Maybe.withDefault layers
-
-
-getLeftBound : Layer -> Float
-getLeftBound layer =
-    layer.entities
-        |> Dict.foldl
-            (\_ entity mn ->
-                let
-                    x =
-                        Entity.getX entity
-                in
-                mn
-                    |> Maybe.map (min x)
-                    |> Maybe.withDefault x
-                    |> Just
-            )
-            Nothing
-        |> Maybe.withDefault (Layer.getX layer)
-
-
-getRightBound : Layer -> Float
-getRightBound layer =
-    layer.entities
-        |> Dict.foldl
-            (\_ entity mn ->
-                let
-                    x =
-                        Entity.getX entity + Entity.getWidth entity
-                in
-                mn
-                    |> Maybe.map (min x)
-                    |> Maybe.withDefault x
-                    |> Just
-            )
-            Nothing
-        |> Maybe.withDefault (Layer.getX layer + entityWidth + 2 * expandHandleWidth)
 
 
 releaseEntity : EntityId -> IntDict Layer -> IntDict Layer

@@ -1,4 +1,4 @@
-module Update.Graph.Address exposing (move, release)
+module Update.Graph.Address exposing (move, release, translate)
 
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
@@ -19,4 +19,12 @@ release address =
         , dy = 0
         , x = address.x + address.dx
         , y = address.y + address.dy
+    }
+
+
+translate : Coords -> Address -> Address
+translate { x, y } address =
+    { address
+        | x = address.x + x
+        , y = address.y + y
     }
