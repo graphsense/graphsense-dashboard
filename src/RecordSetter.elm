@@ -509,6 +509,11 @@ s_circumcircle value__ record__ =
     { record__ | circumcircle = value__ }
 
 
+s_class : a -> { b | class : a } -> { b | class : a }
+s_class value__ record__ =
+    { record__ | class = value__ }
+
+
 s_code : a -> { b | code : a } -> { b | code : a }
 s_code value__ record__ =
     { record__ | code = value__ }
@@ -557,6 +562,16 @@ s_command value__ record__ =
 s_config : a -> { b | config : a } -> { b | config : a }
 s_config value__ record__ =
     { record__ | config = value__ }
+
+
+s_configValue : a -> { b | configValue : a } -> { b | configValue : a }
+s_configValue value__ record__ =
+    { record__ | configValue = value__ }
+
+
+s_containerHeight : a -> { b | containerHeight : a } -> { b | containerHeight : a }
+s_containerHeight value__ record__ =
+    { record__ | containerHeight = value__ }
 
 
 s_content : a -> { b | content : a } -> { b | content : a }
@@ -609,6 +624,11 @@ s_currencyHeading value__ record__ =
     { record__ | currencyHeading = value__ }
 
 
+s_currentHeight : a -> { b | currentHeight : a } -> { b | currentHeight : a }
+s_currentHeight value__ record__ =
+    { record__ | currentHeight = value__ }
+
+
 s_currentLocation : a -> { b | currentLocation : a } -> { b | currentLocation : a }
 s_currentLocation value__ record__ =
     { record__ | currentLocation = value__ }
@@ -629,6 +649,11 @@ s_custom value__ record__ =
     { record__ | custom = value__ }
 
 
+s_customContainer : a -> { b | customContainer : a } -> { b | customContainer : a }
+s_customContainer value__ record__ =
+    { record__ | customContainer = value__ }
+
+
 s_customSuffix : a -> { b | customSuffix : a } -> { b | customSuffix : a }
 s_customSuffix value__ record__ =
     { record__ | customSuffix = value__ }
@@ -637,6 +662,11 @@ s_customSuffix value__ record__ =
 s_danger : a -> { b | danger : a } -> { b | danger : a }
 s_danger value__ record__ =
     { record__ | danger = value__ }
+
+
+s_data : a -> { b | data : a } -> { b | data : a }
+s_data value__ record__ =
+    { record__ | data = value__ }
 
 
 s_date : a -> { b | date : a } -> { b | date : a }
@@ -837,6 +867,21 @@ s_effectSimulation value__ record__ =
 s_element : a -> { b | element : a } -> { b | element : a }
 s_element value__ record__ =
     { record__ | element = value__ }
+
+
+s_elements : a -> { b | elements : a } -> { b | elements : a }
+s_elements value__ record__ =
+    { record__ | elements = value__ }
+
+
+s_elementsCountToSkip : a -> { b | elementsCountToSkip : a } -> { b | elementsCountToSkip : a }
+s_elementsCountToSkip value__ record__ =
+    { record__ | elementsCountToSkip = value__ }
+
+
+s_elementsToShow : a -> { b | elementsToShow : a } -> { b | elementsToShow : a }
+s_elementsToShow value__ record__ =
+    { record__ | elementsToShow = value__ }
 
 
 s_ellipse : a -> { b | ellipse : a } -> { b | ellipse : a }
@@ -1374,6 +1419,11 @@ s_id value__ record__ =
     { record__ | id = value__ }
 
 
+s_idx : a -> { b | idx : a } -> { b | idx : a }
+s_idx value__ record__ =
+    { record__ | idx = value__ }
+
+
 s_importHistory : a -> { b | importHistory : a } -> { b | importHistory : a }
 s_importHistory value__ record__ =
     { record__ | importHistory = value__ }
@@ -1524,6 +1574,26 @@ s_item value__ record__ =
     { record__ | item = value__ }
 
 
+s_itemHeight : a -> { b | itemHeight : a } -> { b | itemHeight : a }
+s_itemHeight value__ record__ =
+    { record__ | itemHeight = value__ }
+
+
+s_itemIndex : a -> { b | itemIndex : a } -> { b | itemIndex : a }
+s_itemIndex value__ record__ =
+    { record__ | itemIndex = value__ }
+
+
+s_itemView : a -> { b | itemView : a } -> { b | itemView : a }
+s_itemView value__ record__ =
+    { record__ | itemView = value__ }
+
+
+s_items : a -> { b | items : a } -> { b | items : a }
+s_items value__ record__ =
+    { record__ | items = value__ }
+
+
 s_justifyContent : a -> { b | justifyContent : a } -> { b | justifyContent : a }
 s_justifyContent value__ record__ =
     { record__ | justifyContent = value__ }
@@ -1532,6 +1602,11 @@ s_justifyContent value__ record__ =
 s_justifyContentOrAuto : a -> { b | justifyContentOrAuto : a } -> { b | justifyContentOrAuto : a }
 s_justifyContentOrAuto value__ record__ =
     { record__ | justifyContentOrAuto = value__ }
+
+
+s_keepFirst : a -> { b | keepFirst : a } -> { b | keepFirst : a }
+s_keepFirst value__ record__ =
+    { record__ | keepFirst = value__ }
 
 
 s_key : a -> { b | key : a } -> { b | key : a }
@@ -1782,6 +1857,11 @@ s_linkThickness value__ record__ =
 s_links : a -> { b | links : a } -> { b | links : a }
 s_links value__ record__ =
     { record__ | links = value__ }
+
+
+s_listHtmlId : a -> { b | listHtmlId : a } -> { b | listHtmlId : a }
+s_listHtmlId value__ record__ =
+    { record__ | listHtmlId = value__ }
 
 
 s_listStylePosition : a -> { b | listStylePosition : a } -> { b | listStylePosition : a }
@@ -2082,6 +2162,11 @@ s_nextPage value__ record__ =
 s_nextVertexIndex : a -> { b | nextVertexIndex : a } -> { b | nextVertexIndex : a }
 s_nextVertexIndex value__ record__ =
     { record__ | nextVertexIndex = value__ }
+
+
+s_nextpage : a -> { b | nextpage : a } -> { b | nextpage : a }
+s_nextpage value__ record__ =
+    { record__ | nextpage = value__ }
 
 
 s_nh : a -> { b | nh : a } -> { b | nh : a }
@@ -2599,6 +2684,11 @@ s_positiveSuffix value__ record__ =
     { record__ | positiveSuffix = value__ }
 
 
+s_postScrollMessage : a -> { b | postScrollMessage : a } -> { b | postScrollMessage : a }
+s_postScrollMessage value__ record__ =
+    { record__ | postScrollMessage = value__ }
+
+
 s_postdocComments : a -> { b | postdocComments : a } -> { b | postdocComments : a }
 s_postdocComments value__ record__ =
     { record__ | postdocComments = value__ }
@@ -2712,6 +2802,11 @@ s_propertyBoxRule value__ record__ =
 s_propertyBoxTable : a -> { b | propertyBoxTable : a } -> { b | propertyBoxTable : a }
 s_propertyBoxTable value__ record__ =
     { record__ | propertyBoxTable = value__ }
+
+
+s_propertyBoxTableLink : a -> { b | propertyBoxTableLink : a } -> { b | propertyBoxTableLink : a }
+s_propertyBoxTableLink value__ record__ =
+    { record__ | propertyBoxTableLink = value__ }
 
 
 s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }
@@ -3097,6 +3192,11 @@ s_size value__ record__ =
 s_sketchPlane : a -> { b | sketchPlane : a } -> { b | sketchPlane : a }
 s_sketchPlane value__ record__ =
     { record__ | sketchPlane = value__ }
+
+
+s_skipCount : a -> { b | skipCount : a } -> { b | skipCount : a }
+s_skipCount value__ record__ =
+    { record__ | skipCount = value__ }
 
 
 s_skipped : a -> { b | skipped : a } -> { b | skipped : a }
@@ -3549,9 +3649,19 @@ s_topLeftVertex value__ record__ =
     { record__ | topLeftVertex = value__ }
 
 
+s_topMargin : a -> { b | topMargin : a } -> { b | topMargin : a }
+s_topMargin value__ record__ =
+    { record__ | topMargin = value__ }
+
+
 s_topRightVertex : a -> { b | topRightVertex : a } -> { b | topRightVertex : a }
 s_topRightVertex value__ record__ =
     { record__ | topRightVertex = value__ }
+
+
+s_totalHeight : a -> { b | totalHeight : a } -> { b | totalHeight : a }
+s_totalHeight value__ record__ =
+    { record__ | totalHeight = value__ }
 
 
 s_totalInput : a -> { b | totalInput : a } -> { b | totalInput : a }

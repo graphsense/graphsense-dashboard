@@ -17,35 +17,14 @@ import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph as Msg exposing (Msg(..))
 import RecordSetter exposing (..)
-import Route
+import Route.Graph as Route
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Adding as Adding
+import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
 import Update.Graph.Layer as Layer
 import Update.Graph.Transform as Transform
-
-
-addAddressAndEntity : Update.Config -> Api.Data.Address -> Api.Data.Entity -> Model -> ( Model, List Effect )
-addAddressAndEntity uc address entity model =
-    let
-        addedEntity =
-            Layer.addEntity uc model.config.colors entity model.layers
-
-        added =
-            Layer.addAddress uc addedEntity.colors address addedEntity.layers
-
-        adding =
-            Adding.removeAddress { currency = address.currency, address = address.address } model.adding
-    in
-    { model
-        | adding = adding
-        , layers = added.layers
-        , config =
-            model.config
-                |> s_colors added.colors
-    }
-        |> n
 
 
 addAddress : Update.Config -> Api.Data.Address -> Model -> ( Model, List Effect )
@@ -62,6 +41,14 @@ addAddress uc address model =
             else
                 Adding.removeAddress { currency = address.currency, address = address.address } model.adding
         , layers = added.layers
+        , browser =
+            added.new
+                |> Set.toList
+                |> List.head
+                |> Maybe.andThen (\a -> Layer.getAddress a added.layers)
+                |> Maybe.map
+                    (\a -> Browser.showAddress a model.browser)
+                |> Maybe.withDefault model.browser
         , config =
             model.config
                 |> s_colors added.colors
@@ -103,13 +90,11 @@ update uc msg model =
                 |> n
 
         UserClickedGraph ->
-            { model
-                | selected = SelectedNone
-                , browser =
-                    model.browser
-                        |> s_visible False
-            }
-                |> n
+            ( model
+            , Route.rootRoute
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         UserWheeledOnGraph x y z ->
             model.size
@@ -196,19 +181,16 @@ update uc msg model =
                 |> n
 
         UserClickedAddress id ->
-            Layer.getAddress id model.layers
-                |> Maybe.map
-                    (\address ->
-                        { model
-                            | browser =
-                                model.browser
-                                    |> s_visible True
-                                    |> s_type_ (Browser.Address address)
-                            , selected = SelectedAddress id
-                        }
-                    )
-                |> Maybe.withDefault model
-                |> n
+            ( model
+            , Route.addressRoute
+                { currency = Id.currency id
+                , address = Id.addressId id
+                , table = Nothing
+                , layer = Id.layer id |> Just
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         UserRightClickedAddress id ->
             n model
@@ -222,9 +204,7 @@ update uc msg model =
                     (\entity ->
                         { model
                             | browser =
-                                model.browser
-                                    |> s_visible True
-                                    |> s_type_ (Browser.Entity entity)
+                                Browser.showEntity entity model.browser
                             , selected = SelectedEntity id
                         }
                     )
@@ -292,7 +272,9 @@ update uc msg model =
                 |> Adding.getAddress { currency = entity.currency, address = a }
                 |> Maybe.map
                     (\address ->
-                        addAddressAndEntity uc address entity model
+                        addEntity uc entity model
+                            |> first
+                            |> addAddress uc address
                     )
                 |> Maybe.Extra.withDefaultLazy (\_ -> addEntity uc entity model)
                 |> mapSecond
@@ -389,34 +371,65 @@ update uc msg model =
             }
                 |> n
 
+        BrowserGotAddressTxs id data ->
+            { model
+                | browser = Browser.showAddressTxs id data model.browser
+            }
+                |> n
+
         NoOp ->
             n model
 
 
-updateByUrl : String -> Route.Thing -> Model -> ( Model, List Effect )
-updateByUrl currency thing model =
-    case thing of
-        Route.Address a ->
-            ( { model
-                | adding = Adding.loadAddress { currency = currency, address = a } model.adding |> Log.log "adding"
-              }
-            , [ GetEntityForAddressEffect
-                    { address = a
-                    , currency = currency
-                    , toMsg = BrowserGotEntity a
-                    }
-              , GetAddressEffect
-                    { address = a
-                    , currency = currency
-                    , toMsg = BrowserGotAddress
-                    }
-              ]
-            )
+updateByRoute : Route.Route -> Model -> ( Model, List Effect )
+updateByRoute route model =
+    case route of
+        Route.Root ->
+            deselect model
+                |> n
 
-        Route.Tx t ->
+        Route.Currency currency (Route.Address a table layer) ->
+            layer
+                |> Maybe.andThen
+                    (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = a, layer = l }) model.layers)
+                |> Maybe.Extra.orElseLazy
+                    (\_ -> Layer.getFirstAddress { currency = currency, address = a } model.layers)
+                |> Maybe.map (\address -> selectAddress address model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        let
+                            ( browser, effects ) =
+                                Browser.loadingAddress { currency = currency, address = a } table model.browser
+                        in
+                        ( { model
+                            | adding = Adding.loadAddress { currency = currency, address = a } model.adding |> Log.log "adding"
+                            , browser = browser
+                          }
+                        , [ GetEntityForAddressEffect
+                                { address = a
+                                , currency = currency
+                                , toMsg = BrowserGotEntity a
+                                }
+                          , GetAddressEffect
+                                { address = a
+                                , currency = currency
+                                , toMsg = BrowserGotAddress
+                                }
+                          ]
+                            ++ effects
+                        )
+                    )
+
+        Route.Currency currency (Route.Entity e table) ->
             n model
 
-        Route.Block b ->
+        Route.Currency currency (Route.Tx t) ->
+            n model
+
+        Route.Currency currency (Route.Block b) ->
+            n model
+
+        Route.Label l ->
             n model
 
 
@@ -601,7 +614,7 @@ getEntityEgonet { currency, entity } layers =
                 , entity = entity
                 , isOutgoing = isOut
                 , onlyIds = Just onlyIds
-                , pagesize = List.length onlyIds
+                , pagesize = max 1 <| List.length onlyIds
                 , toMsg = BrowserGotEntityEgonet currency entity isOut
                 }
     in
@@ -632,4 +645,30 @@ syncLinks : Set EntityId -> Model -> Model
 syncLinks repositioned model =
     { model
         | layers = Layer.syncLinks repositioned model.layers
+    }
+
+
+selectAddressId : Id.AddressId -> Model -> ( Model, List Effect )
+selectAddressId addressId model =
+    Layer.getAddress addressId model.layers
+        |> Maybe.map (\a -> selectAddress a model)
+        |> Maybe.withDefault (n model)
+
+
+selectAddress : Address -> Model -> ( Model, List Effect )
+selectAddress address model =
+    { model
+        | browser = Browser.showAddress address model.browser
+        , selected = SelectedAddress address.id
+    }
+        |> n
+
+
+deselect : Model -> Model
+deselect model =
+    { model
+        | selected = SelectedNone
+        , browser =
+            model.browser
+                |> s_visible False
     }

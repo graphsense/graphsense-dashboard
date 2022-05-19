@@ -43,6 +43,7 @@ type alias Model navigationKey =
     , stats : WebData Api.Data.Stats
     , width : Int
     , height : Int
+    , error : String
     }
 
 
@@ -93,6 +94,7 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | PortsConsoleEffect String
 
 
 type Thing

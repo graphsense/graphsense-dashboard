@@ -33,6 +33,7 @@ init flags url key =
       , stats = NotAsked
       , width = flags.width
       , height = flags.height
+      , error = ""
       }
     , List.map LocaleEffect localeEffect
     )

@@ -18,6 +18,7 @@ type alias Browser =
     , propertyBoxUsageTimestamp : List Style
     , propertyBoxUsageRelative : List Style
     , propertyBoxActivityPeriod : List Style
+    , propertyBoxTableLink : Bool -> List Style
     }
 
 
@@ -36,4 +37,5 @@ default =
     , propertyBoxUsageTimestamp = []
     , propertyBoxUsageRelative = []
     , propertyBoxActivityPeriod = []
+    , propertyBoxTableLink = \_ -> []
     }

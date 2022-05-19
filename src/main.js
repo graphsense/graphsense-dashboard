@@ -18,3 +18,6 @@ const height = window.innerHeight || docElem.clientHeight || body.clientHeight
 const now = +(new Date())
 
 const app = Elm.Main.init({flags: {locale, width, height, now}});
+
+
+app.ports.console.subscribe(console.error)

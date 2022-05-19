@@ -14,6 +14,8 @@ import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
 import Msg.Graph exposing (Msg(..))
+import Route exposing (toUrl)
+import Route.Graph as Route
 import Time
 import Util.View exposing (none, toCssColor)
 import View.Locale as Locale
@@ -26,10 +28,18 @@ type Value
     | Usage Time.Posix Int
     | Duration Int
     | Value String Api.Data.Values
+    | LoadingValue
 
 
-type Row
-    = Row ( String, Value )
+type alias TableLink =
+    { title : String
+    , link : String
+    , active : Bool
+    }
+
+
+type Row id a
+    = Row ( String, Loadable id a -> Value, Maybe TableLink )
     | Rule
 
 
@@ -46,31 +56,31 @@ browser vc gc model =
                     []
 
                 Browser.Address address ->
-                    [ browseAddress vc gc model.now address
+                    [ browseAddress vc gc model.table model.now address
                     ]
 
                 Browser.Entity entity ->
-                    [ browseEntity vc gc model.now entity
+                    [ browseEntity vc gc model.table model.now entity
                     ]
             )
         ]
 
 
-browse : View.Config -> Graph.Config -> List Row -> Html Msg
-browse vc gc rows =
-    List.map (browseRow vc gc) rows
+browse : View.Config -> Graph.Config -> Loadable id a -> List (Row id a) -> Html Msg
+browse vc gc a rows =
+    List.map (browseRow vc gc a) rows
         |> div
             [ Css.propertyBoxTable vc |> css
             ]
 
 
-browseRow : View.Config -> Graph.Config -> Row -> Html Msg
-browseRow vc gc row =
+browseRow : View.Config -> Graph.Config -> Loadable id a -> Row id a -> Html Msg
+browseRow vc gc thing row =
     case row of
         Rule ->
             hr [ Css.propertyBoxRule vc |> css ] []
 
-        Row ( key, value ) ->
+        Row ( key, toValue, table ) ->
             div
                 [ Css.propertyBoxRow vc |> css
                 ]
@@ -79,12 +89,32 @@ browseRow vc gc row =
                     ]
                     [ Locale.text vc.locale key
                     ]
-                , span
-                    [ Css.propertyBoxValue vc |> css
-                    ]
-                    [ browseValue vc gc value
-                    ]
+                , toValue thing |> valueCell vc gc
+                , table
+                    |> Maybe.map (tableLink vc gc)
+                    |> Maybe.withDefault none
                 ]
+
+
+valueCell : View.Config -> Graph.Config -> Value -> Html Msg
+valueCell vc gc value =
+    span
+        [ Css.propertyBoxValue vc |> css
+        ]
+        [ browseValue vc gc value
+        ]
+
+
+tableLink : View.Config -> Graph.Config -> TableLink -> Html Msg
+tableLink vc gc link =
+    a
+        [ Css.propertyBoxTableLink vc link.active |> css
+        , href link.link
+        , title link.title
+        ]
+        [ FontAwesome.icon FontAwesome.ellipsisH
+            |> Html.fromUnstyled
+        ]
 
 
 browseValue : View.Config -> Graph.Config -> Value -> Html Msg
@@ -178,115 +208,251 @@ browseValue vc gc value =
                     |> text
                 ]
 
+        LoadingValue ->
+            text "loading"
 
-browseAddress : View.Config -> Graph.Config -> Time.Posix -> Address -> Html Msg
-browseAddress vc gc now address =
+
+browseAddress : View.Config -> Graph.Config -> TableType -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress vc gc table now address =
+    let
+        mkTableLink title tableTag =
+            address
+                |> makeTableLink
+                    (.address >> .address)
+                    (.address >> .currency)
+                    (\id currency ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.addressRoute
+                                { currency = currency
+                                , address = id
+                                , table = Just tableTag
+                                , layer = Nothing
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
     browse vc
         gc
-        [ Row ( "Address", String address.address.address )
-        , Row ( "Currency", address.address.currency |> String.toUpper |> String )
+        address
+        [ Row
+            ( "Address"
+            , ifLoaded (.address >> .address >> String)
+                >> elseShowAddress
+            , Nothing
+            )
+        , Row
+            ( "Currency"
+            , ifLoaded (.address >> .currency >> String.toUpper >> String)
+                >> elseShowCurrency
+            , Nothing
+            )
         , Row
             ( "Tags"
-            , Maybe.map List.length address.address.tags
-                |> Maybe.withDefault 0
-                |> String.fromInt
-                |> String
+            , ifLoaded
+                (\a ->
+                    Maybe.map List.length a.address.tags
+                        |> Maybe.withDefault 0
+                        |> String.fromInt
+                        |> String
+                )
+                >> elseLoading
+            , mkTableLink "List address tags" Route.AddressTagsTable
             )
         , Rule
         , Row
             ( "Transactions"
-            , Transactions
-                { noIncomingTxs = address.address.noIncomingTxs
-                , noOutgoingTxs = address.address.noOutgoingTxs
-                }
+            , ifLoaded
+                (\a ->
+                    Transactions
+                        { noIncomingTxs = a.address.noIncomingTxs
+                        , noOutgoingTxs = a.address.noOutgoingTxs
+                        }
+                )
+                >> elseLoading
+            , mkTableLink "List address transactions" Route.AddressTxsTable
             )
         , Row
             ( "Receiving addresses"
-            , Locale.int vc.locale address.address.outDegree |> String
+            , ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+                >> elseLoading
+            , mkTableLink "List receiving addresses" Route.AddressIncomingNeighborsTable
             )
         , Row
             ( "Sending addresses"
-            , Locale.int vc.locale address.address.inDegree |> String
+            , ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
+                >> elseLoading
+            , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
             )
         , Rule
         , Row
             ( "First usage"
-            , Usage now address.address.firstTx.timestamp
+            , ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
+                >> elseLoading
+            , Nothing
             )
         , Row
             ( "Last usage"
-            , Usage now address.address.lastTx.timestamp
+            , ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
+                >> elseLoading
+            , Nothing
             )
         , Row
             ( "Activity period"
-            , address.address.firstTx.timestamp
-                - address.address.lastTx.timestamp
-                |> Duration
+            , ifLoaded
+                (\a ->
+                    a.address.firstTx.timestamp
+                        - a.address.lastTx.timestamp
+                        |> Duration
+                )
+                >> elseLoading
+            , Nothing
             )
         , Rule
         , Row
             ( "Total received"
-            , Value address.address.currency address.address.totalReceived
+            , ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
+                >> elseLoading
+            , Nothing
             )
         , Row
             ( "Final balance"
-            , Value address.address.currency address.address.balance
+            , ifLoaded (\a -> Value a.address.currency a.address.balance)
+                >> elseLoading
+            , Nothing
             )
         ]
 
 
-browseEntity : View.Config -> Graph.Config -> Time.Posix -> Entity -> Html Msg
-browseEntity vc gc now entity =
+makeTableLink : (a -> String) -> (a -> id) -> (String -> id -> TableLink) -> Loadable id a -> Maybe TableLink
+makeTableLink getCurrency getId make l =
+    case l of
+        Loading curr id ->
+            make curr id
+                |> Just
+
+        Loaded a ->
+            make (getCurrency a) (getId a)
+                |> Just
+
+
+ifLoaded : (a -> Value) -> Loadable id a -> Loadable id Value
+ifLoaded toValue l =
+    case l of
+        Loading currency id ->
+            Loading currency id
+
+        Loaded a ->
+            toValue a |> Loaded
+
+
+elseLoading : Loadable id Value -> Value
+elseLoading l =
+    case l of
+        Loading _ _ ->
+            LoadingValue
+
+        Loaded v ->
+            v
+
+
+elseShowAddress : Loadable String Value -> Value
+elseShowAddress l =
+    case l of
+        Loading _ id ->
+            String id
+
+        Loaded v ->
+            v
+
+
+elseShowCurrency : Loadable id Value -> Value
+elseShowCurrency l =
+    case l of
+        Loading currency _ ->
+            String <| String.toUpper currency
+
+        Loaded v ->
+            v
+
+
+browseEntity : View.Config -> Graph.Config -> TableType -> Time.Posix -> Loadable Int Entity -> Html Msg
+browseEntity vc gc table now ent =
     browse vc
         gc
-        [ Row ( "Entity", EntityId entity )
-        , Row ( "Root address", String entity.entity.rootAddress )
-        , Row ( "Currency", entity.entity.currency |> String.toUpper |> String )
-        , Row
-            ( "Address Tags"
-            , Maybe.map (.addressTags >> List.length) entity.entity.tags
-                |> Maybe.withDefault 0
-                |> String.fromInt
-                |> String
-            )
-        , Rule
-        , Row
-            ( "Transactions"
-            , Transactions
-                { noIncomingTxs = entity.entity.noIncomingTxs
-                , noOutgoingTxs = entity.entity.noOutgoingTxs
-                }
-            )
-        , Row
-            ( "Receiving entities"
-            , Locale.int vc.locale entity.entity.outDegree |> String
-            )
-        , Row
-            ( "Sending entities"
-            , Locale.int vc.locale entity.entity.inDegree |> String
-            )
-        , Rule
-        , Row
-            ( "First usage"
-            , Usage now entity.entity.firstTx.timestamp
-            )
-        , Row
-            ( "Last usage"
-            , Usage now entity.entity.lastTx.timestamp
-            )
-        , Row
-            ( "Activity period"
-            , entity.entity.firstTx.timestamp
-                - entity.entity.lastTx.timestamp
-                |> Duration
-            )
-        , Rule
-        , Row
-            ( "Total received"
-            , Value entity.entity.currency entity.entity.totalReceived
-            )
-        , Row
-            ( "Final balance"
-            , Value entity.entity.currency entity.entity.balance
-            )
+        ent
+        [ Row ( "Entity", ifLoaded EntityId >> elseLoading, Nothing )
+
+        {-
+           , Row ( "Root address", String entity.entity.rootAddress |> NoTable )
+           , Row ( "Currency", entity.entity.currency |> String.toUpper |> String |> NoTable )
+           , Row
+               ( "Address Tags"
+               , Maybe.map (.addressTags >> List.length) entity.entity.tags
+                   |> Maybe.withDefault 0
+                   |> String.fromInt
+                   |> String
+                   |> NoTable
+               )
+           , Rule
+           , Row
+               ( "Transactions"
+               , Transactions
+                   { noIncomingTxs = entity.entity.noIncomingTxs
+                   , noOutgoingTxs = entity.entity.noOutgoingTxs
+                   }
+                   |> NoTable
+               )
+           , Row
+               ( "Receiving entities"
+               , Locale.int vc.locale entity.entity.outDegree
+                   |> String
+                   |> NoTable
+               )
+           , Row
+               ( "Sending entities"
+               , Locale.int vc.locale entity.entity.inDegree
+                   |> String
+                   |> WithTable
+                       { title = Locale.string vc.locale "List sending entities"
+                       , link =
+                           Route.Entity entity.entity.entity
+                               |> Route.Currency entity.entity.currency
+                               |> Route.toUrl
+                       , active = False
+                       }
+               )
+           , Rule
+           , Row
+               ( "First usage"
+               , Usage now entity.entity.firstTx.timestamp
+                   |> NoTable
+               )
+           , Row
+               ( "Last usage"
+               , Usage now entity.entity.lastTx.timestamp
+                   |> NoTable
+               )
+           , Row
+               ( "Activity period"
+               , entity.entity.firstTx.timestamp
+                   - entity.entity.lastTx.timestamp
+                   |> Duration
+                   |> NoTable
+               )
+           , Rule
+           , Row
+               ( "Total received"
+               , Value entity.entity.currency entity.entity.totalReceived
+                   |> NoTable
+               )
+           , Row
+               ( "Final balance"
+               , Value entity.entity.currency entity.entity.balance
+                   |> NoTable
+               )
+        -}
         ]

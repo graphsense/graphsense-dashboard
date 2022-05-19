@@ -10,6 +10,7 @@ import Effect.Locale as Locale
 import Http exposing (Error(..))
 import Log
 import Model exposing (..)
+import Model.Graph.Id as Id
 import Msg.Graph as Graph
 import Page
 import RecordSetter exposing (..)
@@ -76,6 +77,12 @@ update uc msg model =
                                     )
                     }
                         |> n
+
+                Err ( BadBody err, _ ) ->
+                    ( model
+                    , PortsConsoleEffect err
+                        |> List.singleton
+                    )
 
                 Err _ ->
                     n model
@@ -191,19 +198,21 @@ updateByUrl uc url model =
                 |> RD.map (.currencies >> List.map .name)
                 |> RD.withDefault []
                 |> (\c -> { currencies = c })
+                |> (\g -> { graph = g })
     in
     Route.parse routeConfig url
-        |> Maybe.map
-            (\route ->
+        |> Maybe.map2
+            (\oldRoute route ->
                 case Log.log "route" route of
-                    Route.Currency curr thing ->
+                    Route.Graph graphRoute ->
                         let
                             ( graph, graphEffect ) =
-                                Graph.updateByUrl curr thing model.graph
+                                Graph.updateByRoute graphRoute model.graph
                         in
                         ( { model
                             | page = Page.Graph
                             , graph = graph
+                            , url = url
                           }
                         , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
                         )
@@ -211,6 +220,7 @@ updateByUrl uc url model =
                     _ ->
                         n model
             )
+            (Route.parse routeConfig model.url)
         |> Maybe.withDefault (n model)
 
 

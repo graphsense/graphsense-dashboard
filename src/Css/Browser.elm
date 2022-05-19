@@ -29,6 +29,7 @@ propertyBoxTable vc =
 propertyBoxRow : Config -> List Style
 propertyBoxRow vc =
     display tableRow
+        :: position relative
         :: vc.theme.browser.propertyBoxRow
 
 
@@ -77,3 +78,10 @@ propertyBoxUsageRelative vc =
 propertyBoxActivityPeriod : Config -> List Style
 propertyBoxActivityPeriod vc =
     vc.theme.browser.propertyBoxActivityPeriod
+
+
+propertyBoxTableLink : Config -> Bool -> List Style
+propertyBoxTableLink vc active =
+    position absolute
+        :: right (px 0)
+        :: vc.theme.browser.propertyBoxTableLink active

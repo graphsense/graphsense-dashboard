@@ -2,6 +2,7 @@ module Model.Graph.Layer exposing (..)
 
 import Config.Graph exposing (entityWidth, expandHandleWidth)
 import Dict exposing (Dict)
+import Init.Graph.Id as Id exposing (..)
 import IntDict exposing (IntDict)
 import List.Extra
 import Model.Graph.Address as Address exposing (..)
@@ -169,3 +170,18 @@ getAddressLink ( src, tgt ) =
                         Dict.get tgt links
                             |> Maybe.map (pair address)
             )
+
+
+getFirstAddress : { currency : String, address : String } -> IntDict Layer -> Maybe Address
+getFirstAddress { currency, address } layers =
+    layers
+        |> IntDict.foldl
+            (\layerId _ found ->
+                case found of
+                    Just _ ->
+                        found
+
+                    Nothing ->
+                        getAddress (Id.initAddressId { currency = currency, id = address, layer = layerId }) layers
+            )
+            Nothing

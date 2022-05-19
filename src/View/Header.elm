@@ -7,6 +7,7 @@ import Html.Styled exposing (Attribute, Html, div, header, img, text)
 import Html.Styled.Attributes exposing (css, id, src)
 import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
+import Ports
 import View.Search as Search
 import View.User as User
 

@@ -14,10 +14,8 @@
 
 
 module Api.Request.Bulk exposing
-    ( Operation(..)
-    , bulkCsv
-    , bulkJson
-    , operationVariants
+    ( bulkCsv, Operation(..), operationVariants
+    , bulkJson, Operation(..), operationVariants
     )
 
 import Api
@@ -125,6 +123,8 @@ stringFromOperation model =
             "get_exchange_rates"
 
 
+
+
 type Operation
     = OperationGetBlock
     | OperationListBlockTxs
@@ -222,13 +222,30 @@ stringFromOperation model =
             "get_exchange_rates"
 
 
-bulkCsv : String -> Operation -> Int -> Object -> Api.Request String
+
+
+
+bulkCsv : (String) -> (Operation) -> (Int) -> (Object) -> Api.Request String
 bulkCsv currency_path operation_path numPages_query body_body =
     Api.request
         "POST"
         "/{currency}/bulk.csv/{operation}"
         [ ( "currency", identity currency_path ), ( "operation", stringFromOperation operation_path ) ]
-        [ ( "num_pages", Just <| String.fromInt numPages_query ) ]
+        [ ( "num_pages", Just <| (String.fromInt) numPages_query ) ]
         []
         (Just (encodeObject body_body))
         Json.Decode.string
+
+
+
+bulkJson : (String) -> (Operation) -> (Int) -> (Object) -> Api.Request (List Object)
+bulkJson currency_path operation_path numPages_query body_body =
+    Api.request
+        "POST"
+        "/{currency}/bulk.json/{operation}"
+        [ ( "currency", identity currency_path ), ( "operation", stringFromOperation operation_path ) ]
+        [ ( "num_pages", Just <| (String.fromInt) numPages_query ) ]
+        []
+        (Just (encodeObject body_body))
+        (Json.Decode.list (Json.Decode.dict Api.Data.objectDecoderApi.Data.objectDecoder))
+

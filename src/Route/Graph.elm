@@ -1,0 +1,220 @@
+module Route.Graph exposing (AddressTable(..), Config, EntityTable(..), Route(..), Thing(..), addressRoute, parse, parser, rootRoute, toUrl)
+
+import List.Extra
+import Url exposing (..)
+import Url.Builder as B exposing (..)
+import Url.Parser as P exposing (..)
+import Url.Parser.Query as Q
+
+
+type alias Config =
+    { currencies : List String
+    }
+
+
+type Route
+    = Currency String Thing
+    | Label String
+    | Root
+
+
+type Thing
+    = Address String (Maybe AddressTable) (Maybe Int)
+    | Entity Int (Maybe EntityTable)
+    | Block Int
+    | Tx String
+
+
+addressSegment : String
+addressSegment =
+    "address"
+
+
+entitySegment : String
+entitySegment =
+    "entity"
+
+
+blockSegment : String
+blockSegment =
+    "block"
+
+
+txSegment : String
+txSegment =
+    "tx"
+
+
+labelSegment : String
+labelSegment =
+    "label"
+
+
+tableQuery : String
+tableQuery =
+    "table"
+
+
+type AddressTable
+    = AddressTagsTable
+    | AddressTxsTable
+    | AddressIncomingNeighborsTable
+    | AddressOutgoingNeighborsTable
+
+
+type EntityTable
+    = EntityTagsTable
+    | EntityTxsTable
+    | EntityIncomingNeighborsTable
+    | EntityOutgoingNeighborsTable
+
+
+addressTableToString : AddressTable -> String
+addressTableToString t =
+    case t of
+        AddressTagsTable ->
+            "tags"
+
+        AddressTxsTable ->
+            "transactions"
+
+        AddressIncomingNeighborsTable ->
+            "incoming"
+
+        AddressOutgoingNeighborsTable ->
+            "outgoing"
+
+
+stringToAddressTable : String -> Maybe AddressTable
+stringToAddressTable t =
+    case t of
+        "tags" ->
+            Just AddressTagsTable
+
+        "transactions" ->
+            Just AddressTxsTable
+
+        "incoming-neighbors" ->
+            Just AddressIncomingNeighborsTable
+
+        "outgoing-neighbors" ->
+            Just AddressOutgoingNeighborsTable
+
+        _ ->
+            Nothing
+
+
+entityTableToString : EntityTable -> String
+entityTableToString t =
+    case t of
+        EntityTagsTable ->
+            "tags"
+
+        EntityTxsTable ->
+            "transactions"
+
+        EntityIncomingNeighborsTable ->
+            "incoming-neighbors"
+
+        EntityOutgoingNeighborsTable ->
+            "outgoing-neighbors"
+
+
+stringToEntityTable : String -> Maybe EntityTable
+stringToEntityTable t =
+    case t of
+        "tags" ->
+            Just EntityTagsTable
+
+        "transactions" ->
+            Just EntityTxsTable
+
+        "incoming-neighbors" ->
+            Just EntityIncomingNeighborsTable
+
+        "outgoing-neighbors" ->
+            Just EntityOutgoingNeighborsTable
+
+        _ ->
+            Nothing
+
+
+toUrl : Route -> String
+toUrl route =
+    case route of
+        Root ->
+            absolute [] []
+
+        Currency curr (Address address table layer) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (addressTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            Maybe.map String.fromInt layer
+                |> B.custom Absolute [ curr, addressSegment, address ] query
+
+        Currency curr (Entity entity table) ->
+            table
+                |> Maybe.map (entityTableToString >> B.string tableQuery >> List.singleton)
+                |> Maybe.withDefault []
+                |> absolute [ curr, entitySegment, String.fromInt entity ]
+
+        Currency curr (Block block) ->
+            absolute [ curr, blockSegment, String.fromInt block ] []
+
+        Currency curr (Tx tx) ->
+            absolute [ curr, txSegment, tx ] []
+
+        Label l ->
+            absolute [ labelSegment, l ] []
+
+
+rootRoute : Route
+rootRoute =
+    Root
+
+
+addressRoute : { currency : String, address : String, layer : Maybe Int, table : Maybe AddressTable } -> Route
+addressRoute { currency, address, layer, table } =
+    Address address table layer
+        |> Currency currency
+
+
+parse : Config -> Url -> Maybe Route
+parse c =
+    P.parse (parser c)
+
+
+parser : Config -> Parser (Route -> a) a
+parser c =
+    oneOf
+        [ map Currency (parseCurrency c </> thing)
+        , map Label P.string
+        , map Root P.top
+        ]
+
+
+parseCurrency : Config -> Parser (String -> a) a
+parseCurrency c =
+    P.custom "CURRENCY" <|
+        \segment ->
+            List.Extra.find ((==) segment) c.currencies
+
+
+thing : Parser (Thing -> a) a
+thing =
+    oneOf
+        [ s addressSegment
+            </> P.string
+            <?> (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
+            </> P.fragment (Maybe.andThen String.toInt)
+            |> map Address
+        , s blockSegment
+            </> P.int
+            |> map Block
+        , s txSegment
+            </> P.string
+            |> map Tx
+        ]

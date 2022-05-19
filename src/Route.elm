@@ -1,61 +1,31 @@
-module Route exposing (Route(..), Thing(..), parse, toUrl)
+module Route exposing (Route(..), graphRoute, graphSegment, parse, toUrl)
 
 import List.Extra
+import Route.Graph as Graph
 import Url exposing (..)
 import Url.Builder as B exposing (..)
 import Url.Parser as P exposing (..)
+import Url.Parser.Query as Q
 
 
 type alias Config =
-    { currencies : List String
+    { graph : Graph.Config
     }
 
 
 type Route
-    = Currency String Thing
-    | Label String
+    = Graph Graph.Route
+    | Stats
 
 
-type Thing
-    = Address String
-    | Block Int
-    | Tx String
+graphSegment : String
+graphSegment =
+    "graph"
 
 
-addressSegment : String
-addressSegment =
-    "address"
-
-
-blockSegment : String
-blockSegment =
-    "block"
-
-
-txSegment : String
-txSegment =
-    "tx"
-
-
-labelSegment : String
-labelSegment =
-    "label"
-
-
-toUrl : Route -> String
-toUrl route =
-    case route of
-        Currency curr (Address address) ->
-            absolute [ curr, addressSegment, address ] []
-
-        Currency curr (Block block) ->
-            absolute [ curr, blockSegment, String.fromInt block ] []
-
-        Currency curr (Tx tx) ->
-            absolute [ curr, txSegment, tx ] []
-
-        Label l ->
-            absolute [ labelSegment, l ] []
+statsSegment : String
+statsSegment =
+    "stats"
 
 
 parse : Config -> Url -> Maybe Route
@@ -66,28 +36,21 @@ parse c =
 parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
-        [ map Currency (currency c </> thing)
-        , map Label P.string
+        [ map Graph (s graphSegment </> Graph.parser c.graph)
+        , map Stats (s statsSegment)
         ]
 
 
-currency : Config -> Parser (String -> a) a
-currency c =
-    P.custom "CURRENCY" <|
-        \segment ->
-            List.Extra.find ((==) segment) c.currencies
+graphRoute : Graph.Route -> Route
+graphRoute =
+    Graph
 
 
-thing : Parser (Thing -> a) a
-thing =
-    oneOf
-        [ s addressSegment
-            </> P.string
-            |> map Address
-        , s blockSegment
-            </> P.int
-            |> map Block
-        , s txSegment
-            </> P.string
-            |> map Tx
-        ]
+toUrl : Route -> String
+toUrl route =
+    case route of
+        Graph graph ->
+            absolute [ graphSegment ] [] ++ Graph.toUrl graph
+
+        Stats ->
+            absolute [ statsSegment ] []

@@ -39,4 +39,5 @@ type Msg
         , neighbor : Api.Data.NeighborAddress
         }
         Api.Data.Entity
+    | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
     | NoOp

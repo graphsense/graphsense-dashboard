@@ -15,10 +15,5 @@ subscriptions model =
 
         _ ->
             Browser.Events.onMouseUp (Json.Decode.succeed UserReleasesMouseButton)
-    , if model.browser.visible then
-        Time.every 1000 BrowserGotNow
-
-      else
-        Sub.none
     ]
         |> Sub.batch

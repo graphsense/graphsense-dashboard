@@ -12,6 +12,8 @@ import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
+import Ports
+import Route
 import Task
 
 
@@ -43,6 +45,11 @@ perform key apiKey effect =
 
         GraphEffect eff ->
             case eff of
+                Graph.NavPushRouteEffect route ->
+                    Route.graphRoute route
+                        |> Route.toUrl
+                        |> Nav.pushUrl key
+
                 Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, toMsg } ->
                     let
                         direction =
@@ -81,6 +88,10 @@ perform key apiKey effect =
                     Api.Request.Addresses.getAddressEntity currency address (Just True)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
+                    Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
                 _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg
@@ -97,6 +108,9 @@ perform key apiKey effect =
         SearchEffect (Search.BounceEffect delay msg) ->
             Bounce.delay delay msg
                 |> Cmd.map SearchMsg
+
+        PortsConsoleEffect msg ->
+            Ports.console msg
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

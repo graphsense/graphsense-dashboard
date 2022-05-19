@@ -14,7 +14,8 @@ import Init.Search as Search
 import Model.Search exposing (Model)
 import Msg.Search exposing (Msg(..))
 import RemoteData exposing (RemoteData(..), WebData)
-import Route exposing (Route)
+import Route exposing (toUrl)
+import Route.Graph as Route exposing (Route)
 import Util.RemoteData exposing (webdata)
 import View.Locale as Locale
 
@@ -144,7 +145,10 @@ resultLineToHtml vc title resultLine =
         ( route, icon, label ) =
             case resultLine of
                 Address a ->
-                    ( Route.Currency currency (Route.Address a), FontAwesome.at, a )
+                    ( Route.addressRoute { currency = currency, address = a, table = Nothing, layer = Nothing }
+                    , FontAwesome.at
+                    , a
+                    )
 
                 Tx a ->
                     ( Route.Currency currency (Route.Tx a), FontAwesome.exchangeAlt, a )
@@ -156,8 +160,7 @@ resultLineToHtml vc title resultLine =
                     ( Route.Label a, FontAwesome.tag, a )
     in
     a
-        [ Route.toUrl route
-            |> href
+        [ Route.graphRoute route |> toUrl |> href
         , Css.resultLine vc |> css
         , onClick UserClicksResultLine
         ]

@@ -3,11 +3,13 @@ module Effect.Graph exposing (Effect(..), perform)
 import Api.Data
 import Browser.Dom
 import Msg.Graph exposing (Msg(..))
+import Route.Graph exposing (Route)
 import Task
 
 
 type Effect
-    = GetSvgElementEffect
+    = NavPushRouteEffect Route
+    | GetSvgElementEffect
     | GetAddressEffect
         { currency : String
         , address : String
@@ -38,11 +40,22 @@ type Effect
         , pagesize : Int
         , toMsg : Api.Data.NeighborAddresses -> Msg
         }
+    | GetAddressTxsEffect
+        { currency : String
+        , address : String
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : Api.Data.AddressTxs -> Msg
+        }
 
 
 perform : Effect -> Cmd Msg
 perform eff =
     case eff of
+        -- managed in Effect.elm
+        NavPushRouteEffect str ->
+            Cmd.none
+
         GetSvgElementEffect ->
             Browser.Dom.getElement "graph"
                 |> Task.attempt BrowserGotSvgElement
@@ -65,4 +78,8 @@ perform eff =
 
         -- managed in Effect.elm
         GetEntityForAddressEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetAddressTxsEffect _ ->
             Cmd.none

@@ -426,6 +426,24 @@ theme =
                 |> s_propertyBoxIncomingTxs
                     [ toCssColor colors.brandBase |> color
                     ]
+                |> s_propertyBoxTableLink
+                    (\isActive ->
+                        [ toCssColor
+                            (if isActive then
+                                colors.brandBase
+
+                             else
+                                colors.brandLight
+                            )
+                            |> color
+                        , hover
+                            [ toCssColor colors.brandBase |> color
+                            ]
+                        , active
+                            [ toCssColor colors.brandBase |> color
+                            ]
+                        ]
+                    )
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work
