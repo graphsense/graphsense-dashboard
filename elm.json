@@ -13,6 +13,8 @@
             "BrianHicks/elm-csv": "3.0.3",
             "MaybeJustJames/yaml": "2.1.1",
             "PanagiotisGeorgiadis/elm-datetime": "1.3.0",
+            "TSFoster/elm-tuple-extra": "2.0.0",
+            "andre-dietrich/elm-conditional": "1.0.0",
             "avh4/elm-color": "1.0.0",
             "avh4/elm-fifo": "1.0.4",
             "avh4/elm-program-test": "3.6.3",

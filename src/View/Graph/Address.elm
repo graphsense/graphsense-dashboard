@@ -1,4 +1,4 @@
-module View.Graph.Address exposing (address)
+module View.Graph.Address exposing (address, links)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth, labelHeight)
@@ -6,6 +6,7 @@ import Config.View exposing (Config)
 import Css
 import Css.Graph as Css
 import Dict
+import Init.Graph.Id as Id
 import Json.Decode
 import Log
 import Model.Graph
@@ -16,10 +17,12 @@ import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
+import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
 import Util.Graph exposing (translate)
 import Util.View as Util
 import View.Graph.Label as Label
+import View.Graph.Link as Link
 import View.Graph.Node as Node
 import View.Locale as Locale
 
@@ -166,3 +169,19 @@ flags vc gc addr =
             |> transform
         ]
         []
+
+
+links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg
+links vc gc mn mx addr =
+    case addr.links of
+        Address.Links lnks ->
+            lnks
+                |> Dict.foldr
+                    (\_ link svg ->
+                        ( "addressLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
+                        , Svg.lazy6 Link.addressLink vc gc mn mx addr link
+                        )
+                            :: svg
+                    )
+                    []
+                |> Keyed.node "g" []

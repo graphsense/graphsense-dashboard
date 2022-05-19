@@ -4,7 +4,6 @@ import Config exposing (config)
 import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
-import Init.Store as Store
 import Model exposing (..)
 import Page
 import RemoteData exposing (RemoteData(..))
@@ -26,7 +25,6 @@ init flags url key =
       , page = Page.Stats
       , search = Search.init
       , graph = Graph.init flags.now
-      , store = Store.init
       , user =
             { apiKey = ""
             , auth = Unknown

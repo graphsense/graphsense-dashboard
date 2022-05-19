@@ -7,11 +7,10 @@ import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph as Graph
 import Effect.Locale as Locale
-import Effect.Store as Store
 import Http exposing (Error(..))
+import Log
 import Model exposing (..)
 import Msg.Graph as Graph
-import Msg.Store as Store
 import Page
 import RecordSetter exposing (..)
 import RemoteData as RD
@@ -21,7 +20,6 @@ import Update.Graph as Graph
 import Update.Graph.Adding as Adding
 import Update.Locale as Locale
 import Update.Search as Search
-import Update.Store as Store
 import Url exposing (Url)
 
 
@@ -184,68 +182,6 @@ update uc msg model =
             , List.map GraphEffect graphEffects
             )
 
-        StoreMsg (Store.BrowserGotAddress address) ->
-            let
-                ( store, storeEffects ) =
-                    Store.update (Store.BrowserGotAddress address) model.store
-
-                ( newStore, retrieved ) =
-                    Store.getEntity
-                        { currency = address.currency
-                        , entity = address.entity
-                        , forAddress = address.address
-                        }
-                        store
-
-                ( graph, effects ) =
-                    case retrieved of
-                        Store.Found entity ->
-                            Graph.addAddressAndEntity uc address entity model.graph
-                                |> mapSecond (List.map GraphEffect)
-
-                        Store.NotFound eff ->
-                            Graph.addAddress uc address model.graph
-                                |> mapSecond (List.map GraphEffect)
-                                |> mapSecond ((++) (List.map StoreEffect eff))
-            in
-            ( { model
-                | store = newStore
-                , graph = graph
-              }
-            , List.map StoreEffect storeEffects
-                ++ effects
-            )
-
-        StoreMsg (Store.BrowserGotEntity a entity) ->
-            let
-                ( store, storeEffects ) =
-                    Store.update (Store.BrowserGotEntity a entity) model.store
-
-                ( newStore, retrieved ) =
-                    Store.getAddress { currency = entity.currency, address = a } store
-
-                ( graph, effects ) =
-                    case retrieved of
-                        Store.Found address ->
-                            Graph.addAddressAndEntity uc address entity model.graph
-                                |> mapSecond (List.map GraphEffect)
-
-                        Store.NotFound eff ->
-                            Graph.addEntity uc entity model.graph
-                                |> mapSecond (List.map GraphEffect)
-                                |> mapSecond ((++) (List.map StoreEffect eff))
-            in
-            ( { model
-                | store = newStore
-                , graph = graph
-              }
-            , List.map StoreEffect storeEffects
-                ++ effects
-            )
-
-        StoreMsg (Store.BrowserGotEntityForAddress a entity) ->
-            update uc (Store.BrowserGotEntity a entity |> StoreMsg) model
-
 
 updateByUrl : Config -> Url -> Model key -> ( Model key, List Effect )
 updateByUrl uc url model =
@@ -259,54 +195,17 @@ updateByUrl uc url model =
     Route.parse routeConfig url
         |> Maybe.map
             (\route ->
-                case route of
-                    Route.Currency curr (Route.Address a) ->
+                case Log.log "route" route of
+                    Route.Currency curr thing ->
                         let
-                            ( store, retrieved ) =
-                                Store.getAddress { currency = curr, address = a } model.store
-
-                            ( ( graph, graphEffect ), ( newStore_, storeEffect ) ) =
-                                case retrieved of
-                                    Store.Found address ->
-                                        let
-                                            ( newStore, retr2 ) =
-                                                Store.getEntity
-                                                    { currency = curr
-                                                    , entity = address.entity
-                                                    , forAddress = address.address
-                                                    }
-                                                    store
-                                        in
-                                        case retr2 of
-                                            Store.Found entity ->
-                                                ( Graph.addAddressAndEntity uc address entity model.graph
-                                                , ( newStore, [] )
-                                                )
-
-                                            Store.NotFound effect ->
-                                                ( Graph.addingEntity { currency = curr, entity = address.entity } model.graph
-                                                , ( newStore, effect )
-                                                )
-
-                                    Store.NotFound effect ->
-                                        ( Graph.addingAddress { currency = curr, address = a } model.graph
-                                        , ( store
-                                          , Store.GetEntityForAddressEffect
-                                                { address = a
-                                                , currency = curr
-                                                , toMsg = Store.BrowserGotEntityForAddress a
-                                                }
-                                                :: effect
-                                          )
-                                        )
+                            ( graph, graphEffect ) =
+                                Graph.updateByUrl curr thing model.graph
                         in
                         ( { model
                             | page = Page.Graph
                             , graph = graph
-                            , store = newStore_
                           }
                         , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
-                            ++ List.map StoreEffect storeEffect
                         )
 
                     _ ->

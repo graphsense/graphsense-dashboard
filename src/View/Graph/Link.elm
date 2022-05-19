@@ -8,26 +8,19 @@ import Css.Graph as Css
 import Init.Graph.Id as Id
 import List.Extra
 import Log
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
+import RecordSetter exposing (..)
 import Regex
 import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events exposing (..)
+import Svg.Styled.Events as Svg exposing (..)
 import View.Locale as Locale
-
-
-events : Id.EntityId -> Id.EntityId -> List (S.Attribute Msg)
-events src tgt =
-    [ Id.initEntityLinkId src tgt
-        |> UserHoversEntityLink
-        |> onMouseOver
-    , onMouseOut UserLeavesThing
-    ]
 
 
 linkPrefix : String
@@ -35,34 +28,99 @@ linkPrefix =
     "link"
 
 
-linkId2 : Id.EntityId -> Id.EntityId -> String
-linkId2 src tgt =
-    (Id.initEntityLinkId src tgt
-        |> Id.entityLinkIdToString
-    )
-        |> (++) linkPrefix
+type alias Options =
+    { sx : Float
+    , sy : Float
+    , tx : Float
+    , ty : Float
+    , label : String
+    , amount : Float
+    , hovered : Bool
+    , onMouseOver : Msg
+    }
 
 
-linkId : Id.LinkId Id.EntityId -> String
-linkId id =
-    linkPrefix ++ Id.entityLinkIdToString id
+entityLinkOptions : View.Config -> Graph.Config -> Entity -> Link Entity -> Options
+entityLinkOptions vc gc entity link =
+    { hovered = False
+    , sx = Entity.getX entity + Entity.getWidth entity
+    , sy =
+        Entity.getY entity + Entity.getHeight entity / 2
+    , tx =
+        Entity.getX link.node - Graph.arrowHeight
+    , ty =
+        Entity.getY link.node + Entity.getHeight link.node / 2
+    , amount = getLinkAmount vc gc link
+    , label =
+        getLabel vc gc link.node.entity.currency link
+    , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
+    }
 
 
-entityLink : View.Config -> Graph.Config -> Float -> Float -> Id.LinkId Id.EntityId -> Entity -> Link Entity -> Svg Msg
-entityLink vc gc mn mx hoveredLink entity link =
+addressLinkOptions : View.Config -> Graph.Config -> Address -> Link Address -> Options
+addressLinkOptions vc gc address link =
+    { hovered = False
+    , sx = Address.getX address + Address.getWidth address
+    , sy =
+        Address.getY address + Address.getHeight address / 2
+    , tx =
+        Address.getX link.node - Graph.arrowHeight
+    , ty =
+        Address.getY link.node + Address.getHeight link.node / 2
+    , amount = getLinkAmount vc gc link
+    , label =
+        getLabel vc gc link.node.address.currency link
+    , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
+    }
+
+
+entityLink : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
+entityLink vc gc mn mx entity link =
+    drawLink
+        (entityLinkOptions vc gc entity link)
+        vc
+        gc
+        mn
+        mx
+
+
+entityLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
+entityLinkHovered vc gc mn mx entity link =
+    drawLink
+        (entityLinkOptions vc gc entity link
+            |> s_hovered True
+        )
+        vc
+        gc
+        mn
+        mx
+
+
+addressLink : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
+addressLink vc gc mn mx address link =
+    drawLink
+        (addressLinkOptions vc gc address link)
+        vc
+        gc
+        mn
+        mx
+
+
+addressLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
+addressLinkHovered vc gc mn mx address link =
+    drawLink
+        (addressLinkOptions vc gc address link
+            |> s_hovered True
+        )
+        vc
+        gc
+        mn
+        mx
+
+
+drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
+drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver } vc gc mn mx =
     let
-        sx =
-            Entity.getX entity + Entity.getWidth entity
-
-        sy =
-            Entity.getY entity + Entity.getHeight entity / 2
-
-        tx =
-            Entity.getX link.node - Graph.arrowHeight
-
-        ty =
-            Entity.getY link.node + Entity.getHeight link.node / 2
-
         cx =
             sx + (tx - sx) / 2
 
@@ -72,7 +130,7 @@ entityLink vc gc mn mx hoveredLink entity link =
                     1
 
                    else
-                    1 + (getLinkAmount vc gc link / mx) * txMaxWidth
+                    1 + (amount / mx) * txMaxWidth
                   )
 
         dd =
@@ -87,15 +145,11 @@ entityLink vc gc mn mx hoveredLink entity link =
 
         ly =
             (sy + ty) / 2 + Graph.linkLabelHeight / 3
-
-        linkId_ =
-            Id.initEntityLinkId entity.id link.node.id
-
-        hovered =
-            hoveredLink == linkId_
     in
     g
-        (Svg.id (linkId linkId_) :: events entity.id link.node.id)
+        [ Svg.onMouseOver onMouseOver
+        , onMouseOut UserLeavesThing
+        ]
         [ S.path
             [ dd
             , Css.entityLink vc hovered
@@ -130,16 +184,13 @@ entityLink vc gc mn mx hoveredLink entity link =
                 |> css
             ]
             []
-        , label vc gc lx ly hovered entity link
+        , drawLabel vc gc lx ly hovered label
         ]
 
 
-label : View.Config -> Graph.Config -> Float -> Float -> Bool -> Entity -> Link Entity -> Svg Msg
-label vc gc x y hovered entity link =
+drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> String -> Svg Msg
+drawLabel vc gc x y hovered lbl =
     let
-        lbl =
-            getLabel vc gc link
-
         width =
             toFloat (String.length lbl) * linkLabelHeight / 1.5
 
@@ -170,7 +221,7 @@ label vc gc x y hovered entity link =
         ]
 
 
-getLinkAmount : View.Config -> Graph.Config -> Link Entity -> Float
+getLinkAmount : View.Config -> Graph.Config -> Link node -> Float
 getLinkAmount vc gc link =
     case gc.txLabelType of
         Graph.NoTxs ->
@@ -189,14 +240,14 @@ getLinkAmount vc gc link =
                         |> Maybe.withDefault 0
 
 
-getLabel : View.Config -> Graph.Config -> Link Entity -> String
-getLabel vc gc link =
+getLabel : View.Config -> Graph.Config -> String -> Link node -> String
+getLabel vc gc currency link =
     case gc.txLabelType of
         Graph.NoTxs ->
             Locale.int vc.locale link.noTxs
 
         Graph.Value ->
-            Locale.currencyWithoutCode vc.locale link.node.entity.currency link.value
+            Locale.currencyWithoutCode vc.locale currency link.value
 
 
 arrowMarker : View.Config -> Graph.Config -> Color.Color -> Svg Msg

@@ -1,9 +1,10 @@
 module Model.Graph.Id exposing (..)
 
+import Tuple exposing (..)
+
+
 {-| A tuple of layer index, currency, address/entity id
 -}
-
-
 type alias AddressId =
     ( Int, String, String )
 
@@ -52,6 +53,12 @@ entityLinkIdToString ( s, t ) =
         ++ entityIdToString t
 
 
+addressLinkIdToString : LinkId AddressId -> String
+addressLinkIdToString ( s, t ) =
+    addressIdToString s
+        ++ addressIdToString t
+
+
 noEntityId : EntityId
 noEntityId =
     ( 0, "", -1 )
@@ -65,3 +72,13 @@ noEntityLinkId =
 noAddressId : AddressId
 noAddressId =
     ( 0, "", "" )
+
+
+noAddressLinkId : LinkId AddressId
+noAddressLinkId =
+    ( noAddressId, noAddressId )
+
+
+getSourceId : LinkId a -> a
+getSourceId =
+    first

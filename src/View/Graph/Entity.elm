@@ -1,4 +1,4 @@
-module View.Graph.Entity exposing (addresses, entity, links)
+module View.Graph.Entity exposing (addressLinks, addresses, entity, links)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
@@ -235,56 +235,35 @@ addressesCount vc gc ent =
         ]
 
 
-links : Config -> Graph.Config -> Float -> Float -> Id.LinkId Id.EntityId -> Entity -> Svg Msg
-links vc gc mn mx hoveredLink ent =
+addressLinks : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
+addressLinks vc gc mn mx ent =
+    let
+        _ =
+            Log.log "Entity.addressLinks" ent.id
+    in
+    ent.addresses
+        |> Dict.foldl
+            (\_ address svg ->
+                ( "addressLinks" ++ Id.addressIdToString address.id
+                , Svg.lazy5 Address.links vc gc mn mx address
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+links : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
+links vc gc mn mx ent =
     case ent.links of
         Entity.Links lnks ->
             lnks
                 |> Dict.foldr
-                    (\_ link ( svg, theHovered ) ->
-                        let
-                            id =
-                                Id.initEntityLinkId ent.id link.node.id
-
-                            key =
-                                Link.linkId id
-
-                            theHovered_ =
-                                case theHovered of
-                                    Nothing ->
-                                        if id == hoveredLink then
-                                            Just link
-
-                                        else
-                                            Nothing
-
-                                    Just _ ->
-                                        theHovered
-                        in
-                        ( if id == hoveredLink then
-                            svg
-
-                          else
-                            ( key
-                            , Svg.lazy7 Link.entityLink vc gc mn mx hoveredLink ent link
-                            )
-                                :: svg
-                        , theHovered_
+                    (\_ link svg ->
+                        ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
+                        , Svg.lazy6 Link.entityLink vc gc mn mx ent link
                         )
+                            :: svg
                     )
-                    ( [], Nothing )
-                |> (\( svg, theHovered ) ->
-                        svg
-                            ++ -- place the hoveredlink at the end to make it be layered above the other links
-                               (case theHovered of
-                                    Just link ->
-                                        ( Link.linkId2 ent.id link.node.id
-                                        , Svg.lazy7 Link.entityLink vc gc mn mx hoveredLink ent link
-                                        )
-                                            |> List.singleton
-
-                                    Nothing ->
-                                        []
-                               )
-                   )
+                    []
                 |> Keyed.node "g" []

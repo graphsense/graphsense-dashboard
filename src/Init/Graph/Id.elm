@@ -14,6 +14,6 @@ initEntityId i =
     ( i.layer, i.currency, i.id )
 
 
-initEntityLinkId : a -> a -> LinkId a
-initEntityLinkId =
+initLinkId : a -> a -> LinkId a
+initLinkId =
     pair

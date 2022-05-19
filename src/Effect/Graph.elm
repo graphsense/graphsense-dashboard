@@ -8,6 +8,21 @@ import Task
 
 type Effect
     = GetSvgElementEffect
+    | GetAddressEffect
+        { currency : String
+        , address : String
+        , toMsg : Api.Data.Address -> Msg
+        }
+    | GetEntityEffect
+        { currency : String
+        , entity : Int
+        , toMsg : Api.Data.Entity -> Msg
+        }
+    | GetEntityForAddressEffect
+        { currency : String
+        , address : String
+        , toMsg : Api.Data.Entity -> Msg
+        }
     | GetEntityNeighborsEffect
         { currency : String
         , entity : Int
@@ -38,4 +53,16 @@ perform eff =
 
         -- managed in Effect.elm
         GetAddressNeighborsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetAddressEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetEntityEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetEntityForAddressEffect _ ->
             Cmd.none

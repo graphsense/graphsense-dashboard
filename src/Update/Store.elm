@@ -36,6 +36,68 @@ update msg model =
             }
                 |> n
 
+        StoreMsg (Store.BrowserGotAddress address) ->
+            let
+                ( store, storeEffects ) =
+                    Store.update (Store.BrowserGotAddress address) model.store
+
+                ( newStore, retrieved ) =
+                    Store.getEntity
+                        { currency = address.currency
+                        , entity = address.entity
+                        , forAddress = address.address
+                        }
+                        store
+
+                ( graph, effects ) =
+                    case retrieved of
+                        Store.Found entity ->
+                            Graph.addAddressAndEntity uc address entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+
+                        Store.NotFound eff ->
+                            Graph.addAddress uc address model.graph
+                                |> mapSecond (List.map GraphEffect)
+                                |> mapSecond ((++) (List.map StoreEffect eff))
+            in
+            ( { model
+                | store = newStore
+                , graph = graph
+              }
+            , List.map StoreEffect storeEffects
+                ++ effects
+            )
+
+        StoreMsg (Store.BrowserGotEntity a entity) ->
+            let
+                ( store, storeEffects ) =
+                    Store.update (Store.BrowserGotEntity a entity) model.store
+
+                ( newStore, retrieved ) =
+                    Store.getAddress { currency = entity.currency, address = a } store
+
+                ( graph, effects ) =
+                    case retrieved of
+                        Store.Found address ->
+                            Graph.addAddressAndEntity uc address entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+
+                        Store.NotFound eff ->
+                            Graph.addEntity uc entity model.graph
+                                |> mapSecond (List.map GraphEffect)
+                                |> mapSecond ((++) (List.map StoreEffect eff))
+            in
+            ( { model
+                | store = newStore
+                , graph = graph
+              }
+            , List.map StoreEffect storeEffects
+                ++ effects
+            )
+
+        StoreMsg (Store.BrowserGotEntityForAddress a entity) ->
+            update uc (Store.BrowserGotEntity a entity |> StoreMsg) model
+
 
 remoteDataToRetreived : WebData a -> Maybe (Retrieved a)
 remoteDataToRetreived a =

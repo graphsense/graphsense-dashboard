@@ -8,17 +8,14 @@ import Dict exposing (Dict)
 import Effect.Graph
 import Effect.Locale
 import Effect.Search
-import Effect.Store
 import Html exposing (Attribute, Html)
 import Http
 import Model.Graph
 import Model.Locale
 import Model.Search
-import Model.Store
 import Msg.Graph
 import Msg.Locale
 import Msg.Search
-import Msg.Store
 import Page
 import RemoteData exposing (WebData)
 import Theme.Theme exposing (Theme)
@@ -42,7 +39,6 @@ type alias Model navigationKey =
     , locale : Model.Locale.Model
     , search : Model.Search.Model
     , graph : Model.Graph.Model
-    , store : Model.Store.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
     , width : Int
@@ -65,7 +61,6 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
-    | StoreMsg Msg.Store.Msg
 
 
 type RequestLimit
@@ -98,7 +93,6 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
-    | StoreEffect Effect.Store.Effect
 
 
 type Thing

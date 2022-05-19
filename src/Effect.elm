@@ -10,7 +10,6 @@ import Browser.Navigation as Nav
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
-import Effect.Store as Store
 import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Task
@@ -70,6 +69,18 @@ perform key apiKey effect =
                     Api.Request.Addresses.listAddressNeighbors currency address direction Nothing Nothing (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetAddressEffect { currency, address, toMsg } ->
+                    Api.Request.Addresses.getAddress currency address (Just True)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetEntityEffect { currency, entity, toMsg } ->
+                    Api.Request.Entities.getEntity currency entity (Just True)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
+                    Api.Request.Addresses.getAddressEntity currency address (Just True)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
                 _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg
@@ -86,18 +97,6 @@ perform key apiKey effect =
         SearchEffect (Search.BounceEffect delay msg) ->
             Bounce.delay delay msg
                 |> Cmd.map SearchMsg
-
-        StoreEffect (Store.GetAddressEffect { currency, address, toMsg }) ->
-            Api.Request.Addresses.getAddress currency address (Just True)
-                |> send apiKey effect (toMsg >> StoreMsg)
-
-        StoreEffect (Store.GetEntityEffect { currency, entity, toMsg }) ->
-            Api.Request.Entities.getEntity currency entity (Just True)
-                |> send apiKey effect (toMsg >> StoreMsg)
-
-        StoreEffect (Store.GetEntityForAddressEffect { currency, address, toMsg }) ->
-            Api.Request.Addresses.getAddressEntity currency address (Just True)
-                |> send apiKey effect (toMsg >> StoreMsg)
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

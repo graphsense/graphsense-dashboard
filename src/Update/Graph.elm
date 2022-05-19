@@ -6,13 +6,15 @@ import Config.Update as Update
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Id as Id
+import IntDict exposing (IntDict)
 import Log
+import Maybe.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
-import Model.Graph.Layer as Layer
+import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph as Msg exposing (Msg(..))
 import RecordSetter exposing (..)
 import Route
@@ -34,8 +36,7 @@ addAddressAndEntity uc address entity model =
             Layer.addAddress uc addedEntity.colors address addedEntity.layers
 
         adding =
-            Adding.checkAddress { currency = address.currency, address = address.address } model.adding
-                |> Adding.checkEntity { currency = entity.currency, entity = entity.entity }
+            Adding.removeAddress { currency = address.currency, address = address.address } model.adding
     in
     { model
         | adding = adding
@@ -54,7 +55,12 @@ addAddress uc address model =
             Layer.addAddress uc model.config.colors address model.layers
     in
     { model
-        | adding = Adding.checkAddress { currency = address.currency, address = address.address } model.adding
+        | adding =
+            if Set.isEmpty added.new then
+                model.adding
+
+            else
+                Adding.removeAddress { currency = address.currency, address = address.address } model.adding
         , layers = added.layers
         , config =
             model.config
@@ -69,13 +75,13 @@ addEntity uc entity model =
         added =
             Layer.addEntity uc model.config.colors entity model.layers
     in
-    { model
-        | layers = added.layers
-        , config =
-            model.config
-                |> s_colors added.colors
-    }
-        |> n
+    n
+        { model
+            | layers = added.layers
+            , config =
+                model.config
+                    |> s_colors added.colors
+        }
 
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -166,7 +172,7 @@ update uc msg model =
                     { model
                         | layers =
                             Layer.moveEntity id vector model.layers
-                                |> Layer.syncEntityLinks (Set.singleton id)
+                                |> Layer.syncLinks (Set.singleton id)
                     }
             )
                 |> n
@@ -237,6 +243,12 @@ update uc msg model =
             }
                 |> n
 
+        UserHoversAddressLink id ->
+            { model
+                | hovered = HoveredAddressLink id
+            }
+                |> n
+
         UserLeavesThing ->
             { model
                 | hovered = HoveredNone
@@ -268,6 +280,31 @@ update uc msg model =
                     else
                         n model
 
+        BrowserGotAddress address ->
+            addAddress uc
+                address
+                { model
+                    | adding = Adding.setAddress { currency = address.currency, address = address.address } address model.adding
+                }
+
+        BrowserGotEntity a entity ->
+            model.adding
+                |> Adding.getAddress { currency = entity.currency, address = a }
+                |> Maybe.map
+                    (\address ->
+                        addAddressAndEntity uc address entity model
+                    )
+                |> Maybe.Extra.withDefaultLazy (\_ -> addEntity uc entity model)
+                |> mapSecond
+                    ((++)
+                        (getEntityEgonet
+                            { currency = entity.currency
+                            , entity = entity.entity
+                            }
+                            model.layers
+                        )
+                    )
+
         BrowserGotEntityNeighbors id isOutgoing neighbors ->
             Layer.getEntity id model.layers
                 |> Maybe.map
@@ -281,13 +318,44 @@ update uc msg model =
                 |> n
 
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
-            Layer.getAddress id model.layers
-                |> Log.log "address"
+            ( model
+            , neighbors.neighbors
+                |> List.map
+                    (\neighbor ->
+                        GetEntityForAddressEffect
+                            { address = neighbor.address.address
+                            , currency = neighbor.address.currency
+                            , toMsg =
+                                BrowserGotEntityForAddressNeighbor
+                                    { anchor = id
+                                    , isOutgoing = isOutgoing
+                                    , neighbor = neighbor
+                                    }
+                            }
+                    )
+            )
+
+        BrowserGotEntityForAddressNeighbor { anchor, isOutgoing, neighbor } entity ->
+            Layer.getAddress anchor model.layers
+                |> Maybe.andThen
+                    (\address ->
+                        Layer.getEntity address.entityId model.layers
+                            |> Maybe.map (pair address)
+                    )
                 |> Maybe.map
-                    (\anchor ->
-                        handleAddressNeighbors uc anchor isOutgoing neighbors.neighbors model
+                    (\( address, ent ) ->
+                        handleAddressNeighbor uc ( address, ent ) isOutgoing ( neighbor, entity ) model
                     )
                 |> Maybe.withDefault (n model)
+                |> mapSecond
+                    ((++)
+                        (getEntityEgonet
+                            { currency = entity.currency
+                            , entity = entity.entity
+                            }
+                            model.layers
+                        )
+                    )
 
         UserClickedAddressExpandHandle id isOutgoing ->
             case Layer.getAddress id model.layers of
@@ -325,28 +393,31 @@ update uc msg model =
             n model
 
 
-addingAddress : { currency : String, address : String } -> Model -> ( Model, List Effect )
-addingAddress { currency, address } model =
-    { model
-        | adding = Adding.addAddress { currency = currency, address = address } model.adding
-    }
-        |> n
+updateByUrl : String -> Route.Thing -> Model -> ( Model, List Effect )
+updateByUrl currency thing model =
+    case thing of
+        Route.Address a ->
+            ( { model
+                | adding = Adding.loadAddress { currency = currency, address = a } model.adding |> Log.log "adding"
+              }
+            , [ GetEntityForAddressEffect
+                    { address = a
+                    , currency = currency
+                    , toMsg = BrowserGotEntity a
+                    }
+              , GetAddressEffect
+                    { address = a
+                    , currency = currency
+                    , toMsg = BrowserGotAddress
+                    }
+              ]
+            )
 
+        Route.Tx t ->
+            n model
 
-addingEntity : { currency : String, entity : Int } -> Model -> ( Model, List Effect )
-addingEntity { currency, entity } model =
-    { model
-        | adding = Adding.addEntity { currency = currency, entity = entity } model.adding
-    }
-        |> n
-
-
-addingLabel : String -> Model -> ( Model, List Effect )
-addingLabel label model =
-    { model
-        | adding = Adding.addLabel label model.adding
-    }
-        |> n
+        Route.Block b ->
+            n model
 
 
 updateSize : Int -> Int -> Model -> Model
@@ -363,9 +434,35 @@ updateSize w h model =
     }
 
 
-addAddressNeighbors : Update.Config -> Address -> Bool -> List Api.Data.NeighborAddress -> Model -> ( Model, List ( Api.Data.NeighborAddress, Address ), Set EntityId )
-addAddressNeighbors uc anchor isOutgoing neighbors model =
-    ( model, [], Set.empty )
+addAddressNeighborWithEntity : Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, Maybe Address, Set EntityId )
+addAddressNeighborWithEntity uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbor, entity ) model =
+    let
+        acc =
+            Layer.addEntityNeighbors uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
+    in
+    Set.toList acc.new
+        |> List.head
+        |> Maybe.map
+            (\new ->
+                let
+                    added =
+                        Layer.addAddressAtEntity uc model.config.colors new neighbor.address acc.layers
+                in
+                ( { model
+                    | layers = added.layers
+                  }
+                , Set.toList added.new
+                    |> List.head
+                    |> Maybe.andThen
+                        (\a -> Layer.getAddress a added.layers)
+                , added.repositioned
+                )
+            )
+        |> Maybe.withDefault
+            ( model
+            , Nothing
+            , Set.empty
+            )
 
 
 addEntityNeighbors : Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, List ( Api.Data.NeighborEntity, Entity ), Set EntityId )
@@ -434,22 +531,18 @@ addEntityLinks anchor isOutgoing neighbors model =
     }
 
 
-addAddressLinks : Address -> Bool -> List ( Api.Data.NeighborAddress, Address ) -> Model -> Model
-addAddressLinks anchor isOutgoing neighbors model =
+addAddressLink : Address -> Bool -> ( Api.Data.NeighborAddress, Address ) -> Model -> Model
+addAddressLink anchor isOutgoing ( neighbor, target ) model =
     let
         layers =
             if isOutgoing then
-                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } neighbors model.layers
+                Layer.updateAddressLink { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( neighbor, target ) model.layers
 
             else
-                neighbors
-                    |> List.foldl
-                        (\( neighborAddress, neighbor ) ->
-                            Layer.updateAddressLinks
-                                { currency = Id.currency neighbor.id, address = Id.addressId neighbor.id }
-                                [ ( neighborAddress, anchor ) ]
-                        )
-                        model.layers
+                Layer.updateAddressLink
+                    { currency = Id.currency target.id, address = Id.addressId target.id }
+                    ( neighbor, anchor )
+                    model.layers
     in
     { model
         | layers = layers
@@ -482,52 +575,61 @@ addEntityEgonet currency entity isOutgoing neighbors model =
 handleEntityNeighbors : Update.Config -> Entity -> Bool -> List Api.Data.NeighborEntity -> Model -> ( Model, List Effect )
 handleEntityNeighbors uc anchor isOutgoing neighbors model =
     let
-        -- TODO optimize which only_ids to get for which direction
-        onlyIds =
-            model.layers
-                |> Layer.entities
-                |> List.map (.entity >> .entity)
-
-        effect isOut entity =
-            GetEntityNeighborsEffect
-                { currency = anchor.entity.currency
-                , entity = entity
-                , isOutgoing = isOut
-                , onlyIds = Just onlyIds
-                , pagesize = List.length onlyIds
-                , toMsg = BrowserGotEntityEgonet anchor.entity.currency entity isOut
-                }
-
         ( newModel, new, repositioned ) =
             addEntityNeighbors uc anchor isOutgoing neighbors model
     in
     ( addEntityLinks anchor isOutgoing new newModel
-        |> syncEntityLinks repositioned
+        |> syncLinks repositioned
     , neighbors
-        |> List.map
-            (\entity ->
-                [ effect True entity.entity.entity
-                , effect False entity.entity.entity
-                ]
-            )
+        |> List.map (\{ entity } -> getEntityEgonet { currency = entity.currency, entity = entity.entity } newModel.layers)
         |> List.concat
     )
 
 
-handleAddressNeighbors : Update.Config -> Address -> Bool -> List Api.Data.NeighborAddress -> Model -> ( Model, List Effect )
-handleAddressNeighbors uc anchor isOutgoing neighbors model =
+getEntityEgonet : { currency : String, entity : Int } -> IntDict Layer -> List Effect
+getEntityEgonet { currency, entity } layers =
+    let
+        -- TODO optimize which only_ids to get for which direction
+        onlyIds =
+            layers
+                |> Layer.entities
+                |> List.map (.entity >> .entity)
+
+        effect isOut =
+            GetEntityNeighborsEffect
+                { currency = currency
+                , entity = entity
+                , isOutgoing = isOut
+                , onlyIds = Just onlyIds
+                , pagesize = List.length onlyIds
+                , toMsg = BrowserGotEntityEgonet currency entity isOut
+                }
+    in
+    [ effect True
+    , effect False
+    ]
+
+
+handleAddressNeighbor : Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
+handleAddressNeighbor uc anchor isOutgoing neighbor model =
     let
         ( newModel, new, repositionedEntities ) =
-            addAddressNeighbors uc anchor isOutgoing neighbors model
+            addAddressNeighborWithEntity uc anchor isOutgoing neighbor model
     in
-    ( addAddressLinks anchor isOutgoing (Log.log "new" new) newModel
-        |> syncEntityLinks repositionedEntities
-    , []
-    )
+    case new of
+        Nothing ->
+            n model
+
+        Just address ->
+            ( addAddressLink (first anchor) isOutgoing ( first neighbor, address ) newModel
+                |> Debug.log "addAddressLink"
+                |> syncLinks repositionedEntities
+            , []
+            )
 
 
-syncEntityLinks : Set EntityId -> Model -> Model
-syncEntityLinks repositioned model =
+syncLinks : Set EntityId -> Model -> Model
+syncLinks repositioned model =
     { model
-        | layers = Layer.syncEntityLinks repositioned model.layers
+        | layers = Layer.syncLinks repositioned model.layers
     }

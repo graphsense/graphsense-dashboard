@@ -1,13 +1,23 @@
-module Update.Graph.Adding exposing (addAddress, addEntity, addLabel, checkAddress, checkEntity)
+module Update.Graph.Adding exposing (addEntity, addLabel, checkEntity, getAddress, loadAddress, removeAddress, setAddress)
 
+import Api.Data
+import Dict exposing (Dict)
 import Model.Graph.Adding exposing (Model)
+import RemoteData exposing (RemoteData(..))
 import Set exposing (Set)
 
 
-addAddress : { currency : String, address : String } -> Model -> Model
-addAddress { currency, address } model =
+loadAddress : { currency : String, address : String } -> Model -> Model
+loadAddress { currency, address } model =
     { model
-        | addresses = Set.insert ( currency, address ) model.addresses
+        | addresses = Dict.insert ( currency, address ) Loading model.addresses
+    }
+
+
+setAddress : { currency : String, address : String } -> Api.Data.Address -> Model -> Model
+setAddress { currency, address } a model =
+    { model
+        | addresses = Dict.insert ( currency, address ) (Success a) model.addresses
     }
 
 
@@ -25,11 +35,17 @@ addLabel label model =
     }
 
 
-checkAddress : { currency : String, address : String } -> Model -> Model
-checkAddress { currency, address } model =
+removeAddress : { currency : String, address : String } -> Model -> Model
+removeAddress { currency, address } model =
     { model
-        | addresses = Set.remove ( currency, address ) model.addresses
+        | addresses = Dict.remove ( currency, address ) model.addresses
     }
+
+
+getAddress : { currency : String, address : String } -> Model -> Maybe Api.Data.Address
+getAddress { currency, address } model =
+    Dict.get ( currency, address ) model.addresses
+        |> Maybe.andThen RemoteData.toMaybe
 
 
 checkEntity : { currency : String, entity : Int } -> Model -> Model

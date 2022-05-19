@@ -1,12 +1,13 @@
 module Update.Graph.Layer exposing
     ( Acc
     , addAddress
+    , addAddressAtEntity
     , addEntity
     , addEntityNeighbors
     , moveEntity
     , releaseEntity
-    , syncEntityLinks
-    , updateAddressLinks
+    , syncLinks
+    , updateAddressLink
     , updateEntityLinks
     )
 
@@ -67,6 +68,37 @@ addEntity uc colors entity layers =
         , colors = colors
         , repositioned = Set.empty
         }
+
+
+addAddressAtEntity : Update.Config -> Dict String Color -> EntityId -> Api.Data.Address -> IntDict Layer -> Acc AddressId
+addAddressAtEntity uc colors entityId address layers =
+    IntDict.get (Id.layer entityId) layers
+        |> Maybe.map
+            (\layer ->
+                let
+                    accEntity =
+                        Entity.addAddress uc
+                            layer.id
+                            address
+                            { entities = layer.entities
+                            , new = Set.empty
+                            , colors = colors
+                            , repositioned = Set.empty
+                            }
+                in
+                { layers =
+                    IntDict.insert layer.id { layer | entities = accEntity.entities } layers
+                , new = accEntity.new
+                , colors = accEntity.colors
+                , repositioned = accEntity.repositioned
+                }
+            )
+        |> Maybe.withDefault
+            { layers = layers
+            , new = Set.empty
+            , repositioned = Set.empty
+            , colors = colors
+            }
 
 
 {-| Add neighbors next to an entity
@@ -320,9 +352,71 @@ addAddressHelp uc address acc =
             acc
 
 
-updateAddressLinks : { currency : String, address : String } -> List ( Api.Data.NeighborAddress, Address ) -> IntDict Layer -> IntDict Layer
-updateAddressLinks { currency, address } neighbors layers =
+updateAddressLink : { currency : String, address : String } -> ( Api.Data.NeighborAddress, Address ) -> IntDict Layer -> IntDict Layer
+updateAddressLink { currency, address } ( neighbor, target ) layers =
     layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                if layer.id >= Id.layer target.id then
+                    layers_
+
+                else
+                    let
+                        addressId =
+                            Id.initAddressId { currency = currency, id = address, layer = layer.id }
+
+                        ( entities, updated ) =
+                            updateAddressLinkForEntities addressId ( neighbor, target ) layer.entities
+                    in
+                    if updated then
+                        IntDict.insert layer.id
+                            { layer | entities = entities }
+                            layers_
+
+                    else
+                        layers_
+            )
+            layers
+
+
+updateAddressLinkForEntities : AddressId -> ( Api.Data.NeighborAddress, Address ) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )
+updateAddressLinkForEntities id ( neighbor, address ) entities =
+    entities
+        |> Dict.foldl
+            (\_ entity ( entities_, updated ) ->
+                let
+                    ( addresses, updated_ ) =
+                        updateAddressLinkForAddresses id ( neighbor, address ) entity.addresses
+                in
+                if updated_ then
+                    ( Dict.insert entity.id
+                        { entity
+                            | addresses = addresses
+                        }
+                        entities_
+                    , True
+                    )
+
+                else
+                    ( entities_, updated )
+            )
+            ( entities, False )
+
+
+updateAddressLinkForAddresses : AddressId -> ( Api.Data.NeighborAddress, Address ) -> Dict AddressId Address -> ( Dict AddressId Address, Bool )
+updateAddressLinkForAddresses id neighbor addresses =
+    case Dict.get id addresses of
+        Nothing ->
+            ( addresses, False )
+
+        Just found ->
+            ( Dict.insert found.id
+                { found
+                    | links = insertAddressLink neighbor found.links
+                }
+                addresses
+            , True
+            )
 
 
 updateEntityLinks : { currency : String, entity : Int } -> List ( Api.Data.NeighborEntity, Entity ) -> IntDict Layer -> IntDict Layer
@@ -362,6 +456,18 @@ updateEntityLinks { currency, entity } neighbors layers =
         |> second
 
 
+insertAddressLink : ( Api.Data.NeighborAddress, Address ) -> Address.Links -> Address.Links
+insertAddressLink ( link, address ) (Address.Links links) =
+    Dict.insert address.id
+        { value = link.value
+        , noTxs = link.noTxs
+        , labels = link.labels
+        , node = address
+        }
+        links
+        |> Address.Links
+
+
 insertEntityLinks : List ( Api.Data.NeighborEntity, Entity ) -> Entity.Links -> Entity.Links
 insertEntityLinks neighbors (Entity.Links links) =
     neighbors
@@ -379,8 +485,8 @@ insertEntityLinks neighbors (Entity.Links links) =
         |> Entity.Links
 
 
-syncEntityLinks : Set EntityId -> IntDict Layer -> IntDict Layer
-syncEntityLinks updatedIds layers =
+syncLinks : Set EntityId -> IntDict Layer -> IntDict Layer
+syncLinks updatedIds layers =
     let
         updatedEntities =
             Set.toList updatedIds
@@ -435,7 +541,7 @@ syncLinksOnEntity entity relevant =
             (\updEnt ( entity_, updated ) ->
                 case entity_.links of
                     Entity.Links links ->
-                        case Dict.get (Log.log "updEnt.id" updEnt.id) links |> Log.log "updEnt " of
+                        case Dict.get updEnt.id links of
                             Nothing ->
                                 ( entity_, updated )
 
@@ -444,8 +550,40 @@ syncLinksOnEntity entity relevant =
                                     | links =
                                         Dict.insert updEnt.id { link | node = updEnt } links
                                             |> Entity.Links
+                                    , addresses =
+                                        syncLinksOnAddresses entity_.addresses updEnt.addresses
                                   }
                                 , True
                                 )
             )
             ( entity, False )
+
+
+syncLinksOnAddresses : Dict AddressId Address -> Dict AddressId Address -> Dict AddressId Address
+syncLinksOnAddresses sources targets =
+    sources
+        |> Dict.foldl
+            (\src source sources_ ->
+                sources_
+                    |> Dict.insert src
+                        { source
+                            | links =
+                                Address.Links <|
+                                    case source.links of
+                                        Address.Links links ->
+                                            links
+                                                |> Dict.foldl
+                                                    (\tgt link links_ ->
+                                                        case Dict.get tgt targets of
+                                                            Nothing ->
+                                                                links_
+
+                                                            Just found ->
+                                                                links_
+                                                                    |> Dict.insert tgt
+                                                                        { link | node = found }
+                                                    )
+                                                    links
+                        }
+            )
+            sources

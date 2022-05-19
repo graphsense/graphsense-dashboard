@@ -129,6 +129,11 @@ s_alpha value__ record__ =
     { record__ | alpha = value__ }
 
 
+s_amount : a -> { b | amount : a } -> { b | amount : a }
+s_amount value__ record__ =
+    { record__ | amount = value__ }
+
+
 s_anchor : a -> { b | anchor : a } -> { b | anchor : a }
 s_anchor value__ record__ =
     { record__ | anchor = value__ }
@@ -632,6 +637,11 @@ s_customSuffix value__ record__ =
 s_danger : a -> { b | danger : a } -> { b | danger : a }
 s_danger value__ record__ =
     { record__ | danger = value__ }
+
+
+s_date : a -> { b | date : a } -> { b | date : a }
+s_date value__ record__ =
+    { record__ | date = value__ }
 
 
 s_day : a -> { b | day : a } -> { b | day : a }
@@ -1349,6 +1359,11 @@ s_hovercardRoot value__ record__ =
     { record__ | hovercardRoot = value__ }
 
 
+s_hovered : a -> { b | hovered : a } -> { b | hovered : a }
+s_hovered value__ record__ =
+    { record__ | hovered = value__ }
+
+
 s_http : a -> { b | http : a } -> { b | http : a }
 s_http value__ record__ =
     { record__ | http = value__ }
@@ -1427,11 +1442,6 @@ s_indent value__ record__ =
 s_index : a -> { b | index : a } -> { b | index : a }
 s_index value__ record__ =
     { record__ | index = value__ }
-
-
-s_infinite : a -> { b | infinite : a } -> { b | infinite : a }
-s_infinite value__ record__ =
-    { record__ | infinite = value__ }
 
 
 s_info : a -> { b | info : a } -> { b | info : a }
@@ -1907,6 +1917,11 @@ s_method value__ record__ =
 s_million : a -> { b | million : a } -> { b | million : a }
 s_million value__ record__ =
     { record__ | million = value__ }
+
+
+s_milliseconds : a -> { b | milliseconds : a } -> { b | milliseconds : a }
+s_milliseconds value__ record__ =
+    { record__ | milliseconds = value__ }
 
 
 s_minMaxDimension : a -> { b | minMaxDimension : a } -> { b | minMaxDimension : a }
@@ -2654,6 +2669,11 @@ s_program value__ record__ =
     { record__ | program = value__ }
 
 
+s_propertyBoxActivityPeriod : a -> { b | propertyBoxActivityPeriod : a } -> { b | propertyBoxActivityPeriod : a }
+s_propertyBoxActivityPeriod value__ record__ =
+    { record__ | propertyBoxActivityPeriod = value__ }
+
+
 s_propertyBoxEntityId : a -> { b | propertyBoxEntityId : a } -> { b | propertyBoxEntityId : a }
 s_propertyBoxEntityId value__ record__ =
     { record__ | propertyBoxEntityId = value__ }
@@ -2727,6 +2747,11 @@ s_queryParams value__ record__ =
 s_radius : a -> { b | radius : a } -> { b | radius : a }
 s_radius value__ record__ =
     { record__ | radius = value__ }
+
+
+s_range : a -> { b | range : a } -> { b | range : a }
+s_range value__ record__ =
+    { record__ | range = value__ }
 
 
 s_rates : a -> { b | rates : a } -> { b | rates : a }
@@ -2857,6 +2882,11 @@ s_resolution value__ record__ =
 s_resolver : a -> { b | resolver : a } -> { b | resolver : a }
 s_resolver value__ record__ =
     { record__ | resolver = value__ }
+
+
+s_rest : a -> { b | rest : a } -> { b | rest : a }
+s_rest value__ record__ =
+    { record__ | rest = value__ }
 
 
 s_result : a -> { b | result : a } -> { b | result : a }
@@ -3244,6 +3274,16 @@ s_sweptAngle value__ record__ =
     { record__ | sweptAngle = value__ }
 
 
+s_sx : a -> { b | sx : a } -> { b | sx : a }
+s_sx value__ record__ =
+    { record__ | sx = value__ }
+
+
+s_sy : a -> { b | sy : a } -> { b | sy : a }
+s_sy value__ record__ =
+    { record__ | sy = value__ }
+
+
 s_symbol : a -> { b | symbol : a } -> { b | symbol : a }
 s_symbol value__ record__ =
     { record__ | symbol = value__ }
@@ -3409,6 +3449,11 @@ s_tickLength value__ record__ =
     { record__ | tickLength = value__ }
 
 
+s_time : a -> { b | time : a } -> { b | time : a }
+s_time value__ record__ =
+    { record__ | time = value__ }
+
+
 s_timeLang : a -> { b | timeLang : a } -> { b | timeLang : a }
 s_timeLang value__ record__ =
     { record__ | timeLang = value__ }
@@ -3564,6 +3609,11 @@ s_trillion value__ record__ =
     { record__ | trillion = value__ }
 
 
+s_tx : a -> { b | tx : a } -> { b | tx : a }
+s_tx value__ record__ =
+    { record__ | tx = value__ }
+
+
 s_txHash : a -> { b | txHash : a } -> { b | txHash : a }
 s_txHash value__ record__ =
     { record__ | txHash = value__ }
@@ -3582,6 +3632,11 @@ s_txType value__ record__ =
 s_txs : a -> { b | txs : a } -> { b | txs : a }
 s_txs value__ record__ =
     { record__ | txs = value__ }
+
+
+s_ty : a -> { b | ty : a } -> { b | ty : a }
+s_ty value__ record__ =
+    { record__ | ty = value__ }
 
 
 s_type_ : a -> { b | type_ : a } -> { b | type_ : a }
@@ -3612,6 +3667,11 @@ s_unions value__ record__ =
 s_unitLabel : a -> { b | unitLabel : a } -> { b | unitLabel : a }
 s_unitLabel value__ record__ =
     { record__ | unitLabel = value__ }
+
+
+s_unitToString : a -> { b | unitToString : a } -> { b | unitToString : a }
+s_unitToString value__ record__ =
+    { record__ | unitToString = value__ }
 
 
 s_units : a -> { b | units : a } -> { b | units : a }

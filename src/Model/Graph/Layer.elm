@@ -4,9 +4,11 @@ import Config.Graph exposing (entityWidth, expandHandleWidth)
 import Dict exposing (Dict)
 import IntDict exposing (IntDict)
 import List.Extra
-import Model.Graph.Address exposing (..)
+import Model.Graph.Address as Address exposing (..)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
+import Model.Graph.Link as Link exposing (..)
+import Tuple exposing (..)
 
 
 type alias Layer =
@@ -143,3 +145,27 @@ getRightBound layer =
             )
             Nothing
         |> Maybe.withDefault (layer.x + entityWidth + 2 * expandHandleWidth)
+
+
+getEntityLink : LinkId EntityId -> IntDict Layer -> Maybe ( Entity, Link Entity )
+getEntityLink ( src, tgt ) =
+    getEntity src
+        >> Maybe.andThen
+            (\entity ->
+                case entity.links of
+                    Entity.Links links ->
+                        Dict.get tgt links
+                            |> Maybe.map (pair entity)
+            )
+
+
+getAddressLink : LinkId AddressId -> IntDict Layer -> Maybe ( Address, Link Address )
+getAddressLink ( src, tgt ) =
+    getAddress src
+        >> Maybe.andThen
+            (\address ->
+                case address.links of
+                    Address.Links links ->
+                        Dict.get tgt links
+                            |> Maybe.map (pair address)
+            )
