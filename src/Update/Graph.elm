@@ -68,6 +68,14 @@ addEntity uc entity model =
             , config =
                 model.config
                     |> s_colors added.colors
+            , browser =
+                added.new
+                    |> Set.toList
+                    |> List.head
+                    |> Maybe.andThen (\a -> Layer.getEntity a added.layers)
+                    |> Maybe.map
+                        (\a -> Browser.showEntity a model.browser)
+                    |> Maybe.withDefault model.browser
         }
 
 
@@ -199,17 +207,16 @@ update uc msg model =
             n model
 
         UserClickedEntity id ->
-            Layer.getEntity id model.layers
-                |> Maybe.map
-                    (\entity ->
-                        { model
-                            | browser =
-                                Browser.showEntity entity model.browser
-                            , selected = SelectedEntity id
-                        }
-                    )
-                |> Maybe.withDefault model
-                |> n
+            ( model
+            , Route.entityRoute
+                { currency = Id.currency id
+                , entity = Id.entityId id
+                , table = Nothing
+                , layer = Id.layer id |> Just
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         UserRightClickedEntity id ->
             n model
@@ -394,16 +401,24 @@ updateByRoute route model =
                     (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = a, layer = l }) model.layers)
                 |> Maybe.Extra.orElseLazy
                     (\_ -> Layer.getFirstAddress { currency = currency, address = a } model.layers)
-                |> Maybe.map (\address -> selectAddress address model)
+                |> Maybe.map
+                    (\address ->
+                        selectAddress address table model
+                    )
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
                         let
-                            ( browser, effects ) =
-                                Browser.loadingAddress { currency = currency, address = a } table model.browser
+                            browser =
+                                Browser.loadingAddress { currency = currency, address = a } model.browser
+
+                            ( browser2, effects ) =
+                                table
+                                    |> Maybe.map (\t -> Browser.showAddressTable t browser)
+                                    |> Maybe.withDefault (n browser)
                         in
                         ( { model
                             | adding = Adding.loadAddress { currency = currency, address = a } model.adding |> Log.log "adding"
-                            , browser = browser
+                            , browser = browser2
                           }
                         , [ GetEntityForAddressEffect
                                 { address = a
@@ -420,8 +435,39 @@ updateByRoute route model =
                         )
                     )
 
-        Route.Currency currency (Route.Entity e table) ->
-            n model
+        Route.Currency currency (Route.Entity e table layer) ->
+            layer
+                |> Maybe.andThen
+                    (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = e, layer = l }) model.layers)
+                |> Maybe.Extra.orElseLazy
+                    (\_ -> Layer.getFirstEntity { currency = currency, entity = e } model.layers)
+                |> Maybe.map
+                    (\entity ->
+                        selectEntity entity table model
+                    )
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        let
+                            browser =
+                                Browser.loadingEntity { currency = currency, entity = e } model.browser
+
+                            ( browser2, effects ) =
+                                table
+                                    |> Maybe.map (\t -> Browser.showEntityTable t browser)
+                                    |> Maybe.withDefault (n browser)
+                        in
+                        ( { model
+                            | browser = browser2
+                          }
+                        , [ GetEntityEffect
+                                { entity = e
+                                , currency = currency
+                                , toMsg = BrowserGotEntity ""
+                                }
+                          ]
+                            ++ effects
+                        )
+                    )
 
         Route.Currency currency (Route.Tx t) ->
             n model
@@ -648,20 +694,42 @@ syncLinks repositioned model =
     }
 
 
-selectAddressId : Id.AddressId -> Model -> ( Model, List Effect )
-selectAddressId addressId model =
-    Layer.getAddress addressId model.layers
-        |> Maybe.map (\a -> selectAddress a model)
-        |> Maybe.withDefault (n model)
+selectAddress : Address -> Maybe Route.AddressTable -> Model -> ( Model, List Effect )
+selectAddress address table model =
+    let
+        browser =
+            Browser.showAddress address model.browser
 
-
-selectAddress : Address -> Model -> ( Model, List Effect )
-selectAddress address model =
-    { model
-        | browser = Browser.showAddress address model.browser
+        ( browser2, effects ) =
+            table
+                |> Maybe.map (\t -> Browser.showAddressTable t browser)
+                |> Maybe.withDefault (n browser)
+    in
+    ( { model
+        | browser = browser2
         , selected = SelectedAddress address.id
-    }
-        |> n
+      }
+    , effects
+    )
+
+
+selectEntity : Entity -> Maybe Route.EntityTable -> Model -> ( Model, List Effect )
+selectEntity entity table model =
+    let
+        browser =
+            Browser.showEntity entity model.browser
+
+        ( browser2, effects ) =
+            table
+                |> Maybe.map (\t -> Browser.showEntityTable t browser)
+                |> Maybe.withDefault (n browser)
+    in
+    ( { model
+        | browser = browser2
+        , selected = SelectedEntity entity.id
+      }
+    , effects
+    )
 
 
 deselect : Model -> Model

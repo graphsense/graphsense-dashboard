@@ -1,4 +1,16 @@
-module Route.Graph exposing (AddressTable(..), Config, EntityTable(..), Route(..), Thing(..), addressRoute, parse, parser, rootRoute, toUrl)
+module Route.Graph exposing
+    ( AddressTable(..)
+    , Config
+    , EntityTable(..)
+    , Route(..)
+    , Thing(..)
+    , addressRoute
+    , entityRoute
+    , parse
+    , parser
+    , rootRoute
+    , toUrl
+    )
 
 import List.Extra
 import Url exposing (..)
@@ -20,7 +32,7 @@ type Route
 
 type Thing
     = Address String (Maybe AddressTable) (Maybe Int)
-    | Entity Int (Maybe EntityTable)
+    | Entity Int (Maybe EntityTable) (Maybe Int)
     | Block Int
     | Tx String
 
@@ -65,6 +77,7 @@ type AddressTable
 type EntityTable
     = EntityTagsTable
     | EntityTxsTable
+    | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
 
@@ -113,6 +126,9 @@ entityTableToString t =
         EntityTxsTable ->
             "transactions"
 
+        EntityAddressesTable ->
+            "addresses"
+
         EntityIncomingNeighborsTable ->
             "incoming-neighbors"
 
@@ -128,6 +144,9 @@ stringToEntityTable t =
 
         "transactions" ->
             Just EntityTxsTable
+
+        "addresses" ->
+            Just EntityAddressesTable
 
         "incoming-neighbors" ->
             Just EntityIncomingNeighborsTable
@@ -155,11 +174,15 @@ toUrl route =
             Maybe.map String.fromInt layer
                 |> B.custom Absolute [ curr, addressSegment, address ] query
 
-        Currency curr (Entity entity table) ->
-            table
-                |> Maybe.map (entityTableToString >> B.string tableQuery >> List.singleton)
-                |> Maybe.withDefault []
-                |> absolute [ curr, entitySegment, String.fromInt entity ]
+        Currency curr (Entity entity table layer) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (entityTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            Maybe.map String.fromInt layer
+                |> B.custom Absolute [ curr, entitySegment, String.fromInt entity ] query
 
         Currency curr (Block block) ->
             absolute [ curr, blockSegment, String.fromInt block ] []
@@ -179,6 +202,12 @@ rootRoute =
 addressRoute : { currency : String, address : String, layer : Maybe Int, table : Maybe AddressTable } -> Route
 addressRoute { currency, address, layer, table } =
     Address address table layer
+        |> Currency currency
+
+
+entityRoute : { currency : String, entity : Int, layer : Maybe Int, table : Maybe EntityTable } -> Route
+entityRoute { currency, entity, layer, table } =
+    Entity entity table layer
         |> Currency currency
 
 
@@ -211,6 +240,11 @@ thing =
             <?> (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
             </> P.fragment (Maybe.andThen String.toInt)
             |> map Address
+        , s entitySegment
+            </> P.int
+            <?> (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
+            </> P.fragment (Maybe.andThen String.toInt)
+            |> map Entity
         , s blockSegment
             </> P.int
             |> map Block

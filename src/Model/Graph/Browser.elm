@@ -38,6 +38,13 @@ type AddressTable
     | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
 
 
+type EntityTable
+    = EntityTagsTable (Table Api.Data.AddressTag)
+    | EntityTxsTable (Table Api.Data.AddressTx)
+    | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
+    | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
+
+
 type alias Table a =
     { data : List a
     , loading : Bool

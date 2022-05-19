@@ -11,54 +11,84 @@ import RecordSetter exposing (..)
 import Route.Graph as Route
 
 
-loadingAddress : { currency : String, address : String } -> Maybe Route.AddressTable -> Model -> ( Model, List Effect )
-loadingAddress id maybeTable model =
+loadingAddress : { currency : String, address : String } -> Model -> Model
+loadingAddress id model =
+    { model
+        | type_ = Address (Loading id.currency id.address)
+        , visible = True
+    }
+
+
+loadingEntity : { currency : String, entity : Int } -> Model -> Model
+loadingEntity id model =
+    { model
+        | type_ = Entity (Loading id.currency id.entity)
+        , visible = True
+    }
+
+
+showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
+showAddressTable route model =
     let
+        id =
+            case model.type_ of
+                Address (Loading curr addr) ->
+                    Just ( curr, addr )
+
+                Address (Loaded a) ->
+                    Just ( a.address.currency, a.address.address )
+
+                _ ->
+                    Nothing
+
         ( table, effects ) =
-            case maybeTable of
-                Just Route.AddressTagsTable ->
-                    ( AddressTagsTable initTable
-                        |> AddressTable
-                    , []
-                    )
-
-                Just Route.AddressTxsTable ->
-                    ( AddressTxsTable initTable
-                        |> AddressTable
-                    , [ GetAddressTxsEffect
-                            { currency = id.currency
-                            , address = id.address
-                            , nextpage = Nothing
-                            , pagesize = 100
-                            , toMsg = BrowserGotAddressTxs id
-                            }
-                      ]
-                    )
-
-                Just Route.AddressIncomingNeighborsTable ->
-                    ( AddressIncomingNeighborsTable initTable
-                        |> AddressTable
-                    , []
-                    )
-
-                Just Route.AddressOutgoingNeighborsTable ->
-                    ( AddressOutgoingNeighborsTable initTable
-                        |> AddressTable
-                    , []
-                    )
-
+            case id of
                 Nothing ->
-                    ( NoTable
-                    , []
-                    )
+                    ( model.table, [] )
+
+                Just ( currency, address ) ->
+                    case route of
+                        Route.AddressTagsTable ->
+                            ( AddressTagsTable initTable
+                                |> AddressTable
+                            , []
+                            )
+
+                        Route.AddressTxsTable ->
+                            ( AddressTxsTable initTable
+                                |> AddressTable
+                            , [ GetAddressTxsEffect
+                                    { currency = currency
+                                    , address = address
+                                    , nextpage = Nothing
+                                    , pagesize = 100
+                                    , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
+                                    }
+                              ]
+                            )
+
+                        Route.AddressIncomingNeighborsTable ->
+                            ( AddressIncomingNeighborsTable initTable
+                                |> AddressTable
+                            , []
+                            )
+
+                        Route.AddressOutgoingNeighborsTable ->
+                            ( AddressOutgoingNeighborsTable initTable
+                                |> AddressTable
+                            , []
+                            )
     in
     ( { model
-        | type_ = Address (Loading id.currency id.address)
-        , table = table
-        , visible = True
+        | table = table
       }
     , effects
     )
+
+
+showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
+showEntityTable route model =
+    ( model, [] )
 
 
 show : Model -> Model
@@ -117,4 +147,5 @@ appendData nextpage data table =
     { table
         | data = table.data ++ data
         , nextpage = nextpage
+        , loading = False
     }

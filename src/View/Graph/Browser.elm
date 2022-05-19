@@ -218,9 +218,9 @@ browseAddress vc gc table now address =
         mkTableLink title tableTag =
             address
                 |> makeTableLink
-                    (.address >> .address)
                     (.address >> .currency)
-                    (\id currency ->
+                    (.address >> .address)
+                    (\currency id ->
                         { title = Locale.string vc.locale title
                         , link =
                             Route.addressRoute
@@ -381,78 +381,120 @@ elseShowCurrency l =
 
 browseEntity : View.Config -> Graph.Config -> TableType -> Time.Posix -> Loadable Int Entity -> Html Msg
 browseEntity vc gc table now ent =
+    let
+        mkTableLink title tableTag =
+            ent
+                |> makeTableLink
+                    (.entity >> .currency)
+                    (.entity >> .entity)
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.entityRoute
+                                { currency = currency
+                                , entity = id
+                                , table = Just tableTag
+                                , layer = Nothing
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
     browse vc
         gc
         ent
         [ Row ( "Entity", ifLoaded EntityId >> elseLoading, Nothing )
-
-        {-
-           , Row ( "Root address", String entity.entity.rootAddress |> NoTable )
-           , Row ( "Currency", entity.entity.currency |> String.toUpper |> String |> NoTable )
-           , Row
-               ( "Address Tags"
-               , Maybe.map (.addressTags >> List.length) entity.entity.tags
-                   |> Maybe.withDefault 0
-                   |> String.fromInt
-                   |> String
-                   |> NoTable
-               )
-           , Rule
-           , Row
-               ( "Transactions"
-               , Transactions
-                   { noIncomingTxs = entity.entity.noIncomingTxs
-                   , noOutgoingTxs = entity.entity.noOutgoingTxs
-                   }
-                   |> NoTable
-               )
-           , Row
-               ( "Receiving entities"
-               , Locale.int vc.locale entity.entity.outDegree
-                   |> String
-                   |> NoTable
-               )
-           , Row
-               ( "Sending entities"
-               , Locale.int vc.locale entity.entity.inDegree
-                   |> String
-                   |> WithTable
-                       { title = Locale.string vc.locale "List sending entities"
-                       , link =
-                           Route.Entity entity.entity.entity
-                               |> Route.Currency entity.entity.currency
-                               |> Route.toUrl
-                       , active = False
-                       }
-               )
-           , Rule
-           , Row
-               ( "First usage"
-               , Usage now entity.entity.firstTx.timestamp
-                   |> NoTable
-               )
-           , Row
-               ( "Last usage"
-               , Usage now entity.entity.lastTx.timestamp
-                   |> NoTable
-               )
-           , Row
-               ( "Activity period"
-               , entity.entity.firstTx.timestamp
-                   - entity.entity.lastTx.timestamp
-                   |> Duration
-                   |> NoTable
-               )
-           , Rule
-           , Row
-               ( "Total received"
-               , Value entity.entity.currency entity.entity.totalReceived
-                   |> NoTable
-               )
-           , Row
-               ( "Final balance"
-               , Value entity.entity.currency entity.entity.balance
-                   |> NoTable
-               )
-        -}
+        , Row
+            ( "Root address"
+            , ifLoaded (.entity >> .rootAddress >> String) >> elseLoading
+            , Nothing
+            )
+        , Row
+            ( "Currency"
+            , ifLoaded (.entity >> .currency >> String.toUpper >> String) >> elseShowCurrency
+            , Nothing
+            )
+        , Row
+            ( "Addresses"
+            , ifLoaded
+                (\entity ->
+                    Locale.int vc.locale entity.entity.noAddresses
+                        |> String
+                )
+                >> elseLoading
+            , mkTableLink "List addresses" Route.EntityAddressesTable
+            )
+        , Row
+            ( "Address Tags"
+            , ifLoaded
+                (\entity ->
+                    Maybe.map (.addressTags >> List.length) entity.entity.tags
+                        |> Maybe.withDefault 0
+                        |> String.fromInt
+                        |> String
+                )
+                >> elseLoading
+            , mkTableLink "List address tags" Route.EntityTagsTable
+            )
+        , Rule
+        , Row
+            ( "Transactions"
+            , ifLoaded
+                (\entity ->
+                    Transactions
+                        { noIncomingTxs = entity.entity.noIncomingTxs
+                        , noOutgoingTxs = entity.entity.noOutgoingTxs
+                        }
+                )
+                >> elseLoading
+            , mkTableLink "List entity transactions" Route.EntityTxsTable
+            )
+        , Row
+            ( "Receiving entities"
+            , ifLoaded
+                (\entity ->
+                    Locale.int vc.locale entity.entity.outDegree
+                        |> String
+                )
+                >> elseLoading
+            , mkTableLink "List receiving entities" Route.EntityIncomingNeighborsTable
+            )
+        , Row
+            ( "Sending entities"
+            , ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
+                >> elseLoading
+            , mkTableLink "List sending entities" Route.EntityOutgoingNeighborsTable
+            )
+        , Rule
+        , Row
+            ( "First usage"
+            , ifLoaded (\entity -> Usage now entity.entity.firstTx.timestamp) >> elseLoading
+            , Nothing
+            )
+        , Row
+            ( "Last usage"
+            , ifLoaded (\entity -> Usage now entity.entity.lastTx.timestamp) >> elseLoading
+            , Nothing
+            )
+        , Row
+            ( "Activity period"
+            , ifLoaded (\entity -> entity.entity.firstTx.timestamp - entity.entity.lastTx.timestamp |> Duration)
+                >> elseLoading
+            , Nothing
+            )
+        , Rule
+        , Row
+            ( "Total received"
+            , ifLoaded (\entity -> Value entity.entity.currency entity.entity.totalReceived)
+                >> elseLoading
+            , Nothing
+            )
+        , Row
+            ( "Final balance"
+            , ifLoaded (\entity -> Value entity.entity.currency entity.entity.balance)
+                >> elseLoading
+            , Nothing
+            )
         ]

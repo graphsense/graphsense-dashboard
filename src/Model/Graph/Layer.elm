@@ -185,3 +185,18 @@ getFirstAddress { currency, address } layers =
                         getAddress (Id.initAddressId { currency = currency, id = address, layer = layerId }) layers
             )
             Nothing
+
+
+getFirstEntity : { currency : String, entity : Int } -> IntDict Layer -> Maybe Entity
+getFirstEntity { currency, entity } layers =
+    layers
+        |> IntDict.foldl
+            (\layerId _ found ->
+                case found of
+                    Just _ ->
+                        found
+
+                    Nothing ->
+                        getEntity (Id.initEntityId { currency = currency, id = entity, layer = layerId }) layers
+            )
+            Nothing
