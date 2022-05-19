@@ -224,7 +224,7 @@ addressesCount vc gc ent =
             |> css
         , Entity.getHeight ent
             - Graph.padding
-            |> translate (Entity.getInnerWidth ent / 2)
+            |> translate (Entity.getWidth ent / 2)
             |> transform
         ]
         [ text_

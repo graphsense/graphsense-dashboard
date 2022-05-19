@@ -914,16 +914,6 @@ s_entityLabel value__ record__ =
     { record__ | entityLabel = value__ }
 
 
-s_entityLink : a -> { b | entityLink : a } -> { b | entityLink : a }
-s_entityLink value__ record__ =
-    { record__ | entityLink = value__ }
-
-
-s_entityLinkThickness : a -> { b | entityLinkThickness : a } -> { b | entityLinkThickness : a }
-s_entityLinkThickness value__ record__ =
-    { record__ | entityLinkThickness = value__ }
-
-
 s_entityRect : a -> { b | entityRect : a } -> { b | entityRect : a }
 s_entityRect value__ record__ =
     { record__ | entityRect = value__ }
@@ -1754,6 +1744,11 @@ s_limit value__ record__ =
     { record__ | limit = value__ }
 
 
+s_link : a -> { b | link : a } -> { b | link : a }
+s_link value__ record__ =
+    { record__ | link = value__ }
+
+
 s_linkColorFaded : a -> { b | linkColorFaded : a } -> { b | linkColorFaded : a }
 s_linkColorFaded value__ record__ =
     { record__ | linkColorFaded = value__ }
@@ -1777,6 +1772,11 @@ s_linkLabel value__ record__ =
 s_linkLabelBox : a -> { b | linkLabelBox : a } -> { b | linkLabelBox : a }
 s_linkLabelBox value__ record__ =
     { record__ | linkLabelBox = value__ }
+
+
+s_linkThickness : a -> { b | linkThickness : a } -> { b | linkThickness : a }
+s_linkThickness value__ record__ =
+    { record__ | linkThickness = value__ }
 
 
 s_links : a -> { b | links : a } -> { b | links : a }
@@ -2287,6 +2287,11 @@ s_onFailure value__ record__ =
 s_onLoading : a -> { b | onLoading : a } -> { b | onLoading : a }
 s_onLoading value__ record__ =
     { record__ | onLoading = value__ }
+
+
+s_onMouseOver : a -> { b | onMouseOver : a } -> { b | onMouseOver : a }
+s_onMouseOver value__ record__ =
+    { record__ | onMouseOver = value__ }
 
 
 s_onNotAsked : a -> { b | onNotAsked : a } -> { b | onNotAsked : a }

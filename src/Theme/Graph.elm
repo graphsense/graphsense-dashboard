@@ -18,8 +18,8 @@ type alias Graph =
     , entityAddressesCount : List Style
     , entityRect : List Style
     , entityRoot : List Style
-    , entityLink : Bool -> List Style
-    , entityLinkThickness : Float
+    , link : NodeType -> Bool -> List Style
+    , linkThickness : Float
     , linkColorFaded : Color
     , linkColorStrong : Color
     , linkColorSelected : Color
@@ -62,8 +62,8 @@ default =
     , entityAddressesCount = []
     , entityRect = []
     , entityRoot = []
-    , entityLink = \_ -> []
-    , entityLinkThickness = 1
+    , link = \_ _ -> []
+    , linkThickness = 1
     , linkColorFaded = Color.grey
     , linkColorStrong = Color.black
     , linkColorSelected = Color.red

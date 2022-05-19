@@ -337,13 +337,16 @@ theme =
                         , property "stroke-width" "0.5"
                         ]
                     )
-                |> s_entityLink
-                    (\hovered ->
+                |> s_link
+                    (\nodeType hovered ->
                         [ (if hovered then
                             colors.black
 
-                           else
+                           else if nodeType == Address then
                             colors.grey
+
+                           else
+                            colors.greyLighter
                           )
                             |> Color.toCssString
                             |> property "stroke"

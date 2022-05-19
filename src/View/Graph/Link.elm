@@ -4,10 +4,11 @@ import Color exposing (Color)
 import Config.Graph as Graph exposing (expandHandleWidth, linkLabelHeight, txMaxWidth)
 import Config.View as View
 import Css exposing (..)
-import Css.Graph as Css
+import Css.Graph
 import Init.Graph.Id as Id
 import List.Extra
 import Log
+import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
@@ -37,6 +38,7 @@ type alias Options =
     , amount : Float
     , hovered : Bool
     , onMouseOver : Msg
+    , nodeType : NodeType
     }
 
 
@@ -54,6 +56,7 @@ entityLinkOptions vc gc entity link =
     , label =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
+    , nodeType = Model.Graph.Entity
     }
 
 
@@ -71,6 +74,7 @@ addressLinkOptions vc gc address link =
     , label =
         getLabel vc gc link.node.address.currency link
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
+    , nodeType = Model.Graph.Address
     }
 
 
@@ -119,13 +123,13 @@ addressLinkHovered vc gc mn mx address link =
 
 
 drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
-drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver } vc gc mn mx =
+drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver, nodeType } vc gc mn mx =
     let
         cx =
             sx + (tx - sx) / 2
 
         thickness =
-            vc.theme.graph.entityLinkThickness
+            vc.theme.graph.linkThickness
                 * (if mn == mx then
                     1
 
@@ -152,7 +156,7 @@ drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver } vc gc mn mx =
         ]
         [ S.path
             [ dd
-            , Css.entityLink vc hovered
+            , Css.Graph.link vc nodeType hovered
                 ++ [ thickness
                         |> (\x -> String.fromFloat x ++ "px")
                         |> property "stroke-width"
@@ -206,11 +210,11 @@ drawLabel vc gc x y hovered lbl =
             , y - height * 0.85 |> String.fromFloat |> Svg.y
             , String.fromFloat width |> Svg.width
             , String.fromFloat height |> Svg.height
-            , Css.linkLabelBox vc hovered |> css
+            , Css.Graph.linkLabelBox vc hovered |> css
             ]
             []
         , S.text_
-            [ Css.linkLabel vc hovered
+            [ Css.Graph.linkLabel vc hovered
                 |> css
             , textAnchor "middle"
             , String.fromFloat x |> Svg.x

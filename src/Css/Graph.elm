@@ -165,12 +165,12 @@ nodeSeparatorToExpandHandle vc nodeType =
         ++ vc.theme.graph.nodeSeparatorToExpandHandle nodeType
 
 
-entityLink : Config -> Bool -> List Style
-entityLink vc hovered =
+link : Config -> NodeType -> Bool -> List Style
+link vc nodeType hovered =
     [ property "stroke" "currentColor"
     , property "fill" "none"
     ]
-        ++ vc.theme.graph.entityLink hovered
+        ++ vc.theme.graph.link nodeType hovered
 
 
 linkLabel : Config -> Bool -> List Style
