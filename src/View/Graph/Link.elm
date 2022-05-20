@@ -280,7 +280,5 @@ arrowMarker vc gc color =
 arrowMarkerId : Color.Color -> String
 arrowMarkerId =
     Color.toCssString
-        >> Log.log "before replaced"
         >> Regex.replace (Regex.fromString "[^a-z0-9]" |> Maybe.withDefault Regex.never) (\_ -> "")
-        >> Log.log "replaced"
         >> (++) "arrow"

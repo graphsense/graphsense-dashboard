@@ -44,8 +44,10 @@ addAddress uc address model =
         , browser =
             added.new
                 |> Set.toList
+                |> Debug.log "XXX added.new"
                 |> List.head
                 |> Maybe.andThen (\a -> Layer.getAddress a added.layers)
+                |> Debug.log "XXX getAddress"
                 |> Maybe.map
                     (\a -> Browser.showAddress a model.browser)
                 |> Maybe.withDefault model.browser
@@ -81,7 +83,7 @@ addEntity uc entity model =
 
 update : Update.Config -> Msg -> Model -> ( Model, List Effect )
 update uc msg model =
-    case msg of
+    case Log.truncate "msg" msg of
         BrowserGotSvgElement result ->
             result
                 |> Result.map
@@ -277,11 +279,23 @@ update uc msg model =
         BrowserGotEntity a entity ->
             model.adding
                 |> Adding.getAddress { currency = entity.currency, address = a }
+                |> Debug.log "XXX Adding.getAddress"
                 |> Maybe.map
                     (\address ->
                         addEntity uc entity model
                             |> first
                             |> addAddress uc address
+                    )
+                |> Maybe.map
+                    (\md ->
+                        let
+                            _ =
+                                first md
+                                    |> .browser
+                                    |> .type_
+                                    |> Log.truncate "browser"
+                        in
+                        md
                     )
                 |> Maybe.Extra.withDefaultLazy (\_ -> addEntity uc entity model)
                 |> mapSecond

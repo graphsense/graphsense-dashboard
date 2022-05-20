@@ -43,3 +43,23 @@ loadableEntityCurrency l =
 
         Loaded a ->
             a.entity.currency
+
+
+loadableAddressId : Loadable String Address -> String
+loadableAddressId l =
+    case l of
+        Loading _ id ->
+            id
+
+        Loaded a ->
+            a.address.address
+
+
+loadableEntityId : Loadable Int Entity -> Int
+loadableEntityId l =
+    case l of
+        Loading _ id ->
+            id
+
+        Loaded a ->
+            a.entity.entity

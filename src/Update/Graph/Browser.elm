@@ -120,7 +120,24 @@ showEntity entity model =
 showAddress : Address.Address -> Model -> Model
 showAddress address model =
     show model
-        |> s_type_ (Address (Loaded address) Nothing)
+        |> s_type_
+            (Address (Loaded address) <|
+                case model.type_ of
+                    Address loadable table ->
+                        if
+                            loadableAddressId loadable
+                                == address.address.address
+                                && loadableAddressCurrency loadable
+                                == address.address.currency
+                        then
+                            table
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
 
 
 showAddressTxs : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
