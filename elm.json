@@ -5,6 +5,7 @@
         "openapi/src",
         "themes",
         "config",
+        "plugins",
         "elm-hovercard/src"
     ],
     "elm-version": "0.19.1",

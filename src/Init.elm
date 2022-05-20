@@ -1,6 +1,8 @@
 module Init exposing (init)
 
+import CaseMgm
 import Config exposing (config)
+import Dict
 import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
@@ -20,7 +22,13 @@ init flags url key =
     in
     ( { url = url
       , key = key
-      , config = { locale = locale, theme = config.theme }
+      , config =
+            { locale = locale
+            , theme = config.theme
+            , plugins =
+                Dict.fromList
+                    [ ( "casemgm", CaseMgm.plugin ) ]
+            }
       , locale = locale
       , page = Page.Stats
       , search = Search.init
@@ -34,6 +42,7 @@ init flags url key =
       , width = flags.width
       , height = flags.height
       , error = ""
+      , plugins = Dict.empty
       }
     , List.map LocaleEffect localeEffect
     )

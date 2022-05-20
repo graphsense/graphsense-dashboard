@@ -13,6 +13,7 @@ import Model exposing (..)
 import Model.Graph.Id as Id
 import Msg.Graph as Graph
 import Page
+import Plugin
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
@@ -179,6 +180,44 @@ update uc msg model =
             ( { model | search = search }
             , List.map SearchEffect searchEffects
             )
+
+        GraphMsg (Graph.PluginMsg pid place value) ->
+            Dict.get pid model.config.plugins
+                |> Maybe.map2
+                    (\state plugin ->
+                        case place of
+                            Plugin.Model ->
+                                let
+                                    ( newState, cmd ) =
+                                        plugin.update.model value state
+                                in
+                                ( { model
+                                    | plugins = Dict.insert pid newState model.plugins
+                                  }
+                                , [ PluginEffect pid place cmd
+                                  ]
+                                )
+
+                            Plugin.Address ->
+                                let
+                                    ( newState, cmd ) =
+                                        plugin.update.graph.address value state
+                                in
+                                ( { model
+                                    | graph = model.graph
+
+                                    {- Layer.updateAddress
+                                       { address
+                                           | plugins = Dict.insert pid newState address.plugins
+                                       }
+                                    -}
+                                  }
+                                , [ PluginEffect pid place cmd
+                                  ]
+                                )
+                    )
+                    (Dict.get pid model.plugins)
+                |> Maybe.withDefault (n model)
 
         GraphMsg m ->
             let

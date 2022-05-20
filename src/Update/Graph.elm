@@ -384,6 +384,9 @@ update uc msg model =
             }
                 |> n
 
+        PluginMsg _ _ _ ->
+            n model
+
         NoOp ->
             n model
 

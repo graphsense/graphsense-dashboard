@@ -12,6 +12,7 @@ import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
+import Msg.Graph as Graph
 import Ports
 import Route
 import Task
@@ -111,6 +112,9 @@ perform key apiKey effect =
 
         PortsConsoleEffect msg ->
             Ports.console msg
+
+        PluginEffect pid place cmd ->
+            Cmd.map (Graph.PluginMsg pid place >> GraphMsg) cmd
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

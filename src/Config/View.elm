@@ -1,7 +1,9 @@
 module Config.View exposing (Config)
 
+import Dict exposing (Dict)
 import Html.Styled exposing (Html)
 import Model.Locale as Locale
+import Plugin exposing (Plugin)
 import Theme.Theme exposing (Theme)
 
 
@@ -10,4 +12,5 @@ import Theme.Theme exposing (Theme)
 type alias Config =
     { theme : Theme
     , locale : Locale.Model
+    , plugins : Dict String Plugin
     }

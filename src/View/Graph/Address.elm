@@ -13,6 +13,7 @@ import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Id as Id
 import Msg.Graph exposing (Msg(..))
+import Plugin.View.Graph.Address
 import Route
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
@@ -169,7 +170,9 @@ flags vc gc addr =
             |> translate (Graph.addressWidth - Graph.padding / 2)
             |> transform
         ]
-        []
+        (Plugin.View.Graph.Address.flags vc.plugins addr
+            |> List.map Svg.fromUnstyled
+        )
 
 
 links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg

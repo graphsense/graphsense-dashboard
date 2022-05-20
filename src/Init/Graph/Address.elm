@@ -5,6 +5,7 @@ import Config.Graph exposing (addressHeight, addressWidth, expandHandleWidth, la
 import Config.Update exposing (Config)
 import Dict
 import Init.Graph.Id as Id exposing (..)
+import Json.Encode
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
@@ -38,4 +39,5 @@ init entity address =
     , dx = 0
     , dy = 0
     , links = Model.Graph.Address.Links Dict.empty
+    , plugins = Dict.fromList [ ( "casemgm", Json.Encode.string "X" ) ]
     }

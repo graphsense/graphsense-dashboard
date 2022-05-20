@@ -10,6 +10,7 @@ import Effect.Locale
 import Effect.Search
 import Html exposing (Attribute, Html)
 import Http
+import Json.Encode
 import Model.Graph
 import Model.Locale
 import Model.Search
@@ -17,6 +18,7 @@ import Msg.Graph
 import Msg.Locale
 import Msg.Search
 import Page
+import Plugin
 import RemoteData exposing (WebData)
 import Theme.Theme exposing (Theme)
 import Time
@@ -44,6 +46,7 @@ type alias Model navigationKey =
     , width : Int
     , height : Int
     , error : String
+    , plugins : Dict String Json.Encode.Value
     }
 
 
@@ -94,6 +97,7 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | PluginEffect String Plugin.Place (Cmd Json.Encode.Value)
     | PortsConsoleEffect String
 
 

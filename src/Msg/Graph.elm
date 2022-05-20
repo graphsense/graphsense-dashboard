@@ -2,9 +2,11 @@ module Msg.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom
+import Json.Encode
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Transform as Transform
+import Plugin
 import Time
 
 
@@ -40,4 +42,5 @@ type Msg
         }
         Api.Data.Entity
     | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
+    | PluginMsg String Plugin.Place Json.Encode.Value
     | NoOp

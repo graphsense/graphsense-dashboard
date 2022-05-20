@@ -3,6 +3,7 @@ module Model.Graph.Address exposing (..)
 import Api.Data
 import Config.Graph exposing (expandHandleWidth)
 import Dict exposing (Dict)
+import Json.Decode
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
 
@@ -17,6 +18,7 @@ type alias Address =
     , dx : Float
     , dy : Float
     , links : Links
+    , plugins : Dict String Json.Decode.Value
     }
 
 
