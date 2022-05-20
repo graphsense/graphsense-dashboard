@@ -12,6 +12,7 @@ import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Search as Search
 import Theme.Stats as Stats
+import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
 import Util.View exposing (toCssColor)
@@ -407,7 +408,7 @@ theme =
                         [ Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
-                        , display block
+                        , displayFlex
                         , translateY (pct p) |> transform
                         , colors.brandWhite
                             |> toCssColor
@@ -443,6 +444,36 @@ theme =
                             [ toCssColor colors.brandBase |> color
                             ]
                         ]
+                    )
+            )
+        |> s_table
+            (Table.default
+                |> s_root
+                    [ px 10 |> paddingRight ]
+                |> s_headRow
+                    [ textAlign left
+                    , fontWeight bold
+                    ]
+                |> s_headCellSortable
+                    [ ( "cursor", "pointer" )
+                    ]
+                |> s_row
+                    [ nthChild "2n"
+                        [ colors.brandLightest |> toCssColor |> backgroundColor
+                        ]
+                    ]
+                |> s_cell
+                    [ scaled 1 |> rem |> padding
+                    ]
+                |> s_valuesCell
+                    (\isNegative ->
+                        textAlign right
+                            :: (if isNegative then
+                                    [ toCssColor colors.brandRed |> color ]
+
+                                else
+                                    []
+                               )
                     )
             )
         |> s_custom

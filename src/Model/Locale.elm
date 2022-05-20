@@ -5,6 +5,7 @@ import DateFormat.Relative
 import Dict exposing (Dict)
 import FormatNumber.Locales
 import Locale.Durations
+import Model.Currency exposing (..)
 import Time
 
 
@@ -41,8 +42,3 @@ type alias Model =
     , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
     , unitToString : Int -> Locale.Durations.Unit -> String
     }
-
-
-type Currency
-    = Coin
-    | Fiat String

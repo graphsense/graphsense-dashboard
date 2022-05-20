@@ -11,6 +11,7 @@ watch:
 	find . -name \*.elm | entr make dev
 
 dev: $(API_ELM) $(wildcard src/**)
+	make setem
 	npx elm-test-rs tests/Locale/TestDurations.elm
 
 $(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)

@@ -14,6 +14,12 @@ root vc =
 frame : Config -> Bool -> List Style
 frame vc visible =
     backgroundColor (rgb 255 255 255)
+        :: (if visible then
+                displayFlex
+
+            else
+                display none
+           )
         :: vc.theme.browser.frame visible
 
 
@@ -21,7 +27,7 @@ propertyBoxTable : Config -> List Style
 propertyBoxTable vc =
     [ display table
     , borderCollapse collapse
-    , pct 100 |> width
+    , position relative
     ]
         ++ vc.theme.browser.propertyBoxTable
 

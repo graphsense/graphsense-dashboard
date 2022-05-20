@@ -13,11 +13,15 @@ import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Table exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
+import Table
 import Time
 import Util.View exposing (none, toCssColor)
+import View.Graph.Table as Table
+import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Locale as Locale
 
 
@@ -55,13 +59,21 @@ browser vc gc model =
                 Browser.None ->
                     []
 
-                Browser.Address address ->
-                    [ browseAddress vc gc model.table model.now address
-                    ]
+                Browser.Address loadable table ->
+                    browseAddress vc gc model.now loadable
+                        :: (table
+                                |> Maybe.map (browseAddressTable vc gc (loadableAddressCurrency loadable))
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
 
-                Browser.Entity entity ->
-                    [ browseEntity vc gc model.table model.now entity
-                    ]
+                Browser.Entity loadable table ->
+                    browseEntity vc gc model.now loadable
+                        :: (table
+                                |> Maybe.map (browseEntityTable vc gc (loadableEntityCurrency loadable))
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
             )
         ]
 
@@ -212,8 +224,8 @@ browseValue vc gc value =
             text "loading"
 
 
-browseAddress : View.Config -> Graph.Config -> TableType -> Time.Posix -> Loadable String Address -> Html Msg
-browseAddress vc gc table now address =
+browseAddress : View.Config -> Graph.Config -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress vc gc now address =
     let
         mkTableLink title tableTag =
             address
@@ -379,8 +391,8 @@ elseShowCurrency l =
             v
 
 
-browseEntity : View.Config -> Graph.Config -> TableType -> Time.Posix -> Loadable Int Entity -> Html Msg
-browseEntity vc gc table now ent =
+browseEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
+browseEntity vc gc now ent =
     let
         mkTableLink title tableTag =
             ent
@@ -498,3 +510,29 @@ browseEntity vc gc table now ent =
             , Nothing
             )
         ]
+
+
+browseAddressTable : View.Config -> Graph.Config -> String -> AddressTable -> Html Msg
+browseAddressTable vc gc coinCode table =
+    case table of
+        AddressTxsTable t ->
+            Table.table vc (AddressTxsTable.config vc coinCode) t.state t.data
+
+        _ ->
+            none
+
+
+browseEntityTable : View.Config -> Graph.Config -> String -> EntityTable -> Html Msg
+browseEntityTable vc gc coinCode table =
+    Debug.todo "browseEntityTable"
+
+
+
+{-
+   case table of
+       EntityTxsTable t ->
+           Table.view (AddressTxsTable.config vc coinCode) t.state t.data
+
+       _ ->
+           none
+-}

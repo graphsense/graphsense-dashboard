@@ -1,7 +1,8 @@
 module Init.Graph.Browser exposing (..)
 
-import InfiniteList
 import Model.Graph.Browser exposing (..)
+import Model.Graph.Table exposing (Table)
+import Table
 import Time
 
 
@@ -10,14 +11,4 @@ init now =
     { visible = False
     , type_ = None
     , now = Time.millisToPosix now
-    , table = NoTable
-    }
-
-
-initTable : Table a
-initTable =
-    { data = []
-    , loading = True
-    , table = InfiniteList.init
-    , nextpage = Nothing
     }

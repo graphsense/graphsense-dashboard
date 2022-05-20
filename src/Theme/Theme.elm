@@ -8,6 +8,7 @@ import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
 import Theme.Search as Search exposing (Search)
 import Theme.Stats as Stats exposing (Stats)
+import Theme.Table as Table exposing (Table)
 import Theme.User as User exposing (User)
 
 
@@ -28,6 +29,7 @@ type alias Theme =
     , button : Button
     , graph : Graph
     , browser : Browser
+    , table : Table
     , tool : List Style
     , modal : Dialog
     , user : User
@@ -58,5 +60,6 @@ default =
     , user = User.default
     , graph = Graph.default
     , browser = Browser.default
+    , table = Table.default
     , custom = ""
     }

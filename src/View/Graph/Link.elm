@@ -8,6 +8,7 @@ import Css.Graph
 import Init.Graph.Id as Id
 import List.Extra
 import Log
+import Model.Currency as Currency
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
@@ -233,15 +234,8 @@ getLinkAmount vc gc link =
                 |> toFloat
 
         Graph.Value ->
-            case vc.locale.currency of
-                Locale.Coin ->
-                    link.value.value
-                        |> toFloat
-
-                Locale.Fiat curr ->
-                    List.Extra.find (.code >> (==) curr) link.value.fiatValues
-                        |> Maybe.map .value
-                        |> Maybe.withDefault 0
+            Currency.valuesToFloat vc.locale.currency link.value
+                |> Maybe.withDefault 0
 
 
 getLabel : View.Config -> Graph.Config -> String -> Link node -> String

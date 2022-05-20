@@ -26,6 +26,7 @@ import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
 import Locale.Durations
+import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import RecordSetter exposing (..)
 import String.Interpolate

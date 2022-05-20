@@ -1,15 +1,14 @@
 module Model.Graph.Browser exposing (..)
 
 import Api.Data
-import InfiniteList
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Table exposing (..)
 import Time
 
 
 type alias Model =
     { type_ : Type
-    , table : TableType
     , visible : Bool
     , now : Time.Posix
     }
@@ -17,8 +16,8 @@ type alias Model =
 
 type Type
     = None
-    | Address (Loadable String Address)
-    | Entity (Loadable Int Entity)
+    | Address (Loadable String Address) (Maybe AddressTable)
+    | Entity (Loadable Int Entity) (Maybe EntityTable)
 
 
 type Loadable id thing
@@ -26,28 +25,21 @@ type Loadable id thing
     | Loaded thing
 
 
-type TableType
-    = NoTable
-    | AddressTable AddressTable
+loadableAddressCurrency : Loadable id Address -> String
+loadableAddressCurrency l =
+    case l of
+        Loading curr _ ->
+            curr
+
+        Loaded a ->
+            a.address.currency
 
 
-type AddressTable
-    = AddressTagsTable (Table Api.Data.AddressTag)
-    | AddressTxsTable (Table Api.Data.AddressTx)
-    | AddressIncomingNeighborsTable (Table Api.Data.NeighborAddress)
-    | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
+loadableEntityCurrency : Loadable id Entity -> String
+loadableEntityCurrency l =
+    case l of
+        Loading curr _ ->
+            curr
 
-
-type EntityTable
-    = EntityTagsTable (Table Api.Data.AddressTag)
-    | EntityTxsTable (Table Api.Data.AddressTx)
-    | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
-    | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
-
-
-type alias Table a =
-    { data : List a
-    , loading : Bool
-    , table : InfiniteList.Model
-    , nextpage : Maybe String
-    }
+        Loaded a ->
+            a.entity.currency

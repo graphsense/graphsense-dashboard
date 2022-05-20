@@ -174,6 +174,11 @@ s_attributeNamespace value__ record__ =
     { record__ | attributeNamespace = value__ }
 
 
+s_attributes : a -> { b | attributes : a } -> { b | attributes : a }
+s_attributes value__ record__ =
+    { record__ | attributes = value__ }
+
+
 s_auth : a -> { b | auth : a } -> { b | auth : a }
 s_auth value__ record__ =
     { record__ | auth = value__ }
@@ -454,6 +459,11 @@ s_calc value__ record__ =
     { record__ | calc = value__ }
 
 
+s_caption : a -> { b | caption : a } -> { b | caption : a }
+s_caption value__ record__ =
+    { record__ | caption = value__ }
+
+
 s_caseInsensitive : a -> { b | caseInsensitive : a } -> { b | caseInsensitive : a }
 s_caseInsensitive value__ record__ =
     { record__ | caseInsensitive = value__ }
@@ -462,6 +472,11 @@ s_caseInsensitive value__ record__ =
 s_category : a -> { b | category : a } -> { b | category : a }
 s_category value__ record__ =
     { record__ | category = value__ }
+
+
+s_cell : a -> { b | cell : a } -> { b | cell : a }
+s_cell value__ record__ =
+    { record__ | cell = value__ }
 
 
 s_centerPoint : a -> { b | centerPoint : a } -> { b | centerPoint : a }
@@ -552,6 +567,11 @@ s_colors value__ record__ =
 s_column : a -> { b | column : a } -> { b | column : a }
 s_column value__ record__ =
     { record__ | column = value__ }
+
+
+s_columns : a -> { b | columns : a } -> { b | columns : a }
+s_columns value__ record__ =
+    { record__ | columns = value__ }
 
 
 s_command : a -> { b | command : a } -> { b | command : a }
@@ -657,6 +677,11 @@ s_customContainer value__ record__ =
 s_customSuffix : a -> { b | customSuffix : a } -> { b | customSuffix : a }
 s_customSuffix value__ record__ =
     { record__ | customSuffix = value__ }
+
+
+s_customizations : a -> { b | customizations : a } -> { b | customizations : a }
+s_customizations value__ record__ =
+    { record__ | customizations = value__ }
 
 
 s_danger : a -> { b | danger : a } -> { b | danger : a }
@@ -1109,6 +1134,11 @@ s_firstWeight value__ record__ =
     { record__ | firstWeight = value__ }
 
 
+s_flags : a -> { b | flags : a } -> { b | flags : a }
+s_flags value__ record__ =
+    { record__ | flags = value__ }
+
+
 s_flexBasis : a -> { b | flexBasis : a } -> { b | flexBasis : a }
 s_flexBasis value__ record__ =
     { record__ | flexBasis = value__ }
@@ -1317,6 +1347,16 @@ s_greyLightest value__ record__ =
 s_hash : a -> { b | hash : a } -> { b | hash : a }
 s_hash value__ record__ =
     { record__ | hash = value__ }
+
+
+s_headCellSortable : a -> { b | headCellSortable : a } -> { b | headCellSortable : a }
+s_headCellSortable value__ record__ =
+    { record__ | headCellSortable = value__ }
+
+
+s_headRow : a -> { b | headRow : a } -> { b | headRow : a }
+s_headRow value__ record__ =
+    { record__ | headRow = value__ }
 
 
 s_header : a -> { b | header : a } -> { b | header : a }
@@ -2639,6 +2679,11 @@ s_pivot value__ record__ =
     { record__ | pivot = value__ }
 
 
+s_plugins : a -> { b | plugins : a } -> { b | plugins : a }
+s_plugins value__ record__ =
+    { record__ | plugins = value__ }
+
+
 s_plus : a -> { b | plus : a } -> { b | plus : a }
 s_plus value__ record__ =
     { record__ | plus = value__ }
@@ -3064,6 +3109,11 @@ s_row value__ record__ =
     { record__ | row = value__ }
 
 
+s_rowAttrs : a -> { b | rowAttrs : a } -> { b | rowAttrs : a }
+s_rowAttrs value__ record__ =
+    { record__ | rowAttrs = value__ }
+
+
 s_run : a -> { b | run : a } -> { b | run : a }
 s_run value__ record__ =
     { record__ | run = value__ }
@@ -3254,6 +3304,11 @@ s_someYearsAgo value__ record__ =
     { record__ | someYearsAgo = value__ }
 
 
+s_sorter : a -> { b | sorter : a } -> { b | sorter : a }
+s_sorter value__ record__ =
+    { record__ | sorter = value__ }
+
+
 s_source : a -> { b | source : a } -> { b | source : a }
 s_source value__ record__ =
     { record__ | source = value__ }
@@ -3404,6 +3459,11 @@ s_table value__ record__ =
     { record__ | table = value__ }
 
 
+s_tableAttrs : a -> { b | tableAttrs : a } -> { b | tableAttrs : a }
+s_tableAttrs value__ record__ =
+    { record__ | tableAttrs = value__ }
+
+
 s_tableCellKey : a -> { b | tableCellKey : a } -> { b | tableCellKey : a }
 s_tableCellKey value__ record__ =
     { record__ | tableCellKey = value__ }
@@ -3474,6 +3534,11 @@ s_taxonomy value__ record__ =
     { record__ | taxonomy = value__ }
 
 
+s_tbodyAttrs : a -> { b | tbodyAttrs : a } -> { b | tbodyAttrs : a }
+s_tbodyAttrs value__ record__ =
+    { record__ | tbodyAttrs = value__ }
+
+
 s_text : a -> { b | text : a } -> { b | text : a }
 s_text value__ record__ =
     { record__ | text = value__ }
@@ -3517,6 +3582,16 @@ s_textTransform value__ record__ =
 s_textarea : a -> { b | textarea : a } -> { b | textarea : a }
 s_textarea value__ record__ =
     { record__ | textarea = value__ }
+
+
+s_tfoot : a -> { b | tfoot : a } -> { b | tfoot : a }
+s_tfoot value__ record__ =
+    { record__ | tfoot = value__ }
+
+
+s_thead : a -> { b | thead : a } -> { b | thead : a }
+s_thead value__ record__ =
+    { record__ | thead = value__ }
 
 
 s_theme : a -> { b | theme : a } -> { b | theme : a }
@@ -3602,6 +3677,11 @@ s_toAddress value__ record__ =
 s_toAmPm : a -> { b | toAmPm : a } -> { b | toAmPm : a }
 s_toAmPm value__ record__ =
     { record__ | toAmPm = value__ }
+
+
+s_toId : a -> { b | toId : a } -> { b | toId : a }
+s_toId value__ record__ =
+    { record__ | toId = value__ }
 
 
 s_toMonthAbbreviation : a -> { b | toMonthAbbreviation : a } -> { b | toMonthAbbreviation : a }
@@ -3839,6 +3919,11 @@ s_value value__ record__ =
     { record__ | value = value__ }
 
 
+s_valuesCell : a -> { b | valuesCell : a } -> { b | valuesCell : a }
+s_valuesCell value__ record__ =
+    { record__ | valuesCell = value__ }
+
+
 s_version : a -> { b | version : a } -> { b | version : a }
 s_version value__ record__ =
     { record__ | version = value__ }
@@ -3872,6 +3957,11 @@ s_vertices value__ record__ =
 s_view : a -> { b | view : a } -> { b | view : a }
 s_view value__ record__ =
     { record__ | view = value__ }
+
+
+s_viewData : a -> { b | viewData : a } -> { b | viewData : a }
+s_viewData value__ record__ =
+    { record__ | viewData = value__ }
 
 
 s_viewport : a -> { b | viewport : a } -> { b | viewport : a }

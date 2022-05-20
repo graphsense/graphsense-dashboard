@@ -8,6 +8,7 @@ import Http
 import Languages.German
 import Locale.English
 import Locale.German
+import Model.Currency exposing (..)
 import Model.Locale as Model exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral

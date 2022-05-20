@@ -384,6 +384,12 @@ update uc msg model =
             }
                 |> n
 
+        TableNewState state ->
+            { model
+                | browser = Browser.tableNewState state model.browser
+            }
+                |> n
+
         PluginMsg _ _ _ ->
             n model
 
