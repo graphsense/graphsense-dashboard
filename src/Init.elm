@@ -1,6 +1,5 @@
 module Init exposing (init)
 
-import CaseMgm
 import Config exposing (config)
 import Dict
 import Init.Graph as Graph
@@ -8,12 +7,13 @@ import Init.Locale as Locale
 import Init.Search as Search
 import Model exposing (..)
 import Page
+import Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 
 
-init : Flags -> Url -> key -> ( Model key, List Effect )
-init flags url key =
+init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
+init plugins flags url key =
     let
         ( locale, localeEffect ) =
             Locale.init
@@ -25,14 +25,11 @@ init flags url key =
       , config =
             { locale = locale
             , theme = config.theme
-            , plugins =
-                Dict.fromList
-                    [ ( "casemgm", CaseMgm.plugin ) ]
             }
       , locale = locale
       , page = Page.Stats
       , search = Search.init
-      , graph = Graph.init flags.now
+      , graph = Graph.init plugins flags.now
       , user =
             { apiKey = ""
             , auth = Unknown

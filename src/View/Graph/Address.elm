@@ -13,6 +13,7 @@ import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Id as Id
 import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
 import Plugin.View.Graph.Address
 import Route
 import String.Interpolate
@@ -29,8 +30,8 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-address : Config -> Graph.Config -> Id.AddressId -> Address -> Svg Msg
-address vc gc selected addr =
+address : Plugins -> Config -> Graph.Config -> Id.AddressId -> Address -> Svg Msg
+address plugins vc gc selected addr =
     let
         _ =
             Log.log "rednerAddress" addr.id
@@ -104,7 +105,7 @@ address vc gc selected addr =
             ]
             []
         , label vc gc addr
-        , flags vc gc addr
+        , flags plugins vc gc addr
         , Node.expand vc
             gc
             { isOutgoing = False
@@ -161,8 +162,8 @@ getLabel vc gc addr =
             "todo"
 
 
-flags : Config -> Graph.Config -> Address -> Svg Msg
-flags vc gc addr =
+flags : Plugins -> Config -> Graph.Config -> Address -> Svg Msg
+flags plugins vc gc addr =
     g
         [ Css.addressFlags vc |> css
         , Graph.padding
@@ -170,9 +171,7 @@ flags vc gc addr =
             |> translate (Graph.addressWidth - Graph.padding / 2)
             |> transform
         ]
-        (Plugin.View.Graph.Address.flags vc.plugins addr
-            |> List.map Svg.fromUnstyled
-        )
+        (Plugin.View.Graph.Address.flags plugins vc addr)
 
 
 links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg

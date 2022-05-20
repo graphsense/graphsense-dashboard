@@ -34,6 +34,11 @@ s_active value__ record__ =
     { record__ | active = value__ }
 
 
+s_activeCase : a -> { b | activeCase : a } -> { b | activeCase : a }
+s_activeCase value__ record__ =
+    { record__ | activeCase = value__ }
+
+
 s_actual : a -> { b | actual : a } -> { b | actual : a }
 s_actual value__ record__ =
     { record__ | actual = value__ }

@@ -10,6 +10,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Transform as Transform
+import Plugin.Model as Plugin exposing (PluginStates)
 import Set exposing (Set)
 
 
@@ -23,6 +24,7 @@ type alias Model =
     , size : Maybe Coords
     , selected : Selected
     , hovered : Hovered
+    , plugins : PluginStates
     }
 
 

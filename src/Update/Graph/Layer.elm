@@ -7,6 +7,7 @@ module Update.Graph.Layer exposing
     , moveEntity
     , releaseEntity
     , syncLinks
+    , updateAddress
     , updateAddressLink
     , updateEntityLinks
     )
@@ -587,3 +588,30 @@ syncLinksOnAddresses sources targets =
                         }
             )
             sources
+
+
+updateAddress : AddressId -> (Address -> Address) -> IntDict Layer -> IntDict Layer
+updateAddress id update =
+    IntDict.update (Id.layer id) (Maybe.map (updateAddressOnLayer id update))
+
+
+updateAddressOnLayer : AddressId -> (Address -> Address) -> Layer -> Layer
+updateAddressOnLayer id update layer =
+    { layer
+        | entities =
+            layer.entities
+                |> Dict.foldl
+                    (\_ entity entities ->
+                        if Dict.member id entity.addresses then
+                            Dict.insert
+                                entity.id
+                                { entity
+                                    | addresses = Dict.update id (Maybe.map update) entity.addresses
+                                }
+                                entities
+
+                        else
+                            entities
+                    )
+                    layer.entities
+    }

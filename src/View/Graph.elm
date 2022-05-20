@@ -16,6 +16,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
@@ -34,31 +35,31 @@ import View.Graph.Navbar as Navbar
 import View.Graph.Transform as Transform
 
 
-view : Config -> Model -> Html Msg
-view vc model =
+view : Plugins -> Config -> Model -> Html Msg
+view plugins vc model =
     section
         [ Css.root vc |> Html.css
         ]
-        [ Navbar.navbar vc
-        , graph vc model.config model
+        [ Navbar.navbar plugins vc model
+        , graph plugins vc model.config model
         ]
 
 
-graph : Config -> Graph.Config -> Model -> Html Msg
-graph vc gc model =
+graph : Plugins -> Config -> Graph.Config -> Model -> Html Msg
+graph plugins vc gc model =
     Html.section
         [ Css.graphRoot vc |> Html.css
         , Html.id "graph"
         ]
-        [ browser vc gc model.browser
+        [ browser plugins vc gc model.plugins model.browser
         , model.size
-            |> Maybe.map (graphSvg vc gc model)
+            |> Maybe.map (graphSvg plugins vc gc model)
             |> Maybe.withDefault none
         ]
 
 
-graphSvg : Config -> Graph.Config -> Model -> Coords -> Svg Msg
-graphSvg vc gc model size =
+graphSvg : Plugins -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
+graphSvg plugins vc gc model size =
     let
         dim =
             { width = size.x, height = size.y }
@@ -126,14 +127,14 @@ graphSvg vc gc model size =
          , Svg.lazy3 entityLinks vc gc model.layers
          , Svg.lazy4 entities vc gc selectedEntity model.layers
          , Svg.lazy3 addressLinks vc gc model.layers
-         , Svg.lazy4 addresses vc gc selectedAddress model.layers
+         , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
          , Svg.lazy5 hoveredLink vc gc hoveredEntityLink hoveredAddressLink model.layers
          ]
         )
 
 
-addresses : Config -> Graph.Config -> Id.AddressId -> IntDict Layer -> Svg Msg
-addresses vc gc selected layers =
+addresses : Plugins -> Config -> Graph.Config -> Id.AddressId -> IntDict Layer -> Svg Msg
+addresses plugins vc gc selected layers =
     let
         _ =
             Log.log "Graph.addresses" ""
@@ -142,7 +143,7 @@ addresses vc gc selected layers =
         |> IntDict.foldl
             (\layerId layer svg ->
                 ( "layer" ++ String.fromInt layerId
-                , Svg.lazy4 ViewLayer.addresses vc gc selected layer
+                , Svg.lazy5 ViewLayer.addresses plugins vc gc selected layer
                 )
                     :: svg
             )

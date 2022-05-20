@@ -5,6 +5,7 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
+import Json.Encode
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
@@ -211,3 +212,9 @@ tableNewState state model =
                 _ ->
                     model.type_
     }
+
+
+showPlugin : String -> Model -> Model
+showPlugin pid model =
+    show model
+        |> s_type_ (Plugin pid)

@@ -10,6 +10,7 @@ import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..))
+import Plugin as Plugin exposing (Plugins)
 import RemoteData
 import View.Header as Header
 import View.Locale as Locale
@@ -18,24 +19,26 @@ import View.User as User
 
 
 view :
-    Config
+    Plugins
+    -> Config
     -> Model key
     -> Document Msg
-view vc model =
+view plugins vc model =
     { title = Locale.string vc.locale "Iknaio Dashboard"
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
-        , body vc model |> toUnstyled
+        , body plugins vc model |> toUnstyled
         ]
     }
 
 
 body :
-    Config
+    Plugins
+    -> Config
     -> Model key
     -> Html Msg
-body vc model =
+body plugins vc model =
     div
         [ Css.body vc |> css
         ]
@@ -55,7 +58,7 @@ body vc model =
             [ main_
                 [ Css.main_ vc |> css
                 ]
-                [ Main.main_ vc model
+                [ Main.main_ plugins vc model
                 ]
             ]
          ]

@@ -7,10 +7,11 @@ import Init.Graph.Browser as Browser
 import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
+import Plugin exposing (Plugins)
 
 
-init : Int -> Model
-init now =
+init : Plugins -> Int -> Model
+init plugins now =
     { config = Config.default
     , layers = IntDict.empty
     , browser = Browser.init now
@@ -20,4 +21,5 @@ init now =
     , size = Nothing
     , selected = SelectedNone
     , hovered = HoveredNone
+    , plugins = Plugin.initGraph plugins
     }

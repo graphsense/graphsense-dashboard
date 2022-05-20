@@ -5,23 +5,26 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Model.Graph exposing (Model)
 import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
+import Plugin.View.Graph.Navbar
 import View.Graph.Tool as Tool
 import View.Locale as Locale
 
 
-navbar : Config -> Html Msg
-navbar vc =
+navbar : Plugins -> Config -> Model -> Html Msg
+navbar plugins vc model =
     nav
         [ Css.navbar vc |> css
         ]
-        [ navbarLeft vc
+        [ navbarLeft plugins vc model
         , navbarRight vc
         ]
 
 
-navbarLeft : Config -> Html Msg
-navbarLeft vc =
+navbarLeft : Plugins -> Config -> Model -> Html Msg
+navbarLeft plugins vc model =
     div
         [ Css.navbarLeft vc |> css
         ]
@@ -31,6 +34,7 @@ navbarLeft vc =
               , msg = NoOp
               }
             ]
+            ++ Plugin.View.Graph.Navbar.left plugins vc model
         )
 
 

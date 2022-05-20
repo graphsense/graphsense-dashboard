@@ -3,6 +3,7 @@ module Update.Graph exposing (..)
 import Api.Data
 import Config.Graph exposing (maxExpandableNeighbors)
 import Config.Update as Update
+import Dict
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Id as Id
@@ -16,6 +17,8 @@ import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph as Msg exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
+import Plugin.Model as Plugin
 import RecordSetter exposing (..)
 import Route.Graph as Route
 import Set exposing (Set)
@@ -81,8 +84,8 @@ addEntity uc entity model =
         }
 
 
-update : Update.Config -> Msg -> Model -> ( Model, List Effect )
-update uc msg model =
+update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
+update plugins uc msg model =
     case Log.truncate "msg" msg of
         BrowserGotSvgElement result ->
             result
@@ -404,15 +407,57 @@ update uc msg model =
             }
                 |> n
 
-        PluginMsg _ _ _ ->
-            n model
+        PluginMsg pid context msgValue ->
+            case context of
+                Plugin.Model ->
+                    let
+                        ( new, outMsg, cmd ) =
+                            Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
+                    in
+                    ( { model
+                        | plugins = new
+                      }
+                        |> updateByPluginOutMsg pid outMsg
+                    , List.map (PluginEffect context) cmd
+                    )
+
+                Plugin.Address a ->
+                    Layer.getAddress a model.layers
+                        |> Maybe.map
+                            (\address ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.update pid plugins address.plugins msgValue (.graph >> .address)
+                                in
+                                ( { model
+                                    | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = new }) model.layers
+                                  }
+                                    |> updateByPluginOutMsg pid outMsg
+                                , List.map (PluginEffect context) cmd
+                                )
+                            )
+                        |> Maybe.withDefault (n model)
 
         NoOp ->
             n model
 
 
-updateByRoute : Route.Route -> Model -> ( Model, List Effect )
-updateByRoute route model =
+updateByPluginOutMsg : String -> List Plugin.OutMsg -> Model -> Model
+updateByPluginOutMsg pid outMsgs model =
+    outMsgs
+        |> List.foldl
+            (\msg mo ->
+                case msg of
+                    Plugin.ShowBrowser ->
+                        { model
+                            | browser = Browser.showPlugin pid model.browser
+                        }
+            )
+            model
+
+
+updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute plugins route model =
     case route of
         Route.Root ->
             deselect model
@@ -500,6 +545,18 @@ updateByRoute route model =
 
         Route.Label l ->
             n model
+
+        Route.Plugin pid url ->
+            let
+                ( new, outMsg, cmd ) =
+                    Plugin.updateByUrl pid plugins model.plugins url .graph
+            in
+            ( { model
+                | plugins = new
+              }
+                |> updateByPluginOutMsg pid outMsg
+            , List.map (PluginEffect Plugin.Model) cmd
+            )
 
 
 updateSize : Int -> Int -> Model -> Model

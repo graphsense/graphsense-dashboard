@@ -18,7 +18,7 @@ import Msg.Graph
 import Msg.Locale
 import Msg.Search
 import Page
-import Plugin
+import Plugin.Model as Plugin
 import RemoteData exposing (WebData)
 import Theme.Theme exposing (Theme)
 import Time
@@ -97,7 +97,6 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
-    | PluginEffect String Plugin.Place (Cmd Json.Encode.Value)
     | PortsConsoleEffect String
 
 

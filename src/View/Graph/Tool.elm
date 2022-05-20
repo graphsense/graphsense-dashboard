@@ -6,10 +6,9 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Graph.Tool exposing (Tool)
-import Msg.Graph exposing (Msg)
 
 
-tool : Config -> Tool -> Html Msg
+tool : Config -> Tool msg -> Html msg
 tool vc t =
     button
         [ Css.tool vc |> css

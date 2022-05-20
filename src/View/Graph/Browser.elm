@@ -1,20 +1,26 @@
-module View.Graph.Browser exposing (browser)
+module View.Graph.Browser exposing (Row(..), TableLink, Value(..), browse, browser, elseLoading, ifLoaded)
 
 import Api.Data
 import Config.Graph as Graph
 import Config.View as View
 import Css as CssStyled
 import Css.Browser as Css
+import Css.View as CssView
 import Dict
 import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
+import Json.Encode
 import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
 import Msg.Graph exposing (Msg(..))
+import Plugin exposing (Plugins)
+import Plugin.Model exposing (PluginStates)
+import Plugin.View.Graph.Browser
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
@@ -25,13 +31,14 @@ import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Locale as Locale
 
 
-type Value
+type Value msg
     = String String
-    | EntityId Entity
+    | EntityId Graph.Config Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int
     | Value String Api.Data.Values
+    | Input (String -> msg) String
     | LoadingValue
 
 
@@ -42,13 +49,13 @@ type alias TableLink =
     }
 
 
-type Row id a
-    = Row ( String, Loadable id a -> Value, Maybe TableLink )
+type Row id a msg
+    = Row ( String, Loadable id a -> Value msg, Maybe TableLink )
     | Rule
 
 
-browser : View.Config -> Graph.Config -> Browser.Model -> Html Msg
-browser vc gc model =
+browser : Plugins -> View.Config -> Graph.Config -> PluginStates -> Browser.Model -> Html Msg
+browser plugins vc gc states model =
     div
         [ Css.root vc |> css
         ]
@@ -74,20 +81,25 @@ browser vc gc model =
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
+
+                Browser.Plugin pid ->
+                    browsePlugin plugins vc pid states
+                        |> Maybe.map List.singleton
+                        |> Maybe.withDefault []
             )
         ]
 
 
-browse : View.Config -> Graph.Config -> Loadable id a -> List (Row id a) -> Html Msg
-browse vc gc a rows =
-    List.map (browseRow vc gc a) rows
+browse : View.Config -> Loadable id a -> List (Row id a msg) -> Html msg
+browse vc a rows =
+    List.map (browseRow vc a) rows
         |> div
             [ Css.propertyBoxTable vc |> css
             ]
 
 
-browseRow : View.Config -> Graph.Config -> Loadable id a -> Row id a -> Html Msg
-browseRow vc gc thing row =
+browseRow : View.Config -> Loadable id a -> Row id a msg -> Html msg
+browseRow vc thing row =
     case row of
         Rule ->
             hr [ Css.propertyBoxRule vc |> css ] []
@@ -101,24 +113,24 @@ browseRow vc gc thing row =
                     ]
                     [ Locale.text vc.locale key
                     ]
-                , toValue thing |> valueCell vc gc
+                , toValue thing |> valueCell vc
                 , table
-                    |> Maybe.map (tableLink vc gc)
+                    |> Maybe.map (tableLink vc)
                     |> Maybe.withDefault none
                 ]
 
 
-valueCell : View.Config -> Graph.Config -> Value -> Html Msg
-valueCell vc gc value =
+valueCell : View.Config -> Value msg -> Html msg
+valueCell vc value =
     span
         [ Css.propertyBoxValue vc |> css
         ]
-        [ browseValue vc gc value
+        [ browseValue vc value
         ]
 
 
-tableLink : View.Config -> Graph.Config -> TableLink -> Html Msg
-tableLink vc gc link =
+tableLink : View.Config -> TableLink -> Html msg
+tableLink vc link =
     a
         [ Css.propertyBoxTableLink vc link.active |> css
         , href link.link
@@ -129,13 +141,21 @@ tableLink vc gc link =
         ]
 
 
-browseValue : View.Config -> Graph.Config -> Value -> Html Msg
-browseValue vc gc value =
+browseValue : View.Config -> Value msg -> Html msg
+browseValue vc value =
     case value of
         String str ->
             text str
 
-        EntityId entity ->
+        Input msg current ->
+            input
+                [ Html.Styled.Attributes.value current
+                , onInput msg
+                , CssView.input vc |> css
+                ]
+                []
+
+        EntityId gc entity ->
             div
                 []
                 [ entity.entity.tags
@@ -248,7 +268,6 @@ browseAddress vc gc now address =
                     )
     in
     browse vc
-        gc
         address
         [ Row
             ( "Address"
@@ -351,7 +370,7 @@ makeTableLink getCurrency getId make l =
                 |> Just
 
 
-ifLoaded : (a -> Value) -> Loadable id a -> Loadable id Value
+ifLoaded : (a -> Value msg) -> Loadable id a -> Loadable id (Value msg)
 ifLoaded toValue l =
     case l of
         Loading currency id ->
@@ -361,7 +380,7 @@ ifLoaded toValue l =
             toValue a |> Loaded
 
 
-elseLoading : Loadable id Value -> Value
+elseLoading : Loadable id (Value msg) -> Value msg
 elseLoading l =
     case l of
         Loading _ _ ->
@@ -371,7 +390,7 @@ elseLoading l =
             v
 
 
-elseShowAddress : Loadable String Value -> Value
+elseShowAddress : Loadable String (Value msg) -> Value msg
 elseShowAddress l =
     case l of
         Loading _ id ->
@@ -381,7 +400,7 @@ elseShowAddress l =
             v
 
 
-elseShowCurrency : Loadable id Value -> Value
+elseShowCurrency : Loadable id (Value msg) -> Value msg
 elseShowCurrency l =
     case l of
         Loading currency _ ->
@@ -415,9 +434,8 @@ browseEntity vc gc now ent =
                     )
     in
     browse vc
-        gc
         ent
-        [ Row ( "Entity", ifLoaded EntityId >> elseLoading, Nothing )
+        [ Row ( "Entity", ifLoaded (EntityId gc) >> elseLoading, Nothing )
         , Row
             ( "Root address"
             , ifLoaded (.entity >> .rootAddress >> String) >> elseLoading
@@ -536,3 +554,8 @@ browseEntityTable vc gc coinCode table =
        _ ->
            none
 -}
+
+
+browsePlugin : Plugins -> View.Config -> String -> PluginStates -> Maybe (Html Msg)
+browsePlugin plugins vc pid states =
+    Plugin.View.Graph.Browser.propertyBox plugins vc pid states

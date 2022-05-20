@@ -2,7 +2,9 @@ module Effect.Graph exposing (Effect(..), perform)
 
 import Api.Data
 import Browser.Dom
+import Json.Encode
 import Msg.Graph exposing (Msg(..))
+import Plugin.Model as Plugin
 import Route.Graph exposing (Route)
 import Task
 
@@ -47,6 +49,7 @@ type Effect
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTxs -> Msg
         }
+    | PluginEffect Plugin.Context ( String, Cmd Json.Encode.Value )
 
 
 perform : Effect -> Cmd Msg
@@ -83,3 +86,7 @@ perform eff =
         -- managed in Effect.elm
         GetAddressTxsEffect _ ->
             Cmd.none
+
+        PluginEffect context ( pid, cmd ) ->
+            cmd
+                |> Cmd.map (PluginMsg pid context)

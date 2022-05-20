@@ -1,6 +1,7 @@
 module Model.Graph.Browser exposing (..)
 
 import Api.Data
+import Json.Encode exposing (Value)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
@@ -18,6 +19,7 @@ type Type
     = None
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
+    | Plugin String
 
 
 type Loadable id thing

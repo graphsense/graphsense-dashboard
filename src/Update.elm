@@ -13,7 +13,7 @@ import Model exposing (..)
 import Model.Graph.Id as Id
 import Msg.Graph as Graph
 import Page
-import Plugin
+import Plugin as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
@@ -25,8 +25,8 @@ import Update.Search as Search
 import Url exposing (Url)
 
 
-update : Config -> Msg -> Model key -> ( Model key, List Effect )
-update uc msg model =
+update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
+update plugins uc msg model =
     case msg of
         UserRequestsUrl request ->
             case request of
@@ -44,12 +44,12 @@ update uc msg model =
                     )
 
         BrowserChangedUrl url ->
-            updateByUrl uc url model
+            updateByUrl plugins uc url model
 
         BrowserGotStatistics result ->
             case result of
                 Ok stats ->
-                    updateByUrl uc model.url { model | stats = RD.Success stats }
+                    updateByUrl plugins uc model.url { model | stats = RD.Success stats }
 
                 Err error ->
                     n { model | stats = RD.Failure error }
@@ -57,7 +57,8 @@ update uc msg model =
         BrowserGotResponseWithHeaders result ->
             case result of
                 Ok ( headers, message ) ->
-                    update uc
+                    update plugins
+                        uc
                         message
                         { model
                             | user =
@@ -181,56 +182,18 @@ update uc msg model =
             , List.map SearchEffect searchEffects
             )
 
-        GraphMsg (Graph.PluginMsg pid place value) ->
-            Dict.get pid model.config.plugins
-                |> Maybe.map2
-                    (\state plugin ->
-                        case place of
-                            Plugin.Model ->
-                                let
-                                    ( newState, cmd ) =
-                                        plugin.update.model value state
-                                in
-                                ( { model
-                                    | plugins = Dict.insert pid newState model.plugins
-                                  }
-                                , [ PluginEffect pid place cmd
-                                  ]
-                                )
-
-                            Plugin.Address ->
-                                let
-                                    ( newState, cmd ) =
-                                        plugin.update.graph.address value state
-                                in
-                                ( { model
-                                    | graph = model.graph
-
-                                    {- Layer.updateAddress
-                                       { address
-                                           | plugins = Dict.insert pid newState address.plugins
-                                       }
-                                    -}
-                                  }
-                                , [ PluginEffect pid place cmd
-                                  ]
-                                )
-                    )
-                    (Dict.get pid model.plugins)
-                |> Maybe.withDefault (n model)
-
         GraphMsg m ->
             let
                 ( graph, graphEffects ) =
-                    Graph.update uc m model.graph
+                    Graph.update plugins uc m model.graph
             in
             ( { model | graph = graph }
             , List.map GraphEffect graphEffects
             )
 
 
-updateByUrl : Config -> Url -> Model key -> ( Model key, List Effect )
-updateByUrl uc url model =
+updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
+updateByUrl plugins uc url model =
     let
         routeConfig =
             model.stats
@@ -246,7 +209,7 @@ updateByUrl uc url model =
                     Route.Graph graphRoute ->
                         let
                             ( graph, graphEffect ) =
-                                Graph.updateByRoute graphRoute model.graph
+                                Graph.updateByRoute plugins graphRoute model.graph
                         in
                         ( { model
                             | page = Page.Graph

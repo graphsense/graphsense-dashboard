@@ -15,6 +15,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -31,13 +32,13 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-addresses : Config -> Graph.Config -> Id.AddressId -> Entity -> Svg Msg
-addresses vc gc selected ent =
+addresses : Plugins -> Config -> Graph.Config -> Id.AddressId -> Entity -> Svg Msg
+addresses plugins vc gc selected ent =
     ent.addresses
         |> Dict.foldl
             (\_ address svg ->
                 ( Id.addressIdToString address.id
-                , Svg.lazy4 Address.address vc gc selected address
+                , Svg.lazy5 Address.address plugins vc gc selected address
                 )
                     :: svg
             )

@@ -113,9 +113,6 @@ perform key apiKey effect =
         PortsConsoleEffect msg ->
             Ports.console msg
 
-        PluginEffect pid place cmd ->
-            Cmd.map (Graph.PluginMsg pid place >> GraphMsg) cmd
-
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =

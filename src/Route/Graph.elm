@@ -8,6 +8,7 @@ module Route.Graph exposing
     , entityRoute
     , parse
     , parser
+    , pluginRoute
     , rootRoute
     , toUrl
     )
@@ -28,6 +29,7 @@ type Route
     = Currency String Thing
     | Label String
     | Root
+    | Plugin String String
 
 
 type Thing
@@ -193,6 +195,9 @@ toUrl route =
         Label l ->
             absolute [ labelSegment, l ] []
 
+        Plugin pid p ->
+            "/" ++ pid ++ p
+
 
 rootRoute : Route
 rootRoute =
@@ -209,6 +214,11 @@ entityRoute : { currency : String, entity : Int, layer : Maybe Int, table : Mayb
 entityRoute { currency, entity, layer, table } =
     Entity entity table layer
         |> Currency currency
+
+
+pluginRoute : String -> String -> Route
+pluginRoute =
+    Plugin
 
 
 parse : Config -> Url -> Maybe Route

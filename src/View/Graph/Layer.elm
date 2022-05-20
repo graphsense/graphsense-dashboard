@@ -9,6 +9,7 @@ import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer exposing (..)
 import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (Plugins)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -20,8 +21,8 @@ import View.Graph.Entity as Entity
 import View.Graph.Link as Link
 
 
-addresses : View.Config -> Graph.Config -> Id.AddressId -> Layer -> Svg Msg
-addresses vc gc selected layer =
+addresses : Plugins -> View.Config -> Graph.Config -> Id.AddressId -> Layer -> Svg Msg
+addresses plugins vc gc selected layer =
     let
         _ =
             Log.log "Graph.addresses" ""
@@ -30,7 +31,7 @@ addresses vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( Id.entityIdToString entity.id
-                , Svg.lazy4 Entity.addresses vc gc selected entity
+                , Svg.lazy5 Entity.addresses plugins vc gc selected entity
                 )
                     :: svg
             )
