@@ -9,6 +9,14 @@ type alias PluginStates =
     Dict String Value
 
 
+type UpdateContext
+    = UpdateAddress
+        Id.AddressId
+        { graph : Value
+        , address : Value
+        }
+
+
 type Context
     = Address Id.AddressId
     | Model

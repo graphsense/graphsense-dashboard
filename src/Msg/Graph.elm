@@ -14,7 +14,7 @@ import Time
 type Msg
     = UserClickedGraph
     | UserClickedAddress AddressId
-    | UserRightClickedAddress AddressId
+    | UserRightClickedAddress AddressId Coords
     | UserHoversAddress AddressId
     | UserClickedEntity EntityId
     | UserRightClickedEntity EntityId
@@ -45,4 +45,8 @@ type Msg
     | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
     | PluginMsg String Plugin.Context Json.Encode.Value
     | TableNewState Table.State
+    | UserClickedContextMenu
+    | UserLeftContextMenu
+    | UserClickedAnnotateAddress AddressId
+    | UserClickedRemoveAddress AddressId
     | NoOp

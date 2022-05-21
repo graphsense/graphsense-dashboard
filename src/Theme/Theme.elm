@@ -3,6 +3,7 @@ module Theme.Theme exposing (Theme, default)
 import Css exposing (Style)
 import Theme.Browser as Browser exposing (Browser)
 import Theme.Button as Button exposing (Button)
+import Theme.ContextMenu as ContextMenu exposing (ContextMenu)
 import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
@@ -29,6 +30,7 @@ type alias Theme =
     , button : Button
     , graph : Graph
     , browser : Browser
+    , contextMenu : ContextMenu
     , table : Table
     , tool : List Style
     , modal : Dialog
@@ -60,6 +62,7 @@ default =
     , user = User.default
     , graph = Graph.default
     , browser = Browser.default
+    , contextMenu = ContextMenu.default
     , table = Table.default
     , custom = ""
     }

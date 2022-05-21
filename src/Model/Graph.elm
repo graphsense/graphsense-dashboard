@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import IntDict exposing (IntDict)
 import Model.Graph.Adding as Adding
 import Model.Graph.Browser as Browser
+import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
@@ -24,6 +25,7 @@ type alias Model =
     , size : Maybe Coords
     , selected : Selected
     , hovered : Hovered
+    , contextMenu : Maybe ContextMenu.Model
     , plugins : PluginStates
     }
 

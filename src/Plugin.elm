@@ -17,7 +17,8 @@ type alias Plugin =
     { view :
         { graph :
             { address :
-                { flags : View.Config -> Id.AddressId -> Maybe Value -> Maybe (Svg Value)
+                { flags : View.Config -> Maybe Value -> Maybe (Svg Value)
+                , contextMenu : View.Config -> Id.AddressId -> Value -> Maybe Value -> List (Html Value)
                 }
             , navbar :
                 { left : View.Config -> Maybe Value -> Maybe (Html Value)
@@ -42,6 +43,12 @@ type alias UpdateModel =
     }
 
 
+type alias UpdateAddress =
+    { graph : Value
+    , address : Value
+    }
+
+
 type alias UpdateByUrlModel =
     { graph : UpdateByUrl
     }
@@ -60,6 +67,14 @@ type alias MsgValue =
 
 
 type alias StateValue =
+    Value
+
+
+type alias AddressValue =
+    Value
+
+
+type alias GraphValue =
     Value
 
 

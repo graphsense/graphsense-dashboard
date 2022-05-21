@@ -469,9 +469,24 @@ s_caption value__ record__ =
     { record__ | caption = value__ }
 
 
+s_caseIdJur : a -> { b | caseIdJur : a } -> { b | caseIdJur : a }
+s_caseIdJur value__ record__ =
+    { record__ | caseIdJur = value__ }
+
+
+s_caseIdPol : a -> { b | caseIdPol : a } -> { b | caseIdPol : a }
+s_caseIdPol value__ record__ =
+    { record__ | caseIdPol = value__ }
+
+
 s_caseInsensitive : a -> { b | caseInsensitive : a } -> { b | caseInsensitive : a }
 s_caseInsensitive value__ record__ =
     { record__ | caseInsensitive = value__ }
+
+
+s_cases : a -> { b | cases : a } -> { b | cases : a }
+s_cases value__ record__ =
+    { record__ | cases = value__ }
 
 
 s_category : a -> { b | category : a } -> { b | category : a }
@@ -614,9 +629,19 @@ s_context value__ record__ =
     { record__ | context = value__ }
 
 
+s_contextMenu : a -> { b | contextMenu : a } -> { b | contextMenu : a }
+s_contextMenu value__ record__ =
+    { record__ | contextMenu = value__ }
+
+
 s_contextStack : a -> { b | contextStack : a } -> { b | contextStack : a }
 s_contextStack value__ record__ =
     { record__ | contextStack = value__ }
+
+
+s_coords : a -> { b | coords : a } -> { b | coords : a }
+s_coords value__ record__ =
+    { record__ | coords = value__ }
 
 
 s_css : a -> { b | css : a } -> { b | css : a }
@@ -2469,6 +2494,11 @@ s_open value__ record__ =
     { record__ | open = value__ }
 
 
+s_option : a -> { b | option : a } -> { b | option : a }
+s_option value__ record__ =
+    { record__ | option = value__ }
+
+
 s_optionalDecimal : a -> { b | optionalDecimal : a } -> { b | optionalDecimal : a }
 s_optionalDecimal value__ record__ =
     { record__ | optionalDecimal = value__ }
@@ -3887,6 +3917,11 @@ s_unvisited value__ record__ =
 s_update : a -> { b | update : a } -> { b | update : a }
 s_update value__ record__ =
     { record__ | update = value__ }
+
+
+s_updateByUrl : a -> { b | updateByUrl : a } -> { b | updateByUrl : a }
+s_updateByUrl value__ record__ =
+    { record__ | updateByUrl = value__ }
 
 
 s_updateFrequency : a -> { b | updateFrequency : a } -> { b | updateFrequency : a }

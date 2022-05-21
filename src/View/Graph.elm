@@ -11,12 +11,15 @@ import Json.Decode
 import List.Extra
 import Log
 import Model.Graph exposing (..)
+import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
+import Plugin.Model exposing (PluginStates)
+import Plugin.View.Graph.Address
 import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
@@ -28,11 +31,13 @@ import Util.Graph as Util
 import Util.View exposing (none)
 import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
+import View.Graph.ContextMenu as ContextMenu
 import View.Graph.Entity as Entity
 import View.Graph.Layer as ViewLayer
 import View.Graph.Link as Link
 import View.Graph.Navbar as Navbar
 import View.Graph.Transform as Transform
+import View.Locale as Locale
 
 
 view : Plugins -> Config -> Model -> Html Msg
@@ -55,6 +60,7 @@ graph plugins vc gc model =
         , model.size
             |> Maybe.map (graphSvg plugins vc gc model)
             |> Maybe.withDefault none
+        , model.contextMenu |> Maybe.map (contextMenu plugins vc model) |> Maybe.withDefault none
         ]
 
 
@@ -252,3 +258,21 @@ arrowMarkers vc gc =
     ]
         |> List.map (Link.arrowMarker vc gc)
         |> defs []
+
+
+contextMenu : Plugins -> Config -> Model -> ContextMenu.Model -> Html Msg
+contextMenu plugins vc model cm =
+    let
+        option title msg =
+            ContextMenu.option vc (Locale.string vc.locale title) msg
+    in
+    (case cm.type_ of
+        ContextMenu.Address address ->
+            [ UserClickedAnnotateAddress address.id
+                |> ContextMenu.option vc "annotate"
+            , UserClickedRemoveAddress address.id
+                |> ContextMenu.option vc "remove"
+            ]
+                ++ Plugin.View.Graph.Address.contextMenu plugins vc model address
+    )
+        |> ContextMenu.view vc cm.coords

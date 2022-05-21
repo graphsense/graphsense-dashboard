@@ -11,6 +11,7 @@ import Json.Decode
 import Log
 import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
@@ -22,7 +23,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
-import Util.Graph exposing (translate)
+import Util.Graph exposing (decodeCoords, translate)
 import Util.View as Util
 import View.Graph.Label as Label
 import View.Graph.Link as Link
@@ -61,9 +62,9 @@ address plugins vc gc selected addr =
         [ Css.addressRoot vc |> css
         , Json.Decode.succeed ( UserClickedAddress addr.id, True )
             |> stopPropagationOn "click"
-        , UserRightClickedAddress addr.id
-            |> Json.Decode.succeed
-            |> on "contextmenu"
+        , decodeCoords Coords
+            |> Json.Decode.map (\c -> ( UserRightClickedAddress addr.id c, True ))
+            |> preventDefaultOn "contextmenu"
         , UserHoversAddress addr.id
             |> onMouseOver
         , UserLeavesThing

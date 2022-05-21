@@ -7,6 +7,7 @@ import Model.Graph exposing (NodeType(..))
 import RecordSetter exposing (..)
 import Theme.Browser as Browser
 import Theme.Button as Button
+import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
@@ -475,6 +476,19 @@ theme =
                                     []
                                )
                     )
+            )
+        |> s_contextMenu
+            (ContextMenu.default
+                |> s_root
+                    [ colors.brandWhite |> toCssColor |> backgroundColor
+                    , shadowMd
+                    ]
+                |> s_option
+                    [ scaled 2 |> rem |> padding
+                    , hover
+                        [ colors.brandBase |> toCssColor |> backgroundColor
+                        ]
+                    ]
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work

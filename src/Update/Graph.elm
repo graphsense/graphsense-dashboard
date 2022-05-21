@@ -6,6 +6,7 @@ import Config.Update as Update
 import Dict
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
+import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
 import Log
@@ -205,8 +206,18 @@ update plugins uc msg model =
                 |> List.singleton
             )
 
-        UserRightClickedAddress id ->
-            n model
+        UserRightClickedAddress id coords ->
+            Layer.getAddress id model.layers
+                |> Maybe.map
+                    (\address ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initAddress coords address
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserHoversAddress id ->
             n model
@@ -408,38 +419,73 @@ update plugins uc msg model =
                 |> n
 
         PluginMsg pid context msgValue ->
-            case context of
-                Plugin.Model ->
-                    let
-                        ( new, outMsg, cmd ) =
-                            Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
-                    in
-                    ( { model
-                        | plugins = new
-                      }
-                        |> updateByPluginOutMsg pid outMsg
-                    , List.map (PluginEffect context) cmd
-                    )
+            n model
 
-                Plugin.Address a ->
-                    Layer.getAddress a model.layers
-                        |> Maybe.map
-                            (\address ->
-                                let
-                                    ( new, outMsg, cmd ) =
-                                        Plugin.update pid plugins address.plugins msgValue (.graph >> .address)
-                                in
-                                ( { model
-                                    | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = new }) model.layers
-                                  }
-                                    |> updateByPluginOutMsg pid outMsg
-                                , List.map (PluginEffect context) cmd
-                                )
-                            )
-                        |> Maybe.withDefault (n model)
+        {- case context of
+                 Plugin.Model ->
+              let
+                  ( new, outMsg, cmd ) =
+                      Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
+              in
+              ( List.foldl
+                  (\( ctx, nw ) model ->
+                      case ctx of
+                          Plugin.Model ->
+                              { model
+                                  | plugins = new
+                              }
+
+                          Plugin.Address a ->
+                              Layer.getAddress a model.layers
+                                  |> Maybe.map
+                                      (\address ->
+                                          { model
+                                              | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = nw }) model.layers
+                                          }
+                                      )
+                                  |> Maybe.withDefault model
+                  )
+                  new
+                  |> updateByPluginOutMsg pid outMsg
+              , List.map (PluginEffect context) cmd
+              )
+
+           Plugin.Address a ->
+             Layer.getAddress a model.layers
+                 |> Maybe.map
+                     (\address ->
+                         let
+                             ( new, outMsg, cmd ) =
+                                 Plugin.update pid plugins address.plugins msgValue (.graph >> .address)
+                         in
+                         ( { model
+                             | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = new }) model.layers
+                           }
+                             |> updateByPluginOutMsg pid outMsg
+                         , List.map (PluginEffect context) cmd
+                         )
+                     )
+                     |> Maybe.withDefault (n model)
+        -}
+        UserClickedContextMenu ->
+            hideContextmenu model
+
+        UserLeftContextMenu ->
+            hideContextmenu model
+
+        UserClickedAnnotateAddress id ->
+            n model
+
+        UserClickedRemoveAddress id ->
+            n model
 
         NoOp ->
             n model
+
+
+hideContextmenu : Model -> ( Model, List Effect )
+hideContextmenu model =
+    n { model | contextMenu = Nothing }
 
 
 updateByPluginOutMsg : String -> List Plugin.OutMsg -> Model -> Model
@@ -447,7 +493,7 @@ updateByPluginOutMsg pid outMsgs model =
     outMsgs
         |> List.foldl
             (\msg mo ->
-                case msg of
+                case Debug.log "outMsg" msg of
                     Plugin.ShowBrowser ->
                         { model
                             | browser = Browser.showPlugin pid model.browser
