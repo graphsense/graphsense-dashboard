@@ -2,26 +2,25 @@ module Stats exposing (statsTest)
 
 import Api
 import Api.Data
-import Effect exposing (Effect(..))
 import Expect exposing (Expectation)
 import Mockup.Stats
-import Model exposing (Flags, Model)
-import Msg exposing (Msg(..))
+import Model exposing (Effect(..), Flags, Model, Msg(..))
 import ProgramTest exposing (..)
 import Setup
 import Test exposing (..)
 import Test.Html.Query as Query
 import Test.Html.Selector exposing (..)
+import Theme.Theme as Theme
 import Util exposing (ensureAndSimulateHttp)
 
 
 type alias Program =
-    ProgramTest (Model ()) Msg Effect
+    ProgramTest (Model ()) Msg (List Effect)
 
 
 base : String -> Program
 base locale =
-    Setup.start "/" { locale = locale }
+    Setup.start locale
         |> ensureAndSimulateHttp "GET"
             (Api.baseUrl ++ "/stats")
             Mockup.Stats.stats

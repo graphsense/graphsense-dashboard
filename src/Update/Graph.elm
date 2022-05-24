@@ -37,53 +37,52 @@ addAddress plugins uc address model =
     let
         added =
             Layer.addAddress plugins uc model.config.colors address model.layers
-    in
-    { model
-        | adding =
-            if Set.isEmpty added.new then
-                model.adding
 
-            else
-                Adding.removeAddress { currency = address.currency, address = address.address } model.adding
-        , layers = added.layers
-        , browser =
+        newModel =
+            { model
+                | adding =
+                    if Set.isEmpty added.new then
+                        model.adding
+
+                    else
+                        Adding.removeAddress { currency = address.currency, address = address.address } model.adding
+                , layers = added.layers
+                , config =
+                    model.config
+                        |> s_colors added.colors
+            }
+
+        addedAddress =
             added.new
                 |> Set.toList
-                |> Debug.log "XXX added.new"
                 |> List.head
                 |> Maybe.andThen (\a -> Layer.getAddress a added.layers)
-                |> Debug.log "XXX getAddress"
-                |> Maybe.map
-                    (\a -> Browser.showAddress a model.browser)
-                |> Maybe.withDefault model.browser
-        , config =
-            model.config
-                |> s_colors added.colors
-    }
-        |> n
+    in
+    addedAddress
+        |> Maybe.map (\a -> selectAddress a Nothing newModel)
+        |> Maybe.withDefault (n newModel)
 
 
-addEntity : Update.Config -> Api.Data.Entity -> Model -> ( Model, List Effect )
+addEntity : Update.Config -> Api.Data.Entity -> Model -> ( Model, Maybe Entity )
 addEntity uc entity model =
     let
         added =
             Layer.addEntity uc model.config.colors entity model.layers
+
+        addedEntity =
+            added.new
+                |> Set.toList
+                |> List.head
+                |> Maybe.andThen (\a -> Layer.getEntity a added.layers)
     in
-    n
-        { model
-            | layers = added.layers
-            , config =
-                model.config
-                    |> s_colors added.colors
-            , browser =
-                added.new
-                    |> Set.toList
-                    |> List.head
-                    |> Maybe.andThen (\a -> Layer.getEntity a added.layers)
-                    |> Maybe.map
-                        (\a -> Browser.showEntity a model.browser)
-                    |> Maybe.withDefault model.browser
-        }
+    ( { model
+        | layers = added.layers
+        , config =
+            model.config
+                |> s_colors added.colors
+      }
+    , addedEntity
+    )
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -313,7 +312,15 @@ update plugins uc msg model =
                         in
                         md
                     )
-                |> Maybe.Extra.withDefaultLazy (\_ -> addEntity uc entity model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        addEntity uc entity model
+                            |> (\( newModel, newEntity ) ->
+                                    newEntity
+                                        |> Maybe.map (\e -> selectEntity e Nothing newModel)
+                                        |> Maybe.withDefault (n newModel)
+                               )
+                    )
                 |> mapSecond
                     ((++)
                         (getEntityEgonet

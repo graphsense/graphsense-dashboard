@@ -28,6 +28,9 @@ import Url exposing (Url)
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
     case msg of
+        NoOp ->
+            n model
+
         UserRequestsUrl request ->
             case request of
                 Browser.Internal url ->

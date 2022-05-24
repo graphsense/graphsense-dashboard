@@ -1,7 +1,7 @@
-module Locale.Setup exposing (simulateEffects)
+module Setup.Locale exposing (simulateEffects)
 
-import Locale.Effect exposing (Effect(..))
-import Locale.Msg exposing (Msg(..))
+import Effect.Locale exposing (Effect(..))
+import Msg.Locale exposing (Msg(..))
 import ProgramTest exposing (ProgramTest)
 import SimulatedEffect.Cmd
 import SimulatedEffect.Http as Http

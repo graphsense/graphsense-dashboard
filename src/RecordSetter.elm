@@ -2844,6 +2844,11 @@ s_program value__ record__ =
     { record__ | program = value__ }
 
 
+s_properties : a -> { b | properties : a } -> { b | properties : a }
+s_properties value__ record__ =
+    { record__ | properties = value__ }
+
+
 s_propertyBoxActivityPeriod : a -> { b | propertyBoxActivityPeriod : a } -> { b | propertyBoxActivityPeriod : a }
 s_propertyBoxActivityPeriod value__ record__ =
     { record__ | propertyBoxActivityPeriod = value__ }

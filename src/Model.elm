@@ -51,7 +51,8 @@ type alias Model navigationKey =
 
 
 type Msg
-    = UserRequestsUrl UrlRequest
+    = NoOp
+    | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
     | BrowserGotResponseWithHeaders (Result ( Http.Error, Effect ) ( Dict String String, Msg ))

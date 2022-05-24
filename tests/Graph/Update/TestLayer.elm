@@ -20,13 +20,13 @@ import Update.Graph.Layer as Layer
 
 type TestRow
     = Address ( String, Api.Data.Address, IntDict Layer -> Layer.Acc Id.AddressId )
-    | Entity ( String, Api.Data.Entity, IntDict Layer -> Layer.Acc Entity )
+    | Entity ( String, Api.Data.Entity, IntDict Layer -> Layer.Acc Id.EntityId )
     | EntityNeighbors
         { title : String
         , anchor : EntityId
         , isOutgoing : Bool
         , neighbors : List Api.Data.Entity
-        , output : IntDict Layer -> Layer.Acc Entity
+        , output : IntDict Layer -> Layer.Acc Id.EntityId
         }
 
 
@@ -443,7 +443,7 @@ suite =
                             in
                             (test title <|
                                 \_ ->
-                                    Layer.addNeighbors
+                                    Layer.addEntityNeighbors
                                         config
                                         anchor
                                         isOutgoing

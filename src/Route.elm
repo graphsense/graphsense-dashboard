@@ -23,11 +23,6 @@ graphSegment =
     "graph"
 
 
-statsSegment : String
-statsSegment =
-    "stats"
-
-
 parse : Config -> Url -> Maybe Route
 parse c =
     P.parse (parser c)
@@ -37,7 +32,7 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Graph (s graphSegment </> Graph.parser c.graph)
-        , map Stats (s statsSegment)
+        , map Stats top
         ]
 
 
@@ -53,4 +48,4 @@ toUrl route =
             absolute [ graphSegment ] [] ++ Graph.toUrl graph
 
         Stats ->
-            absolute [ statsSegment ] []
+            absolute [] []
