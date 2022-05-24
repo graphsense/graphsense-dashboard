@@ -49,7 +49,7 @@ type Effect
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTxs -> Msg
         }
-    | PluginEffect Plugin.Context ( String, Cmd Json.Encode.Value )
+    | PluginEffect ( String, Cmd Json.Encode.Value )
 
 
 perform : Effect -> Cmd Msg
@@ -87,6 +87,6 @@ perform eff =
         GetAddressTxsEffect _ ->
             Cmd.none
 
-        PluginEffect context ( pid, cmd ) ->
+        PluginEffect ( pid, cmd ) ->
             cmd
-                |> Cmd.map (PluginMsg pid context)
+                |> Cmd.map (PluginMsg pid)

@@ -43,7 +43,7 @@ type Msg
         }
         Api.Data.Entity
     | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
-    | PluginMsg String Plugin.Context Json.Encode.Value
+    | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu
     | UserLeftContextMenu

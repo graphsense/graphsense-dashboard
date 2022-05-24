@@ -13,6 +13,7 @@ import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
+import Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Address as Address
@@ -27,14 +28,14 @@ type alias Acc =
     }
 
 
-addAddress : Update.Config -> Int -> Api.Data.Address -> Acc -> Acc
-addAddress uc layerId address acc =
+addAddress : Plugins -> Update.Config -> Int -> Api.Data.Address -> Acc -> Acc
+addAddress plugins uc layerId address acc =
     Dict.get (Id.initEntityId { layer = layerId, currency = address.currency, id = address.entity }) acc.entities
         |> Maybe.map
             (\entity ->
                 let
                     newAcc =
-                        addAddressToEntity uc acc.colors address entity
+                        addAddressToEntity plugins uc acc.colors address entity
 
                     ( entities, repositioned ) =
                         Dict.insert entity.id newAcc.updatedEntity acc.entities
@@ -49,14 +50,14 @@ addAddress uc layerId address acc =
         |> Maybe.withDefault acc
 
 
-addAddressToEntity : Update.Config -> Dict String Color -> Api.Data.Address -> Entity -> { updatedEntity : Entity, new : AddressId, colors : Dict String Color }
-addAddressToEntity uc colors address entity =
+addAddressToEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> Entity -> { updatedEntity : Entity, new : AddressId, colors : Dict String Color }
+addAddressToEntity plugins uc colors address entity =
     Dict.get (Id.initAddressId { layer = Id.layer entity.id, id = address.address, currency = address.currency }) entity.addresses
         |> Maybe.map (\{ id } -> { updatedEntity = entity, new = id, colors = colors })
         |> Maybe.withDefault
             (let
                 newAddress =
-                    Address.init entity address
+                    Address.init plugins entity address
 
                 newColors =
                     Color.update uc colors newAddress.category

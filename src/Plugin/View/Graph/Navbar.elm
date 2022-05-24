@@ -17,5 +17,5 @@ left plugins vc graph =
             (\( pid, plugin ) ->
                 Dict.get pid graph.plugins
                     |> plugin.view.graph.navbar.left vc
-                    |> Maybe.map (Html.map (PluginMsg pid Plugin.Model))
+                    |> Maybe.map (Html.map (PluginMsg pid))
             )

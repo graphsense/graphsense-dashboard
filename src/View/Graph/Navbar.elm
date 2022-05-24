@@ -32,6 +32,7 @@ navbarLeft plugins vc model =
             [ { icon = FontAwesome.icon FontAwesome.tag
               , title = Locale.string vc.locale "My tags"
               , msg = NoOp
+              , color = Nothing
               }
             ]
             ++ Plugin.View.Graph.Navbar.left plugins vc model
@@ -69,34 +70,42 @@ navbarRight vc =
             [ { title = Locale.string vc.locale "Start from scratch"
               , icon = FontAwesome.icon FontAwesome.file
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Export ..."
               , icon = FontAwesome.icon FontAwesome.download
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Undo last graph change"
               , icon = FontAwesome.icon FontAwesome.undo
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog
               , msg = NoOp
+              , color = Nothing
               }
             , { title = Locale.string vc.locale "Legend"
               , icon = FontAwesome.icon FontAwesome.info
               , msg = NoOp
+              , color = Nothing
               }
             ]
         )

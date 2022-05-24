@@ -9,10 +9,11 @@ import Json.Encode
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
+import Plugin exposing (Plugins)
 
 
-init : Entity -> Api.Data.Address -> Address
-init entity address =
+init : Plugins -> Entity -> Api.Data.Address -> Address
+init plugins entity address =
     { id =
         Id.initAddressId
             { layer = Id.layer entity.id
@@ -39,5 +40,5 @@ init entity address =
     , dx = 0
     , dy = 0
     , links = Model.Graph.Address.Links Dict.empty
-    , plugins = Dict.fromList [ ( "casemgm", Json.Encode.string "X" ) ]
+    , plugins = Plugin.initAddress plugins
     }

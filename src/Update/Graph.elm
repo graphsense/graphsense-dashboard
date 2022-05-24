@@ -9,6 +9,7 @@ import Effect.Graph exposing (Effect(..))
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
+import Json.Encode exposing (Value)
 import Log
 import Maybe.Extra
 import Model.Graph exposing (..)
@@ -31,11 +32,11 @@ import Update.Graph.Layer as Layer
 import Update.Graph.Transform as Transform
 
 
-addAddress : Update.Config -> Api.Data.Address -> Model -> ( Model, List Effect )
-addAddress uc address model =
+addAddress : Plugins -> Update.Config -> Api.Data.Address -> Model -> ( Model, List Effect )
+addAddress plugins uc address model =
     let
         added =
-            Layer.addAddress uc model.config.colors address model.layers
+            Layer.addAddress plugins uc model.config.colors address model.layers
     in
     { model
         | adding =
@@ -284,7 +285,8 @@ update plugins uc msg model =
                         n model
 
         BrowserGotAddress address ->
-            addAddress uc
+            addAddress plugins
+                uc
                 address
                 { model
                     | adding = Adding.setAddress { currency = address.currency, address = address.address } address model.adding
@@ -298,7 +300,7 @@ update plugins uc msg model =
                     (\address ->
                         addEntity uc entity model
                             |> first
-                            |> addAddress uc address
+                            |> addAddress plugins uc address
                     )
                 |> Maybe.map
                     (\md ->
@@ -361,7 +363,7 @@ update plugins uc msg model =
                     )
                 |> Maybe.map
                     (\( address, ent ) ->
-                        handleAddressNeighbor uc ( address, ent ) isOutgoing ( neighbor, entity ) model
+                        handleAddressNeighbor plugins uc ( address, ent ) isOutgoing ( neighbor, entity ) model
                     )
                 |> Maybe.withDefault (n model)
                 |> mapSecond
@@ -418,8 +420,17 @@ update plugins uc msg model =
             }
                 |> n
 
-        PluginMsg pid context msgValue ->
-            n model
+        PluginMsg pid msgValue ->
+            let
+                ( new, outMsg, cmd ) =
+                    Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
+            in
+            ( { model
+                | plugins = new
+              }
+                |> updateByPluginOutMsg plugins pid outMsg
+            , List.map PluginEffect cmd
+            )
 
         {- case context of
                  Plugin.Model ->
@@ -488,8 +499,8 @@ hideContextmenu model =
     n { model | contextMenu = Nothing }
 
 
-updateByPluginOutMsg : String -> List Plugin.OutMsg -> Model -> Model
-updateByPluginOutMsg pid outMsgs model =
+updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model -> Model
+updateByPluginOutMsg plugins pid outMsgs model =
     outMsgs
         |> List.foldl
             (\msg mo ->
@@ -497,6 +508,31 @@ updateByPluginOutMsg pid outMsgs model =
                     Plugin.ShowBrowser ->
                         { model
                             | browser = Browser.showPlugin pid model.browser
+                        }
+
+                    Plugin.UpdateAddresses id msgValue ->
+                        let
+                            layers =
+                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) model.layers
+                        in
+                        { model
+                            | layers = layers
+                            , browser =
+                                case model.browser.type_ of
+                                    Browser.Address (Browser.Loaded ad) table ->
+                                        if ad.address.currency == id.currency && ad.address.address == id.address then
+                                            model.browser
+                                                |> s_type_
+                                                    (Layer.getAddress ad.id layers
+                                                        |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
+                                                        |> Maybe.withDefault model.browser.type_
+                                                    )
+
+                                        else
+                                            model.browser
+
+                                    _ ->
+                                        model.browser
                         }
             )
             model
@@ -600,8 +636,8 @@ updateByRoute plugins route model =
             ( { model
                 | plugins = new
               }
-                |> updateByPluginOutMsg pid outMsg
-            , List.map (PluginEffect Plugin.Model) cmd
+                |> updateByPluginOutMsg plugins pid outMsg
+            , List.map PluginEffect cmd
             )
 
 
@@ -619,8 +655,8 @@ updateSize w h model =
     }
 
 
-addAddressNeighborWithEntity : Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, Maybe Address, Set EntityId )
-addAddressNeighborWithEntity uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbor, entity ) model =
+addAddressNeighborWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, Maybe Address, Set EntityId )
+addAddressNeighborWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbor, entity ) model =
     let
         acc =
             Layer.addEntityNeighbors uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
@@ -631,7 +667,7 @@ addAddressNeighborWithEntity uc ( anchorAddress, anchorEntity ) isOutgoing ( nei
             (\new ->
                 let
                     added =
-                        Layer.addAddressAtEntity uc model.config.colors new neighbor.address acc.layers
+                        Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address acc.layers
                 in
                 ( { model
                     | layers = added.layers
@@ -795,11 +831,11 @@ getEntityEgonet { currency, entity } layers =
     ]
 
 
-handleAddressNeighbor : Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
-handleAddressNeighbor uc anchor isOutgoing neighbor model =
+handleAddressNeighbor : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
+handleAddressNeighbor plugins uc anchor isOutgoing neighbor model =
     let
         ( newModel, new, repositionedEntities ) =
-            addAddressNeighborWithEntity uc anchor isOutgoing neighbor model
+            addAddressNeighborWithEntity plugins uc anchor isOutgoing neighbor model
     in
     case new of
         Nothing ->

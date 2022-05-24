@@ -6,6 +6,8 @@ import Html.Styled as Html exposing (Html)
 import Json.Encode exposing (Value)
 import Maybe.Extra
 import Model.Graph as Graph
+import Model.Graph.Address exposing (..)
+import Model.Graph.Browser exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (..)
 import Plugin.Model as Plugin exposing (..)
@@ -16,4 +18,4 @@ propertyBox plugins vc pid states =
     Maybe.Extra.andThen2 (\plugin -> plugin.view.graph.browser vc)
         (Dict.get pid plugins)
         (Dict.get pid states)
-        |> Maybe.map (Html.map (PluginMsg pid Plugin.Model))
+        |> Maybe.map (Html.map (PluginMsg pid))

@@ -1,4 +1,4 @@
-module View.Graph.Browser exposing (Row(..), TableLink, Value(..), browse, browser, elseLoading, ifLoaded)
+module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, ifLoaded, propertyBox, rule)
 
 import Api.Data
 import Config.Graph as Graph
@@ -19,6 +19,7 @@ import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Plugin exposing (Plugins)
+import Plugin.Html
 import Plugin.Model exposing (PluginStates)
 import Plugin.View.Graph.Browser
 import Route exposing (toUrl)
@@ -29,29 +30,6 @@ import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Locale as Locale
-
-
-type Value msg
-    = String String
-    | EntityId Graph.Config Entity
-    | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
-    | Usage Time.Posix Int
-    | Duration Int
-    | Value String Api.Data.Values
-    | Input (String -> msg) String
-    | LoadingValue
-
-
-type alias TableLink =
-    { title : String
-    , link : String
-    , active : Bool
-    }
-
-
-type Row id a msg
-    = Row ( String, Loadable id a -> Value msg, Maybe TableLink )
-    | Rule
 
 
 browser : Plugins -> View.Config -> Graph.Config -> PluginStates -> Browser.Model -> Html Msg
@@ -67,7 +45,7 @@ browser plugins vc gc states model =
                     []
 
                 Browser.Address loadable table ->
-                    browseAddress vc gc model.now loadable
+                    browseAddress plugins vc model.now loadable
                         :: (table
                                 |> Maybe.map (browseAddressTable vc gc (loadableAddressCurrency loadable))
                                 |> Maybe.map List.singleton
@@ -75,7 +53,7 @@ browser plugins vc gc states model =
                            )
 
                 Browser.Entity loadable table ->
-                    browseEntity vc gc model.now loadable
+                    browseEntity plugins vc gc model.now loadable
                         :: (table
                                 |> Maybe.map (browseEntityTable vc gc (loadableEntityCurrency loadable))
                                 |> Maybe.map List.singleton
@@ -90,21 +68,25 @@ browser plugins vc gc states model =
         ]
 
 
-browse : View.Config -> Loadable id a -> List (Row id a msg) -> Html msg
-browse vc a rows =
-    List.map (browseRow vc a) rows
-        |> div
-            [ Css.propertyBoxTable vc |> css
-            ]
+propertyBox : View.Config -> List (Html msg) -> Html msg
+propertyBox vc =
+    div
+        [ Css.propertyBoxTable vc |> css
+        ]
 
 
-browseRow : View.Config -> Loadable id a -> Row id a msg -> Html msg
-browseRow vc thing row =
+rule : View.Config -> Html msg
+rule vc =
+    hr [ Css.propertyBoxRule vc |> css ] []
+
+
+browseRow : View.Config -> (r -> Html msg) -> Row r -> Html msg
+browseRow vc map row =
     case row of
         Rule ->
-            hr [ Css.propertyBoxRule vc |> css ] []
+            rule vc
 
-        Row ( key, toValue, table ) ->
+        Row ( key, value, table ) ->
             div
                 [ Css.propertyBoxRow vc |> css
                 ]
@@ -113,20 +95,15 @@ browseRow vc thing row =
                     ]
                     [ Locale.text vc.locale key
                     ]
-                , toValue thing |> valueCell vc
+                , span
+                    [ Css.propertyBoxValue vc |> css
+                    ]
+                    [ map value
+                    ]
                 , table
                     |> Maybe.map (tableLink vc)
                     |> Maybe.withDefault none
                 ]
-
-
-valueCell : View.Config -> Value msg -> Html msg
-valueCell vc value =
-    span
-        [ Css.propertyBoxValue vc |> css
-        ]
-        [ browseValue vc value
-        ]
 
 
 tableLink : View.Config -> TableLink -> Html msg
@@ -244,8 +221,28 @@ browseValue vc value =
             text "loading"
 
 
-browseAddress : View.Config -> Graph.Config -> Time.Posix -> Loadable String Address -> Html Msg
-browseAddress vc gc now address =
+browseAddress : Plugins -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress plugins vc now address =
+    (rowsAddress vc now address |> List.map (browseRow vc (browseValue vc)))
+        ++ [ rule vc ]
+        ++ (case address of
+                Loading _ _ ->
+                    []
+
+                Loaded ad ->
+                    ad.plugins
+                        |> Plugin.Html.iterate plugins
+                            (\plugin state ->
+                                plugin.view.graph.address.properties vc state
+                            )
+                        |> List.intersperse [ rule vc ]
+                        |> List.concat
+           )
+        |> propertyBox vc
+
+
+rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg))
+rowsAddress vc now address =
     let
         mkTableLink title tableTag =
             address
@@ -267,95 +264,104 @@ browseAddress vc gc now address =
                         }
                     )
     in
-    browse vc
-        address
-        [ Row
-            ( "Address"
-            , ifLoaded (.address >> .address >> String)
-                >> elseShowAddress
-            , Nothing
-            )
-        , Row
-            ( "Currency"
-            , ifLoaded (.address >> .currency >> String.toUpper >> String)
-                >> elseShowCurrency
-            , Nothing
-            )
-        , Row
-            ( "Tags"
-            , ifLoaded
+    [ Row
+        ( "Address"
+        , address
+            |> ifLoaded (.address >> .address >> String)
+            |> elseShowAddress
+        , Nothing
+        )
+    , Row
+        ( "Currency"
+        , address
+            |> ifLoaded (.address >> .currency >> String.toUpper >> String)
+            |> elseShowCurrency
+        , Nothing
+        )
+    , Row
+        ( "Tags"
+        , address
+            |> ifLoaded
                 (\a ->
                     Maybe.map List.length a.address.tags
                         |> Maybe.withDefault 0
                         |> String.fromInt
                         |> String
                 )
-                >> elseLoading
-            , mkTableLink "List address tags" Route.AddressTagsTable
-            )
-        , Rule
-        , Row
-            ( "Transactions"
-            , ifLoaded
+            |> elseLoading
+        , mkTableLink "List address tags" Route.AddressTagsTable
+        )
+    , Rule
+    , Row
+        ( "Transactions"
+        , address
+            |> ifLoaded
                 (\a ->
                     Transactions
                         { noIncomingTxs = a.address.noIncomingTxs
                         , noOutgoingTxs = a.address.noOutgoingTxs
                         }
                 )
-                >> elseLoading
-            , mkTableLink "List address transactions" Route.AddressTxsTable
-            )
-        , Row
-            ( "Receiving addresses"
-            , ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
-                >> elseLoading
-            , mkTableLink "List receiving addresses" Route.AddressIncomingNeighborsTable
-            )
-        , Row
-            ( "Sending addresses"
-            , ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
-                >> elseLoading
-            , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
-            )
-        , Rule
-        , Row
-            ( "First usage"
-            , ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
-                >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Last usage"
-            , ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
-                >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Activity period"
-            , ifLoaded
+            |> elseLoading
+        , mkTableLink "List address transactions" Route.AddressTxsTable
+        )
+    , Row
+        ( "Receiving addresses"
+        , address
+            |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+            |> elseLoading
+        , mkTableLink "List receiving addresses" Route.AddressIncomingNeighborsTable
+        )
+    , Row
+        ( "Sending addresses"
+        , address
+            |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
+            |> elseLoading
+        , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
+        )
+    , Rule
+    , Row
+        ( "First usage"
+        , address
+            |> ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Last usage"
+        , address
+            |> ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Activity period"
+        , address
+            |> ifLoaded
                 (\a ->
                     a.address.firstTx.timestamp
                         - a.address.lastTx.timestamp
                         |> Duration
                 )
-                >> elseLoading
-            , Nothing
-            )
-        , Rule
-        , Row
-            ( "Total received"
-            , ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
-                >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Final balance"
-            , ifLoaded (\a -> Value a.address.currency a.address.balance)
-                >> elseLoading
-            , Nothing
-            )
-        ]
+            |> elseLoading
+        , Nothing
+        )
+    , Rule
+    , Row
+        ( "Total received"
+        , address
+            |> ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Final balance"
+        , address
+            |> ifLoaded (\a -> Value a.address.currency a.address.balance)
+            |> elseLoading
+        , Nothing
+        )
+    ]
 
 
 makeTableLink : (a -> String) -> (a -> id) -> (String -> id -> TableLink) -> Loadable id a -> Maybe TableLink
@@ -410,8 +416,25 @@ elseShowCurrency l =
             v
 
 
-browseEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
-browseEntity vc gc now ent =
+browseEntity : Plugins -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
+browseEntity plugins vc gc now entity =
+    (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
+        ++ [ rule vc ]
+        {- ++ (pluginStates
+                |> Plugin.Html.iterate plugins
+                    vc
+                    (\plugin state ->
+                        plugin.view.graph.address.properties vc state
+                    )
+                |> List.intersperse [ rule vc ]
+                |> List.concat
+           )
+        -}
+        |> propertyBox vc
+
+
+rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg))
+rowsEntity vc gc now ent =
     let
         mkTableLink title tableTag =
             ent
@@ -433,101 +456,107 @@ browseEntity vc gc now ent =
                         }
                     )
     in
-    browse vc
-        ent
-        [ Row ( "Entity", ifLoaded (EntityId gc) >> elseLoading, Nothing )
-        , Row
-            ( "Root address"
-            , ifLoaded (.entity >> .rootAddress >> String) >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Currency"
-            , ifLoaded (.entity >> .currency >> String.toUpper >> String) >> elseShowCurrency
-            , Nothing
-            )
-        , Row
-            ( "Addresses"
-            , ifLoaded
+    [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
+    , Row
+        ( "Root address"
+        , ent |> ifLoaded (.entity >> .rootAddress >> String) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Currency"
+        , ent |> ifLoaded (.entity >> .currency >> String.toUpper >> String) |> elseShowCurrency
+        , Nothing
+        )
+    , Row
+        ( "Addresses"
+        , ent
+            |> ifLoaded
                 (\entity ->
                     Locale.int vc.locale entity.entity.noAddresses
                         |> String
                 )
-                >> elseLoading
-            , mkTableLink "List addresses" Route.EntityAddressesTable
-            )
-        , Row
-            ( "Address Tags"
-            , ifLoaded
+            |> elseLoading
+        , mkTableLink "List addresses" Route.EntityAddressesTable
+        )
+    , Row
+        ( "Address Tags"
+        , ent
+            |> ifLoaded
                 (\entity ->
                     Maybe.map (.addressTags >> List.length) entity.entity.tags
                         |> Maybe.withDefault 0
                         |> String.fromInt
                         |> String
                 )
-                >> elseLoading
-            , mkTableLink "List address tags" Route.EntityTagsTable
-            )
-        , Rule
-        , Row
-            ( "Transactions"
-            , ifLoaded
+            |> elseLoading
+        , mkTableLink "List address tags" Route.EntityTagsTable
+        )
+    , Rule
+    , Row
+        ( "Transactions"
+        , ent
+            |> ifLoaded
                 (\entity ->
                     Transactions
                         { noIncomingTxs = entity.entity.noIncomingTxs
                         , noOutgoingTxs = entity.entity.noOutgoingTxs
                         }
                 )
-                >> elseLoading
-            , mkTableLink "List entity transactions" Route.EntityTxsTable
-            )
-        , Row
-            ( "Receiving entities"
-            , ifLoaded
+            |> elseLoading
+        , mkTableLink "List entity transactions" Route.EntityTxsTable
+        )
+    , Row
+        ( "Receiving entities"
+        , ent
+            |> ifLoaded
                 (\entity ->
                     Locale.int vc.locale entity.entity.outDegree
                         |> String
                 )
-                >> elseLoading
-            , mkTableLink "List receiving entities" Route.EntityIncomingNeighborsTable
-            )
-        , Row
-            ( "Sending entities"
-            , ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
-                >> elseLoading
-            , mkTableLink "List sending entities" Route.EntityOutgoingNeighborsTable
-            )
-        , Rule
-        , Row
-            ( "First usage"
-            , ifLoaded (\entity -> Usage now entity.entity.firstTx.timestamp) >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Last usage"
-            , ifLoaded (\entity -> Usage now entity.entity.lastTx.timestamp) >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Activity period"
-            , ifLoaded (\entity -> entity.entity.firstTx.timestamp - entity.entity.lastTx.timestamp |> Duration)
-                >> elseLoading
-            , Nothing
-            )
-        , Rule
-        , Row
-            ( "Total received"
-            , ifLoaded (\entity -> Value entity.entity.currency entity.entity.totalReceived)
-                >> elseLoading
-            , Nothing
-            )
-        , Row
-            ( "Final balance"
-            , ifLoaded (\entity -> Value entity.entity.currency entity.entity.balance)
-                >> elseLoading
-            , Nothing
-            )
-        ]
+            |> elseLoading
+        , mkTableLink "List receiving entities" Route.EntityIncomingNeighborsTable
+        )
+    , Row
+        ( "Sending entities"
+        , ent
+            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
+            |> elseLoading
+        , mkTableLink "List sending entities" Route.EntityOutgoingNeighborsTable
+        )
+    , Rule
+    , Row
+        ( "First usage"
+        , ent |> ifLoaded (\entity -> Usage now entity.entity.firstTx.timestamp) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Last usage"
+        , ent |> ifLoaded (\entity -> Usage now entity.entity.lastTx.timestamp) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Activity period"
+        , ent
+            |> ifLoaded (\entity -> entity.entity.firstTx.timestamp - entity.entity.lastTx.timestamp |> Duration)
+            |> elseLoading
+        , Nothing
+        )
+    , Rule
+    , Row
+        ( "Total received"
+        , ent
+            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.totalReceived)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Final balance"
+        , ent
+            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.balance)
+            |> elseLoading
+        , Nothing
+        )
+    ]
 
 
 browseAddressTable : View.Config -> Graph.Config -> String -> AddressTable -> Html Msg

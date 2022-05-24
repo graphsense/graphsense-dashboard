@@ -1,6 +1,7 @@
 module Model.Graph.Browser exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Json.Encode exposing (Value)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
@@ -25,6 +26,29 @@ type Type
 type Loadable id thing
     = Loading String id
     | Loaded thing
+
+
+type Value msg
+    = String String
+    | EntityId Graph.Config Entity
+    | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
+    | Usage Time.Posix Int
+    | Duration Int
+    | Value String Api.Data.Values
+    | Input (String -> msg) String
+    | LoadingValue
+
+
+type alias TableLink =
+    { title : String
+    , link : String
+    , active : Bool
+    }
+
+
+type Row r
+    = Row ( String, r, Maybe TableLink )
+    | Rule
 
 
 loadableAddressCurrency : Loadable id Address -> String

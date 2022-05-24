@@ -9,6 +9,7 @@ module Update.Graph.Layer exposing
     , syncLinks
     , updateAddress
     , updateAddressLink
+    , updateAddresses
     , updateEntityLinks
     )
 
@@ -30,6 +31,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Locale as Locale
+import Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Color as Color
@@ -52,9 +54,9 @@ type alias Acc comparable =
 
 {-| Add an address to every entity node it belongs to
 -}
-addAddress : Update.Config -> Dict String Color -> Api.Data.Address -> IntDict Layer -> Acc AddressId
-addAddress uc colors address layers =
-    addAddressHelp uc address { layers = layers, new = Set.empty, repositioned = Set.empty, colors = colors }
+addAddress : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> IntDict Layer -> Acc AddressId
+addAddress plugins uc colors address layers =
+    addAddressHelp plugins uc address { layers = layers, new = Set.empty, repositioned = Set.empty, colors = colors }
 
 
 {-| Add an entity to the root of the graph
@@ -71,14 +73,15 @@ addEntity uc colors entity layers =
         }
 
 
-addAddressAtEntity : Update.Config -> Dict String Color -> EntityId -> Api.Data.Address -> IntDict Layer -> Acc AddressId
-addAddressAtEntity uc colors entityId address layers =
+addAddressAtEntity : Plugins -> Update.Config -> Dict String Color -> EntityId -> Api.Data.Address -> IntDict Layer -> Acc AddressId
+addAddressAtEntity plugins uc colors entityId address layers =
     IntDict.get (Id.layer entityId) layers
         |> Maybe.map
             (\layer ->
                 let
                     accEntity =
-                        Entity.addAddress uc
+                        Entity.addAddress plugins
+                            uc
                             layer.id
                             address
                             { entities = layer.entities
@@ -327,14 +330,15 @@ updateEntity id update layers =
         |> Maybe.withDefault ( layers, Nothing )
 
 
-addAddressHelp : Update.Config -> Api.Data.Address -> Acc AddressId -> Acc AddressId
-addAddressHelp uc address acc =
+addAddressHelp : Plugins -> Update.Config -> Api.Data.Address -> Acc AddressId -> Acc AddressId
+addAddressHelp plugins uc address acc =
     acc.layers
         |> IntDict.foldl
             (\layerId layer acc_ ->
                 let
                     accEntity =
-                        Entity.addAddress uc
+                        Entity.addAddress plugins
+                            uc
                             layerId
                             address
                             { entities = layer.entities
@@ -615,3 +619,64 @@ updateAddressOnLayer id update layer =
                     )
                     layer.entities
     }
+
+
+updateAddresses : { currency : String, address : String } -> (Address -> Address) -> IntDict Layer -> IntDict Layer
+updateAddresses { currency, address } update layers =
+    layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                let
+                    addressId =
+                        Id.initAddressId { currency = currency, id = address, layer = layer.id }
+
+                    ( entities, updated ) =
+                        updateAddressesForEntities addressId update layer.entities
+                in
+                if Debug.log ("Updated layer " ++ String.fromInt layer.id) updated then
+                    IntDict.insert layer.id
+                        { layer | entities = entities }
+                        layers_
+
+                else
+                    layers_
+            )
+            layers
+
+
+updateAddressesForEntities : AddressId -> (Address -> Address) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )
+updateAddressesForEntities id update entities =
+    entities
+        |> Dict.foldl
+            (\_ entity ( entities_, updated ) ->
+                let
+                    ( addresses, updated_ ) =
+                        updateAddressesForAddresses id update entity.addresses
+                in
+                if Debug.log ("updated entity " ++ Debug.toString entity.id) updated_ then
+                    ( Dict.insert entity.id
+                        { entity
+                            | addresses = addresses
+                        }
+                        entities_
+                    , True
+                    )
+
+                else
+                    ( entities_, updated )
+            )
+            ( entities, False )
+
+
+updateAddressesForAddresses : AddressId -> (Address -> Address) -> Dict AddressId Address -> ( Dict AddressId Address, Bool )
+updateAddressesForAddresses id update addresses =
+    case Dict.get id addresses of
+        Nothing ->
+            ( addresses, False )
+
+        Just found ->
+            ( Dict.insert found.id
+                (update found)
+                addresses
+            , True
+            )

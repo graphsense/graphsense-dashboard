@@ -269,9 +269,9 @@ contextMenu plugins vc model cm =
     (case cm.type_ of
         ContextMenu.Address address ->
             [ UserClickedAnnotateAddress address.id
-                |> ContextMenu.option vc "annotate"
+                |> option "Annotate"
             , UserClickedRemoveAddress address.id
-                |> ContextMenu.option vc "remove"
+                |> option "Remove"
             ]
                 ++ Plugin.View.Graph.Address.contextMenu plugins vc model address
     )

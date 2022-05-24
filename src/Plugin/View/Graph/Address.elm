@@ -17,12 +17,28 @@ flags : Plugins -> View.Config -> Address -> List (Svg Msg)
 flags plugins vc address =
     plugins
         |> Dict.toList
-        |> List.filterMap
+        |> List.map
             (\( pid, plugin ) ->
                 Dict.get pid address.plugins
-                    |> plugin.view.graph.address.flags vc
-                    |> Maybe.map (Svg.map (PluginMsg pid (Plugin.Address address.id)))
+                    |> Maybe.map (plugin.view.graph.address.flags vc)
+                    |> Maybe.withDefault []
+                    |> List.map (Svg.map (PluginMsg pid))
             )
+        |> List.concat
+
+
+properties : Plugins -> View.Config -> PluginStates -> List (Svg Msg)
+properties plugins vc states =
+    plugins
+        |> Dict.toList
+        |> List.map
+            (\( pid, plugin ) ->
+                Dict.get pid states
+                    |> Maybe.map (plugin.view.graph.address.properties vc)
+                    |> Maybe.withDefault []
+                    |> List.map (Html.map (PluginMsg pid))
+            )
+        |> List.concat
 
 
 contextMenu : Plugins -> View.Config -> Model -> Address -> List (Html Msg)
@@ -36,7 +52,7 @@ contextMenu plugins vc model address =
                         (\modelState ->
                             Dict.get pid address.plugins
                                 |> plugin.view.graph.address.contextMenu vc address.id modelState
-                                |> List.map (Html.map (PluginMsg pid (Plugin.Address address.id)))
+                                |> List.map (Html.map (PluginMsg pid))
                         )
             )
         |> List.concat
