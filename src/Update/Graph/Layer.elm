@@ -284,7 +284,13 @@ addEntityHere uc position entity { layer, colors, new, repositioned } =
         ( ( newEntities, newRepositioned ), newEntity ) =
             case Dict.get entityId layer.entities of
                 Just ent ->
-                    ( ( layer.entities, Set.empty ), ent )
+                    ( ( Dict.update entityId
+                            (Maybe.map (\e -> { e | entity = entity }))
+                            layer.entities
+                      , Set.empty
+                      )
+                    , ent
+                    )
 
                 Nothing ->
                     let
