@@ -44,7 +44,9 @@ addAddress plugins uc layerId address acc =
                 { entities = entities
                 , new = Set.insert newAcc.new acc.new
                 , colors = newAcc.colors
-                , repositioned = Set.insert newAcc.updatedEntity.id repositioned
+                , repositioned =
+                    Set.union repositioned acc.repositioned
+                        |> Set.insert newAcc.updatedEntity.id
                 }
             )
         |> Maybe.withDefault acc

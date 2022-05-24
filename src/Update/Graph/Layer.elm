@@ -2,8 +2,10 @@ module Update.Graph.Layer exposing
     ( Acc
     , addAddress
     , addAddressAtEntity
+    , addEntitiesAt
     , addEntity
     , addEntityNeighbors
+    , anchorsToPositions
     , moveEntity
     , releaseEntity
     , syncLinks
@@ -65,7 +67,7 @@ addAddress plugins uc colors address layers =
 addEntity : Update.Config -> Dict String Color -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
 addEntity uc colors entity layers =
     addEntitiesAt uc
-        (anchorsToPositions IntDict.empty layers)
+        (anchorsToPositions Nothing layers)
         [ entity ]
         { layers = layers
         , new = Set.empty
@@ -113,7 +115,7 @@ addEntityNeighbors uc entity isOutgoing colors neighbors layers =
     let
         added =
             addEntitiesAt uc
-                (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing )) layers)
+                (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing ) |> Just) layers)
                 neighbors
                 { layers = layers
                 , new = Set.empty
@@ -159,81 +161,82 @@ addEntityNeighbors uc entity isOutgoing colors neighbors layers =
     }
 
 
-anchorsToPositions : IntDict ( Entity, Bool ) -> IntDict Layer -> IntDict Position
+anchorsToPositions : Maybe (IntDict ( Entity, Bool )) -> IntDict Layer -> IntDict Position
 anchorsToPositions anchors layers =
-    if IntDict.isEmpty anchors then
-        let
-            y =
-                IntDict.get 0 layers
-                    |> Maybe.andThen
-                        (\layer ->
-                            layer.entities
-                                |> Dict.foldl
-                                    (\_ e max ->
-                                        max
-                                            |> Maybe.map
-                                                (\mx ->
-                                                    if mx.y < e.y then
-                                                        e
+    case anchors of
+        Nothing ->
+            let
+                y =
+                    IntDict.get 0 layers
+                        |> Maybe.andThen
+                            (\layer ->
+                                layer.entities
+                                    |> Dict.foldl
+                                        (\_ e max ->
+                                            max
+                                                |> Maybe.map
+                                                    (\mx ->
+                                                        if mx.y < e.y then
+                                                            e
 
-                                                    else
-                                                        mx
-                                                )
-                                            |> Maybe.withDefault e
-                                            |> Just
-                                    )
-                                    Nothing
-                                |> Maybe.map (\e -> e.y + Entity.getHeight e + padding)
-                        )
-                    |> Maybe.withDefault 0
-        in
-        IntDict.singleton 0 { x = 0, y = y }
+                                                        else
+                                                            mx
+                                                    )
+                                                |> Maybe.withDefault e
+                                                |> Just
+                                        )
+                                        Nothing
+                                    |> Maybe.map (\e -> e.y + Entity.getHeight e + padding)
+                            )
+                        |> Maybe.withDefault 0
+            in
+            IntDict.singleton 0 { x = 0, y = y }
 
-    else
-        anchors
-            |> IntDict.foldl
-                (\i ( entity, isOutgoing ) positions ->
-                    let
-                        id =
-                            Id.layer entity.id
-                                + (if isOutgoing then
-                                    1
+        Just anchs ->
+            anchs
+                |> IntDict.foldl
+                    (\i ( entity, isOutgoing ) positions ->
+                        let
+                            id =
+                                Id.layer entity.id
+                                    + (if isOutgoing then
+                                        1
 
-                                   else
-                                    -1
-                                  )
+                                       else
+                                        -1
+                                      )
 
-                        x =
-                            IntDict.get id layers
-                                |> Maybe.map Layer.getX
-                                |> Maybe.Extra.withDefaultLazy
-                                    (\_ ->
-                                        IntDict.get (Id.layer entity.id) layers
-                                            |> Maybe.map
-                                                (\l ->
-                                                    Layer.getX l
-                                                        + (if isOutgoing then
-                                                            entityWidth + layerMargin
+                            x =
+                                IntDict.get id layers
+                                    |> Maybe.map Layer.getX
+                                    |> Maybe.Extra.withDefaultLazy
+                                        (\_ ->
+                                            IntDict.get (Id.layer entity.id) layers
+                                                |> Maybe.map
+                                                    (\l ->
+                                                        Layer.getX l
+                                                            + (if isOutgoing then
+                                                                entityWidth + layerMargin
 
-                                                           else
-                                                            -entityWidth - layerMargin
-                                                          )
-                                                )
-                                            |> Maybe.withDefault 0
-                                    )
-                    in
-                    IntDict.insert id
-                        { x = x
-                        , y =
-                            entity.y
-                                + entity.dy
-                                + (Entity.getHeight entity / 2)
-                                - Graph.entityMinHeight
-                                / 2
-                        }
-                        positions
-                )
-                IntDict.empty
+                                                               else
+                                                                -entityWidth - layerMargin
+                                                              )
+                                                    )
+                                                |> Maybe.withDefault 0
+                                        )
+                        in
+                        IntDict.insert id
+                            { x = x
+                            , y =
+                                entity.y
+                                    + entity.dy
+                                    + (Entity.getHeight entity / 2)
+                                    - Graph.entityMinHeight
+                                    / 2
+                            }
+                            positions
+                    )
+                    IntDict.empty
 
 
 addEntitiesAt : Update.Config -> IntDict Position -> List Api.Data.Entity -> Acc EntityId -> Acc EntityId
@@ -385,7 +388,7 @@ updateAddressLink { currency, address } ( neighbor, target ) layers =
     layers
         |> IntDict.foldl
             (\_ layer layers_ ->
-                if layer.id >= Id.layer target.id then
+                if layer.id /= Id.layer target.id - 1 then
                     layers_
 
                 else

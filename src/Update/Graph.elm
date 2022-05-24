@@ -33,23 +33,37 @@ import Update.Graph.Layer as Layer
 import Update.Graph.Transform as Transform
 
 
-addAddress : Plugins -> Update.Config -> Api.Data.Address -> Model -> ( Model, List Effect )
-addAddress plugins uc address model =
+addAddress :
+    Plugins
+    -> Update.Config
+    ->
+        { address : Api.Data.Address
+        , entity : Api.Data.Entity
+        , incoming : List Api.Data.NeighborEntity
+        , outgoing : List Api.Data.NeighborEntity
+        }
+    -> Model
+    -> ( Model, List Effect )
+addAddress plugins uc { address, entity, incoming, outgoing } model =
     let
+        ( newModel, _ ) =
+            addEntity uc
+                { entity = entity
+                , incoming = incoming
+                , outgoing = outgoing
+                }
+                model
+
         added =
-            Layer.addAddress plugins uc model.config.colors address model.layers
+            Layer.addAddress plugins uc newModel.config.colors address newModel.layers
 
-        newModel =
-            { model
-                | adding =
-                    if Set.isEmpty added.new then
-                        model.adding
-
-                    else
-                        Adding.removeAddress { currency = address.currency, address = address.address } model.adding
-                , layers = added.layers
+        newModel_ =
+            { newModel
+                | layers =
+                    added.layers
+                        |> Layer.syncLinks (Debug.log "addAddress.repositioned" added.repositioned)
                 , config =
-                    model.config
+                    newModel.config
                         |> s_colors added.colors
             }
 
@@ -57,33 +71,87 @@ addAddress plugins uc address model =
             added.new
                 |> Set.toList
                 |> List.head
-                |> Maybe.andThen (\a -> Layer.getAddress a added.layers)
+                |> Maybe.andThen (\a -> Layer.getAddress a newModel_.layers)
     in
     addedAddress
-        |> Maybe.map (\a -> selectAddress a Nothing newModel)
-        |> Maybe.withDefault (n newModel)
+        |> Maybe.map (\a -> selectAddress a Nothing newModel_)
+        |> Maybe.withDefault (n newModel_)
 
 
-addEntity : Update.Config -> Api.Data.Entity -> Model -> ( Model, Maybe Entity )
-addEntity uc entity model =
+addEntity : Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Model -> ( Model, List Effect )
+addEntity uc { entity, incoming, outgoing } model =
     let
-        added =
-            Layer.addEntity uc model.config.colors entity model.layers
+        _ =
+            incoming
+                |> List.map (.entity >> .entity)
+                |> Debug.log "add.incoming"
 
-        addedEntity =
-            added.new
-                |> Set.toList
-                |> List.head
-                |> Maybe.andThen (\a -> Layer.getEntity a added.layers)
+        _ =
+            outgoing
+                |> List.map (.entity >> .entity)
+                |> Debug.log "add.outgoing"
+
+        _ =
+            outgoingAnchors
+                |> IntDict.values
+                |> List.map (first >> .id)
+                |> Debug.log "add.outgoingAnchors"
+
+        _ =
+            incomingAnchors
+                |> IntDict.values
+                |> List.map (first >> .id)
+                |> Debug.log "add.incomingAnchors"
+
+        findEntities e =
+            (++)
+                (Layer.getEntities e.entity.currency e.entity.entity model.layers)
+
+        outgoingAnchors =
+            incoming
+                |> List.foldl findEntities []
+                |> List.map (\e -> ( Id.layer e.id, ( e, True ) ))
+                |> IntDict.fromList
+
+        incomingAnchors =
+            outgoing
+                |> List.foldl findEntities []
+                |> List.map (\e -> ( Id.layer e.id, ( e, False ) ))
+                |> IntDict.fromList
+
+        added =
+            if IntDict.isEmpty outgoingAnchors && IntDict.isEmpty incomingAnchors then
+                Layer.addEntity uc model.config.colors entity model.layers
+
+            else
+                Layer.addEntitiesAt uc
+                    (Layer.anchorsToPositions (Just outgoingAnchors) model.layers)
+                    [ entity ]
+                    { layers = model.layers
+                    , new = Set.empty
+                    , colors = model.config.colors
+                    , repositioned = Set.empty
+                    }
+                    |> Layer.addEntitiesAt uc
+                        (Layer.anchorsToPositions (Just incomingAnchors) model.layers)
+                        [ entity ]
+
+        newModel =
+            { model
+                | layers = added.layers
+                , config =
+                    model.config
+                        |> s_colors added.colors
+            }
+                |> addEntityEgonet entity.currency entity.entity True outgoing
+                |> addEntityEgonet entity.currency entity.entity False incoming
     in
-    ( { model
-        | layers = added.layers
-        , config =
-            model.config
-                |> s_colors added.colors
-      }
-    , addedEntity
-    )
+    added.new
+        |> Set.toList
+        |> List.head
+        |> Maybe.andThen (\e -> Layer.getEntity e added.layers)
+        |> Maybe.map (\e -> selectEntity e Nothing newModel)
+        |> Maybe.withDefault (n newModel)
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -285,52 +353,61 @@ update plugins uc msg model =
                         n model
 
         BrowserGotAddress address ->
-            addAddress plugins
-                uc
-                address
-                { model
-                    | adding = Adding.setAddress { currency = address.currency, address = address.address } address model.adding
-                }
+            let
+                id =
+                    { currency = address.currency, address = address.address }
 
-        BrowserGotEntity a entity ->
-            model.adding
-                |> Adding.getAddress { currency = entity.currency, address = a }
-                |> Debug.log "XXX Adding.getAddress"
-                |> Maybe.map
-                    (\address ->
-                        addEntity uc entity model
-                            |> first
-                            |> addAddress plugins uc address
+                adding =
+                    Adding.setAddress id address model.adding
+            in
+            case Adding.readyAddress id adding of
+                Nothing ->
+                    n { model | adding = adding }
+
+                Just added ->
+                    { model | adding = Adding.removeAddress id model.adding }
+                        |> addAddress plugins uc added
+
+        BrowserGotEntityForAddress address entity ->
+            let
+                id =
+                    { currency = entity.currency, address = address }
+
+                adding =
+                    Adding.setEntityForAddress id entity model.adding
+            in
+            case Adding.readyAddress id adding of
+                Nothing ->
+                    ( { model | adding = adding }
+                    , getEntityEgonet
+                        { currency = entity.currency
+                        , entity = entity.entity
+                        }
+                        (BrowserGotEntityEgonetForAddress address)
+                        model.layers
                     )
-                |> Maybe.map
-                    (\md ->
-                        let
-                            _ =
-                                first md
-                                    |> .browser
-                                    |> .type_
-                                    |> Log.truncate "browser"
-                        in
-                        md
-                    )
-                |> Maybe.Extra.withDefaultLazy
-                    (\_ ->
-                        addEntity uc entity model
-                            |> (\( newModel, newEntity ) ->
-                                    newEntity
-                                        |> Maybe.map (\e -> selectEntity e Nothing newModel)
-                                        |> Maybe.withDefault (n newModel)
-                               )
-                    )
-                |> mapSecond
-                    ((++)
-                        (getEntityEgonet
-                            { currency = entity.currency
-                            , entity = entity.entity
-                            }
-                            model.layers
-                        )
-                    )
+
+                Just added ->
+                    { model | adding = Adding.removeAddress id model.adding }
+                        |> addAddress plugins uc added
+
+        BrowserGotEntity entity ->
+            let
+                id =
+                    { currency = entity.currency
+                    , entity = entity.entity
+                    }
+
+                adding =
+                    Adding.setEntityForEntity id entity model.adding
+            in
+            case Adding.readyEntity id adding of
+                Nothing ->
+                    n { model | adding = adding }
+
+                Just added ->
+                    { model | adding = Adding.removeEntity id model.adding }
+                        |> addEntity uc added
 
         BrowserGotEntityNeighbors id isOutgoing neighbors ->
             Layer.getEntity id model.layers
@@ -341,8 +418,57 @@ update plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         BrowserGotEntityEgonet currency id isOutgoing neighbors ->
-            addEntityEgonet currency id isOutgoing neighbors.neighbors model
-                |> n
+            let
+                e =
+                    { currency = currency, entity = id }
+
+                adding =
+                    (if isOutgoing then
+                        Adding.setOutgoingForEntity
+
+                     else
+                        Adding.setIncomingForEntity
+                    )
+                        e
+                        neighbors.neighbors
+                        model.adding
+            in
+            case Adding.readyEntity e adding of
+                Nothing ->
+                    -- try to add the egonet anyways
+                    { model
+                        | adding = adding
+                    }
+                        |> addEntityEgonet currency id isOutgoing neighbors.neighbors
+                        |> n
+
+                Just added ->
+                    { model | adding = Adding.removeEntity e model.adding }
+                        |> addEntity uc added
+
+        BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
+            let
+                e =
+                    { currency = currency, address = address }
+
+                adding =
+                    (if isOutgoing then
+                        Adding.setOutgoingForAddress
+
+                     else
+                        Adding.setIncomingForAddress
+                    )
+                        e
+                        neighbors.neighbors
+                        model.adding
+            in
+            case Adding.readyAddress e adding of
+                Nothing ->
+                    n { model | adding = adding }
+
+                Just added ->
+                    { model | adding = Adding.removeAddress e model.adding }
+                        |> addAddress plugins uc added
 
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
             ( model
@@ -380,6 +506,7 @@ update plugins uc msg model =
                             { currency = entity.currency
                             , entity = entity.entity
                             }
+                            BrowserGotEntityEgonet
                             model.layers
                         )
                     )
@@ -575,13 +702,13 @@ updateByRoute plugins route model =
                                     |> Maybe.withDefault (n browser)
                         in
                         ( { model
-                            | adding = Adding.loadAddress { currency = currency, address = a } model.adding |> Log.log "adding"
+                            | adding = Adding.loadAddress { currency = currency, address = a } model.adding
                             , browser = browser2
                           }
                         , [ GetEntityForAddressEffect
                                 { address = a
                                 , currency = currency
-                                , toMsg = BrowserGotEntity a
+                                , toMsg = BrowserGotEntityForAddress a
                                 }
                           , GetAddressEffect
                                 { address = a
@@ -616,13 +743,20 @@ updateByRoute plugins route model =
                         in
                         ( { model
                             | browser = browser2
+                            , adding = Adding.loadEntity { currency = currency, entity = e } model.adding
                           }
                         , [ GetEntityEffect
                                 { entity = e
                                 , currency = currency
-                                , toMsg = BrowserGotEntity ""
+                                , toMsg = BrowserGotEntity
                                 }
                           ]
+                            ++ getEntityEgonet
+                                { currency = currency
+                                , entity = e
+                                }
+                                BrowserGotEntityEgonet
+                                model.layers
                             ++ effects
                         )
                     )
@@ -809,6 +943,11 @@ addEntityEgonet currency entity isOutgoing neighbors model =
 
         anchors =
             Layer.getEntities currency entity model.layers
+
+        _ =
+            anchors
+                |> List.map .id
+                |> Debug.log "addEntityEgonet.anchors"
     in
     List.foldl
         (\anchor model_ ->
@@ -827,13 +966,25 @@ handleEntityNeighbors uc anchor isOutgoing neighbors model =
     ( addEntityLinks anchor isOutgoing new newModel
         |> syncLinks repositioned
     , neighbors
-        |> List.map (\{ entity } -> getEntityEgonet { currency = entity.currency, entity = entity.entity } newModel.layers)
+        |> List.map
+            (\{ entity } ->
+                getEntityEgonet
+                    { currency = entity.currency
+                    , entity = entity.entity
+                    }
+                    BrowserGotEntityEgonet
+                    newModel.layers
+            )
         |> List.concat
     )
 
 
-getEntityEgonet : { currency : String, entity : Int } -> IntDict Layer -> List Effect
-getEntityEgonet { currency, entity } layers =
+getEntityEgonet :
+    { currency : String, entity : Int }
+    -> (String -> Int -> Bool -> Api.Data.NeighborEntities -> Msg)
+    -> IntDict Layer
+    -> List Effect
+getEntityEgonet { currency, entity } msg layers =
     let
         -- TODO optimize which only_ids to get for which direction
         onlyIds =
@@ -848,7 +999,7 @@ getEntityEgonet { currency, entity } layers =
                 , isOutgoing = isOut
                 , onlyIds = Just onlyIds
                 , pagesize = max 1 <| List.length onlyIds
-                , toMsg = BrowserGotEntityEgonet currency entity isOut
+                , toMsg = msg currency entity isOut
                 }
     in
     [ effect True

@@ -32,10 +32,12 @@ type Msg
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
+    | BrowserGotEntityEgonetForAddress String String Int Bool Api.Data.NeighborEntities
     | BrowserGotAddressNeighbors AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix
     | BrowserGotAddress Api.Data.Address
-    | BrowserGotEntity String Api.Data.Entity
+    | BrowserGotEntity Api.Data.Entity
+    | BrowserGotEntityForAddress String Api.Data.Entity
     | BrowserGotEntityForAddressNeighbor
         { anchor : AddressId
         , isOutgoing : Bool
