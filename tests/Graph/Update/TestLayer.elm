@@ -9,13 +9,19 @@ import Init.Graph.Id as Id
 import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
 import List.Extra
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer exposing (Layer)
 import RecordSetter exposing (..)
+import Set
 import Test exposing (..)
 import Tuple exposing (..)
 import Update.Graph.Layer as Layer
+
+
+plugins =
+    Dict.empty
 
 
 type TestRow
@@ -23,7 +29,7 @@ type TestRow
     | Entity ( String, Api.Data.Entity, IntDict Layer -> Layer.Acc Id.EntityId )
     | EntityNeighbors
         { title : String
-        , anchor : EntityId
+        , anchor : Entity
         , isOutgoing : Bool
         , neighbors : List Api.Data.Entity
         , output : IntDict Layer -> Layer.Acc Id.EntityId
@@ -80,6 +86,26 @@ ent { currency, entity } =
     , tags = Nothing
     , totalReceived = { fiatValues = [], value = 0 }
     , totalSpent = { fiatValues = [], value = 0 }
+    }
+
+
+baseAddress : Id.EntityId -> Id.AddressId -> Address
+baseAddress entityId addressId =
+    { id = addressId
+    , entityId = entityId
+    , address =
+        addr
+            { currency = Id.currency addressId
+            , address = Id.addressId addressId
+            , entity = Id.entityId entityId
+            }
+    , category = Nothing
+    , x = 0
+    , y = 0
+    , dx = 0
+    , dy = 0
+    , plugins = Dict.empty
+    , links = Address.Links Dict.empty
     }
 
 
@@ -142,8 +168,8 @@ data =
       , addrA
       , \_ ->
             { layers = IntDict.empty
-            , new = []
-            , repositioned = []
+            , new = Set.empty
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -158,8 +184,8 @@ data =
                     , id = 0
                     , x = 0
                     }
-            , new = [ entityNode ]
-            , repositioned = []
+            , new = Set.fromList [ entityNode.id ]
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -177,21 +203,16 @@ data =
                     (\entity ->
                         { entity
                             | addresses =
-                                Dict.singleton id
-                                    { id = id
-                                    , entityId = entityId
-                                    , address = addrA
-                                    , category = Nothing
-                                    , x = 25
-                                    , y = 40
-                                    , dx = 0
-                                    , dy = 0
-                                    }
+                                baseAddress entityId id
+                                    |> s_address addrA
+                                    |> s_x 25
+                                    |> s_y 40
+                                    |> Dict.singleton id
                         }
                     )
                     previous
-            , new = [ id ]
-            , repositioned = []
+            , new = Set.fromList [ id ]
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -215,21 +236,17 @@ data =
                         { entity
                             | addresses =
                                 Dict.insert id
-                                    { id = id
-                                    , entityId = entityId
-                                    , address = addrB
-                                    , category = Nothing
-                                    , x = 25
-                                    , y = 90
-                                    , dx = 0
-                                    , dy = 0
-                                    }
+                                    (baseAddress entityId id
+                                        |> s_address addrB
+                                        |> s_x 25
+                                        |> s_y 90
+                                    )
                                     entity.addresses
                         }
                     )
                     previous
-            , new = [ id ]
-            , repositioned = []
+            , new = Set.fromList [ id ]
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -247,8 +264,8 @@ data =
                         )
                     )
                     previous
-            , new = [ entityNode2 ]
-            , repositioned = []
+            , new = Set.fromList [ entityNode2.id ]
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -272,21 +289,17 @@ data =
                         { entity
                             | addresses =
                                 Dict.insert id
-                                    { id = id
-                                    , entityId = entityId2
-                                    , address = addrB
-                                    , category = Nothing
-                                    , x = 25
-                                    , y = 226
-                                    , dx = 0
-                                    , dy = 0
-                                    }
+                                    (baseAddress entityId2 id
+                                        |> s_address addrB
+                                        |> s_x 25
+                                        |> s_y 226
+                                    )
                                     entity.addresses
                         }
                     )
                     previous
-            , new = [ id ]
-            , repositioned = []
+            , new = Set.fromList [ id ]
+            , repositioned = Set.empty
             , colors = Dict.empty
             }
       )
@@ -308,7 +321,7 @@ data =
             { id = entity3Id
             , addresses = Dict.empty
             , x = 490
-            , y = 362
+            , y = 338
             , dx = 0
             , dy = 0
             , category = Nothing
@@ -360,12 +373,12 @@ data =
             , dx = 0
             , dy = 0
             , category = Nothing
-            , entity = entity4
+            , entity = entity5
             , links = Entity.Links Dict.empty
             }
       in
       { title = "add 2 neighbors to second entity"
-      , anchor = entityId2
+      , anchor = entityNode2
       , isOutgoing = True
       , neighbors =
             [ entity3, entity4, entity5 ]
@@ -373,7 +386,7 @@ data =
             \previous ->
                 { layers =
                     IntDict.insert 1
-                        (Layer.init 1
+                        (Layer.init 490 1
                             |> s_entities
                                 (Dict.fromList
                                     [ ( entity3Id
@@ -389,8 +402,8 @@ data =
                                 )
                         )
                         previous
-                , new = [ entityNode5, entityNode4, entityNode3 ]
-                , repositioned = [ entityNode3, entityNode4 ]
+                , new = Set.fromList [ entityNode5.id, entityNode4.id, entityNode3.id ]
+                , repositioned = Set.fromList [ entityNode3.id, entityNode4.id ]
                 , colors = Dict.empty
                 }
       }
@@ -419,7 +432,7 @@ suite =
                             in
                             (test title <|
                                 \_ ->
-                                    Expect.equal o (Layer.addAddress config Dict.empty input layers)
+                                    Expect.equal o (Layer.addAddress plugins config Dict.empty input layers)
                             )
                                 :: tests
                                 |> pair o.layers

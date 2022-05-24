@@ -2569,11 +2569,6 @@ s_outline value__ record__ =
     { record__ | outline = value__ }
 
 
-s_output : a -> { b | output : a } -> { b | output : a }
-s_output value__ record__ =
-    { record__ | output = value__ }
-
-
 s_outputValue : a -> { b | outputValue : a } -> { b | outputValue : a }
 s_outputValue value__ record__ =
     { record__ | outputValue = value__ }

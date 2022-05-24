@@ -2,12 +2,10 @@ module Search exposing (..)
 
 import Api
 import Api.Data
-import Effect exposing (Effect(..))
 import Expect exposing (Expectation)
 import Json.Encode
 import Mockup.Search
-import Model exposing (Flags, Model)
-import Msg exposing (Msg(..))
+import Model exposing (Effect(..), Flags, Model, Msg(..))
 import ProgramTest exposing (..)
 import Setup
 import Test exposing (..)
@@ -17,12 +15,12 @@ import Util exposing (ensureAndSimulateHttp)
 
 
 type alias Program =
-    ProgramTest (Model ()) Msg Effect
+    ProgramTest (Model ()) Msg (List Effect)
 
 
 base : String -> Program
 base locale =
-    Setup.start "/" { locale = locale }
+    Setup.start locale
 
 
 searchTest : Test

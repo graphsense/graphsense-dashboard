@@ -195,6 +195,7 @@ repositionAround pivot entities =
         sorted =
             Dict.values entities
                 |> List.sortBy Entity.getY
+                |> List.filter (.id >> (/=) pivot.id)
 
         ( upper, lower ) =
             sorted
