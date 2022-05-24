@@ -155,9 +155,8 @@ label vc gc ent =
     g
         [ Css.entityLabel vc |> css
         , Graph.padding
-            / 2
             + labelHeight
-            |> translate Graph.padding
+            |> translate (Graph.padding * 3)
             |> transform
         ]
         [ getLabel vc gc ent
@@ -167,8 +166,7 @@ label vc gc ent =
 
 getLabel : Config -> Graph.Config -> Entity -> String
 getLabel vc gc ent =
-    --ent.entity.entity |> String.fromInt
-    ""
+    ent.entity.entity |> String.fromInt
 
 
 flags : Config -> Graph.Config -> Entity -> Svg Msg

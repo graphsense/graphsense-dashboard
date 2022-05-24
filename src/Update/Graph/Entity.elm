@@ -44,7 +44,7 @@ addAddress plugins uc layerId address acc =
                 { entities = entities
                 , new = Set.insert newAcc.new acc.new
                 , colors = newAcc.colors
-                , repositioned = repositioned
+                , repositioned = Set.insert newAcc.updatedEntity.id repositioned
                 }
             )
         |> Maybe.withDefault acc
@@ -132,7 +132,7 @@ toRightBound { right } entity x =
         |> Maybe.withDefault x
 
 
-move : BoundingBox -> Coords -> Entity -> ( Entity, () )
+move : BoundingBox -> Coords -> Entity -> Entity
 move bb vector entity =
     let
         v =
@@ -142,28 +142,24 @@ move bb vector entity =
             , y = vector.y
             }
     in
-    ( { entity
+    { entity
         | dx = v.x
         , dy = v.y
         , addresses =
             Dict.map (\_ -> Address.move v) entity.addresses
-      }
-    , ()
-    )
+    }
 
 
-release : Entity -> ( Entity, () )
+release : Entity -> Entity
 release entity =
-    ( { entity
+    { entity
         | x = entity.x + entity.dx
         , y = entity.y + entity.dy
         , dx = 0
         , dy = 0
         , addresses =
             Dict.map (\_ -> Address.release) entity.addresses
-      }
-    , ()
-    )
+    }
 
 
 translate : Coords -> Entity -> Entity

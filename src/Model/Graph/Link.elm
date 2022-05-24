@@ -5,7 +5,23 @@ import Api.Data
 
 type alias Link a =
     { node : a
-    , labels : Maybe (List String)
-    , noTxs : Int
-    , value : Api.Data.Values
+    , link : LinkData
     }
+
+
+type LinkData
+    = LinkData
+        { labels : Maybe (List String)
+        , noTxs : Int
+        , value : Api.Data.Values
+        }
+    | PlaceholderLinkData
+
+
+fromNeighbor : { a | labels : Maybe (List String), noTxs : Int, value : Api.Data.Values } -> LinkData
+fromNeighbor { labels, noTxs, value } =
+    LinkData
+        { labels = labels
+        , noTxs = noTxs
+        , value = value
+        }

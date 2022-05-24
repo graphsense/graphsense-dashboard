@@ -30,6 +30,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Graph.Link exposing (..)
 import Model.Locale as Locale
 import Plugin exposing (Plugins)
 import Set exposing (Set)
@@ -105,18 +106,57 @@ addAddressAtEntity plugins uc colors entityId address layers =
             }
 
 
-{-| Add neighbors next to an entity
+{-| Add neighbors next to an entity. Also insert placeholder links
 -}
 addEntityNeighbors : Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
 addEntityNeighbors uc entity isOutgoing colors neighbors layers =
-    addEntitiesAt uc
-        (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing )) layers)
-        neighbors
-        { layers = layers
-        , new = Set.empty
-        , colors = colors
-        , repositioned = Set.empty
-        }
+    let
+        added =
+            addEntitiesAt uc
+                (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing )) layers)
+                neighbors
+                { layers = layers
+                , new = Set.empty
+                , colors = colors
+                , repositioned = Set.empty
+                }
+
+        layers_ =
+            if isOutgoing then
+                let
+                    pseudoLinks =
+                        added.new
+                            |> Set.toList
+                            |> List.filterMap
+                                (\e -> Layer.getEntity e added.layers)
+                            |> List.map (pair PlaceholderLinkData)
+                in
+                updateEntity entity.id
+                    (\e ->
+                        { e
+                            | links = insertEntityLinks pseudoLinks e.links
+                        }
+                    )
+                    added.layers
+
+            else
+                added.new
+                    |> Set.toList
+                    |> List.foldl
+                        (\new layers__ ->
+                            updateEntity new
+                                (\e ->
+                                    { e
+                                        | links = insertEntityLinks [ ( PlaceholderLinkData, entity ) ] e.links
+                                    }
+                                )
+                                layers__
+                        )
+                        added.layers
+    in
+    { added
+        | layers = layers_
+    }
 
 
 anchorsToPositions : IntDict ( Entity, Bool ) -> IntDict Layer -> IntDict Position
@@ -171,7 +211,7 @@ anchorsToPositions anchors layers =
                                         IntDict.get (Id.layer entity.id) layers
                                             |> Maybe.map
                                                 (\l ->
-                                                    Debug.log "getX" (Layer.getX l)
+                                                    Layer.getX l
                                                         + (if isOutgoing then
                                                             entityWidth + layerMargin
 
@@ -298,7 +338,6 @@ moveEntity id vector layers =
                         }
                 in
                 updateEntity id (Entity.move boundingBox vector) layers
-                    |> first
             )
         |> Maybe.withDefault layers
 
@@ -306,28 +345,6 @@ moveEntity id vector layers =
 releaseEntity : EntityId -> IntDict Layer -> IntDict Layer
 releaseEntity id layers =
     updateEntity id Entity.release layers
-        |> first
-
-
-updateEntity : EntityId -> (Entity -> ( Entity, a )) -> IntDict Layer -> ( IntDict Layer, Maybe a )
-updateEntity id update layers =
-    layers
-        |> IntDict.get (Id.layer id)
-        |> Maybe.andThen
-            (\layer ->
-                Dict.get id layer.entities
-                    |> Maybe.map
-                        (\entity ->
-                            let
-                                ( newEntity, a ) =
-                                    update entity
-                            in
-                            ( IntDict.insert layer.id { layer | entities = Dict.insert id newEntity layer.entities } layers
-                            , Just a
-                            )
-                        )
-            )
-        |> Maybe.withDefault ( layers, Nothing )
 
 
 addAddressHelp : Plugins -> Update.Config -> Api.Data.Address -> Acc AddressId -> Acc AddressId
@@ -357,7 +374,7 @@ addAddressHelp plugins uc address acc =
             acc
 
 
-updateAddressLink : { currency : String, address : String } -> ( Api.Data.NeighborAddress, Address ) -> IntDict Layer -> IntDict Layer
+updateAddressLink : { currency : String, address : String } -> ( LinkData, Address ) -> IntDict Layer -> IntDict Layer
 updateAddressLink { currency, address } ( neighbor, target ) layers =
     layers
         |> IntDict.foldl
@@ -384,7 +401,7 @@ updateAddressLink { currency, address } ( neighbor, target ) layers =
             layers
 
 
-updateAddressLinkForEntities : AddressId -> ( Api.Data.NeighborAddress, Address ) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )
+updateAddressLinkForEntities : AddressId -> ( LinkData, Address ) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )
 updateAddressLinkForEntities id ( neighbor, address ) entities =
     entities
         |> Dict.foldl
@@ -408,7 +425,7 @@ updateAddressLinkForEntities id ( neighbor, address ) entities =
             ( entities, False )
 
 
-updateAddressLinkForAddresses : AddressId -> ( Api.Data.NeighborAddress, Address ) -> Dict AddressId Address -> ( Dict AddressId Address, Bool )
+updateAddressLinkForAddresses : AddressId -> ( LinkData, Address ) -> Dict AddressId Address -> ( Dict AddressId Address, Bool )
 updateAddressLinkForAddresses id neighbor addresses =
     case Dict.get id addresses of
         Nothing ->
@@ -424,7 +441,7 @@ updateAddressLinkForAddresses id neighbor addresses =
             )
 
 
-updateEntityLinks : { currency : String, entity : Int } -> List ( Api.Data.NeighborEntity, Entity ) -> IntDict Layer -> IntDict Layer
+updateEntityLinks : { currency : String, entity : Int } -> List ( LinkData, Entity ) -> IntDict Layer -> IntDict Layer
 updateEntityLinks { currency, entity } neighbors layers =
     IntDict.foldl
         (\_ layer ( neighbors_, layers_ ) ->
@@ -461,29 +478,31 @@ updateEntityLinks { currency, entity } neighbors layers =
         |> second
 
 
-insertAddressLink : ( Api.Data.NeighborAddress, Address ) -> Address.Links -> Address.Links
+insertAddressLink : ( LinkData, Address ) -> Address.Links -> Address.Links
 insertAddressLink ( link, address ) (Address.Links links) =
-    Dict.insert address.id
-        { value = link.value
-        , noTxs = link.noTxs
-        , labels = link.labels
-        , node = address
-        }
+    Dict.update address.id
+        (Maybe.withDefault
+            { link = link
+            , node = address
+            }
+            >> Just
+        )
         links
         |> Address.Links
 
 
-insertEntityLinks : List ( Api.Data.NeighborEntity, Entity ) -> Entity.Links -> Entity.Links
+insertEntityLinks : List ( LinkData, Entity ) -> Entity.Links -> Entity.Links
 insertEntityLinks neighbors (Entity.Links links) =
     neighbors
         |> List.foldl
             (\( link, entity ) li ->
-                Dict.insert entity.id
-                    { value = link.value
-                    , noTxs = link.noTxs
-                    , labels = link.labels
-                    , node = entity
-                    }
+                Dict.update entity.id
+                    (Maybe.withDefault
+                        { link = link
+                        , node = entity
+                        }
+                        >> Just
+                    )
                     li
             )
             links
@@ -633,7 +652,7 @@ updateAddresses { currency, address } update layers =
                     ( entities, updated ) =
                         updateAddressesForEntities addressId update layer.entities
                 in
-                if Debug.log ("Updated layer " ++ String.fromInt layer.id) updated then
+                if updated then
                     IntDict.insert layer.id
                         { layer | entities = entities }
                         layers_
@@ -653,7 +672,7 @@ updateAddressesForEntities id update entities =
                     ( addresses, updated_ ) =
                         updateAddressesForAddresses id update entity.addresses
                 in
-                if Debug.log ("updated entity " ++ Debug.toString entity.id) updated_ then
+                if updated_ then
                     ( Dict.insert entity.id
                         { entity
                             | addresses = addresses
@@ -680,3 +699,40 @@ updateAddressesForAddresses id update addresses =
                 addresses
             , True
             )
+
+
+updateEntity : EntityId -> (Entity -> Entity) -> IntDict Layer -> IntDict Layer
+updateEntity id update =
+    IntDict.update (Id.layer id) (Maybe.map (updateEntityOnLayer id update))
+
+
+updateEntityOnLayer : EntityId -> (Entity -> Entity) -> Layer -> Layer
+updateEntityOnLayer id update layer =
+    { layer
+        | entities = Dict.update id (Maybe.map update) layer.entities
+    }
+
+
+
+{-
+   updateEntity : EntityId -> (Entity -> ( Entity, a )) -> IntDict Layer -> ( IntDict Layer, Maybe a )
+   updateEntity id update layers =
+       layers
+           |> IntDict.get (Id.layer id)
+           |> Maybe.andThen
+               (\layer ->
+                   Dict.get id layer.entities
+                       |> Maybe.map
+                           (\entity ->
+                               let
+                                   ( newEntity, a ) =
+                                       update entity
+                               in
+                               ( IntDict.insert layer.id { layer | entities = Dict.insert id newEntity layer.entities } layers
+                               , Just a
+                               )
+                           )
+               )
+           |> Maybe.withDefault ( layers, Nothing )
+
+-}

@@ -100,6 +100,6 @@ default : Config
 default =
     { addressLabelType = ID
     , txLabelType = Value
-    , maxLettersPerLabelRow = 8
+    , maxLettersPerLabelRow = 12
     , colors = Dict.empty
     }

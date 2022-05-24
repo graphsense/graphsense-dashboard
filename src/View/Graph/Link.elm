@@ -13,7 +13,7 @@ import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
-import Model.Graph.Link exposing (Link)
+import Model.Graph.Link as Link exposing (Link)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
@@ -228,24 +228,35 @@ drawLabel vc gc x y hovered lbl =
 
 getLinkAmount : View.Config -> Graph.Config -> Link node -> Float
 getLinkAmount vc gc link =
-    case gc.txLabelType of
-        Graph.NoTxs ->
-            link.noTxs
-                |> toFloat
+    case link.link of
+        Link.PlaceholderLinkData ->
+            0
 
-        Graph.Value ->
-            Currency.valuesToFloat vc.locale.currency link.value
-                |> Maybe.withDefault 0
+        Link.LinkData li ->
+            case gc.txLabelType of
+                Graph.NoTxs ->
+                    li.noTxs
+                        |> toFloat
+
+                Graph.Value ->
+                    Currency.valuesToFloat vc.locale.currency li.value
+                        |> Maybe.withDefault 0
 
 
 getLabel : View.Config -> Graph.Config -> String -> Link node -> String
 getLabel vc gc currency link =
-    case gc.txLabelType of
-        Graph.NoTxs ->
-            Locale.int vc.locale link.noTxs
+    case link.link of
+        Link.PlaceholderLinkData ->
+            ""
 
-        Graph.Value ->
-            Locale.currencyWithoutCode vc.locale currency link.value
+        Link.LinkData li ->
+            case gc.txLabelType of
+                Graph.NoTxs ->
+                    Locale.int vc.locale li.noTxs
+
+                Graph.Value ->
+                    Locale.currencyWithoutCode vc.locale currency li.value
+                        |> (++) "~"
 
 
 arrowMarker : View.Config -> Graph.Config -> Color.Color -> Svg Msg

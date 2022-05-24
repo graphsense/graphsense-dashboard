@@ -18,6 +18,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Graph.Link as Link
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
@@ -667,12 +668,21 @@ addAddressNeighborWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoi
     let
         acc =
             Layer.addEntityNeighbors uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
+
+        _ =
+            Debug.log "syncLinks.addEntityNeighbors.repos" acc.repositioned
     in
     Set.toList acc.new
         |> List.head
+        |> Debug.log "syncLinks.addAddressNeighborsWithEntity.newEntity"
         |> Maybe.map
             (\new ->
                 let
+                    _ =
+                        Layer.getEntity new acc.layers
+                            |> Maybe.map Model.Graph.Entity.getY
+                            |> Debug.log "syncLinks.newEntity.y"
+
                     added =
                         Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address acc.layers
                 in
@@ -681,15 +691,16 @@ addAddressNeighborWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoi
                   }
                 , Set.toList added.new
                     |> List.head
+                    |> Debug.log "syncLinks.addAddressNeighborsWithEntity.newAddress"
                     |> Maybe.andThen
                         (\a -> Layer.getAddress a added.layers)
-                , added.repositioned
+                , Set.union acc.repositioned added.repositioned
                 )
             )
         |> Maybe.withDefault
             ( model
             , Nothing
-            , Set.empty
+            , acc.repositioned
             )
 
 
@@ -740,17 +751,21 @@ addEntityNeighbors uc anchor isOutgoing neighbors model =
 addEntityLinks : Entity -> Bool -> List ( Api.Data.NeighborEntity, Entity ) -> Model -> Model
 addEntityLinks anchor isOutgoing neighbors model =
     let
+        linkData =
+            neighbors
+                |> List.map (mapFirst Link.fromNeighbor)
+
         layers =
             if isOutgoing then
-                Layer.updateEntityLinks { currency = Id.currency anchor.id, entity = Id.entityId anchor.id } neighbors model.layers
+                Layer.updateEntityLinks { currency = Id.currency anchor.id, entity = Id.entityId anchor.id } linkData model.layers
 
             else
-                neighbors
+                linkData
                     |> List.foldl
-                        (\( neighborEntity, neighbor ) ->
+                        (\( linkDatum, neighbor ) ->
                             Layer.updateEntityLinks
                                 { currency = Id.currency neighbor.id, entity = Id.entityId neighbor.id }
-                                [ ( neighborEntity, anchor ) ]
+                                [ ( linkDatum, anchor ) ]
                         )
                         model.layers
     in
@@ -762,14 +777,17 @@ addEntityLinks anchor isOutgoing neighbors model =
 addAddressLink : Address -> Bool -> ( Api.Data.NeighborAddress, Address ) -> Model -> Model
 addAddressLink anchor isOutgoing ( neighbor, target ) model =
     let
+        linkData =
+            Link.fromNeighbor neighbor
+
         layers =
             if isOutgoing then
-                Layer.updateAddressLink { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( neighbor, target ) model.layers
+                Layer.updateAddressLink { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( linkData, target ) model.layers
 
             else
                 Layer.updateAddressLink
                     { currency = Id.currency target.id, address = Id.addressId target.id }
-                    ( neighbor, anchor )
+                    ( linkData, anchor )
                     model.layers
     in
     { model
@@ -844,13 +862,12 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbor model =
         ( newModel, new, repositionedEntities ) =
             addAddressNeighborWithEntity plugins uc anchor isOutgoing neighbor model
     in
-    case new of
+    case new |> Debug.log "syncLinks.new" of
         Nothing ->
             n model
 
         Just address ->
             ( addAddressLink (first anchor) isOutgoing ( first neighbor, address ) newModel
-                |> Debug.log "addAddressLink"
                 |> syncLinks repositionedEntities
             , []
             )

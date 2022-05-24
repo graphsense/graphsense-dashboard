@@ -229,16 +229,11 @@ coin model hideCode code v =
                 ( toFloat v / 1.0e8, "s" )
     in
     if abs value < 0.0001 then
-        int model v
-            ++ (if hideCode then
-                    ""
-
-                else
-                    " " ++ sc
-               )
+        -- always show small currency
+        int model v ++ sc
 
     else
-        float model value
+        floatWithFormat model "1,000.0000" value
             ++ (if hideCode then
                     ""
 
