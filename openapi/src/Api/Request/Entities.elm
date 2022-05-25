@@ -37,28 +37,6 @@ import Json.Decode
 import Json.Encode
 
 
-type Direction
-    = DirectionIn
-    | DirectionOut
-
-
-directionVariants : List Direction
-directionVariants =
-    [ DirectionIn
-    , DirectionOut
-    ]
-
-
-stringFromDirection : Direction -> String
-stringFromDirection model =
-    case model of
-        DirectionIn ->
-            "in"
-
-        DirectionOut ->
-            "out"
-
-
 type Level
     = LevelAddress
     | LevelEntity
@@ -79,6 +57,28 @@ stringFromLevel model =
 
         LevelEntity ->
             "entity"
+
+
+type Direction
+    = DirectionIn
+    | DirectionOut
+
+
+directionVariants : List Direction
+directionVariants =
+    [ DirectionIn
+    , DirectionOut
+    ]
+
+
+stringFromDirection : Direction -> String
+stringFromDirection model =
+    case model of
+        DirectionIn ->
+            "in"
+
+        DirectionOut ->
+            "out"
 
 
 type Key

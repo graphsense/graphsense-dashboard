@@ -269,7 +269,7 @@ type alias Entity =
 
 
 type alias EntityAddresses =
-    { addresses : Maybe (List Address)
+    { addresses : List Address
     , nextPage : Maybe String
     }
 
@@ -624,10 +624,10 @@ encodeAddressTx : AddressTx -> Json.Encode.Value
 encodeAddressTx model =
     case model of
         AddressTxTxAccount subModel ->
-            encodeTxAccountWithTag ( "txType", "account" ) subModel
+            encodeTxAccountWithTag ( "tx_type", "account" ) subModel
 
         AddressTxAddressTxUtxo subModel ->
-            encodeAddressTxUtxoWithTag ( "txType", "utxo" ) subModel
+            encodeAddressTxUtxoWithTag ( "tx_type", "utxo" ) subModel
 
 
 encodeAddressTxUtxo : AddressTxUtxo -> Json.Encode.Value
@@ -798,7 +798,7 @@ encodeEntityAddressesPairs : EntityAddresses -> List EncodedField
 encodeEntityAddressesPairs model =
     let
         pairs =
-            [ maybeEncode "addresses" (Json.Encode.list encodeAddress) model.addresses
+            [ encode "addresses" (Json.Encode.list encodeAddress) model.addresses
             , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
@@ -861,10 +861,10 @@ encodeLink : Link -> Json.Encode.Value
 encodeLink model =
     case model of
         LinkTxAccount subModel ->
-            encodeTxAccountWithTag ( "txType", "account" ) subModel
+            encodeTxAccountWithTag ( "tx_type", "account" ) subModel
 
         LinkLinkUtxo subModel ->
-            encodeLinkUtxoWithTag ( "txType", "utxo" ) subModel
+            encodeLinkUtxoWithTag ( "tx_type", "utxo" ) subModel
 
 
 encodeLinkUtxo : LinkUtxo -> Json.Encode.Value
@@ -1354,10 +1354,10 @@ encodeTx : Tx -> Json.Encode.Value
 encodeTx model =
     case model of
         TxTxAccount subModel ->
-            encodeTxAccountWithTag ( "txType", "account" ) subModel
+            encodeTxAccountWithTag ( "tx_type", "account" ) subModel
 
         TxTxUtxo subModel ->
-            encodeTxUtxoWithTag ( "txType", "utxo" ) subModel
+            encodeTxUtxoWithTag ( "tx_type", "utxo" ) subModel
 
 
 encodeTxAccount : TxAccount -> Json.Encode.Value
@@ -1622,7 +1622,7 @@ entityDecoder =
 entityAddressesDecoder : Json.Decode.Decoder EntityAddresses
 entityAddressesDecoder =
     Json.Decode.succeed EntityAddresses
-        |> maybeDecode "addresses" (Json.Decode.list addressDecoder) Nothing
+        |> decode "addresses" (Json.Decode.list addressDecoder)
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
@@ -1652,7 +1652,7 @@ entityTagsDecoder =
 
 linkDecoder : Json.Decode.Decoder Link
 linkDecoder =
-    Json.Decode.field "txType" Json.Decode.string
+    Json.Decode.field "tx_type" Json.Decode.string
         |> Json.Decode.andThen linkTagDecoder
 
 
@@ -1858,7 +1858,7 @@ taxonomyDecoder =
 
 txDecoder : Json.Decode.Decoder Tx
 txDecoder =
-    Json.Decode.field "txType" Json.Decode.string
+    Json.Decode.field "tx_type" Json.Decode.string
         |> Json.Decode.andThen txTagDecoder
 
 

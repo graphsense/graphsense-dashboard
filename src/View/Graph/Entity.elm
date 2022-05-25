@@ -225,6 +225,9 @@ addressesCount vc gc ent =
             - Graph.padding
             |> translate (Entity.getWidth ent / 2)
             |> transform
+        , ( UserClickedAddressesExpand ent.id, True )
+            |> Json.Decode.succeed
+            |> stopPropagationOn "click"
         ]
         [ text_
             [ textAnchor "middle"

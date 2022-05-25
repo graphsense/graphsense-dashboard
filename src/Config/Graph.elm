@@ -49,6 +49,11 @@ maxExpandableNeighbors =
     25
 
 
+maxExpandableAddresses : Int
+maxExpandableAddresses =
+    20
+
+
 txMaxWidth : Float
 txMaxWidth =
     7

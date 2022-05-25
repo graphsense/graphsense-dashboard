@@ -9,6 +9,7 @@ import Json.Encode
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
+import Model.Graph.Id as Id
 import Model.Graph.Table exposing (..)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
@@ -36,73 +37,150 @@ loadingEntity id model =
 
 showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
 showAddressTable route model =
-    let
-        ( type_, effects ) =
-            case model.type_ of
-                Address loadable t ->
-                    let
-                        ( currency, address ) =
-                            case loadable of
-                                Loading curr addr ->
-                                    ( curr, addr )
+    case model.type_ of
+        Address loadable t ->
+            let
+                ( currency, address ) =
+                    case loadable of
+                        Loading curr addr ->
+                            ( curr, addr )
 
-                                Loaded a ->
-                                    ( a.address.currency, a.address.address )
-                    in
-                    mapFirst (Address loadable) <|
-                        case ( route, t ) of
-                            ( Route.AddressTagsTable, Just (AddressTagsTable _) ) ->
-                                n t
+                        Loaded a ->
+                            ( a.address.currency, a.address.address )
+            in
+            createAddressTable route t currency address
+                |> mapFirst (Address loadable)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
 
-                            ( Route.AddressTagsTable, _ ) ->
-                                ( AddressTagsTable Table.init |> Just
-                                , []
-                                )
+        _ ->
+            n model
 
-                            ( Route.AddressTxsTable, Just (AddressTxsTable _) ) ->
-                                n t
 
-                            ( Route.AddressTxsTable, _ ) ->
-                                ( AddressTxsTable Table.init |> Just
-                                , [ GetAddressTxsEffect
-                                        { currency = currency
-                                        , address = address
-                                        , nextpage = Nothing
-                                        , pagesize = 100
-                                        , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
-                                        }
-                                  ]
-                                )
+createAddressTable : Route.AddressTable -> Maybe AddressTable -> String -> String -> ( Maybe AddressTable, List Effect )
+createAddressTable route t currency address =
+    case ( route, t ) of
+        ( Route.AddressTagsTable, Just (AddressTagsTable _) ) ->
+            n t
 
-                            ( Route.AddressIncomingNeighborsTable, Just (AddressIncomingNeighborsTable _) ) ->
-                                n t
+        ( Route.AddressTagsTable, _ ) ->
+            ( AddressTagsTable Table.init |> Just
+            , []
+            )
 
-                            ( Route.AddressIncomingNeighborsTable, _ ) ->
-                                ( AddressIncomingNeighborsTable Table.init |> Just
-                                , []
-                                )
+        ( Route.AddressTxsTable, Just (AddressTxsTable _) ) ->
+            n t
 
-                            ( Route.AddressOutgoingNeighborsTable, Just (AddressOutgoingNeighborsTable _) ) ->
-                                n t
+        ( Route.AddressTxsTable, _ ) ->
+            ( AddressTxsTable Table.init |> Just
+            , [ GetAddressTxsEffect
+                    { currency = currency
+                    , address = address
+                    , nextpage = Nothing
+                    , pagesize = 100
+                    , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
+                    }
+              ]
+            )
 
-                            ( Route.AddressOutgoingNeighborsTable, _ ) ->
-                                ( AddressOutgoingNeighborsTable Table.init |> Just
-                                , []
-                                )
+        ( Route.AddressIncomingNeighborsTable, Just (AddressIncomingNeighborsTable _) ) ->
+            n t
 
-                _ ->
-                    ( model.type_, [] )
-    in
-    ( { model
-        | type_ = type_
-      }
-    , effects
-    )
+        ( Route.AddressIncomingNeighborsTable, _ ) ->
+            ( AddressIncomingNeighborsTable Table.init |> Just
+            , []
+            )
+
+        ( Route.AddressOutgoingNeighborsTable, Just (AddressOutgoingNeighborsTable _) ) ->
+            n t
+
+        ( Route.AddressOutgoingNeighborsTable, _ ) ->
+            ( AddressOutgoingNeighborsTable Table.init |> Just
+            , []
+            )
 
 
 showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
 showEntityTable route model =
-    ( model, [] )
+    case model.type_ |> Debug.log "showEntityTable" of
+        Entity loadable t ->
+            let
+                ( currency, entity ) =
+                    case loadable of
+                        Loading curr e ->
+                            ( curr, e )
+
+                        Loaded a ->
+                            ( a.entity.currency, a.entity.entity )
+            in
+            createEntityTable route t currency entity
+                |> Debug.log "table"
+                |> mapFirst (Entity loadable)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+
+        _ ->
+            n model
+
+
+createEntityTable : Route.EntityTable -> Maybe EntityTable -> String -> Int -> ( Maybe EntityTable, List Effect )
+createEntityTable route t currency entity =
+    case ( route, t ) of
+        ( Route.EntityTagsTable, Just (EntityTagsTable _) ) ->
+            n t
+
+        ( Route.EntityTagsTable, _ ) ->
+            ( EntityTagsTable Table.init |> Just
+            , []
+            )
+
+        ( Route.EntityTxsTable, Just (EntityTxsTable _) ) ->
+            n t
+
+        ( Route.EntityTxsTable, _ ) ->
+            ( EntityTxsTable Table.init |> Just
+            , {- [ GetEntityTxsEffect
+                 { currency = currency
+                 , address = address
+                 , nextpage = Nothing
+                 , pagesize = 100
+                 , toMsg = BrowserGotEntityTxs { currency = currency, address = address }
+                 }
+                 ]
+              -}
+              []
+            )
+
+        ( Route.EntityIncomingNeighborsTable, Just (EntityIncomingNeighborsTable _) ) ->
+            n t
+
+        ( Route.EntityIncomingNeighborsTable, _ ) ->
+            ( EntityIncomingNeighborsTable Table.init |> Just
+            , []
+            )
+
+        ( Route.EntityOutgoingNeighborsTable, Just (EntityOutgoingNeighborsTable _) ) ->
+            n t
+
+        ( Route.EntityOutgoingNeighborsTable, _ ) ->
+            ( EntityOutgoingNeighborsTable Table.init |> Just
+            , []
+            )
+
+        ( Route.EntityAddressesTable, Just (EntityAddressesTable _) ) ->
+            n t
+
+        ( Route.EntityAddressesTable, _ ) ->
+            ( EntityAddressesTable Table.init |> Just
+            , [ GetEntityAddressesEffect
+                    { currency = currency
+                    , entity = entity
+                    , nextpage = Nothing
+                    , pagesize = 100
+                    , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
+                    }
+              ]
+            )
 
 
 show : Model -> Model
@@ -115,7 +193,24 @@ show model =
 showEntity : Entity.Entity -> Model -> Model
 showEntity entity model =
     show model
-        |> s_type_ (Entity (Loaded entity) Nothing)
+        |> s_type_
+            (Entity (Loaded entity) <|
+                case model.type_ of
+                    Entity loadable table ->
+                        if
+                            loadableEntityId loadable
+                                == entity.entity.entity
+                                && loadableEntityCurrency loadable
+                                == entity.entity.currency
+                        then
+                            table
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
 
 
 showAddress : Address.Address -> Model -> Model
@@ -183,6 +278,35 @@ showAddressTxs id data model =
             model
 
 
+showEntityAddresses : { currency : String, entity : Int } -> Api.Data.EntityAddresses -> Model -> Model
+showEntityAddresses id data model =
+    case model.type_ of
+        Entity loadable table ->
+            if matchEntityId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Entity loadable <|
+                            case table of
+                                Just (EntityAddressesTable t) ->
+                                    appendData data.nextPage data.addresses t
+                                        |> EntityAddressesTable
+                                        |> Just
+
+                                _ ->
+                                    Table.init
+                                        |> s_data data.addresses
+                                        |> s_nextpage data.nextPage
+                                        |> EntityAddressesTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
 matchAddressId : { currency : String, address : String } -> Loadable String Address.Address -> Bool
 matchAddressId { currency, address } loadable =
     case loadable of
@@ -191,6 +315,16 @@ matchAddressId { currency, address } loadable =
 
         Loaded a ->
             a.address.currency == currency && a.address.address == address
+
+
+matchEntityId : { currency : String, entity : Int } -> Loadable Int Entity.Entity -> Bool
+matchEntityId { currency, entity } loadable =
+    case loadable of
+        Loading c id ->
+            c == currency && id == entity
+
+        Loaded a ->
+            a.entity.currency == currency && a.entity.entity == entity
 
 
 tableNewState : Table.State -> Model -> Model

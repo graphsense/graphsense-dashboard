@@ -1,7 +1,9 @@
-module Update.Graph.Address exposing (move, release, translate)
+module Update.Graph.Address exposing (..)
 
+import Api.Data
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
+import RecordSetter exposing (..)
 
 
 move : Coords -> Address -> Address
@@ -27,4 +29,13 @@ translate { x, y } address =
     { address
         | x = address.x + x
         , y = address.y + y
+    }
+
+
+updateTags : List Api.Data.AddressTag -> Address -> Address
+updateTags tags address =
+    { address
+        | address =
+            address.address
+                |> s_tags (Just tags)
     }

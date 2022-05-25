@@ -28,3 +28,5 @@ docker run --rm \
     --additional-properties=generateAliasAsModel=false \
     -t /templates 
 rm $temp $temp2
+
+sed -i 's/"txType"/"tx_type"/' "${dir}/../openapi/src/Api/Data.elm"

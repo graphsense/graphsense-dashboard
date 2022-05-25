@@ -1,7 +1,7 @@
 module Update.Graph exposing (..)
 
 import Api.Data
-import Config.Graph exposing (maxExpandableNeighbors)
+import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import Dict
 import Effect exposing (n)
@@ -27,6 +27,7 @@ import Route.Graph as Route
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Adding as Adding
+import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
 import Update.Graph.Layer as Layer
@@ -81,28 +82,6 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
 addEntity : Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Model -> ( Model, List Effect )
 addEntity uc { entity, incoming, outgoing } model =
     let
-        _ =
-            incoming
-                |> List.map (.entity >> .entity)
-                |> Debug.log "add.incoming"
-
-        _ =
-            outgoing
-                |> List.map (.entity >> .entity)
-                |> Debug.log "add.outgoing"
-
-        _ =
-            outgoingAnchors
-                |> IntDict.values
-                |> List.map (first >> .id)
-                |> Debug.log "add.outgoingAnchors"
-
-        _ =
-            incomingAnchors
-                |> IntDict.values
-                |> List.map (first >> .id)
-                |> Debug.log "add.incomingAnchors"
-
         findEntities e =
             (++)
                 (Layer.getEntities e.entity.currency e.entity.entity model.layers)
@@ -327,6 +306,36 @@ update plugins uc msg model =
             }
                 |> n
 
+        UserClickedAddressesExpand id ->
+            Layer.getEntity id model.layers
+                |> Debug.log "entity"
+                |> Maybe.map
+                    (\entity ->
+                        if entity.entity.noAddresses < maxExpandableAddresses then
+                            ( model
+                            , GetEntityAddressesEffect
+                                { currency = Id.currency id
+                                , entity = Id.entityId id
+                                , pagesize = maxExpandableAddresses
+                                , nextpage = Nothing
+                                , toMsg = BrowserGotEntityAddresses id
+                                }
+                            )
+
+                        else
+                            ( model
+                            , Route.entityRoute
+                                { currency = Id.currency id
+                                , entity = Id.entityId id
+                                , table = Just Route.EntityAddressesTable
+                                , layer = Id.layer id |> Just
+                                }
+                                |> NavPushRouteEffect
+                            )
+                    )
+                |> Maybe.map (mapSecond List.singleton)
+                |> Maybe.withDefault (n model)
+
         UserClickedEntityExpandHandle id isOutgoing ->
             case Layer.getEntity id model.layers of
                 Nothing ->
@@ -510,6 +519,63 @@ update plugins uc msg model =
                             model.layers
                         )
                     )
+
+        BrowserGotEntityAddresses entityId addresses ->
+            let
+                added =
+                    List.foldl
+                        (\address acc ->
+                            Layer.addAddressAtEntity
+                                plugins
+                                uc
+                                acc.colors
+                                entityId
+                                address
+                                acc.layers
+                        )
+                        { layers = model.layers
+                        , new = Set.empty
+                        , repositioned = Set.empty
+                        , colors = model.config.colors
+                        }
+                        addresses.addresses
+            in
+            ( { model
+                | layers =
+                    added.layers
+                , config =
+                    model.config
+                        |> s_colors added.colors
+              }
+                |> syncLinks added.repositioned
+            , addresses.addresses
+                |> List.map
+                    (\address ->
+                        GetAddressTagsEffect
+                            { currency = address.currency
+                            , address = address.address
+                            , pagesize = 10
+                            , nextpage = Nothing
+                            , toMsg =
+                                BrowserGotAddressTags
+                                    { currency = address.currency
+                                    , address = address.address
+                                    }
+                            }
+                    )
+            )
+
+        BrowserGotEntityAddressesForTable id addresses ->
+            { model
+                | browser = Browser.showEntityAddresses id addresses model.browser
+            }
+                |> n
+
+        BrowserGotAddressTags id tags ->
+            { model
+                | layers = Layer.updateAddresses id (Address.updateTags tags.addressTags) model.layers
+            }
+                |> n
 
         UserClickedAddressExpandHandle id isOutgoing ->
             case Layer.getAddress id model.layers of

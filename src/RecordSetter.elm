@@ -1544,6 +1544,11 @@ s_inSomeYears value__ record__ =
     { record__ | inSomeYears = value__ }
 
 
+s_incoming : a -> { b | incoming : a } -> { b | incoming : a }
+s_incoming value__ record__ =
+    { record__ | incoming = value__ }
+
+
 s_indent : a -> { b | indent : a } -> { b | indent : a }
 s_indent value__ record__ =
     { record__ | indent = value__ }
@@ -2554,6 +2559,11 @@ s_outerLoop value__ record__ =
     { record__ | outerLoop = value__ }
 
 
+s_outgoing : a -> { b | outgoing : a } -> { b | outgoing : a }
+s_outgoing value__ record__ =
+    { record__ | outgoing = value__ }
+
+
 s_outgoingEdgeIndex : a -> { b | outgoingEdgeIndex : a } -> { b | outgoingEdgeIndex : a }
 s_outgoingEdgeIndex value__ record__ =
     { record__ | outgoingEdgeIndex = value__ }
@@ -2567,6 +2577,11 @@ s_outgoingPortValues value__ record__ =
 s_outline : a -> { b | outline : a } -> { b | outline : a }
 s_outline value__ record__ =
     { record__ | outline = value__ }
+
+
+s_output : a -> { b | output : a } -> { b | output : a }
+s_output value__ record__ =
+    { record__ | output = value__ }
 
 
 s_outputValue : a -> { b | outputValue : a } -> { b | outputValue : a }

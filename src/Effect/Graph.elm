@@ -49,6 +49,20 @@ type Effect
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTxs -> Msg
         }
+    | GetEntityAddressesEffect
+        { currency : String
+        , entity : Int
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : Api.Data.EntityAddresses -> Msg
+        }
+    | GetAddressTagsEffect
+        { currency : String
+        , address : String
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : Api.Data.AddressTags -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
 
 
@@ -85,6 +99,14 @@ perform eff =
 
         -- managed in Effect.elm
         GetAddressTxsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetEntityAddressesEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetAddressTagsEffect _ ->
             Cmd.none
 
         PluginEffect ( pid, cmd ) ->

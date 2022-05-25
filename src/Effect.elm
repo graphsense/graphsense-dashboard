@@ -93,6 +93,14 @@ perform key apiKey effect =
                     Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetAddressTagsEffect { currency, address, pagesize, nextpage, toMsg } ->
+                    Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetEntityAddressesEffect { currency, entity, pagesize, nextpage, toMsg } ->
+                    Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
                 _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg

@@ -16,6 +16,7 @@ type EntityTable
     | EntityTxsTable (Table Api.Data.AddressTx)
     | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
+    | EntityAddressesTable (Table Api.Data.Address)
 
 
 type alias Table a =

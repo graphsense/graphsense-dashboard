@@ -24,6 +24,7 @@ type Msg
     | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool
+    | UserClickedAddressesExpand EntityId
     | UserPushesLeftMouseButtonOnGraph Coords
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
@@ -45,6 +46,9 @@ type Msg
         }
         Api.Data.Entity
     | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
+    | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
+    | BrowserGotEntityAddressesForTable { currency : String, entity : Int } Api.Data.EntityAddresses
+    | BrowserGotAddressTags { currency : String, address : String } Api.Data.AddressTags
     | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu

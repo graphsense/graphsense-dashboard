@@ -29,6 +29,7 @@ import Time
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
+import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Locale as Locale
 
 
@@ -571,7 +572,12 @@ browseAddressTable vc gc coinCode table =
 
 browseEntityTable : View.Config -> Graph.Config -> String -> EntityTable -> Html Msg
 browseEntityTable vc gc coinCode table =
-    Debug.todo "browseEntityTable"
+    case table of
+        EntityAddressesTable t ->
+            Table.table vc (EntityAddressesTable.config vc coinCode) t.state t.data
+
+        _ ->
+            none
 
 
 
