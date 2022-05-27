@@ -22,9 +22,7 @@ init plugins entity address =
             }
     , entityId = entity.id
     , address = address
-    , category =
-        address.tags
-            |> Maybe.andThen (List.head >> Maybe.andThen .category)
+    , category = tagsToCategory address.tags
     , x =
         entity.x
             + entity.dx

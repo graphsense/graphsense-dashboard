@@ -29,6 +29,7 @@ type Msg
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
     | BrowserGotSvgElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotBrowserElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnEntity EntityId Coords
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
@@ -42,7 +43,7 @@ type Msg
     | BrowserGotEntityForAddressNeighbor
         { anchor : AddressId
         , isOutgoing : Bool
-        , neighbor : Api.Data.NeighborAddress
+        , neighbors : List Api.Data.NeighborAddress
         }
         Api.Data.Entity
     | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
@@ -55,4 +56,5 @@ type Msg
     | UserLeftContextMenu
     | UserClickedAnnotateAddress AddressId
     | UserClickedRemoveAddress AddressId
+    | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | NoOp

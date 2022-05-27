@@ -2,6 +2,7 @@ module View.Graph.Table exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css
 import Css.Table
 import FontAwesome
 import Html
@@ -16,10 +17,16 @@ import Tuple exposing (..)
 import View.Locale as Locale
 
 
-table : View.Config -> Table.Config data Msg -> Table.State -> List data -> Html Msg
-table vc config state data =
+table : View.Config -> Maybe Float -> Table.Config data Msg -> Table.State -> List data -> Html Msg
+table vc height config state data =
     div
-        [ Css.Table.root vc |> css
+        [ (height
+            |> Maybe.withDefault 250
+            |> Css.px
+            |> Css.maxHeight
+          )
+            :: Css.Table.root vc
+            |> css
         ]
         [ Table.view config state data
         ]
@@ -88,7 +95,18 @@ simpleTheadHelp vc ( name, status, click ) =
         |> Html.Styled.fromUnstyled
         |> List.singleton
         |> th
-            [ click ]
+            [ click
+            , Css.Table.headCell vc |> css
+            ]
+
+
+htmlColumn : View.Config -> String -> (data -> String) -> (data -> List (Html Msg)) -> Table.Column data Msg
+htmlColumn vc name accessor html =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = html >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy accessor
+        }
 
 
 stringColumn : View.Config -> String -> (data -> String) -> Table.Column data Msg
@@ -96,6 +114,24 @@ stringColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
         , viewData = accessor >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy accessor
+        }
+
+
+timestampColumn : View.Config -> String -> (data -> Int) -> Table.Column data Msg
+timestampColumn vc name accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = accessor >> Locale.timestamp vc.locale >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy accessor
+        }
+
+
+numberColumn : View.Config -> String -> (data -> String) -> Table.Column data Msg
+numberColumn vc name accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = accessor >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

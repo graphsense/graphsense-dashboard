@@ -38,4 +38,6 @@ updateTags tags address =
         | address =
             address.address
                 |> s_tags (Just tags)
+        , category =
+            tagsToCategory (Just tags)
     }

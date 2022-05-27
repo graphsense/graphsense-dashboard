@@ -13,6 +13,7 @@ type alias Model =
     { type_ : Type
     , visible : Bool
     , now : Time.Posix
+    , height : Maybe Float
     }
 
 

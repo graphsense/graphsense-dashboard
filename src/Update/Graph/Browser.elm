@@ -52,6 +52,7 @@ showAddressTable route model =
                 |> mapFirst (Address loadable)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
 
         _ ->
             n model
@@ -118,6 +119,7 @@ showEntityTable route model =
                 |> mapFirst (Entity loadable)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
 
         _ ->
             n model
@@ -343,6 +345,17 @@ tableNewState state model =
                             _ ->
                                 table
 
+                Entity loadable table ->
+                    Entity loadable <|
+                        case table of
+                            Just (EntityAddressesTable t) ->
+                                { t | state = state }
+                                    |> EntityAddressesTable
+                                    |> Just
+
+                            _ ->
+                                table
+
                 _ ->
                     model.type_
     }
@@ -352,3 +365,10 @@ showPlugin : String -> Model -> Model
 showPlugin pid model =
     show model
         |> s_type_ (Plugin pid)
+
+
+setHeight : Float -> Model -> Model
+setHeight height browser =
+    { browser
+        | height = Just height
+    }

@@ -11,4 +11,5 @@ init now =
     { visible = False
     , type_ = None
     , now = Time.millisToPosix now
+    , height = Nothing
     }

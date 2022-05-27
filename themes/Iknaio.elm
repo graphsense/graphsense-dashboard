@@ -450,7 +450,14 @@ theme =
         |> s_table
             (Table.default
                 |> s_root
-                    [ px 10 |> paddingRight ]
+                    [ px 10 |> paddingX
+                    ]
+                |> s_table
+                    [ scaled 1 |> rem |> padding
+                    ]
+                |> s_headCell
+                    [ tableCell
+                    ]
                 |> s_headRow
                     [ textAlign left
                     , fontWeight bold
@@ -464,11 +471,14 @@ theme =
                         ]
                     ]
                 |> s_cell
-                    [ scaled 1 |> rem |> padding
+                    [ tableCell
+                    ]
+                |> s_numberCell
+                    [ numberCell
                     ]
                 |> s_valuesCell
                     (\isNegative ->
-                        textAlign right
+                        numberCell
                             :: (if isNegative then
                                     [ toCssColor colors.brandRed |> color ]
 
@@ -587,3 +597,19 @@ nodeStrokeWidth =
 shadowMd : Style
 shadowMd =
     property "box-shadow" "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)"
+
+
+tableCell : Style
+tableCell =
+    [ scaled 1 |> rem |> padding
+    , whiteSpace noWrap
+    ]
+        |> batch
+
+
+numberCell : Style
+numberCell =
+    [ tableCell
+    , textAlign right
+    ]
+        |> batch

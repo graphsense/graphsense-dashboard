@@ -50,3 +50,8 @@ getX addr =
 getY : Address -> Float
 getY addr =
     addr.y + addr.dy
+
+
+tagsToCategory : Maybe (List Api.Data.AddressTag) -> Maybe String
+tagsToCategory =
+    Maybe.andThen (List.head >> Maybe.andThen .category)

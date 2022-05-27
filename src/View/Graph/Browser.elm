@@ -48,7 +48,7 @@ browser plugins vc gc states model =
                 Browser.Address loadable table ->
                     browseAddress plugins vc model.now loadable
                         :: (table
-                                |> Maybe.map (browseAddressTable vc gc (loadableAddressCurrency loadable))
+                                |> Maybe.map (browseAddressTable vc gc model.height (loadableAddressCurrency loadable))
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -56,7 +56,7 @@ browser plugins vc gc states model =
                 Browser.Entity loadable table ->
                     browseEntity plugins vc gc model.now loadable
                         :: (table
-                                |> Maybe.map (browseEntityTable vc gc (loadableEntityCurrency loadable))
+                                |> Maybe.map (browseEntityTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -73,6 +73,7 @@ propertyBox : View.Config -> List (Html msg) -> Html msg
 propertyBox vc =
     div
         [ Css.propertyBoxTable vc |> css
+        , id "propertyBox"
         ]
 
 
@@ -560,21 +561,30 @@ rowsEntity vc gc now ent =
     ]
 
 
-browseAddressTable : View.Config -> Graph.Config -> String -> AddressTable -> Html Msg
-browseAddressTable vc gc coinCode table =
+browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddressTable -> Html Msg
+browseAddressTable vc gc height coinCode table =
     case table of
         AddressTxsTable t ->
-            Table.table vc (AddressTxsTable.config vc coinCode) t.state t.data
+            Table.table vc height (AddressTxsTable.config vc coinCode) t.state t.data
 
         _ ->
             none
 
 
-browseEntityTable : View.Config -> Graph.Config -> String -> EntityTable -> Html Msg
-browseEntityTable vc gc coinCode table =
+browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
+browseEntityTable vc gc height entity table =
     case table of
         EntityAddressesTable t ->
-            Table.table vc (EntityAddressesTable.config vc coinCode) t.state t.data
+            let
+                ( coinCode, entityId ) =
+                    case entity of
+                        Loaded e ->
+                            ( e.entity.currency, e.id |> Just )
+
+                        Loading curr _ ->
+                            ( curr, Nothing )
+            in
+            Table.table vc height (EntityAddressesTable.config vc coinCode entityId) t.state t.data
 
         _ ->
             none

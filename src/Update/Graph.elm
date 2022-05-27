@@ -10,8 +10,10 @@ import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
+import List.Extra
 import Log
 import Maybe.Extra
+import Model.Address as A
 import Model.Graph exposing (..)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Browser as Browser
@@ -146,6 +148,17 @@ update plugins uc msg model =
                                 , y = element.height
                                 }
                                     |> Just
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
+        BrowserGotBrowserElement result ->
+            result
+                |> Result.map
+                    (\{ element } ->
+                        { model
+                            | browser = Browser.setHeight element.height model.browser
                         }
                     )
                 |> Result.withDefault model
@@ -482,22 +495,33 @@ update plugins uc msg model =
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
             ( model
             , neighbors.neighbors
+                |> List.foldl
+                    (\neighbor acc ->
+                        Dict.update ( neighbor.address.currency, neighbor.address.entity )
+                            (Maybe.map ((::) neighbor)
+                                >> Maybe.withDefault [ neighbor ]
+                                >> Just
+                            )
+                            acc
+                    )
+                    Dict.empty
+                |> Dict.toList
                 |> List.map
-                    (\neighbor ->
-                        GetEntityForAddressEffect
-                            { address = neighbor.address.address
-                            , currency = neighbor.address.currency
+                    (\( ( currency, entity ), neighbors_ ) ->
+                        GetEntityEffect
+                            { entity = entity
+                            , currency = currency
                             , toMsg =
                                 BrowserGotEntityForAddressNeighbor
                                     { anchor = id
                                     , isOutgoing = isOutgoing
-                                    , neighbor = neighbor
+                                    , neighbors = neighbors_
                                     }
                             }
                     )
             )
 
-        BrowserGotEntityForAddressNeighbor { anchor, isOutgoing, neighbor } entity ->
+        BrowserGotEntityForAddressNeighbor { anchor, isOutgoing, neighbors } entity ->
             Layer.getAddress anchor model.layers
                 |> Maybe.andThen
                     (\address ->
@@ -506,7 +530,7 @@ update plugins uc msg model =
                     )
                 |> Maybe.map
                     (\( address, ent ) ->
-                        handleAddressNeighbor plugins uc ( address, ent ) isOutgoing ( neighbor, entity ) model
+                        handleAddressNeighbor plugins uc ( address, ent ) isOutgoing ( neighbors, entity ) model
                     )
                 |> Maybe.withDefault (n model)
                 |> mapSecond
@@ -551,16 +575,9 @@ update plugins uc msg model =
             , addresses.addresses
                 |> List.map
                     (\address ->
-                        GetAddressTagsEffect
+                        getAddressTagsEffect
                             { currency = address.currency
                             , address = address.address
-                            , pagesize = 10
-                            , nextpage = Nothing
-                            , toMsg =
-                                BrowserGotAddressTags
-                                    { currency = address.currency
-                                    , address = address.address
-                                    }
                             }
                     )
             )
@@ -690,6 +707,29 @@ update plugins uc msg model =
 
         UserClickedRemoveAddress id ->
             n model
+
+        UserClickedAddressInEntityAddressesTable entityId address ->
+            let
+                added =
+                    Layer.addAddressAtEntity
+                        plugins
+                        uc
+                        model.config.colors
+                        entityId
+                        address
+                        model.layers
+            in
+            ( { model
+                | layers = added.layers
+                , config = model.config |> s_colors added.colors
+              }
+                |> syncLinks added.repositioned
+            , getAddressTagsEffect
+                { currency = address.currency
+                , address = address.address
+                }
+                |> List.singleton
+            )
 
         NoOp ->
             n model
@@ -863,8 +903,8 @@ updateSize w h model =
     }
 
 
-addAddressNeighborWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, Maybe Address, Set EntityId )
-addAddressNeighborWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbor, entity ) model =
+addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Address, Set EntityId )
+addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbors, entity ) model =
     let
         acc =
             Layer.addEntityNeighbors uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
@@ -884,22 +924,40 @@ addAddressNeighborWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoi
                             |> Debug.log "syncLinks.newEntity.y"
 
                     added =
-                        Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address acc.layers
+                        neighbors
+                            |> List.foldl
+                                (\neighbor added_ ->
+                                    let
+                                        added__ =
+                                            Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address added_.layers
+                                    in
+                                    { layers = added__.layers
+                                    , new = Set.union added__.new added_.new
+                                    , repositioned = Set.union added_.repositioned added__.repositioned
+                                    , colors = Dict.union added__.colors added_.colors
+                                    }
+                                )
+                                { layers = acc.layers
+                                , colors = acc.colors
+                                , new = Set.empty
+                                , repositioned = acc.repositioned
+                                }
                 in
                 ( { model
                     | layers = added.layers
+                    , config =
+                        model.config
+                            |> s_colors added.colors
                   }
                 , Set.toList added.new
-                    |> List.head
-                    |> Debug.log "syncLinks.addAddressNeighborsWithEntity.newAddress"
-                    |> Maybe.andThen
+                    |> List.filterMap
                         (\a -> Layer.getAddress a added.layers)
-                , Set.union acc.repositioned added.repositioned
+                , added.repositioned
                 )
             )
         |> Maybe.withDefault
             ( model
-            , Nothing
+            , []
             , acc.repositioned
             )
 
@@ -1045,6 +1103,21 @@ handleEntityNeighbors uc anchor isOutgoing neighbors model =
     )
 
 
+getAddressTagsEffect : A.Address -> Effect
+getAddressTagsEffect address =
+    GetAddressTagsEffect
+        { currency = address.currency
+        , address = address.address
+        , pagesize = 10
+        , nextpage = Nothing
+        , toMsg =
+            BrowserGotAddressTags
+                { currency = address.currency
+                , address = address.address
+                }
+        }
+
+
 getEntityEgonet :
     { currency : String, entity : Int }
     -> (String -> Int -> Bool -> Api.Data.NeighborEntities -> Msg)
@@ -1073,21 +1146,39 @@ getEntityEgonet { currency, entity } msg layers =
     ]
 
 
-handleAddressNeighbor : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
-handleAddressNeighbor plugins uc anchor isOutgoing neighbor model =
+{-|
+
+    neighbors contains a list of address neighbors and their parent entity.
+
+-}
+handleAddressNeighbor : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> ( Model, List Effect )
+handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     let
         ( newModel, new, repositionedEntities ) =
-            addAddressNeighborWithEntity plugins uc anchor isOutgoing neighbor model
+            addAddressNeighborsWithEntity plugins uc anchor isOutgoing neighbors model
     in
-    case new |> Debug.log "syncLinks.new" of
-        Nothing ->
-            n model
-
-        Just address ->
-            ( addAddressLink (first anchor) isOutgoing ( first neighbor, address ) newModel
-                |> syncLinks repositionedEntities
-            , []
+    ( new
+        |> List.foldl
+            (\address model_ ->
+                first neighbors
+                    |> List.Extra.find (\n -> n.address.currency == address.address.currency && n.address.address == address.address.address)
+                    |> Maybe.map
+                        (\neighbor ->
+                            addAddressLink (first anchor) isOutgoing ( neighbor, address ) model_
+                        )
+                    |> Maybe.withDefault model_
             )
+            newModel
+        |> syncLinks repositionedEntities
+    , first neighbors
+        |> List.map
+            (\neighbor ->
+                getAddressTagsEffect
+                    { currency = neighbor.address.currency
+                    , address = neighbor.address.address
+                    }
+            )
+    )
 
 
 syncLinks : Set EntityId -> Model -> Model

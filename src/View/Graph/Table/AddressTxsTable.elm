@@ -7,6 +7,7 @@ import Html.Styled.Attributes exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Table
 import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Locale as Locale
 
 
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
@@ -15,21 +16,11 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.stringColumn vc "transaction" .txHash
-            , T.valueColumn vc coinCode "value" .value
+            [ T.stringColumn vc "Transaction" .txHash
+            , T.valueColumn vc coinCode "Value" .value
+            , (.height >> Locale.int vc.locale)
+                |> T.numberColumn vc "Height"
+            , T.timestampColumn vc "Timestamp" .timestamp
             ]
         , customizations = customizations vc
         }
-
-
-
-{-
-     name: t('Height'),
-     data: 'height',
-     className: 'text-right'
-   },
-   {
-     name: t('Timestamp'),
-     data: 'timestamp',
-     render: this.formatValue(this.formatTimestamp)
--}

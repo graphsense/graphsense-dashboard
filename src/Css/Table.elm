@@ -8,13 +8,17 @@ root : Config -> List Style
 root vc =
     overflowY auto
         :: overflowX auto
-        :: maxHeight (px 250)
         :: vc.theme.table.root
 
 
 table : Config -> List Style
 table vc =
     vc.theme.table.table
+
+
+headCell : Config -> List Style
+headCell vc =
+    vc.theme.table.headCell
 
 
 headRow : Config -> List Style
@@ -40,3 +44,8 @@ cell vc =
 valuesCell : Config -> Bool -> List Style
 valuesCell vc isNegative =
     vc.theme.table.valuesCell isNegative
+
+
+numberCell : Config -> List Style
+numberCell vc =
+    vc.theme.table.numberCell

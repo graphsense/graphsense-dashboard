@@ -12,6 +12,7 @@ import Task
 type Effect
     = NavPushRouteEffect Route
     | GetSvgElementEffect
+    | GetBrowserElementEffect
     | GetAddressEffect
         { currency : String
         , address : String
@@ -76,6 +77,10 @@ perform eff =
         GetSvgElementEffect ->
             Browser.Dom.getElement "graph"
                 |> Task.attempt BrowserGotSvgElement
+
+        GetBrowserElementEffect ->
+            Browser.Dom.getElement "propertyBox"
+                |> Task.attempt BrowserGotBrowserElement
 
         -- managed in Effect.elm
         GetEntityNeighborsEffect _ ->

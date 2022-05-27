@@ -16,6 +16,7 @@
     "elm-review": "^2.7.1",
     "elm-test": "^0.19.1-revision7",
     "elm-tooling": "^1.7.0",
+    "level": "^8.0.0",
     "setem": "^0.3.6",
     "vite": "^2.9.0",
     "vite-plugin-elm": "^2.6.0"

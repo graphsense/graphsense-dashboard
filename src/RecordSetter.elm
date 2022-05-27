@@ -1379,6 +1379,11 @@ s_hash value__ record__ =
     { record__ | hash = value__ }
 
 
+s_headCell : a -> { b | headCell : a } -> { b | headCell : a }
+s_headCell value__ record__ =
+    { record__ | headCell = value__ }
+
+
 s_headCellSortable : a -> { b | headCellSortable : a } -> { b | headCellSortable : a }
 s_headCellSortable value__ record__ =
     { record__ | headCellSortable = value__ }
@@ -2392,6 +2397,11 @@ s_numMessages value__ record__ =
 s_number : a -> { b | number : a } -> { b | number : a }
 s_number value__ record__ =
     { record__ | number = value__ }
+
+
+s_numberCell : a -> { b | numberCell : a } -> { b | numberCell : a }
+s_numberCell value__ record__ =
+    { record__ | numberCell = value__ }
 
 
 s_numberFormat : a -> { b | numberFormat : a } -> { b | numberFormat : a }
