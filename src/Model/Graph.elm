@@ -49,5 +49,5 @@ type Hovered
 
 type Dragging
     = NoDragging
-    | Dragging Transform.Model Coords
-    | DraggingNode EntityId Coords
+    | Dragging Transform.Model Coords Coords
+    | DraggingNode EntityId Coords Coords

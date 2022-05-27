@@ -75,7 +75,7 @@ entity vc gc selected ent =
     in
     g
         [ Css.entityRoot vc |> css
-        , Json.Decode.succeed ( UserClickedEntity ent.id, True )
+        , Json.Decode.succeed ( UserClickedEntity ent.id { x = ent.dx, y = ent.dy }, True )
             |> stopPropagationOn "click"
         , UserRightClickedEntity ent.id
             |> Json.Decode.succeed

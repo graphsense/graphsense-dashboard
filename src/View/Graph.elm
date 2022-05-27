@@ -74,7 +74,7 @@ graphSvg plugins vc gc model size =
         ([ preserveAspectRatio "xMidYMid meet"
          , Transform.viewBox dim model.transform |> viewBox
          , Css.svgRoot vc |> Svg.css
-         , UserClickedGraph
+         , UserClickedGraph model.dragging
             |> onClick
          , Svg.custom "wheel"
             (Json.Decode.map3

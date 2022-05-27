@@ -17,6 +17,7 @@ import Model.Address as A
 import Model.Graph exposing (..)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Browser as Browser
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
@@ -164,12 +165,28 @@ update plugins uc msg model =
                 |> Result.withDefault model
                 |> n
 
-        UserClickedGraph ->
-            ( model
-            , Route.rootRoute
-                |> NavPushRouteEffect
-                |> List.singleton
-            )
+        UserClickedGraph dragging ->
+            let
+                click =
+                    case dragging of
+                        NoDragging ->
+                            True
+
+                        Dragging _ start current ->
+                            draggingToClick start current
+
+                        DraggingNode _ start current ->
+                            draggingToClick start current
+            in
+            if click then
+                ( model
+                , Route.rootRoute
+                    |> NavPushRouteEffect
+                    |> List.singleton
+                )
+
+            else
+                n model
 
         UserWheeledOnGraph x y z ->
             model.size
@@ -195,7 +212,7 @@ update plugins uc msg model =
                 | dragging =
                     case model.dragging of
                         NoDragging ->
-                            Dragging model.transform coords
+                            Dragging model.transform coords coords
 
                         x ->
                             x
@@ -207,7 +224,7 @@ update plugins uc msg model =
                 | dragging =
                     case model.dragging of
                         NoDragging ->
-                            DraggingNode id coords
+                            DraggingNode id coords coords
 
                         x ->
                             x
@@ -219,12 +236,13 @@ update plugins uc msg model =
                 NoDragging ->
                     model
 
-                Dragging transform start ->
+                Dragging transform start _ ->
                     { model
                         | transform = Transform.update start coords transform
+                        , dragging = Dragging transform start coords
                     }
 
-                DraggingNode id start ->
+                DraggingNode id start _ ->
                     let
                         vector =
                             Transform.vector start coords model.transform
@@ -233,6 +251,7 @@ update plugins uc msg model =
                         | layers =
                             Layer.moveEntity id vector model.layers
                                 |> Layer.syncLinks (Set.singleton id)
+                        , dragging = DraggingNode id start coords
                     }
             )
                 |> n
@@ -242,12 +261,12 @@ update plugins uc msg model =
                 NoDragging ->
                     model
 
-                Dragging _ _ ->
+                Dragging _ _ _ ->
                     { model
                         | dragging = NoDragging
                     }
 
-                DraggingNode id _ ->
+                DraggingNode id _ _ ->
                     { model
                         | layers = Layer.releaseEntity id model.layers
                         , dragging = NoDragging
@@ -283,17 +302,21 @@ update plugins uc msg model =
         UserHoversAddress id ->
             n model
 
-        UserClickedEntity id ->
-            ( model
-            , Route.entityRoute
-                { currency = Id.currency id
-                , entity = Id.entityId id
-                , table = Nothing
-                , layer = Id.layer id |> Just
-                }
-                |> NavPushRouteEffect
-                |> List.singleton
-            )
+        UserClickedEntity id moved ->
+            if draggingToClick { x = 0, y = 0 } moved then
+                ( model
+                , Route.entityRoute
+                    { currency = Id.currency id
+                    , entity = Id.entityId id
+                    , table = Nothing
+                    , layer = Id.layer id |> Just
+                    }
+                    |> NavPushRouteEffect
+                    |> List.singleton
+                )
+
+            else
+                n model
 
         UserRightClickedEntity id ->
             n model
@@ -1234,3 +1257,8 @@ deselect model =
             model.browser
                 |> s_visible False
     }
+
+
+draggingToClick : Coords -> Coords -> Bool
+draggingToClick start current =
+    Coords.betrag start current < 2

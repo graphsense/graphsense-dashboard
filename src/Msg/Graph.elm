@@ -3,6 +3,7 @@ module Msg.Graph exposing (..)
 import Api.Data
 import Browser.Dom
 import Json.Encode
+import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Transform as Transform
@@ -12,11 +13,11 @@ import Time
 
 
 type Msg
-    = UserClickedGraph
+    = UserClickedGraph Dragging
     | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId Coords
     | UserHoversAddress AddressId
-    | UserClickedEntity EntityId
+    | UserClickedEntity EntityId Coords
     | UserRightClickedEntity EntityId
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
