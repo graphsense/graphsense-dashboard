@@ -51,6 +51,8 @@ type Msg
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
     | BrowserGotEntityAddressesForTable { currency : String, entity : Int } Api.Data.EntityAddresses
     | BrowserGotAddressTags { currency : String, address : String } Api.Data.AddressTags
+    | BrowserGotAddressTagsTable { currency : String, address : String } Api.Data.AddressTags
+    | BrowserGotEntityAddressTagsTable { currency : String, entity : Int } Api.Data.AddressTags
     | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu

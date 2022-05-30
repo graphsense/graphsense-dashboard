@@ -2,7 +2,7 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..), getAddressTagsEffect)
+import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Json.Encode
@@ -69,9 +69,16 @@ createAddressTable route t currency address =
 
         ( Route.AddressTagsTable, _ ) ->
             ( AddressTagsTable.init |> AddressTagsTable |> Just
-            , [ getAddressTagsEffect
+            , [ GetAddressTagsEffect
                     { currency = currency
                     , address = address
+                    , pagesize = 100
+                    , nextpage = Nothing
+                    , toMsg =
+                        BrowserGotAddressTagsTable
+                            { currency = currency
+                            , address = address
+                            }
                     }
               ]
             )
@@ -139,8 +146,19 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityTagsTable, _ ) ->
-            ( Debug.todo "EntityTagsTable Table.init" |> Just
-            , []
+            ( AddressTagsTable.init |> EntityTagsTable |> Just
+            , [ GetEntityAddressTagsEffect
+                    { currency = currency
+                    , entity = entity
+                    , pagesize = 100
+                    , nextpage = Nothing
+                    , toMsg =
+                        BrowserGotEntityAddressTagsTable
+                            { currency = currency
+                            , entity = entity
+                            }
+                    }
+              ]
             )
 
         ( Route.EntityTxsTable, Just (EntityTxsTable _) ) ->
@@ -338,6 +356,35 @@ showEntityAddresses id data model =
                                         |> s_data data.addresses
                                         |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showEntityAddressTags : { currency : String, entity : Int } -> Api.Data.AddressTags -> Model -> Model
+showEntityAddressTags id data model =
+    case model.type_ of
+        Entity loadable table ->
+            if matchEntityId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Entity loadable <|
+                            case table of
+                                Just (EntityTagsTable t) ->
+                                    appendData data.nextPage data.addressTags t
+                                        |> EntityTagsTable
+                                        |> Just
+
+                                _ ->
+                                    AddressTagsTable.init
+                                        |> s_data data.addressTags
+                                        |> s_nextpage data.nextPage
+                                        |> EntityTagsTable
                                         |> Just
                 }
 

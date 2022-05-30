@@ -14,8 +14,8 @@
 
 
 module Api.Request.Tags exposing
-    ( listConcepts
-    , listTags, Level(..), levelVariants
+    ( listAddressTags
+    , listConcepts
     , listTaxonomies
     )
 
@@ -27,28 +27,17 @@ import Json.Decode
 import Json.Encode
 
 
-type Level
-    = LevelAddress
-    | LevelEntity
 
-
-levelVariants : List Level
-levelVariants =
-    [ LevelAddress
-    , LevelEntity
-    ]
-
-
-stringFromLevel : Level -> String
-stringFromLevel model =
-    case model of
-        LevelAddress ->
-            "address"
-
-        LevelEntity ->
-            "entity"
-
-
+listAddressTags : (String) -> (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
+listAddressTags currency_path label_query page_query pagesize_query =
+    Api.request
+        "GET"
+        "/{currency}/tags"
+        [ ( "currency", identity currency_path ) ]
+        [ ( "label", Just <| (identity) label_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
+        []
+        Nothing
+        Api.Data.addressTagsDecoder
 
 
 
@@ -62,19 +51,6 @@ listConcepts taxonomy_path =
         []
         Nothing
         (Json.Decode.list Api.Data.conceptDecoder)
-
-
-
-listTags : (String) -> (String) -> (Level) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Tags
-listTags currency_path label_query level_query page_query pagesize_query =
-    Api.request
-        "GET"
-        "/{currency}/tags"
-        [ ( "currency", identity currency_path ) ]
-        [ ( "label", Just <| (identity) label_query ), ( "level", Just <| (stringFromLevel) level_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
-        []
-        Nothing
-        Api.Data.tagsDecoder
 
 
 

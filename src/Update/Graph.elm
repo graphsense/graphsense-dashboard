@@ -5,7 +5,7 @@ import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import Dict
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..), getAddressTagsEffect, getEntityEgonet)
+import Effect.Graph exposing (Effect(..), getEntityEgonet)
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
@@ -77,10 +77,24 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
                 |> Set.toList
                 |> List.head
                 |> Maybe.andThen (\a -> Layer.getAddress a newModel_.layers)
+
+        getTagsEffect =
+            GetAddressTagsEffect
+                { address = address.address
+                , currency = address.currency
+                , nextpage = Nothing
+                , pagesize = 10
+                , toMsg =
+                    BrowserGotAddressTags
+                        { currency = address.currency
+                        , address = address.address
+                        }
+                }
     in
     addedAddress
         |> Maybe.map (\a -> selectAddress a Nothing newModel_)
         |> Maybe.withDefault (n newModel_)
+        |> mapSecond ((::) getTagsEffect)
 
 
 addEntity : Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Model -> ( Model, List Effect )
@@ -609,9 +623,16 @@ update plugins uc msg model =
             , addresses.addresses
                 |> List.map
                     (\address ->
-                        getAddressTagsEffect
+                        GetAddressTagsEffect
                             { currency = address.currency
                             , address = address.address
+                            , pagesize = 10
+                            , nextpage = Nothing
+                            , toMsg =
+                                BrowserGotAddressTags
+                                    { currency = address.currency
+                                    , address = address.address
+                                    }
                             }
                     )
             )
@@ -625,7 +646,18 @@ update plugins uc msg model =
         BrowserGotAddressTags id tags ->
             { model
                 | layers = Layer.updateAddresses id (Address.updateTags tags.addressTags) model.layers
-                , browser = Browser.showAddressTags id tags model.browser
+            }
+                |> n
+
+        BrowserGotAddressTagsTable id tags ->
+            { model
+                | browser = Browser.showAddressTags id tags model.browser
+            }
+                |> n
+
+        BrowserGotEntityAddressTagsTable id tags ->
+            { model
+                | browser = Browser.showEntityAddressTags id tags model.browser
             }
                 |> n
 
@@ -769,9 +801,16 @@ update plugins uc msg model =
                 , config = model.config |> s_colors added.colors
               }
                 |> syncLinks added.repositioned
-            , getAddressTagsEffect
+            , GetAddressTagsEffect
                 { currency = address.currency
                 , address = address.address
+                , pagesize = 10
+                , nextpage = Nothing
+                , toMsg =
+                    BrowserGotAddressTags
+                        { currency = address.currency
+                        , address = address.address
+                        }
                 }
                 |> List.singleton
             )
@@ -1188,9 +1227,16 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     , first neighbors
         |> List.map
             (\neighbor ->
-                getAddressTagsEffect
+                GetAddressTagsEffect
                     { currency = neighbor.address.currency
                     , address = neighbor.address.address
+                    , pagesize = 10
+                    , nextpage = Nothing
+                    , toMsg =
+                        BrowserGotAddressTags
+                            { currency = neighbor.address.currency
+                            , address = neighbor.address.address
+                            }
                     }
             )
     )

@@ -55,26 +55,26 @@ stringFromDirection model =
 
 
 
-getAddress : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Address
-getAddress currency_path address_path includeTags_query =
+getAddress : (String) -> (String) -> Api.Request Api.Data.Address
+getAddress currency_path address_path =
     Api.request
         "GET"
         "/{currency}/addresses/{address}"
         [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
-        [ ( "include_tags", Maybe.map ((\val -> if val then "true" else "false")) includeTags_query ) ]
+        []
         []
         Nothing
         Api.Data.addressDecoder
 
 
 
-getAddressEntity : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Entity
-getAddressEntity currency_path address_path includeTags_query =
+getAddressEntity : (String) -> (String) -> Api.Request Api.Data.Entity
+getAddressEntity currency_path address_path =
     Api.request
         "GET"
         "/{currency}/addresses/{address}/entity"
         [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
-        [ ( "include_tags", Maybe.map ((\val -> if val then "true" else "false")) includeTags_query ) ]
+        []
         []
         Nothing
         Api.Data.entityDecoder

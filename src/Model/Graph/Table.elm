@@ -13,7 +13,7 @@ type AddressTable
 
 type EntityTable
     = EntityTagsTable (Table Api.Data.AddressTag)
-    | EntityTxsTable (Table Api.Data.AddressTx)
+    | EntityTxsTable (Table Api.Data.AddressTxUtxo)
     | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityAddressesTable (Table Api.Data.Address)

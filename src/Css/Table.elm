@@ -49,3 +49,8 @@ valuesCell vc isNegative =
 numberCell : Config -> List Style
 numberCell vc =
     vc.theme.table.numberCell
+
+
+loadingSpinner : Config -> List Style
+loadingSpinner vc =
+    vc.theme.table.loadingSpinner

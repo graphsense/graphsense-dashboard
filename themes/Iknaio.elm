@@ -107,6 +107,7 @@ theme =
                 [ textDecoration none
                 ]
             ]
+        |> s_loadingSpinner [ loadingSpinner ]
         |> s_stats
             (Stats.default
                 |> s_root
@@ -176,10 +177,10 @@ theme =
                     , spinnerHeight |> scaled |> rem |> minHeight
                     ]
                 |> s_loadingSpinner
-                    [ top zero
+                    [ position absolute
+                    , top zero
                     , right zero
-                    , scaled spinnerHeight |> rem |> height
-                    , scaled spinnerPadding |> rem |> padding
+                    , loadingSpinner
                     ]
                 |> s_resultGroupTitle
                     [ fontWeight bold
@@ -492,6 +493,9 @@ theme =
                                     []
                                )
                     )
+                |> s_loadingSpinner
+                    [ loadingSpinner
+                    ]
             )
         |> s_contextMenu
             (ContextMenu.default
@@ -617,5 +621,13 @@ numberCell : Style
 numberCell =
     [ tableCell
     , textAlign right
+    ]
+        |> batch
+
+
+loadingSpinner : Style
+loadingSpinner =
+    [ scaled spinnerHeight |> rem |> height
+    , scaled spinnerPadding |> rem |> padding
     ]
         |> batch

@@ -14,6 +14,7 @@ type alias Table =
     , cell : List Style
     , numberCell : List Style
     , valuesCell : Bool -> List Style
+    , loadingSpinner : List Style
     }
 
 
@@ -28,4 +29,5 @@ default =
     , cell = []
     , numberCell = []
     , valuesCell = \_ -> []
+    , loadingSpinner = []
     }

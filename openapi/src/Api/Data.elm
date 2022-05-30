@@ -15,7 +15,6 @@
 
 module Api.Data exposing
     ( Address
-    , AddressAndEntityTags
     , AddressTag
     , AddressTags
     , AddressTx(..)
@@ -26,8 +25,6 @@ module Api.Data exposing
     , CurrencyStats
     , Entity
     , EntityAddresses
-    , EntityTag
-    , EntityTags
     , Link(..)
     , LinkUtxo
     , Links
@@ -49,7 +46,6 @@ module Api.Data exposing
     , SearchResultLevel6
     , Stats
     , Tag
-    , Tags(..)
     , Taxonomy
     , Tx(..)
     , TxAccount
@@ -58,7 +54,6 @@ module Api.Data exposing
     , TxValue
     , Values
     , encodeAddress
-    , encodeAddressAndEntityTags
     , encodeAddressTag
     , encodeAddressTags
     , encodeAddressTx
@@ -69,8 +64,6 @@ module Api.Data exposing
     , encodeCurrencyStats
     , encodeEntity
     , encodeEntityAddresses
-    , encodeEntityTag
-    , encodeEntityTags
     , encodeLink
     , encodeLinkUtxo
     , encodeLinks
@@ -92,7 +85,6 @@ module Api.Data exposing
     , encodeSearchResultLevel6
     , encodeStats
     , encodeTag
-    , encodeTags
     , encodeTaxonomy
     , encodeTx
     , encodeTxAccount
@@ -101,7 +93,6 @@ module Api.Data exposing
     , encodeTxValue
     , encodeValues
     , addressDecoder
-    , addressAndEntityTagsDecoder
     , addressTagDecoder
     , addressTagsDecoder
     , addressTxDecoder
@@ -112,8 +103,6 @@ module Api.Data exposing
     , currencyStatsDecoder
     , entityDecoder
     , entityAddressesDecoder
-    , entityTagDecoder
-    , entityTagsDecoder
     , linkDecoder
     , linkUtxoDecoder
     , linksDecoder
@@ -135,7 +124,6 @@ module Api.Data exposing
     , searchResultLevel6Decoder
     , statsDecoder
     , tagDecoder
-    , tagsDecoder
     , taxonomyDecoder
     , txDecoder
     , txAccountDecoder
@@ -168,12 +156,6 @@ type alias Address =
     , tags : Maybe (List (AddressTag))
     , totalReceived : Values
     , totalSpent : Values
-    }
-
-
-type alias AddressAndEntityTags =
-    { addressTags : List (AddressTag)
-    , entityTags : List (EntityTag)
     }
 
 
@@ -255,6 +237,7 @@ type alias CurrencyStats =
 
 type alias Entity =
     { balance : Values
+    , bestAddressTag : Maybe AddressTag
     , currency : String
     , entity : Int
     , firstTx : TxSummary
@@ -265,7 +248,6 @@ type alias Entity =
     , noOutgoingTxs : Int
     , outDegree : Int
     , rootAddress : String
-    , tags : Maybe AddressAndEntityTags
     , totalReceived : Values
     , totalSpent : Values
     }
@@ -273,31 +255,6 @@ type alias Entity =
 
 type alias EntityAddresses =
     { addresses : List (Address)
-    , nextPage : Maybe String
-    }
-
-
-type alias EntityTag =
-    { abuse : Maybe String
-    , category : Maybe String
-    , confidence : Maybe String
-    , confidenceLevel : Maybe Int
-    , currency : String
-    , isClusterDefiner : Bool
-    , label : String
-    , lastmod : Maybe Int
-    , source : Maybe String
-    , tagpackCreator : String
-    , tagpackIsPublic : Bool
-    , tagpackTitle : String
-    , tagpackUri : Maybe String
-    , address : Maybe String
-    , entity : Int
-    }
-
-
-type alias EntityTags =
-    { entityTags : List (EntityTag)
     , nextPage : Maybe String
     }
 
@@ -463,12 +420,6 @@ type alias Tag =
     }
 
 
-type Tags
-    = TagsAddressTags AddressTags
-    | TagsEntityTags EntityTags
-
-
-
 type alias Taxonomy =
     { taxonomy : String
     , uri : String
@@ -554,27 +505,6 @@ encodeAddressPairs model =
             , maybeEncode "tags" (Json.Encode.list encodeAddressTag) model.tags
             , encode "total_received" encodeValues model.totalReceived
             , encode "total_spent" encodeValues model.totalSpent
-            ]
-    in
-    pairs
-
-
-encodeAddressAndEntityTags : AddressAndEntityTags -> Json.Encode.Value
-encodeAddressAndEntityTags =
-    encodeObject << encodeAddressAndEntityTagsPairs
-
-
-encodeAddressAndEntityTagsWithTag : ( String, String ) -> AddressAndEntityTags -> Json.Encode.Value
-encodeAddressAndEntityTagsWithTag (tagField, tag) model =
-    encodeObject (encodeAddressAndEntityTagsPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeAddressAndEntityTagsPairs : AddressAndEntityTags -> List EncodedField
-encodeAddressAndEntityTagsPairs model =
-    let
-        pairs =
-            [ encode "address_tags" (Json.Encode.list encodeAddressTag) model.addressTags
-            , encode "entity_tags" (Json.Encode.list encodeEntityTag) model.entityTags
             ]
     in
     pairs
@@ -782,6 +712,7 @@ encodeEntityPairs model =
     let
         pairs =
             [ encode "balance" encodeValues model.balance
+            , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
             , encode "entity" Json.Encode.int model.entity
             , encode "first_tx" encodeTxSummary model.firstTx
@@ -792,7 +723,6 @@ encodeEntityPairs model =
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
             , encode "out_degree" Json.Encode.int model.outDegree
             , encode "root_address" Json.Encode.string model.rootAddress
-            , maybeEncode "tags" encodeAddressAndEntityTags model.tags
             , encode "total_received" encodeValues model.totalReceived
             , encode "total_spent" encodeValues model.totalSpent
             ]
@@ -815,61 +745,6 @@ encodeEntityAddressesPairs model =
     let
         pairs =
             [ encode "addresses" (Json.Encode.list encodeAddress) model.addresses
-            , maybeEncode "next_page" Json.Encode.string model.nextPage
-            ]
-    in
-    pairs
-
-
-encodeEntityTag : EntityTag -> Json.Encode.Value
-encodeEntityTag =
-    encodeObject << encodeEntityTagPairs
-
-
-encodeEntityTagWithTag : ( String, String ) -> EntityTag -> Json.Encode.Value
-encodeEntityTagWithTag (tagField, tag) model =
-    encodeObject (encodeEntityTagPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeEntityTagPairs : EntityTag -> List EncodedField
-encodeEntityTagPairs model =
-    let
-        pairs =
-            [ maybeEncode "abuse" Json.Encode.string model.abuse
-            , maybeEncode "category" Json.Encode.string model.category
-            , maybeEncode "confidence" Json.Encode.string model.confidence
-            , maybeEncode "confidence_level" Json.Encode.int model.confidenceLevel
-            , encode "currency" Json.Encode.string model.currency
-            , encode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
-            , encode "label" Json.Encode.string model.label
-            , maybeEncode "lastmod" Json.Encode.int model.lastmod
-            , maybeEncode "source" Json.Encode.string model.source
-            , encode "tagpack_creator" Json.Encode.string model.tagpackCreator
-            , encode "tagpack_is_public" Json.Encode.bool model.tagpackIsPublic
-            , encode "tagpack_title" Json.Encode.string model.tagpackTitle
-            , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
-            , maybeEncode "address" Json.Encode.string model.address
-            , encode "entity" Json.Encode.int model.entity
-            ]
-    in
-    pairs
-
-
-encodeEntityTags : EntityTags -> Json.Encode.Value
-encodeEntityTags =
-    encodeObject << encodeEntityTagsPairs
-
-
-encodeEntityTagsWithTag : ( String, String ) -> EntityTags -> Json.Encode.Value
-encodeEntityTagsWithTag (tagField, tag) model =
-    encodeObject (encodeEntityTagsPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeEntityTagsPairs : EntityTags -> List EncodedField
-encodeEntityTagsPairs model =
-    let
-        pairs =
-            [ encode "entity_tags" (Json.Encode.list encodeEntityTag) model.entityTags
             , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
@@ -1343,19 +1218,6 @@ encodeTagPairs model =
     pairs
 
 
-encodeTags : Tags -> Json.Encode.Value
-encodeTags model =
-    case model of
-        TagsAddressTags subModel ->
-            encodeAddressTags subModel
-
-
-        TagsEntityTags subModel ->
-            encodeEntityTags subModel
-
-
-
-
 encodeTaxonomy : Taxonomy -> Json.Encode.Value
 encodeTaxonomy =
     encodeObject << encodeTaxonomyPairs
@@ -1528,13 +1390,6 @@ addressDecoder =
         |> decode "total_spent" valuesDecoder 
 
 
-addressAndEntityTagsDecoder : Json.Decode.Decoder AddressAndEntityTags
-addressAndEntityTagsDecoder =
-    Json.Decode.succeed AddressAndEntityTags
-        |> decode "address_tags" (Json.Decode.list addressTagDecoder) 
-        |> decode "entity_tags" (Json.Decode.list entityTagDecoder) 
-
-
 addressTagDecoder : Json.Decode.Decoder AddressTag
 addressTagDecoder =
     Json.Decode.succeed AddressTag
@@ -1636,6 +1491,7 @@ entityDecoder : Json.Decode.Decoder Entity
 entityDecoder =
     Json.Decode.succeed Entity
         |> decode "balance" valuesDecoder 
+        |> maybeDecode "best_address_tag" addressTagDecoder Nothing
         |> decode "currency" Json.Decode.string 
         |> decode "entity" Json.Decode.int 
         |> decode "first_tx" txSummaryDecoder 
@@ -1646,7 +1502,6 @@ entityDecoder =
         |> decode "no_outgoing_txs" Json.Decode.int 
         |> decode "out_degree" Json.Decode.int 
         |> decode "root_address" Json.Decode.string 
-        |> maybeDecode "tags" addressAndEntityTagsDecoder Nothing
         |> decode "total_received" valuesDecoder 
         |> decode "total_spent" valuesDecoder 
 
@@ -1655,33 +1510,6 @@ entityAddressesDecoder : Json.Decode.Decoder EntityAddresses
 entityAddressesDecoder =
     Json.Decode.succeed EntityAddresses
         |> decode "addresses" (Json.Decode.list addressDecoder) 
-        |> maybeDecode "next_page" Json.Decode.string Nothing
-
-
-entityTagDecoder : Json.Decode.Decoder EntityTag
-entityTagDecoder =
-    Json.Decode.succeed EntityTag
-        |> maybeDecode "abuse" Json.Decode.string Nothing
-        |> maybeDecode "category" Json.Decode.string Nothing
-        |> maybeDecode "confidence" Json.Decode.string Nothing
-        |> maybeDecode "confidence_level" Json.Decode.int Nothing
-        |> decode "currency" Json.Decode.string 
-        |> decode "is_cluster_definer" Json.Decode.bool 
-        |> decode "label" Json.Decode.string 
-        |> maybeDecode "lastmod" Json.Decode.int Nothing
-        |> maybeDecode "source" Json.Decode.string Nothing
-        |> decode "tagpack_creator" Json.Decode.string 
-        |> decode "tagpack_is_public" Json.Decode.bool 
-        |> decode "tagpack_title" Json.Decode.string 
-        |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-        |> maybeDecode "address" Json.Decode.string Nothing
-        |> decode "entity" Json.Decode.int 
-
-
-entityTagsDecoder : Json.Decode.Decoder EntityTags
-entityTagsDecoder =
-    Json.Decode.succeed EntityTags
-        |> decode "entity_tags" (Json.Decode.list entityTagDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 
@@ -1878,15 +1706,6 @@ tagDecoder =
         |> decode "tagpack_is_public" Json.Decode.bool 
         |> decode "tagpack_title" Json.Decode.string 
         |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
-
-
-tagsDecoder : Json.Decode.Decoder Tags
-tagsDecoder =
-    Json.Decode.oneOf
-        [ Json.Decode.map TagsAddressTags addressTagsDecoder
-        , Json.Decode.map TagsEntityTags entityTagsDecoder
-        ]
-
 
 
 taxonomyDecoder : Json.Decode.Decoder Taxonomy

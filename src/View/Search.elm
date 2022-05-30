@@ -17,6 +17,7 @@ import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
 import Route.Graph as Route exposing (Route)
 import Util.RemoteData exposing (webdata)
+import Util.View exposing (loadingSpinner)
 import View.Locale as Locale
 
 
@@ -54,19 +55,6 @@ search vc sc model =
         ]
 
 
-loadingSpinner : Config -> Bool -> Html Msg
-loadingSpinner vc show =
-    if show then
-        img
-            [ src vc.theme.loadingSpinnerUrl
-            , Css.loadingSpinner vc |> css
-            ]
-            []
-
-    else
-        span [] []
-
-
 searchResult : Config -> SearchConfig -> Model -> Html Msg
 searchResult vc sc model =
     let
@@ -81,8 +69,13 @@ searchResult vc sc model =
             [ id "search-result"
             , css (Css.result vc)
             ]
-            (loadingSpinner vc model.loading
-                :: rl
+            ((if model.loading then
+                [ loadingSpinner vc Css.loadingSpinner ]
+
+              else
+                []
+             )
+                ++ rl
             )
 
 

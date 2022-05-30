@@ -14,6 +14,7 @@ type alias Entity =
     , entity : Api.Data.Entity
     , addresses : Dict AddressId Address
     , category : Maybe String
+    , addressTags : List Api.Data.AddressTag
     , x : Float
     , y : Float
     , dx : Float

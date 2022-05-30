@@ -8,12 +8,12 @@ type alias Search =
     , frame : List Style
     , textarea : List Style
     , result : List Style
-    , loadingSpinner : List Style
     , resultGroup : List Style
     , resultGroupList : List Style
     , resultGroupTitle : List Style
     , resultLine : List Style
     , resultLineIcon : List Style
+    , loadingSpinner : List Style
     }
 
 
@@ -23,10 +23,10 @@ default =
     , frame = []
     , textarea = []
     , result = []
-    , loadingSpinner = []
     , resultGroup = []
     , resultGroupList = []
     , resultGroupTitle = []
     , resultLine = []
     , resultLineIcon = []
+    , loadingSpinner = []
     }

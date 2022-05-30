@@ -10,14 +10,16 @@ import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model.Currency as Currency
+import Model.Graph.Table as T
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
+import Util.View exposing (loadingSpinner)
 import View.Locale as Locale
 
 
-table : View.Config -> Maybe Float -> Table.Config data msg -> Table.State -> List data -> Html msg
-table vc height config state data =
+table : View.Config -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
+table vc height config tbl =
     div
         [ (height
             |> Maybe.withDefault 250
@@ -27,8 +29,15 @@ table vc height config state data =
             :: Css.Table.root vc
             |> css
         ]
-        [ Table.view config state data
-        ]
+        (Table.view config tbl.state tbl.data
+            :: (if tbl.loading then
+                    [ loadingSpinner vc Css.Table.loadingSpinner
+                    ]
+
+                else
+                    []
+               )
+        )
 
 
 customizations : View.Config -> Table.Customizations data msg

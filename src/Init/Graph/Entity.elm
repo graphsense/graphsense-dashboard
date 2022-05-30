@@ -12,8 +12,9 @@ init { x, y, layer } entity =
     , entity = entity
     , addresses = Dict.empty
     , category =
-        entity.tags
-            |> Maybe.andThen (.entityTags >> List.head >> Maybe.andThen .category)
+        entity.bestAddressTag
+            |> Maybe.andThen .category
+    , addressTags = []
     , x = x
     , y = y
     , dx = 0

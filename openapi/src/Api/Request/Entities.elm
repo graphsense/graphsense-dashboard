@@ -16,16 +16,14 @@
 module Api.Request.Entities exposing
     ( Direction(..)
     , Key(..)
-    , Level(..)
     , directionVariants
     , getEntity
     , keyVariants
-    , levelVariants
+    , listAddressTagsByEntity
     , listEntityAddresses
     , listEntityLinks
     , listEntityNeighbors
     , listEntityTxs
-    , listTagsByEntity
     , searchEntityNeighbors
     )
 
@@ -35,28 +33,6 @@ import Dict
 import Http
 import Json.Decode
 import Json.Encode
-
-
-type Level
-    = LevelAddress
-    | LevelEntity
-
-
-levelVariants : List Level
-levelVariants =
-    [ LevelAddress
-    , LevelEntity
-    ]
-
-
-stringFromLevel : Level -> String
-stringFromLevel model =
-    case model of
-        LevelAddress ->
-            "address"
-
-        LevelEntity ->
-            "entity"
 
 
 type Direction
@@ -118,27 +94,28 @@ stringFromKey model =
             "balance"
 
 
-getEntity : String -> Int -> Maybe Bool -> Api.Request Api.Data.Entity
-getEntity currency_path entity_path includeTags_query =
+getEntity : String -> Int -> Api.Request Api.Data.Entity
+getEntity currency_path entity_path =
     Api.request
         "GET"
         "/{currency}/entities/{entity}"
         [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "include_tags"
-          , Maybe.map
-                (\val ->
-                    if val then
-                        "true"
-
-                    else
-                        "false"
-                )
-                includeTags_query
-          )
-        ]
+        []
         []
         Nothing
         Api.Data.entityDecoder
+
+
+listAddressTagsByEntity : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTags
+listAddressTagsByEntity currency_path entity_path page_query pagesize_query =
+    Api.request
+        "GET"
+        "/{currency}/entities/{entity}/tags"
+        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
+        [ ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
+        []
+        Nothing
+        Api.Data.addressTagsDecoder
 
 
 listEntityAddresses : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.EntityAddresses
@@ -202,18 +179,6 @@ listEntityTxs currency_path entity_path page_query pagesize_query =
         []
         Nothing
         Api.Data.addressTxsDecoder
-
-
-listTagsByEntity : String -> Int -> Level -> Maybe String -> Maybe Int -> Api.Request Api.Data.Tags
-listTagsByEntity currency_path entity_path level_query page_query pagesize_query =
-    Api.request
-        "GET"
-        "/{currency}/entities/{entity}/tags"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "level", Just <| stringFromLevel level_query ), ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
-        []
-        Nothing
-        Api.Data.tagsDecoder
 
 
 searchEntityNeighbors : String -> Int -> Direction -> Key -> List String -> Int -> Maybe Int -> Maybe Int -> Api.Request Api.Data.SearchResultLevel1

@@ -1,9 +1,11 @@
 module Util.View exposing (..)
 
 import Color
-import Css exposing (Color)
-import Html.Styled exposing (Attribute, Html, span)
-import Html.Styled.Attributes exposing (classList)
+import Config.View as View
+import Css exposing (Color, Style)
+import Css.View as Css
+import Html.Styled exposing (Attribute, Html, img, span)
+import Html.Styled.Attributes exposing (classList, css, src)
 
 
 none : Html msg
@@ -27,3 +29,12 @@ toCssColor color =
         |> (\{ red, green, blue, alpha } ->
                 Css.rgba (red * 255 |> Basics.round) (green * 255 |> Basics.round) (blue * 255 |> Basics.round) alpha
            )
+
+
+loadingSpinner : View.Config -> (View.Config -> List Style) -> Html msg
+loadingSpinner vc css_ =
+    img
+        [ src vc.theme.loadingSpinnerUrl
+        , css_ vc |> css
+        ]
+        []

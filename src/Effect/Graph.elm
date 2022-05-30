@@ -5,6 +5,7 @@ import Browser.Dom
 import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model as Plugin
@@ -67,6 +68,13 @@ type Effect
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTags -> Msg
         }
+    | GetEntityAddressTagsEffect
+        { currency : String
+        , entity : Int
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : Api.Data.AddressTags -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
 
 
@@ -117,24 +125,13 @@ perform eff =
         GetAddressTagsEffect _ ->
             Cmd.none
 
+        -- managed in Effect.elm
+        GetEntityAddressTagsEffect _ ->
+            Cmd.none
+
         PluginEffect ( pid, cmd ) ->
             cmd
                 |> Cmd.map (PluginMsg pid)
-
-
-getAddressTagsEffect : A.Address -> Effect
-getAddressTagsEffect address =
-    GetAddressTagsEffect
-        { currency = address.currency
-        , address = address.address
-        , pagesize = 10
-        , nextpage = Nothing
-        , toMsg =
-            BrowserGotAddressTags
-                { currency = address.currency
-                , address = address.address
-                }
-        }
 
 
 getEntityEgonet :

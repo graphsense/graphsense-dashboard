@@ -284,6 +284,11 @@ s_baseUrl value__ record__ =
     { record__ | baseUrl = value__ }
 
 
+s_bestAddressTag : a -> { b | bestAddressTag : a } -> { b | bestAddressTag : a }
+s_bestAddressTag value__ record__ =
+    { record__ | bestAddressTag = value__ }
+
+
 s_billion : a -> { b | billion : a } -> { b | billion : a }
 s_billion value__ record__ =
     { record__ | billion = value__ }
@@ -1082,11 +1087,6 @@ s_entityRect value__ record__ =
 s_entityRoot : a -> { b | entityRoot : a } -> { b | entityRoot : a }
 s_entityRoot value__ record__ =
     { record__ | entityRoot = value__ }
-
-
-s_entityTags : a -> { b | entityTags : a } -> { b | entityTags : a }
-s_entityTags value__ record__ =
-    { record__ | entityTags = value__ }
 
 
 s_equals : a -> { b | equals : a } -> { b | equals : a }

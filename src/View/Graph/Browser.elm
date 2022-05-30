@@ -136,24 +136,23 @@ browseValue vc value =
         EntityId gc entity ->
             div
                 []
-                [ entity.entity.tags
-                    |> Maybe.andThen (.entityTags >> List.head)
-                    |> Maybe.Extra.andThen2
-                        (\cat tag ->
-                            Dict.get cat gc.colors
-                                |> Maybe.map
-                                    (\color ->
-                                        span
-                                            [ css
-                                                [ toCssColor color
-                                                    |> CssStyled.color
-                                                ]
-                                            ]
-                                            [ text tag.label
-                                            ]
-                                    )
+                [ entity.entity.bestAddressTag
+                    |> Maybe.map
+                        (\tag ->
+                            span
+                                [ tag.category
+                                    |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
+                                    |> Maybe.map
+                                        (toCssColor
+                                            >> CssStyled.color
+                                            >> List.singleton
+                                        )
+                                    |> Maybe.withDefault []
+                                    |> css
+                                ]
+                                [ text tag.label
+                                ]
                         )
-                        entity.category
                     |> Maybe.withDefault none
                 , span
                     [ Css.propertyBoxEntityId vc |> css
@@ -483,11 +482,10 @@ rowsEntity vc gc now ent =
         ( "Address Tags"
         , ent
             |> ifLoaded
-                (\entity ->
-                    Maybe.map (.addressTags >> List.length) entity.entity.tags
-                        |> Maybe.withDefault 0
-                        |> String.fromInt
-                        |> String
+                (.addressTags
+                    >> List.length
+                    >> String.fromInt
+                    >> String
                 )
             |> elseLoading
         , mkTableLink "List address tags" Route.EntityTagsTable
@@ -564,10 +562,10 @@ browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> String -> Add
 browseAddressTable vc gc height coinCode table =
     case table of
         AddressTxsTable t ->
-            Table.table vc height (AddressTxsTable.config vc coinCode) t.state t.data
+            Table.table vc height (AddressTxsTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            Table.table vc height (AddressTagsTable.config vc) t.state t.data
+            Table.table vc height (AddressTagsTable.config vc) t
 
         AddressIncomingNeighborsTable t ->
             Debug.todo "AddressIncomingNeighborsTable"
@@ -578,21 +576,30 @@ browseAddressTable vc gc height coinCode table =
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
 browseEntityTable vc gc height entity table =
+    let
+        ( coinCode, entityId ) =
+            case entity of
+                Loaded e ->
+                    ( e.entity.currency, e.id |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
     case table of
         EntityAddressesTable t ->
-            let
-                ( coinCode, entityId ) =
-                    case entity of
-                        Loaded e ->
-                            ( e.entity.currency, e.id |> Just )
+            Table.table vc height (EntityAddressesTable.config vc coinCode entityId) t
 
-                        Loading curr _ ->
-                            ( curr, Nothing )
-            in
-            Table.table vc height (EntityAddressesTable.config vc coinCode entityId) t.state t.data
+        EntityTxsTable t ->
+            Table.table vc height (AddressTxsTable.config vc coinCode) t
 
-        _ ->
-            none
+        EntityTagsTable t ->
+            Table.table vc height (AddressTagsTable.config vc) t
+
+        EntityIncomingNeighborsTable t ->
+            Debug.todo "EntityIncomingNeighborsTable"
+
+        EntityOutgoingNeighborsTable t ->
+            Debug.todo "EntityOutgoingNeighborsTable"
 
 
 

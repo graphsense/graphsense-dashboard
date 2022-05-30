@@ -79,15 +79,15 @@ perform key apiKey effect =
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressEffect { currency, address, toMsg } ->
-                    Api.Request.Addresses.getAddress currency address (Just True)
+                    Api.Request.Addresses.getAddress currency address
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityEffect { currency, entity, toMsg } ->
-                    Api.Request.Entities.getEntity currency entity (Just True)
+                    Api.Request.Entities.getEntity currency entity
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
-                    Api.Request.Addresses.getAddressEntity currency address (Just True)
+                    Api.Request.Addresses.getAddressEntity currency address
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
@@ -98,11 +98,23 @@ perform key apiKey effect =
                     Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage, toMsg } ->
+                    Api.Request.Entities.listAddressTagsByEntity currency entity nextpage (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
                 Graph.GetEntityAddressesEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
-                _ ->
+                Graph.GetSvgElementEffect ->
+                    Graph.perform eff
+                        |> Cmd.map GraphMsg
+
+                Graph.GetBrowserElementEffect ->
+                    Graph.perform eff
+                        |> Cmd.map GraphMsg
+
+                Graph.PluginEffect _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
