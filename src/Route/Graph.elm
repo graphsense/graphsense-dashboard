@@ -112,10 +112,10 @@ stringToAddressTable t =
         "transactions" ->
             Just AddressTxsTable
 
-        "incoming-neighbors" ->
+        "incoming" ->
             Just AddressIncomingNeighborsTable
 
-        "outgoing-neighbors" ->
+        "outgoing" ->
             Just AddressOutgoingNeighborsTable
 
         _ ->

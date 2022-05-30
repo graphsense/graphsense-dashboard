@@ -3,6 +3,8 @@ module Msg.Graph exposing (..)
 import Api.Data
 import Browser.Dom
 import Json.Encode
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
@@ -37,6 +39,7 @@ type Msg
     | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonetForAddress String String Int Bool Api.Data.NeighborEntities
     | BrowserGotAddressNeighbors AddressId Bool Api.Data.NeighborAddresses
+    | BrowserGotAddressNeighborsTable A.Address Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix
     | BrowserGotAddress Api.Data.Address
     | BrowserGotEntity Api.Data.Entity
@@ -47,12 +50,12 @@ type Msg
         , neighbors : List Api.Data.NeighborAddress
         }
         Api.Data.Entity
-    | BrowserGotAddressTxs { currency : String, address : String } Api.Data.AddressTxs
+    | BrowserGotAddressTxs A.Address Api.Data.AddressTxs
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
-    | BrowserGotEntityAddressesForTable { currency : String, entity : Int } Api.Data.EntityAddresses
-    | BrowserGotAddressTags { currency : String, address : String } Api.Data.AddressTags
-    | BrowserGotAddressTagsTable { currency : String, address : String } Api.Data.AddressTags
-    | BrowserGotEntityAddressTagsTable { currency : String, entity : Int } Api.Data.AddressTags
+    | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
+    | BrowserGotAddressTags A.Address Api.Data.AddressTags
+    | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
+    | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
     | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu
@@ -61,4 +64,5 @@ type Msg
     | UserClickedRemoveAddress AddressId
     | UserClickedRemoveEntity EntityId
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
+    | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | NoOp

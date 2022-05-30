@@ -17,6 +17,7 @@ import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData)
+import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
@@ -102,16 +103,40 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
-            ( Table.init (Debug.todo "initialSort AddressIncomingNeighborsTable") |> AddressIncomingNeighborsTable |> Just
-            , []
+            ( AddressNeighborsTable.init |> AddressIncomingNeighborsTable |> Just
+            , [ GetAddressNeighborsEffect
+                    { currency = currency
+                    , address = address
+                    , isOutgoing = False
+                    , pagesize = 100
+                    , toMsg =
+                        BrowserGotAddressNeighborsTable
+                            { currency = currency
+                            , address = address
+                            }
+                            False
+                    }
+              ]
             )
 
         ( Route.AddressOutgoingNeighborsTable, Just (AddressOutgoingNeighborsTable _) ) ->
             n t
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
-            ( Table.init (Debug.todo "initialSort AddressOutgoingNeighborsTable") |> AddressOutgoingNeighborsTable |> Just
-            , []
+            ( AddressNeighborsTable.init |> AddressOutgoingNeighborsTable |> Just
+            , [ GetAddressNeighborsEffect
+                    { currency = currency
+                    , address = address
+                    , isOutgoing = True
+                    , pagesize = 100
+                    , toMsg =
+                        BrowserGotAddressNeighborsTable
+                            { currency = currency
+                            , address = address
+                            }
+                            True
+                    }
+              ]
             )
 
 
@@ -327,6 +352,45 @@ showAddressTags id data model =
                                         |> s_data data.addressTags
                                         |> s_nextpage data.nextPage
                                         |> AddressTagsTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showAddressNeighbors : { currency : String, address : String } -> Bool -> Api.Data.NeighborAddresses -> Model -> Model
+showAddressNeighbors id isOutgoing data model =
+    case model.type_ of
+        Address loadable table ->
+            if matchAddressId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Address loadable <|
+                            case ( isOutgoing, table ) of
+                                ( True, Just (AddressOutgoingNeighborsTable t) ) ->
+                                    appendData data.nextPage data.neighbors t
+                                        |> AddressOutgoingNeighborsTable
+                                        |> Just
+
+                                ( False, Just (AddressIncomingNeighborsTable t) ) ->
+                                    appendData data.nextPage data.neighbors t
+                                        |> AddressIncomingNeighborsTable
+                                        |> Just
+
+                                _ ->
+                                    AddressNeighborsTable.init
+                                        |> s_data data.neighbors
+                                        |> s_nextpage data.nextPage
+                                        |> (if isOutgoing then
+                                                AddressOutgoingNeighborsTable
+
+                                            else
+                                                AddressIncomingNeighborsTable
+                                           )
                                         |> Just
                 }
 

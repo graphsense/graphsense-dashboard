@@ -569,6 +569,12 @@ update plugins uc msg model =
                     )
             )
 
+        BrowserGotAddressNeighborsTable id isOutgoing neighbors ->
+            { model
+                | browser = Browser.showAddressNeighbors id isOutgoing neighbors model.browser
+            }
+                |> n
+
         BrowserGotEntityForAddressNeighbor { anchor, isOutgoing, neighbors } entity ->
             Layer.getAddress anchor model.layers
                 |> Maybe.andThen
@@ -814,6 +820,59 @@ update plugins uc msg model =
                 }
                 |> List.singleton
             )
+
+        UserClickedAddressInNeighborsTable addressId isOutgoing neighbor ->
+            let
+                entityId =
+                    Id.initEntityId
+                        { currency = Id.currency addressId
+                        , layer =
+                            Id.layer addressId
+                                + (if isOutgoing then
+                                    1
+
+                                   else
+                                    -1
+                                  )
+                        , id = neighbor.address.entity
+                        }
+
+                added =
+                    Layer.addAddressAtEntity plugins uc model.config.colors entityId neighbor.address model.layers
+            in
+            if Set.isEmpty added.new then
+                ( model
+                , [ GetEntityEffect
+                        { entity = neighbor.address.entity
+                        , currency = Id.currency addressId
+                        , toMsg =
+                            BrowserGotEntityForAddressNeighbor
+                                { anchor = addressId
+                                , isOutgoing = isOutgoing
+                                , neighbors = [ neighbor ]
+                                }
+                        }
+                  ]
+                )
+
+            else
+                ( { model
+                    | layers = added.layers
+                    , config = model.config |> s_colors added.colors
+                  }
+                , [ GetAddressTagsEffect
+                        { currency = Id.currency addressId
+                        , address = Id.addressId addressId
+                        , pagesize = 10
+                        , nextpage = Nothing
+                        , toMsg =
+                            BrowserGotAddressTags
+                                { currency = Id.currency addressId
+                                , address = Id.addressId addressId
+                                }
+                        }
+                  ]
+                )
 
         NoOp ->
             n model

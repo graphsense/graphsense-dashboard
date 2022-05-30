@@ -28,6 +28,7 @@ import Table
 import Time
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
+import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
@@ -49,7 +50,7 @@ browser plugins vc gc states model =
                 Browser.Address loadable table ->
                     browseAddress plugins vc model.now loadable
                         :: (table
-                                |> Maybe.map (browseAddressTable vc gc model.height (loadableAddressCurrency loadable))
+                                |> Maybe.map (browseAddressTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -310,14 +311,14 @@ rowsAddress vc now address =
         , address
             |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
             |> elseLoading
-        , mkTableLink "List receiving addresses" Route.AddressIncomingNeighborsTable
+        , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
         )
     , Row
         ( "Sending addresses"
         , address
             |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
             |> elseLoading
-        , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
+        , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
         )
     , Rule
     , Row
@@ -558,8 +559,17 @@ rowsEntity vc gc now ent =
     ]
 
 
-browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddressTable -> Html Msg
-browseAddressTable vc gc height coinCode table =
+browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Address -> AddressTable -> Html Msg
+browseAddressTable vc gc height address table =
+    let
+        ( coinCode, addressId ) =
+            case address of
+                Loaded a ->
+                    ( a.address.currency, a.id |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
     case table of
         AddressTxsTable t ->
             Table.table vc height (AddressTxsTable.config vc coinCode) t
@@ -568,10 +578,10 @@ browseAddressTable vc gc height coinCode table =
             Table.table vc height (AddressTagsTable.config vc) t
 
         AddressIncomingNeighborsTable t ->
-            Debug.todo "AddressIncomingNeighborsTable"
+            Table.table vc height (AddressNeighborsTable.config vc False coinCode addressId) t
 
         AddressOutgoingNeighborsTable t ->
-            Debug.todo "AddressOutgoingNeighborsTable"
+            Table.table vc height (AddressNeighborsTable.config vc True coinCode addressId) t
 
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
