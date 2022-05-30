@@ -6,10 +6,17 @@ import Css exposing (cursor, pointer)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Init.Graph.Table
 import Model.Graph.Id exposing (EntityId)
+import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
 import View.Graph.Table as T exposing (customizations, valueColumn)
+
+
+init : Table Api.Data.Address
+init =
+    Init.Graph.Table.init "Address"
 
 
 config : View.Config -> String -> Maybe EntityId -> Table.Config Api.Data.Address Msg

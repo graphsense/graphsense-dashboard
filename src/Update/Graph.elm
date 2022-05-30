@@ -5,7 +5,7 @@ import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import Dict
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..))
+import Effect.Graph exposing (Effect(..), getAddressTagsEffect, getEntityEgonet)
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
@@ -625,6 +625,7 @@ update plugins uc msg model =
         BrowserGotAddressTags id tags ->
             { model
                 | layers = Layer.updateAddresses id (Address.updateTags tags.addressTags) model.layers
+                , browser = Browser.showAddressTags id tags model.browser
             }
                 |> n
 
@@ -1158,49 +1159,6 @@ handleEntityNeighbors uc anchor isOutgoing neighbors model =
             )
         |> List.concat
     )
-
-
-getAddressTagsEffect : A.Address -> Effect
-getAddressTagsEffect address =
-    GetAddressTagsEffect
-        { currency = address.currency
-        , address = address.address
-        , pagesize = 10
-        , nextpage = Nothing
-        , toMsg =
-            BrowserGotAddressTags
-                { currency = address.currency
-                , address = address.address
-                }
-        }
-
-
-getEntityEgonet :
-    { currency : String, entity : Int }
-    -> (String -> Int -> Bool -> Api.Data.NeighborEntities -> Msg)
-    -> IntDict Layer
-    -> List Effect
-getEntityEgonet { currency, entity } msg layers =
-    let
-        -- TODO optimize which only_ids to get for which direction
-        onlyIds =
-            layers
-                |> Layer.entities
-                |> List.map (.entity >> .entity)
-
-        effect isOut =
-            GetEntityNeighborsEffect
-                { currency = currency
-                , entity = entity
-                , isOutgoing = isOut
-                , onlyIds = Just onlyIds
-                , pagesize = max 1 <| List.length onlyIds
-                , toMsg = msg currency entity isOut
-                }
-    in
-    [ effect True
-    , effect False
-    ]
 
 
 {-|

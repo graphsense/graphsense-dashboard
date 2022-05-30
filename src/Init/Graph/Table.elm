@@ -4,10 +4,10 @@ import Model.Graph.Table exposing (..)
 import Table
 
 
-init : Table a
-init =
+init : String -> Table a
+init col =
     { data = []
     , loading = True
-    , state = Table.initialSort "transaction"
+    , state = Table.initialSort col
     , nextpage = Nothing
     }

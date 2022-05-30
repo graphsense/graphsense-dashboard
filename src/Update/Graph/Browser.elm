@@ -2,7 +2,7 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..))
+import Effect.Graph exposing (Effect(..), getAddressTagsEffect)
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Json.Encode
@@ -17,6 +17,9 @@ import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData)
+import View.Graph.Table.AddressTagsTable as AddressTagsTable
+import View.Graph.Table.AddressTxsTable as AddressTxsTable
+import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -65,15 +68,19 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressTagsTable, _ ) ->
-            ( AddressTagsTable Table.init |> Just
-            , []
+            ( AddressTagsTable.init |> AddressTagsTable |> Just
+            , [ getAddressTagsEffect
+                    { currency = currency
+                    , address = address
+                    }
+              ]
             )
 
         ( Route.AddressTxsTable, Just (AddressTxsTable _) ) ->
             n t
 
         ( Route.AddressTxsTable, _ ) ->
-            ( AddressTxsTable Table.init |> Just
+            ( AddressTxsTable.init |> AddressTxsTable |> Just
             , [ GetAddressTxsEffect
                     { currency = currency
                     , address = address
@@ -88,7 +95,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
-            ( AddressIncomingNeighborsTable Table.init |> Just
+            ( Table.init (Debug.todo "initialSort AddressIncomingNeighborsTable") |> AddressIncomingNeighborsTable |> Just
             , []
             )
 
@@ -96,7 +103,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
-            ( AddressOutgoingNeighborsTable Table.init |> Just
+            ( Table.init (Debug.todo "initialSort AddressOutgoingNeighborsTable") |> AddressOutgoingNeighborsTable |> Just
             , []
             )
 
@@ -132,7 +139,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityTagsTable, _ ) ->
-            ( EntityTagsTable Table.init |> Just
+            ( Debug.todo "EntityTagsTable Table.init" |> Just
             , []
             )
 
@@ -140,7 +147,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityTxsTable, _ ) ->
-            ( EntityTxsTable Table.init |> Just
+            ( Debug.todo "EntityTxsTable Table.init" |> Just
             , {- [ GetEntityTxsEffect
                  { currency = currency
                  , address = address
@@ -157,7 +164,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
-            ( EntityIncomingNeighborsTable Table.init |> Just
+            ( Debug.todo "EntityIncomingNeighborsTable Table.init" |> Just
             , []
             )
 
@@ -165,7 +172,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
-            ( EntityOutgoingNeighborsTable Table.init |> Just
+            ( Debug.todo "EntityOutgoingNeighborsTable" |> Just
             , []
             )
 
@@ -173,7 +180,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityAddressesTable, _ ) ->
-            ( EntityAddressesTable Table.init |> Just
+            ( EntityAddressesTable.init |> EntityAddressesTable |> Just
             , [ GetEntityAddressesEffect
                     { currency = currency
                     , entity = entity
@@ -269,10 +276,39 @@ showAddressTxs id data model =
                                         |> Just
 
                                 _ ->
-                                    Table.init
+                                    AddressTxsTable.init
                                         |> s_data addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showAddressTags : { currency : String, address : String } -> Api.Data.AddressTags -> Model -> Model
+showAddressTags id data model =
+    case model.type_ of
+        Address loadable table ->
+            if matchAddressId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Address loadable <|
+                            case table of
+                                Just (AddressTagsTable t) ->
+                                    appendData data.nextPage data.addressTags t
+                                        |> AddressTagsTable
+                                        |> Just
+
+                                _ ->
+                                    AddressTagsTable.init
+                                        |> s_data data.addressTags
+                                        |> s_nextpage data.nextPage
+                                        |> AddressTagsTable
                                         |> Just
                 }
 
@@ -298,7 +334,7 @@ showEntityAddresses id data model =
                                         |> Just
 
                                 _ ->
-                                    Table.init
+                                    EntityAddressesTable.init
                                         |> s_data data.addresses
                                         |> s_nextpage data.nextPage
                                         |> EntityAddressesTable

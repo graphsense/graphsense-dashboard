@@ -144,6 +144,11 @@ s_anchor value__ record__ =
     { record__ | anchor = value__ }
 
 
+s_and : a -> { b | and : a } -> { b | and : a }
+s_and value__ record__ =
+    { record__ | and = value__ }
+
+
 s_angle : a -> { b | angle : a } -> { b | angle : a }
 s_angle value__ record__ =
     { record__ | angle = value__ }
@@ -554,6 +559,16 @@ s_code value__ record__ =
     { record__ | code = value__ }
 
 
+s_codecId : a -> { b | codecId : a } -> { b | codecId : a }
+s_codecId value__ record__ =
+    { record__ | codecId = value__ }
+
+
+s_codecJson : a -> { b | codecJson : a } -> { b | codecJson : a }
+s_codecJson value__ record__ =
+    { record__ | codecJson = value__ }
+
+
 s_coinbase : a -> { b | coinbase : a } -> { b | coinbase : a }
 s_coinbase value__ record__ =
     { record__ | coinbase = value__ }
@@ -599,6 +614,16 @@ s_command value__ record__ =
     { record__ | command = value__ }
 
 
+s_confidence : a -> { b | confidence : a } -> { b | confidence : a }
+s_confidence value__ record__ =
+    { record__ | confidence = value__ }
+
+
+s_confidenceLevel : a -> { b | confidenceLevel : a } -> { b | confidenceLevel : a }
+s_confidenceLevel value__ record__ =
+    { record__ | confidenceLevel = value__ }
+
+
 s_config : a -> { b | config : a } -> { b | config : a }
 s_config value__ record__ =
     { record__ | config = value__ }
@@ -609,9 +634,19 @@ s_configValue value__ record__ =
     { record__ | configValue = value__ }
 
 
+s_connect : a -> { b | connect : a } -> { b | connect : a }
+s_connect value__ record__ =
+    { record__ | connect = value__ }
+
+
 s_containerHeight : a -> { b | containerHeight : a } -> { b | containerHeight : a }
 s_containerHeight value__ record__ =
     { record__ | containerHeight = value__ }
+
+
+s_contains : a -> { b | contains : a } -> { b | contains : a }
+s_contains value__ record__ =
+    { record__ | contains = value__ }
 
 
 s_content : a -> { b | content : a } -> { b | content : a }
@@ -642,6 +677,11 @@ s_contextStack value__ record__ =
 s_coords : a -> { b | coords : a } -> { b | coords : a }
 s_coords value__ record__ =
     { record__ | coords = value__ }
+
+
+s_create : a -> { b | create : a } -> { b | create : a }
+s_create value__ record__ =
+    { record__ | create = value__ }
 
 
 s_css : a -> { b | css : a } -> { b | css : a }
@@ -834,6 +874,16 @@ s_description value__ record__ =
     { record__ | description = value__ }
 
 
+s_details : a -> { b | details : a } -> { b | details : a }
+s_details value__ record__ =
+    { record__ | details = value__ }
+
+
+s_dict : a -> { b | dict : a } -> { b | dict : a }
+s_dict value__ record__ =
+    { record__ | dict = value__ }
+
+
 s_dim : a -> { b | dim : a } -> { b | dim : a }
 s_dim value__ record__ =
     { record__ | dim = value__ }
@@ -852,6 +902,11 @@ s_direction value__ record__ =
 s_disabled : a -> { b | disabled : a } -> { b | disabled : a }
 s_disabled value__ record__ =
     { record__ | disabled = value__ }
+
+
+s_disconnect : a -> { b | disconnect : a } -> { b | disconnect : a }
+s_disconnect value__ record__ =
+    { record__ | disconnect = value__ }
 
 
 s_display : a -> { b | display : a } -> { b | display : a }
@@ -979,6 +1034,11 @@ s_ending value__ record__ =
     { record__ | ending = value__ }
 
 
+s_endsWith : a -> { b | endsWith : a } -> { b | endsWith : a }
+s_endsWith value__ record__ =
+    { record__ | endsWith = value__ }
+
+
 s_entities : a -> { b | entities : a } -> { b | entities : a }
 s_entities value__ record__ =
     { record__ | entities = value__ }
@@ -1029,6 +1089,11 @@ s_entityTags value__ record__ =
     { record__ | entityTags = value__ }
 
 
+s_equals : a -> { b | equals : a } -> { b | equals : a }
+s_equals value__ record__ =
+    { record__ | equals = value__ }
+
+
 s_error : a -> { b | error : a } -> { b | error : a }
 s_error value__ record__ =
     { record__ | error = value__ }
@@ -1042,6 +1107,11 @@ s_event value__ record__ =
 s_events : a -> { b | events : a } -> { b | events : a }
 s_events value__ record__ =
     { record__ | events = value__ }
+
+
+s_every : a -> { b | every : a } -> { b | every : a }
+s_every value__ record__ =
+    { record__ | every = value__ }
 
 
 s_exactly : a -> { b | exactly : a } -> { b | exactly : a }
@@ -1132,6 +1202,11 @@ s_featureTagValue value__ record__ =
 s_fiatValues : a -> { b | fiatValues : a } -> { b | fiatValues : a }
 s_fiatValues value__ record__ =
     { record__ | fiatValues = value__ }
+
+
+s_fieldName : a -> { b | fieldName : a } -> { b | fieldName : a }
+s_fieldName value__ record__ =
+    { record__ | fieldName = value__ }
 
 
 s_fieldSeparator : a -> { b | fieldSeparator : a } -> { b | fieldSeparator : a }
@@ -1374,6 +1449,16 @@ s_greyLightest value__ record__ =
     { record__ | greyLightest = value__ }
 
 
+s_gt : a -> { b | gt : a } -> { b | gt : a }
+s_gt value__ record__ =
+    { record__ | gt = value__ }
+
+
+s_gte : a -> { b | gte : a } -> { b | gte : a }
+s_gte value__ record__ =
+    { record__ | gte = value__ }
+
+
 s_hash : a -> { b | hash : a } -> { b | hash : a }
 s_hash value__ record__ =
     { record__ | hash = value__ }
@@ -1549,6 +1634,11 @@ s_inSomeYears value__ record__ =
     { record__ | inSomeYears = value__ }
 
 
+s_in_ : a -> { b | in_ : a } -> { b | in_ : a }
+s_in_ value__ record__ =
+    { record__ | in_ = value__ }
+
+
 s_incoming : a -> { b | incoming : a } -> { b | incoming : a }
 s_incoming value__ record__ =
     { record__ | incoming = value__ }
@@ -1637,11 +1727,6 @@ s_isMerge value__ record__ =
 s_isOutgoing : a -> { b | isOutgoing : a } -> { b | isOutgoing : a }
 s_isOutgoing value__ record__ =
     { record__ | isOutgoing = value__ }
-
-
-s_isPublic : a -> { b | isPublic : a } -> { b | isPublic : a }
-s_isPublic value__ record__ =
-    { record__ | isPublic = value__ }
 
 
 s_isSelected : a -> { b | isSelected : a } -> { b | isSelected : a }
@@ -1899,6 +1984,11 @@ s_limit value__ record__ =
     { record__ | limit = value__ }
 
 
+s_line : a -> { b | line : a } -> { b | line : a }
+s_line value__ record__ =
+    { record__ | line = value__ }
+
+
 s_link : a -> { b | link : a } -> { b | link : a }
 s_link value__ record__ =
     { record__ | link = value__ }
@@ -1979,6 +2069,11 @@ s_locale value__ record__ =
     { record__ | locale = value__ }
 
 
+s_locations : a -> { b | locations : a } -> { b | locations : a }
+s_locations value__ record__ =
+    { record__ | locations = value__ }
+
+
 s_logo : a -> { b | logo : a } -> { b | logo : a }
 s_logo value__ record__ =
     { record__ | logo = value__ }
@@ -1987,6 +2082,16 @@ s_logo value__ record__ =
 s_lower : a -> { b | lower : a } -> { b | lower : a }
 s_lower value__ record__ =
     { record__ | lower = value__ }
+
+
+s_lt : a -> { b | lt : a } -> { b | lt : a }
+s_lt value__ record__ =
+    { record__ | lt = value__ }
+
+
+s_lte : a -> { b | lte : a } -> { b | lte : a }
+s_lte value__ record__ =
+    { record__ | lte = value__ }
 
 
 s_main : a -> { b | main : a } -> { b | main : a }
@@ -2379,6 +2484,16 @@ s_normalDirection value__ record__ =
     { record__ | normalDirection = value__ }
 
 
+s_not : a -> { b | not : a } -> { b | not : a }
+s_not value__ record__ =
+    { record__ | not = value__ }
+
+
+s_notIn : a -> { b | notIn : a } -> { b | notIn : a }
+s_notIn value__ record__ =
+    { record__ | notIn = value__ }
+
+
 s_now : a -> { b | now : a } -> { b | now : a }
 s_now value__ record__ =
     { record__ | now = value__ }
@@ -2509,6 +2624,11 @@ s_open value__ record__ =
     { record__ | open = value__ }
 
 
+s_operationName : a -> { b | operationName : a } -> { b | operationName : a }
+s_operationName value__ record__ =
+    { record__ | operationName = value__ }
+
+
 s_option : a -> { b | option : a } -> { b | option : a }
 s_option value__ record__ =
     { record__ | option = value__ }
@@ -2522,6 +2642,21 @@ s_optionalDecimal value__ record__ =
 s_options : a -> { b | options : a } -> { b | options : a }
 s_options value__ record__ =
     { record__ | options = value__ }
+
+
+s_or : a -> { b | or : a } -> { b | or : a }
+s_or value__ record__ =
+    { record__ | or = value__ }
+
+
+s_order : a -> { b | order : a } -> { b | order : a }
+s_order value__ record__ =
+    { record__ | order = value__ }
+
+
+s_orderBy : a -> { b | orderBy : a } -> { b | orderBy : a }
+s_orderBy value__ record__ =
+    { record__ | orderBy = value__ }
 
 
 s_ordinal : a -> { b | ordinal : a } -> { b | ordinal : a }
@@ -3274,9 +3409,24 @@ s_separator value__ record__ =
     { record__ | separator = value__ }
 
 
+s_set : a -> { b | set : a } -> { b | set : a }
+s_set value__ record__ =
+    { record__ | set = value__ }
+
+
 s_shift : a -> { b | shift : a } -> { b | shift : a }
 s_shift value__ record__ =
     { record__ | shift = value__ }
+
+
+s_showCase : a -> { b | showCase : a } -> { b | showCase : a }
+s_showCase value__ record__ =
+    { record__ | showCase = value__ }
+
+
+s_showTable : a -> { b | showTable : a } -> { b | showTable : a }
+s_showTable value__ record__ =
+    { record__ | showTable = value__ }
 
 
 s_sign : a -> { b | sign : a } -> { b | sign : a }
@@ -3302,6 +3452,11 @@ s_size value__ record__ =
 s_sketchPlane : a -> { b | sketchPlane : a } -> { b | sketchPlane : a }
 s_sketchPlane value__ record__ =
     { record__ | sketchPlane = value__ }
+
+
+s_skip : a -> { b | skip : a } -> { b | skip : a }
+s_skip value__ record__ =
+    { record__ | skip = value__ }
 
 
 s_skipCount : a -> { b | skipCount : a } -> { b | skipCount : a }
@@ -3332,6 +3487,11 @@ s_snapshots value__ record__ =
 s_snippets : a -> { b | snippets : a } -> { b | snippets : a }
 s_snippets value__ record__ =
     { record__ | snippets = value__ }
+
+
+s_some : a -> { b | some : a } -> { b | some : a }
+s_some value__ record__ =
+    { record__ | some = value__ }
 
 
 s_someDaysAgo : a -> { b | someDaysAgo : a } -> { b | someDaysAgo : a }
@@ -3407,6 +3567,11 @@ s_startPoint value__ record__ =
 s_startVertexIndex : a -> { b | startVertexIndex : a } -> { b | startVertexIndex : a }
 s_startVertexIndex value__ record__ =
     { record__ | startVertexIndex = value__ }
+
+
+s_startsWith : a -> { b | startsWith : a } -> { b | startsWith : a }
+s_startsWith value__ record__ =
+    { record__ | startsWith = value__ }
 
 
 s_state : a -> { b | state : a } -> { b | state : a }
@@ -3574,6 +3739,21 @@ s_taggers value__ record__ =
     { record__ | taggers = value__ }
 
 
+s_tagpackCreator : a -> { b | tagpackCreator : a } -> { b | tagpackCreator : a }
+s_tagpackCreator value__ record__ =
+    { record__ | tagpackCreator = value__ }
+
+
+s_tagpackIsPublic : a -> { b | tagpackIsPublic : a } -> { b | tagpackIsPublic : a }
+s_tagpackIsPublic value__ record__ =
+    { record__ | tagpackIsPublic = value__ }
+
+
+s_tagpackTitle : a -> { b | tagpackTitle : a } -> { b | tagpackTitle : a }
+s_tagpackTitle value__ record__ =
+    { record__ | tagpackTitle = value__ }
+
+
 s_tagpackUri : a -> { b | tagpackUri : a } -> { b | tagpackUri : a }
 s_tagpackUri value__ record__ =
     { record__ | tagpackUri = value__ }
@@ -3587,6 +3767,11 @@ s_tags value__ record__ =
 s_tail : a -> { b | tail : a } -> { b | tail : a }
 s_tail value__ record__ =
     { record__ | tail = value__ }
+
+
+s_take : a -> { b | take : a } -> { b | take : a }
+s_take value__ record__ =
+    { record__ | take = value__ }
 
 
 s_taxonomy : a -> { b | taxonomy : a } -> { b | taxonomy : a }
@@ -3764,6 +3949,11 @@ s_toOrdinalSuffix value__ record__ =
     { record__ | toOrdinalSuffix = value__ }
 
 
+s_toUrl : a -> { b | toUrl : a } -> { b | toUrl : a }
+s_toUrl value__ record__ =
+    { record__ | toUrl = value__ }
+
+
 s_toWeekdayAbbreviation : a -> { b | toWeekdayAbbreviation : a } -> { b | toWeekdayAbbreviation : a }
 s_toWeekdayAbbreviation value__ record__ =
     { record__ | toWeekdayAbbreviation = value__ }
@@ -3894,6 +4084,11 @@ s_ty value__ record__ =
     { record__ | ty = value__ }
 
 
+s_typeString : a -> { b | typeString : a } -> { b | typeString : a }
+s_typeString value__ record__ =
+    { record__ | typeString = value__ }
+
+
 s_type_ : a -> { b | type_ : a } -> { b | type_ : a }
 s_type_ value__ record__ =
     { record__ | type_ = value__ }
@@ -3944,9 +4139,9 @@ s_update value__ record__ =
     { record__ | update = value__ }
 
 
-s_updateByUrl : a -> { b | updateByUrl : a } -> { b | updateByUrl : a }
-s_updateByUrl value__ record__ =
-    { record__ | updateByUrl = value__ }
+s_updateByRoute : a -> { b | updateByRoute : a } -> { b | updateByRoute : a }
+s_updateByRoute value__ record__ =
+    { record__ | updateByRoute = value__ }
 
 
 s_updateFrequency : a -> { b | updateFrequency : a } -> { b | updateFrequency : a }
@@ -4054,6 +4249,11 @@ s_visited value__ record__ =
     { record__ | visited = value__ }
 
 
+s_where_ : a -> { b | where_ : a } -> { b | where_ : a }
+s_where_ value__ record__ =
+    { record__ | where_ = value__ }
+
+
 s_white : a -> { b | white : a } -> { b | white : a }
 s_white value__ record__ =
     { record__ | white = value__ }
@@ -4067,6 +4267,11 @@ s_whiteSpace value__ record__ =
 s_width : a -> { b | width : a } -> { b | width : a }
 s_width value__ record__ =
     { record__ | width = value__ }
+
+
+s_withCredentials : a -> { b | withCredentials : a } -> { b | withCredentials : a }
+s_withCredentials value__ record__ =
+    { record__ | withCredentials = value__ }
 
 
 s_withinFocus : a -> { b | withinFocus : a } -> { b | withinFocus : a }

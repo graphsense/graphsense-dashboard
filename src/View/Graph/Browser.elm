@@ -28,6 +28,7 @@ import Table
 import Time
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
+import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Locale as Locale
@@ -565,8 +566,14 @@ browseAddressTable vc gc height coinCode table =
         AddressTxsTable t ->
             Table.table vc height (AddressTxsTable.config vc coinCode) t.state t.data
 
-        _ ->
-            none
+        AddressTagsTable t ->
+            Table.table vc height (AddressTagsTable.config vc) t.state t.data
+
+        AddressIncomingNeighborsTable t ->
+            Debug.todo "AddressIncomingNeighborsTable"
+
+        AddressOutgoingNeighborsTable t ->
+            Debug.todo "AddressOutgoingNeighborsTable"
 
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg

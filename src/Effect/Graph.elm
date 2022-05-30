@@ -1,8 +1,11 @@
-module Effect.Graph exposing (Effect(..), perform)
+module Effect.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom
+import IntDict exposing (IntDict)
 import Json.Encode
+import Model.Address as A
+import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model as Plugin
 import Route.Graph exposing (Route)
@@ -117,3 +120,46 @@ perform eff =
         PluginEffect ( pid, cmd ) ->
             cmd
                 |> Cmd.map (PluginMsg pid)
+
+
+getAddressTagsEffect : A.Address -> Effect
+getAddressTagsEffect address =
+    GetAddressTagsEffect
+        { currency = address.currency
+        , address = address.address
+        , pagesize = 10
+        , nextpage = Nothing
+        , toMsg =
+            BrowserGotAddressTags
+                { currency = address.currency
+                , address = address.address
+                }
+        }
+
+
+getEntityEgonet :
+    { currency : String, entity : Int }
+    -> (String -> Int -> Bool -> Api.Data.NeighborEntities -> Msg)
+    -> IntDict Layer
+    -> List Effect
+getEntityEgonet { currency, entity } msg layers =
+    let
+        -- TODO optimize which only_ids to get for which direction
+        onlyIds =
+            layers
+                |> Layer.entities
+                |> List.map (.entity >> .entity)
+
+        effect isOut =
+            GetEntityNeighborsEffect
+                { currency = currency
+                , entity = entity
+                , isOutgoing = isOut
+                , onlyIds = Just onlyIds
+                , pagesize = max 1 <| List.length onlyIds
+                , toMsg = msg currency entity isOut
+                }
+    in
+    [ effect True
+    , effect False
+    ]

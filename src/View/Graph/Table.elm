@@ -99,7 +99,7 @@ simpleTheadHelp vc ( name, status, click ) =
             ]
 
 
-htmlColumn : View.Config -> String -> (data -> String) -> (data -> List (Html msg)) -> Table.Column data msg
+htmlColumn : View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
 htmlColumn vc name accessor html =
     Table.veryCustomColumn
         { name = name
@@ -126,11 +126,11 @@ timestampColumn vc name accessor =
         }
 
 
-numberColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
-numberColumn vc name accessor =
+intColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
+intColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , viewData = accessor >> Locale.int vc.locale >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

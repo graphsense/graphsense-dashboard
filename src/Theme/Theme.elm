@@ -24,6 +24,7 @@ type alias Theme =
     , input : List Style
     , addonsNav : List Style
     , main : List Style
+    , link : List Style
     , loadingSpinnerUrl : String
     , stats : Stats
     , search : Search
@@ -52,6 +53,7 @@ default =
     , headerLogo = []
     , addonsNav = []
     , main = []
+    , link = []
     , loadingSpinnerUrl = ""
     , stats = Stats.default
     , search = Search.default

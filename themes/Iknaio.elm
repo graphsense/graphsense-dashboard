@@ -101,6 +101,12 @@ theme =
         |> s_main
             [ backgroundColor <| toCssColor colors.brandLightest
             ]
+        |> s_link
+            [ color <| toCssColor colors.brandText
+            , hover
+                [ textDecoration none
+                ]
+            ]
         |> s_stats
             (Stats.default
                 |> s_root

@@ -68,3 +68,8 @@ hovercard vc =
 input : Config -> List Style
 input vc =
     vc.theme.input
+
+
+link : Config -> List Style
+link vc =
+    vc.theme.link
