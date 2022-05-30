@@ -503,7 +503,7 @@ update plugins uc msg model =
                         neighbors.neighbors
                         model.adding
             in
-            case Adding.readyEntity e adding of
+            case Adding.readyEntity e adding |> Debug.log "Adding.readyEntity" of
                 Nothing ->
                     -- try to add the egonet anyways
                     { model
@@ -1168,6 +1168,7 @@ addEntityLinks anchor isOutgoing neighbors model =
         linkData =
             neighbors
                 |> List.map (mapFirst Link.fromNeighbor)
+                |> Debug.log "linkData"
 
         layers =
             if isOutgoing then

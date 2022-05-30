@@ -506,10 +506,17 @@ insertEntityLinks neighbors (Entity.Links links) =
         |> List.foldl
             (\( link, entity ) li ->
                 Dict.update entity.id
-                    (Maybe.withDefault
-                        { link = link
-                        , node = entity
-                        }
+                    (Maybe.map
+                        (\l ->
+                            { l
+                                | link = link
+                                , node = entity
+                            }
+                        )
+                        >> Maybe.withDefault
+                            { link = link
+                            , node = entity
+                            }
                         >> Just
                     )
                     li
