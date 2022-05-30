@@ -13,3 +13,6 @@ outMsg encoder ms =
         UpdateAddresses a m ->
             encoder m
                 |> UpdateAddresses a
+
+        PushUrl url ->
+            PushUrl url

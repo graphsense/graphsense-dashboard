@@ -18,7 +18,7 @@ type Msg
     | UserRightClickedAddress AddressId Coords
     | UserHoversAddress AddressId
     | UserClickedEntity EntityId Coords
-    | UserRightClickedEntity EntityId
+    | UserRightClickedEntity EntityId Coords
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
     | UserHoversAddressLink (LinkId AddressId)
@@ -57,5 +57,6 @@ type Msg
     | UserLeftContextMenu
     | UserClickedAnnotateAddress AddressId
     | UserClickedRemoveAddress AddressId
+    | UserClickedRemoveEntity EntityId
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | NoOp

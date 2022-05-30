@@ -26,6 +26,7 @@ import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
 import RecordSetter exposing (..)
+import Route as R exposing (toUrl)
 import Route.Graph as Route
 import Set exposing (Set)
 import Tuple exposing (..)
@@ -318,8 +319,18 @@ update plugins uc msg model =
             else
                 n model
 
-        UserRightClickedEntity id ->
-            n model
+        UserRightClickedEntity id coords ->
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\entity ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initEntity coords entity
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserHoversEntity id ->
             n model
@@ -663,15 +674,22 @@ update plugins uc msg model =
 
         PluginMsg pid msgValue ->
             let
+                pc =
+                    { toUrl =
+                        pair pid
+                            >> Route.pluginRoute
+                            >> R.graphRoute
+                            >> toUrl
+                    }
+
                 ( new, outMsg, cmd ) =
-                    Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
+                    Plugin.update pc pid plugins model.plugins msgValue (.graph >> .model)
             in
-            ( { model
+            { model
                 | plugins = new
-              }
+            }
                 |> updateByPluginOutMsg plugins pid outMsg
-            , List.map PluginEffect cmd
-            )
+                |> mapSecond ((++) (List.map PluginEffect cmd))
 
         {- case context of
                  Plugin.Model ->
@@ -731,6 +749,9 @@ update plugins uc msg model =
         UserClickedRemoveAddress id ->
             n model
 
+        UserClickedRemoveEntity id ->
+            n model
+
         UserClickedAddressInEntityAddressesTable entityId address ->
             let
                 added =
@@ -763,23 +784,25 @@ hideContextmenu model =
     n { model | contextMenu = Nothing }
 
 
-updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model -> Model
+updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model -> ( Model, List Effect )
 updateByPluginOutMsg plugins pid outMsgs model =
     outMsgs
         |> List.foldl
-            (\msg mo ->
+            (\msg ( mo, eff ) ->
                 case Debug.log "outMsg" msg of
                     Plugin.ShowBrowser ->
-                        { model
+                        ( { model
                             | browser = Browser.showPlugin pid model.browser
-                        }
+                          }
+                        , eff
+                        )
 
                     Plugin.UpdateAddresses id msgValue ->
                         let
                             layers =
                                 Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) model.layers
                         in
-                        { model
+                        ( { model
                             | layers = layers
                             , browser =
                                 case model.browser.type_ of
@@ -797,9 +820,21 @@ updateByPluginOutMsg plugins pid outMsgs model =
 
                                     _ ->
                                         model.browser
-                        }
+                          }
+                        , eff
+                        )
+
+                    Plugin.PushUrl url ->
+                        ( model
+                        , url
+                            |> pair pid
+                            |> Route.pluginRoute
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                            |> (++) eff
+                        )
             )
-            model
+            ( model, [] )
 
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
@@ -899,17 +934,16 @@ updateByRoute plugins route model =
         Route.Label l ->
             n model
 
-        Route.Plugin pid url ->
+        Route.Plugin ( pid, value ) ->
             let
                 ( new, outMsg, cmd ) =
-                    Plugin.updateByUrl pid plugins model.plugins url .graph
+                    Plugin.updateByRoute pid plugins model.plugins value
             in
-            ( { model
+            { model
                 | plugins = new
-              }
+            }
                 |> updateByPluginOutMsg plugins pid outMsg
-            , List.map PluginEffect cmd
-            )
+                |> mapSecond ((++) (List.map PluginEffect cmd))
 
 
 updateSize : Int -> Int -> Model -> Model

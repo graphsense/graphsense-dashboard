@@ -274,5 +274,10 @@ contextMenu plugins vc model cm =
                 |> option "Remove"
             ]
                 ++ Plugin.View.Graph.Address.contextMenu plugins vc model address
+
+        ContextMenu.Entity entity ->
+            [ UserClickedRemoveEntity entity.id
+                |> option "Remove"
+            ]
     )
         |> ContextMenu.view vc cm.coords

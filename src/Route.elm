@@ -1,11 +1,12 @@
 module Route exposing (Route(..), graphRoute, graphSegment, parse, toUrl)
 
 import List.Extra
+import Plugin exposing (Plugins)
 import Route.Graph as Graph
 import Url exposing (..)
 import Url.Builder as B exposing (..)
-import Url.Parser as P exposing (..)
-import Url.Parser.Query as Q
+import Util.Url.Parser as P exposing (..)
+import Util.Url.Parser.Query as Q
 
 
 type alias Config =
@@ -23,15 +24,15 @@ graphSegment =
     "graph"
 
 
-parse : Config -> Url -> Maybe Route
-parse c =
-    P.parse (parser c)
+parse : Plugins -> Config -> Url -> Maybe Route
+parse plugins c =
+    P.parse (parser plugins c)
 
 
-parser : Config -> Parser (Route -> a) a
-parser c =
+parser : Plugins -> Config -> Parser (Route -> a) a
+parser plugins c =
     oneOf
-        [ map Graph (s graphSegment </> Graph.parser c.graph)
+        [ map Graph (s graphSegment |> slash (Graph.parser plugins c.graph))
         , map Stats top
         ]
 

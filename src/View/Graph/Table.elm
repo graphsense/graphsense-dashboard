@@ -10,14 +10,13 @@ import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model.Currency as Currency
-import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import View.Locale as Locale
 
 
-table : View.Config -> Maybe Float -> Table.Config data Msg -> Table.State -> List data -> Html Msg
+table : View.Config -> Maybe Float -> Table.Config data msg -> Table.State -> List data -> Html msg
 table vc height config state data =
     div
         [ (height
@@ -100,7 +99,7 @@ simpleTheadHelp vc ( name, status, click ) =
             ]
 
 
-htmlColumn : View.Config -> String -> (data -> String) -> (data -> List (Html Msg)) -> Table.Column data Msg
+htmlColumn : View.Config -> String -> (data -> String) -> (data -> List (Html msg)) -> Table.Column data msg
 htmlColumn vc name accessor html =
     Table.veryCustomColumn
         { name = name
@@ -109,7 +108,7 @@ htmlColumn vc name accessor html =
         }
 
 
-stringColumn : View.Config -> String -> (data -> String) -> Table.Column data Msg
+stringColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
 stringColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
@@ -118,7 +117,7 @@ stringColumn vc name accessor =
         }
 
 
-timestampColumn : View.Config -> String -> (data -> Int) -> Table.Column data Msg
+timestampColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
 timestampColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
@@ -127,7 +126,7 @@ timestampColumn vc name accessor =
         }
 
 
-numberColumn : View.Config -> String -> (data -> String) -> Table.Column data Msg
+numberColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
 numberColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
@@ -136,7 +135,7 @@ numberColumn vc name accessor =
         }
 
 
-valueColumn : View.Config -> String -> String -> (data -> Api.Data.Values) -> Table.Column data Msg
+valueColumn : View.Config -> String -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 valueColumn vc coinCode name getValues =
     Table.veryCustomColumn
         { name = name
@@ -145,7 +144,7 @@ valueColumn vc coinCode name getValues =
         }
 
 
-valuesCell : View.Config -> String -> Api.Data.Values -> Table.HtmlDetails Msg
+valuesCell : View.Config -> String -> Api.Data.Values -> Table.HtmlDetails msg
 valuesCell vc coinCode values =
     Locale.currency vc.locale coinCode values
         |> text

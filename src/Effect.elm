@@ -13,6 +13,7 @@ import Effect.Search as Search
 import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
+import Plugin exposing (Plugins)
 import Ports
 import Route
 import Task

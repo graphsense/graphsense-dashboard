@@ -5,7 +5,7 @@
         "openapi/src",
         "themes",
         "config",
-        "plugins",
+        "plugins/casemgm",
         "elm-hovercard/src",
         "elm-css-sortable-table/src"
     ],
@@ -24,6 +24,7 @@
             "avh4/elm-program-test": "3.6.3",
             "cuducos/elm-format-number": "9.0.1",
             "danyx23/elm-uuid": "2.1.2",
+            "dillonkearns/elm-graphql": "5.0.9",
             "elm/browser": "1.0.2",
             "elm/core": "1.0.5",
             "elm/html": "1.0.0",
@@ -66,6 +67,7 @@
             "ianmackenzie/elm-interval": "2.0.0",
             "ianmackenzie/elm-triangular-mesh": "1.1.0",
             "ianmackenzie/elm-units-interval": "2.3.0",
+            "j-maas/elm-ordered-containers": "1.0.0",
             "myrho/elm-round": "1.0.4",
             "robinheghan/murmur3": "1.0.0",
             "rtfeldman/elm-hex": "1.0.0"

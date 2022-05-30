@@ -11,11 +11,24 @@ import Model.Graph.Browser exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (..)
 import Plugin.Model as Plugin exposing (..)
+import Route exposing (toUrl)
+import Route.Graph as Route
+import Tuple exposing (..)
 
 
-propertyBox : Plugins -> View.Config -> String -> PluginStates -> Maybe (Html Msg)
-propertyBox plugins vc pid states =
-    Maybe.Extra.andThen2 (\plugin -> plugin.view.graph.browser vc)
+browser : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)
+browser plugins vc pid states =
+    let
+        pc =
+            { toUrl =
+                pair pid
+                    >> Route.pluginRoute
+                    >> Route.graphRoute
+                    >> toUrl
+            }
+    in
+    Maybe.map2 (\plugin -> plugin.view.graph.browser pc vc)
         (Dict.get pid plugins)
         (Dict.get pid states)
-        |> Maybe.map (Html.map (PluginMsg pid))
+        |> Maybe.withDefault []
+        |> List.map (Html.map (PluginMsg pid))

@@ -6,6 +6,11 @@ import Model.Address exposing (Address)
 import Model.Graph.Id as Id
 
 
+type alias Config =
+    { toUrl : String -> String
+    }
+
+
 type alias PluginStates =
     Dict String Value
 
@@ -18,3 +23,4 @@ type Context
 type OutMsg msg
     = ShowBrowser
     | UpdateAddresses Address msg
+    | PushUrl String

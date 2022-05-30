@@ -63,8 +63,6 @@ browser plugins vc gc states model =
 
                 Browser.Plugin pid ->
                     browsePlugin plugins vc pid states
-                        |> Maybe.map List.singleton
-                        |> Maybe.withDefault []
             )
         ]
 
@@ -601,6 +599,6 @@ browseEntityTable vc gc height entity table =
 -}
 
 
-browsePlugin : Plugins -> View.Config -> String -> PluginStates -> Maybe (Html Msg)
+browsePlugin : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)
 browsePlugin plugins vc pid states =
-    Plugin.View.Graph.Browser.propertyBox plugins vc pid states
+    Plugin.View.Graph.Browser.browser plugins vc pid states

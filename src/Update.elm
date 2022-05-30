@@ -205,7 +205,7 @@ updateByUrl plugins uc url model =
                 |> (\c -> { currencies = c })
                 |> (\g -> { graph = g })
     in
-    Route.parse routeConfig url
+    Route.parse plugins routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
                 case Log.log "route" route of
@@ -225,7 +225,7 @@ updateByUrl plugins uc url model =
                     _ ->
                         n model
             )
-            (Route.parse routeConfig model.url)
+            (Route.parse plugins routeConfig model.url)
         |> Maybe.withDefault (n model)
 
 

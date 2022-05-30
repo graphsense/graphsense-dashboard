@@ -7,8 +7,11 @@ import Json.Encode exposing (Value)
 import Model.Graph.Address as Address
 import Model.Graph.Id as Id
 import Plugin.Model exposing (..)
+import Regex
 import Svg.Styled as Svg exposing (..)
 import Tuple exposing (..)
+import Url
+import Url.Parser exposing ((</>), Parser)
 
 
 type alias Plugins =
@@ -26,11 +29,11 @@ type alias Plugin =
             , navbar :
                 { left : View.Config -> Maybe Value -> Maybe (Html Value)
                 }
-            , browser : View.Config -> Value -> Maybe (Html Value)
+            , browser : Config -> View.Config -> Value -> List (Html Value)
             }
         }
     , update : UpdateModel
-    , updateByUrl : UpdateByUrlModel
+    , updateByRoute : UpdateByRoute
     , init :
         { graph :
             { model : Value
@@ -53,17 +56,16 @@ type alias UpdateAddress =
     MsgValue -> StateValue -> StateValue
 
 
-type alias UpdateByUrlModel =
-    { graph : UpdateByUrl
-    }
-
-
 type alias Update =
-    MsgValue -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+    Config -> MsgValue -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
 
 
-type alias UpdateByUrl =
+type alias UpdateByRoute =
     String -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+
+
+type alias RouteValue =
+    Value
 
 
 type alias MsgValue =
@@ -107,18 +109,19 @@ iterate plugins fun states =
 
 
 update :
-    String
+    Config
+    -> String
     -> Dict String Plugin
     -> Dict String StateValue
     -> MsgValue
     -> (UpdateModel -> Update)
     -> ( Dict String StateValue, List (OutMsg Value), List ( String, Cmd Value ) )
-update pid plugins states msg fun =
+update pc pid plugins states msg fun =
     Maybe.map2
         (\plugin state ->
             let
                 ( newState, outMsg, cmd ) =
-                    fun plugin.update msg state
+                    fun plugin.update pc msg state
             in
             ( Dict.insert pid newState states
             , outMsg
@@ -148,19 +151,18 @@ updateAddress pid plugins msg address =
         |> Maybe.withDefault address
 
 
-updateByUrl :
+updateByRoute :
     String
     -> Plugins
     -> PluginStates
     -> String
-    -> (UpdateByUrlModel -> UpdateByUrl)
     -> ( PluginStates, List (OutMsg Value), List ( String, Cmd Value ) )
-updateByUrl pid plugins states url fun =
+updateByRoute pid plugins states route =
     Maybe.map2
         (\plugin state ->
             let
                 ( newState, outMsg, cmd ) =
-                    fun plugin.updateByUrl url state
+                    plugin.updateByRoute route state
             in
             ( Dict.insert pid newState states
             , outMsg
@@ -188,3 +190,36 @@ initAddress plugins =
             (\pid plugin ->
                 plugin.init.graph.address
             )
+
+
+parseUrl : Plugins -> String -> Maybe ( String, String )
+parseUrl plugins url =
+    plugins
+        |> Dict.toList
+        |> parseUrlHelp url
+
+
+parseUrlHelp : String -> List ( String, Plugin ) -> Maybe ( String, String )
+parseUrlHelp url plugins =
+    case plugins of
+        [] ->
+            Nothing
+
+        ( pid, plugin ) :: rest ->
+            let
+                regex =
+                    "^"
+                        ++ pid
+                        ++ "[/?#]"
+                        |> Regex.fromString
+                        |> Maybe.withDefault Regex.never
+            in
+            if Regex.contains regex url || url == pid then
+                let
+                    purl =
+                        String.dropLeft (String.length pid) url
+                in
+                Just ( pid, purl )
+
+            else
+                parseUrlHelp url rest

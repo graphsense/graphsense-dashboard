@@ -13,11 +13,14 @@ module Route.Graph exposing
     , toUrl
     )
 
+import Json.Encode
 import List.Extra
+import Maybe.Extra
+import Plugin exposing (Plugins)
 import Url exposing (..)
 import Url.Builder as B exposing (..)
-import Url.Parser as P exposing (..)
-import Url.Parser.Query as Q
+import Util.Url.Parser as P exposing (..)
+import Util.Url.Parser.Query as Q
 
 
 type alias Config =
@@ -29,7 +32,7 @@ type Route
     = Currency String Thing
     | Label String
     | Root
-    | Plugin String String
+    | Plugin ( String, String )
 
 
 type Thing
@@ -195,8 +198,12 @@ toUrl route =
         Label l ->
             absolute [ labelSegment, l ] []
 
-        Plugin pid p ->
+        Plugin ( pid, p ) ->
             "/" ++ pid ++ p
+
+
+
+--++ p
 
 
 rootRoute : Route
@@ -216,21 +223,22 @@ entityRoute { currency, entity, layer, table } =
         |> Currency currency
 
 
-pluginRoute : String -> String -> Route
+pluginRoute : ( String, String ) -> Route
 pluginRoute =
     Plugin
 
 
-parse : Config -> Url -> Maybe Route
-parse c =
-    P.parse (parser c)
+parse : Plugins -> Config -> Url -> Maybe Route
+parse plugins c =
+    P.parse (parser plugins c)
 
 
-parser : Config -> Parser (Route -> a) a
-parser c =
+parser : Plugins -> Config -> Parser (Route -> a) a
+parser plugins c =
     oneOf
-        [ map Currency (parseCurrency c </> thing)
-        , map Label P.string
+        [ map Currency (parseCurrency c |> P.slash thing)
+        , map Label (P.s labelSegment |> P.slash P.string)
+        , map Plugin (P.remainder (Plugin.parseUrl plugins))
         , map Root P.top
         ]
 
@@ -246,19 +254,21 @@ thing : Parser (Thing -> a) a
 thing =
     oneOf
         [ s addressSegment
-            </> P.string
-            <?> (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
-            </> P.fragment (Maybe.andThen String.toInt)
+            |> P.slash P.string
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
+            |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Address
         , s entitySegment
-            </> P.int
-            <?> (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
-            </> P.fragment (Maybe.andThen String.toInt)
+            |> P.slash P.int
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
+            |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Entity
-        , s blockSegment
-            </> P.int
-            |> map Block
-        , s txSegment
-            </> P.string
-            |> map Tx
+
+        {- , s blockSegment
+               </> P.int
+               |> map Block
+           , s txSegment
+               </> P.string
+               |> map Tx
+        -}
         ]

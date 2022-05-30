@@ -23,7 +23,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
 import Tuple exposing (..)
-import Util.Graph exposing (rotate, translate)
+import Util.Graph exposing (decodeCoords, rotate, translate)
 import Util.View as Util
 import View.Graph.Address as Address
 import View.Graph.Label as Label
@@ -77,9 +77,9 @@ entity vc gc selected ent =
         [ Css.entityRoot vc |> css
         , Json.Decode.succeed ( UserClickedEntity ent.id { x = ent.dx, y = ent.dy }, True )
             |> stopPropagationOn "click"
-        , UserRightClickedEntity ent.id
-            |> Json.Decode.succeed
-            |> on "contextmenu"
+        , decodeCoords Coords
+            |> Json.Decode.map (\c -> ( UserRightClickedEntity ent.id c, True ))
+            |> preventDefaultOn "contextmenu"
         , UserHoversEntity ent.id
             |> onMouseOver
         , UserLeavesThing
