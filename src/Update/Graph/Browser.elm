@@ -21,6 +21,7 @@ import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -103,12 +104,14 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init |> AddressIncomingNeighborsTable |> Just
+            ( AddressNeighborsTable.init False |> AddressIncomingNeighborsTable |> Just
             , [ GetAddressNeighborsEffect
                     { currency = currency
                     , address = address
                     , isOutgoing = False
                     , pagesize = 100
+                    , includeLabels = True
+                    , nextpage = Nothing
                     , toMsg =
                         BrowserGotAddressNeighborsTable
                             { currency = currency
@@ -123,12 +126,14 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init |> AddressOutgoingNeighborsTable |> Just
+            ( AddressNeighborsTable.init True |> AddressOutgoingNeighborsTable |> Just
             , [ GetAddressNeighborsEffect
                     { currency = currency
                     , address = address
                     , isOutgoing = True
                     , pagesize = 100
+                    , includeLabels = True
+                    , nextpage = Nothing
                     , toMsg =
                         BrowserGotAddressNeighborsTable
                             { currency = currency
@@ -190,33 +195,61 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityTxsTable, _ ) ->
-            ( Debug.todo "EntityTxsTable Table.init" |> Just
-            , {- [ GetEntityTxsEffect
-                 { currency = currency
-                 , address = address
-                 , nextpage = Nothing
-                 , pagesize = 100
-                 , toMsg = BrowserGotEntityTxs { currency = currency, address = address }
-                 }
-                 ]
-              -}
-              []
+            ( AddressTxsTable.init |> EntityTxsTable |> Just
+            , [ GetEntityTxsEffect
+                    { currency = currency
+                    , entity = entity
+                    , nextpage = Nothing
+                    , pagesize = 100
+                    , toMsg = BrowserGotEntityTxs { currency = currency, entity = entity }
+                    }
+              ]
             )
 
         ( Route.EntityIncomingNeighborsTable, Just (EntityIncomingNeighborsTable _) ) ->
             n t
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
-            ( Debug.todo "EntityIncomingNeighborsTable Table.init" |> Just
-            , []
+            ( EntityNeighborsTable.init False |> EntityIncomingNeighborsTable |> Just
+            , [ GetEntityNeighborsEffect
+                    { currency = currency
+                    , entity = entity
+                    , isOutgoing = False
+                    , onlyIds = Nothing
+                    , pagesize = 100
+                    , includeLabels = True
+                    , nextpage = Nothing
+                    , toMsg =
+                        BrowserGotEntityNeighborsTable
+                            { currency = currency
+                            , entity = entity
+                            }
+                            False
+                    }
+              ]
             )
 
         ( Route.EntityOutgoingNeighborsTable, Just (EntityOutgoingNeighborsTable _) ) ->
             n t
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
-            ( Debug.todo "EntityOutgoingNeighborsTable" |> Just
-            , []
+            ( EntityNeighborsTable.init False |> EntityOutgoingNeighborsTable |> Just
+            , [ GetEntityNeighborsEffect
+                    { currency = currency
+                    , entity = entity
+                    , isOutgoing = True
+                    , onlyIds = Nothing
+                    , pagesize = 100
+                    , includeLabels = True
+                    , nextpage = Nothing
+                    , toMsg =
+                        BrowserGotEntityNeighborsTable
+                            { currency = currency
+                            , entity = entity
+                            }
+                            True
+                    }
+              ]
             )
 
         ( Route.EntityAddressesTable, Just (EntityAddressesTable _) ) ->
@@ -382,7 +415,7 @@ showAddressNeighbors id isOutgoing data model =
                                         |> Just
 
                                 _ ->
-                                    AddressNeighborsTable.init
+                                    AddressNeighborsTable.init isOutgoing
                                         |> s_data data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
@@ -390,6 +423,45 @@ showAddressNeighbors id isOutgoing data model =
 
                                             else
                                                 AddressIncomingNeighborsTable
+                                           )
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showEntityNeighbors : { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
+showEntityNeighbors id isOutgoing data model =
+    case model.type_ of
+        Entity loadable table ->
+            if matchEntityId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Entity loadable <|
+                            case ( isOutgoing, table ) of
+                                ( True, Just (EntityOutgoingNeighborsTable t) ) ->
+                                    appendData data.nextPage data.neighbors t
+                                        |> EntityOutgoingNeighborsTable
+                                        |> Just
+
+                                ( False, Just (EntityIncomingNeighborsTable t) ) ->
+                                    appendData data.nextPage data.neighbors t
+                                        |> EntityIncomingNeighborsTable
+                                        |> Just
+
+                                _ ->
+                                    EntityNeighborsTable.init isOutgoing
+                                        |> s_data data.neighbors
+                                        |> s_nextpage data.nextPage
+                                        |> (if isOutgoing then
+                                                EntityOutgoingNeighborsTable
+
+                                            else
+                                                EntityIncomingNeighborsTable
                                            )
                                         |> Just
                 }
@@ -420,6 +492,48 @@ showEntityAddresses id data model =
                                         |> s_data data.addresses
                                         |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showEntityTxs : { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
+showEntityTxs id data model =
+    let
+        addressTxs =
+            data.addressTxs
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.AddressTxAddressTxUtxo tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Entity loadable table ->
+            if matchEntityId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Entity loadable <|
+                            case table of
+                                Just (EntityTxsTable t) ->
+                                    appendData data.nextPage addressTxs t
+                                        |> EntityTxsTable
+                                        |> Just
+
+                                _ ->
+                                    AddressTxsTable.init
+                                        |> s_data addressTxs
+                                        |> s_nextpage data.nextPage
+                                        |> EntityTxsTable
                                         |> Just
                 }
 
@@ -489,7 +603,22 @@ tableNewState state model =
                                     |> AddressTxsTable
                                     |> Just
 
-                            _ ->
+                            Just (AddressTagsTable t) ->
+                                { t | state = state }
+                                    |> AddressTagsTable
+                                    |> Just
+
+                            Just (AddressIncomingNeighborsTable t) ->
+                                { t | state = state }
+                                    |> AddressIncomingNeighborsTable
+                                    |> Just
+
+                            Just (AddressOutgoingNeighborsTable t) ->
+                                { t | state = state }
+                                    |> AddressOutgoingNeighborsTable
+                                    |> Just
+
+                            Nothing ->
                                 table
 
                 Entity loadable table ->
@@ -500,7 +629,27 @@ tableNewState state model =
                                     |> EntityAddressesTable
                                     |> Just
 
-                            _ ->
+                            Just (EntityTxsTable t) ->
+                                { t | state = state }
+                                    |> EntityTxsTable
+                                    |> Just
+
+                            Just (EntityTagsTable t) ->
+                                { t | state = state }
+                                    |> EntityTagsTable
+                                    |> Just
+
+                            Just (EntityIncomingNeighborsTable t) ->
+                                { t | state = state }
+                                    |> EntityIncomingNeighborsTable
+                                    |> Just
+
+                            Just (EntityOutgoingNeighborsTable t) ->
+                                { t | state = state }
+                                    |> EntityOutgoingNeighborsTable
+                                    |> Just
+
+                            Nothing ->
                                 table
 
                 _ ->

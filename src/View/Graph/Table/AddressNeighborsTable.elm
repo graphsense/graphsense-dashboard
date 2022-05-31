@@ -15,9 +15,21 @@ import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
 
-init : Table Api.Data.NeighborAddress
+columnTitleFromDirection : Bool -> String
+columnTitleFromDirection isOutgoing =
+    (if isOutgoing then
+        "Outgoing"
+
+     else
+        "Incoming"
+    )
+        ++ " address"
+
+
+init : Bool -> Table Api.Data.NeighborAddress
 init =
-    Init.Graph.Table.init "Address"
+    columnTitleFromDirection
+        >> Init.Graph.Table.init
 
 
 config : View.Config -> Bool -> String -> Maybe AddressId -> Table.Config Api.Data.NeighborAddress Msg
@@ -27,7 +39,7 @@ config vc isOutgoing coinCode id =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Address"
+                (columnTitleFromDirection isOutgoing)
                 (.address >> .address)
                 (\data ->
                     text data.address.address

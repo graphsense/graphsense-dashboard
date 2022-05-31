@@ -5,14 +5,19 @@ ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
     apk --no-cache --update add bash nginx && \
-    apk --no-cache --update --virtual build-dependendencies add npm nodejs
+    apk --no-cache --update --virtual build-dependendencies add npm nodejs python3 make g++
 
 WORKDIR $WORKDIR
 COPY ./docker/docker-entrypoint.sh /
 COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src
+COPY ./openapi $WORKDIR/openapi
+COPY ./elm-hovercard $WORKDIR/elm-hovercard
+COPY ./elm-css-sortable-table $WORKDIR/elm-css-sortable-table
 COPY ./lang $WORKDIR/lang
-COPY ./*.js ./*package.json $WORKDIR/
+COPY ./plugins $WORKDIR/plugins
+COPY ./themes $WORKDIR/themes
+COPY ./elm.json ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
 COPY ./docker/site.conf /etc/nginx/conf.d/
 
 RUN chmod +x /docker-entrypoint.sh && \
@@ -24,6 +29,5 @@ RUN chmod +x /docker-entrypoint.sh && \
     rm /etc/nginx/conf.d/default.conf && \
     apk del build-dependendencies
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 EXPOSE 8000

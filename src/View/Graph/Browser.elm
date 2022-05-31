@@ -32,6 +32,7 @@ import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Locale as Locale
 
 
@@ -514,14 +515,14 @@ rowsEntity vc gc now ent =
                         |> String
                 )
             |> elseLoading
-        , mkTableLink "List receiving entities" Route.EntityIncomingNeighborsTable
+        , mkTableLink "List receiving entities" Route.EntityOutgoingNeighborsTable
         )
     , Row
         ( "Sending entities"
         , ent
             |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
             |> elseLoading
-        , mkTableLink "List sending entities" Route.EntityOutgoingNeighborsTable
+        , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
         )
     , Rule
     , Row
@@ -606,21 +607,10 @@ browseEntityTable vc gc height entity table =
             Table.table vc height (AddressTagsTable.config vc) t
 
         EntityIncomingNeighborsTable t ->
-            Debug.todo "EntityIncomingNeighborsTable"
+            Table.table vc height (EntityNeighborsTable.config vc False coinCode entityId) t
 
         EntityOutgoingNeighborsTable t ->
-            Debug.todo "EntityOutgoingNeighborsTable"
-
-
-
-{-
-   case table of
-       EntityTxsTable t ->
-           Table.view (AddressTxsTable.config vc coinCode) t.state t.data
-
-       _ ->
-           none
--}
+            Table.table vc height (EntityNeighborsTable.config vc True coinCode entityId) t
 
 
 browsePlugin : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)

@@ -38,6 +38,8 @@ type Effect
         , isOutgoing : Bool
         , pagesize : Int
         , onlyIds : Maybe (List Int)
+        , includeLabels : Bool
+        , nextpage : Maybe String
         , toMsg : Api.Data.NeighborEntities -> Msg
         }
     | GetAddressNeighborsEffect
@@ -45,6 +47,8 @@ type Effect
         , address : String
         , isOutgoing : Bool
         , pagesize : Int
+        , includeLabels : Bool
+        , nextpage : Maybe String
         , toMsg : Api.Data.NeighborAddresses -> Msg
         }
     | GetAddressTxsEffect
@@ -60,6 +64,13 @@ type Effect
         , pagesize : Int
         , nextpage : Maybe String
         , toMsg : Api.Data.EntityAddresses -> Msg
+        }
+    | GetEntityTxsEffect
+        { currency : String
+        , entity : Int
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : Api.Data.AddressTxs -> Msg
         }
     | GetAddressTagsEffect
         { currency : String
@@ -122,6 +133,10 @@ perform eff =
             Cmd.none
 
         -- managed in Effect.elm
+        GetEntityTxsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
         GetAddressTagsEffect _ ->
             Cmd.none
 
@@ -154,6 +169,8 @@ getEntityEgonet { currency, entity } msg layers =
                 , isOutgoing = isOut
                 , onlyIds = Just onlyIds
                 , pagesize = max 1 <| List.length onlyIds
+                , nextpage = Nothing
+                , includeLabels = False
                 , toMsg = msg currency entity isOut
                 }
     in

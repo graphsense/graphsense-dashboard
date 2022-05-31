@@ -135,10 +135,10 @@ entityTableToString t =
             "addresses"
 
         EntityIncomingNeighborsTable ->
-            "incoming-neighbors"
+            "incoming"
 
         EntityOutgoingNeighborsTable ->
-            "outgoing-neighbors"
+            "outgoing"
 
 
 stringToEntityTable : String -> Maybe EntityTable
@@ -153,10 +153,10 @@ stringToEntityTable t =
         "addresses" ->
             Just EntityAddressesTable
 
-        "incoming-neighbors" ->
+        "incoming" ->
             Just EntityIncomingNeighborsTable
 
-        "outgoing-neighbors" ->
+        "outgoing" ->
             Just EntityOutgoingNeighborsTable
 
         _ ->

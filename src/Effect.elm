@@ -52,7 +52,7 @@ perform key apiKey effect =
                         |> Route.toUrl
                         |> Nav.pushUrl key
 
-                Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, toMsg } ->
+                Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage, toMsg } ->
                     let
                         direction =
                             case isOutgoing of
@@ -62,10 +62,10 @@ perform key apiKey effect =
                                 False ->
                                     Api.Request.Entities.DirectionIn
                     in
-                    Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds Nothing Nothing (Just pagesize)
+                    Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, toMsg } ->
+                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, includeLabels, nextpage, toMsg } ->
                     let
                         direction =
                             case isOutgoing of
@@ -75,7 +75,7 @@ perform key apiKey effect =
                                 False ->
                                     Api.Request.Addresses.DirectionIn
                     in
-                    Api.Request.Addresses.listAddressNeighbors currency address direction Nothing Nothing (Just pagesize)
+                    Api.Request.Addresses.listAddressNeighbors currency address direction (Just includeLabels) nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressEffect { currency, address, toMsg } ->
@@ -104,6 +104,10 @@ perform key apiKey effect =
 
                 Graph.GetEntityAddressesEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
+                        |> send apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
+                    Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetSvgElementEffect ->

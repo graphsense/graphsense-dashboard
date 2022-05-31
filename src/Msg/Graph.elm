@@ -50,9 +50,11 @@ type Msg
         , neighbors : List Api.Data.NeighborAddress
         }
         Api.Data.Entity
+    | BrowserGotEntityNeighborsTable E.Entity Bool Api.Data.NeighborEntities
     | BrowserGotAddressTxs A.Address Api.Data.AddressTxs
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
     | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
+    | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
@@ -65,4 +67,5 @@ type Msg
     | UserClickedRemoveEntity EntityId
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
+    | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | NoOp

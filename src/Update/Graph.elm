@@ -413,6 +413,8 @@ update plugins uc msg model =
                           , isOutgoing = isOutgoing
                           , onlyIds = Nothing
                           , pagesize = 20
+                          , includeLabels = False
+                          , nextpage = Nothing
                           , toMsg = BrowserGotEntityNeighbors id isOutgoing
                           }
                             |> GetEntityNeighborsEffect
@@ -598,6 +600,12 @@ update plugins uc msg model =
                         )
                     )
 
+        BrowserGotEntityNeighborsTable id isOutgoing neighbors ->
+            { model
+                | browser = Browser.showEntityNeighbors id isOutgoing neighbors model.browser
+            }
+                |> n
+
         BrowserGotEntityAddresses entityId addresses ->
             let
                 added =
@@ -682,6 +690,8 @@ update plugins uc msg model =
                           , address = Id.addressId id
                           , isOutgoing = isOutgoing
                           , pagesize = 20
+                          , includeLabels = False
+                          , nextpage = Nothing
                           , toMsg = BrowserGotAddressNeighbors id isOutgoing
                           }
                             |> GetAddressNeighborsEffect
@@ -702,6 +712,12 @@ update plugins uc msg model =
         BrowserGotAddressTxs id data ->
             { model
                 | browser = Browser.showAddressTxs id data model.browser
+            }
+                |> n
+
+        BrowserGotEntityTxs id data ->
+            { model
+                | browser = Browser.showEntityTxs id data model.browser
             }
                 |> n
 
@@ -873,6 +889,14 @@ update plugins uc msg model =
                         }
                   ]
                 )
+
+        UserClickedEntityInNeighborsTable entityId isOutgoing neighbor ->
+            Layer.getEntity entityId model.layers
+                |> Maybe.map
+                    (\anchor ->
+                        handleEntityNeighbors uc anchor isOutgoing [ neighbor ] model
+                    )
+                |> Maybe.withDefault (n model)
 
         NoOp ->
             n model
@@ -1168,7 +1192,6 @@ addEntityLinks anchor isOutgoing neighbors model =
         linkData =
             neighbors
                 |> List.map (mapFirst Link.fromNeighbor)
-                |> Debug.log "linkData"
 
         layers =
             if isOutgoing then
