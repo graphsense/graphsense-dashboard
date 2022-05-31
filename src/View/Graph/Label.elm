@@ -24,8 +24,7 @@ label vc gc title =
 
         height =
             labelHeight
-                * 1.3
-                * (if ll > gc.maxLettersPerLabelRow then
+                * (if List.length spl > 1 then
                     0.5
 
                    else
@@ -36,7 +35,7 @@ label vc gc title =
             split gc.maxLettersPerLabelRow lbl
 
         dy =
-            toFloat (List.length spl - 1) * labelHeight / 2.5 |> negate
+            toFloat (List.length spl - 1) * height / 2.5 |> negate
     in
     spl
         |> List.indexedMap
@@ -50,6 +49,7 @@ label vc gc title =
             )
         |> Svg.text_
             [ Util.translate 0 dy |> Svg.transform
+            , css [ px height |> Css.fontSize ]
             ]
 
 

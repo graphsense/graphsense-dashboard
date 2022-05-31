@@ -422,7 +422,23 @@ update plugins uc msg model =
                         )
 
                     else
-                        n model
+                        ( model
+                        , Route.entityRoute
+                            { currency = Id.currency id
+                            , entity = Id.entityId id
+                            , table =
+                                (if isOutgoing then
+                                    Route.EntityOutgoingNeighborsTable
+
+                                 else
+                                    Route.EntityIncomingNeighborsTable
+                                )
+                                    |> Just
+                            , layer = Id.layer id |> Just
+                            }
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                        )
 
         BrowserGotAddress address ->
             let
@@ -699,7 +715,23 @@ update plugins uc msg model =
                         )
 
                     else
-                        n model
+                        ( model
+                        , Route.addressRoute
+                            { currency = Id.currency id
+                            , address = Id.addressId id
+                            , table =
+                                (if isOutgoing then
+                                    Route.AddressOutgoingNeighborsTable
+
+                                 else
+                                    Route.AddressIncomingNeighborsTable
+                                )
+                                    |> Just
+                            , layer = Id.layer id |> Just
+                            }
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                        )
 
         BrowserGotNow time ->
             { model

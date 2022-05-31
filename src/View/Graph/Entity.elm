@@ -9,6 +9,7 @@ import Dict
 import Init.Graph.Id as Id
 import Json.Decode
 import Log
+import Maybe.Extra
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
@@ -156,7 +157,8 @@ label vc gc ent =
         [ Css.entityLabel vc |> css
         , Graph.padding
             + labelHeight
-            |> translate (Graph.padding * 3)
+            / 2
+            |> translate (Graph.padding * 2.5)
             |> transform
         ]
         [ getLabel vc gc ent
@@ -166,7 +168,16 @@ label vc gc ent =
 
 getLabel : Config -> Graph.Config -> Entity -> String
 getLabel vc gc ent =
-    ent.entity.entity |> String.fromInt
+    ent.entity.bestAddressTag
+        |> Maybe.andThen
+            (\tag ->
+                if String.isEmpty tag.label then
+                    tag.category
+
+                else
+                    Just tag.label
+            )
+        |> Maybe.withDefault ""
 
 
 flags : Config -> Graph.Config -> Entity -> Svg Msg
@@ -185,12 +196,12 @@ currency : Config -> Graph.Config -> Entity -> Svg Msg
 currency vc gc ent =
     g
         [ Css.entityCurrency vc |> css
-        , (Graph.padding / 2 + labelHeight / 2)
-            |> translate (Graph.padding + expandHandleWidth)
+        , (Graph.padding + labelHeight / 3.5)
+            |> translate (Entity.getWidth ent - Graph.padding - expandHandleWidth)
             |> transform
         ]
         [ text_
-            [ textAnchor "start"
+            [ textAnchor "end"
             ]
             [ text (String.toUpper ent.entity.currency) ]
         ]

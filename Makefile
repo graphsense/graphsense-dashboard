@@ -12,7 +12,7 @@ watch:
 
 dev: $(API_ELM) $(wildcard src/**)
 	make setem
-	npx elm-test-rs --watch 
+	npx elm-test-rs --watch tests/Graph/View/TestLabel.elm
 
 $(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	make openapi

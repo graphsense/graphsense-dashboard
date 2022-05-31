@@ -534,6 +534,11 @@ s_changed value__ record__ =
     { record__ | changed = value__ }
 
 
+s_charCount : a -> { b | charCount : a } -> { b | charCount : a }
+s_charCount value__ record__ =
+    { record__ | charCount = value__ }
+
+
 s_charsProcessed : a -> { b | charsProcessed : a } -> { b | charsProcessed : a }
 s_charsProcessed value__ record__ =
     { record__ | charsProcessed = value__ }
@@ -1569,6 +1574,11 @@ s_hue value__ record__ =
     { record__ | hue = value__ }
 
 
+s_i : a -> { b | i : a } -> { b | i : a }
+s_i value__ record__ =
+    { record__ | i = value__ }
+
+
 s_icon : a -> { b | icon : a } -> { b | icon : a }
 s_icon value__ record__ =
     { record__ | icon = value__ }
@@ -1637,6 +1647,11 @@ s_inSomeYears value__ record__ =
 s_in_ : a -> { b | in_ : a } -> { b | in_ : a }
 s_in_ value__ record__ =
     { record__ | in_ = value__ }
+
+
+s_includeLabels : a -> { b | includeLabels : a } -> { b | includeLabels : a }
+s_includeLabels value__ record__ =
+    { record__ | includeLabels = value__ }
 
 
 s_incoming : a -> { b | incoming : a } -> { b | incoming : a }

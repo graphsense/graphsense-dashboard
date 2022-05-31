@@ -36,7 +36,7 @@ padding =
 
 labelHeight : Float
 labelHeight =
-    20
+    18
 
 
 addressesCountHeight : Float
@@ -105,6 +105,6 @@ default : Config
 default =
     { addressLabelType = ID
     , txLabelType = Value
-    , maxLettersPerLabelRow = 12
+    , maxLettersPerLabelRow = 19
     , colors = Dict.empty
     }
