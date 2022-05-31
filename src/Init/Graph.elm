@@ -22,5 +22,4 @@ init plugins now =
     , selected = SelectedNone
     , hovered = HoveredNone
     , contextMenu = Nothing
-    , plugins = Plugin.initGraph plugins
     }

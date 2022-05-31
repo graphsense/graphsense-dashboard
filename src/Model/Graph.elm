@@ -26,7 +26,6 @@ type alias Model =
     , selected : Selected
     , hovered : Hovered
     , contextMenu : Maybe ContextMenu.Model
-    , plugins : PluginStates
     }
 
 

@@ -40,32 +40,32 @@ import View.Graph.Transform as Transform
 import View.Locale as Locale
 
 
-view : Plugins -> Config -> Model -> Html Msg
-view plugins vc model =
+view : Plugins -> PluginStates -> Config -> Model -> Html Msg
+view plugins states vc model =
     section
         [ Css.root vc |> Html.css
         ]
-        [ Navbar.navbar plugins vc model
-        , graph plugins vc model.config model
+        [ Navbar.navbar plugins states vc model
+        , graph plugins states vc model.config model
         ]
 
 
-graph : Plugins -> Config -> Graph.Config -> Model -> Html Msg
-graph plugins vc gc model =
+graph : Plugins -> PluginStates -> Config -> Graph.Config -> Model -> Html Msg
+graph plugins states vc gc model =
     Html.section
         [ Css.graphRoot vc |> Html.css
         , Html.id "graph"
         ]
-        [ browser plugins vc gc model.plugins model.browser
+        [ browser plugins states vc gc model.browser
         , model.size
-            |> Maybe.map (graphSvg plugins vc gc model)
+            |> Maybe.map (graphSvg plugins states vc gc model)
             |> Maybe.withDefault none
-        , model.contextMenu |> Maybe.map (contextMenu plugins vc model) |> Maybe.withDefault none
+        , model.contextMenu |> Maybe.map (contextMenu plugins states vc model) |> Maybe.withDefault none
         ]
 
 
-graphSvg : Plugins -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
-graphSvg plugins vc gc model size =
+graphSvg : Plugins -> PluginStates -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
+graphSvg plugins states vc gc model size =
     let
         dim =
             { width = size.x, height = size.y }
@@ -260,8 +260,8 @@ arrowMarkers vc gc =
         |> defs []
 
 
-contextMenu : Plugins -> Config -> Model -> ContextMenu.Model -> Html Msg
-contextMenu plugins vc model cm =
+contextMenu : Plugins -> PluginStates -> Config -> Model -> ContextMenu.Model -> Html Msg
+contextMenu plugins states vc model cm =
     let
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
@@ -273,7 +273,7 @@ contextMenu plugins vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
-                ++ Plugin.View.Graph.Address.contextMenu plugins vc model address
+                ++ Plugin.View.Graph.Address.contextMenu plugins states vc model address
 
         ContextMenu.Entity entity ->
             [ UserClickedRemoveEntity entity.id

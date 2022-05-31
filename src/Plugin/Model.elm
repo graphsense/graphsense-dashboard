@@ -23,4 +23,4 @@ type Context
 type OutMsg msg
     = ShowBrowser
     | UpdateAddresses Address msg
-    | PushUrl String
+    | PushGraphUrl String

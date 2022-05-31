@@ -43,6 +43,7 @@ body plugins vc model =
         [ Css.body vc |> css
         ]
         ([ Header.header
+            plugins
             vc
             { search = model.search
             , user = model.user

@@ -760,23 +760,8 @@ update plugins uc msg model =
                 |> n
 
         PluginMsg pid msgValue ->
-            let
-                pc =
-                    { toUrl =
-                        pair pid
-                            >> Route.pluginRoute
-                            >> R.graphRoute
-                            >> toUrl
-                    }
-
-                ( new, outMsg, cmd ) =
-                    Plugin.update pc pid plugins model.plugins msgValue (.graph >> .model)
-            in
-            { model
-                | plugins = new
-            }
-                |> updateByPluginOutMsg plugins pid outMsg
-                |> mapSecond ((++) (List.map PluginEffect cmd))
+            -- handled in src/Update.elm
+            n model
 
         {- case context of
                  Plugin.Model ->
@@ -939,59 +924,6 @@ hideContextmenu model =
     n { model | contextMenu = Nothing }
 
 
-updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model -> ( Model, List Effect )
-updateByPluginOutMsg plugins pid outMsgs model =
-    outMsgs
-        |> List.foldl
-            (\msg ( mo, eff ) ->
-                case Debug.log "outMsg" msg of
-                    Plugin.ShowBrowser ->
-                        ( { model
-                            | browser = Browser.showPlugin pid model.browser
-                          }
-                        , eff
-                        )
-
-                    Plugin.UpdateAddresses id msgValue ->
-                        let
-                            layers =
-                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) model.layers
-                        in
-                        ( { model
-                            | layers = layers
-                            , browser =
-                                case model.browser.type_ of
-                                    Browser.Address (Browser.Loaded ad) table ->
-                                        if ad.address.currency == id.currency && ad.address.address == id.address then
-                                            model.browser
-                                                |> s_type_
-                                                    (Layer.getAddress ad.id layers
-                                                        |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
-                                                        |> Maybe.withDefault model.browser.type_
-                                                    )
-
-                                        else
-                                            model.browser
-
-                                    _ ->
-                                        model.browser
-                          }
-                        , eff
-                        )
-
-                    Plugin.PushUrl url ->
-                        ( model
-                        , url
-                            |> pair pid
-                            |> Route.pluginRoute
-                            |> NavPushRouteEffect
-                            |> List.singleton
-                            |> (++) eff
-                        )
-            )
-            ( model, [] )
-
-
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
     case route of
@@ -1090,15 +1022,7 @@ updateByRoute plugins route model =
             n model
 
         Route.Plugin ( pid, value ) ->
-            let
-                ( new, outMsg, cmd ) =
-                    Plugin.updateByRoute pid plugins model.plugins value
-            in
-            { model
-                | plugins = new
-            }
-                |> updateByPluginOutMsg plugins pid outMsg
-                |> mapSecond ((++) (List.map PluginEffect cmd))
+            n model
 
 
 updateSize : Int -> Int -> Model -> Model

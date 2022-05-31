@@ -12,7 +12,7 @@ import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (..)
 import Plugin.Model as Plugin exposing (..)
 import Route exposing (toUrl)
-import Route.Graph as Route
+import Route.Graph as R
 import Tuple exposing (..)
 
 
@@ -22,7 +22,7 @@ browser plugins vc pid states =
         pc =
             { toUrl =
                 pair pid
-                    >> Route.pluginRoute
+                    >> R.pluginRoute
                     >> Route.graphRoute
                     >> toUrl
             }

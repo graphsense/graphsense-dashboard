@@ -27,7 +27,7 @@ main : Program Flags (Model Nav.Key) Msg
 main =
     let
         performEffect ( model, effects ) =
-            ( model, List.map (perform model.key model.user.apiKey) effects |> Cmd.batch )
+            ( model, List.map (perform plugins model.key model.user.apiKey) effects |> Cmd.batch )
 
         uc =
             { defaultColor = config.theme.graph.defaultColor

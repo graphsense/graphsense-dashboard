@@ -14,5 +14,5 @@ outMsg encoder ms =
             encoder m
                 |> UpdateAddresses a
 
-        PushUrl url ->
-            PushUrl url
+        PushGraphUrl url ->
+            PushGraphUrl url

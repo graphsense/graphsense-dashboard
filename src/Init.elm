@@ -39,7 +39,7 @@ init plugins flags url key =
       , width = flags.width
       , height = flags.height
       , error = ""
-      , plugins = Dict.empty
+      , plugins = Plugin.init plugins
       }
     , List.map LocaleEffect localeEffect
     )

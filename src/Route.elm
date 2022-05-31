@@ -1,4 +1,4 @@
-module Route exposing (Route(..), graphRoute, graphSegment, parse, toUrl)
+module Route exposing (Route(..), graphRoute, graphSegment, parse, pluginRoute, toUrl)
 
 import List.Extra
 import Plugin exposing (Plugins)
@@ -17,6 +17,7 @@ type alias Config =
 type Route
     = Graph Graph.Route
     | Stats
+    | Plugin ( String, String )
 
 
 graphSegment : String
@@ -42,6 +43,11 @@ graphRoute =
     Graph
 
 
+pluginRoute : ( String, String ) -> Route
+pluginRoute =
+    Plugin
+
+
 toUrl : Route -> String
 toUrl route =
     case route of
@@ -50,3 +56,6 @@ toUrl route =
 
         Stats ->
             absolute [] []
+
+        Plugin ( pid, _ ) ->
+            absolute [ pid ] []

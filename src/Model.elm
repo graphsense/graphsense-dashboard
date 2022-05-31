@@ -66,6 +66,7 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
+    | PluginMsg String Json.Encode.Value
 
 
 type RequestLimit
@@ -98,6 +99,7 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | PluginEffect ( String, Cmd Json.Encode.Value )
     | PortsConsoleEffect String
 
 

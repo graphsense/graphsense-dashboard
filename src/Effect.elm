@@ -14,6 +14,7 @@ import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Plugin exposing (Plugins)
+import Plugin.Effect
 import Ports
 import Route
 import Task
@@ -24,8 +25,8 @@ n m =
     ( m, [] )
 
 
-perform : Nav.Key -> String -> Effect -> Cmd Msg
-perform key apiKey effect =
+perform : Plugins -> Nav.Key -> String -> Effect -> Cmd Msg
+perform plugins key apiKey effect =
     case effect of
         NavLoadEffect url ->
             Nav.load url
@@ -123,9 +124,12 @@ perform key apiKey effect =
                         |> Cmd.map GraphMsg
 
         SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
-            Api.Request.General.search query currency limit
+            (Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
                 |> send apiKey effect (toMsg >> SearchMsg)
+            )
+                :: Plugin.Effect.search plugins query
+                |> Cmd.batch
 
         SearchEffect Search.CancelEffect ->
             Http.cancel "search"
@@ -137,6 +141,10 @@ perform key apiKey effect =
 
         PortsConsoleEffect msg ->
             Ports.console msg
+
+        PluginEffect ( pid, cmd ) ->
+            cmd
+                |> Cmd.map (PluginMsg pid)
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

@@ -9,13 +9,13 @@ import Plugin as Plugin exposing (..)
 import Plugin.Model as Plugin exposing (..)
 
 
-left : Plugins -> View.Config -> Graph.Model -> List (Html Msg)
-left plugins vc graph =
+left : Plugins -> PluginStates -> View.Config -> Graph.Model -> List (Html Msg)
+left plugins states vc graph =
     plugins
         |> Dict.toList
         |> List.filterMap
             (\( pid, plugin ) ->
-                Dict.get pid graph.plugins
+                Dict.get pid states
                     |> plugin.view.graph.navbar.left vc
                     |> Maybe.map (Html.map (PluginMsg pid))
             )

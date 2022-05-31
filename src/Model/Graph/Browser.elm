@@ -2,6 +2,7 @@ module Model.Graph.Browser exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import Html.Styled exposing (Html)
 import Json.Encode exposing (Value)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
@@ -36,7 +37,8 @@ type Value msg
     | Usage Time.Posix Int
     | Duration Int
     | Value String Api.Data.Values
-    | Input (String -> msg) String
+    | Input (String -> msg) msg String
+    | Html (Html msg)
     | LoadingValue
 
 

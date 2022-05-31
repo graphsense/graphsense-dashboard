@@ -36,8 +36,8 @@ import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Locale as Locale
 
 
-browser : Plugins -> View.Config -> Graph.Config -> PluginStates -> Browser.Model -> Html Msg
-browser plugins vc gc states model =
+browser : Plugins -> PluginStates -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
+browser plugins states vc gc model =
     div
         [ Css.root vc |> css
         ]
@@ -127,10 +127,14 @@ browseValue vc value =
         String str ->
             text str
 
-        Input msg current ->
+        Html html ->
+            html
+
+        Input msg blur current ->
             input
                 [ Html.Styled.Attributes.value current
                 , onInput msg
+                , onBlur blur
                 , CssView.input vc |> css
                 ]
                 []

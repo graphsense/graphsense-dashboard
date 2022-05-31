@@ -41,13 +41,13 @@ properties plugins vc states =
         |> List.concat
 
 
-contextMenu : Plugins -> View.Config -> Model -> Address -> List (Html Msg)
-contextMenu plugins vc model address =
+contextMenu : Plugins -> PluginStates -> View.Config -> Model -> Address -> List (Html Msg)
+contextMenu plugins states vc model address =
     plugins
         |> Dict.toList
         |> List.filterMap
             (\( pid, plugin ) ->
-                Dict.get pid model.plugins
+                Dict.get pid states
                     |> Maybe.map
                         (\modelState ->
                             Dict.get pid address.plugins

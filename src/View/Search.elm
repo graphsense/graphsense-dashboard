@@ -13,6 +13,8 @@ import Html.Styled.Events exposing (onClick, onInput)
 import Init.Search as Search
 import Model.Search exposing (Model)
 import Msg.Search exposing (Msg(..))
+import Plugin exposing (Plugins)
+import Plugin.View.Search
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
 import Route.Graph as Route exposing (Route)
@@ -26,8 +28,8 @@ type alias SearchConfig =
     }
 
 
-search : Config -> SearchConfig -> Model -> Html Msg
-search vc sc model =
+search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+search plugins vc sc model =
     Html.Styled.form
         [ Css.form vc |> css
         ]
@@ -39,7 +41,11 @@ search vc sc model =
                 , autocomplete False
                 , spellcheck False
                 , Locale.string vc.locale "The search" |> title
-                , Locale.string vc.locale "Addresses, transaction, label, block" |> placeholder
+                , [ "Addresses", "transaction", "label", "block" ]
+                    |> List.map (Locale.string vc.locale)
+                    |> (\st -> st ++ Plugin.View.Search.placeholder plugins vc)
+                    |> String.join ", "
+                    |> placeholder
                 , onInput UserInputsSearch
                 , value model.input
                 ]

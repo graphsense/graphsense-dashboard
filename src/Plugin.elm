@@ -31,6 +31,9 @@ type alias Plugin =
                 }
             , browser : Config -> View.Config -> Value -> List (Html Value)
             }
+        , search :
+            { placeholder : View.Config -> List String
+            }
         }
     , update : UpdateModel
     , updateByRoute : UpdateByRoute
@@ -39,6 +42,10 @@ type alias Plugin =
             { model : Value
             , address : Value
             }
+        , model : Value
+        }
+    , effect :
+        { search : String -> Cmd Value
         }
     }
 
@@ -47,7 +54,6 @@ type alias UpdateModel =
     { model : Update
     , graph :
         { address : UpdateAddress
-        , model : Update
         }
     }
 
@@ -174,12 +180,12 @@ updateByRoute pid plugins states route =
         |> Maybe.withDefault ( states, [], [] )
 
 
-initGraph : Plugins -> PluginStates
-initGraph plugins =
+init : Plugins -> PluginStates
+init plugins =
     plugins
         |> Dict.map
             (\pid plugin ->
-                plugin.init.graph.model
+                plugin.init.model
             )
 
 

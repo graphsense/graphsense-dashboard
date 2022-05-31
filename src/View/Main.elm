@@ -21,5 +21,5 @@ main_ plugins vc model =
             Stats.stats vc model.stats
 
         Page.Graph ->
-            Graph.view plugins vc model.graph
+            Graph.view plugins model.plugins vc model.graph
                 |> Html.Styled.map GraphMsg

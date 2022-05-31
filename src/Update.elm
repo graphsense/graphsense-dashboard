@@ -8,18 +8,25 @@ import Effect exposing (n)
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Http exposing (Error(..))
+import Json.Encode exposing (Value)
 import Log
 import Model exposing (..)
+import Model.Graph.Browser as Browser
 import Model.Graph.Id as Id
+import Model.Graph.Layer as Layer
 import Msg.Graph as Graph
 import Page
 import Plugin as Plugin exposing (Plugins)
+import Plugin.Model as Plugin
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
+import Route.Graph
 import Tuple exposing (..)
 import Update.Graph as Graph
 import Update.Graph.Adding as Adding
+import Update.Graph.Browser as Browser
+import Update.Graph.Layer as Layer
 import Update.Locale as Locale
 import Update.Search as Search
 import Url exposing (Url)
@@ -186,13 +193,119 @@ update plugins uc msg model =
             )
 
         GraphMsg m ->
+            case m of
+                Graph.PluginMsg pid ms ->
+                    let
+                        pc =
+                            { toUrl =
+                                pair pid
+                                    >> Route.Graph.pluginRoute
+                                    >> Route.graphRoute
+                                    >> Route.toUrl
+                            }
+
+                        ( new, outMsg, cmd ) =
+                            Plugin.update pc pid plugins model.plugins ms .model
+                    in
+                    { model
+                        | plugins = new
+                    }
+                        |> updateByPluginOutMsg plugins pid outMsg
+                        |> mapSecond ((++) (List.map PluginEffect cmd))
+
+                _ ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+                    in
+                    ( { model | graph = graph }
+                    , List.map GraphEffect graphEffects
+                    )
+
+        PluginMsg pid msgValue ->
             let
-                ( graph, graphEffects ) =
-                    Graph.update plugins uc m model.graph
+                pc =
+                    { toUrl =
+                        pair pid
+                            >> Route.pluginRoute
+                            >> Route.toUrl
+                    }
+
+                ( new, outMsg, cmd ) =
+                    Plugin.update pc pid plugins model.plugins msgValue .model
             in
-            ( { model | graph = graph }
-            , List.map GraphEffect graphEffects
+            { model
+                | plugins = new
+            }
+                |> updateByPluginOutMsg plugins pid outMsg
+                |> mapSecond ((++) (List.map PluginEffect cmd))
+
+
+updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model key -> ( Model key, List Effect )
+updateByPluginOutMsg plugins pid outMsgs model =
+    outMsgs
+        |> List.foldl
+            (\msg ( mo, eff ) ->
+                case Debug.log "outMsg" msg of
+                    Plugin.ShowBrowser ->
+                        ( { model
+                            | graph =
+                                model.graph
+                                    |> (\graph ->
+                                            { graph
+                                                | browser = Browser.showPlugin pid graph.browser
+                                            }
+                                       )
+                          }
+                        , eff
+                        )
+
+                    Plugin.UpdateAddresses id msgValue ->
+                        let
+                            layers =
+                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) model.graph.layers
+                        in
+                        ( { model
+                            | graph =
+                                model.graph
+                                    |> (\graph ->
+                                            { graph
+                                                | layers = layers
+                                                , browser =
+                                                    case graph.browser.type_ of
+                                                        Browser.Address (Browser.Loaded ad) table ->
+                                                            if ad.address.currency == id.currency && ad.address.address == id.address then
+                                                                graph.browser
+                                                                    |> s_type_
+                                                                        (Layer.getAddress ad.id layers
+                                                                            |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
+                                                                            |> Maybe.withDefault graph.browser.type_
+                                                                        )
+
+                                                            else
+                                                                graph.browser
+
+                                                        _ ->
+                                                            graph.browser
+                                            }
+                                       )
+                          }
+                        , eff
+                        )
+
+                    Plugin.PushGraphUrl url ->
+                        ( model
+                        , url
+                            |> pair pid
+                            |> Route.Graph.pluginRoute
+                            |> Route.graphRoute
+                            |> Route.toUrl
+                            |> NavPushUrlEffect
+                            |> List.singleton
+                            |> (++) eff
+                        )
             )
+            ( model, [] )
 
 
 updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
@@ -210,17 +323,32 @@ updateByUrl plugins uc url model =
             (\oldRoute route ->
                 case Log.log "route" route of
                     Route.Graph graphRoute ->
-                        let
-                            ( graph, graphEffect ) =
-                                Graph.updateByRoute plugins graphRoute model.graph
-                        in
-                        ( { model
-                            | page = Page.Graph
-                            , graph = graph
-                            , url = url
-                          }
-                        , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
-                        )
+                        case graphRoute of
+                            Route.Graph.Plugin ( pid, value ) ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.updateByRoute pid plugins model.plugins value
+                                in
+                                { model
+                                    | plugins = new
+                                    , page = Page.Graph
+                                    , url = url
+                                }
+                                    |> updateByPluginOutMsg plugins pid outMsg
+                                    |> mapSecond ((++) (List.map PluginEffect cmd))
+
+                            _ ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.updateByRoute plugins graphRoute model.graph
+                                in
+                                ( { model
+                                    | page = Page.Graph
+                                    , graph = graph
+                                    , url = url
+                                  }
+                                , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
+                                )
 
                     _ ->
                         n model
