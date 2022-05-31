@@ -21,6 +21,7 @@ import Msg.Graph exposing (Msg(..))
 import Plugin exposing (Plugins)
 import Plugin.Html
 import Plugin.Model exposing (PluginStates)
+import Plugin.View.Graph.Address
 import Plugin.View.Graph.Browser
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -49,7 +50,7 @@ browser plugins states vc gc model =
                     []
 
                 Browser.Address loadable table ->
-                    browseAddress plugins vc model.now loadable
+                    browseAddress plugins states vc model.now loadable
                         :: (table
                                 |> Maybe.map (browseAddressTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
@@ -227,8 +228,8 @@ browseValue vc value =
             text "loading"
 
 
-browseAddress : Plugins -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
-browseAddress plugins vc now address =
+browseAddress : Plugins -> PluginStates -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress plugins states vc now address =
     (rowsAddress vc now address |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
         ++ (case address of
@@ -236,13 +237,7 @@ browseAddress plugins vc now address =
                     []
 
                 Loaded ad ->
-                    ad.plugins
-                        |> Plugin.Html.iterate plugins
-                            (\plugin state ->
-                                plugin.view.graph.address.properties vc state
-                            )
-                        |> List.intersperse [ rule vc ]
-                        |> List.concat
+                    Plugin.View.Graph.Address.properties plugins states ad.plugins vc
            )
         |> propertyBox vc
 

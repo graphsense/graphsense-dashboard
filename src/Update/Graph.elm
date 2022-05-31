@@ -95,6 +95,7 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
         |> Maybe.map (\a -> selectAddress a Nothing newModel_)
         |> Maybe.withDefault (n newModel_)
         |> mapSecond ((::) getTagsEffect)
+        |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
 addEntity : Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Model -> ( Model, List Effect )
@@ -154,6 +155,9 @@ addEntity uc { entity, incoming, outgoing } model =
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
+        InternalGraphAddedAddresses _ ->
+            n model
+
         BrowserGotSvgElement result ->
             result
                 |> Result.map

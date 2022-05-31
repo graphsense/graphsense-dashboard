@@ -44,6 +44,7 @@ body plugins vc model =
         ]
         ([ Header.header
             plugins
+            model.plugins
             vc
             { search = model.search
             , user = model.user

@@ -59,7 +59,8 @@ resultGroupList vc =
 
 resultLine : Config -> List Style
 resultLine vc =
-    vc.theme.search.resultLine
+    cursor pointer
+        :: vc.theme.search.resultLine
 
 
 resultLineIcon : Config -> List Style

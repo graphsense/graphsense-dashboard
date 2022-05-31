@@ -15,9 +15,11 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Msg.Graph as Graph
+import Msg.Search as Search
 import Page
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
+import Plugin.Update.Graph
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
@@ -184,13 +186,33 @@ update plugins uc msg model =
             )
 
         SearchMsg m ->
-            let
-                ( search, searchEffects ) =
-                    Search.update m model.search
-            in
-            ( { model | search = search }
-            , List.map SearchEffect searchEffects
-            )
+            case m of
+                Search.PluginMsg pid ms ->
+                    let
+                        pc =
+                            { toUrl =
+                                pair pid
+                                    >> Route.pluginRoute
+                                    >> Route.toUrl
+                            }
+
+                        ( new, outMsg, cmd ) =
+                            Plugin.update pc pid plugins model.plugins ms .model
+                    in
+                    { model
+                        | plugins = new
+                    }
+                        |> updateByPluginOutMsg plugins pid outMsg
+                        |> mapSecond ((++) (List.map PluginEffect cmd))
+
+                _ ->
+                    let
+                        ( search, searchEffects ) =
+                            Search.update m model.search
+                    in
+                    ( { model | search = search }
+                    , List.map SearchEffect searchEffects
+                    )
 
         GraphMsg m ->
             case m of
@@ -212,6 +234,17 @@ update plugins uc msg model =
                     }
                         |> updateByPluginOutMsg plugins pid outMsg
                         |> mapSecond ((++) (List.map PluginEffect cmd))
+
+                Graph.InternalGraphAddedAddresses ids ->
+                    let
+                        ( new, outMsg, cmd ) =
+                            Plugin.Update.Graph.addressesAdded plugins model.plugins ids
+                    in
+                    ( { model
+                        | plugins = new
+                      }
+                    , List.map PluginEffect cmd
+                    )
 
                 _ ->
                     let

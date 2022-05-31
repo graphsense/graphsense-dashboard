@@ -8,6 +8,7 @@ import Model.Graph.Address as Address
 import Model.Graph.Id as Id
 import Plugin.Model exposing (..)
 import Regex
+import Set exposing (Set)
 import Svg.Styled as Svg exposing (..)
 import Tuple exposing (..)
 import Url
@@ -24,7 +25,7 @@ type alias Plugin =
             { address :
                 { flags : View.Config -> Value -> List (Svg Value)
                 , contextMenu : View.Config -> Id.AddressId -> Value -> Maybe Value -> List (Html Value)
-                , properties : View.Config -> Value -> List (Html Value)
+                , properties : View.Config -> Value -> Value -> List (Html Value)
                 }
             , navbar :
                 { left : View.Config -> Maybe Value -> Maybe (Html Value)
@@ -33,6 +34,7 @@ type alias Plugin =
             }
         , search :
             { placeholder : View.Config -> List String
+            , resultList : View.Config -> StateValue -> List (Html Value)
             }
         }
     , update : UpdateModel
@@ -54,6 +56,7 @@ type alias UpdateModel =
     { model : Update
     , graph :
         { address : UpdateAddress
+        , addressesAdded : Set Id.AddressId -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
         }
     }
 

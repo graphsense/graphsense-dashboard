@@ -27,14 +27,15 @@ flags plugins vc address =
         |> List.concat
 
 
-properties : Plugins -> View.Config -> PluginStates -> List (Svg Msg)
-properties plugins vc states =
+properties : Plugins -> PluginStates -> PluginStates -> View.Config -> List (Html Msg)
+properties plugins states addressStates vc =
     plugins
         |> Dict.toList
         |> List.map
             (\( pid, plugin ) ->
-                Dict.get pid states
-                    |> Maybe.map (plugin.view.graph.address.properties vc)
+                Maybe.map2 (plugin.view.graph.address.properties vc)
+                    (Dict.get pid states)
+                    (Dict.get pid addressStates)
                     |> Maybe.withDefault []
                     |> List.map (Html.map (PluginMsg pid))
             )

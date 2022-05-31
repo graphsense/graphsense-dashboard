@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (css, id, src)
 import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
 import Plugin exposing (Plugins)
+import Plugin.Model exposing (PluginStates)
 import Ports
 import View.Search as Search
 import View.User as User
@@ -20,14 +21,15 @@ type alias HeaderConfig =
     }
 
 
-header : Plugins -> Config -> HeaderConfig -> Html Msg
-header plugins vc hc =
+header : Plugins -> PluginStates -> Config -> HeaderConfig -> Html Msg
+header plugins states vc hc =
     Html.Styled.header
         [ Css.header vc |> css
         , id "header"
         ]
         [ logo vc
         , Search.search plugins
+            states
             vc
             { latestBlocks = hc.latestBlocks
             }

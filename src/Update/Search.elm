@@ -48,6 +48,10 @@ update msg model =
                 |> n
                 |> maybeTriggerSearch
 
+        PluginMsg pid msgValue ->
+            -- handled in src/Update.elm
+            n model
+
 
 maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
 maybeTriggerSearch ( model, cmd ) =

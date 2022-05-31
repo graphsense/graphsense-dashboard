@@ -10,6 +10,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Transform as Transform
 import Plugin.Model as Plugin
+import Set exposing (Set)
 import Table
 import Time
 
@@ -68,4 +69,5 @@ type Msg
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
+    | InternalGraphAddedAddresses (Set AddressId)
     | NoOp

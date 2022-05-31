@@ -2,6 +2,7 @@ module Msg.Search exposing (Msg(..))
 
 import Api.Data
 import Http
+import Json.Encode
 
 
 type Msg
@@ -9,3 +10,4 @@ type Msg
     | UserInputsSearch String
     | UserClicksResultLine
     | RuntimeBounced
+    | PluginMsg String Json.Encode.Value

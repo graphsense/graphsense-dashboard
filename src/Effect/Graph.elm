@@ -6,10 +6,12 @@ import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
 import Model.Entity as E
+import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model as Plugin
 import Route.Graph exposing (Route)
+import Set exposing (Set)
 import Task
 
 
@@ -87,6 +89,7 @@ type Effect
         , toMsg : Api.Data.AddressTags -> Msg
         }
     | PluginEffect ( String, Cmd Json.Encode.Value )
+    | InternalGraphAddedAddressesEffect (Set AddressId)
 
 
 perform : Effect -> Cmd Msg
@@ -142,6 +145,10 @@ perform eff =
 
         -- managed in Effect.elm
         GetEntityAddressTagsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        InternalGraphAddedAddressesEffect _ ->
             Cmd.none
 
         PluginEffect ( pid, cmd ) ->

@@ -395,6 +395,9 @@ theme =
                 |> s_propertyBoxTable
                     [ letterSpacingWide
                     ]
+                |> s_propertyBoxRow
+                    [ scaled 1 |> rem |> paddingY
+                    ]
                 |> s_propertyBoxKey
                     [ fontWeight (int 500)
                     , scaled 2 |> rem |> paddingRight

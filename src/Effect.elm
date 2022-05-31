@@ -119,6 +119,10 @@ perform plugins key apiKey effect =
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
+                Graph.InternalGraphAddedAddressesEffect ids ->
+                    Task.succeed ids
+                        |> Task.perform (Graph.InternalGraphAddedAddresses >> GraphMsg)
+
                 Graph.PluginEffect _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg

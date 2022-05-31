@@ -14,6 +14,7 @@ import Init.Search as Search
 import Model.Search exposing (Model)
 import Msg.Search exposing (Msg(..))
 import Plugin exposing (Plugins)
+import Plugin.Model exposing (PluginStates)
 import Plugin.View.Search
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
@@ -28,8 +29,8 @@ type alias SearchConfig =
     }
 
 
-search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
-search plugins vc sc model =
+search : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> Html Msg
+search plugins states vc sc model =
     Html.Styled.form
         [ Css.form vc |> css
         ]
@@ -50,7 +51,7 @@ search plugins vc sc model =
                 , value model.input
                 ]
                 []
-            , searchResult vc sc model
+            , searchResult plugins states vc sc model
             ]
         , button
             [ Css.primary vc |> css
@@ -61,11 +62,11 @@ search plugins vc sc model =
         ]
 
 
-searchResult : Config -> SearchConfig -> Model -> Html Msg
-searchResult vc sc model =
+searchResult : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> Html Msg
+searchResult plugins states vc sc model =
     let
         rl =
-            resultList vc sc model
+            resultList plugins states vc sc model
     in
     if String.length model.input < 4 then
         span [] []
@@ -74,6 +75,7 @@ searchResult vc sc model =
         div
             [ id "search-result"
             , css (Css.result vc)
+            , onClick UserClicksResultLine
             ]
             ((if model.loading then
                 [ loadingSpinner vc Css.loadingSpinner ]
@@ -100,13 +102,13 @@ filterByPrefix input result =
     }
 
 
-resultList : Config -> SearchConfig -> Model -> List (Html Msg)
-resultList vc sc { found, input } =
+resultList : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> List (Html Msg)
+resultList plugins states vc sc { found, input } =
     let
         filtered =
             Maybe.map (filterByPrefix input) found
     in
-    List.map (currencyToResult vc input filtered) sc.latestBlocks
+    (List.map (currencyToResult vc input filtered) sc.latestBlocks
         ++ [ { title = Locale.string vc.locale "Labels"
              , badge =
                 Maybe.map .labels found
@@ -133,6 +135,8 @@ resultList vc sc { found, input } =
                         ]
                         |> Just
             )
+    )
+        ++ Plugin.View.Search.resultList plugins states vc
 
 
 resultLineToHtml : Config -> String -> ResultLine -> Html Msg
@@ -161,7 +165,6 @@ resultLineToHtml vc title resultLine =
     a
         [ Route.graphRoute route |> toUrl |> href
         , Css.resultLine vc |> css
-        , onClick UserClicksResultLine
         ]
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled
