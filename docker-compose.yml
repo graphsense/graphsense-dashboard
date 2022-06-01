@@ -10,8 +10,8 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 8000:8000
+      - ${DASHBOARD_PORT}:8000
     environment:
-      REST_ENDPOINT: "${REST_URL}"
+      REST_URL: "${REST_URL}"
     command: ["nginx", "-g", "daemon off;"]
     restart: always

@@ -12,5 +12,5 @@ test/*.gs
 elm-stuff
 .parcel-cache
 .venv
-plugins
+plugins/*
 config/Config.elm
