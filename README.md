@@ -51,7 +51,7 @@ Copy `docker/env.template` to `.env`:
 Edit the file `.env` and set the URL of the [graphsense-REST][graphsense-rest]
 service, e.g.:
 
-    REST_ENDPOINT="https://example.com:9000"
+    REST_URL="https://example.com:9000"
 
 ### Usage
 
