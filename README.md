@@ -2,6 +2,10 @@
 
 A web dashboard for interactive cryptocurrency analysis.
 
+## Configuration
+
+Install plugins and define custom theme in `config/Config.elm`. Use `config/Config.elm.tmp` as a template.
+
 ## Development setup
 
 You need to have [NodeJS][nodejs] installed. It comes with [NPM][npm],

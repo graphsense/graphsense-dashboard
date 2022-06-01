@@ -2,14 +2,12 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import CaseMgm
 import Config exposing (config)
 import Dict
 import Effect exposing (perform)
 import Init exposing (init)
 import Model exposing (Flags, Model, Msg(..))
 import Model.Locale as Locale
-import Plugin as Plugin exposing (Plugins)
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
@@ -17,10 +15,9 @@ import View exposing (view)
 import View.Locale as Locale
 
 
-plugins : Plugins
 plugins =
     Dict.fromList
-        [ ( "casemgm", CaseMgm.plugin ) ]
+        Config.plugins
 
 
 main : Program Flags (Model Nav.Key) Msg

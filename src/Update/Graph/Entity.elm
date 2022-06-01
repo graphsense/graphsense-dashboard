@@ -129,7 +129,6 @@ toRightBound { right } entity x =
                     - ((Entity.getX entity + Entity.getWidth entity + x)
                         - r
                         |> max 0
-                        |> Debug.log "adapt"
                       )
             )
         |> Maybe.withDefault x
@@ -140,7 +139,7 @@ move bb vector entity =
     let
         v =
             { x =
-                toLeftBound (Debug.log "bb" bb) entity vector.x
+                toLeftBound bb entity vector.x
                     |> toRightBound bb entity
             , y = vector.y
             }

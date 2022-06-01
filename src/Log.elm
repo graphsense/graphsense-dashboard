@@ -9,10 +9,11 @@ log str a =
 
 truncate : String -> a -> a
 truncate str a =
-    let
-        _ =
-            Debug.toString a
-                |> String.left 100
-                |> Debug.log str
-    in
+    {- let
+           _ =
+               Debug.toString a
+                   |> String.left 100
+                   |> Debug.log str
+       in
+    -}
     a

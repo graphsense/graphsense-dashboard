@@ -6,6 +6,7 @@ import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Json.Encode
+import Log
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
@@ -147,7 +148,7 @@ createAddressTable route t currency address =
 
 showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
 showEntityTable route model =
-    case model.type_ |> Debug.log "showEntityTable" of
+    case model.type_ |> Log.log "showEntityTable" of
         Entity loadable t ->
             let
                 ( currency, entity ) =
@@ -159,7 +160,7 @@ showEntityTable route model =
                             ( a.entity.currency, a.entity.entity )
             in
             createEntityTable route t currency entity
-                |> Debug.log "table"
+                |> Log.log "table"
                 |> mapFirst (Entity loadable)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })

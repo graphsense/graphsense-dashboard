@@ -73,8 +73,7 @@ theme : Theme
 theme =
     Theme.default
         |> s_scaled scaled
-        |> s_logo "/themes/Iknaio/logo.svg"
-        |> s_loadingSpinnerUrl "/themes/Iknaio/loading.gif"
+        |> s_loadingSpinnerUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/loading.gif]"
         |> s_body
             [ color <| toCssColor colors.brandText
             , fontFamilies [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
@@ -108,6 +107,7 @@ theme =
                 ]
             ]
         |> s_loadingSpinner [ loadingSpinner ]
+        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
         |> s_stats
             (Stats.default
                 |> s_root

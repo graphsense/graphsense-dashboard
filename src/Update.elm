@@ -189,15 +189,8 @@ update plugins uc msg model =
             case m of
                 Search.PluginMsg pid ms ->
                     let
-                        pc =
-                            { toUrl =
-                                pair pid
-                                    >> Route.pluginRoute
-                                    >> Route.toUrl
-                            }
-
                         ( new, outMsg, cmd ) =
-                            Plugin.update pc pid plugins model.plugins ms .model
+                            Plugin.update pid plugins model.plugins ms .model
                     in
                     { model
                         | plugins = new
@@ -218,16 +211,8 @@ update plugins uc msg model =
             case m of
                 Graph.PluginMsg pid ms ->
                     let
-                        pc =
-                            { toUrl =
-                                pair pid
-                                    >> Route.Graph.pluginRoute
-                                    >> Route.graphRoute
-                                    >> Route.toUrl
-                            }
-
                         ( new, outMsg, cmd ) =
-                            Plugin.update pc pid plugins model.plugins ms .model
+                            Plugin.update pid plugins model.plugins ms .model
                     in
                     { model
                         | plugins = new
@@ -257,15 +242,8 @@ update plugins uc msg model =
 
         PluginMsg pid msgValue ->
             let
-                pc =
-                    { toUrl =
-                        pair pid
-                            >> Route.pluginRoute
-                            >> Route.toUrl
-                    }
-
                 ( new, outMsg, cmd ) =
-                    Plugin.update pc pid plugins model.plugins msgValue .model
+                    Plugin.update pid plugins model.plugins msgValue .model
             in
             { model
                 | plugins = new
@@ -279,7 +257,7 @@ updateByPluginOutMsg plugins pid outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
-                case Debug.log "outMsg" msg of
+                case Log.log "outMsg" msg of
                     Plugin.ShowBrowser ->
                         ( { model
                             | graph =

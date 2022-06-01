@@ -13,3 +13,4 @@ elm-stuff
 .parcel-cache
 .venv
 plugins
+config/Config.elm

@@ -66,7 +66,7 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
             { newModel
                 | layers =
                     added.layers
-                        |> Layer.syncLinks (Debug.log "addAddress.repositioned" added.repositioned)
+                        |> Layer.syncLinks added.repositioned
                 , config =
                     newModel.config
                         |> s_colors added.colors
@@ -373,7 +373,6 @@ update plugins uc msg model =
 
         UserClickedAddressesExpand id ->
             Layer.getEntity id model.layers
-                |> Debug.log "entity"
                 |> Maybe.map
                     (\entity ->
                         if entity.entity.noAddresses < maxExpandableAddresses then
@@ -525,7 +524,7 @@ update plugins uc msg model =
                         neighbors.neighbors
                         model.adding
             in
-            case Adding.readyEntity e adding |> Debug.log "Adding.readyEntity" of
+            case Adding.readyEntity e adding of
                 Nothing ->
                     -- try to add the egonet anyways
                     { model
@@ -1051,20 +1050,15 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
     let
         acc =
             Layer.addEntityNeighbors uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
-
-        _ =
-            Debug.log "syncLinks.addEntityNeighbors.repos" acc.repositioned
     in
     Set.toList acc.new
         |> List.head
-        |> Debug.log "syncLinks.addAddressNeighborsWithEntity.newEntity"
         |> Maybe.map
             (\new ->
                 let
                     _ =
                         Layer.getEntity new acc.layers
                             |> Maybe.map Model.Graph.Entity.getY
-                            |> Debug.log "syncLinks.newEntity.y"
 
                     added =
                         neighbors
@@ -1210,11 +1204,6 @@ addEntityEgonet currency entity isOutgoing neighbors model =
 
         anchors =
             Layer.getEntities currency entity model.layers
-
-        _ =
-            anchors
-                |> List.map .id
-                |> Debug.log "addEntityEgonet.anchors"
     in
     List.foldl
         (\anchor model_ ->

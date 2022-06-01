@@ -4,6 +4,7 @@ import Config.View as View
 import Dict exposing (Dict)
 import Html.Styled as Html exposing (..)
 import Json.Encode exposing (Value)
+import Log
 import Model.Graph.Address as Address
 import Model.Graph.Id as Id
 import Plugin.Model exposing (..)
@@ -66,7 +67,7 @@ type alias UpdateAddress =
 
 
 type alias Update =
-    Config -> MsgValue -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+    MsgValue -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
 
 
 type alias UpdateByRoute =
@@ -118,19 +119,18 @@ iterate plugins fun states =
 
 
 update :
-    Config
-    -> String
+    String
     -> Dict String Plugin
     -> Dict String StateValue
     -> MsgValue
     -> (UpdateModel -> Update)
     -> ( Dict String StateValue, List (OutMsg Value), List ( String, Cmd Value ) )
-update pc pid plugins states msg fun =
+update pid plugins states msg fun =
     Maybe.map2
         (\plugin state ->
             let
                 ( newState, outMsg, cmd ) =
-                    fun plugin.update pc msg state
+                    fun plugin.update msg state
             in
             ( Dict.insert pid newState states
             , outMsg
@@ -150,7 +150,7 @@ updateAddress pid plugins msg address =
         )
         (Dict.get pid plugins)
         (Dict.get pid address.plugins)
-        |> Debug.log "Plugin.updateAddress"
+        |> Log.log "Plugin.updateAddress"
         |> Maybe.map
             (\newState ->
                 { address
@@ -198,7 +198,7 @@ initAddress plugins =
         |> Dict.map
             (\pid plugin ->
                 plugin.init.graph.address
-                    |> Debug.log "initAddress"
+                    |> Log.log "initAddress"
             )
 
 
