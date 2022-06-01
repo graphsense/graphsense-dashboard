@@ -12,6 +12,6 @@ services:
     ports:
       - 8000:8000
     environment:
-      REST_ENDPOINT: "${REST_ENDPOINT}"
+      REST_ENDPOINT: "${REST_URL}"
     command: ["nginx", "-g", "daemon off;"]
     restart: always
