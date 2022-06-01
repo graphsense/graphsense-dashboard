@@ -198,6 +198,7 @@ initAddress plugins =
         |> Dict.map
             (\pid plugin ->
                 plugin.init.graph.address
+                    |> Debug.log "initAddress"
             )
 
 

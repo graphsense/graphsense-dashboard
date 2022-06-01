@@ -670,6 +670,7 @@ update plugins uc msg model =
                             }
                     )
             )
+                |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
         BrowserGotEntityAddressesForTable id addresses ->
             { model
@@ -857,6 +858,7 @@ update plugins uc msg model =
                 }
                 |> List.singleton
             )
+                |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
         UserClickedAddressInNeighborsTable addressId isOutgoing neighbor ->
             let
@@ -910,6 +912,7 @@ update plugins uc msg model =
                         }
                   ]
                 )
+                    |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
         UserClickedEntityInNeighborsTable entityId isOutgoing neighbor ->
             Layer.getEntity entityId model.layers
@@ -1281,6 +1284,12 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                             , address = neighbor.address.address
                             }
                     }
+            )
+        |> (::)
+            (new
+                |> List.map .id
+                |> Set.fromList
+                |> InternalGraphAddedAddressesEffect
             )
     )
 

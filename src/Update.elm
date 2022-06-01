@@ -283,7 +283,7 @@ updateByPluginOutMsg plugins pid outMsgs model =
                     Plugin.ShowBrowser ->
                         ( { model
                             | graph =
-                                model.graph
+                                mo.graph
                                     |> (\graph ->
                                             { graph
                                                 | browser = Browser.showPlugin pid graph.browser
@@ -296,11 +296,11 @@ updateByPluginOutMsg plugins pid outMsgs model =
                     Plugin.UpdateAddresses id msgValue ->
                         let
                             layers =
-                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) model.graph.layers
+                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) mo.graph.layers
                         in
                         ( { model
                             | graph =
-                                model.graph
+                                mo.graph
                                     |> (\graph ->
                                             { graph
                                                 | layers = layers
@@ -327,7 +327,7 @@ updateByPluginOutMsg plugins pid outMsgs model =
                         )
 
                     Plugin.PushGraphUrl url ->
-                        ( model
+                        ( mo
                         , url
                             |> pair pid
                             |> Route.Graph.pluginRoute
