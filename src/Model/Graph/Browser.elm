@@ -4,6 +4,8 @@ import Api.Data
 import Config.Graph as Graph
 import Html.Styled exposing (Html)
 import Json.Encode exposing (Value)
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
@@ -52,6 +54,34 @@ type alias TableLink =
 type Row r
     = Row ( String, r, Maybe TableLink )
     | Rule
+
+
+loadableAddress : Loadable String Address -> A.Address
+loadableAddress l =
+    case l of
+        Loading curr id ->
+            { currency = curr
+            , address = id
+            }
+
+        Loaded a ->
+            { currency = a.address.currency
+            , address = a.address.address
+            }
+
+
+loadableEntity : Loadable Int Entity -> E.Entity
+loadableEntity l =
+    case l of
+        Loading curr id ->
+            { currency = curr
+            , entity = id
+            }
+
+        Loaded a ->
+            { currency = a.entity.currency
+            , entity = a.entity.entity
+            }
 
 
 loadableAddressCurrency : Loadable id Address -> String

@@ -108,6 +108,16 @@ theme =
             ]
         |> s_loadingSpinner [ loadingSpinner ]
         |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
+        |> s_popup
+            [ scaled 5 |> rem |> padding
+            , backgroundColor <| toCssColor colors.brandWhite
+            , borderColor <| toCssColor colors.greyLight
+            , borderWidth <| px 1
+            , borderRadius <| px 5
+            ]
+        |> s_overlay
+            [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
+            ]
         |> s_stats
             (Stats.default
                 |> s_root
@@ -137,11 +147,11 @@ theme =
                     , currencyPadding / 2 |> scaled |> rem |> borderSpacing
                     ]
                 |> s_tableCellKey
-                    [ int 500 |> fontWeight
+                    [ fontBold
                     , scaled 2 |> rem |> paddingRight
                     ]
                 |> s_tableCellValue
-                    [ fontWeight (int 300)
+                    [ fontNormal
                     ]
                 |> s_currencyBackground
                     [ rgba 0 0 0 0.2 |> color
@@ -248,13 +258,13 @@ theme =
                     [ scaled 3 |> rem |> padding
                     ]
             )
-        |> s_modal
+        |> s_dialog
             (Dialog.default
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
                     ]
                 |> s_heading
-                    [ fontWeight bold
+                    [ fontNormal
                     , scaled 0.1 |> rem |> letterSpacing
                     , scaled 2 |> rem |> paddingBottom
                     , scaled 0.5 |> rem |> paddingTop
@@ -399,12 +409,12 @@ theme =
                     [ scaled 1 |> rem |> paddingY
                     ]
                 |> s_propertyBoxKey
-                    [ fontWeight (int 500)
+                    [ fontBold
                     , scaled 2 |> rem |> paddingRight
                     , scaled 1 |> rem |> paddingBottom
                     ]
                 |> s_propertyBoxValue
-                    [ fontHairline
+                    [ fontNormal
                     ]
                 |> s_frame
                     (\visible ->
@@ -530,6 +540,16 @@ fontHairline =
     fontWeight (int 100)
 
 
+fontNormal : Style
+fontNormal =
+    fontWeight (int 300)
+
+
+fontBold : Style
+fontBold =
+    fontWeight (int 500)
+
+
 currencyPadding : Float
 currencyPadding =
     4
@@ -578,7 +598,8 @@ inputStyle =
         , color <| toCssColor colors.black
         , borderRadiusSm
         , border zero
-        , scaled 0.5 |> rem |> padding
+        , scaled 1 |> rem |> padding
+        , scaled 1 |> rem |> marginBottom
         ]
 
 

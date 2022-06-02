@@ -27,6 +27,8 @@ type alias Theme =
     , link : List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
+    , overlay : List Style
+    , popup : List Style
     , stats : Stats
     , search : Search
     , button : Button
@@ -35,7 +37,7 @@ type alias Theme =
     , contextMenu : ContextMenu
     , table : Table
     , tool : List Style
-    , modal : Dialog
+    , dialog : Dialog
     , user : User
     , hovercard : Hovercard
     , custom : String
@@ -57,12 +59,14 @@ default =
     , link = []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""
+    , overlay = []
+    , popup = []
     , stats = Stats.default
     , search = Search.default
     , button = Button.default
     , tool = []
     , hovercard = Hovercard.default
-    , modal = Dialog.default
+    , dialog = Dialog.default
     , user = User.default
     , graph = Graph.default
     , browser = Browser.default

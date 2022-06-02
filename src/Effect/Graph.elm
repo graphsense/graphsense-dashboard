@@ -90,6 +90,7 @@ type Effect
         }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
+    | CmdEffect (Cmd Msg)
 
 
 perform : Effect -> Cmd Msg
@@ -154,6 +155,9 @@ perform eff =
         PluginEffect ( pid, cmd ) ->
             cmd
                 |> Cmd.map (PluginMsg pid)
+
+        CmdEffect cmd ->
+            cmd
 
 
 getEntityEgonet :

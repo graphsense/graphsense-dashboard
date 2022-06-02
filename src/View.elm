@@ -4,12 +4,12 @@ import Browser exposing (Document)
 import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Reset
-import Css.View as Css
+import Css.View
 import Hovercard
 import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model exposing (Model, Msg(..))
+import Model exposing (Auth(..), Model, Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import RemoteData
 import View.Header as Header
@@ -40,7 +40,7 @@ body :
     -> Html Msg
 body plugins vc model =
     div
-        [ Css.body vc |> css
+        [ Css.View.body vc |> css
         ]
         ([ Header.header
             plugins
@@ -55,16 +55,17 @@ body plugins vc model =
                     |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
             }
          , section
-            [ Css.sectionBelowHeader vc |> css
+            [ Css.View.sectionBelowHeader vc |> css
             ]
             [ main_
-                [ Css.main_ vc |> css
+                [ Css.View.main_ vc |> css
                 ]
                 [ Main.main_ plugins vc model
                 ]
             ]
          ]
             ++ hovercards vc model
+            ++ overlay vc model
         )
 
 
@@ -82,7 +83,7 @@ hovercards vc model =
                     , borderWidth = vc.theme.hovercard.borderWidth
                     }
                     element
-                    (Css.hovercard vc
+                    (Css.View.hovercard vc
                         |> List.map (\( k, v ) -> Html.style k v)
                     )
                     (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
@@ -90,3 +91,40 @@ hovercards vc model =
                     |> List.singleton
             )
         |> Maybe.withDefault []
+
+
+overlay : Config -> Model key -> List (Html Msg)
+overlay vc model =
+    let
+        ov =
+            List.singleton
+                >> div
+                    [ Css.View.overlay vc |> css
+                    ]
+                >> List.singleton
+    in
+    case model.user.auth of
+        Unauthorized _ _ ->
+            model.user.hovercardElement
+                |> Maybe.map
+                    (\element ->
+                        Hovercard.hovercard
+                            { maxWidth = 300
+                            , maxHeight = 500
+                            , tickLength = 16
+                            , borderColor = vc.theme.hovercard.borderColor
+                            , backgroundColor = vc.theme.hovercard.backgroundColor
+                            , borderWidth = vc.theme.hovercard.borderWidth
+                            }
+                            element
+                            (Css.View.hovercard vc
+                                |> List.map (\( k, v ) -> Html.style k v)
+                            )
+                            (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
+                            |> Html.Styled.fromUnstyled
+                    )
+                |> Maybe.map ov
+                |> Maybe.withDefault []
+
+        _ ->
+            []

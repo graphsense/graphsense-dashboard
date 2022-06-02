@@ -155,6 +155,17 @@ addEntity uc { entity, incoming, outgoing } model =
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     case Log.truncate "msg" msg of
+        InfiniteScrollMsg m ->
+            let
+                ( browser, eff ) =
+                    Browser.infiniteScroll m model.browser
+            in
+            ( { model
+                | browser = browser
+              }
+            , eff
+            )
+
         InternalGraphAddedAddresses _ ->
             n model
 

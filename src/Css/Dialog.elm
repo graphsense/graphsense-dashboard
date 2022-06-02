@@ -6,9 +6,9 @@ import Css exposing (..)
 
 part : Config -> List Style
 part vc =
-    vc.theme.modal.part
+    vc.theme.dialog.part
 
 
 heading : Config -> List Style
 heading vc =
-    vc.theme.modal.heading
+    vc.theme.dialog.heading

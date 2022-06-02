@@ -27,6 +27,7 @@ import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Time
+import Util.InfiniteScroll as InfiniteScroll
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -572,16 +573,25 @@ browseAddressTable vc gc height address table =
     in
     case table of
         AddressTxsTable t ->
-            Table.table vc height (AddressTxsTable.config vc coinCode) t
+            table_ vc height (AddressTxsTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            Table.table vc height (AddressTagsTable.config vc) t
+            table_ vc height (AddressTagsTable.config vc) t
 
         AddressIncomingNeighborsTable t ->
-            Table.table vc height (AddressNeighborsTable.config vc False coinCode addressId) t
+            table_ vc height (AddressNeighborsTable.config vc False coinCode addressId) t
 
         AddressOutgoingNeighborsTable t ->
-            Table.table vc height (AddressNeighborsTable.config vc True coinCode addressId) t
+            table_ vc height (AddressNeighborsTable.config vc True coinCode addressId) t
+
+
+table_ : View.Config -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
+table_ vc =
+    Table.table vc
+        [ InfiniteScroll.infiniteScroll
+            |> Html.Styled.Attributes.fromUnstyled
+            |> Html.Styled.Attributes.map InfiniteScrollMsg
+        ]
 
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
@@ -597,19 +607,19 @@ browseEntityTable vc gc height entity table =
     in
     case table of
         EntityAddressesTable t ->
-            Table.table vc height (EntityAddressesTable.config vc coinCode entityId) t
+            table_ vc height (EntityAddressesTable.config vc coinCode entityId) t
 
         EntityTxsTable t ->
-            Table.table vc height (AddressTxsTable.config vc coinCode) t
+            table_ vc height (AddressTxsTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            Table.table vc height (AddressTagsTable.config vc) t
+            table_ vc height (AddressTagsTable.config vc) t
 
         EntityIncomingNeighborsTable t ->
-            Table.table vc height (EntityNeighborsTable.config vc False coinCode entityId) t
+            table_ vc height (EntityNeighborsTable.config vc False coinCode entityId) t
 
         EntityOutgoingNeighborsTable t ->
-            Table.table vc height (EntityNeighborsTable.config vc True coinCode entityId) t
+            table_ vc height (EntityNeighborsTable.config vc True coinCode entityId) t
 
 
 browsePlugin : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)

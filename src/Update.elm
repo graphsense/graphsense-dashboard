@@ -24,6 +24,7 @@ import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
+import Task
 import Tuple exposing (..)
 import Update.Graph as Graph
 import Update.Graph.Adding as Adding
@@ -78,19 +79,24 @@ update plugins uc msg model =
                         }
 
                 Err ( BadStatus 401, eff ) ->
-                    { model
+                    ( { model
                         | user =
                             model.user
                                 |> s_auth
                                     (case model.user.auth of
-                                        Unauthorized effs ->
-                                            Unauthorized <| effs ++ [ eff ]
+                                        Unauthorized loading effs ->
+                                            Unauthorized False <| effs ++ [ eff ]
 
                                         _ ->
-                                            Unauthorized [ eff ]
+                                            Unauthorized False [ eff ]
                                     )
-                    }
-                        |> n
+                      }
+                    , "userTool"
+                        |> Task.succeed
+                        |> Task.perform UserHoversUserIcon
+                        |> CmdEffect
+                        |> List.singleton
+                    )
 
                 Err ( BadBody err, _ ) ->
                     ( model
@@ -112,7 +118,13 @@ update plugins uc msg model =
 
         UserLeftUserHovercard ->
             { model
-                | user = model.user |> s_hovercardElement Nothing
+                | user =
+                    case model.user.auth of
+                        Unauthorized _ _ ->
+                            model.user
+
+                        _ ->
+                            model.user |> s_hovercardElement Nothing
             }
                 |> n
 
@@ -132,28 +144,27 @@ update plugins uc msg model =
                 |> n
 
         UserSubmitsApiKeyForm ->
-            let
-                effs =
-                    case model.user.auth of
-                        Unauthorized effects ->
-                            effects
+            if String.isEmpty model.user.apiKey then
+                n model
 
-                        _ ->
-                            []
-            in
-            ( { model
-                | user =
-                    model.user
-                        |> s_auth
-                            (if List.isEmpty effs then
-                                Unknown
+            else
+                let
+                    effs =
+                        case model.user.auth of
+                            Unauthorized _ effects ->
+                                effects
 
-                             else
-                                Loading
-                            )
-              }
-            , effs
-            )
+                            _ ->
+                                []
+                in
+                ( { model
+                    | user =
+                        model.user
+                            |> s_auth
+                                (Unauthorized True [])
+                  }
+                , effs
+                )
 
         BrowserGotElement result ->
             { model

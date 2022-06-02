@@ -4,7 +4,7 @@ import Api.Data
 import Config.View exposing (Config)
 import Css exposing (block, display, none)
 import Css.Search as Css
-import Css.View as Css
+import Css.View
 import FontAwesome
 import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
@@ -54,7 +54,7 @@ search plugins states vc sc model =
             , searchResult plugins states vc sc model
             ]
         , button
-            [ Css.primary vc |> css
+            [ Css.View.primary vc |> css
             ]
             [ FontAwesome.icon FontAwesome.search
                 |> Html.Styled.fromUnstyled

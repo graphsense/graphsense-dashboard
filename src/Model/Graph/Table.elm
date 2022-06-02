@@ -2,6 +2,7 @@ module Model.Graph.Table exposing (..)
 
 import Api.Data
 import Table
+import Util.InfiniteScroll as InfiniteScroll
 
 
 type AddressTable
@@ -24,4 +25,5 @@ type alias Table a =
     , loading : Bool
     , state : Table.State
     , nextpage : Maybe String
+    , infiniteScroll : InfiniteScroll.Model
     }

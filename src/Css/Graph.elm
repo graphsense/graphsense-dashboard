@@ -47,7 +47,8 @@ navbarRight vc =
 
 tool : Config -> List Style
 tool vc =
-    vc.theme.graph.tool
+    cursor pointer
+        :: vc.theme.graph.tool
 
 
 graphRoot : Config -> List Style

@@ -104,6 +104,11 @@ s_addresses value__ record__ =
     { record__ | addresses = value__ }
 
 
+s_addressesAdded : a -> { b | addressesAdded : a } -> { b | addressesAdded : a }
+s_addressesAdded value__ record__ =
+    { record__ | addressesAdded = value__ }
+
+
 s_aliases : a -> { b | aliases : a } -> { b | aliases : a }
 s_aliases value__ record__ =
     { record__ | aliases = value__ }
@@ -664,6 +669,11 @@ s_content value__ record__ =
     { record__ | content = value__ }
 
 
+s_contentHeight : a -> { b | contentHeight : a } -> { b | contentHeight : a }
+s_contentHeight value__ record__ =
+    { record__ | contentHeight = value__ }
+
+
 s_contentType : a -> { b | contentType : a } -> { b | contentType : a }
 s_contentType value__ record__ =
     { record__ | contentType = value__ }
@@ -889,6 +899,11 @@ s_details value__ record__ =
     { record__ | details = value__ }
 
 
+s_dialog : a -> { b | dialog : a } -> { b | dialog : a }
+s_dialog value__ record__ =
+    { record__ | dialog = value__ }
+
+
 s_dict : a -> { b | dict : a } -> { b | dict : a }
 s_dict value__ record__ =
     { record__ | dict = value__ }
@@ -977,6 +992,11 @@ s_edgeSet value__ record__ =
 s_edges : a -> { b | edges : a } -> { b | edges : a }
 s_edges value__ record__ =
     { record__ | edges = value__ }
+
+
+s_effect : a -> { b | effect : a } -> { b | effect : a }
+s_effect value__ record__ =
+    { record__ | effect = value__ }
 
 
 s_effectSimulation : a -> { b | effectSimulation : a } -> { b | effectSimulation : a }
@@ -1669,6 +1689,11 @@ s_index value__ record__ =
     { record__ | index = value__ }
 
 
+s_infiniteScroll : a -> { b | infiniteScroll : a } -> { b | infiniteScroll : a }
+s_infiniteScroll value__ record__ =
+    { record__ | infiniteScroll = value__ }
+
+
 s_info : a -> { b | info : a } -> { b | info : a }
 s_info value__ record__ =
     { record__ | info = value__ }
@@ -1709,6 +1734,11 @@ s_inputs value__ record__ =
     { record__ | inputs = value__ }
 
 
+s_inquired : a -> { b | inquired : a } -> { b | inquired : a }
+s_inquired value__ record__ =
+    { record__ | inquired = value__ }
+
+
 s_int : a -> { b | int : a } -> { b | int : a }
 s_int value__ record__ =
     { record__ | int = value__ }
@@ -1732,6 +1762,11 @@ s_invalid value__ record__ =
 s_isClusterDefiner : a -> { b | isClusterDefiner : a } -> { b | isClusterDefiner : a }
 s_isClusterDefiner value__ record__ =
     { record__ | isClusterDefiner = value__ }
+
+
+s_isLoading : a -> { b | isLoading : a } -> { b | isLoading : a }
+s_isLoading value__ record__ =
+    { record__ | isLoading = value__ }
 
 
 s_isMerge : a -> { b | isMerge : a } -> { b | isMerge : a }
@@ -1832,6 +1867,11 @@ s_larger value__ record__ =
 s_lastEffect : a -> { b | lastEffect : a } -> { b | lastEffect : a }
 s_lastEffect value__ record__ =
     { record__ | lastEffect = value__ }
+
+
+s_lastRequest : a -> { b | lastRequest : a } -> { b | lastRequest : a }
+s_lastRequest value__ record__ =
+    { record__ | lastRequest = value__ }
 
 
 s_lastTx : a -> { b | lastTx : a } -> { b | lastTx : a }
@@ -2237,11 +2277,6 @@ s_minutes value__ record__ =
 s_missing : a -> { b | missing : a } -> { b | missing : a }
 s_missing value__ record__ =
     { record__ | missing = value__ }
-
-
-s_modal : a -> { b | modal : a } -> { b | modal : a }
-s_modal value__ record__ =
-    { record__ | modal = value__ }
 
 
 s_model : a -> { b | model : a } -> { b | model : a }
@@ -2884,6 +2919,11 @@ s_pivot value__ record__ =
     { record__ | pivot = value__ }
 
 
+s_placeholder : a -> { b | placeholder : a } -> { b | placeholder : a }
+s_placeholder value__ record__ =
+    { record__ | placeholder = value__ }
+
+
 s_plugins : a -> { b | plugins : a } -> { b | plugins : a }
 s_plugins value__ record__ =
     { record__ | plugins = value__ }
@@ -2912,6 +2952,11 @@ s_points value__ record__ =
 s_popout : a -> { b | popout : a } -> { b | popout : a }
 s_popout value__ record__ =
     { record__ | popout = value__ }
+
+
+s_popup : a -> { b | popup : a } -> { b | popup : a }
+s_popup value__ record__ =
+    { record__ | popup = value__ }
 
 
 s_port_ : a -> { b | port_ : a } -> { b | port_ : a }
@@ -3274,6 +3319,11 @@ s_resultLineIcon value__ record__ =
     { record__ | resultLineIcon = value__ }
 
 
+s_resultList : a -> { b | resultList : a } -> { b | resultList : a }
+s_resultList value__ record__ =
+    { record__ | resultList = value__ }
+
+
 s_resume : a -> { b | resume : a } -> { b | resume : a }
 s_resume value__ record__ =
     { record__ | resume = value__ }
@@ -3372,6 +3422,11 @@ s_scriptingSupport value__ record__ =
 s_scroll : a -> { b | scroll : a } -> { b | scroll : a }
 s_scroll value__ record__ =
     { record__ | scroll = value__ }
+
+
+s_scrollTop : a -> { b | scrollTop : a } -> { b | scrollTop : a }
+s_scrollTop value__ record__ =
+    { record__ | scrollTop = value__ }
 
 
 s_search : a -> { b | search : a } -> { b | search : a }

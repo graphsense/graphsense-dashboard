@@ -86,8 +86,7 @@ type Auth
         { requestLimit : RequestLimit
         , expiration : Maybe Time.Posix
         }
-    | Unauthorized (List Effect)
-    | Loading
+    | Unauthorized Bool (List Effect)
     | Unknown
 
 
@@ -101,6 +100,7 @@ type Effect
     | GraphEffect Effect.Graph.Effect
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | PortsConsoleEffect String
+    | CmdEffect (Cmd Msg)
 
 
 type Thing

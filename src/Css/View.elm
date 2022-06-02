@@ -73,3 +73,25 @@ input vc =
 link : Config -> List Style
 link vc =
     vc.theme.link
+
+
+overlay : Config -> List Style
+overlay vc =
+    position absolute
+        :: height (vh 100)
+        :: width (vw 100)
+        :: displayFlex
+        :: justifyContent center
+        :: alignItems center
+        :: zIndex (int 500)
+        :: vc.theme.overlay
+
+
+popup : Config -> List Style
+popup vc =
+    vc.theme.popup
+
+
+loadingSpinner : Config -> List Style
+loadingSpinner vc =
+    vc.theme.loadingSpinner

@@ -127,6 +127,10 @@ perform plugins key apiKey effect =
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
+                Graph.CmdEffect cmd ->
+                    cmd
+                        |> Cmd.map GraphMsg
+
         SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
             (Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
@@ -149,6 +153,9 @@ perform plugins key apiKey effect =
         PluginEffect ( pid, cmd ) ->
             cmd
                 |> Cmd.map (PluginMsg pid)
+
+        CmdEffect cmd ->
+            cmd
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

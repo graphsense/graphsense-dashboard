@@ -13,6 +13,7 @@ import Plugin.Model as Plugin
 import Set exposing (Set)
 import Table
 import Time
+import Util.InfiniteScroll as InfiniteScroll
 
 
 type Msg
@@ -70,4 +71,5 @@ type Msg
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
+    | InfiniteScrollMsg InfiniteScroll.Msg
     | NoOp

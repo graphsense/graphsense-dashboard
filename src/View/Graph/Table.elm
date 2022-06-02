@@ -11,26 +11,30 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model.Currency as Currency
 import Model.Graph.Table as T
+import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
+import Util.InfiniteScroll as InfiniteScroll
 import Util.View exposing (loadingSpinner)
 import View.Locale as Locale
 
 
-table : View.Config -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
-table vc height config tbl =
+table : View.Config -> List (Attribute msg) -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
+table vc attributes height config tbl =
     div
-        [ (height
-            |> Maybe.withDefault 250
-            |> Css.px
-            |> Css.maxHeight
-          )
+        ([ (height
+                |> Maybe.withDefault 250
+                |> Css.px
+                |> Css.maxHeight
+           )
             :: Css.Table.root vc
             |> css
-        ]
+         ]
+            ++ attributes
+        )
         (Table.view config tbl.state tbl.data
-            :: (if tbl.loading then
+            :: (if tbl.loading || InfiniteScroll.isLoading tbl.infiniteScroll then
                     [ loadingSpinner vc Css.Table.loadingSpinner
                     ]
 

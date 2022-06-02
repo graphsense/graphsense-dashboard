@@ -1,4 +1,4 @@
-module View.User exposing (hovercard, user)
+module View.User exposing (apiKeyForm, hovercard, user)
 
 import Config.View exposing (Config)
 import Css.User as Css
@@ -10,7 +10,7 @@ import Html.Styled.Events as Events exposing (onInput)
 import Model exposing (Auth(..), Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
 import Time
-import Util.View exposing (nona, none)
+import Util.View exposing (loadingSpinner, nona, none)
 import View.Button as Button
 import View.Dialog as Dialog
 import View.Locale as Locale
@@ -43,8 +43,8 @@ hovercard vc model =
         Unknown ->
             []
 
-        _ ->
-            [ apiKeyForm vc model
+        Unauthorized loading _ ->
+            [ apiKeyForm vc loading model
             ]
     )
         ++ [ Dialog.part vc
@@ -125,10 +125,10 @@ localeSwitch vc =
             ]
 
 
-apiKeyForm : Config -> UserModel -> Html Msg
-apiKeyForm vc model =
+apiKeyForm : Config -> Bool -> UserModel -> Html Msg
+apiKeyForm vc loading model =
     Dialog.part vc
-        (Locale.string vc.locale "API key")
+        (Locale.string vc.locale "Please provide an API key")
         [ Html.Styled.form
             [ Events.onSubmit UserSubmitsApiKeyForm
             ]
@@ -136,9 +136,20 @@ apiKeyForm vc model =
                 [ Css.input vc |> css
                 , Events.onBlur UserSubmitsApiKeyForm
                 , Events.onInput UserInputsApiKeyForm
-                , disabled <| model.auth == Loading
+                , disabled loading
                 , value model.apiKey
                 ]
                 []
+            , if loading then
+                loadingSpinner vc Css.loadingSpinner
+
+              else
+                input
+                    [ Css.primary vc |> css
+                    , type_ "submit"
+                    , Locale.string vc.locale "OK" |> value
+                    , disabled loading
+                    ]
+                    []
             ]
         ]

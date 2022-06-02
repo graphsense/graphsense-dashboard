@@ -29,8 +29,7 @@ columnTitleFromDirection isOutgoing =
 
 init : Bool -> Table Api.Data.NeighborEntity
 init =
-    columnTitleFromDirection
-        >> Init.Graph.Table.init
+    columnTitleFromDirection >> Init.Graph.Table.init
 
 
 config : View.Config -> Bool -> String -> Maybe EntityId -> Table.Config Api.Data.NeighborEntity Msg

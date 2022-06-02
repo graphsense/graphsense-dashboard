@@ -7,6 +7,8 @@ import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Json.Encode
 import Log
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
@@ -18,6 +20,7 @@ import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData)
+import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
@@ -72,16 +75,9 @@ createAddressTable route t currency address =
 
         ( Route.AddressTagsTable, _ ) ->
             ( AddressTagsTable.init |> AddressTagsTable |> Just
-            , [ GetAddressTagsEffect
+            , [ getAddressTagsEffect Nothing
                     { currency = currency
                     , address = address
-                    , pagesize = 100
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotAddressTagsTable
-                            { currency = currency
-                            , address = address
-                            }
                     }
               ]
             )
@@ -91,12 +87,9 @@ createAddressTable route t currency address =
 
         ( Route.AddressTxsTable, _ ) ->
             ( AddressTxsTable.init |> AddressTxsTable |> Just
-            , [ GetAddressTxsEffect
+            , [ getAddressTxsEffect Nothing
                     { currency = currency
                     , address = address
-                    , nextpage = Nothing
-                    , pagesize = 100
-                    , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
                     }
               ]
             )
@@ -106,19 +99,10 @@ createAddressTable route t currency address =
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
             ( AddressNeighborsTable.init False |> AddressIncomingNeighborsTable |> Just
-            , [ GetAddressNeighborsEffect
+            , [ getAddressNeighborsEffect Nothing
+                    False
                     { currency = currency
                     , address = address
-                    , isOutgoing = False
-                    , pagesize = 100
-                    , includeLabels = True
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotAddressNeighborsTable
-                            { currency = currency
-                            , address = address
-                            }
-                            False
                     }
               ]
             )
@@ -128,19 +112,10 @@ createAddressTable route t currency address =
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
             ( AddressNeighborsTable.init True |> AddressOutgoingNeighborsTable |> Just
-            , [ GetAddressNeighborsEffect
+            , [ getAddressNeighborsEffect Nothing
+                    True
                     { currency = currency
                     , address = address
-                    , isOutgoing = True
-                    , pagesize = 100
-                    , includeLabels = True
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotAddressNeighborsTable
-                            { currency = currency
-                            , address = address
-                            }
-                            True
                     }
               ]
             )
@@ -178,16 +153,9 @@ createEntityTable route t currency entity =
 
         ( Route.EntityTagsTable, _ ) ->
             ( AddressTagsTable.init |> EntityTagsTable |> Just
-            , [ GetEntityAddressTagsEffect
+            , [ getEntityAddressTagsEffect Nothing
                     { currency = currency
                     , entity = entity
-                    , pagesize = 100
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotEntityAddressTagsTable
-                            { currency = currency
-                            , entity = entity
-                            }
                     }
               ]
             )
@@ -197,12 +165,9 @@ createEntityTable route t currency entity =
 
         ( Route.EntityTxsTable, _ ) ->
             ( AddressTxsTable.init |> EntityTxsTable |> Just
-            , [ GetEntityTxsEffect
+            , [ getEntityTxsEffect Nothing
                     { currency = currency
                     , entity = entity
-                    , nextpage = Nothing
-                    , pagesize = 100
-                    , toMsg = BrowserGotEntityTxs { currency = currency, entity = entity }
                     }
               ]
             )
@@ -212,20 +177,10 @@ createEntityTable route t currency entity =
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
             ( EntityNeighborsTable.init False |> EntityIncomingNeighborsTable |> Just
-            , [ GetEntityNeighborsEffect
+            , [ getEntityNeighborsEffect Nothing
+                    False
                     { currency = currency
                     , entity = entity
-                    , isOutgoing = False
-                    , onlyIds = Nothing
-                    , pagesize = 100
-                    , includeLabels = True
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotEntityNeighborsTable
-                            { currency = currency
-                            , entity = entity
-                            }
-                            False
                     }
               ]
             )
@@ -235,20 +190,10 @@ createEntityTable route t currency entity =
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
             ( EntityNeighborsTable.init False |> EntityOutgoingNeighborsTable |> Just
-            , [ GetEntityNeighborsEffect
+            , [ getEntityNeighborsEffect Nothing
+                    True
                     { currency = currency
                     , entity = entity
-                    , isOutgoing = True
-                    , onlyIds = Nothing
-                    , pagesize = 100
-                    , includeLabels = True
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotEntityNeighborsTable
-                            { currency = currency
-                            , entity = entity
-                            }
-                            True
                     }
               ]
             )
@@ -258,12 +203,9 @@ createEntityTable route t currency entity =
 
         ( Route.EntityAddressesTable, _ ) ->
             ( EntityAddressesTable.init |> EntityAddressesTable |> Just
-            , [ GetEntityAddressesEffect
+            , [ getEntityAddressesEffect Nothing
                     { currency = currency
                     , entity = entity
-                    , nextpage = Nothing
-                    , pagesize = 100
-                    , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
                     }
               ]
             )
@@ -669,3 +611,260 @@ setHeight height browser =
     { browser
         | height = Just height
     }
+
+
+infiniteScroll : InfiniteScroll.Msg -> Model -> ( Model, List Effect )
+infiniteScroll msg model =
+    let
+        ( type_, eff ) =
+            case model.type_ of
+                Address loadable table ->
+                    (case table of
+                        Just (AddressTxsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddressTxsTable
+                                |> Just
+                            , loadableAddress loadable
+                                |> getAddressTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (AddressTagsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddressTagsTable
+                                |> Just
+                            , loadableAddress loadable
+                                |> getAddressTagsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (AddressIncomingNeighborsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddressIncomingNeighborsTable
+                                |> Just
+                            , loadableAddress loadable
+                                |> getAddressNeighborsEffect t.nextpage False
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (AddressOutgoingNeighborsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddressOutgoingNeighborsTable
+                                |> Just
+                            , loadableAddress loadable
+                                |> getAddressNeighborsEffect t.nextpage True
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Nothing ->
+                            ( table, [] )
+                    )
+                        |> mapFirst (Address loadable)
+
+                Entity loadable table ->
+                    (case table of
+                        Just (EntityAddressesTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityAddressesTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityAddressesEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (EntityTxsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityTxsTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (EntityTagsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityTagsTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityAddressTagsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (EntityIncomingNeighborsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityIncomingNeighborsTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityNeighborsEffect t.nextpage False
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (EntityOutgoingNeighborsTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityOutgoingNeighborsTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityNeighborsEffect t.nextpage True
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Nothing ->
+                            ( table, [] )
+                    )
+                        |> mapFirst (Entity loadable)
+
+                _ ->
+                    ( model.type_, [] )
+    in
+    ( { model
+        | type_ = type_
+      }
+    , eff
+    )
+
+
+infiniteScrollEffects : Cmd InfiniteScroll.Msg -> Bool -> Table a -> Effect -> List Effect
+infiniteScrollEffects cmd needMore { nextpage } effect =
+    CmdEffect (Cmd.map InfiniteScrollMsg cmd)
+        :: (if needMore && nextpage /= Nothing then
+                [ effect ]
+
+            else
+                []
+           )
+
+
+getAddressTxsEffect : Maybe String -> A.Address -> Effect
+getAddressTxsEffect nextpage { currency, address } =
+    GetAddressTxsEffect
+        { currency = currency
+        , address = address
+        , nextpage = nextpage
+        , pagesize = 100
+        , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
+        }
+
+
+getAddressTagsEffect : Maybe String -> A.Address -> Effect
+getAddressTagsEffect nextpage { currency, address } =
+    GetAddressTagsEffect
+        { currency = currency
+        , address = address
+        , pagesize = 100
+        , nextpage = nextpage
+        , toMsg =
+            BrowserGotAddressTagsTable
+                { currency = currency
+                , address = address
+                }
+        }
+
+
+getAddressNeighborsEffect : Maybe String -> Bool -> A.Address -> Effect
+getAddressNeighborsEffect nextpage isOutgoing { currency, address } =
+    GetAddressNeighborsEffect
+        { currency = currency
+        , address = address
+        , isOutgoing = isOutgoing
+        , pagesize = 100
+        , includeLabels = True
+        , nextpage = nextpage
+        , toMsg =
+            BrowserGotAddressNeighborsTable
+                { currency = currency
+                , address = address
+                }
+                isOutgoing
+        }
+
+
+getEntityAddressTagsEffect : Maybe String -> E.Entity -> Effect
+getEntityAddressTagsEffect nextpage { currency, entity } =
+    GetEntityAddressTagsEffect
+        { currency = currency
+        , entity = entity
+        , pagesize = 100
+        , nextpage = nextpage
+        , toMsg =
+            BrowserGotEntityAddressTagsTable
+                { currency = currency
+                , entity = entity
+                }
+        }
+
+
+getEntityTxsEffect : Maybe String -> E.Entity -> Effect
+getEntityTxsEffect nextpage { currency, entity } =
+    GetEntityTxsEffect
+        { currency = currency
+        , entity = entity
+        , nextpage = nextpage
+        , pagesize = 100
+        , toMsg = BrowserGotEntityTxs { currency = currency, entity = entity }
+        }
+
+
+getEntityNeighborsEffect : Maybe String -> Bool -> E.Entity -> Effect
+getEntityNeighborsEffect nextpage isOutgoing { currency, entity } =
+    GetEntityNeighborsEffect
+        { currency = currency
+        , entity = entity
+        , isOutgoing = isOutgoing
+        , onlyIds = Nothing
+        , pagesize = 100
+        , includeLabels = True
+        , nextpage = nextpage
+        , toMsg =
+            BrowserGotEntityNeighborsTable
+                { currency = currency
+                , entity = entity
+                }
+                isOutgoing
+        }
+
+
+getEntityAddressesEffect : Maybe String -> E.Entity -> Effect
+getEntityAddressesEffect nextpage { currency, entity } =
+    GetEntityAddressesEffect
+        { currency = currency
+        , entity = entity
+        , nextpage = nextpage
+        , pagesize = 100
+        , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
+        }
