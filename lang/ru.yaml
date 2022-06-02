@@ -51,7 +51,7 @@ minute: минута
 minutes: минут(ы)
 second: секунда
 seconds: секунд(ы)
-addresses tagged: адресов с тэгами
+addresses tagged: адреса с тэгами
 source: источник
 destination: назначение
 value: значение
@@ -167,7 +167,7 @@ saved to file: сохранение в файл %0
 loading file: загружаем файл %0
 loaded file: загружен файл %0
 loading entity for: загружаем субъект для %0
-loaded entity for: загружен субхект для %0
+loaded entity for: загружен субъект для %0
 no entity for: нет субъекта для %0
 loading tags for: загружаем тэги для %0 %1
 loaded tags for: загружены тэги для %0 %1
@@ -179,25 +179,25 @@ go to dashboard: перейти к панели инструментов
 remove tag: удалить тэг
 show at most in links table: перечислено максимум %0 транзакций
 estimated value: ориентировочная стоимость
-reorder to prioritize: reorder to prioritize
-tag coherence: tag coherence
-unknown: unknown
-from: from
-to: to
-pick a color: pick a color
-start highlighting addresses and entities: highlight addresses and entities
-api request limit: request limit
-reset in %0 s: reset in %0s
-from address: from address
-to address: to address
-transactions file: transactions of %0 %1 # $0 = type, %1 = id
-neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
-tags file: %0 tags of %1 %2 # %0 = type, %1 = id
-links file: transactions between %0 %1 and %2 # %0 = type, %1 = source, %2 = target
-addresses file: addresses of entity %0
-address/entity balance: %0 balance
-address/entity received: %0 received
-tagged addresses: tagged addresses
-please provide an API key: please provide an API key
-invalid key: invalid key
-unlimited: unlimited
+reorder to prioritize: упорядочить по приоритету
+tag coherence: согласованность тегов
+unknown: неизвестно
+from: с
+to: на
+pick a color: выбрать цвет
+start highlighting addresses and entities: выделить адреса и субъекты
+api request limit: лимит API-запросов
+reset in %0 s: сброс через %0 сек.
+from address: с адреса
+to address: на адрес
+transactions file: транзакции %0 %1 # $0 = type, %1 = id
+neighbors file: %0 от %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
+tags file: %0 тэги от %1 %2 # %0 = type, %1 = id
+links file: транзакции между %0 %1 и %2 # %0 = type, %1 = source, %2 = target
+addresses file: адреса субъекта %0
+address/entity balance: %0 баланс
+address/entity received: %0 получено
+tagged addresses: адреса с тэгами
+please provide an API key: введите ключ API
+invalid key: недействительный ключ
+unlimited: неограниченный
