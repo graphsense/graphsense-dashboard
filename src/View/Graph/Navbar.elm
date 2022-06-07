@@ -31,8 +31,8 @@ navbarLeft plugins states vc model =
         ]
         (List.map (Tool.tool vc)
             [ { icon = FontAwesome.icon FontAwesome.tag
-              , title = Locale.string vc.locale "My tags"
-              , msg = NoOp
+              , title = "My tags"
+              , msg = ToBeDone "My tags"
               , color = Nothing
               }
             ]
@@ -68,44 +68,44 @@ navbarRight vc =
         [ Css.navbarRight vc |> css
         ]
         (List.map (Tool.tool vc)
-            [ { title = Locale.string vc.locale "Start from scratch"
+            [ { title = "Start from scratch"
               , icon = FontAwesome.icon FontAwesome.file
-              , msg = NoOp
+              , msg = ToBeDone "Start from scratch"
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Load from file ..."
+            , { title = "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen
-              , msg = NoOp
+              , msg = ToBeDone "Load from file ..."
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Export ..."
+            , { title = "Export ..."
               , icon = FontAwesome.icon FontAwesome.download
-              , msg = NoOp
+              , msg = ToBeDone "Export ..."
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Undo last graph change"
+            , { title = "Undo last graph change"
               , icon = FontAwesome.icon FontAwesome.undo
-              , msg = NoOp
+              , msg = ToBeDone "Undo last graph change"
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Redo undone graph change"
+            , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
-              , msg = NoOp
+              , msg = ToBeDone "Redo undone graph change"
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Highlight nodes"
+            , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
-              , msg = NoOp
+              , msg = ToBeDone "Highlight nodes"
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Configuration options"
+            , { title = "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog
-              , msg = NoOp
+              , msg = ToBeDone "Configuration options"
               , color = Nothing
               }
-            , { title = Locale.string vc.locale "Legend"
+            , { title = "Legend"
               , icon = FontAwesome.icon FontAwesome.info
-              , msg = NoOp
+              , msg = ToBeDone "Legend"
               , color = Nothing
               }
             ]

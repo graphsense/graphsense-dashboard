@@ -24,4 +24,5 @@ init plugins now =
     , contextMenu = Nothing
     , tag = Nothing
     , userAddressTags = Dict.empty
+    , hovercardTBD = Nothing
     }

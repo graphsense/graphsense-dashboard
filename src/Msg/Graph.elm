@@ -80,4 +80,7 @@ type Msg
     | UserInputsTagAbuse String
     | UserClicksCloseTagHovercard
     | UserSubmitsTagInput
+    | ToBeDone String
+    | BrowserGotElementForTBD (Result Browser.Dom.Error Browser.Dom.Element)
+    | RuntimeHideTBD
     | NoOp

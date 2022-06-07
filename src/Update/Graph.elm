@@ -28,6 +28,7 @@ import Model.Graph.Tag as Tag
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
+import Process
 import RecordSetter exposing (..)
 import Route as R exposing (toUrl)
 import Route.Graph as Route
@@ -1018,6 +1019,33 @@ update plugins uc msg model =
                         )
                     )
                 |> Maybe.withDefault (n model)
+
+        ToBeDone id ->
+            ( model
+            , id
+                |> Dom.getElement
+                |> Task.attempt BrowserGotElementForTBD
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotElementForTBD element ->
+            element
+                |> Result.map
+                    (\el ->
+                        ( { model
+                            | hovercardTBD = Just el
+                          }
+                        , [ Process.sleep 2000
+                                |> Task.perform (\_ -> RuntimeHideTBD)
+                                |> CmdEffect
+                          ]
+                        )
+                    )
+                |> Result.withDefault (n model)
+
+        RuntimeHideTBD ->
+            n { model | hovercardTBD = Nothing }
 
         NoOp ->
             n model

@@ -1,5 +1,6 @@
 module Model.Graph exposing (..)
 
+import Browser.Dom as Dom
 import Color exposing (Color)
 import Config.Graph exposing (Config)
 import Dict exposing (Dict)
@@ -29,6 +30,7 @@ type alias Model =
     , contextMenu : Maybe ContextMenu.Model
     , tag : Maybe Tag.Model
     , userAddressTags : Dict ( String, String ) Tag.UserTag
+    , hovercardTBD : Maybe Dom.Element
     }
 
 

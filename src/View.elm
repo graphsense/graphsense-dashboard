@@ -1,12 +1,14 @@
 module View exposing (view)
 
 import Browser exposing (Document)
+import Browser.Dom as Dom
 import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Reset
 import Css.View
 import Hovercard
-import Html.Attributes as Html
+import Html
+import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Maybe.Extra
@@ -71,56 +73,60 @@ body plugins vc model =
         )
 
 
+hovercard : Config -> Dom.Element -> List (Html.Html Msg) -> List (Html Msg)
+hovercard vc element =
+    Hovercard.hovercard
+        { maxWidth = 300
+        , maxHeight = 500
+        , tickLength = 16
+        , borderColor = vc.theme.hovercard.borderColor
+        , backgroundColor = vc.theme.hovercard.backgroundColor
+        , borderWidth = vc.theme.hovercard.borderWidth
+        }
+        element
+        (Css.View.hovercard vc
+            |> List.map (\( k, v ) -> Html.Attributes.style k v)
+        )
+        >> Html.Styled.fromUnstyled
+        >> List.singleton
+
+
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
 hovercards plugins vc model =
     (model.user.hovercardElement
         |> Maybe.map
             (\element ->
-                Hovercard.hovercard
-                    { maxWidth = 300
-                    , maxHeight = 500
-                    , tickLength = 16
-                    , borderColor = vc.theme.hovercard.borderColor
-                    , backgroundColor = vc.theme.hovercard.backgroundColor
-                    , borderWidth = vc.theme.hovercard.borderWidth
-                    }
-                    element
-                    (Css.View.hovercard vc
-                        |> List.map (\( k, v ) -> Html.style k v)
-                    )
-                    (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
-                    |> Html.Styled.fromUnstyled
-                    |> List.singleton
+                User.hovercard vc model.user
+                    |> List.map Html.Styled.toUnstyled
+                    |> hovercard vc element
             )
         |> Maybe.withDefault []
     )
         ++ (model.graph.tag
                 |> Maybe.map
                     (\tag ->
-                        Hovercard.hovercard
-                            { maxWidth = 300
-                            , maxHeight = 500
-                            , tickLength = 16
-                            , borderColor = vc.theme.hovercard.borderColor
-                            , backgroundColor = vc.theme.hovercard.backgroundColor
-                            , borderWidth = vc.theme.hovercard.borderWidth
+                        (Tag.inputHovercard plugins
+                            vc
+                            { entityConcepts = model.entityConcepts
+                            , abuseConcepts = model.abuseConcepts
                             }
-                            tag.hovercardElement
-                            (Css.View.hovercard vc
-                                |> List.map (\( k, v ) -> Html.style k v)
-                            )
-                            (Tag.inputHovercard plugins
-                                vc
-                                { entityConcepts = model.entityConcepts
-                                , abuseConcepts = model.abuseConcepts
-                                }
-                                tag
-                                |> Html.Styled.toUnstyled
-                                |> List.singleton
-                            )
-                            |> Html.Styled.fromUnstyled
-                            |> Html.Styled.map GraphMsg
+                            tag
+                            |> Html.Styled.toUnstyled
                             |> List.singleton
+                        )
+                            |> List.map (Html.map GraphMsg)
+                            |> hovercard vc tag.hovercardElement
+                    )
+                |> Maybe.withDefault []
+           )
+        ++ (model.graph.hovercardTBD
+                |> Maybe.map
+                    (\element ->
+                        Html.text "To be done"
+                            |> List.singleton
+                            |> Html.div [ Html.Attributes.style "white-space" "nowrap", Html.Attributes.style "padding" "10px" ]
+                            |> List.singleton
+                            |> hovercard vc element
                     )
                 |> Maybe.withDefault []
            )
@@ -151,7 +157,7 @@ overlay vc model =
                             }
                             element
                             (Css.View.hovercard vc
-                                |> List.map (\( k, v ) -> Html.style k v)
+                                |> List.map (\( k, v ) -> Html.Attributes.style k v)
                             )
                             (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
                             |> Html.Styled.fromUnstyled
