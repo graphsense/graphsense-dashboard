@@ -331,11 +331,10 @@ showAddressTags : { currency : String, address : String } -> Api.Data.AddressTag
 showAddressTags id data model =
     let
         getUserTag load =
-            case load |> Debug.log "userTag load" of
+            case load of
                 Loaded a ->
                     a.userTag
                         |> Maybe.map (Tag.userTagToApiTag a.address False >> List.singleton)
-                        |> Debug.log "userTagToApiTag"
                         |> Maybe.withDefault []
 
                 Loading _ _ ->
@@ -350,7 +349,7 @@ showAddressTags id data model =
                 { model
                     | type_ =
                         Address loadable <|
-                            case table |> Debug.log "table" of
+                            case table of
                                 Just (AddressTagsTable t) ->
                                     let
                                         addressTags =
