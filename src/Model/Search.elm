@@ -11,3 +11,10 @@ type alias Model =
     , input : String
     , bounce : Bounce
     }
+
+
+type ResultLine
+    = Address String
+    | Tx String
+    | Block Int
+    | Label String

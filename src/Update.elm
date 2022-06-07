@@ -67,6 +67,18 @@ update plugins uc msg model =
                 Err error ->
                     n { model | stats = RD.Failure error }
 
+        BrowserGotEntityTaxonomy concepts ->
+            { model
+                | entityConcepts = concepts
+            }
+                |> n
+
+        BrowserGotAbuseTaxonomy concepts ->
+            { model
+                | abuseConcepts = concepts
+            }
+                |> n
+
         BrowserGotResponseWithHeaders result ->
             case result of
                 Ok ( headers, message ) ->

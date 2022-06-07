@@ -48,7 +48,7 @@ hovercard vc model =
             ]
     )
         ++ [ Dialog.part vc
-                (Locale.string vc.locale "language")
+                "Language"
                 [ localeSwitch vc ]
            ]
         |> div
@@ -61,7 +61,7 @@ hovercard vc model =
 requestLimit : Config -> RequestLimit -> Html Msg
 requestLimit vc rl =
     Dialog.part vc
-        (Locale.string vc.locale "Request limit")
+        "Request limit"
         [ div
             [ Css.requestLimitRoot vc |> css
             ]
@@ -128,7 +128,7 @@ localeSwitch vc =
 apiKeyForm : Config -> Bool -> UserModel -> Html Msg
 apiKeyForm vc loading model =
     Dialog.part vc
-        (Locale.string vc.locale "Please provide an API key")
+        "Please provide an API key"
         [ Html.Styled.form
             [ Events.onSubmit UserSubmitsApiKeyForm
             ]

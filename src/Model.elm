@@ -46,6 +46,8 @@ type alias Model navigationKey =
     , width : Int
     , height : Int
     , error : String
+    , entityConcepts : List Api.Data.Concept
+    , abuseConcepts : List Api.Data.Concept
     , plugins : Dict String Json.Encode.Value
     }
 
@@ -63,6 +65,8 @@ type Msg
     | UserLeftUserHovercard
     | BrowserGotElement (Result Dom.Error Dom.Element)
     | BrowserChangedWindowSize Int Int
+    | BrowserGotEntityTaxonomy (List Api.Data.Concept)
+    | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
@@ -94,6 +98,7 @@ type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
     | GetStatisticsEffect
+    | GetConceptsEffect String (List Api.Data.Concept -> Msg)
     | GetElementEffect { id : String, msg : Result Dom.Error Dom.Element -> Msg }
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect

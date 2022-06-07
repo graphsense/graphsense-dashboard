@@ -2,6 +2,7 @@ module Effect.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom
+import Effect.Search as Search
 import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
@@ -90,6 +91,7 @@ type Effect
         }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
+    | TagSearchEffect Search.Effect
     | CmdEffect (Cmd Msg)
 
 
@@ -155,6 +157,10 @@ perform eff =
         PluginEffect ( pid, cmd ) ->
             cmd
                 |> Cmd.map (PluginMsg pid)
+
+        -- managed in Effect.elm
+        TagSearchEffect _ ->
+            Cmd.none
 
         CmdEffect cmd ->
             cmd

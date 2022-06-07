@@ -103,7 +103,7 @@ type alias Config =
 
 default : Config
 default =
-    { addressLabelType = ID
+    { addressLabelType = Tag
     , txLabelType = Value
     , maxLettersPerLabelRow = 19
     , colors = Dict.empty

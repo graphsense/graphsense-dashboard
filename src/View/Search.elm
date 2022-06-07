@@ -1,8 +1,8 @@
-module View.Search exposing (search)
+module View.Search exposing (Searchable(..), search)
 
 import Api.Data
 import Config.View exposing (Config)
-import Css exposing (block, display, none)
+import Css exposing (Style, block, display, none)
 import Css.Search as Css
 import Css.View
 import FontAwesome
@@ -11,7 +11,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick, onInput)
 import Init.Search as Search
-import Model.Search exposing (Model)
+import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin exposing (Plugins)
 import Plugin.Model exposing (PluginStates)
@@ -25,57 +25,84 @@ import View.Locale as Locale
 
 
 type alias SearchConfig =
-    { latestBlocks : List ( String, Int )
+    { searchable : Searchable
+    , css : List Style
+    , resultsAsLink : Bool
+    , multiline : Bool
+    , showIcon : Bool
     }
 
 
-search : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> Html Msg
-search plugins states vc sc model =
+type Searchable
+    = SearchAll
+        { latestBlocks : List ( String, Int )
+        , pluginStates : PluginStates
+        }
+    | SearchTagsOnly
+
+
+search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+search plugins vc sc model =
     Html.Styled.form
         [ Css.form vc |> css
         ]
         [ div
             [ Css.frame vc |> css
             ]
-            [ textarea
-                [ Css.textarea vc |> css
+            [ (if sc.multiline then
+                textarea
+
+               else
+                input
+              )
+                [ sc.css |> css
                 , autocomplete False
                 , spellcheck False
                 , Locale.string vc.locale "The search" |> title
-                , [ "Addresses", "transaction", "label", "block" ]
-                    |> List.map (Locale.string vc.locale)
-                    |> (\st -> st ++ Plugin.View.Search.placeholder plugins vc)
-                    |> String.join ", "
-                    |> placeholder
+                , case sc.searchable of
+                    SearchAll _ ->
+                        [ "Addresses", "transaction", "label", "block" ]
+                            |> List.map (Locale.string vc.locale)
+                            |> (\st -> st ++ Plugin.View.Search.placeholder plugins vc)
+                            |> String.join ", "
+                            |> placeholder
+
+                    SearchTagsOnly ->
+                        Locale.string vc.locale "Label"
+                            |> placeholder
                 , onInput UserInputsSearch
                 , value model.input
                 ]
                 []
-            , searchResult plugins states vc sc model
+            , searchResult plugins vc sc model
             ]
-        , button
-            [ Css.View.primary vc |> css
-            ]
-            [ FontAwesome.icon FontAwesome.search
-                |> Html.Styled.fromUnstyled
-            ]
+        , if sc.showIcon then
+            button
+                [ Css.View.primary vc |> css
+                ]
+                [ FontAwesome.icon FontAwesome.search
+                    |> Html.Styled.fromUnstyled
+                ]
+
+          else
+            Util.View.none
         ]
 
 
-searchResult : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> Html Msg
-searchResult plugins states vc sc model =
+searchResult : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+searchResult plugins vc sc model =
     let
         rl =
-            resultList plugins states vc sc model
+            resultList plugins vc sc model
     in
-    if String.length model.input < 4 then
+    if not model.loading && List.isEmpty rl then
         span [] []
 
     else
         div
             [ id "search-result"
             , css (Css.result vc)
-            , onClick UserClicksResultLine
+            , onClick UserClicksResult
             ]
             ((if model.loading then
                 [ loadingSpinner vc Css.loadingSpinner ]
@@ -102,45 +129,54 @@ filterByPrefix input result =
     }
 
 
-resultList : Plugins -> PluginStates -> Config -> SearchConfig -> Model -> List (Html Msg)
-resultList plugins states vc sc { found, input } =
+resultList : Plugins -> Config -> SearchConfig -> Model -> List (Html Msg)
+resultList plugins vc sc { found, input } =
     let
         filtered =
             Maybe.map (filterByPrefix input) found
-    in
-    (List.map (currencyToResult vc input filtered) sc.latestBlocks
-        ++ [ { title = Locale.string vc.locale "Labels"
-             , badge =
+
+        labelBadge =
+            { title = Locale.string vc.locale "Labels"
+            , badge =
                 Maybe.map .labels found
                     |> Maybe.withDefault []
                     |> List.map Label
-             }
-           ]
-        |> List.filterMap
-            (\{ title, badge } ->
-                if List.isEmpty badge then
-                    Nothing
+            }
 
-                else
-                    div
-                        [ Css.resultGroup vc |> css
+        badgeToResult { title, badge } =
+            if List.isEmpty badge then
+                Nothing
+
+            else
+                div
+                    [ Css.resultGroup vc |> css
+                    ]
+                    [ div
+                        [ Css.resultGroupTitle vc |> css
                         ]
-                        [ div
-                            [ Css.resultGroupTitle vc |> css
-                            ]
-                            [ text title
-                            ]
-                        , List.map (resultLineToHtml vc title) badge
-                            |> ol [ Css.resultGroupList vc |> css ]
+                        [ text title
                         ]
-                        |> Just
+                    , List.map (resultLineToHtml vc title sc.resultsAsLink) badge
+                        |> ol [ Css.resultGroupList vc |> css ]
+                    ]
+                    |> Just
+    in
+    case sc.searchable of
+        SearchTagsOnly ->
+            [ labelBadge ]
+                |> List.filterMap badgeToResult
+
+        SearchAll { latestBlocks, pluginStates } ->
+            (List.map (currencyToResult vc input filtered) latestBlocks
+                ++ [ labelBadge
+                   ]
+                |> List.filterMap badgeToResult
             )
-    )
-        ++ Plugin.View.Search.resultList plugins states vc
+                ++ Plugin.View.Search.resultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> ResultLine -> Html Msg
-resultLineToHtml vc title resultLine =
+resultLineToHtml : Config -> String -> Bool -> ResultLine -> Html Msg
+resultLineToHtml vc title asLink resultLine =
     let
         currency =
             String.toLower title
@@ -161,10 +197,17 @@ resultLineToHtml vc title resultLine =
 
                 Label a ->
                     ( Route.Label a, FontAwesome.tag, a )
+
+        el attr =
+            if asLink then
+                a ((Route.graphRoute route |> toUrl |> href) :: attr)
+
+            else
+                div attr
     in
-    a
-        [ Route.graphRoute route |> toUrl |> href
-        , Css.resultLine vc |> css
+    el
+        [ Css.resultLine vc |> css
+        , onClick (UserClicksResultLine resultLine)
         ]
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled
@@ -172,13 +215,6 @@ resultLineToHtml vc title resultLine =
             |> span [ Css.resultLineIcon vc |> css ]
         , text label
         ]
-
-
-type ResultLine
-    = Address String
-    | Tx String
-    | Block Int
-    | Label String
 
 
 currencyToResult : Config -> String -> Maybe Api.Data.SearchResult -> ( String, Int ) -> { title : String, badge : List ResultLine }

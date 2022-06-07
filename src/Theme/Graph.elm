@@ -45,6 +45,7 @@ type alias Graph =
         , address : Float
         }
     , defaultColor : Color
+    , searchTextarea : List Style
     }
 
 
@@ -89,4 +90,5 @@ default =
         , address = 1
         }
     , defaultColor = Color.rgb 255 255 255
+    , searchTextarea = []
     }

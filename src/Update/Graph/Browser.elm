@@ -5,6 +5,7 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
+import Init.Graph.Tag as Tag
 import Json.Encode
 import Log
 import Model.Address as A
@@ -14,12 +15,16 @@ import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Table exposing (..)
+import Model.Graph.Tag as Tag
+import Model.Search as Search
 import Msg.Graph exposing (Msg(..))
+import Msg.Search as Search
 import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData)
+import Update.Search as Search
 import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -264,6 +269,22 @@ showAddress address model =
             )
 
 
+updateAddress : A.Address -> (Address.Address -> Address.Address) -> Model -> Model
+updateAddress { currency, address } update model =
+    case model.type_ of
+        Address (Loaded a) table ->
+            if a.address.currency == currency && a.address.address == address then
+                { model
+                    | type_ = Address (update a |> Loaded) table
+                }
+
+            else
+                model
+
+        _ ->
+            model
+
+
 showAddressTxs : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
 showAddressTxs id data model =
     let
@@ -308,6 +329,18 @@ showAddressTxs id data model =
 
 showAddressTags : { currency : String, address : String } -> Api.Data.AddressTags -> Model -> Model
 showAddressTags id data model =
+    let
+        getUserTag load =
+            case load |> Debug.log "userTag load" of
+                Loaded a ->
+                    a.userTag
+                        |> Maybe.map (Tag.userTagToApiTag a.address False >> List.singleton)
+                        |> Debug.log "userTagToApiTag"
+                        |> Maybe.withDefault []
+
+                Loading _ _ ->
+                    []
+    in
     case model.type_ of
         Address loadable table ->
             if matchAddressId id loadable |> not then
@@ -317,15 +350,23 @@ showAddressTags id data model =
                 { model
                     | type_ =
                         Address loadable <|
-                            case table of
+                            case table |> Debug.log "table" of
                                 Just (AddressTagsTable t) ->
-                                    appendData data.nextPage data.addressTags t
+                                    let
+                                        addressTags =
+                                            if List.isEmpty t.data then
+                                                getUserTag loadable ++ data.addressTags
+
+                                            else
+                                                data.addressTags
+                                    in
+                                    appendData data.nextPage addressTags t
                                         |> AddressTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> s_data data.addressTags
+                                        |> s_data (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> AddressTagsTable
                                         |> Just

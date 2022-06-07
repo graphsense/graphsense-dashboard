@@ -17,6 +17,7 @@ import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
+import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import Plugin exposing (Plugins)
 import Plugin.Html
@@ -36,6 +37,7 @@ import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Locale as Locale
+import View.Search as Search
 
 
 browser : Plugins -> PluginStates -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
@@ -285,8 +287,8 @@ rowsAddress vc now address =
         , address
             |> ifLoaded
                 (\a ->
-                    Maybe.map List.length a.address.tags
-                        |> Maybe.withDefault 0
+                    (Maybe.map List.length a.address.tags |> Maybe.withDefault 0)
+                        + (Maybe.map (\_ -> 1) a.userTag |> Maybe.withDefault 0)
                         |> String.fromInt
                         |> String
                 )

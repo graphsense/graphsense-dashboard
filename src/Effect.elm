@@ -4,6 +4,7 @@ import Api
 import Api.Request.Addresses
 import Api.Request.Entities
 import Api.Request.General
+import Api.Request.Tags
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
@@ -13,6 +14,7 @@ import Effect.Search as Search
 import Http
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
+import Msg.Search as Search
 import Plugin exposing (Plugins)
 import Plugin.Effect
 import Ports
@@ -37,6 +39,10 @@ perform plugins key apiKey effect =
         GetStatisticsEffect ->
             Api.Request.General.getStatistics
                 |> Api.send BrowserGotStatistics
+
+        GetConceptsEffect taxonomy msg ->
+            Api.Request.Tags.listConcepts taxonomy
+                |> send apiKey effect msg
 
         GetElementEffect { id, msg } ->
             Dom.getElement id
@@ -127,25 +133,19 @@ perform plugins key apiKey effect =
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
+                Graph.TagSearchEffect e ->
+                    handleSearchEffect apiKey
+                        Nothing
+                        (Graph.TagSearchMsg >> GraphMsg)
+                        (Graph.TagSearchEffect >> GraphEffect)
+                        e
+
                 Graph.CmdEffect cmd ->
                     cmd
                         |> Cmd.map GraphMsg
 
-        SearchEffect (Search.SearchEffect { query, currency, limit, toMsg }) ->
-            (Api.Request.General.search query currency limit
-                |> Api.withTracker "search"
-                |> send apiKey effect (toMsg >> SearchMsg)
-            )
-                :: Plugin.Effect.search plugins query
-                |> Cmd.batch
-
-        SearchEffect Search.CancelEffect ->
-            Http.cancel "search"
-                |> Cmd.map SearchMsg
-
-        SearchEffect (Search.BounceEffect delay msg) ->
-            Bounce.delay delay msg
-                |> Cmd.map SearchMsg
+        SearchEffect e ->
+            handleSearchEffect apiKey (Just plugins) SearchMsg SearchEffect e
 
         PortsConsoleEffect msg ->
             Ports.console msg
@@ -156,6 +156,29 @@ perform plugins key apiKey effect =
 
         CmdEffect cmd ->
             cmd
+
+
+handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> (Search.Effect -> Effect) -> Search.Effect -> Cmd Msg
+handleSearchEffect apiKey plugins tag tagEffect effect =
+    case effect of
+        Search.SearchEffect { query, currency, limit, toMsg } ->
+            (Api.Request.General.search query currency limit
+                |> Api.withTracker "search"
+                |> send apiKey (tagEffect effect) (toMsg >> tag)
+            )
+                :: (plugins
+                        |> Maybe.map (\p -> Plugin.Effect.search p query)
+                        |> Maybe.withDefault []
+                   )
+                |> Cmd.batch
+
+        Search.CancelEffect ->
+            Http.cancel "search"
+                |> Cmd.map tag
+
+        Search.BounceEffect delay msg ->
+            Bounce.delay delay msg
+                |> Cmd.map tag
 
 
 withAuthorization : String -> Api.Request a -> Api.Request a

@@ -20,7 +20,14 @@ update msg model =
                     , found = Just result
                 }
 
-        UserClicksResultLine ->
+        UserClicksResult ->
+            n
+                { model
+                    | found = Nothing
+                    , input = ""
+                }
+
+        UserClicksResultLine _ ->
             n
                 { model
                     | found = Nothing

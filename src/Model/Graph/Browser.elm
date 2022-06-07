@@ -9,6 +9,7 @@ import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Table exposing (..)
+import Model.Graph.Tag as Tag
 import Time
 
 
@@ -24,6 +25,7 @@ type Type
     = None
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
+      --| Label String (Maybe (Table Api.Data.AddressTag))
     | Plugin String
 
 

@@ -39,9 +39,14 @@ init plugins flags url key =
       , width = flags.width
       , height = flags.height
       , error = ""
+      , entityConcepts = []
+      , abuseConcepts = []
       , plugins = Plugin.init plugins
       }
     , List.map LocaleEffect localeEffect
+        ++ [ GetConceptsEffect "entity" BrowserGotEntityTaxonomy
+           , GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
+           ]
     )
         |> getStatistics
 

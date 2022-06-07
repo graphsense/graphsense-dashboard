@@ -3,11 +3,13 @@ module Msg.Search exposing (Msg(..))
 import Api.Data
 import Http
 import Json.Encode
+import Model.Search exposing (..)
 
 
 type Msg
     = BrowserGotSearchResult Api.Data.SearchResult
     | UserInputsSearch String
-    | UserClicksResultLine
+    | UserClicksResult
+    | UserClicksResultLine ResultLine
     | RuntimeBounced
     | PluginMsg String Json.Encode.Value

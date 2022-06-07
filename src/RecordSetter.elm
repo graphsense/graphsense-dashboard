@@ -1504,6 +1504,16 @@ s_headRow value__ record__ =
     { record__ | headRow = value__ }
 
 
+s_headRowClose : a -> { b | headRowClose : a } -> { b | headRowClose : a }
+s_headRowClose value__ record__ =
+    { record__ | headRowClose = value__ }
+
+
+s_headRowText : a -> { b | headRowText : a } -> { b | headRowText : a }
+s_headRowText value__ record__ =
+    { record__ | headRowText = value__ }
+
+
 s_header : a -> { b | header : a } -> { b | header : a }
 s_header value__ record__ =
     { record__ | header = value__ }
@@ -2924,6 +2934,11 @@ s_placeholder value__ record__ =
     { record__ | placeholder = value__ }
 
 
+s_pluginStates : a -> { b | pluginStates : a } -> { b | pluginStates : a }
+s_pluginStates value__ record__ =
+    { record__ | pluginStates = value__ }
+
+
 s_plugins : a -> { b | plugins : a } -> { b | plugins : a }
 s_plugins value__ record__ =
     { record__ | plugins = value__ }
@@ -3324,6 +3339,11 @@ s_resultList value__ record__ =
     { record__ | resultList = value__ }
 
 
+s_resultsAsLink : a -> { b | resultsAsLink : a } -> { b | resultsAsLink : a }
+s_resultsAsLink value__ record__ =
+    { record__ | resultsAsLink = value__ }
+
+
 s_resume : a -> { b | resume : a } -> { b | resume : a }
 s_resume value__ record__ =
     { record__ | resume = value__ }
@@ -3434,6 +3454,16 @@ s_search value__ record__ =
     { record__ | search = value__ }
 
 
+s_searchTextarea : a -> { b | searchTextarea : a } -> { b | searchTextarea : a }
+s_searchTextarea value__ record__ =
+    { record__ | searchTextarea = value__ }
+
+
+s_searchable : a -> { b | searchable : a } -> { b | searchable : a }
+s_searchable value__ record__ =
+    { record__ | searchable = value__ }
+
+
 s_secondControlPoint : a -> { b | secondControlPoint : a } -> { b | secondControlPoint : a }
 s_secondControlPoint value__ record__ =
     { record__ | secondControlPoint = value__ }
@@ -3492,6 +3522,11 @@ s_shift value__ record__ =
 s_showCase : a -> { b | showCase : a } -> { b | showCase : a }
 s_showCase value__ record__ =
     { record__ | showCase = value__ }
+
+
+s_showIcon : a -> { b | showIcon : a } -> { b | showIcon : a }
+s_showIcon value__ record__ =
+    { record__ | showIcon = value__ }
 
 
 s_showTable : a -> { b | showTable : a } -> { b | showTable : a }

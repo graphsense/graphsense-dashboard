@@ -184,3 +184,8 @@ linkLabel vc hovered =
 linkLabelBox : Config -> Bool -> List Style
 linkLabelBox vc hovered =
     vc.theme.graph.linkLabelBox hovered
+
+
+searchTextarea : Config -> List Style
+searchTextarea vc =
+    vc.theme.graph.searchTextarea

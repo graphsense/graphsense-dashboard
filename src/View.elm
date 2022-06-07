@@ -9,9 +9,11 @@ import Hovercard
 import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import RemoteData
+import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
@@ -64,14 +66,14 @@ body plugins vc model =
                 ]
             ]
          ]
-            ++ hovercards vc model
+            ++ hovercards plugins vc model
             ++ overlay vc model
         )
 
 
-hovercards : Config -> Model key -> List (Html Msg)
-hovercards vc model =
-    model.user.hovercardElement
+hovercards : Plugins -> Config -> Model key -> List (Html Msg)
+hovercards plugins vc model =
+    (model.user.hovercardElement
         |> Maybe.map
             (\element ->
                 Hovercard.hovercard
@@ -91,6 +93,37 @@ hovercards vc model =
                     |> List.singleton
             )
         |> Maybe.withDefault []
+    )
+        ++ (model.graph.tag
+                |> Maybe.map
+                    (\tag ->
+                        Hovercard.hovercard
+                            { maxWidth = 300
+                            , maxHeight = 500
+                            , tickLength = 16
+                            , borderColor = vc.theme.hovercard.borderColor
+                            , backgroundColor = vc.theme.hovercard.backgroundColor
+                            , borderWidth = vc.theme.hovercard.borderWidth
+                            }
+                            tag.hovercardElement
+                            (Css.View.hovercard vc
+                                |> List.map (\( k, v ) -> Html.style k v)
+                            )
+                            (Tag.inputHovercard plugins
+                                vc
+                                { entityConcepts = model.entityConcepts
+                                , abuseConcepts = model.abuseConcepts
+                                }
+                                tag
+                                |> Html.Styled.toUnstyled
+                                |> List.singleton
+                            )
+                            |> Html.Styled.fromUnstyled
+                            |> Html.Styled.map GraphMsg
+                            |> List.singleton
+                    )
+                |> Maybe.withDefault []
+           )
 
 
 overlay : Config -> Model key -> List (Html Msg)

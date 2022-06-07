@@ -9,6 +9,7 @@ import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Transform as Transform
+import Msg.Search as Search
 import Plugin.Model as Plugin
 import Set exposing (Set)
 import Table
@@ -72,4 +73,11 @@ type Msg
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
     | InfiniteScrollMsg InfiniteScroll.Msg
+    | TagSearchMsg Search.Msg
+    | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)
+    | UserInputsTagSource String
+    | UserInputsTagCategory String
+    | UserInputsTagAbuse String
+    | UserClicksCloseTagHovercard
+    | UserSubmitsTagInput
     | NoOp

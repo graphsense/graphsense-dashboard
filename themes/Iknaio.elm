@@ -69,6 +69,10 @@ colors =
     }
 
 
+fontFam =
+    [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
+
+
 theme : Theme
 theme =
     Theme.default
@@ -76,7 +80,7 @@ theme =
         |> s_loadingSpinnerUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/loading.gif]"
         |> s_body
             [ color <| toCssColor colors.brandText
-            , fontFamilies [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
+            , fontFamilies fontFam
             , scaled 3.5 |> rem |> fontSize
             ]
         |> s_header
@@ -91,8 +95,7 @@ theme =
             , fontWeight bold
             ]
         |> s_input
-            [ outline none
-            , inputStyle
+            [ inputStyle
             ]
         |> s_headerLogo
             [ maxWidth <| px 190
@@ -269,6 +272,28 @@ theme =
                     , scaled 2 |> rem |> paddingBottom
                     , scaled 0.5 |> rem |> paddingTop
                     ]
+                |> s_headRow
+                    [ scaled 3 |> rem |> padding
+                    , colors.brandLight |> toCssColor |> backgroundColor
+                    , displayFlex
+                    , justifyContent spaceBetween
+                    , alignItems center
+                    ]
+                |> s_body
+                    [ scaled 3 |> rem |> padding
+                    ]
+                |> s_headRowClose
+                    [ colors.brandText |> toCssColor |> color
+                    , backgroundColor transparent
+                    , border (px 0)
+
+                    --, position absolute
+                    --, scaled 3 |> rem |> top
+                    --, scaled 1 |> rem |> right
+                    , px 15 |> width
+                    , px 20 |> height
+                    , cursor pointer
+                    ]
             )
         |> s_graph
             (Graph.default
@@ -398,6 +423,11 @@ theme =
                     )
                 |> s_navbar
                     [ toCssColor colors.brandWhite |> backgroundColor
+                    ]
+                |> s_searchTextarea
+                    [ inputStyle
+                    , scaled 1 |> rem |> padding
+                    , fontFamilies fontFam
                     ]
             )
         |> s_browser

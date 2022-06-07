@@ -22,4 +22,6 @@ init plugins now =
     , selected = SelectedNone
     , hovered = HoveredNone
     , contextMenu = Nothing
+    , tag = Nothing
+    , userAddressTags = Dict.empty
     }

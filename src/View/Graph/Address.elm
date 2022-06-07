@@ -9,6 +9,7 @@ import Dict
 import Init.Graph.Id as Id
 import Json.Decode
 import Log
+import Maybe.Extra
 import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -38,7 +39,9 @@ address plugins vc gc selected addr =
             Log.log "rednerAddress" addr.id
 
         color =
-            addr.category
+            addr.userTag
+                |> Maybe.andThen .category
+                |> Maybe.Extra.orElse addr.category
                 |> Maybe.andThen
                     (\category -> Dict.get category gc.colors)
                 |> Maybe.withDefault vc.theme.graph.defaultColor
@@ -73,6 +76,8 @@ address plugins vc gc selected addr =
             |> transform
         , UserPushesLeftMouseButtonOnEntity addr.entityId
             |> Util.Graph.mousedown
+        , Id.addressIdToString addr.id
+            |> id
         ]
         [ rect
             [ width <| String.fromFloat Graph.addressWidth
@@ -160,7 +165,13 @@ getLabel vc gc addr =
                 |> Locale.currency vc.locale (Id.currency addr.id)
 
         Tag ->
-            "todo"
+            addr.userTag
+                |> Maybe.map .label
+                |> Maybe.Extra.orElseLazy
+                    (\_ ->
+                        Address.bestTag addr.address.tags |> Maybe.map .label
+                    )
+                |> Maybe.withDefault (addr.address.address |> String.left 8)
 
 
 flags : Plugins -> Config -> Graph.Config -> Address -> Svg Msg

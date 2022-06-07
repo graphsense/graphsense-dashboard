@@ -1,6 +1,7 @@
 module Update.Graph exposing (..)
 
 import Api.Data
+import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import Dict
@@ -8,6 +9,7 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
+import Init.Graph.Tag as Tag
 import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
 import List.Extra
@@ -22,6 +24,7 @@ import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
+import Model.Graph.Tag as Tag
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
@@ -29,12 +32,14 @@ import RecordSetter exposing (..)
 import Route as R exposing (toUrl)
 import Route.Graph as Route
 import Set exposing (Set)
+import Task
 import Tuple exposing (..)
 import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
 import Update.Graph.Layer as Layer
+import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 
 
@@ -689,9 +694,8 @@ update plugins uc msg model =
                 |> n
 
         BrowserGotAddressTags id tags ->
-            { model
-                | layers = Layer.updateAddresses id (Address.updateTags tags.addressTags) model.layers
-            }
+            model
+                |> updateAddresses id (Address.updateTags tags.addressTags)
                 |> n
 
         BrowserGotAddressTagsTable id tags ->
@@ -831,7 +835,74 @@ update plugins uc msg model =
             hideContextmenu model
 
         UserClickedAnnotateAddress id ->
-            n model
+            ( model
+            , Id.addressIdToString id
+                |> Dom.getElement
+                |> Task.attempt (BrowserGotAddressElementForAnnotate id)
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotAddressElementForAnnotate id element ->
+            element
+                |> Result.map
+                    (\el ->
+                        { model
+                            | tag =
+                                model.layers
+                                    |> Layer.getAddress id
+                                    |> Maybe.andThen .userTag
+                                    |> Tag.init id el
+                                    |> Just
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
+        UserInputsTagSource input ->
+            model.tag
+                |> Maybe.map
+                    (\tag ->
+                        { model
+                            | tag = Tag.inputSource input tag |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
+        UserInputsTagCategory input ->
+            model.tag
+                |> Maybe.map
+                    (\tag ->
+                        { model
+                            | tag = Tag.inputCategory input tag |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
+        UserInputsTagAbuse input ->
+            model.tag
+                |> Maybe.map
+                    (\tag ->
+                        { model
+                            | tag = Tag.inputAbuse input tag |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
+        UserClicksCloseTagHovercard ->
+            { model
+                | tag = Nothing
+            }
+                |> n
+
+        UserSubmitsTagInput ->
+            model.tag
+                |> Maybe.map (storeUserTag uc model)
+                |> Maybe.withDefault model
+                |> n
 
         UserClickedRemoveAddress id ->
             n model
@@ -929,6 +1000,22 @@ update plugins uc msg model =
                 |> Maybe.map
                     (\anchor ->
                         handleEntityNeighbors uc anchor isOutgoing [ neighbor ] model
+                    )
+                |> Maybe.withDefault (n model)
+
+        TagSearchMsg m ->
+            model.tag
+                |> Maybe.map
+                    (\tag ->
+                        let
+                            ( tag_, effects ) =
+                                Tag.searchMsg m tag
+                        in
+                        ( { model
+                            | tag = Just tag_
+                          }
+                        , effects
+                        )
                     )
                 |> Maybe.withDefault (n model)
 
@@ -1352,3 +1439,56 @@ deselect model =
 draggingToClick : Coords -> Coords -> Bool
 draggingToClick start current =
     Coords.betrag start current < 2
+
+
+storeUserTag : Update.Config -> Model -> Tag.Model -> Model
+storeUserTag uc model tag =
+    if String.isEmpty tag.input.label.input then
+        model
+
+    else
+        let
+            tag_ =
+                { label = tag.input.label.input
+                , category =
+                    if String.isEmpty tag.input.category then
+                        Nothing
+
+                    else
+                        Just tag.input.category
+                , abuse =
+                    if String.isEmpty tag.input.abuse then
+                        Nothing
+
+                    else
+                        Just tag.input.abuse
+                , source = tag.input.source
+                }
+
+            currency =
+                Id.currency tag.input.id
+
+            address =
+                Id.addressId tag.input.id
+
+            colors =
+                tag_.category
+                    |> Color.update uc model.config.colors
+        in
+        { model
+            | userAddressTags =
+                Dict.insert ( currency, address ) tag_ model.userAddressTags
+            , config =
+                model.config
+                    |> s_colors colors
+            , tag = Nothing
+        }
+            |> updateAddresses { currency = currency, address = address } (\a -> { a | userTag = Just tag_ })
+
+
+updateAddresses : A.Address -> (Address -> Address) -> Model -> Model
+updateAddresses id upd model =
+    { model
+        | layers = Layer.updateAddresses id upd model.layers
+        , browser = Browser.updateAddress id upd model.browser
+    }

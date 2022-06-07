@@ -4,8 +4,10 @@ import Api.Data
 import Config.Graph exposing (expandHandleWidth)
 import Dict exposing (Dict)
 import Json.Encode
+import List.Extra
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
+import Model.Graph.Tag as Tag
 import Plugin.Model as Plugin exposing (PluginStates)
 
 
@@ -19,6 +21,7 @@ type alias Address =
     , dx : Float
     , dy : Float
     , links : Links
+    , userTag : Maybe Tag.UserTag
     , plugins : PluginStates
     }
 
@@ -54,4 +57,12 @@ getY addr =
 
 tagsToCategory : Maybe (List Api.Data.AddressTag) -> Maybe String
 tagsToCategory =
-    Maybe.andThen (List.head >> Maybe.andThen .category)
+    bestTag >> Maybe.andThen .category
+
+
+bestTag : Maybe (List Api.Data.AddressTag) -> Maybe Api.Data.AddressTag
+bestTag =
+    Maybe.andThen
+        (List.sortBy (.confidenceLevel >> Maybe.withDefault 0)
+            >> List.Extra.last
+        )

@@ -3,6 +3,7 @@ module View.Header exposing (header)
 import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Header as Css
+import Css.Search
 import Html.Styled exposing (Attribute, Html, div, header, img, text)
 import Html.Styled.Attributes exposing (css, id, src)
 import Model exposing (Msg(..), UserModel)
@@ -29,9 +30,16 @@ header plugins states vc hc =
         ]
         [ logo vc
         , Search.search plugins
-            states
             vc
-            { latestBlocks = hc.latestBlocks
+            { searchable =
+                { latestBlocks = hc.latestBlocks
+                , pluginStates = states
+                }
+                    |> Search.SearchAll
+            , css = Css.Search.textarea vc
+            , resultsAsLink = True
+            , multiline = True
+            , showIcon = True
             }
             hc.search
             |> Html.Styled.map SearchMsg
