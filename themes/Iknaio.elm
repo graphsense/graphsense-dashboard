@@ -429,6 +429,17 @@ theme =
                     , scaled 1 |> rem |> padding
                     , fontFamilies fontFam
                     ]
+                |> s_toolbox
+                    [ toCssColor colors.brandWhite |> backgroundColor
+                    , scaled 2 |> rem |> padding
+                    ]
+                |> s_legendItemColor
+                    [ before
+                        -- seems not to work
+                        [ property "content" "◼"
+                        ]
+                    , scaled 1 |> rem |> marginRight
+                    ]
             )
         |> s_browser
             (Browser.default

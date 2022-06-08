@@ -273,6 +273,18 @@ update plugins uc msg model =
                             , List.map PluginEffect cmd
                             )
 
+                Graph.BrowserGotLegendElement result ->
+                    let
+                        ( graph, effects ) =
+                            Graph.makeLegend model.entityConcepts model.graph
+                                |> Graph.toolElementResultToTool result model.graph
+                    in
+                    ( { model
+                        | graph = graph
+                      }
+                    , List.map GraphEffect effects
+                    )
+
                 _ ->
                     let
                         ( graph, graphEffects ) =

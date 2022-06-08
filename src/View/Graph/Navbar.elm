@@ -32,7 +32,7 @@ navbarLeft plugins states vc model =
         (List.map (Tool.tool vc)
             [ { icon = FontAwesome.icon FontAwesome.tag
               , title = "My tags"
-              , msg = ToBeDone "My tags"
+              , msg = ToBeDone
               , color = Nothing
               }
             ]
@@ -70,42 +70,42 @@ navbarRight vc =
         (List.map (Tool.tool vc)
             [ { title = "Start from scratch"
               , icon = FontAwesome.icon FontAwesome.file
-              , msg = ToBeDone "Start from scratch"
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen
-              , msg = ToBeDone "Load from file ..."
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Export ..."
               , icon = FontAwesome.icon FontAwesome.download
-              , msg = ToBeDone "Export ..."
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Undo last graph change"
               , icon = FontAwesome.icon FontAwesome.undo
-              , msg = ToBeDone "Undo last graph change"
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
-              , msg = ToBeDone "Redo undone graph change"
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
-              , msg = ToBeDone "Highlight nodes"
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog
-              , msg = ToBeDone "Configuration options"
+              , msg = ToBeDone
               , color = Nothing
               }
             , { title = "Legend"
               , icon = FontAwesome.icon FontAwesome.info
-              , msg = ToBeDone "Legend"
+              , msg = UserClicksLegend
               , color = Nothing
               }
             ]

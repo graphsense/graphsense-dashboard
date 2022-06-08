@@ -1,5 +1,6 @@
 module View.Graph exposing (view)
 
+import Browser.Dom as Dom
 import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
@@ -36,6 +37,7 @@ import View.Graph.Entity as Entity
 import View.Graph.Layer as ViewLayer
 import View.Graph.Link as Link
 import View.Graph.Navbar as Navbar
+import View.Graph.Tool as Tool
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 
@@ -57,6 +59,7 @@ graph plugins states vc gc model =
         , Html.id "graph"
         ]
         [ browser plugins states vc gc model.browser
+        , Tool.toolbox vc model.activeTool
         , model.size
             |> Maybe.map (graphSvg plugins states vc gc model)
             |> Maybe.withDefault none

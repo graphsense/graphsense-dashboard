@@ -11,6 +11,7 @@ import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
+import Model.Graph.Legend as Legend
 import Model.Graph.Tag as Tag
 import Model.Graph.Transform as Transform
 import Plugin.Model as Plugin exposing (PluginStates)
@@ -31,7 +32,12 @@ type alias Model =
     , tag : Maybe Tag.Model
     , userAddressTags : Dict ( String, String ) Tag.UserTag
     , hovercardTBD : Maybe Dom.Element
+    , activeTool : Maybe ( Dom.Element, Toolbox )
     }
+
+
+type Toolbox
+    = Legend (List Legend.Item)
 
 
 type NodeType

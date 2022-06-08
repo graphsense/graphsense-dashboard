@@ -24,6 +24,11 @@ s_abuse value__ record__ =
     { record__ | abuse = value__ }
 
 
+s_abuseConcepts : a -> { b | abuseConcepts : a } -> { b | abuseConcepts : a }
+s_abuseConcepts value__ record__ =
+    { record__ | abuseConcepts = value__ }
+
+
 s_accumulatedFaces : a -> { b | accumulatedFaces : a } -> { b | accumulatedFaces : a }
 s_accumulatedFaces value__ record__ =
     { record__ | accumulatedFaces = value__ }
@@ -37,6 +42,11 @@ s_active value__ record__ =
 s_activeCase : a -> { b | activeCase : a } -> { b | activeCase : a }
 s_activeCase value__ record__ =
     { record__ | activeCase = value__ }
+
+
+s_activeTool : a -> { b | activeTool : a } -> { b | activeTool : a }
+s_activeTool value__ record__ =
+    { record__ | activeTool = value__ }
 
 
 s_actual : a -> { b | actual : a } -> { b | actual : a }
@@ -1074,6 +1084,11 @@ s_entities value__ record__ =
     { record__ | entities = value__ }
 
 
+s_entitiesAdded : a -> { b | entitiesAdded : a } -> { b | entitiesAdded : a }
+s_entitiesAdded value__ record__ =
+    { record__ | entitiesAdded = value__ }
+
+
 s_entity : a -> { b | entity : a } -> { b | entity : a }
 s_entity value__ record__ =
     { record__ | entity = value__ }
@@ -1082,6 +1097,11 @@ s_entity value__ record__ =
 s_entityAddressesCount : a -> { b | entityAddressesCount : a } -> { b | entityAddressesCount : a }
 s_entityAddressesCount value__ record__ =
     { record__ | entityAddressesCount = value__ }
+
+
+s_entityConcepts : a -> { b | entityConcepts : a } -> { b | entityConcepts : a }
+s_entityConcepts value__ record__ =
+    { record__ | entityConcepts = value__ }
 
 
 s_entityCurrency : a -> { b | entityCurrency : a } -> { b | entityCurrency : a }
@@ -1589,6 +1609,11 @@ s_hovercardRoot value__ record__ =
     { record__ | hovercardRoot = value__ }
 
 
+s_hovercardTBD : a -> { b | hovercardTBD : a } -> { b | hovercardTBD : a }
+s_hovercardTBD value__ record__ =
+    { record__ | hovercardTBD = value__ }
+
+
 s_hovered : a -> { b | hovered : a } -> { b | hovered : a }
 s_hovered value__ record__ =
     { record__ | hovered = value__ }
@@ -1932,6 +1957,21 @@ s_leftBranch value__ record__ =
 s_leftEdge : a -> { b | leftEdge : a } -> { b | leftEdge : a }
 s_leftEdge value__ record__ =
     { record__ | leftEdge = value__ }
+
+
+s_legendItem : a -> { b | legendItem : a } -> { b | legendItem : a }
+s_legendItem value__ record__ =
+    { record__ | legendItem = value__ }
+
+
+s_legendItemColor : a -> { b | legendItemColor : a } -> { b | legendItemColor : a }
+s_legendItemColor value__ record__ =
+    { record__ | legendItemColor = value__ }
+
+
+s_legendItemTitle : a -> { b | legendItemTitle : a } -> { b | legendItemTitle : a }
+s_legendItemTitle value__ record__ =
+    { record__ | legendItemTitle = value__ }
 
 
 s_length : a -> { b | length : a } -> { b | length : a }
@@ -2387,6 +2427,16 @@ s_neighbors value__ record__ =
 s_new : a -> { b | new : a } -> { b | new : a }
 s_new value__ record__ =
     { record__ | new = value__ }
+
+
+s_newAddresses : a -> { b | newAddresses : a } -> { b | newAddresses : a }
+s_newAddresses value__ record__ =
+    { record__ | newAddresses = value__ }
+
+
+s_newEntities : a -> { b | newEntities : a } -> { b | newEntities : a }
+s_newEntities value__ record__ =
+    { record__ | newEntities = value__ }
 
 
 s_newLines : a -> { b | newLines : a } -> { b | newLines : a }
@@ -3384,6 +3434,11 @@ s_rootAddress value__ record__ =
     { record__ | rootAddress = value__ }
 
 
+s_root_address : a -> { b | root_address : a } -> { b | root_address : a }
+s_root_address value__ record__ =
+    { record__ | root_address = value__ }
+
+
 s_row : a -> { b | row : a } -> { b | row : a }
 s_row value__ record__ =
     { record__ | row = value__ }
@@ -4074,6 +4129,11 @@ s_tool value__ record__ =
     { record__ | tool = value__ }
 
 
+s_toolbox : a -> { b | toolbox : a } -> { b | toolbox : a }
+s_toolbox value__ record__ =
+    { record__ | toolbox = value__ }
+
+
 s_topEdge : a -> { b | topEdge : a } -> { b | topEdge : a }
 s_topEdge value__ record__ =
     { record__ | topEdge = value__ }
@@ -4277,6 +4337,16 @@ s_url value__ record__ =
 s_user : a -> { b | user : a } -> { b | user : a }
 s_user value__ record__ =
     { record__ | user = value__ }
+
+
+s_userAddressTags : a -> { b | userAddressTags : a } -> { b | userAddressTags : a }
+s_userAddressTags value__ record__ =
+    { record__ | userAddressTags = value__ }
+
+
+s_userTag : a -> { b | userTag : a } -> { b | userTag : a }
+s_userTag value__ record__ =
+    { record__ | userTag = value__ }
 
 
 s_value : a -> { b | value : a } -> { b | value : a }

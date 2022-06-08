@@ -1062,8 +1062,39 @@ update plugins uc msg model =
         RuntimeHideTBD ->
             n { model | hovercardTBD = Nothing }
 
+        UserClicksLegend id ->
+            case model.activeTool |> Maybe.map second of
+                Just (Legend _) ->
+                    n { model | activeTool = Nothing }
+
+                _ ->
+                    ( model
+                    , id
+                        |> Dom.getElement
+                        |> Task.attempt BrowserGotLegendElement
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+        BrowserGotLegendElement result ->
+            -- handled in Update.elm
+            n model
+
         NoOp ->
             n model
+
+
+toolElementResultToTool : Result Dom.Error Dom.Element -> Model -> Toolbox -> ( Model, List Effect )
+toolElementResultToTool result model toolbox =
+    result
+        |> Result.map
+            (\element ->
+                { model
+                    | activeTool = Just ( element, toolbox )
+                }
+            )
+        |> Result.withDefault model
+        |> n
 
 
 hideContextmenu : Model -> ( Model, List Effect )
@@ -1666,3 +1697,21 @@ addUserTag ids userTags layers =
                     |> Maybe.withDefault layers_
             )
             layers
+
+
+makeLegend : List Api.Data.Concept -> Model -> Toolbox
+makeLegend categories model =
+    model.config.colors
+        |> Dict.toList
+        |> List.filterMap
+            (\( cat, color ) ->
+                List.Extra.find (.id >> (==) cat) categories
+                    |> Maybe.map
+                        (\category ->
+                            { color = color
+                            , title = category.label
+                            , uri = category.uri
+                            }
+                        )
+            )
+        |> Legend

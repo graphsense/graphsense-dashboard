@@ -189,3 +189,24 @@ linkLabelBox vc hovered =
 searchTextarea : Config -> List Style
 searchTextarea vc =
     vc.theme.graph.searchTextarea
+
+
+toolbox : Config -> List Style
+toolbox vc =
+    position absolute
+        :: vc.theme.graph.toolbox
+
+
+legendItem : Config -> List Style
+legendItem vc =
+    vc.theme.graph.legendItem
+
+
+legendItemColor : Config -> List Style
+legendItemColor vc =
+    vc.theme.graph.legendItemColor
+
+
+legendItemTitle : Config -> List Style
+legendItemTitle vc =
+    vc.theme.graph.legendItemTitle

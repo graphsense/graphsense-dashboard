@@ -7,6 +7,6 @@ import Html exposing (Html)
 type alias Tool msg =
     { icon : Html msg
     , title : String
-    , msg : msg
+    , msg : String -> msg
     , color : Maybe Color
     }

@@ -84,4 +84,6 @@ type Msg
     | ToBeDone String
     | BrowserGotElementForTBD (Result Browser.Dom.Error Browser.Dom.Element)
     | RuntimeHideTBD
+    | UserClicksLegend String
+    | BrowserGotLegendElement (Result Browser.Dom.Error Browser.Dom.Element)
     | NoOp

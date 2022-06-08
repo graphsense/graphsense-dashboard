@@ -1,14 +1,17 @@
-module View.Graph.Tool exposing (tool)
+module View.Graph.Tool exposing (..)
 
+import Browser.Dom as Dom
 import Config.View exposing (Config)
 import Css exposing (color)
 import Css.Graph as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Model.Graph exposing (Toolbox(..))
 import Model.Graph.Tool exposing (Tool)
 import Msg.Graph exposing (Msg(..))
-import Util.View exposing (toCssColor)
+import Util.View exposing (none, toCssColor)
+import View.Graph.Legend as Legend
 import View.Locale as Locale
 
 
@@ -19,9 +22,37 @@ tool vc t =
             ++ (t.color |> Maybe.map (toCssColor >> color >> List.singleton) |> Maybe.withDefault [])
             |> css
         , Locale.string vc.locale t.title |> title
-        , onClick t.msg
+        , onClick (t.msg t.title)
         , id t.title
         ]
         [ t.icon
             |> Html.Styled.fromUnstyled
         ]
+
+
+toolbox : Config -> Maybe ( Dom.Element, Toolbox ) -> Html Msg
+toolbox vc =
+    Maybe.map
+        (\( el, too ) ->
+            div
+                [ [ el.element.x
+                        + el.element.width
+                        |> Css.px
+                        |> Css.left
+                  , Css.position Css.absolute
+                  ]
+                    |> css
+                ]
+                [ div
+                    [ [ Css.right (Css.px 0)
+                      ]
+                        ++ Css.toolbox vc
+                        |> css
+                    ]
+                    (case too of
+                        Legend data ->
+                            Legend.legend vc data
+                    )
+                ]
+        )
+        >> Maybe.withDefault none
