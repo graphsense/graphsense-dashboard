@@ -1,10 +1,12 @@
 module Model.Graph.Layer exposing (..)
 
+import Api.Data
 import Config.Graph exposing (entityWidth, expandHandleWidth)
 import Dict exposing (Dict)
 import Init.Graph.Id as Id exposing (..)
 import IntDict exposing (IntDict)
 import List.Extra
+import Model.Address as A
 import Model.Graph.Address as Address exposing (..)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
@@ -46,6 +48,49 @@ getEntity : EntityId -> IntDict Layer -> Maybe Entity
 getEntity id =
     IntDict.get (Id.layer id)
         >> Maybe.andThen (.entities >> Dict.get id)
+
+
+getEntityForAddress : A.Address -> IntDict Layer -> Maybe Api.Data.Entity
+getEntityForAddress address layers =
+    layers
+        |> IntDict.values
+        |> getEntityForAddressHelp address
+
+
+getEntityForAddressHelp : A.Address -> List Layer -> Maybe Api.Data.Entity
+getEntityForAddressHelp address layers =
+    case layers of
+        [] ->
+            Nothing
+
+        layer :: rest ->
+            case
+                layer.entities
+                    |> Dict.values
+                    |> getEntityForAddressHelp2 address
+            of
+                Nothing ->
+                    getEntityForAddressHelp address rest
+
+                Just found ->
+                    Just found
+
+
+getEntityForAddressHelp2 : A.Address -> List Entity -> Maybe Api.Data.Entity
+getEntityForAddressHelp2 { currency, address } =
+    List.Extra.find
+        (.addresses
+            >> Dict.values
+            >> List.Extra.find
+                (\a ->
+                    a.address.currency
+                        == currency
+                        && a.address.address
+                        == address
+                )
+            >> (/=) Nothing
+        )
+        >> Maybe.map .entity
 
 
 getAddress : AddressId -> IntDict Layer -> Maybe Address

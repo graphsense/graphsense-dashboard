@@ -24,6 +24,7 @@ import Plugin.Html
 import Plugin.Model exposing (PluginStates)
 import Plugin.View.Graph.Address
 import Plugin.View.Graph.Browser
+import Plugin.View.Graph.Entity
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
@@ -61,7 +62,7 @@ browser plugins states vc gc model =
                            )
 
                 Browser.Entity loadable table ->
-                    browseEntity plugins vc gc model.now loadable
+                    browseEntity plugins states vc gc model.now loadable
                         :: (table
                                 |> Maybe.map (browseEntityTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
@@ -420,20 +421,17 @@ elseShowCurrency l =
             v
 
 
-browseEntity : Plugins -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
-browseEntity plugins vc gc now entity =
+browseEntity : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
+browseEntity plugins states vc gc now entity =
     (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
-        {- ++ (pluginStates
-                |> Plugin.Html.iterate plugins
-                    vc
-                    (\plugin state ->
-                        plugin.view.graph.address.properties vc state
-                    )
-                |> List.intersperse [ rule vc ]
-                |> List.concat
+        ++ (case entity of
+                Loading _ _ ->
+                    []
+
+                Loaded en ->
+                    Plugin.View.Graph.Entity.properties plugins states en.plugins vc
            )
-        -}
         |> propertyBox vc
 
 

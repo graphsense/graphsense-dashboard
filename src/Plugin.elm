@@ -6,6 +6,7 @@ import Html.Styled as Html exposing (..)
 import Json.Encode exposing (Value)
 import Log
 import Model.Graph.Address as Address
+import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Plugin.Model exposing (..)
 import Regex
@@ -28,6 +29,11 @@ type alias Plugin =
                 , contextMenu : View.Config -> Id.AddressId -> Value -> Maybe Value -> List (Html Value)
                 , properties : View.Config -> Value -> Value -> List (Html Value)
                 }
+            , entity :
+                { flags : View.Config -> Value -> List (Svg Value)
+                , contextMenu : View.Config -> Id.EntityId -> Value -> Maybe Value -> List (Html Value)
+                , properties : View.Config -> Value -> Value -> List (Html Value)
+                }
             , navbar :
                 { left : View.Config -> Maybe Value -> Maybe (Html Value)
                 }
@@ -44,6 +50,7 @@ type alias Plugin =
         { graph :
             { model : Value
             , address : Value
+            , entity : Value
             }
         , model : Value
         }
@@ -53,25 +60,27 @@ type alias Plugin =
     }
 
 
+type alias OutMsgs =
+    List (OutMsg Value Value Value)
+
+
 type alias UpdateModel =
     { model : Update
     , graph :
-        { address : UpdateAddress
-        , addressesAdded : Set Id.AddressId -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+        { address : MsgValue -> StateValue -> StateValue
+        , entity : MsgValue -> StateValue -> StateValue
+        , addressesAdded : Set Id.AddressId -> StateValue -> ( StateValue, OutMsgs, Cmd Value )
+        , entitiesAdded : Set Id.EntityId -> StateValue -> ( StateValue, OutMsgs, Cmd Value )
         }
     }
 
 
-type alias UpdateAddress =
-    MsgValue -> StateValue -> StateValue
-
-
 type alias Update =
-    MsgValue -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+    MsgValue -> StateValue -> ( StateValue, OutMsgs, Cmd Value )
 
 
 type alias UpdateByRoute =
-    String -> StateValue -> ( StateValue, List (OutMsg Value), Cmd Value )
+    String -> StateValue -> ( StateValue, OutMsgs, Cmd Value )
 
 
 type alias RouteValue =
@@ -124,7 +133,7 @@ update :
     -> Dict String StateValue
     -> MsgValue
     -> (UpdateModel -> Update)
-    -> ( Dict String StateValue, List (OutMsg Value), List ( String, Cmd Value ) )
+    -> ( Dict String StateValue, OutMsgs, Cmd Value )
 update pid plugins states msg fun =
     Maybe.map2
         (\plugin state ->
@@ -134,12 +143,12 @@ update pid plugins states msg fun =
             in
             ( Dict.insert pid newState states
             , outMsg
-            , [ ( pid, cmd ) ]
+            , cmd
             )
         )
         (Dict.get pid plugins)
         (Dict.get pid states)
-        |> Maybe.withDefault ( states, [], [] )
+        |> Maybe.withDefault ( states, [], Cmd.none )
 
 
 updateAddress : String -> Plugins -> Value -> Address.Address -> Address.Address
@@ -160,12 +169,30 @@ updateAddress pid plugins msg address =
         |> Maybe.withDefault address
 
 
+updateEntity : String -> Plugins -> Value -> Entity.Entity -> Entity.Entity
+updateEntity pid plugins msg entity =
+    Maybe.map2
+        (\plugin state ->
+            plugin.update.graph.entity msg state
+        )
+        (Dict.get pid plugins)
+        (Dict.get pid entity.plugins |> Log.log "Plugin get .entity.plugins")
+        |> Log.log "Plugin.updateEntity"
+        |> Maybe.map
+            (\newState ->
+                { entity
+                    | plugins = Dict.insert pid newState entity.plugins
+                }
+            )
+        |> Maybe.withDefault entity
+
+
 updateByRoute :
     String
     -> Plugins
     -> PluginStates
     -> String
-    -> ( PluginStates, List (OutMsg Value), List ( String, Cmd Value ) )
+    -> ( PluginStates, OutMsgs, Cmd Value )
 updateByRoute pid plugins states route =
     Maybe.map2
         (\plugin state ->
@@ -175,12 +202,12 @@ updateByRoute pid plugins states route =
             in
             ( Dict.insert pid newState states
             , outMsg
-            , [ ( pid, cmd ) ]
+            , cmd
             )
         )
         (Dict.get pid plugins)
         (Dict.get pid states)
-        |> Maybe.withDefault ( states, [], [] )
+        |> Maybe.withDefault ( states, [], Cmd.none )
 
 
 init : Plugins -> PluginStates

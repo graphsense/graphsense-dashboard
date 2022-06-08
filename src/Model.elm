@@ -11,6 +11,8 @@ import Effect.Search
 import Html exposing (Attribute, Html)
 import Http
 import Json.Encode
+import Model.Address exposing (Address)
+import Model.Entity exposing (Entity)
 import Model.Graph
 import Model.Locale
 import Model.Search

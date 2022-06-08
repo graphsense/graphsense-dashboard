@@ -1,0 +1,59 @@
+module Plugin.View.Graph.Entity exposing (..)
+
+import Config.View as View
+import Dict exposing (Dict)
+import Html.Styled as Html exposing (Html)
+import Json.Decode
+import Model.Graph exposing (Model)
+import Model.Graph.ContextMenu exposing (Type(..))
+import Model.Graph.Entity exposing (..)
+import Msg.Graph exposing (Msg(..))
+import Plugin as Plugin exposing (..)
+import Plugin.Model as Plugin exposing (..)
+import Svg.Styled as Svg exposing (Svg)
+
+
+flags : Plugins -> View.Config -> Entity -> List (Svg Msg)
+flags plugins vc entity =
+    plugins
+        |> Dict.toList
+        |> List.map
+            (\( pid, plugin ) ->
+                Dict.get pid entity.plugins
+                    |> Maybe.map (plugin.view.graph.entity.flags vc)
+                    |> Maybe.withDefault []
+                    |> List.map (Svg.map (PluginMsg pid))
+            )
+        |> List.concat
+
+
+properties : Plugins -> PluginStates -> PluginStates -> View.Config -> List (Html Msg)
+properties plugins states entityStates vc =
+    plugins
+        |> Dict.toList
+        |> List.map
+            (\( pid, plugin ) ->
+                Maybe.map2 (plugin.view.graph.entity.properties vc)
+                    (Dict.get pid states)
+                    (Dict.get pid entityStates)
+                    |> Maybe.withDefault []
+                    |> List.map (Html.map (PluginMsg pid))
+            )
+        |> List.concat
+
+
+contextMenu : Plugins -> PluginStates -> View.Config -> Model -> Entity -> List (Html Msg)
+contextMenu plugins states vc model entity =
+    plugins
+        |> Dict.toList
+        |> List.filterMap
+            (\( pid, plugin ) ->
+                Dict.get pid states
+                    |> Maybe.map
+                        (\modelState ->
+                            Dict.get pid entity.plugins
+                                |> plugin.view.graph.entity.contextMenu vc entity.id modelState
+                                |> List.map (Html.map (PluginMsg pid))
+                        )
+            )
+        |> List.concat

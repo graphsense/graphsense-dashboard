@@ -7,6 +7,7 @@ import Dict exposing (Dict)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
+import Plugin.Model as Plugin exposing (PluginStates)
 
 
 type alias Entity =
@@ -20,6 +21,7 @@ type alias Entity =
     , dx : Float
     , dy : Float
     , links : Links
+    , plugins : PluginStates
     }
 
 

@@ -131,7 +131,7 @@ graphSvg plugins states vc gc model size =
          in
          [ Svg.lazy2 arrowMarkers vc gc
          , Svg.lazy3 entityLinks vc gc model.layers
-         , Svg.lazy4 entities vc gc selectedEntity model.layers
+         , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
          , Svg.lazy3 addressLinks vc gc model.layers
          , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
          , Svg.lazy5 hoveredLink vc gc hoveredEntityLink hoveredAddressLink model.layers
@@ -157,8 +157,8 @@ addresses plugins vc gc selected layers =
         |> Keyed.node "g" []
 
 
-entities : Config -> Graph.Config -> Id.EntityId -> IntDict Layer -> Svg Msg
-entities vc gc selected layers =
+entities : Plugins -> Config -> Graph.Config -> Id.EntityId -> IntDict Layer -> Svg Msg
+entities plugins vc gc selected layers =
     let
         _ =
             Log.log "Graph.entities" ""
@@ -167,7 +167,7 @@ entities vc gc selected layers =
         |> IntDict.foldl
             (\layerId layer svg ->
                 ( "layer" ++ String.fromInt layerId
-                , Svg.lazy4 ViewLayer.entities vc gc selected layer
+                , Svg.lazy5 ViewLayer.entities plugins vc gc selected layer
                 )
                     :: svg
             )

@@ -37,7 +37,7 @@ import Url exposing (Url)
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
 update plugins uc msg model =
-    case msg of
+    case Log.truncate "msg" msg of
         NoOp ->
             n model
 
@@ -215,11 +215,12 @@ update plugins uc msg model =
                         ( new, outMsg, cmd ) =
                             Plugin.update pid plugins model.plugins ms .model
                     in
-                    { model
+                    ( { model
                         | plugins = new
-                    }
-                        |> updateByPluginOutMsg plugins pid outMsg
-                        |> mapSecond ((++) (List.map PluginEffect cmd))
+                      }
+                    , [ PluginEffect ( pid, cmd ) ]
+                    )
+                        |> updateByPluginOutMsg plugins ( pid, outMsg )
 
                 _ ->
                     let
@@ -237,22 +238,40 @@ update plugins uc msg model =
                         ( new, outMsg, cmd ) =
                             Plugin.update pid plugins model.plugins ms .model
                     in
-                    { model
+                    ( { model
                         | plugins = new
-                    }
-                        |> updateByPluginOutMsg plugins pid outMsg
-                        |> mapSecond ((++) (List.map PluginEffect cmd))
+                      }
+                    , [ PluginEffect ( pid, cmd ) ]
+                    )
+                        |> updateByPluginOutMsg plugins ( pid, outMsg )
 
                 Graph.InternalGraphAddedAddresses ids ->
                     let
                         ( new, outMsg, cmd ) =
                             Plugin.Update.Graph.addressesAdded plugins model.plugins ids
                     in
-                    ( { model
-                        | plugins = new
-                      }
-                    , List.map PluginEffect cmd
-                    )
+                    outMsg
+                        |> List.foldl
+                            (updateByPluginOutMsg plugins)
+                            ( { model
+                                | plugins = new
+                              }
+                            , List.map PluginEffect cmd
+                            )
+
+                Graph.InternalGraphAddedEntities ids ->
+                    let
+                        ( new, outMsg, cmd ) =
+                            Plugin.Update.Graph.entitiesAdded plugins model.plugins ids
+                    in
+                    outMsg
+                        |> List.foldl
+                            (updateByPluginOutMsg plugins)
+                            ( { model
+                                | plugins = new
+                              }
+                            , List.map PluginEffect cmd
+                            )
 
                 _ ->
                     let
@@ -268,67 +287,46 @@ update plugins uc msg model =
                 ( new, outMsg, cmd ) =
                     Plugin.update pid plugins model.plugins msgValue .model
             in
-            { model
+            ( { model
                 | plugins = new
-            }
-                |> updateByPluginOutMsg plugins pid outMsg
-                |> mapSecond ((++) (List.map PluginEffect cmd))
+              }
+            , [ PluginEffect ( pid, cmd ) ]
+            )
+                |> updateByPluginOutMsg plugins ( pid, outMsg )
 
 
-updateByPluginOutMsg : Plugins -> String -> List (Plugin.OutMsg Value) -> Model key -> ( Model key, List Effect )
-updateByPluginOutMsg plugins pid outMsgs model =
+updateByPluginOutMsg : Plugins -> ( String, Plugin.OutMsgs ) -> ( Model key, List Effect ) -> ( Model key, List Effect )
+updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
+    let
+        updateGraphByPluginOutMsg model eff =
+            let
+                ( graph, graphEffect ) =
+                    Graph.updateByPluginOutMsg plugins pid outMsgs model.graph
+            in
+            ( { model
+                | graph = graph
+              }
+            , eff ++ List.map GraphEffect graphEffect
+            )
+    in
     outMsgs
         |> List.foldl
-            (\msg ( mo, eff ) ->
+            (\msg ( model, eff ) ->
                 case Log.log "outMsg" msg of
                     Plugin.ShowBrowser ->
-                        ( { model
-                            | graph =
-                                mo.graph
-                                    |> (\graph ->
-                                            { graph
-                                                | browser = Browser.showPlugin pid graph.browser
-                                            }
-                                       )
-                          }
-                        , eff
-                        )
+                        updateGraphByPluginOutMsg model eff
 
                     Plugin.UpdateAddresses id msgValue ->
-                        let
-                            layers =
-                                Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) mo.graph.layers
-                        in
-                        ( { model
-                            | graph =
-                                mo.graph
-                                    |> (\graph ->
-                                            { graph
-                                                | layers = layers
-                                                , browser =
-                                                    case graph.browser.type_ of
-                                                        Browser.Address (Browser.Loaded ad) table ->
-                                                            if ad.address.currency == id.currency && ad.address.address == id.address then
-                                                                graph.browser
-                                                                    |> s_type_
-                                                                        (Layer.getAddress ad.id layers
-                                                                            |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
-                                                                            |> Maybe.withDefault graph.browser.type_
-                                                                        )
+                        updateGraphByPluginOutMsg model eff
 
-                                                            else
-                                                                graph.browser
+                    Plugin.UpdateAddressEntities id msgValue ->
+                        updateGraphByPluginOutMsg model eff
 
-                                                        _ ->
-                                                            graph.browser
-                                            }
-                                       )
-                          }
-                        , eff
-                        )
+                    Plugin.UpdateEntities id msgValue ->
+                        updateGraphByPluginOutMsg model eff
 
                     Plugin.PushGraphUrl url ->
-                        ( mo
+                        ( model
                         , url
                             |> pair pid
                             |> Route.Graph.pluginRoute
@@ -338,8 +336,44 @@ updateByPluginOutMsg plugins pid outMsgs model =
                             |> List.singleton
                             |> (++) eff
                         )
+
+                    Plugin.GetEntitiesForAddresses addresses toMsg ->
+                        addresses
+                            |> List.filterMap
+                                (\address -> Layer.getEntityForAddress address model.graph.layers)
+                            |> (\entities ->
+                                    let
+                                        ( new, outMsg, cmd ) =
+                                            Plugin.update pid plugins model.plugins (toMsg entities) .model
+                                    in
+                                    ( { model
+                                        | plugins = new
+                                      }
+                                    , PluginEffect ( pid, cmd ) :: eff
+                                    )
+                                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                               )
+
+                    Plugin.GetEntities entities toMsg ->
+                        entities
+                            |> List.map
+                                (\entity -> Layer.getEntities entity.currency entity.entity model.graph.layers)
+                            |> List.concat
+                            |> List.map .entity
+                            |> (\ents ->
+                                    let
+                                        ( new, outMsg, cmd ) =
+                                            Plugin.update pid plugins model.plugins (toMsg ents) .model
+                                    in
+                                    ( { model
+                                        | plugins = new
+                                      }
+                                    , PluginEffect ( pid, cmd ) :: eff
+                                    )
+                                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                               )
             )
-            ( model, [] )
+            ( mo, effects )
 
 
 updateByUrl : Plugins -> Config -> Url -> Model key -> ( Model key, List Effect )
@@ -363,13 +397,14 @@ updateByUrl plugins uc url model =
                                     ( new, outMsg, cmd ) =
                                         Plugin.updateByRoute pid plugins model.plugins value
                                 in
-                                { model
+                                ( { model
                                     | plugins = new
                                     , page = Page.Graph
                                     , url = url
-                                }
-                                    |> updateByPluginOutMsg plugins pid outMsg
-                                    |> mapSecond ((++) (List.map PluginEffect cmd))
+                                  }
+                                , [ PluginEffect ( pid, cmd ) ]
+                                )
+                                    |> updateByPluginOutMsg plugins ( pid, outMsg )
 
                             _ ->
                                 let

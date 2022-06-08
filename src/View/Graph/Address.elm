@@ -183,7 +183,7 @@ flags plugins vc gc addr =
             |> translate (Graph.addressWidth - Graph.padding / 2)
             |> transform
         ]
-        (Plugin.View.Graph.Address.flags plugins vc addr)
+        (Plugin.View.Graph.Address.flags plugins vc addr |> Log.log "View.Graph.Address flags result")
 
 
 links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg

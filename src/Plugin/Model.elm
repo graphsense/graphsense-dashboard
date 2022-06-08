@@ -1,8 +1,10 @@
 module Plugin.Model exposing (..)
 
+import Api.Data
 import Dict exposing (Dict)
 import Json.Encode exposing (Value)
 import Model.Address exposing (Address)
+import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 
 
@@ -20,7 +22,11 @@ type Context
     | Model
 
 
-type OutMsg msg
+type OutMsg msg addressMsg entityMsg
     = ShowBrowser
-    | UpdateAddresses Address msg
+    | UpdateAddresses Address addressMsg
+    | UpdateAddressEntities Address entityMsg
+    | UpdateEntities Entity entityMsg
     | PushGraphUrl String
+    | GetEntitiesForAddresses (List Address) (List Api.Data.Entity -> msg)
+    | GetEntities (List Entity) (List Api.Data.Entity -> msg)

@@ -7,7 +7,7 @@ import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
 import Model.Entity as E
-import Model.Graph.Id exposing (AddressId)
+import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model as Plugin
@@ -91,6 +91,7 @@ type Effect
         }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
+    | InternalGraphAddedEntitiesEffect (Set EntityId)
     | TagSearchEffect Search.Effect
     | CmdEffect (Cmd Msg)
 
@@ -152,6 +153,10 @@ perform eff =
 
         -- managed in Effect.elm
         InternalGraphAddedAddressesEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        InternalGraphAddedEntitiesEffect _ ->
             Cmd.none
 
         PluginEffect ( pid, cmd ) ->

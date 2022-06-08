@@ -12,6 +12,8 @@ module Update.Graph.Layer exposing
     , updateAddress
     , updateAddressLink
     , updateAddresses
+    , updateEntities
+    , updateEntity
     , updateEntityLinks
     )
 
@@ -27,6 +29,7 @@ import IntDict exposing (IntDict)
 import List.Extra
 import Log
 import Maybe.Extra
+import Model.Entity as E
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
@@ -64,9 +67,10 @@ addAddress plugins uc colors address layers =
 
 {-| Add an entity to the root of the graph
 -}
-addEntity : Update.Config -> Dict String Color -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addEntity uc colors entity layers =
-    addEntitiesAt uc
+addEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntity plugins uc colors entity layers =
+    addEntitiesAt plugins
+        uc
         (anchorsToPositions Nothing layers)
         [ entity ]
         { layers = layers
@@ -110,11 +114,12 @@ addAddressAtEntity plugins uc colors entityId address layers =
 
 {-| Add neighbors next to an entity. Also insert placeholder links
 -}
-addEntityNeighbors : Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addEntityNeighbors uc entity isOutgoing colors neighbors layers =
+addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntityNeighbors plugins uc entity isOutgoing colors neighbors layers =
     let
         added =
-            addEntitiesAt uc
+            addEntitiesAt plugins
+                uc
                 (anchorsToPositions (IntDict.singleton (Id.layer entity.id) ( entity, isOutgoing ) |> Just) layers)
                 neighbors
                 { layers = layers
@@ -239,8 +244,8 @@ anchorsToPositions anchors layers =
                     IntDict.empty
 
 
-addEntitiesAt : Update.Config -> IntDict Position -> List Api.Data.Entity -> Acc EntityId -> Acc EntityId
-addEntitiesAt uc positions entities acc =
+addEntitiesAt : Plugins -> Update.Config -> IntDict Position -> List Api.Data.Entity -> Acc EntityId -> Acc EntityId
+addEntitiesAt plugins uc positions entities acc =
     IntDict.foldl
         (\layerId position acc_ ->
             IntDict.get layerId acc_.layers
@@ -250,7 +255,7 @@ addEntitiesAt uc positions entities acc =
                             accToLayer =
                                 List.foldl
                                     (\entity ->
-                                        addEntityHere uc position entity
+                                        addEntityHere plugins uc position entity
                                     )
                                     { layer = layer
                                     , colors = acc_.colors
@@ -278,8 +283,8 @@ type alias AccEntity =
     }
 
 
-addEntityHere : Update.Config -> Position -> Api.Data.Entity -> AccEntity -> AccEntity
-addEntityHere uc position entity { layer, colors, new, repositioned } =
+addEntityHere : Plugins -> Update.Config -> Position -> Api.Data.Entity -> AccEntity -> AccEntity
+addEntityHere plugins uc position entity { layer, colors, new, repositioned } =
     let
         entityId =
             Id.initEntityId { currency = entity.currency, id = entity.entity, layer = layer.id }
@@ -305,6 +310,7 @@ addEntityHere uc position entity { layer, colors, new, repositioned } =
 
                         newEnt =
                             Entity.init
+                                plugins
                                 { x = position.x
                                 , y = position.y
                                 , layer = layer.id
@@ -729,26 +735,33 @@ updateEntityOnLayer id update layer =
     }
 
 
+updateEntities : E.Entity -> (Entity -> Entity) -> IntDict Layer -> IntDict Layer
+updateEntities { currency, entity } update layers =
+    layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                let
+                    entityId =
+                        Id.initEntityId { currency = currency, id = entity, layer = layer.id }
 
-{-
-   updateEntity : EntityId -> (Entity -> ( Entity, a )) -> IntDict Layer -> ( IntDict Layer, Maybe a )
-   updateEntity id update layers =
-       layers
-           |> IntDict.get (Id.layer id)
-           |> Maybe.andThen
-               (\layer ->
-                   Dict.get id layer.entities
-                       |> Maybe.map
-                           (\entity ->
-                               let
-                                   ( newEntity, a ) =
-                                       update entity
-                               in
-                               ( IntDict.insert layer.id { layer | entities = Dict.insert id newEntity layer.entities } layers
-                               , Just a
-                               )
-                           )
-               )
-           |> Maybe.withDefault ( layers, Nothing )
+                    ( entities, updated ) =
+                        case Dict.get entityId layer.entities of
+                            Nothing ->
+                                ( layer.entities, False )
 
--}
+                            Just found ->
+                                ( Dict.insert found.id
+                                    (update found)
+                                    layer.entities
+                                , True
+                                )
+                in
+                if updated then
+                    IntDict.insert layer.id
+                        { layer | entities = entities }
+                        layers_
+
+                else
+                    layers_
+            )
+            layers

@@ -17,6 +17,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
+import Plugin.View.Graph.Entity
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -47,8 +48,8 @@ addresses plugins vc gc selected ent =
         |> Keyed.node "g" []
 
 
-entity : Config -> Graph.Config -> Id.EntityId -> Entity -> Svg Msg
-entity vc gc selected ent =
+entity : Plugins -> Config -> Graph.Config -> Id.EntityId -> Entity -> Svg Msg
+entity plugins vc gc selected ent =
     let
         _ =
             Log.log "rednerEntity" ent.id
@@ -123,7 +124,7 @@ entity vc gc selected ent =
             ]
             []
         , label vc gc ent
-        , flags vc gc ent
+        , flags plugins vc gc ent
         , currency vc gc ent
         , addressesCount vc gc ent
         , Node.expand vc
@@ -180,8 +181,8 @@ getLabel vc gc ent =
         |> Maybe.withDefault ""
 
 
-flags : Config -> Graph.Config -> Entity -> Svg Msg
-flags vc gc ent =
+flags : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
+flags plugins vc gc ent =
     g
         [ Css.entityFlags vc |> css
         , Graph.padding
@@ -189,7 +190,7 @@ flags vc gc ent =
             |> translate (Graph.entityWidth - Graph.padding / 2)
             |> transform
         ]
-        []
+        (Plugin.View.Graph.Entity.flags plugins vc ent)
 
 
 currency : Config -> Graph.Config -> Entity -> Svg Msg

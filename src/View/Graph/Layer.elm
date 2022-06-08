@@ -39,8 +39,8 @@ addresses plugins vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entities : View.Config -> Graph.Config -> Id.EntityId -> Layer -> Svg Msg
-entities vc gc selected layer =
+entities : Plugins -> View.Config -> Graph.Config -> Id.EntityId -> Layer -> Svg Msg
+entities plugins vc gc selected layer =
     let
         _ =
             Log.log "Graph.entities" ""
@@ -49,7 +49,7 @@ entities vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( Id.entityIdToString entity.id
-                , Svg.lazy4 Entity.entity vc gc selected entity
+                , Svg.lazy5 Entity.entity plugins vc gc selected entity
                 )
                     :: svg
             )

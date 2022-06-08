@@ -72,6 +72,7 @@ type Msg
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
+    | InternalGraphAddedEntities (Set EntityId)
     | InfiniteScrollMsg InfiniteScroll.Msg
     | TagSearchMsg Search.Msg
     | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)

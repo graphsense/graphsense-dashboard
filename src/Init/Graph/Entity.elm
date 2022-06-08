@@ -4,10 +4,11 @@ import Api.Data
 import Dict
 import Init.Graph.Id exposing (..)
 import Model.Graph.Entity exposing (..)
+import Plugin exposing (Plugins)
 
 
-init : { x : Float, y : Float, layer : Int } -> Api.Data.Entity -> Entity
-init { x, y, layer } entity =
+init : Plugins -> { x : Float, y : Float, layer : Int } -> Api.Data.Entity -> Entity
+init plugins { x, y, layer } entity =
     { id = initEntityId { layer = layer, currency = entity.currency, id = entity.entity }
     , entity = entity
     , addresses = Dict.empty
@@ -20,4 +21,5 @@ init { x, y, layer } entity =
     , dx = 0
     , dy = 0
     , links = Links Dict.empty
+    , plugins = Plugin.initAddress plugins
     }
