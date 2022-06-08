@@ -4,7 +4,7 @@ import Api.Data
 import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
-import Dict
+import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
 import Init.Graph.ContextMenu as ContextMenu
@@ -75,6 +75,7 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
                 | layers =
                     added.layers
                         |> Layer.syncLinks added.repositioned
+                        |> addUserTag added.new model.userAddressTags
                 , config =
                     newModel.config
                         |> s_colors added.colors
@@ -674,6 +675,7 @@ update plugins uc msg model =
             ( { model
                 | layers =
                     added.layers
+                        |> addUserTag added.new model.userAddressTags
                 , config =
                     model.config
                         |> s_colors added.colors
@@ -932,7 +934,9 @@ update plugins uc msg model =
                         model.layers
             in
             ( { model
-                | layers = added.layers
+                | layers =
+                    added.layers
+                        |> addUserTag added.new model.userAddressTags
                 , config = model.config |> s_colors added.colors
               }
                 |> syncLinks added.repositioned
@@ -987,7 +991,9 @@ update plugins uc msg model =
 
             else
                 ( { model
-                    | layers = added.layers
+                    | layers =
+                        added.layers
+                            |> addUserTag added.new model.userAddressTags
                     , config = model.config |> s_colors added.colors
                   }
                 , [ GetAddressTagsEffect
@@ -1199,7 +1205,9 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
                                         added__ =
                                             Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address added_.layers
                                     in
-                                    { layers = added__.layers
+                                    { layers =
+                                        added__.layers
+                                            |> addUserTag added__.new model.userAddressTags
                                     , new = Set.union added__.new added_.new
                                     , repositioned = Set.union added_.repositioned added__.repositioned
                                     , colors = Dict.union added__.colors added_.colors
@@ -1645,3 +1653,16 @@ refreshBrowserEntity id model =
                 _ ->
                     model.browser
     }
+
+
+addUserTag : Set Id.AddressId -> Dict ( String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
+addUserTag ids userTags layers =
+    ids
+        |> Set.toList
+        |> List.foldl
+            (\id layers_ ->
+                Dict.get ( Id.currency id, Id.addressId id ) userTags
+                    |> Maybe.map (\tag -> Layer.updateAddress id (\a -> { a | userTag = Just tag }) layers_)
+                    |> Maybe.withDefault layers_
+            )
+            layers
