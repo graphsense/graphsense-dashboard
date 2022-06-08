@@ -28,5 +28,5 @@ type OutMsg msg addressMsg entityMsg
     | UpdateAddressEntities Address entityMsg
     | UpdateEntities Entity entityMsg
     | PushGraphUrl String
-    | GetEntitiesForAddresses (List Address) (List Api.Data.Entity -> msg)
+    | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Entity ) -> msg)
     | GetEntities (List Entity) (List Api.Data.Entity -> msg)

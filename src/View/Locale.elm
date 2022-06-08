@@ -147,7 +147,7 @@ timestamp { locale, timeLang, zone } =
                     , DateFormat.text " "
                     , yearNumber
                     , DateFormat.text " "
-                    , hourFixed
+                    , hourMilitaryFixed
                     , DateFormat.text ":"
                     , minuteFixed
                     ]
@@ -159,7 +159,7 @@ timestamp { locale, timeLang, zone } =
                     , DateFormat.text "/"
                     , yearNumber
                     , DateFormat.text " "
-                    , hourMilitaryFixed
+                    , hourFixed
                     , DateFormat.text ":"
                     , minuteFixed
                     , DateFormat.text " "

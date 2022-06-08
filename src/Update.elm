@@ -340,7 +340,10 @@ updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
                     Plugin.GetEntitiesForAddresses addresses toMsg ->
                         addresses
                             |> List.filterMap
-                                (\address -> Layer.getEntityForAddress address model.graph.layers)
+                                (\address ->
+                                    Layer.getEntityForAddress address model.graph.layers
+                                        |> Maybe.map (pair address)
+                                )
                             |> (\entities ->
                                     let
                                         ( new, outMsg, cmd ) =
