@@ -25,7 +25,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg exposing (..)
 import Tuple exposing (..)
-import Util.Graph exposing (decodeCoords, rotate, translate)
+import Util.Graph exposing (decodeCoords, rotate, scale, translate)
 import Util.View as Util
 import View.Graph.Address as Address
 import View.Graph.Label as Label
@@ -186,8 +186,11 @@ flags plugins vc gc ent =
     g
         [ Css.entityFlags vc |> css
         , Graph.padding
-            / 2
+            * 1.5
+            + labelHeight
+            / 3
             |> translate (Graph.entityWidth - Graph.padding / 2)
+            |> Util.Graph.scale 0.75
             |> transform
         ]
         (Plugin.View.Graph.Entity.flags plugins vc ent)

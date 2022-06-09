@@ -16,6 +16,11 @@ rotate degree others =
     others ++ " rotate(" ++ String.fromFloat degree ++ ")"
 
 
+scale : Float -> String -> String
+scale f others =
+    others ++ " scale(" ++ String.fromFloat f ++ ")"
+
+
 decodeCoords : (Float -> Float -> a) -> Json.Decode.Decoder a
 decodeCoords decoded =
     Json.Decode.map2 decoded
