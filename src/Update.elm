@@ -69,13 +69,17 @@ update plugins uc msg model =
 
         BrowserGotEntityTaxonomy concepts ->
             { model
-                | entityConcepts = concepts
+                | graph =
+                    model.graph
+                        |> s_entityConcepts concepts
             }
                 |> n
 
         BrowserGotAbuseTaxonomy concepts ->
             { model
-                | abuseConcepts = concepts
+                | graph =
+                    model.graph
+                        |> s_abuseConcepts concepts
             }
                 |> n
 
@@ -272,18 +276,6 @@ update plugins uc msg model =
                               }
                             , List.map PluginEffect cmd
                             )
-
-                Graph.BrowserGotLegendElement result ->
-                    let
-                        ( graph, effects ) =
-                            Graph.makeLegend model.entityConcepts model.graph
-                                |> Graph.toolElementResultToTool result model.graph
-                    in
-                    ( { model
-                        | graph = graph
-                      }
-                    , List.map GraphEffect effects
-                    )
 
                 _ ->
                     let

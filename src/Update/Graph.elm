@@ -1063,9 +1063,14 @@ update plugins uc msg model =
             n { model | hovercardTBD = Nothing }
 
         UserClicksLegend id ->
-            case model.activeTool |> Maybe.map second of
-                Just (Legend _) ->
-                    n { model | activeTool = Nothing }
+            case ( model.activeTool.toolbox, model.activeTool.element ) of
+                ( Legend _, Just ( el, vis ) ) ->
+                    n
+                        { model
+                            | activeTool =
+                                model.activeTool
+                                    |> s_element (Just ( el, not vis ))
+                        }
 
                 _ ->
                     ( model
@@ -1077,8 +1082,8 @@ update plugins uc msg model =
                     )
 
         BrowserGotLegendElement result ->
-            -- handled in Update.elm
-            n model
+            makeLegend model
+                |> toolElementResultToTool result model
 
         NoOp ->
             n model
@@ -1090,7 +1095,10 @@ toolElementResultToTool result model toolbox =
         |> Result.map
             (\element ->
                 { model
-                    | activeTool = Just ( element, toolbox )
+                    | activeTool =
+                        { toolbox = toolbox
+                        , element = Just ( element, True )
+                        }
                 }
             )
         |> Result.withDefault model
@@ -1570,7 +1578,19 @@ storeUserTag uc model tag =
                     |> s_colors colors
             , tag = Nothing
         }
+            |> updateLegend
             |> updateAddresses { currency = currency, address = address } (\a -> { a | userTag = Just tag_ })
+
+
+updateLegend : Model -> Model
+updateLegend model =
+    { model
+        | activeTool =
+            case model.activeTool.toolbox of
+                Legend _ ->
+                    model.activeTool
+                        |> s_toolbox (makeLegend model)
+    }
 
 
 updateAddresses : A.Address -> (Address -> Address) -> Model -> Model
@@ -1699,13 +1719,13 @@ addUserTag ids userTags layers =
             layers
 
 
-makeLegend : List Api.Data.Concept -> Model -> Toolbox
-makeLegend categories model =
+makeLegend : Model -> Toolbox
+makeLegend model =
     model.config.colors
         |> Dict.toList
         |> List.filterMap
             (\( cat, color ) ->
-                List.Extra.find (.id >> (==) cat) categories
+                List.Extra.find (.id >> (==) cat) model.entityConcepts
                     |> Maybe.map
                         (\category ->
                             { color = color

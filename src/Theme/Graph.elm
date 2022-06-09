@@ -46,7 +46,7 @@ type alias Graph =
         }
     , defaultColor : Color
     , searchTextarea : List Style
-    , toolbox : List Style
+    , toolbox : Bool -> List Style
     , legendItem : List Style
     , legendItemColor : List Style
     , legendItemTitle : List Style
@@ -95,7 +95,7 @@ default =
         }
     , defaultColor = Color.rgb 255 255 255
     , searchTextarea = []
-    , toolbox = []
+    , toolbox = \_ -> []
     , legendItem = []
     , legendItemColor = []
     , legendItemTitle = []

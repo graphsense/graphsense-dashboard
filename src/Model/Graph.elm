@@ -1,5 +1,6 @@
 module Model.Graph exposing (..)
 
+import Api.Data
 import Browser.Dom as Dom
 import Color exposing (Color)
 import Config.Graph exposing (Config)
@@ -32,7 +33,15 @@ type alias Model =
     , tag : Maybe Tag.Model
     , userAddressTags : Dict ( String, String ) Tag.UserTag
     , hovercardTBD : Maybe Dom.Element
-    , activeTool : Maybe ( Dom.Element, Toolbox )
+    , entityConcepts : List Api.Data.Concept
+    , abuseConcepts : List Api.Data.Concept
+    , activeTool : ActiveTool
+    }
+
+
+type alias ActiveTool =
+    { element : Maybe ( Dom.Element, Bool ) -- visibility
+    , toolbox : Toolbox
     }
 
 

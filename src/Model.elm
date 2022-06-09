@@ -48,8 +48,6 @@ type alias Model navigationKey =
     , width : Int
     , height : Int
     , error : String
-    , entityConcepts : List Api.Data.Concept
-    , abuseConcepts : List Api.Data.Concept
     , plugins : Dict String Json.Encode.Value
     }
 

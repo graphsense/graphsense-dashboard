@@ -191,10 +191,10 @@ searchTextarea vc =
     vc.theme.graph.searchTextarea
 
 
-toolbox : Config -> List Style
-toolbox vc =
+toolbox : Config -> Bool -> List Style
+toolbox vc visible =
     position absolute
-        :: vc.theme.graph.toolbox
+        :: vc.theme.graph.toolbox visible
 
 
 legendItem : Config -> List Style

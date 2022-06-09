@@ -25,5 +25,10 @@ init plugins now =
     , tag = Nothing
     , userAddressTags = Dict.empty
     , hovercardTBD = Nothing
-    , activeTool = Nothing
+    , entityConcepts = []
+    , abuseConcepts = []
+    , activeTool =
+        { element = Nothing
+        , toolbox = Legend []
+        }
     }

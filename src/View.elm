@@ -107,8 +107,8 @@ hovercards plugins vc model =
                     (\tag ->
                         (Tag.inputHovercard plugins
                             vc
-                            { entityConcepts = model.entityConcepts
-                            , abuseConcepts = model.abuseConcepts
+                            { entityConcepts = model.graph.entityConcepts
+                            , abuseConcepts = model.graph.abuseConcepts
                             }
                             tag
                             |> Html.Styled.toUnstyled

@@ -430,8 +430,27 @@ theme =
                     , fontFamilies fontFam
                     ]
                 |> s_toolbox
-                    [ toCssColor colors.brandWhite |> backgroundColor
-                    , scaled 2 |> rem |> padding
+                    (\visible ->
+                        let
+                            p =
+                                if visible then
+                                    0
+
+                                else
+                                    -110
+                        in
+                        [ toCssColor colors.brandWhite |> backgroundColor
+                        , scaled 2 |> rem |> padding
+                        , Css.Transitions.transition
+                            [ Css.Transitions.transform 200
+                            ]
+                        , translateY (pct p) |> transform
+                        ]
+                    )
+                |> s_legendItem
+                    [ displayFlex
+                    , alignItems center
+                    , scaled 1 |> rem |> marginTop
                     ]
                 |> s_legendItemColor
                     [ before
