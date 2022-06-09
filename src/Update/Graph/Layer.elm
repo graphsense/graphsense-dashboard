@@ -8,6 +8,7 @@ module Update.Graph.Layer exposing
     , anchorsToPositions
     , moveEntity
     , releaseEntity
+    , removeAddressLinksTo
     , syncLinks
     , updateAddress
     , updateAddressLink
@@ -765,3 +766,83 @@ updateEntities { currency, entity } update layers =
                     layers_
             )
             layers
+
+
+removeAddressLinksTo : AddressId -> IntDict Layer -> IntDict Layer
+removeAddressLinksTo id layers =
+    updateAddressesIf
+        (\a ->
+            case a.links of
+                Address.Links links ->
+                    Dict.member id links
+        )
+        (\a ->
+            { a
+                | links =
+                    case a.links of
+                        Address.Links links ->
+                            Dict.remove id links
+                                |> Address.Links
+            }
+        )
+        layers
+
+
+updateAddressesIf : (Address -> Bool) -> (Address -> Address) -> IntDict Layer -> IntDict Layer
+updateAddressesIf predicate update layers =
+    layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                let
+                    ( entities, updated ) =
+                        updateAddressesForEntitiesIf predicate update layer.entities
+                in
+                if updated then
+                    IntDict.insert layer.id
+                        { layer | entities = entities }
+                        layers_
+
+                else
+                    layers_
+            )
+            layers
+
+
+updateAddressesForEntitiesIf : (Address -> Bool) -> (Address -> Address) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )
+updateAddressesForEntitiesIf predicate update entities =
+    entities
+        |> Dict.foldl
+            (\_ entity ( entities_, updated ) ->
+                let
+                    ( addresses, updated_ ) =
+                        updateAddressesForAddressesIf predicate update entity.addresses
+                in
+                if updated_ then
+                    ( Dict.insert entity.id
+                        { entity
+                            | addresses = addresses
+                        }
+                        entities_
+                    , True
+                    )
+
+                else
+                    ( entities_, updated )
+            )
+            ( entities, False )
+
+
+updateAddressesForAddressesIf : (Address -> Bool) -> (Address -> Address) -> Dict AddressId Address -> ( Dict AddressId Address, Bool )
+updateAddressesForAddressesIf predicate update addresses =
+    addresses
+        |> Dict.foldl
+            (\k address ( acc, updated ) ->
+                if predicate address then
+                    ( Dict.update k (Maybe.map update) acc
+                    , True
+                    )
+
+                else
+                    ( acc, updated )
+            )
+            ( addresses, False )
