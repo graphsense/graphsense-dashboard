@@ -8,7 +8,9 @@ module Update.Graph.Layer exposing
     , anchorsToPositions
     , moveEntity
     , releaseEntity
+    , removeAddress
     , removeAddressLinksTo
+    , removeEntity
     , syncLinks
     , updateAddress
     , updateAddressLink
@@ -768,6 +770,57 @@ updateEntities { currency, entity } update layers =
             layers
 
 
+updateEntitiesIf : (Entity -> Bool) -> (Entity -> Entity) -> IntDict Layer -> IntDict Layer
+updateEntitiesIf predicate update layers =
+    layers
+        |> IntDict.foldl
+            (\_ layer layers_ ->
+                let
+                    ( entities, updated ) =
+                        layer.entities
+                            |> Dict.foldl
+                                (\k entity ( acc, upd ) ->
+                                    if predicate entity then
+                                        ( Dict.update k (Maybe.map update) acc
+                                        , True
+                                        )
+
+                                    else
+                                        ( acc, upd )
+                                )
+                                ( layer.entities, False )
+                in
+                if updated then
+                    IntDict.insert layer.id
+                        { layer | entities = entities }
+                        layers_
+
+                else
+                    layers_
+            )
+            layers
+
+
+removeEntityLinksTo : EntityId -> IntDict Layer -> IntDict Layer
+removeEntityLinksTo id layers =
+    updateEntitiesIf
+        (\a ->
+            case a.links of
+                Entity.Links links ->
+                    Dict.member id links
+        )
+        (\a ->
+            { a
+                | links =
+                    case a.links of
+                        Entity.Links links ->
+                            Dict.remove id links
+                                |> Entity.Links
+            }
+        )
+        layers
+
+
 removeAddressLinksTo : AddressId -> IntDict Layer -> IntDict Layer
 removeAddressLinksTo id layers =
     updateAddressesIf
@@ -846,3 +899,34 @@ updateAddressesForAddressesIf predicate update addresses =
                     ( acc, updated )
             )
             ( addresses, False )
+
+
+removeAddress : Id.AddressId -> IntDict Layer -> IntDict Layer
+removeAddress id layers =
+    Layer.getAddress id layers
+        |> Maybe.map
+            (\address ->
+                updateEntity address.entityId (\e -> { e | addresses = Dict.remove id e.addresses }) layers
+                    |> syncLinks (Set.singleton address.entityId)
+            )
+        |> Maybe.map (removeAddressLinksTo id)
+        |> Maybe.withDefault layers
+
+
+removeEntity : Id.EntityId -> IntDict Layer -> IntDict Layer
+removeEntity id layers =
+    Layer.getEntity id layers
+        |> Maybe.map
+            (\entity ->
+                entity.addresses
+                    |> Dict.keys
+                    |> List.foldl removeAddress layers
+            )
+        |> Maybe.map
+            (IntDict.update (Id.layer id)
+                (Maybe.map
+                    (\l -> { l | entities = Dict.remove id l.entities })
+                )
+            )
+        |> Maybe.map (removeEntityLinksTo id)
+        |> Maybe.withDefault layers

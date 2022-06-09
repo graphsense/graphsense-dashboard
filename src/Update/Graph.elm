@@ -917,11 +917,16 @@ update plugins uc msg model =
                 |> n
 
         UserClickedRemoveAddress id ->
-            removeAddress id model
+            { model
+                | layers = Layer.removeAddress id model.layers
+            }
                 |> n
 
         UserClickedRemoveEntity id ->
-            n model
+            { model
+                | layers = Layer.removeEntity id model.layers
+            }
+                |> n
 
         UserClickedAddressInEntityAddressesTable entityId address ->
             let
@@ -1805,16 +1810,3 @@ makeLegend model =
                         )
             )
         |> Legend
-
-
-removeAddress : Id.AddressId -> Model -> Model
-removeAddress id model =
-    Layer.getAddress id model.layers
-        |> Maybe.map
-            (\address ->
-                Layer.updateEntity address.entityId (\e -> { e | addresses = Dict.remove id e.addresses }) model.layers
-                    |> Layer.syncLinks (Set.singleton address.entityId)
-            )
-        |> Maybe.map (Layer.removeAddressLinksTo id)
-        |> Maybe.map (\l -> { model | layers = l })
-        |> Maybe.withDefault model
