@@ -19,7 +19,6 @@ import Model.Search
 import Msg.Graph
 import Msg.Locale
 import Msg.Search
-import Page
 import Plugin.Model as Plugin
 import RemoteData exposing (WebData)
 import Theme.Theme exposing (Theme)
@@ -39,7 +38,7 @@ type alias Model navigationKey =
     { url : Url
     , key : navigationKey
     , config : Config.View.Config
-    , page : Page.Page
+    , page : Page
     , locale : Model.Locale.Model
     , search : Model.Search.Model
     , graph : Model.Graph.Model
@@ -50,6 +49,11 @@ type alias Model navigationKey =
     , error : String
     , plugins : Dict String Json.Encode.Value
     }
+
+
+type Page
+    = Stats
+    | Graph
 
 
 type Msg

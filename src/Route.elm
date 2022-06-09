@@ -1,4 +1,4 @@
-module Route exposing (Route(..), graphRoute, graphSegment, parse, pluginRoute, toUrl)
+module Route exposing (Route(..), graphRoute, graphSegment, parse, pluginRoute, statsRoute, toUrl)
 
 import List.Extra
 import Plugin exposing (Plugins)
@@ -36,6 +36,11 @@ parser plugins c =
         [ map Graph (s graphSegment |> slash (Graph.parser plugins c.graph))
         , map Stats top
         ]
+
+
+statsRoute : Route
+statsRoute =
+    Stats
 
 
 graphRoute : Graph.Route -> Route

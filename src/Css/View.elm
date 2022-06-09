@@ -28,6 +28,18 @@ sectionBelowHeader vc =
         ++ vc.theme.sectionBelowHeader
 
 
+sidebar : Config -> List Style
+sidebar vc =
+    displayFlex
+        :: flexDirection column
+        :: vc.theme.sidebar
+
+
+sidebarIcon : Config -> Bool -> List Style
+sidebarIcon vc active =
+    vc.theme.sidebarIcon active
+
+
 main_ : Config -> List Style
 main_ vc =
     [ flexGrow (num 1)

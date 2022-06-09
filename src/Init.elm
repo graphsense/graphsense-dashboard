@@ -6,7 +6,6 @@ import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
 import Model exposing (..)
-import Page
 import Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
@@ -27,7 +26,7 @@ init plugins flags url key =
             , theme = config.theme
             }
       , locale = locale
-      , page = Page.Stats
+      , page = Stats
       , search = Search.init
       , graph = Graph.init plugins flags.now
       , user =

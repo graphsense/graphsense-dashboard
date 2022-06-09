@@ -3589,6 +3589,16 @@ s_showTable value__ record__ =
     { record__ | showTable = value__ }
 
 
+s_sidebar : a -> { b | sidebar : a } -> { b | sidebar : a }
+s_sidebar value__ record__ =
+    { record__ | sidebar = value__ }
+
+
+s_sidebarIcon : a -> { b | sidebarIcon : a } -> { b | sidebarIcon : a }
+s_sidebarIcon value__ record__ =
+    { record__ | sidebarIcon = value__ }
+
+
 s_sign : a -> { b | sign : a } -> { b | sign : a }
 s_sign value__ record__ =
     { record__ | sign = value__ }

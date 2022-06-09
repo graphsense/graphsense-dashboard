@@ -6,15 +6,18 @@ import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Reset
 import Css.View
+import FontAwesome
 import Hovercard
 import Html
 import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Maybe.Extra
-import Model exposing (Auth(..), Model, Msg(..))
+import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Plugin as Plugin exposing (Plugins)
 import RemoteData
+import Route
+import Route.Graph
 import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
@@ -61,7 +64,8 @@ body plugins vc model =
          , section
             [ Css.View.sectionBelowHeader vc |> css
             ]
-            [ main_
+            [ sidebar vc model.page
+            , main_
                 [ Css.View.main_ vc |> css
                 ]
                 [ Main.main_ plugins vc model
@@ -71,6 +75,33 @@ body plugins vc model =
             ++ hovercards plugins vc model
             ++ overlay vc model
         )
+
+
+sidebar : Config -> Page -> Html Msg
+sidebar vc page =
+    div
+        [ Css.View.sidebar vc |> css
+        ]
+        [ FontAwesome.icon FontAwesome.home
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> a
+                [ page == Stats |> Css.View.sidebarIcon vc |> css
+                , Route.statsRoute
+                    |> Route.toUrl
+                    |> href
+                ]
+        , FontAwesome.icon FontAwesome.projectDiagram
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> a
+                [ page == Graph |> Css.View.sidebarIcon vc |> css
+                , Route.Graph.rootRoute
+                    |> Route.graphRoute
+                    |> Route.toUrl
+                    |> href
+                ]
+        ]
 
 
 hovercard : Config -> Dom.Element -> List (Html.Html Msg) -> List (Html Msg)

@@ -49,7 +49,7 @@ toolbox vc activeTool =
             |> css
         ]
         [ div
-            [ [ Css.right (Css.px 0)
+            [ [ Css.right (Css.px 60) -- TODO matches the sidebar width hardcoded
               ]
                 ++ (activeTool.element
                         |> Maybe.map second

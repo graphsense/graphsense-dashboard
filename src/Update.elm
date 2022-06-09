@@ -16,7 +16,6 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Msg.Graph as Graph
 import Msg.Search as Search
-import Page
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
 import Plugin.Update.Graph
@@ -410,6 +409,9 @@ updateByUrl plugins uc url model =
         |> Maybe.map2
             (\oldRoute route ->
                 case Log.log "route" route of
+                    Route.Stats ->
+                        n { model | page = Stats }
+
                     Route.Graph graphRoute ->
                         case graphRoute of
                             Route.Graph.Plugin ( pid, value ) ->
@@ -419,7 +421,7 @@ updateByUrl plugins uc url model =
                                 in
                                 ( { model
                                     | plugins = new
-                                    , page = Page.Graph
+                                    , page = Graph
                                     , url = url
                                   }
                                 , [ PluginEffect ( pid, cmd ) ]
@@ -432,7 +434,7 @@ updateByUrl plugins uc url model =
                                         Graph.updateByRoute plugins graphRoute model.graph
                                 in
                                 ( { model
-                                    | page = Page.Graph
+                                    | page = Graph
                                     , graph = graph
                                     , url = url
                                   }

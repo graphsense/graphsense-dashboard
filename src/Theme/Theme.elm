@@ -23,6 +23,8 @@ type alias Theme =
     , heading2 : List Style
     , input : List Style
     , addonsNav : List Style
+    , sidebar : List Style
+    , sidebarIcon : Bool -> List Style
     , main : List Style
     , link : List Style
     , loadingSpinner : List Style
@@ -55,6 +57,8 @@ default =
     , input = []
     , headerLogo = []
     , addonsNav = []
+    , sidebar = []
+    , sidebarIcon = \_ -> []
     , main = []
     , link = []
     , loadingSpinner = []

@@ -100,6 +100,31 @@ theme =
         |> s_headerLogo
             [ maxWidth <| px 190
             ]
+        |> s_sidebar
+            [ colors.brandWhite |> toCssColor |> backgroundColor
+            ]
+        |> s_sidebarIcon
+            (\active ->
+                [ colors.greyLight |> toCssColor |> color
+                , scaled 5 |> rem |> fontSize
+                , scaled 4 |> rem |> padding
+                ]
+                    ++ (if active then
+                            [ colors.brandLightest
+                                |> toCssColor
+                                |> backgroundColor
+                            , colors.brandText
+                                |> toCssColor
+                                |> color
+                            ]
+
+                        else
+                            [ hover
+                                [ colors.brandLight |> toCssColor |> color
+                                ]
+                            ]
+                       )
+            )
         |> s_main
             [ backgroundColor <| toCssColor colors.brandLightest
             ]
