@@ -8,6 +8,7 @@ import Effect.Locale as Effect exposing (Effect(..))
 import Languages.German
 import Locale.English
 import Locale.German
+import Model.Currency exposing (..)
 import Model.Locale as Model exposing (..)
 import Msg.Locale as Msg exposing (Msg(..))
 import Numeral
@@ -99,4 +100,17 @@ switch locale model =
 
                 _ ->
                     Locale.English.unitToString
+    }
+
+
+changeCurrency : String -> Model -> Model
+changeCurrency curr model =
+    { model
+        | currency =
+            case String.toLower curr of
+                "coin" ->
+                    Coin
+
+                fiat ->
+                    Fiat fiat
     }

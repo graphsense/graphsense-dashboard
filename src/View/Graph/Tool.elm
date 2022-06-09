@@ -12,6 +12,7 @@ import Model.Graph.Tool exposing (Tool)
 import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
 import Util.View exposing (none, toCssColor)
+import View.Graph.Configuration as Configuration
 import View.Graph.Legend as Legend
 import View.Locale as Locale
 
@@ -60,5 +61,8 @@ toolbox vc activeTool =
             (case activeTool.toolbox of
                 Legend data ->
                     Legend.legend vc data
+
+                Configuration config ->
+                    Configuration.configuration vc config
             )
         ]

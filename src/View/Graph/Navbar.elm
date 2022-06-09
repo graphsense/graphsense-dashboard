@@ -100,7 +100,7 @@ navbarRight vc =
               }
             , { title = "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog
-              , msg = ToBeDone
+              , msg = UserClicksConfiguraton
               , color = Nothing
               }
             , { title = "Legend"

@@ -277,6 +277,19 @@ update plugins uc msg model =
                             , List.map PluginEffect cmd
                             )
 
+                Graph.UserChangesCurrency currency ->
+                    let
+                        locale =
+                            Locale.changeCurrency currency model.locale
+                    in
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
+                        |> n
+
                 _ ->
                     let
                         ( graph, graphEffects ) =

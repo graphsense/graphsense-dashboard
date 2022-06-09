@@ -1065,28 +1065,94 @@ update plugins uc msg model =
         UserClicksLegend id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Legend _, Just ( el, vis ) ) ->
-                    n
-                        { model
-                            | activeTool =
-                                model.activeTool
-                                    |> s_element (Just ( el, not vis ))
-                        }
+                    toolVisible model el vis
 
                 _ ->
-                    ( model
-                    , id
-                        |> Dom.getElement
-                        |> Task.attempt BrowserGotLegendElement
-                        |> CmdEffect
-                        |> List.singleton
-                    )
+                    getToolElement model id BrowserGotLegendElement
 
         BrowserGotLegendElement result ->
             makeLegend model
                 |> toolElementResultToTool result model
 
+        UserClicksConfiguraton id ->
+            case ( model.activeTool.toolbox, model.activeTool.element ) of
+                ( Configuration _, Just ( el, vis ) ) ->
+                    toolVisible model el vis
+
+                _ ->
+                    getToolElement model id BrowserGotConfigurationElement
+
+        BrowserGotConfigurationElement result ->
+            model.config
+                |> Configuration
+                |> toolElementResultToTool result model
+
+        UserChangesCurrency currency ->
+            -- handled upstream
+            n model
+
+        UserChangesAddressLabelType at ->
+            { model
+                | config =
+                    model.config
+                        |> s_addressLabelType
+                            (case at of
+                                "id" ->
+                                    Config.Graph.ID
+
+                                "balance" ->
+                                    Config.Graph.Balance
+
+                                "tag" ->
+                                    Config.Graph.Tag
+
+                                _ ->
+                                    model.config.addressLabelType
+                            )
+            }
+                |> n
+
+        UserChangesTxLabelType at ->
+            { model
+                | config =
+                    model.config
+                        |> s_txLabelType
+                            (case at of
+                                "notxs" ->
+                                    Config.Graph.NoTxs
+
+                                "value" ->
+                                    Config.Graph.Value
+
+                                _ ->
+                                    model.config.txLabelType
+                            )
+            }
+                |> n
+
         NoOp ->
             n model
+
+
+toolVisible : Model -> Dom.Element -> Bool -> ( Model, List Effect )
+toolVisible model element visible =
+    n
+        { model
+            | activeTool =
+                model.activeTool
+                    |> s_element (Just ( element, not visible ))
+        }
+
+
+getToolElement : Model -> String -> (Result Dom.Error Dom.Element -> Msg) -> ( Model, List Effect )
+getToolElement model id msg =
+    ( model
+    , id
+        |> Dom.getElement
+        |> Task.attempt msg
+        |> CmdEffect
+        |> List.singleton
+    )
 
 
 toolElementResultToTool : Result Dom.Error Dom.Element -> Model -> Toolbox -> ( Model, List Effect )
@@ -1590,6 +1656,9 @@ updateLegend model =
                 Legend _ ->
                     model.activeTool
                         |> s_toolbox (makeLegend model)
+
+                _ ->
+                    model.activeTool
     }
 
 

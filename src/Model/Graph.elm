@@ -47,6 +47,7 @@ type alias ActiveTool =
 
 type Toolbox
     = Legend (List Legend.Item)
+    | Configuration Config
 
 
 type NodeType

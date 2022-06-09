@@ -271,6 +271,7 @@ theme =
                     , scaled 0.1 |> rem |> letterSpacing
                     , scaled 2 |> rem |> paddingBottom
                     , scaled 0.5 |> rem |> paddingTop
+                    , whiteSpace noWrap
                     ]
                 |> s_headRow
                     [ scaled 3 |> rem |> padding

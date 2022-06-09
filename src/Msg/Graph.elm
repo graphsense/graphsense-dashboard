@@ -85,5 +85,10 @@ type Msg
     | BrowserGotElementForTBD (Result Browser.Dom.Error Browser.Dom.Element)
     | RuntimeHideTBD
     | UserClicksLegend String
+    | UserClicksConfiguraton String
     | BrowserGotLegendElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotConfigurationElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | UserChangesCurrency String
+    | UserChangesAddressLabelType String
+    | UserChangesTxLabelType String
     | NoOp
