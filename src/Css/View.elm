@@ -77,9 +77,16 @@ hovercard vc =
     vc.theme.hovercard.root
 
 
+inputRaw : Config -> List ( String, String )
+inputRaw vc =
+    vc.theme.inputRaw
+
+
 input : Config -> List Style
 input vc =
-    vc.theme.input
+    inputRaw vc
+        |> List.map
+            (\( k, v ) -> property k v)
 
 
 link : Config -> List Style

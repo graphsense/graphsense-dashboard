@@ -238,7 +238,7 @@ bulkCsv currency_path operation_path numPages_query body_body =
 
 
 
-bulkJson : (String) -> (Operation) -> (Int) -> (Object) -> Api.Request (List Object)
+bulkJson : (String) -> (Operation) -> (Int) -> (Object) -> Api.Request (List AnyType)
 bulkJson currency_path operation_path numPages_query body_body =
     Api.request
         "POST"
@@ -247,5 +247,5 @@ bulkJson currency_path operation_path numPages_query body_body =
         [ ( "num_pages", Just <| (String.fromInt) numPages_query ) ]
         []
         (Just (encodeObject body_body))
-        (Json.Decode.list (Json.Decode.dict Api.Data.objectDecoderApi.Data.objectDecoder))
+        (Json.Decode.list (Json.Decode.dict Api.Data.anyTypeDecoderApi.Data.anyTypeDecoder))
 

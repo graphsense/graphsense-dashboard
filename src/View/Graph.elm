@@ -281,6 +281,8 @@ contextMenu plugins states vc model cm =
         ContextMenu.Entity entity ->
             [ UserClickedRemoveEntity entity.id
                 |> option "Remove"
+            , UserClickedSearch entity.id
+                |> option "Search neighbors"
             ]
     )
         |> ContextMenu.view vc cm.coords

@@ -91,4 +91,15 @@ type Msg
     | UserChangesCurrency String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
+    | UserClickedSearch EntityId
+    | BrowserGotEntityElementForSearch EntityId (Result Browser.Dom.Error Browser.Dom.Element)
+    | UserSelectsDirection String
+    | UserSelectsCriterion String
+    | UserSelectsSearchCategory String
+    | UserInputsSearchDepth (Maybe Int)
+    | UserInputsSearchBreadth (Maybe Int)
+    | UserInputsSearchMaxAddresses (Maybe Int)
+    | UserClicksCloseSearchHovercard
+    | UserSubmitsSearchInput
+    | BrowserGotEntitySearchResult EntityId Bool (List Api.Data.SearchResultLevel1)
     | NoOp

@@ -13,6 +13,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Legend as Legend
+import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Transform as Transform
 import Plugin.Model as Plugin exposing (PluginStates)
@@ -31,6 +32,7 @@ type alias Model =
     , hovered : Hovered
     , contextMenu : Maybe ContextMenu.Model
     , tag : Maybe Tag.Model
+    , search : Maybe Search.Model
     , userAddressTags : Dict ( String, String ) Tag.UserTag
     , hovercardTBD : Maybe Dom.Element
     , entityConcepts : List Api.Data.Concept

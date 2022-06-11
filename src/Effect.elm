@@ -62,12 +62,7 @@ perform plugins key apiKey effect =
                 Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage, toMsg } ->
                     let
                         direction =
-                            case isOutgoing of
-                                True ->
-                                    Api.Request.Entities.DirectionOut
-
-                                False ->
-                                    Api.Request.Entities.DirectionIn
+                            isOutgoingToDirection isOutgoing
                     in
                     Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
@@ -116,6 +111,14 @@ perform plugins key apiKey effect =
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
                         |> send apiKey effect (toMsg >> GraphMsg)
+
+                Graph.SearchEntityNeighborsEffect e ->
+                    let
+                        direction =
+                            isOutgoingToDirection e.isOutgoing
+                    in
+                    Api.Request.Entities.searchEntityNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
+                        |> send apiKey effect (e.toMsg >> GraphMsg)
 
                 Graph.GetSvgElementEffect ->
                     Graph.perform eff
@@ -194,3 +197,13 @@ send : String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
 send apiKey effect toMsg =
     withAuthorization apiKey
         >> Api.sendAndAlsoReceiveHeaders BrowserGotResponseWithHeaders effect toMsg
+
+
+isOutgoingToDirection : Bool -> Api.Request.Entities.Direction
+isOutgoingToDirection isOutgoing =
+    case isOutgoing of
+        True ->
+            Api.Request.Entities.DirectionOut
+
+        False ->
+            Api.Request.Entities.DirectionIn

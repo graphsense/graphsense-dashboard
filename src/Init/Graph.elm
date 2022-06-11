@@ -31,4 +31,5 @@ init plugins now =
         { element = Nothing
         , toolbox = Legend []
         }
+    , search = Nothing
     }

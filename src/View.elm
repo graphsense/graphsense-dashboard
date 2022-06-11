@@ -18,6 +18,7 @@ import Plugin as Plugin exposing (Plugins)
 import RemoteData
 import Route
 import Route.Graph
+import View.Graph.Search as Search
 import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
@@ -147,6 +148,18 @@ hovercards plugins vc model =
                         )
                             |> List.map (Html.map GraphMsg)
                             |> hovercard vc tag.hovercardElement
+                    )
+                |> Maybe.withDefault []
+           )
+        ++ (model.graph.search
+                |> Maybe.map
+                    (\search ->
+                        (Search.inputHovercard plugins vc search
+                            |> Html.Styled.toUnstyled
+                            |> List.singleton
+                        )
+                            |> List.map (Html.map GraphMsg)
+                            |> hovercard vc search.element
                     )
                 |> Maybe.withDefault []
            )

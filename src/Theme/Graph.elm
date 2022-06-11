@@ -50,6 +50,10 @@ type alias Graph =
     , legendItem : List Style
     , legendItemColor : List Style
     , legendItemTitle : List Style
+    , radio : List Style
+    , radioInput : List Style
+    , radioText : List Style
+    , searchSettingsRow : List Style
     }
 
 
@@ -99,4 +103,8 @@ default =
     , legendItem = []
     , legendItemColor = []
     , legendItemTitle = []
+    , radio = []
+    , radioInput = []
+    , radioText = []
+    , searchSettingsRow = []
     }

@@ -149,6 +149,11 @@ s_alpha value__ record__ =
     { record__ | alpha = value__ }
 
 
+s_altKey : a -> { b | altKey : a } -> { b | altKey : a }
+s_altKey value__ record__ =
+    { record__ | altKey = value__ }
+
+
 s_amount : a -> { b | amount : a } -> { b | amount : a }
 s_amount value__ record__ =
     { record__ | amount = value__ }
@@ -459,6 +464,11 @@ s_brandWhite value__ record__ =
     { record__ | brandWhite = value__ }
 
 
+s_breadth : a -> { b | breadth : a } -> { b | breadth : a }
+s_breadth value__ record__ =
+    { record__ | breadth = value__ }
+
+
 s_breaks : a -> { b | breaks : a } -> { b | breaks : a }
 s_breaks value__ record__ =
     { record__ | breaks = value__ }
@@ -512,6 +522,11 @@ s_caseInsensitive value__ record__ =
 s_cases : a -> { b | cases : a } -> { b | cases : a }
 s_cases value__ record__ =
     { record__ | cases = value__ }
+
+
+s_categories : a -> { b | categories : a } -> { b | categories : a }
+s_categories value__ record__ =
+    { record__ | categories = value__ }
 
 
 s_category : a -> { b | category : a } -> { b | category : a }
@@ -714,9 +729,19 @@ s_create value__ record__ =
     { record__ | create = value__ }
 
 
+s_criterion : a -> { b | criterion : a } -> { b | criterion : a }
+s_criterion value__ record__ =
+    { record__ | criterion = value__ }
+
+
 s_css : a -> { b | css : a } -> { b | css : a }
 s_css value__ record__ =
     { record__ | css = value__ }
+
+
+s_ctrlKey : a -> { b | ctrlKey : a } -> { b | ctrlKey : a }
+s_ctrlKey value__ record__ =
+    { record__ | ctrlKey = value__ }
 
 
 s_currencies : a -> { b | currencies : a } -> { b | currencies : a }
@@ -742,6 +767,11 @@ s_currencyBackgroundPath value__ record__ =
 s_currencyHeading : a -> { b | currencyHeading : a } -> { b | currencyHeading : a }
 s_currencyHeading value__ record__ =
     { record__ | currencyHeading = value__ }
+
+
+s_current : a -> { b | current : a } -> { b | current : a }
+s_current value__ record__ =
+    { record__ | current = value__ }
 
 
 s_currentHeight : a -> { b | currentHeight : a } -> { b | currentHeight : a }
@@ -887,6 +917,11 @@ s_delay value__ record__ =
 s_delimiters : a -> { b | delimiters : a } -> { b | delimiters : a }
 s_delimiters value__ record__ =
     { record__ | delimiters = value__ }
+
+
+s_depth : a -> { b | depth : a } -> { b | depth : a }
+s_depth value__ record__ =
+    { record__ | depth = value__ }
 
 
 s_derivativeMagnitude : a -> { b | derivativeMagnitude : a } -> { b | derivativeMagnitude : a }
@@ -1042,6 +1077,16 @@ s_ellipse value__ record__ =
 s_elm : a -> { b | elm : a } -> { b | elm : a }
 s_elm value__ record__ =
     { record__ | elm = value__ }
+
+
+s_emptyItem : a -> { b | emptyItem : a } -> { b | emptyItem : a }
+s_emptyItem value__ record__ =
+    { record__ | emptyItem = value__ }
+
+
+s_enabled : a -> { b | enabled : a } -> { b | enabled : a }
+s_enabled value__ record__ =
+    { record__ | enabled = value__ }
 
 
 s_encoder : a -> { b | encoder : a } -> { b | encoder : a }
@@ -1504,6 +1549,11 @@ s_gte value__ record__ =
     { record__ | gte = value__ }
 
 
+s_hasFocus : a -> { b | hasFocus : a } -> { b | hasFocus : a }
+s_hasFocus value__ record__ =
+    { record__ | hasFocus = value__ }
+
+
 s_hash : a -> { b | hash : a } -> { b | hash : a }
 s_hash value__ record__ =
     { record__ | hash = value__ }
@@ -1759,6 +1809,16 @@ s_input value__ record__ =
     { record__ | input = value__ }
 
 
+s_inputCharacter : a -> { b | inputCharacter : a } -> { b | inputCharacter : a }
+s_inputCharacter value__ record__ =
+    { record__ | inputCharacter = value__ }
+
+
+s_inputRaw : a -> { b | inputRaw : a } -> { b | inputRaw : a }
+s_inputRaw value__ record__ =
+    { record__ | inputRaw = value__ }
+
+
 s_inputValue : a -> { b | inputValue : a } -> { b | inputValue : a }
 s_inputValue value__ record__ =
     { record__ | inputValue = value__ }
@@ -1862,6 +1922,11 @@ s_keepFirst value__ record__ =
 s_key : a -> { b | key : a } -> { b | key : a }
 s_key value__ record__ =
     { record__ | key = value__ }
+
+
+s_keyCode : a -> { b | keyCode : a } -> { b | keyCode : a }
+s_keyCode value__ record__ =
+    { record__ | keyCode = value__ }
 
 
 s_keyframes : a -> { b | keyframes : a } -> { b | keyframes : a }
@@ -2224,6 +2289,11 @@ s_matchingAddresses value__ record__ =
     { record__ | matchingAddresses = value__ }
 
 
+s_maxAddresses : a -> { b | maxAddresses : a } -> { b | maxAddresses : a }
+s_maxAddresses value__ record__ =
+    { record__ | maxAddresses = value__ }
+
+
 s_maxError : a -> { b | maxError : a } -> { b | maxError : a }
 s_maxError value__ record__ =
     { record__ | maxError = value__ }
@@ -2234,6 +2304,11 @@ s_maxHeight value__ record__ =
     { record__ | maxHeight = value__ }
 
 
+s_maxLength : a -> { b | maxLength : a } -> { b | maxLength : a }
+s_maxLength value__ record__ =
+    { record__ | maxLength = value__ }
+
+
 s_maxLettersPerLabelRow : a -> { b | maxLettersPerLabelRow : a } -> { b | maxLettersPerLabelRow : a }
 s_maxLettersPerLabelRow value__ record__ =
     { record__ | maxLettersPerLabelRow = value__ }
@@ -2242,6 +2317,11 @@ s_maxLettersPerLabelRow value__ record__ =
 s_maxSecondDerivativeMagnitude : a -> { b | maxSecondDerivativeMagnitude : a } -> { b | maxSecondDerivativeMagnitude : a }
 s_maxSecondDerivativeMagnitude value__ record__ =
     { record__ | maxSecondDerivativeMagnitude = value__ }
+
+
+s_maxValue : a -> { b | maxValue : a } -> { b | maxValue : a }
+s_maxValue value__ record__ =
+    { record__ | maxValue = value__ }
 
 
 s_maxWidth : a -> { b | maxWidth : a } -> { b | maxWidth : a }
@@ -2274,6 +2354,11 @@ s_messages value__ record__ =
     { record__ | messages = value__ }
 
 
+s_metaKey : a -> { b | metaKey : a } -> { b | metaKey : a }
+s_metaKey value__ record__ =
+    { record__ | metaKey = value__ }
+
+
 s_metadata : a -> { b | metadata : a } -> { b | metadata : a }
 s_metadata value__ record__ =
     { record__ | metadata = value__ }
@@ -2297,6 +2382,11 @@ s_milliseconds value__ record__ =
 s_minMaxDimension : a -> { b | minMaxDimension : a } -> { b | minMaxDimension : a }
 s_minMaxDimension value__ record__ =
     { record__ | minMaxDimension = value__ }
+
+
+s_minValue : a -> { b | minValue : a } -> { b | minValue : a }
+s_minValue value__ record__ =
+    { record__ | minValue = value__ }
 
 
 s_minX : a -> { b | minX : a } -> { b | minX : a }
@@ -2634,6 +2724,16 @@ s_numberFormat value__ record__ =
     { record__ | numberFormat = value__ }
 
 
+s_numberModel : a -> { b | numberModel : a } -> { b | numberModel : a }
+s_numberModel value__ record__ =
+    { record__ | numberModel = value__ }
+
+
+s_numberOptions : a -> { b | numberOptions : a } -> { b | numberOptions : a }
+s_numberOptions value__ record__ =
+    { record__ | numberOptions = value__ }
+
+
 s_numberOrInfinite : a -> { b | numberOrInfinite : a } -> { b | numberOrInfinite : a }
 s_numberOrInfinite value__ record__ =
     { record__ | numberOrInfinite = value__ }
@@ -2664,6 +2764,11 @@ s_oldTime value__ record__ =
     { record__ | oldTime = value__ }
 
 
+s_onChange : a -> { b | onChange : a } -> { b | onChange : a }
+s_onChange value__ record__ =
+    { record__ | onChange = value__ }
+
+
 s_onClick : a -> { b | onClick : a } -> { b | onClick : a }
 s_onClick value__ record__ =
     { record__ | onClick = value__ }
@@ -2677,6 +2782,11 @@ s_onError value__ record__ =
 s_onFailure : a -> { b | onFailure : a } -> { b | onFailure : a }
 s_onFailure value__ record__ =
     { record__ | onFailure = value__ }
+
+
+s_onInput : a -> { b | onInput : a } -> { b | onInput : a }
+s_onInput value__ record__ =
+    { record__ | onInput = value__ }
 
 
 s_onLoading : a -> { b | onLoading : a } -> { b | onLoading : a }
@@ -2964,6 +3074,11 @@ s_paths value__ record__ =
     { record__ | paths = value__ }
 
 
+s_pattern : a -> { b | pattern : a } -> { b | pattern : a }
+s_pattern value__ record__ =
+    { record__ | pattern = value__ }
+
+
 s_ph : a -> { b | ph : a } -> { b | ph : a }
 s_ph value__ record__ =
     { record__ | ph = value__ }
@@ -3209,6 +3324,21 @@ s_queryParams value__ record__ =
     { record__ | queryParams = value__ }
 
 
+s_radio : a -> { b | radio : a } -> { b | radio : a }
+s_radio value__ record__ =
+    { record__ | radio = value__ }
+
+
+s_radioInput : a -> { b | radioInput : a } -> { b | radioInput : a }
+s_radioInput value__ record__ =
+    { record__ | radioInput = value__ }
+
+
+s_radioText : a -> { b | radioText : a } -> { b | radioText : a }
+s_radioText value__ record__ =
+    { record__ | radioText = value__ }
+
+
 s_radius : a -> { b | radius : a } -> { b | radius : a }
 s_radius value__ record__ =
     { record__ | radius = value__ }
@@ -3257,11 +3387,6 @@ s_refs value__ record__ =
 s_regions : a -> { b | regions : a } -> { b | regions : a }
 s_regions value__ record__ =
     { record__ | regions = value__ }
-
-
-s_relation : a -> { b | relation : a } -> { b | relation : a }
-s_relation value__ record__ =
-    { record__ | relation = value__ }
 
 
 s_relativeTimeOptions : a -> { b | relativeTimeOptions : a } -> { b | relativeTimeOptions : a }
@@ -3509,6 +3634,11 @@ s_search value__ record__ =
     { record__ | search = value__ }
 
 
+s_searchSettingsRow : a -> { b | searchSettingsRow : a } -> { b | searchSettingsRow : a }
+s_searchSettingsRow value__ record__ =
+    { record__ | searchSettingsRow = value__ }
+
+
 s_searchTextarea : a -> { b | searchTextarea : a } -> { b | searchTextarea : a }
 s_searchTextarea value__ record__ =
     { record__ | searchTextarea = value__ }
@@ -3572,6 +3702,11 @@ s_set value__ record__ =
 s_shift : a -> { b | shift : a } -> { b | shift : a }
 s_shift value__ record__ =
     { record__ | shift = value__ }
+
+
+s_shiftKey : a -> { b | shiftKey : a } -> { b | shiftKey : a }
+s_shiftKey value__ record__ =
+    { record__ | shiftKey = value__ }
 
 
 s_showCase : a -> { b | showCase : a } -> { b | showCase : a }
@@ -3972,6 +4107,16 @@ s_textDecorationStyle value__ record__ =
 s_textIndent : a -> { b | textIndent : a } -> { b | textIndent : a }
 s_textIndent value__ record__ =
     { record__ | textIndent = value__ }
+
+
+s_textModel : a -> { b | textModel : a } -> { b | textModel : a }
+s_textModel value__ record__ =
+    { record__ | textModel = value__ }
+
+
+s_textOptions : a -> { b | textOptions : a } -> { b | textOptions : a }
+s_textOptions value__ record__ =
+    { record__ | textOptions = value__ }
 
 
 s_textOrientation : a -> { b | textOrientation : a } -> { b | textOrientation : a }

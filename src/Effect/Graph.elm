@@ -1,6 +1,7 @@
 module Effect.Graph exposing (..)
 
 import Api.Data
+import Api.Request.Entities
 import Browser.Dom
 import Effect.Search as Search
 import IntDict exposing (IntDict)
@@ -9,6 +10,7 @@ import Model.Address as A
 import Model.Entity as E
 import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Graph.Search exposing (Criterion)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model as Plugin
 import Route.Graph exposing (Route)
@@ -89,6 +91,17 @@ type Effect
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTags -> Msg
         }
+    | SearchEntityNeighborsEffect
+        { currency : String
+        , entity : Int
+        , isOutgoing : Bool
+        , key : Api.Request.Entities.Key
+        , value : List String
+        , depth : Int
+        , breadth : Int
+        , maxAddresses : Int
+        , toMsg : List Api.Data.SearchResultLevel1 -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
@@ -149,6 +162,9 @@ perform eff =
 
         -- managed in Effect.elm
         GetEntityAddressTagsEffect _ ->
+            Cmd.none
+
+        SearchEntityNeighborsEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

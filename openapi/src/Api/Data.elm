@@ -342,57 +342,50 @@ type alias SearchResultByCurrency =
 
 
 type alias SearchResultLeaf =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
     }
 
 
 type alias SearchResultLevel1 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLevel2))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLevel2)
     }
 
 
 type alias SearchResultLevel2 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLevel3))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLevel3)
     }
 
 
 type alias SearchResultLevel3 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLevel4))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLevel4)
     }
 
 
 type alias SearchResultLevel4 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLevel5))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLevel5)
     }
 
 
 type alias SearchResultLevel5 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLevel6))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLevel6)
     }
 
 
 type alias SearchResultLevel6 =
-    { matchingAddresses : Maybe (List (Address))
-    , node : Maybe Entity
-    , relation : Maybe Neighbor
-    , paths : Maybe (List (SearchResultLeaf))
+    { matchingAddresses : List (Address)
+    , neighbor : NeighborEntity
+    , paths : List (SearchResultLeaf)
     }
 
 
@@ -1018,9 +1011,8 @@ encodeSearchResultLeafPairs : SearchResultLeaf -> List EncodedField
 encodeSearchResultLeafPairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
             ]
     in
     pairs
@@ -1040,10 +1032,9 @@ encodeSearchResultLevel1Pairs : SearchResultLevel1 -> List EncodedField
 encodeSearchResultLevel1Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel2) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLevel2) model.paths
             ]
     in
     pairs
@@ -1063,10 +1054,9 @@ encodeSearchResultLevel2Pairs : SearchResultLevel2 -> List EncodedField
 encodeSearchResultLevel2Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel3) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLevel3) model.paths
             ]
     in
     pairs
@@ -1086,10 +1076,9 @@ encodeSearchResultLevel3Pairs : SearchResultLevel3 -> List EncodedField
 encodeSearchResultLevel3Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel4) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLevel4) model.paths
             ]
     in
     pairs
@@ -1109,10 +1098,9 @@ encodeSearchResultLevel4Pairs : SearchResultLevel4 -> List EncodedField
 encodeSearchResultLevel4Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel5) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLevel5) model.paths
             ]
     in
     pairs
@@ -1132,10 +1120,9 @@ encodeSearchResultLevel5Pairs : SearchResultLevel5 -> List EncodedField
 encodeSearchResultLevel5Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLevel6) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLevel6) model.paths
             ]
     in
     pairs
@@ -1155,10 +1142,9 @@ encodeSearchResultLevel6Pairs : SearchResultLevel6 -> List EncodedField
 encodeSearchResultLevel6Pairs model =
     let
         pairs =
-            [ maybeEncode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
-            , maybeEncode "node" encodeEntity model.node
-            , maybeEncode "relation" encodeNeighbor model.relation
-            , maybeEncode "paths" (Json.Encode.list encodeSearchResultLeaf) model.paths
+            [ encode "matching_addresses" (Json.Encode.list encodeAddress) model.matchingAddresses
+            , encode "neighbor" encodeNeighborEntity model.neighbor
+            , encode "paths" (Json.Encode.list encodeSearchResultLeaf) model.paths
             ]
     in
     pairs
@@ -1623,63 +1609,56 @@ searchResultByCurrencyDecoder =
 searchResultLeafDecoder : Json.Decode.Decoder SearchResultLeaf
 searchResultLeafDecoder =
     Json.Decode.succeed SearchResultLeaf
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
 
 
 searchResultLevel1Decoder : Json.Decode.Decoder SearchResultLevel1
 searchResultLevel1Decoder =
     Json.Decode.succeed SearchResultLevel1
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLevel2Decoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLevel2Decoder) 
 
 
 searchResultLevel2Decoder : Json.Decode.Decoder SearchResultLevel2
 searchResultLevel2Decoder =
     Json.Decode.succeed SearchResultLevel2
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLevel3Decoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLevel3Decoder) 
 
 
 searchResultLevel3Decoder : Json.Decode.Decoder SearchResultLevel3
 searchResultLevel3Decoder =
     Json.Decode.succeed SearchResultLevel3
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLevel4Decoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLevel4Decoder) 
 
 
 searchResultLevel4Decoder : Json.Decode.Decoder SearchResultLevel4
 searchResultLevel4Decoder =
     Json.Decode.succeed SearchResultLevel4
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLevel5Decoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLevel5Decoder) 
 
 
 searchResultLevel5Decoder : Json.Decode.Decoder SearchResultLevel5
 searchResultLevel5Decoder =
     Json.Decode.succeed SearchResultLevel5
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLevel6Decoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLevel6Decoder) 
 
 
 searchResultLevel6Decoder : Json.Decode.Decoder SearchResultLevel6
 searchResultLevel6Decoder =
     Json.Decode.succeed SearchResultLevel6
-        |> maybeDecode "matching_addresses" (Json.Decode.list addressDecoder) Nothing
-        |> maybeDecode "node" entityDecoder Nothing
-        |> maybeDecode "relation" neighborDecoder Nothing
-        |> maybeDecode "paths" (Json.Decode.list searchResultLeafDecoder) Nothing
+        |> decode "matching_addresses" (Json.Decode.list addressDecoder) 
+        |> decode "neighbor" neighborEntityDecoder 
+        |> decode "paths" (Json.Decode.list searchResultLeafDecoder) 
 
 
 statsDecoder : Json.Decode.Decoder Stats

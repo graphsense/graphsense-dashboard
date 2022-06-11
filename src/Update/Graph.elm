@@ -9,6 +9,7 @@ import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
+import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
 import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
@@ -25,6 +26,7 @@ import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
+import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
@@ -41,6 +43,7 @@ import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
 import Update.Graph.Layer as Layer
+import Update.Graph.Search as Search
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 
@@ -1136,8 +1139,224 @@ update plugins uc msg model =
             }
                 |> n
 
+        UserClickedSearch id ->
+            ( model
+            , Id.entityIdToString id
+                |> Dom.getElement
+                |> Task.attempt (BrowserGotEntityElementForSearch id)
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotEntityElementForSearch id result ->
+            result
+                |> Result.map
+                    (\element ->
+                        { model
+                            | search = Search.init model.entityConcepts element id |> Just
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
+        UserSelectsDirection direction ->
+            updateSearch (Search.selectDirection direction) model
+
+        UserSelectsCriterion criterion ->
+            updateSearch
+                (Search.selectCriterion
+                    { categories = model.entityConcepts
+                    }
+                    criterion
+                )
+                model
+
+        UserSelectsSearchCategory category ->
+            updateSearch (Search.selectCategory category) model
+
+        UserInputsSearchDepth input ->
+            input
+                |> Maybe.map
+                    (\depth ->
+                        updateSearch (\s -> n { s | depth = depth }) model
+                    )
+                |> Maybe.withDefault (n model)
+
+        UserInputsSearchBreadth input ->
+            input
+                |> Maybe.map
+                    (\breadth ->
+                        updateSearch (\s -> n { s | breadth = breadth }) model
+                    )
+                |> Maybe.withDefault (n model)
+
+        UserInputsSearchMaxAddresses input ->
+            input
+                |> Maybe.map
+                    (\maxAddresses ->
+                        updateSearch (\s -> n { s | maxAddresses = maxAddresses }) model
+                    )
+                |> Maybe.withDefault (n model)
+
+        UserSubmitsSearchInput ->
+            updateSearch Search.submit model
+                |> mapFirst (s_search Nothing)
+
+        UserClicksCloseSearchHovercard ->
+            { model
+                | search = Nothing
+            }
+                |> n
+
+        BrowserGotEntitySearchResult id isOutgoing result ->
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\anchor ->
+                        handleEntitySearchResult
+                            plugins
+                            uc
+                            anchor
+                            (prepareSearchResult result)
+                            isOutgoing
+                            ( model, [] )
+                    )
+                |> Maybe.withDefault (n model)
+
         NoOp ->
             n model
+
+
+type alias SearchResult =
+    { matchingAddresses : List Api.Data.Address
+    , neighbor : Api.Data.NeighborEntity
+    , paths : More
+    }
+
+
+type More
+    = More (List SearchResult)
+
+
+prepareSearchResult : List Api.Data.SearchResultLevel1 -> List SearchResult
+prepareSearchResult paths =
+    paths
+        |> List.map
+            (\p1 ->
+                { matchingAddresses = p1.matchingAddresses
+                , neighbor = p1.neighbor
+                , paths =
+                    p1.paths
+                        |> List.map
+                            (\p2 ->
+                                { matchingAddresses = p2.matchingAddresses
+                                , neighbor = p2.neighbor
+                                , paths =
+                                    p2.paths
+                                        |> List.map
+                                            (\p3 ->
+                                                { matchingAddresses = p3.matchingAddresses
+                                                , neighbor = p3.neighbor
+                                                , paths =
+                                                    p3.paths
+                                                        |> List.map
+                                                            (\p4 ->
+                                                                { matchingAddresses = p4.matchingAddresses
+                                                                , neighbor = p4.neighbor
+                                                                , paths =
+                                                                    p4.paths
+                                                                        |> List.map
+                                                                            (\p5 ->
+                                                                                { matchingAddresses = p5.matchingAddresses
+                                                                                , neighbor = p5.neighbor
+                                                                                , paths =
+                                                                                    p5.paths
+                                                                                        |> List.map
+                                                                                            (\p6 ->
+                                                                                                { matchingAddresses = p6.matchingAddresses
+                                                                                                , neighbor = p6.neighbor
+                                                                                                , paths =
+                                                                                                    p6.paths
+                                                                                                        |> List.map
+                                                                                                            (\p7 ->
+                                                                                                                { matchingAddresses = p7.matchingAddresses
+                                                                                                                , neighbor = p7.neighbor
+                                                                                                                , paths = More []
+                                                                                                                }
+                                                                                                            )
+                                                                                                        |> More
+                                                                                                }
+                                                                                            )
+                                                                                        |> More
+                                                                                }
+                                                                            )
+                                                                        |> More
+                                                                }
+                                                            )
+                                                        |> More
+                                                }
+                                            )
+                                        |> More
+                                }
+                            )
+                        |> More
+                }
+            )
+
+
+handleEntitySearchResult : Plugins -> Update.Config -> Entity -> List SearchResult -> Bool -> ( Model, List Effect ) -> ( Model, List Effect )
+handleEntitySearchResult plugins uc anchor nodes isOutgoing ( model, effects ) =
+    let
+        neighbors =
+            nodes
+                |> List.map .neighbor
+    in
+    nodes
+        |> List.foldl
+            (\{ neighbor, paths } ( mo, eff ) ->
+                let
+                    id =
+                        Id.initEntityId
+                            { currency = neighbor.entity.currency
+                            , id = neighbor.entity.entity
+                            , layer =
+                                Id.layer anchor.id
+                                    + (if isOutgoing then
+                                        1
+
+                                       else
+                                        -1
+                                      )
+                            }
+                in
+                Layer.getEntity id mo.layers
+                    |> Maybe.map
+                        (\ancho ->
+                            case paths of
+                                More ps ->
+                                    handleEntitySearchResult plugins uc ancho ps isOutgoing ( mo, eff )
+                        )
+                    |> Maybe.withDefault ( mo, eff )
+            )
+            (handleEntityNeighbors plugins uc anchor isOutgoing neighbors model)
+        |> mapSecond ((++) effects)
+
+
+updateSearch : (Search.Model -> ( Search.Model, List Effect )) -> Model -> ( Model, List Effect )
+updateSearch upd model =
+    model.search
+        |> Maybe.map
+            (\search ->
+                let
+                    ( s, eff ) =
+                        upd search
+                in
+                ( { model
+                    | search = Just s
+                  }
+                , eff
+                )
+            )
+        |> Maybe.withDefault (n model)
 
 
 toolVisible : Model -> Dom.Element -> Bool -> ( Model, List Effect )

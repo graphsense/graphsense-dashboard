@@ -21,7 +21,7 @@ type alias Theme =
     , header : List Style
     , headerLogo : List Style
     , heading2 : List Style
-    , input : List Style
+    , inputRaw : List ( String, String )
     , addonsNav : List Style
     , sidebar : List Style
     , sidebarIcon : Bool -> List Style
@@ -54,7 +54,7 @@ default =
     , sectionBelowHeader = []
     , header = []
     , heading2 = []
-    , input = []
+    , inputRaw = []
     , headerLogo = []
     , addonsNav = []
     , sidebar = []

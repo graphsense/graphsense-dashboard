@@ -16,6 +16,7 @@ import Theme.Stats as Stats
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
+import Tuple exposing (..)
 import Util.View exposing (toCssColor)
 import VitePluginHelper
 
@@ -94,9 +95,8 @@ theme =
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
             ]
-        |> s_input
-            [ inputStyle
-            ]
+        |> s_inputRaw
+            inputStyleRaw
         |> s_headerLogo
             [ maxWidth <| px 190
             ]
@@ -485,6 +485,15 @@ theme =
                         ]
                     , scaled 1 |> rem |> marginRight
                     ]
+                |> s_radio
+                    []
+                |> s_radioText
+                    [ scaled 1 |> rem |> padding
+                    ]
+                |> s_searchSettingsRow
+                    [ displayFlex
+                    , justifyContent spaceBetween
+                    ]
             )
         |> s_browser
             (Browser.default
@@ -672,9 +681,29 @@ borderRadiusSmValue =
     0.5
 
 
+borderRadiusSmRaw : ( String, String )
+borderRadiusSmRaw =
+    ( "border-radius"
+    , String.fromFloat (scaled borderRadiusSmValue) ++ "rem"
+    )
+
+
 borderRadiusSm : Style
 borderRadiusSm =
-    scaled borderRadiusSmValue |> rem |> borderRadius
+    property
+        (Tuple.first borderRadiusSmRaw)
+        (Tuple.second borderRadiusSmRaw)
+
+
+inputStyleRaw : List ( String, String )
+inputStyleRaw =
+    [ ( "background-color", Color.toCssString colors.greyLight )
+    , ( "color", Color.toCssString colors.black )
+    , borderRadiusSmRaw
+    , ( "border", "0" )
+    , ( "padding", (scaled 1 |> String.fromFloat) ++ "rem" )
+    , ( "marginBottom", (scaled 1 |> String.fromFloat) ++ "rem" )
+    ]
 
 
 inputStyle : Style

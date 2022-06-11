@@ -210,3 +210,23 @@ legendItemColor vc =
 legendItemTitle : Config -> List Style
 legendItemTitle vc =
     vc.theme.graph.legendItemTitle
+
+
+radio : Config -> List Style
+radio vc =
+    vc.theme.graph.radio
+
+
+radioInput : Config -> List Style
+radioInput vc =
+    vc.theme.graph.radioInput
+
+
+radioText : Config -> List Style
+radioText vc =
+    vc.theme.graph.radioText
+
+
+searchSettingsRow : Config -> List Style
+searchSettingsRow vc =
+    vc.theme.graph.searchSettingsRow

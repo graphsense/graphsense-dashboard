@@ -181,7 +181,7 @@ listEntityTxs currency_path entity_path page_query pagesize_query =
         Api.Data.addressTxsDecoder
 
 
-searchEntityNeighbors : String -> Int -> Direction -> Key -> List String -> Int -> Maybe Int -> Maybe Int -> Api.Request Api.Data.SearchResultLevel1
+searchEntityNeighbors : String -> Int -> Direction -> Key -> List String -> Int -> Maybe Int -> Maybe Int -> Api.Request (List Api.Data.SearchResultLevel1)
 searchEntityNeighbors currency_path entity_path direction_query key_query value_query depth_query breadth_query skipNumAddresses_query =
     Api.request
         "GET"
@@ -190,4 +190,4 @@ searchEntityNeighbors currency_path entity_path direction_query key_query value_
         [ ( "direction", Just <| stringFromDirection direction_query ), ( "key", Just <| stringFromKey key_query ), ( "value", Just <| (String.join "," << List.map identity) value_query ), ( "depth", Just <| String.fromInt depth_query ), ( "breadth", Maybe.map String.fromInt breadth_query ), ( "skip_num_addresses", Maybe.map String.fromInt skipNumAddresses_query ) ]
         []
         Nothing
-        Api.Data.searchResultLevel1Decoder
+        (Json.Decode.list Api.Data.searchResultLevel1Decoder)

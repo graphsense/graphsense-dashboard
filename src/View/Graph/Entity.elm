@@ -89,6 +89,7 @@ entity plugins vc gc selected ent =
         , translate (Entity.getX ent) (Entity.getY ent) |> transform
         , UserPushesLeftMouseButtonOnEntity ent.id
             |> Util.Graph.mousedown
+        , Id.entityIdToString ent.id |> id
         ]
         [ rect
             [ width <| String.fromFloat <| Entity.getInnerWidth ent

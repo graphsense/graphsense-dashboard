@@ -215,3 +215,6 @@ invalid key: ungültiger Schlüssel
 unlimited: unlimitiert
 root address: Wurzeladresse
 key expires: Key ist gültig bis %0
+direction: Richtung
+both: beide
+search neighbors: Suche Nachbarn
