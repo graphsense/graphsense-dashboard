@@ -1,5 +1,5 @@
-FROM alpine:3.15
-LABEL maintainer="contact@graphsense.info"
+FROM alpine:3.16
+LABEL maintainer="contact@iknaio.com"
 
 ENV WORKDIR=/app
 
