@@ -511,6 +511,10 @@ theme =
                 |> s_propertyBoxValue
                     [ fontNormal
                     ]
+                |> s_propertyBoxValueInner
+                    [ displayFlex
+                    , justifyContent spaceBetween
+                    ]
                 |> s_frame
                     (\visible ->
                         let
