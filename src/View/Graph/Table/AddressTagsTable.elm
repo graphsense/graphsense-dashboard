@@ -25,7 +25,8 @@ config vc =
         , toMsg = TableNewState
         , columns =
             [ T.stringColumn vc "Address" .address
-            , T.stringColumn vc "Currency" (.currency >> String.toUpper)
+
+            --, T.stringColumn vc "Currency" (.currency >> String.toUpper)
             , T.stringColumn vc "Label" .label
             , T.htmlColumn vc
                 "Source"
@@ -33,10 +34,19 @@ config vc =
                 (\data ->
                     let
                         source =
-                            data.source |> Maybe.withDefault ""
+                            data.source
+                                |> Maybe.withDefault ""
+
+                        truncated =
+                            if String.length source > vc.theme.table.urlMaxLength then
+                                String.left vc.theme.table.urlMaxLength source
+                                    ++ "…"
+
+                            else
+                                source
                     in
                     [ if String.startsWith "http" source then
-                        text source
+                        text truncated
                             |> List.singleton
                             |> a
                                 [ href source
@@ -45,19 +55,14 @@ config vc =
                                 ]
 
                       else
-                        text source
+                        text truncated
                     ]
                 )
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
-            , T.htmlColumn vc
+            , T.intColumn vc
                 "Confidence"
                 (.confidenceLevel >> Maybe.withDefault 0)
-                (.confidence
-                    >> Maybe.withDefault ""
-                    >> text
-                    >> List.singleton
-                )
             , T.htmlColumn vc
                 "TagPack"
                 .tagpackTitle

@@ -15,6 +15,7 @@ type alias Table =
     , numberCell : List Style
     , valuesCell : Bool -> List Style
     , loadingSpinner : List Style
+    , urlMaxLength : Int
     }
 
 
@@ -30,4 +31,5 @@ default =
     , numberCell = []
     , valuesCell = \_ -> []
     , loadingSpinner = []
+    , urlMaxLength = 40
     }
