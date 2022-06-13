@@ -8,6 +8,8 @@ import Model.Graph exposing (NodeType)
 type alias Graph =
     { root : List Style
     , addressFlags : List Style
+    , abuseFlag : List Style
+    , flagsGap : Float
     , addressLabel : List Style
     , addressRect : List Style
     , nodeFrame : NodeType -> Bool -> List Style
@@ -61,6 +63,8 @@ default : Graph
 default =
     { root = []
     , addressFlags = []
+    , abuseFlag = []
+    , flagsGap = 5
     , addressLabel = []
     , addressRect = []
     , nodeFrame = \_ _ -> []

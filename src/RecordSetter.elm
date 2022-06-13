@@ -29,6 +29,11 @@ s_abuseConcepts value__ record__ =
     { record__ | abuseConcepts = value__ }
 
 
+s_abuseFlag : a -> { b | abuseFlag : a } -> { b | abuseFlag : a }
+s_abuseFlag value__ record__ =
+    { record__ | abuseFlag = value__ }
+
+
 s_accumulatedFaces : a -> { b | accumulatedFaces : a } -> { b | accumulatedFaces : a }
 s_accumulatedFaces value__ record__ =
     { record__ | accumulatedFaces = value__ }
@@ -4492,6 +4497,11 @@ s_uri value__ record__ =
 s_url : a -> { b | url : a } -> { b | url : a }
 s_url value__ record__ =
     { record__ | url = value__ }
+
+
+s_urlMaxLength : a -> { b | urlMaxLength : a } -> { b | urlMaxLength : a }
+s_urlMaxLength value__ record__ =
+    { record__ | urlMaxLength = value__ }
 
 
 s_user : a -> { b | user : a } -> { b | user : a }

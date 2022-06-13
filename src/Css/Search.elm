@@ -18,13 +18,13 @@ frame vc =
         ++ vc.theme.search.frame
 
 
-textarea : Config -> List Style
-textarea vc =
+textarea : Config -> String -> List Style
+textarea vc input =
     [ overflow hidden
     , resize none
     , ex 50 |> width
     ]
-        ++ vc.theme.search.textarea
+        ++ vc.theme.search.textarea input
 
 
 result : Config -> List Style

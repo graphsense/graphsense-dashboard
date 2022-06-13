@@ -194,7 +194,7 @@ flags plugins vc gc ent =
             |> Util.Graph.scale 0.75
             |> transform
         ]
-        (Plugin.View.Graph.Entity.flags plugins vc ent)
+        (Plugin.View.Graph.Entity.flags plugins vc 0 ent)
 
 
 currency : Config -> Graph.Config -> Entity -> Svg Msg

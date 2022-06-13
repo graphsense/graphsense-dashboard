@@ -26,7 +26,7 @@ import View.Locale as Locale
 
 type alias SearchConfig =
     { searchable : Searchable
-    , css : List Style
+    , css : String -> List Style
     , resultsAsLink : Bool
     , multiline : Bool
     , showIcon : Bool
@@ -55,7 +55,7 @@ search plugins vc sc model =
                else
                 input
               )
-                [ sc.css |> css
+                [ sc.css model.input |> css
                 , autocomplete False
                 , spellcheck False
                 , Locale.string vc.locale "The search" |> title

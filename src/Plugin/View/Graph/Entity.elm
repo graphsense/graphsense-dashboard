@@ -11,20 +11,39 @@ import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (..)
 import Plugin.Model as Plugin exposing (..)
 import Svg.Styled as Svg exposing (Svg)
+import Svg.Styled.Attributes as Svg
+import Tuple exposing (..)
+import Util.Graph
 
 
-flags : Plugins -> View.Config -> Entity -> List (Svg Msg)
-flags plugins vc entity =
+flags : Plugins -> View.Config -> Float -> Entity -> List (Svg Msg)
+flags plugins vc offset entity =
     plugins
         |> Dict.toList
-        |> List.map
-            (\( pid, plugin ) ->
+        |> List.foldl
+            (\( pid, plugin ) ( off, otherFlags ) ->
                 Dict.get pid entity.plugins
-                    |> Maybe.map (plugin.view.graph.entity.flags vc)
-                    |> Maybe.withDefault []
-                    |> List.map (Svg.map (PluginMsg pid))
+                    |> Maybe.map
+                        (plugin.view.graph.entity.flags vc)
+                    |> Maybe.map
+                        (\( pOff, pFlags ) ->
+                            let
+                                newOff =
+                                    off + vc.theme.graph.flagsGap
+                            in
+                            pFlags
+                                |> List.map (Svg.map (PluginMsg pid))
+                                |> Svg.g
+                                    [ Util.Graph.translate -newOff 0
+                                        |> Svg.transform
+                                    ]
+                                |> (\f -> f :: otherFlags)
+                                |> pair (newOff + pOff)
+                        )
+                    |> Maybe.withDefault ( off, otherFlags )
             )
-        |> List.concat
+            ( offset, [] )
+        |> second
 
 
 properties : Plugins -> PluginStates -> PluginStates -> View.Config -> List (Html Msg)

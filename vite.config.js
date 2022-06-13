@@ -3,5 +3,5 @@ import elmPlugin from "vite-plugin-elm";
 
 export default defineConfig({
   plugins: [elmPlugin()],
-  server: { hmr : { overlay : false } }
+  server: { host: '0.0.0.0', hmr : { overlay : false } }
 });

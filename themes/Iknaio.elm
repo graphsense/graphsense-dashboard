@@ -196,13 +196,21 @@ theme =
                     , fontFamily monospace
                     ]
                 |> s_textarea
-                    [ scaled 1 |> rem |> padding
-                    , scaled 5 |> rem |> height
-                    , inputStyle
-                    , scaled 2 |> rem |> paddingX
-                    , scaled 2 |> rem |> paddingTop
-                    , scaled 1 |> rem |> paddingBottom
-                    ]
+                    (\input ->
+                        [ scaled 1 |> rem |> padding
+                        , scaled 5 |> rem |> height
+                        , inputStyle
+                        , scaled 2 |> rem |> paddingX
+                        , scaled 2 |> rem |> paddingTop
+                        , scaled 1 |> rem |> paddingBottom
+                        ]
+                            ++ (if String.isEmpty input then
+                                    [ fontFamilies fontFam ]
+
+                                else
+                                    []
+                               )
+                    )
                 |> s_result
                     [ calc (pct 100) minus (scaled 4 |> rem) |> width
                     , scaled 2 |> rem |> padding
@@ -360,6 +368,15 @@ theme =
                         |> Color.toCssString
                         |> property "color"
                     , fontWeight (int 300)
+                    ]
+                |> s_abuseFlag
+                    [ colors.red
+                        |> Color.toCssString
+                        |> property "fill"
+                    , colors.white
+                        |> Color.toCssString
+                        |> property "stroke"
+                    , property "stroke-width" "10px"
                     ]
                 |> s_entityCurrency
                     [ px 12 |> fontSize

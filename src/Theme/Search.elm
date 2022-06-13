@@ -6,7 +6,7 @@ import Css exposing (Style)
 type alias Search =
     { form : List Style
     , frame : List Style
-    , textarea : List Style
+    , textarea : String -> List Style
     , result : List Style
     , resultGroup : List Style
     , resultGroupList : List Style
@@ -21,7 +21,7 @@ default : Search
 default =
     { form = []
     , frame = []
-    , textarea = []
+    , textarea = \_ -> []
     , result = []
     , resultGroup = []
     , resultGroupList = []

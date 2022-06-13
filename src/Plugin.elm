@@ -25,12 +25,12 @@ type alias Plugin =
     { view :
         { graph :
             { address :
-                { flags : View.Config -> Value -> List (Svg Value)
+                { flags : View.Config -> Value -> ( Float, List (Svg Value) )
                 , contextMenu : View.Config -> Id.AddressId -> Value -> Maybe Value -> List (Html Value)
                 , properties : View.Config -> Value -> Value -> List (Html Value)
                 }
             , entity :
-                { flags : View.Config -> Value -> List (Svg Value)
+                { flags : View.Config -> Value -> ( Float, List (Svg Value) )
                 , contextMenu : View.Config -> Id.EntityId -> Value -> Maybe Value -> List (Html Value)
                 , properties : View.Config -> Value -> Value -> List (Html Value)
                 }

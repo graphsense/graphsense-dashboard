@@ -176,14 +176,59 @@ getLabel vc gc addr =
 
 flags : Plugins -> Config -> Graph.Config -> Address -> Svg Msg
 flags plugins vc gc addr =
-    g
-        [ Css.addressFlags vc |> css
-        , Graph.padding
-            / 2
-            |> translate (Graph.addressWidth - Graph.padding / 2)
-            |> transform
-        ]
-        (Plugin.View.Graph.Address.flags plugins vc addr |> Log.log "View.Graph.Address flags result")
+    let
+        af =
+            abuseFlag vc addr
+
+        offset =
+            if List.isEmpty af then
+                0
+
+            else
+                10
+    in
+    af
+        ++ (Plugin.View.Graph.Address.flags plugins vc offset addr |> Log.log "View.Graph.Address flags result")
+        |> g
+            [ Css.addressFlags vc |> css
+            , Graph.padding
+                / 2
+                |> translate Graph.addressWidth
+                |> Util.Graph.scale 0.75
+                |> transform
+            ]
+
+
+abuseFlag : Config -> Address -> List (Svg Msg)
+abuseFlag vc addr =
+    let
+        hasAbuse =
+            .abuse >> Maybe.map (\_ -> True)
+    in
+    addr.userTag
+        |> Maybe.andThen hasAbuse
+        |> Maybe.Extra.orElseLazy
+            (\_ ->
+                case addr.address.tags |> Maybe.map (List.any (hasAbuse >> Maybe.withDefault False)) of
+                    Just True ->
+                        Just True
+
+                    _ ->
+                        Nothing
+            )
+        |> Maybe.map
+            (\_ ->
+                [ Svg.path
+                    [ translate 5 0
+                        |> Util.Graph.scale 0.025
+                        |> transform
+                    , Css.abuseFlag vc |> css
+                    , d "M296 160H180.6l42.6-129.8C227.2 15 215.7 0 200 0H56C44 0 33.8 8.9 32.2 20.8l-32 240C-1.7 275.2 9.5 288 24 288h118.7L96.6 482.5c-3.6 15.2 8 29.5 23.3 29.5 8.4 0 16.4-4.4 20.8-12l176-304c9.3-15.9-2.2-36-20.7-36z"
+                    ]
+                    []
+                ]
+            )
+        |> Maybe.withDefault []
 
 
 links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg

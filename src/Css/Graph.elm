@@ -92,6 +92,11 @@ addressFlags vc =
     vc.theme.graph.addressFlags
 
 
+abuseFlag : Config -> List Style
+abuseFlag vc =
+    vc.theme.graph.abuseFlag
+
+
 addressLabel : Config -> List Style
 addressLabel vc =
     property "fill" "currentColor"
