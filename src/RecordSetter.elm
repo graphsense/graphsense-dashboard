@@ -3304,6 +3304,11 @@ s_propertyBoxValue value__ record__ =
     { record__ | propertyBoxValue = value__ }
 
 
+s_propertyBoxValueInner : a -> { b | propertyBoxValueInner : a } -> { b | propertyBoxValueInner : a }
+s_propertyBoxValueInner value__ record__ =
+    { record__ | propertyBoxValueInner = value__ }
+
+
 s_protocol : a -> { b | protocol : a } -> { b | protocol : a }
 s_protocol value__ record__ =
     { record__ | protocol = value__ }

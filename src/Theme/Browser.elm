@@ -11,6 +11,7 @@ type alias Browser =
     , propertyBoxRow : List Style
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
+    , propertyBoxValueInner : List Style
     , propertyBoxEntityId : List Style
     , propertyBoxRule : List Style
     , propertyBoxIncomingTxs : List Style
@@ -30,6 +31,7 @@ default =
     , propertyBoxRow = []
     , propertyBoxKey = []
     , propertyBoxValue = []
+    , propertyBoxValueInner = []
     , propertyBoxEntityId = []
     , propertyBoxRule = []
     , propertyBoxIncomingTxs = []

@@ -51,6 +51,11 @@ propertyBoxValue vc =
         :: vc.theme.browser.propertyBoxValue
 
 
+propertyBoxValueInner : Config -> List Style
+propertyBoxValueInner vc =
+    vc.theme.browser.propertyBoxValueInner
+
+
 propertyBoxEntityId : Config -> List Style
 propertyBoxEntityId vc =
     vc.theme.browser.propertyBoxEntityId

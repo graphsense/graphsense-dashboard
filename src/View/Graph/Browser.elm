@@ -104,13 +104,16 @@ browseRow vc map row =
                     [ Locale.text vc.locale key
                     ]
                 , span
-                    [ Css.propertyBoxValue vc |> css
+                    []
+                    [ div
+                        [ Css.propertyBoxValueInner vc |> css
+                        ]
+                        [ map value
+                        , table
+                            |> Maybe.map (tableLink vc)
+                            |> Maybe.withDefault none
+                        ]
                     ]
-                    [ map value
-                    ]
-                , table
-                    |> Maybe.map (tableLink vc)
-                    |> Maybe.withDefault none
                 ]
 
 
