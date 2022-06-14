@@ -114,3 +114,8 @@ popup vc =
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.loadingSpinner
+
+
+footer : Config -> List Style
+footer vc =
+    vc.theme.footer

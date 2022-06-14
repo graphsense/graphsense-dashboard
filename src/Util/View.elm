@@ -38,3 +38,10 @@ loadingSpinner vc css_ =
         , css_ vc |> css
         ]
         []
+
+
+firstToUpper : String -> String
+firstToUpper str =
+    String.left 1 str
+        |> String.toUpper
+        |> (\f -> f ++ String.dropLeft 1 str)

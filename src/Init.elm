@@ -5,6 +5,7 @@ import Dict
 import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
+import Init.Statusbar as Statusbar
 import Model exposing (..)
 import Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
@@ -38,6 +39,7 @@ init plugins flags url key =
       , width = flags.width
       , height = flags.height
       , error = ""
+      , statusbar = Statusbar.init
       , plugins = Plugin.init plugins
       }
     , List.map LocaleEffect localeEffect

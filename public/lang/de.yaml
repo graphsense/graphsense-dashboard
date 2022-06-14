@@ -153,7 +153,7 @@ entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
 link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
 shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Entitäten.
-searching criterion category_name: Kategorie %0
+"category {0}": Kategorie {0}
 searching criterion addresses_ids: Adressen %0
 searching between: zwischen %0 und %1
 searching min: ab %0
@@ -162,7 +162,9 @@ searching criterion final_balance: Bilanz %0 # one of searching between, min, ma
 searching criterion total_received: Eingänge %0 # one of searching between, min, max
 searching outgoing: ausgehenden
 searching incoming: eingehenden
-searching: "suche nach %0 Nachbarn von %1 mit %2 (Tiefe: %3, Breite: %4, Entitäten mit mehr als %5 Adressen auslassen)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
+for outgoing neighbors: nach ausgehenden Nachbarn
+for incoming neighbors: nach eingehenden Nachbarn
+"searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, Entitäten mit mehr als {5} Adressen auslassen)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
 errors only: nur Fehler
 show more: zeige mehr
 error requesting: "Fehler beim Aufruf von %0: %1"
@@ -170,7 +172,10 @@ loading transactions between: lade Transaktionen zwischen %0 und %1
 loaded: %0 %1 geladen # eg. loaded address xy
 loading msg outgoing: ausgehende
 loading msg incoming: eingehende
-loading neighbors for: lade %0 Nachbarn von %1 %2 # %0 = loading msg outgoing/incoming, %1 = type %2 = id
+"loading outgoing neighbors of entity {0}": "lade ausgehende Nachbarn von Entität {0}"
+"loading incoming neighbors of entity {0}": "lade eingehende Nachbarn von Entität {0}"
+"loading outgoing neighbors of address {0}": "lade ausgehende Nachbarn von Adresse {0}"
+"loading incoming neighbors of address {0}": "lade eingehende Nachbarn von Adresse {0}"
 loaded neighbors for: %0 Nachbarn von %1 %2 geladen
 saving to file: speichern in Datei
 saved to file: in Datei %0 gespeichert

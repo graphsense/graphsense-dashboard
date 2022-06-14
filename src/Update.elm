@@ -32,8 +32,10 @@ import Update.Graph as Graph
 import Update.Graph.Adding as Adding
 import Update.Graph.Browser as Browser
 import Update.Graph.Layer as Layer
+import Update.Graph.Search
 import Update.Locale as Locale
 import Update.Search as Search
+import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
 
@@ -86,45 +88,18 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotResponseWithHeaders result ->
-            case result of
-                Ok ( headers, message ) ->
-                    update plugins
-                        uc
-                        message
+        BrowserGotResponseWithHeaders statusbarToken result ->
+            statusbarToken
+                |> Maybe.map
+                    (\t ->
                         { model
-                            | user =
-                                updateRequestLimit headers model.user
+                            | statusbar = Statusbar.removeMessage t model.statusbar
                         }
-
-                Err ( BadStatus 401, eff ) ->
-                    ( { model
-                        | user =
-                            model.user
-                                |> s_auth
-                                    (case model.user.auth of
-                                        Unauthorized loading effs ->
-                                            Unauthorized False <| effs ++ [ eff ]
-
-                                        _ ->
-                                            Unauthorized False [ eff ]
-                                    )
-                      }
-                    , "userTool"
-                        |> Task.succeed
-                        |> Task.perform UserHoversUserIcon
-                        |> CmdEffect
-                        |> List.singleton
                     )
-
-                Err ( BadBody err, _ ) ->
-                    ( model
-                    , PortsConsoleEffect err
-                        |> List.singleton
-                    )
-
-                Err _ ->
-                    n model
+                |> Maybe.withDefault model
+                |> handleResponse plugins
+                    uc
+                    result
 
         UserHoversUserIcon id ->
             ( model
@@ -506,3 +481,45 @@ updateRequestLimit headers model =
             }
                 |> Authorized
     }
+
+
+handleResponse : Plugins -> Config -> Result ( Http.Error, Effect ) ( Dict String String, Msg ) -> Model key -> ( Model key, List Effect )
+handleResponse plugins uc result model =
+    case result of
+        Ok ( headers, message ) ->
+            update plugins
+                uc
+                message
+                { model
+                    | user =
+                        updateRequestLimit headers model.user
+                }
+
+        Err ( BadStatus 401, eff ) ->
+            ( { model
+                | user =
+                    model.user
+                        |> s_auth
+                            (case model.user.auth of
+                                Unauthorized loading effs ->
+                                    Unauthorized False <| effs ++ [ eff ]
+
+                                _ ->
+                                    Unauthorized False [ eff ]
+                            )
+              }
+            , "userTool"
+                |> Task.succeed
+                |> Task.perform UserHoversUserIcon
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        Err ( BadBody err, _ ) ->
+            ( model
+            , PortsConsoleEffect err
+                |> List.singleton
+            )
+
+        Err _ ->
+            n model

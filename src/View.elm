@@ -23,6 +23,7 @@ import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
+import View.Statusbar as Statusbar
 import View.User as User
 
 
@@ -71,6 +72,11 @@ body plugins vc model =
                 ]
                 [ Main.main_ plugins vc model
                 ]
+            ]
+         , footer
+            [ Css.View.footer vc |> css
+            ]
+            [ Statusbar.view vc model.statusbar
             ]
          ]
             ++ hovercards plugins vc model

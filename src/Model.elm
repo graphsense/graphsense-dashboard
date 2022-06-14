@@ -16,6 +16,7 @@ import Model.Entity exposing (Entity)
 import Model.Graph
 import Model.Locale
 import Model.Search
+import Model.Statusbar
 import Msg.Graph
 import Msg.Locale
 import Msg.Search
@@ -47,6 +48,7 @@ type alias Model navigationKey =
     , width : Int
     , height : Int
     , error : String
+    , statusbar : Model.Statusbar.Model
     , plugins : Dict String Json.Encode.Value
     }
 
@@ -61,7 +63,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
-    | BrowserGotResponseWithHeaders (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
+    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String

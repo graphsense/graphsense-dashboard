@@ -11,6 +11,7 @@ import Model.Locale as Locale
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
+import Update.Statusbar as Statusbar
 import View exposing (view)
 import View.Locale as Locale
 
@@ -24,7 +25,14 @@ main : Program Flags (Model Nav.Key) Msg
 main =
     let
         performEffect ( model, effects ) =
-            ( model, List.map (perform plugins model.key model.user.apiKey) effects |> Cmd.batch )
+            Statusbar.messagesFromEffects model effects
+                |> mapSecond
+                    (List.map
+                        (\( statusbarToken, eff ) ->
+                            perform plugins model.key statusbarToken model.user.apiKey eff
+                        )
+                    )
+                |> mapSecond Cmd.batch
 
         uc =
             { defaultColor = config.theme.graph.defaultColor

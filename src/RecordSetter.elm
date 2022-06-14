@@ -1339,6 +1339,11 @@ s_flags value__ record__ =
     { record__ | flags = value__ }
 
 
+s_flagsGap : a -> { b | flagsGap : a } -> { b | flagsGap : a }
+s_flagsGap value__ record__ =
+    { record__ | flagsGap = value__ }
+
+
 s_flexBasis : a -> { b | flexBasis : a } -> { b | flexBasis : a }
 s_flexBasis value__ record__ =
     { record__ | flexBasis = value__ }
@@ -3899,6 +3904,11 @@ s_stats value__ record__ =
     { record__ | stats = value__ }
 
 
+s_status : a -> { b | status : a } -> { b | status : a }
+s_status value__ record__ =
+    { record__ | status = value__ }
+
+
 s_statusCode : a -> { b | statusCode : a } -> { b | statusCode : a }
 s_statusCode value__ record__ =
     { record__ | statusCode = value__ }
@@ -3907,6 +3917,11 @@ s_statusCode value__ record__ =
 s_statusText : a -> { b | statusText : a } -> { b | statusText : a }
 s_statusText value__ record__ =
     { record__ | statusText = value__ }
+
+
+s_statusbar : a -> { b | statusbar : a } -> { b | statusbar : a }
+s_statusbar value__ record__ =
+    { record__ | statusbar = value__ }
 
 
 s_steps : a -> { b | steps : a } -> { b | steps : a }

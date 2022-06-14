@@ -27,8 +27,8 @@ n m =
     ( m, [] )
 
 
-perform : Plugins -> Nav.Key -> String -> Effect -> Cmd Msg
-perform plugins key apiKey effect =
+perform : Plugins -> Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
+perform plugins key statusbarToken apiKey effect =
     case effect of
         NavLoadEffect url ->
             Nav.load url
@@ -42,7 +42,7 @@ perform plugins key apiKey effect =
 
         GetConceptsEffect taxonomy msg ->
             Api.Request.Tags.listConcepts taxonomy
-                |> send apiKey effect msg
+                |> send statusbarToken apiKey effect msg
 
         GetElementEffect { id, msg } ->
             Dom.getElement id
@@ -65,7 +65,7 @@ perform plugins key apiKey effect =
                             isOutgoingToDirection isOutgoing
                     in
                     Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, includeLabels, nextpage, toMsg } ->
                     let
@@ -78,39 +78,39 @@ perform plugins key apiKey effect =
                                     Api.Request.Addresses.DirectionIn
                     in
                     Api.Request.Addresses.listAddressNeighbors currency address direction (Just includeLabels) nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressEffect { currency, address, toMsg } ->
                     Api.Request.Addresses.getAddress currency address
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityEffect { currency, entity, toMsg } ->
                     Api.Request.Entities.getEntity currency entity
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
                     Api.Request.Addresses.getAddressEntity currency address
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
                     Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTagsEffect { currency, address, pagesize, nextpage, toMsg } ->
                     Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listAddressTagsByEntity currency entity nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityAddressesEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityAddresses currency entity nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
-                        |> send apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.SearchEntityNeighborsEffect e ->
                     let
@@ -118,7 +118,7 @@ perform plugins key apiKey effect =
                             isOutgoingToDirection e.isOutgoing
                     in
                     Api.Request.Entities.searchEntityNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
-                        |> send apiKey effect (e.toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
 
                 Graph.GetSvgElementEffect ->
                     Graph.perform eff
@@ -171,7 +171,7 @@ handleSearchEffect apiKey plugins tag tagEffect effect =
         Search.SearchEffect { query, currency, limit, toMsg } ->
             (Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
-                |> send apiKey (tagEffect effect) (toMsg >> tag)
+                |> send Nothing apiKey (tagEffect effect) (toMsg >> tag)
             )
                 :: (plugins
                         |> Maybe.map (\p -> Plugin.Effect.search p query)
@@ -193,10 +193,10 @@ withAuthorization apiKey request =
     Api.withHeader "Authorization" apiKey request
 
 
-send : String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
-send apiKey effect toMsg =
+send : Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
+send statusbarToken apiKey effect toMsg =
     withAuthorization apiKey
-        >> Api.sendAndAlsoReceiveHeaders BrowserGotResponseWithHeaders effect toMsg
+        >> Api.sendAndAlsoReceiveHeaders (BrowserGotResponseWithHeaders statusbarToken) effect toMsg
 
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction

@@ -14,6 +14,7 @@ import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Search as Search
 import Theme.Stats as Stats
+import Theme.Statusbar as Statusbar
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
@@ -663,6 +664,22 @@ theme =
                     , hover
                         [ colors.brandLighter |> toCssColor |> backgroundColor
                         ]
+                    ]
+            )
+        |> s_statusbar
+            (Statusbar.default
+                |> s_root
+                    [ colors.brandWhite |> toCssColor |> backgroundColor
+                    , scaled 5 |> rem |> minHeight
+                    , colors.greyDark |> toCssColor |> color
+                    , scaled 2.75 |> rem |> fontSize
+                    , displayFlex
+                    , alignItems center
+                    ]
+                |> s_loadingSpinner
+                    [ loadingSpinner
+                    , padding (px 0)
+                    , scaled 1 |> rem |> paddingRight
                     ]
             )
         |> s_custom
