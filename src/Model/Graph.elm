@@ -12,9 +12,9 @@ import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
-import Model.Graph.Legend as Legend
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
+import Model.Graph.Tool as Tool
 import Model.Graph.Transform as Transform
 import Plugin.Model as Plugin exposing (PluginStates)
 import Set exposing (Set)
@@ -43,13 +43,8 @@ type alias Model =
 
 type alias ActiveTool =
     { element : Maybe ( Dom.Element, Bool ) -- visibility
-    , toolbox : Toolbox
+    , toolbox : Tool.Toolbox
     }
-
-
-type Toolbox
-    = Legend (List Legend.Item)
-    | Configuration Config
 
 
 type NodeType

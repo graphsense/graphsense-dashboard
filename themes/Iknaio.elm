@@ -4,6 +4,7 @@ import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
 import Model.Graph exposing (NodeType(..))
+import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
 import Theme.Browser as Browser
 import Theme.Button as Button
@@ -105,7 +106,7 @@ theme =
             ]
         |> s_sidebarIcon
             (\active ->
-                [ colors.greyLight |> toCssColor |> color
+                [ iconInactive |> toCssColor |> color
                 , scaled 5 |> rem |> fontSize
                 , scaled 4 |> rem |> padding
                 ]
@@ -113,14 +114,14 @@ theme =
                             [ colors.brandLightest
                                 |> toCssColor
                                 |> backgroundColor
-                            , colors.brandText
+                            , iconActive
                                 |> toCssColor
                                 |> color
                             ]
 
                         else
                             [ hover
-                                [ colors.brandLight |> toCssColor |> color
+                                [ iconHovered |> toCssColor |> color
                                 ]
                             ]
                        )
@@ -354,21 +355,46 @@ theme =
                 |> s_defaultColor
                     (rgb255 128 128 128)
                 |> s_tool
-                    [ scaled 2 |> rem |> padding
-                    , scaled 4 |> rem |> fontSize
-                    , textAlign center
-                    , colors.brandBase
-                        |> toCssColor
-                        |> color
-                    , backgroundColor transparent
-                    , border (px 0)
-                    ]
+                    (\status ->
+                        [ scaled 2 |> rem |> padding
+                        , scaled 4 |> rem |> fontSize
+                        , textAlign center
+                        , color <|
+                            toCssColor <|
+                                case status of
+                                    Tool.Active ->
+                                        iconActive
+
+                                    Tool.Disabled ->
+                                        iconDisabled
+
+                                    Tool.Inactive ->
+                                        iconInactive
+                        , transparent
+                            |> backgroundColor
+                        , border (px 0)
+                        , hover
+                            (if status /= Tool.Disabled then
+                                [ iconHovered |> toCssColor |> color
+                                ]
+
+                             else
+                                []
+                            )
+                        ]
+                    )
                 |> s_svgRoot
                     [ colors.black
                         |> Color.toCssString
                         |> property "color"
                     , fontWeight (int 300)
                     ]
+                |> s_expandHandleText
+                    (\_ -> fillBlack)
+                |> s_addressLabel
+                    fillBlack
+                |> s_entityLabel
+                    fillBlack
                 |> s_abuseFlag
                     [ colors.red
                         |> Color.toCssString
@@ -379,10 +405,9 @@ theme =
                     , property "stroke-width" "10px"
                     ]
                 |> s_entityCurrency
-                    [ px 12 |> fontSize
-                    ]
+                    ((px 12 |> fontSize) :: fillBlack)
                 |> s_entityAddressesCount
-                    [ px 14 |> fontSize ]
+                    ((px 14 |> fontSize) :: fillBlack)
                 |> s_expandHandlePath
                     (\_ isSelected ->
                         let
@@ -634,8 +659,9 @@ theme =
                     ]
                 |> s_option
                     [ scaled 2 |> rem |> padding
+                    , whiteSpace noWrap
                     , hover
-                        [ colors.brandBase |> toCssColor |> backgroundColor
+                        [ colors.brandLighter |> toCssColor |> backgroundColor
                         ]
                     ]
             )
@@ -791,3 +817,31 @@ loadingSpinner =
     , scaled spinnerPadding |> rem |> padding
     ]
         |> batch
+
+
+fillBlack : List Style
+fillBlack =
+    [ colors.black
+        |> Color.toCssString
+        |> property "fill"
+    ]
+
+
+iconDisabled : Color.Color
+iconDisabled =
+    colors.greyLighter
+
+
+iconInactive : Color.Color
+iconInactive =
+    colors.brandLight
+
+
+iconActive : Color.Color
+iconActive =
+    colors.brandBase
+
+
+iconHovered : Color.Color
+iconHovered =
+    colors.brandBase

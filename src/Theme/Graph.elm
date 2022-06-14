@@ -3,6 +3,7 @@ module Theme.Graph exposing (Graph, default)
 import Color exposing (Color)
 import Css exposing (Style)
 import Model.Graph exposing (NodeType)
+import Model.Graph.Tool as Tool
 
 
 type alias Graph =
@@ -36,7 +37,7 @@ type alias Graph =
     , navbar : List Style
     , navbarLeft : List Style
     , navbarRight : List Style
-    , tool : List Style
+    , tool : Tool.Status -> List Style
     , colorScheme : List Color
     , lightnessFactor :
         { entity : Float
@@ -91,7 +92,7 @@ default =
     , navbar = []
     , navbarLeft = []
     , navbarRight = []
-    , tool = []
+    , tool = \_ -> []
     , colorScheme = []
     , lightnessFactor =
         { entity = 1

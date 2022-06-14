@@ -7,6 +7,7 @@ import Init.Graph.Browser as Browser
 import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
+import Model.Graph.Tool exposing (Toolbox(..))
 import Plugin exposing (Plugins)
 
 

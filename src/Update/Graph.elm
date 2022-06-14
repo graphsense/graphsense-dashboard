@@ -4,6 +4,7 @@ import Api.Data
 import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
+import DateFormat
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
@@ -28,9 +29,11 @@ import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
+import Model.Graph.Tool as Tool
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
+import Ports
 import Process
 import RecordSetter exposing (..)
 import Route as R exposing (toUrl)
@@ -1073,7 +1076,7 @@ update plugins uc msg model =
 
         UserClicksLegend id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
-                ( Legend _, Just ( el, vis ) ) ->
+                ( Tool.Legend _, Just ( el, vis ) ) ->
                     toolVisible model el vis
 
                 _ ->
@@ -1085,7 +1088,7 @@ update plugins uc msg model =
 
         UserClicksConfiguraton id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
-                ( Configuration _, Just ( el, vis ) ) ->
+                ( Tool.Configuration _, Just ( el, vis ) ) ->
                     toolVisible model el vis
 
                 _ ->
@@ -1093,8 +1096,19 @@ update plugins uc msg model =
 
         BrowserGotConfigurationElement result ->
             model.config
-                |> Configuration
+                |> Tool.Configuration
                 |> toolElementResultToTool result model
+
+        UserClickedExport id ->
+            case ( model.activeTool.toolbox, model.activeTool.element ) of
+                ( Tool.Export, Just ( el, vis ) ) ->
+                    toolVisible model el vis
+
+                _ ->
+                    getToolElement model id BrowserGotExportElement
+
+        BrowserGotExportElement result ->
+            toolElementResultToTool result model Tool.Export
 
         UserChangesCurrency currency ->
             -- handled upstream
@@ -1221,6 +1235,10 @@ update plugins uc msg model =
                             ( model, [] )
                     )
                 |> Maybe.withDefault (n model)
+
+        UserClickedExportGraphics time ->
+            -- handled upstream
+            n model
 
         NoOp ->
             n model
@@ -1380,7 +1398,7 @@ getToolElement model id msg =
     )
 
 
-toolElementResultToTool : Result Dom.Error Dom.Element -> Model -> Toolbox -> ( Model, List Effect )
+toolElementResultToTool : Result Dom.Error Dom.Element -> Model -> Tool.Toolbox -> ( Model, List Effect )
 toolElementResultToTool result model toolbox =
     result
         |> Result.map
@@ -1878,7 +1896,7 @@ updateLegend model =
     { model
         | activeTool =
             case model.activeTool.toolbox of
-                Legend _ ->
+                Tool.Legend _ ->
                     model.activeTool
                         |> s_toolbox (makeLegend model)
 
@@ -2013,7 +2031,7 @@ addUserTag ids userTags layers =
             layers
 
 
-makeLegend : Model -> Toolbox
+makeLegend : Model -> Tool.Toolbox
 makeLegend model =
     model.config.colors
         |> Dict.toList
@@ -2028,4 +2046,4 @@ makeLegend model =
                             }
                         )
             )
-        |> Legend
+        |> Tool.Legend

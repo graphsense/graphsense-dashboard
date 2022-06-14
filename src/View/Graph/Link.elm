@@ -212,6 +212,7 @@ drawLabel vc gc x y hovered lbl =
             , String.fromFloat width |> Svg.width
             , String.fromFloat height |> Svg.height
             , Css.Graph.linkLabelBox vc hovered |> css
+            , class "rectLabel"
             ]
             []
         , S.text_

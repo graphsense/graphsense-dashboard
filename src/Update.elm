@@ -3,6 +3,7 @@ module Update exposing (update, updateByUrl)
 import Browser
 import Browser.Navigation as Nav
 import Config.Update exposing (Config)
+import DateFormat
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph as Graph
@@ -19,11 +20,13 @@ import Msg.Search as Search
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
 import Plugin.Update.Graph
+import Ports
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
 import Task
+import Time
 import Tuple exposing (..)
 import Update.Graph as Graph
 import Update.Graph.Adding as Adding
@@ -32,6 +35,7 @@ import Update.Graph.Layer as Layer
 import Update.Locale as Locale
 import Update.Search as Search
 import Url exposing (Url)
+import View.Locale as Locale
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -288,6 +292,38 @@ update plugins uc msg model =
                                 |> s_locale locale
                     }
                         |> n
+
+                Graph.UserClickedExportGraphics time ->
+                    ( model
+                    , (case time of
+                        Nothing ->
+                            Time.now
+                                |> Task.perform (Just >> Graph.UserClickedExportGraphics)
+
+                        Just t ->
+                            Time.posixToMillis t
+                                // 1000
+                                |> Locale.timestampWithFormat
+                                    [ DateFormat.yearNumber
+                                    , DateFormat.text "-"
+                                    , DateFormat.monthFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.dayOfMonthFixed
+                                    , DateFormat.text " "
+                                    , DateFormat.hourMilitaryFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.minuteFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.secondFixed
+                                    ]
+                                    model.locale
+                                |> (\tt -> tt ++ ".svg")
+                                |> Ports.exportGraphics
+                      )
+                        |> Graph.CmdEffect
+                        |> GraphEffect
+                        |> List.singleton
+                    )
 
                 _ ->
                     let

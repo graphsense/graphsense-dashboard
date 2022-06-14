@@ -5,11 +5,13 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model.Graph exposing (Model)
+import Model.Graph exposing (ActiveTool, Model)
+import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
 import Plugin.Model exposing (PluginStates)
 import Plugin.View.Graph.Navbar
+import Tuple exposing (..)
 import View.Graph.Tool as Tool
 import View.Locale as Locale
 
@@ -20,7 +22,7 @@ navbar plugins states vc model =
         [ Css.navbar vc |> css
         ]
         [ navbarLeft plugins states vc model
-        , navbarRight vc
+        , navbarRight vc model
         ]
 
 
@@ -34,6 +36,7 @@ navbarLeft plugins states vc model =
               , title = "My tags"
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             ]
             ++ Plugin.View.Graph.Navbar.left plugins states vc model
@@ -62,8 +65,22 @@ navbarLeft plugins states vc model =
 -}
 
 
-navbarRight : Config -> Html Msg
-navbarRight vc =
+isActive : (Tool.Toolbox -> Bool) -> ActiveTool -> Tool.Status
+isActive is at =
+    at.element
+        |> Maybe.map
+            (\e ->
+                if second e && is at.toolbox then
+                    Tool.Active
+
+                else
+                    Tool.Inactive
+            )
+        |> Maybe.withDefault Tool.Inactive
+
+
+navbarRight : Config -> Model -> Html Msg
+navbarRight vc model =
     div
         [ Css.navbarRight vc |> css
         ]
@@ -72,41 +89,49 @@ navbarRight vc =
               , icon = FontAwesome.icon FontAwesome.file
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             , { title = "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             , { title = "Export ..."
               , icon = FontAwesome.icon FontAwesome.download
-              , msg = ToBeDone
+              , msg = UserClickedExport
               , color = Nothing
+              , status = isActive Tool.isExport model.activeTool
               }
             , { title = "Undo last graph change"
               , icon = FontAwesome.icon FontAwesome.undo
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
               , msg = ToBeDone
               , color = Nothing
+              , status = Tool.Disabled
               }
             , { title = "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog
               , msg = UserClicksConfiguraton
               , color = Nothing
+              , status = isActive Tool.isConfiguration model.activeTool
               }
             , { title = "Legend"
               , icon = FontAwesome.icon FontAwesome.info
               , msg = UserClicksLegend
               , color = Nothing
+              , status = isActive Tool.isLegend model.activeTool
               }
             ]
         )

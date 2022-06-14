@@ -12,6 +12,7 @@ module View.Locale exposing
     , string
     , text
     , timestamp
+    , timestampWithFormat
     )
 
 import Api.Data
@@ -136,10 +137,10 @@ intWithFormat model format =
 
 
 timestamp : Model -> Int -> String
-timestamp { locale, timeLang, zone } =
+timestamp model =
     let
         format =
-            case locale of
+            case model.locale of
                 "de" ->
                     [ dayOfMonthNumber
                     , DateFormat.text ". "
@@ -166,6 +167,11 @@ timestamp { locale, timeLang, zone } =
                     , amPmUppercase
                     ]
     in
+    timestampWithFormat format model
+
+
+timestampWithFormat : List Token -> Model -> Int -> String
+timestampWithFormat format { locale, timeLang, zone } =
     (*) 1000
         >> Time.millisToPosix
         >> formatWithLanguage timeLang format zone

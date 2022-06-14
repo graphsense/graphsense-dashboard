@@ -4,6 +4,7 @@ import Config.Graph exposing (addressesCountHeight, labelHeight, linkLabelHeight
 import Config.View exposing (Config)
 import Css exposing (..)
 import Model.Graph exposing (NodeType)
+import Model.Graph.Tool as Tool
 
 
 root : Config -> List Style
@@ -45,10 +46,10 @@ navbarRight vc =
         ++ vc.theme.graph.navbarRight
 
 
-tool : Config -> List Style
-tool vc =
+tool : Config -> Tool.Status -> List Style
+tool vc status =
     cursor pointer
-        :: vc.theme.graph.tool
+        :: vc.theme.graph.tool status
 
 
 graphRoot : Config -> List Style

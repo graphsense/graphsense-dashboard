@@ -86,8 +86,10 @@ type Msg
     | RuntimeHideTBD
     | UserClicksLegend String
     | UserClicksConfiguraton String
+    | UserClickedExport String
     | BrowserGotLegendElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotConfigurationElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotExportElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserChangesCurrency String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
@@ -102,4 +104,5 @@ type Msg
     | UserClicksCloseSearchHovercard
     | UserSubmitsSearchInput
     | BrowserGotEntitySearchResult EntityId Bool (List Api.Data.SearchResultLevel1)
+    | UserClickedExportGraphics (Maybe Time.Posix)
     | NoOp
