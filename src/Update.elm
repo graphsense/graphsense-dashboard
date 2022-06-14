@@ -93,7 +93,16 @@ update plugins uc msg model =
                 |> Maybe.map
                     (\t ->
                         { model
-                            | statusbar = Statusbar.removeMessage t model.statusbar
+                            | statusbar =
+                                Statusbar.update t
+                                    (case result of
+                                        Err ( err, _ ) ->
+                                            Just err
+
+                                        Ok _ ->
+                                            Nothing
+                                    )
+                                    model.statusbar
                         }
                     )
                 |> Maybe.withDefault model
@@ -173,6 +182,12 @@ update plugins uc msg model =
                 | graph = Graph.updateSize (w - model.width) (h - model.height) model.graph
                 , width = w
                 , height = h
+            }
+                |> n
+
+        UserClickedStatusbar ->
+            { model
+                | statusbar = Statusbar.toggle model.statusbar
             }
                 |> n
 

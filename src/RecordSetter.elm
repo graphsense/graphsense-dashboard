@@ -599,6 +599,11 @@ s_class value__ record__ =
     { record__ | class = value__ }
 
 
+s_close : a -> { b | close : a } -> { b | close : a }
+s_close value__ record__ =
+    { record__ | close = value__ }
+
+
 s_code : a -> { b | code : a } -> { b | code : a }
 s_code value__ record__ =
     { record__ | code = value__ }
@@ -1417,6 +1422,11 @@ s_fontVariantNumeric value__ record__ =
 s_fontWeight : a -> { b | fontWeight : a } -> { b | fontWeight : a }
 s_fontWeight value__ record__ =
     { record__ | fontWeight = value__ }
+
+
+s_footer : a -> { b | footer : a } -> { b | footer : a }
+s_footer value__ record__ =
+    { record__ | footer = value__ }
 
 
 s_forAddress : a -> { b | forAddress : a } -> { b | forAddress : a }
@@ -2252,6 +2262,11 @@ s_locale value__ record__ =
 s_locations : a -> { b | locations : a } -> { b | locations : a }
 s_locations value__ record__ =
     { record__ | locations = value__ }
+
+
+s_log : a -> { b | log : a } -> { b | log : a }
+s_log value__ record__ =
+    { record__ | log = value__ }
 
 
 s_logo : a -> { b | logo : a } -> { b | logo : a }

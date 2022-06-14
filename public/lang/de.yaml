@@ -223,3 +223,10 @@ key expires: Key ist gültig bis %0
 direction: Richtung
 both: beide
 search neighbors: Suche Nachbarn
+bad status: Fehler
+bad url: Fehlerhafter URL
+timeout: Zeitüberschreitung
+network error: Netzwerkfehler
+server error: Serverfehler
+not found: Nicht gefunden
+data error: Datenfehler

@@ -669,17 +669,61 @@ theme =
         |> s_statusbar
             (Statusbar.default
                 |> s_root
-                    [ colors.brandWhite |> toCssColor |> backgroundColor
-                    , scaled 5 |> rem |> minHeight
-                    , colors.greyDark |> toCssColor |> color
-                    , scaled 2.75 |> rem |> fontSize
-                    , displayFlex
-                    , alignItems center
-                    ]
+                    (\visible ->
+                        (if visible then
+                            [ scaled 2 |> rem |> padding
+                            , scaled 1 |> rem |> paddingLeft
+                            , Css.Transitions.transition
+                                [ Css.Transitions.minHeight 200
+                                ]
+                            ]
+
+                         else
+                            [ cursor pointer
+                            ]
+                        )
+                            ++ [ colors.brandWhite |> toCssColor |> backgroundColor
+                               , (if visible then
+                                    50
+
+                                  else
+                                    5
+                                 )
+                                    |> scaled
+                                    |> rem
+                                    |> minHeight
+                               , colors.greyDark |> toCssColor |> color
+                               , scaled 2.75 |> rem |> fontSize
+                               ]
+                    )
                 |> s_loadingSpinner
                     [ loadingSpinner
                     , padding (px 0)
                     , scaled 1 |> rem |> paddingRight
+                    ]
+                |> s_log
+                    (\noerror ->
+                        [ displayFlex
+                        , alignItems center
+                        ]
+                            ++ (if noerror then
+                                    []
+
+                                else
+                                    [ colors.brandRed |> toCssColor |> color
+                                    , fontWeight bold
+                                    , scaled 3 |> rem |> fontSize
+                                    ]
+                               )
+                    )
+                |> s_close
+                    [ colors.brandText |> toCssColor |> color
+                    , backgroundColor transparent
+                    , border (px 0)
+                    , position absolute
+                    , scaled 2 |> rem |> top
+                    , scaled 1 |> rem |> right
+                    , cursor pointer
                     ]
             )
         |> s_custom

@@ -5,13 +5,17 @@ import Css exposing (Style)
 
 
 type alias Statusbar =
-    { root : List Style
+    { root : Bool -> List Style
     , loadingSpinner : List Style
+    , log : Bool -> List Style
+    , close : List Style
     }
 
 
 default : Statusbar
 default =
-    { root = []
+    { root = \_ -> []
     , loadingSpinner = []
+    , log = \_ -> []
+    , close = []
     }

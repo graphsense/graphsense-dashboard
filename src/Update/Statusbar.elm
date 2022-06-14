@@ -3,6 +3,7 @@ module Update.Statusbar exposing (..)
 import Api.Request.Entities
 import Dict
 import Effect.Graph as Graph
+import Http
 import List.Extra
 import Model
 import Model.Statusbar exposing (..)
@@ -92,8 +93,23 @@ isOutgoingToString isOutgoing =
         "incoming"
 
 
-removeMessage : String -> Model -> Model
-removeMessage key model =
-    { model
-        | messages = Dict.remove key model.messages
-    }
+update : String -> Maybe Http.Error -> Model -> Model
+update key error model =
+    Dict.get key model.messages
+        |> Maybe.map
+            (\msg ->
+                { model
+                    | messages = Dict.remove key model.messages
+                    , log = ( key, msg, error ) :: model.log
+                    , visible =
+                        error
+                            |> Maybe.map (\_ -> True)
+                            |> Maybe.withDefault model.visible
+                }
+            )
+        |> Maybe.withDefault model
+
+
+toggle : Model -> Model
+toggle model =
+    { model | visible = not model.visible }

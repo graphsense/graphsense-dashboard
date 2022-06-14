@@ -118,4 +118,7 @@ loadingSpinner vc =
 
 footer : Config -> List Style
 footer vc =
-    vc.theme.footer
+    position absolute
+        :: bottom (px 0)
+        :: width (pct 100)
+        :: vc.theme.footer
