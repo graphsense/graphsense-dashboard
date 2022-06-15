@@ -14,7 +14,7 @@ initSorted : Bool -> String -> Table a
 initSorted desc col =
     { data = []
     , loading = True
-    , state = Table.sortBy col asc
+    , state = Table.sortBy col desc
     , nextpage = Nothing
     , infiniteScroll = InfiniteScroll.init
     }
