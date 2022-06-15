@@ -20,6 +20,16 @@ type alias UserTag =
     }
 
 
+type alias YamlTag =
+    { currency : String
+    , address : String
+    , label : String
+    , source : String
+    , category : Maybe String
+    , abuse : Maybe String
+    }
+
+
 type alias Input =
     { label : Search.Model
     , source : String

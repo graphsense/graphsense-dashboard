@@ -2,6 +2,7 @@ module Msg.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom
+import File
 import Json.Encode
 import Model.Address as A
 import Model.Entity as E
@@ -87,9 +88,11 @@ type Msg
     | UserClicksLegend String
     | UserClicksConfiguraton String
     | UserClickedExport String
+    | UserClickedImport String
     | BrowserGotLegendElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotConfigurationElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotExportElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotImportElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserChangesCurrency String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
@@ -105,4 +108,8 @@ type Msg
     | UserSubmitsSearchInput
     | BrowserGotEntitySearchResult EntityId Bool (List Api.Data.SearchResultLevel1)
     | UserClickedExportGraphics (Maybe Time.Posix)
+    | UserClickedExportTagPack (Maybe Time.Posix)
+    | UserClickedImportTagPack
+    | BrowserGotTagPackFile File.File
+    | BrowserReadTagPackFile String
     | NoOp

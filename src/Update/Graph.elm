@@ -8,6 +8,8 @@ import DateFormat
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
+import File
+import File.Select
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import Init.Graph.Search as Search
@@ -40,6 +42,7 @@ import Route as R exposing (toUrl)
 import Route.Graph as Route
 import Set exposing (Set)
 import Task
+import Time
 import Tuple exposing (..)
 import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
@@ -49,6 +52,8 @@ import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Yaml.Decode
+import Yaml.Encode
 
 
 addAddress :
@@ -918,6 +923,28 @@ update plugins uc msg model =
 
         UserSubmitsTagInput ->
             model.tag
+                |> Maybe.map
+                    (\tag ->
+                        { label = tag.input.label.input
+                        , category =
+                            if String.isEmpty tag.input.category then
+                                Nothing
+
+                            else
+                                Just tag.input.category
+                        , abuse =
+                            if String.isEmpty tag.input.abuse then
+                                Nothing
+
+                            else
+                                Just tag.input.abuse
+                        , source = tag.input.source
+                        , currency =
+                            Id.currency tag.input.id
+                        , address =
+                            Id.addressId tag.input.id
+                        }
+                    )
                 |> Maybe.map (storeUserTag uc model)
                 |> Maybe.withDefault model
                 |> n
@@ -1110,6 +1137,17 @@ update plugins uc msg model =
         BrowserGotExportElement result ->
             toolElementResultToTool result model Tool.Export
 
+        UserClickedImport id ->
+            case ( model.activeTool.toolbox, model.activeTool.element ) of
+                ( Tool.Import, Just ( el, vis ) ) ->
+                    toolVisible model el vis
+
+                _ ->
+                    getToolElement model id BrowserGotImportElement
+
+        BrowserGotImportElement result ->
+            toolElementResultToTool result model Tool.Import
+
         UserChangesCurrency currency ->
             -- handled upstream
             n model
@@ -1239,6 +1277,29 @@ update plugins uc msg model =
         UserClickedExportGraphics time ->
             -- handled upstream
             n model
+
+        UserClickedExportTagPack time ->
+            -- handled upstream
+            n model
+
+        UserClickedImportTagPack ->
+            ( model
+            , File.Select.file [ "text/yaml" ] BrowserGotTagPackFile
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotTagPackFile file ->
+            ( model
+            , File.toString file
+                |> Task.perform BrowserReadTagPackFile
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserReadTagPackFile yaml ->
+            importTagPack uc yaml model
+                |> n
 
         NoOp ->
             n model
@@ -1845,35 +1906,25 @@ draggingToClick start current =
     Coords.betrag start current < 2
 
 
-storeUserTag : Update.Config -> Model -> Tag.Model -> Model
+storeUserTag : Update.Config -> Model -> Tag.YamlTag -> Model
 storeUserTag uc model tag =
-    if String.isEmpty tag.input.label.input then
+    if String.isEmpty tag.label then
         model
 
     else
         let
             tag_ =
-                { label = tag.input.label.input
-                , category =
-                    if String.isEmpty tag.input.category then
-                        Nothing
-
-                    else
-                        Just tag.input.category
-                , abuse =
-                    if String.isEmpty tag.input.abuse then
-                        Nothing
-
-                    else
-                        Just tag.input.abuse
-                , source = tag.input.source
+                { label = tag.label
+                , category = tag.category
+                , abuse = tag.abuse
+                , source = tag.source
                 }
 
             currency =
-                Id.currency tag.input.id
+                tag.currency
 
             address =
-                Id.addressId tag.input.id
+                tag.address
 
             colors =
                 tag_.category
@@ -2047,3 +2098,123 @@ makeLegend model =
                         )
             )
         |> Tool.Legend
+
+
+makeTagPack : Model -> Time.Posix -> String
+makeTagPack model time =
+    Layer.addresses model.layers
+        |> List.foldl
+            (\address dict ->
+                address.userTag
+                    |> Maybe.map
+                        (\userTag ->
+                            let
+                                addr =
+                                    { currency = address.address.currency
+                                    , address = address.address.address
+                                    }
+
+                                id =
+                                    tagId addr userTag
+
+                                tag =
+                                    { currency = addr.currency
+                                    , address = addr.address
+                                    , label = userTag.label
+                                    , source = userTag.source
+                                    , category = userTag.category
+                                    , abuse = userTag.abuse
+                                    }
+                            in
+                            Dict.insert id tag dict
+                        )
+                    |> Maybe.withDefault dict
+            )
+            Dict.empty
+        |> Dict.values
+        |> (\tags ->
+                Yaml.Encode.record
+                    [ ( "title", Yaml.Encode.string "TagPack exported from Iknaio Dashboard" )
+                    , ( "creator", Yaml.Encode.string "tbd" )
+                    , ( "tags"
+                      , tags
+                            |> Yaml.Encode.list
+                                (\{ currency, address, label, source, category, abuse } ->
+                                    Yaml.Encode.record
+                                        [ ( "currency", Yaml.Encode.string currency )
+                                        , ( "address", Yaml.Encode.string address )
+                                        , ( "label", Yaml.Encode.string label )
+                                        , ( "category"
+                                          , category
+                                                |> Maybe.map Yaml.Encode.string
+                                                |> Maybe.withDefault Yaml.Encode.null
+                                          )
+                                        , ( "abuse"
+                                          , abuse
+                                                |> Maybe.map Yaml.Encode.string
+                                                |> Maybe.withDefault Yaml.Encode.null
+                                          )
+                                        , ( "lastmod"
+                                          , DateFormat.format
+                                                [ DateFormat.yearNumber
+                                                , DateFormat.text "-"
+                                                , DateFormat.monthFixed
+                                                , DateFormat.text "-"
+                                                , DateFormat.dayOfMonthFixed
+                                                , DateFormat.text " "
+                                                , DateFormat.hourMilitaryFixed
+                                                , DateFormat.text ":"
+                                                , DateFormat.minuteFixed
+                                                , DateFormat.text ":"
+                                                , DateFormat.secondFixed
+                                                ]
+                                                Time.utc
+                                                time
+                                                |> Yaml.Encode.string
+                                          )
+                                        ]
+                                )
+                      )
+                    ]
+                    |> Yaml.Encode.toString 2
+           )
+
+
+tagId : A.Address -> Tag.UserTag -> String
+tagId { currency, address } { label, source } =
+    [ address
+    , currency
+    , label
+    , source
+    ]
+        |> String.join "|"
+
+
+importTagPack : Update.Config -> String -> Model -> Model
+importTagPack uc yaml model =
+    yaml
+        |> Yaml.Decode.fromString
+            (Yaml.Decode.list decodeYamlTag
+                |> Yaml.Decode.field "tags"
+            )
+        |> Result.map
+            (\tags ->
+                tags
+                    |> List.foldl
+                        (\tag mo ->
+                            storeUserTag uc model tag
+                        )
+                        model
+            )
+        |> Result.withDefault model
+
+
+decodeYamlTag : Yaml.Decode.Decoder Tag.YamlTag
+decodeYamlTag =
+    Yaml.Decode.map6 Tag.YamlTag
+        (Yaml.Decode.field "currency" Yaml.Decode.string)
+        (Yaml.Decode.field "address" Yaml.Decode.string)
+        (Yaml.Decode.field "label" Yaml.Decode.string)
+        (Yaml.Decode.field "source" Yaml.Decode.string)
+        (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
+        (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))

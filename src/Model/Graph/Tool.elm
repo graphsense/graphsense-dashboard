@@ -19,6 +19,7 @@ type Toolbox
     = Legend (List Legend.Item)
     | Configuration Config
     | Export
+    | Import
 
 
 type Status
@@ -51,6 +52,16 @@ isExport : Toolbox -> Bool
 isExport tb =
     case tb of
         Export ->
+            True
+
+        _ ->
+            False
+
+
+isImport : Toolbox -> Bool
+isImport tb =
+    case tb of
+        Import ->
             True
 
         _ ->

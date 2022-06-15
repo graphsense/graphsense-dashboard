@@ -93,9 +93,9 @@ navbarRight vc model =
               }
             , { title = "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen
-              , msg = ToBeDone
+              , msg = UserClickedImport
               , color = Nothing
-              , status = Tool.Disabled
+              , status = isActive Tool.isImport model.activeTool
               }
             , { title = "Export ..."
               , icon = FontAwesome.icon FontAwesome.download

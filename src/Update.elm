@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph as Graph
 import Effect.Locale as Locale
+import File.Download
 import Http exposing (Error(..))
 import Json.Encode exposing (Value)
 import Log
@@ -15,6 +16,7 @@ import Model exposing (..)
 import Model.Graph.Browser as Browser
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
+import Model.Locale as Locale
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin as Plugin exposing (Plugins)
@@ -291,24 +293,30 @@ update plugins uc msg model =
                                 |> Task.perform (Just >> Graph.UserClickedExportGraphics)
 
                         Just t ->
-                            Time.posixToMillis t
-                                // 1000
-                                |> Locale.timestampWithFormat
-                                    [ DateFormat.yearNumber
-                                    , DateFormat.text "-"
-                                    , DateFormat.monthFixed
-                                    , DateFormat.text "-"
-                                    , DateFormat.dayOfMonthFixed
-                                    , DateFormat.text " "
-                                    , DateFormat.hourMilitaryFixed
-                                    , DateFormat.text "-"
-                                    , DateFormat.minuteFixed
-                                    , DateFormat.text "-"
-                                    , DateFormat.secondFixed
-                                    ]
-                                    model.locale
+                            makeTimestampFilename model.locale t
                                 |> (\tt -> tt ++ ".svg")
                                 |> Ports.exportGraphics
+                      )
+                        |> Graph.CmdEffect
+                        |> GraphEffect
+                        |> List.singleton
+                    )
+
+                Graph.UserClickedExportTagPack time ->
+                    ( model
+                    , (case time of
+                        Nothing ->
+                            Time.now
+                                |> Task.perform (Just >> Graph.UserClickedExportTagPack)
+
+                        Just t ->
+                            let
+                                filename =
+                                    makeTimestampFilename model.locale t
+                                        |> (\tt -> tt ++ ".yaml")
+                            in
+                            Graph.makeTagPack model.graph t
+                                |> File.Download.string filename "text/yaml"
                       )
                         |> Graph.CmdEffect
                         |> GraphEffect
@@ -538,3 +546,23 @@ handleResponse plugins uc result model =
 
         Err _ ->
             n model
+
+
+makeTimestampFilename : Locale.Model -> Time.Posix -> String
+makeTimestampFilename locale t =
+    Time.posixToMillis t
+        // 1000
+        |> Locale.timestampWithFormat
+            [ DateFormat.yearNumber
+            , DateFormat.text "-"
+            , DateFormat.monthFixed
+            , DateFormat.text "-"
+            , DateFormat.dayOfMonthFixed
+            , DateFormat.text " "
+            , DateFormat.hourMilitaryFixed
+            , DateFormat.text "-"
+            , DateFormat.minuteFixed
+            , DateFormat.text "-"
+            , DateFormat.secondFixed
+            ]
+            locale

@@ -18,6 +18,20 @@ export vc =
         [ Dialog.part vc
             "Export"
             [ option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
+            , option vc "TagPack (.yaml)" (UserClickedExportTagPack Nothing)
+            ]
+        ]
+    ]
+
+
+import_ : View.Config -> List (Html Msg)
+import_ vc =
+    [ div
+        [ onMouseLeave (UserClickedImport "")
+        ]
+        [ Dialog.part vc
+            "Export"
+            [ option vc "TagPack (.yaml)" UserClickedImportTagPack
             ]
         ]
     ]

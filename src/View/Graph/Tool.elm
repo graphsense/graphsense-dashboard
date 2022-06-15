@@ -68,5 +68,8 @@ toolbox vc activeTool =
 
                 Tool.Export ->
                     Export.export vc
+
+                Tool.Import ->
+                    Export.import_ vc
             )
         ]
