@@ -9,6 +9,7 @@ import Model.Entity as E
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
+import Model.Graph.Tag as Tag
 import Model.Graph.Transform as Transform
 import Msg.Search as Search
 import Plugin.Model as Plugin
@@ -16,6 +17,7 @@ import Set exposing (Set)
 import Table
 import Time
 import Util.InfiniteScroll as InfiniteScroll
+import Yaml.Decode
 
 
 type Msg
@@ -111,5 +113,5 @@ type Msg
     | UserClickedExportTagPack (Maybe Time.Posix)
     | UserClickedImportTagPack
     | BrowserGotTagPackFile File.File
-    | BrowserReadTagPackFile String
+    | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.YamlTag))
     | NoOp

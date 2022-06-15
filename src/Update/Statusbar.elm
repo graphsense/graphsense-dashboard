@@ -113,3 +113,14 @@ update key error model =
 toggle : Model -> Model
 toggle model =
     { model | visible = not model.visible }
+
+
+add : Model -> String -> List String -> Maybe Http.Error -> Model
+add model key values error =
+    { model
+        | log = ( key, values, error ) :: model.log
+        , visible =
+            error
+                |> Maybe.map (\_ -> True)
+                |> Maybe.withDefault model.visible
+    }

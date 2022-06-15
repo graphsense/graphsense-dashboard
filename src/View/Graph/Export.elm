@@ -30,7 +30,7 @@ import_ vc =
         [ onMouseLeave (UserClickedImport "")
         ]
         [ Dialog.part vc
-            "Export"
+            "Import"
             [ option vc "TagPack (.yaml)" UserClickedImportTagPack
             ]
         ]

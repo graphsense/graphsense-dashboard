@@ -99,7 +99,7 @@ language: Sprache
 english: Englisch
 german: Deutsch
 russian: Russisch
-import: importiere # as an imperative
+import: importieren
 criterion: Kriterium
 depth: Tiefe
 by category: nach Kategorie

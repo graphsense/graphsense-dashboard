@@ -40,6 +40,7 @@ import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
+import Yaml.Decode
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -322,6 +323,24 @@ update plugins uc msg model =
                         |> GraphEffect
                         |> List.singleton
                     )
+
+                Graph.BrowserReadTagPackFile filename result ->
+                    case result of
+                        Err err ->
+                            { model
+                                | statusbar =
+                                    Yaml.Decode.errorToString err
+                                        |> Http.BadBody
+                                        |> Just
+                                        |> Statusbar.add model.statusbar filename []
+                            }
+                                |> n
+
+                        Ok yaml ->
+                            { model
+                                | graph = Graph.importTagPack uc yaml model.graph
+                            }
+                                |> n
 
                 _ ->
                     let

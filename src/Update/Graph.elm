@@ -1292,14 +1292,20 @@ update plugins uc msg model =
         BrowserGotTagPackFile file ->
             ( model
             , File.toString file
-                |> Task.perform BrowserReadTagPackFile
+                |> Task.map
+                    (Yaml.Decode.fromString
+                        (Yaml.Decode.list decodeYamlTag
+                            |> Yaml.Decode.field "tags"
+                        )
+                    )
+                |> Task.perform (BrowserReadTagPackFile (File.name file))
                 |> CmdEffect
                 |> List.singleton
             )
 
-        BrowserReadTagPackFile yaml ->
-            importTagPack uc yaml model
-                |> n
+        BrowserReadTagPackFile filename result ->
+            -- handled upstream
+            n model
 
         NoOp ->
             n model
@@ -2190,23 +2196,14 @@ tagId { currency, address } { label, source } =
         |> String.join "|"
 
 
-importTagPack : Update.Config -> String -> Model -> Model
-importTagPack uc yaml model =
-    yaml
-        |> Yaml.Decode.fromString
-            (Yaml.Decode.list decodeYamlTag
-                |> Yaml.Decode.field "tags"
+importTagPack : Update.Config -> List Tag.YamlTag -> Model -> Model
+importTagPack uc tags model =
+    tags
+        |> List.foldl
+            (\tag mo ->
+                storeUserTag uc model tag
             )
-        |> Result.map
-            (\tags ->
-                tags
-                    |> List.foldl
-                        (\tag mo ->
-                            storeUserTag uc model tag
-                        )
-                        model
-            )
-        |> Result.withDefault model
+            model
 
 
 decodeYamlTag : Yaml.Decode.Decoder Tag.YamlTag
@@ -2215,6 +2212,6 @@ decodeYamlTag =
         (Yaml.Decode.field "currency" Yaml.Decode.string)
         (Yaml.Decode.field "address" Yaml.Decode.string)
         (Yaml.Decode.field "label" Yaml.Decode.string)
-        (Yaml.Decode.field "source" Yaml.Decode.string)
+        (Yaml.Decode.oneOf [ Yaml.Decode.field "source" Yaml.Decode.string, Yaml.Decode.succeed "" ])
         (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
         (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))
