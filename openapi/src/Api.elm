@@ -42,7 +42,7 @@ type Request a
 
 baseUrl : String
 baseUrl =
-    "http://192.168.1.243:9000"
+    "http://graphsense.rest.local:9000"
 
 
 request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
