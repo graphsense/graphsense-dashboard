@@ -6,10 +6,15 @@ import Util.InfiniteScroll as InfiniteScroll
 
 
 init : String -> Table a
-init col =
+init =
+    initSorted True
+
+
+initSorted : Bool -> String -> Table a
+initSorted desc col =
     { data = []
     , loading = True
-    , state = Table.initialSort col
+    , state = Table.sortBy col asc
     , nextpage = Nothing
     , infiniteScroll = InfiniteScroll.init
     }

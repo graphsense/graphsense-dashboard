@@ -15,7 +15,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.AddressTag
 init =
-    Init.Graph.Table.init "Confidence"
+    Init.Graph.Table.initSorted True "Confidence"
 
 
 config : View.Config -> Table.Config Api.Data.AddressTag Msg
