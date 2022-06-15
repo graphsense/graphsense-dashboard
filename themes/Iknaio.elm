@@ -544,12 +544,14 @@ theme =
                     [ letterSpacingWide
                     ]
                 |> s_propertyBoxRow
-                    [ scaled 1 |> rem |> paddingY
+                    [ hover
+                        [ colors.brandLightest |> toCssColor |> backgroundColor
+                        ]
                     ]
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
-                    , scaled 1 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingY
                     ]
                 |> s_propertyBoxValue
                     [ fontNormal
@@ -662,7 +664,7 @@ theme =
                     [ scaled 2 |> rem |> padding
                     , whiteSpace noWrap
                     , hover
-                        [ colors.brandLighter |> toCssColor |> backgroundColor
+                        [ backgroundHoverColor |> toCssColor |> backgroundColor
                         ]
                     ]
             )
@@ -906,3 +908,8 @@ iconActive =
 iconHovered : Color.Color
 iconHovered =
     colors.brandBase
+
+
+backgroundHoverColor : Color.Color
+backgroundHoverColor =
+    colors.brandLighter
