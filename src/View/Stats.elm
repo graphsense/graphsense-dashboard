@@ -140,4 +140,4 @@ taggedAddressesWithPercentage vc cs =
         ++ " ("
         ++ Locale.percentage vc.locale
             (toFloat cs.noTaggedAddresses / toFloat cs.noAddresses)
-        ++ "%)"
+        ++ ")"

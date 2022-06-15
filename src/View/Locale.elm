@@ -186,7 +186,7 @@ relativeTime { relativeTimeOptions } from to =
 
 percentage : Model -> Float -> String
 percentage model =
-    floatWithFormat model "100[.00]%"
+    floatWithFormat model "0[.]00%"
 
 
 currency : Model -> String -> Api.Data.Values -> String
