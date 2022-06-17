@@ -32,6 +32,7 @@ import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 
 
@@ -101,6 +102,37 @@ loadingTxUtxo id model =
       }
     , eff
     )
+
+
+loadingLabel : String -> Model -> ( Model, List Effect )
+loadingLabel label model =
+    ( { model
+        | type_ =
+            LabelAddressTagsTable.init
+                |> Label label
+        , visible = True
+      }
+    , [ listAddressTagsEffect Nothing label
+      ]
+    )
+
+
+showLabelAddressTags : String -> Api.Data.AddressTags -> Model -> Model
+showLabelAddressTags label data model =
+    case model.type_ of
+        Label current table ->
+            if current /= label then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Label current <|
+                            appendData data.nextPage data.addressTags table
+                }
+
+        _ ->
+            model
 
 
 showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
@@ -1106,7 +1138,27 @@ infiniteScroll msg model =
                     )
                         |> mapFirst (Entity loadable)
 
-                _ ->
+                TxUtxo _ _ ->
+                    ( model.type_, [] )
+
+                TxAccount _ ->
+                    ( model.type_, [] )
+
+                Label label t ->
+                    let
+                        ( is, cmd, needMore ) =
+                            InfiniteScroll.update msg t.infiniteScroll
+                    in
+                    ( { t | infiniteScroll = is }
+                        |> Label label
+                    , listAddressTagsEffect t.nextpage label
+                        |> infiniteScrollEffects cmd needMore t
+                    )
+
+                Plugin _ ->
+                    ( model.type_, [] )
+
+                None ->
                     ( model.type_, [] )
     in
     ( { model
@@ -1268,3 +1320,13 @@ showTxUtxoAddresses id isOutgoing data model =
 
         _ ->
             model
+
+
+listAddressTagsEffect : Maybe String -> String -> Effect
+listAddressTagsEffect nextpage label =
+    ListAddressTagsEffect
+        { label = label
+        , pagesize = Nothing
+        , nextpage = nextpage
+        , toMsg = BrowserGotLabelAddressTags label
+        }

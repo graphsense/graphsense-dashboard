@@ -137,6 +137,10 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Entities.searchEntityNeighbors e.currency e.entity direction e.key e.value e.depth (Just e.breadth) (Just e.maxAddresses)
                         |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
 
+                Graph.ListAddressTagsEffect { label, nextpage, pagesize, toMsg } ->
+                    Api.Request.Tags.listAddressTags label nextpage pagesize
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
                 Graph.GetSvgElementEffect ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg

@@ -27,7 +27,7 @@ type Type
     | Entity (Loadable Int Entity) (Maybe EntityTable)
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
     | TxAccount (Loadable String Api.Data.TxAccount)
-      --| Label String (Maybe (Table Api.Data.AddressTag))
+    | Label String (Table Api.Data.AddressTag)
     | Plugin String
 
 

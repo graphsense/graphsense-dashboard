@@ -721,6 +721,12 @@ update plugins uc msg model =
                 |> updateAddresses id (Address.updateTags tags.addressTags)
                 |> n
 
+        BrowserGotLabelAddressTags label tags ->
+            { model
+                | browser = Browser.showLabelAddressTags label tags model.browser
+            }
+                |> n
+
         BrowserGotAddressTagsTable id tags ->
             { model
                 | browser = Browser.showAddressTags id tags model.browser
@@ -1624,7 +1630,15 @@ updateByRoute plugins route model =
             n model
 
         Route.Label l ->
-            n model
+            let
+                ( browser, effect ) =
+                    Browser.loadingLabel l model.browser
+            in
+            ( { model
+                | browser = browser
+              }
+            , effect
+            )
 
         Route.Plugin ( pid, value ) ->
             n model

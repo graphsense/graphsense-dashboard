@@ -38,6 +38,7 @@ import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Locale as Locale
 import View.Search as Search
@@ -81,6 +82,11 @@ browser plugins states vc gc model =
 
                 Browser.TxAccount loadable ->
                     [ browseTxAccount plugins states vc gc model.now loadable ]
+
+                Browser.Label label table ->
+                    table
+                        |> table_ vc model.height (LabelAddressTagsTable.config vc)
+                        |> List.singleton
 
                 Browser.Plugin pid ->
                     browsePlugin plugins vc pid states

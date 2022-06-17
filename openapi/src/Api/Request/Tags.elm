@@ -28,12 +28,12 @@ import Json.Encode
 
 
 
-listAddressTags : (String) -> (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
-listAddressTags currency_path label_query page_query pagesize_query =
+listAddressTags : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
+listAddressTags label_query page_query pagesize_query =
     Api.request
         "GET"
-        "/{currency}/tags"
-        [ ( "currency", identity currency_path ) ]
+        "/tags"
+        []
         [ ( "label", Just <| (identity) label_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing

@@ -67,6 +67,7 @@ type Msg
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
     | BrowserGotTx Api.Data.Tx
     | BrowserGotTxUtxoAddresses T.Tx Bool (List Api.Data.TxValue)
+    | BrowserGotLabelAddressTags String Api.Data.AddressTags
     | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu

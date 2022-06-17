@@ -250,19 +250,19 @@ rootRoute =
 addressRoute : { currency : String, address : String, layer : Maybe Int, table : Maybe AddressTable } -> Route
 addressRoute { currency, address, layer, table } =
     Address address table layer
-        |> Currency currency
+        |> Currency (String.toLower currency)
 
 
 txRoute : { currency : String, txHash : String, table : Maybe TxTable } -> Route
 txRoute { currency, txHash, table } =
     Tx txHash table
-        |> Currency currency
+        |> Currency (String.toLower currency)
 
 
 entityRoute : { currency : String, entity : Int, layer : Maybe Int, table : Maybe EntityTable } -> Route
 entityRoute { currency, entity, layer, table } =
     Entity entity table layer
-        |> Currency currency
+        |> Currency (String.toLower currency)
 
 
 pluginRoute : ( String, String ) -> Route

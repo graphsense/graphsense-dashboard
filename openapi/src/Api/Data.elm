@@ -191,6 +191,7 @@ type AddressTx
 
 type alias AddressTxUtxo =
     { coinbase : Bool
+    , currency : String
     , height : Int
     , timestamp : Int
     , txHash : String
@@ -588,6 +589,7 @@ encodeAddressTxUtxoPairs model =
     let
         pairs =
             [ encode "coinbase" Json.Encode.bool model.coinbase
+            , encode "currency" Json.Encode.string model.currency
             , encode "height" Json.Encode.int model.height
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "tx_hash" Json.Encode.string model.txHash
@@ -1434,6 +1436,7 @@ addressTxUtxoDecoder : Json.Decode.Decoder AddressTxUtxo
 addressTxUtxoDecoder =
     Json.Decode.succeed AddressTxUtxo
         |> decode "coinbase" Json.Decode.bool 
+        |> decode "currency" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "timestamp" Json.Decode.int 
         |> decode "tx_hash" Json.Decode.string 

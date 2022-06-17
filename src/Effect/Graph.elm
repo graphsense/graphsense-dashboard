@@ -113,6 +113,12 @@ type Effect
         , isOutgoing : Bool
         , toMsg : List Api.Data.TxValue -> Msg
         }
+    | ListAddressTagsEffect
+        { label : String
+        , nextpage : Maybe String
+        , pagesize : Maybe Int
+        , toMsg : Api.Data.AddressTags -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
@@ -185,6 +191,10 @@ perform eff =
 
         -- managed in Effect.elm
         GetTxUtxoAddressesEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        ListAddressTagsEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm
