@@ -116,7 +116,7 @@ hovercard vc element =
     Hovercard.hovercard
         { maxWidth = 300
         , maxHeight = 500
-        , tickLength = 16
+        , tickLength = 0
         , borderColor = vc.theme.hovercard.borderColor
         , backgroundColor = vc.theme.hovercard.backgroundColor
         , borderWidth = vc.theme.hovercard.borderWidth

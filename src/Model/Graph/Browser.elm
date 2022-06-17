@@ -25,6 +25,7 @@ type Type
     = None
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
+    | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
       --| Label String (Maybe (Table Api.Data.AddressTag))
     | Plugin String
 
@@ -106,6 +107,16 @@ loadableEntityCurrency l =
             a.entity.currency
 
 
+loadableTxCurrency : Loadable id { a | currency : String } -> String
+loadableTxCurrency l =
+    case l of
+        Loading curr _ ->
+            curr
+
+        Loaded a ->
+            a.currency
+
+
 loadableAddressId : Loadable String Address -> String
 loadableAddressId l =
     case l of
@@ -124,3 +135,13 @@ loadableEntityId l =
 
         Loaded a ->
             a.entity.entity
+
+
+loadableTxId : Loadable String { a | txHash : String } -> String
+loadableTxId l =
+    case l of
+        Loading _ id ->
+            id
+
+        Loaded a ->
+            a.txHash

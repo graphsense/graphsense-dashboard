@@ -14,8 +14,10 @@
 
 
 module Api.Request.Txs exposing
-    ( getTx
-    , getTxIo, Io(..), ioVariants
+    ( Io(..)
+    , getTx
+    , getTxIo
+    , ioVariants
     )
 
 import Api
@@ -48,30 +50,36 @@ stringFromIo model =
             "outputs"
 
 
-
-
-
-getTx : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Tx
+getTx : String -> String -> Maybe Bool -> Api.Request Api.Data.Tx
 getTx currency_path txHash_path includeIo_query =
     Api.request
         "GET"
-        "/{currency}/txs/{tx_hash}"
+        "/{currency}/txs/{txHash}"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query ) ]
+        [ ( "include_io"
+          , Maybe.map
+                (\val ->
+                    if val then
+                        "true"
+
+                    else
+                        "false"
+                )
+                includeIo_query
+          )
+        ]
         []
         Nothing
         Api.Data.txDecoder
 
 
-
-getTxIo : (String) -> (String) -> (Io) -> Api.Request (List Api.Data.TxValue)
+getTxIo : String -> String -> Io -> Api.Request (List Api.Data.TxValue)
 getTxIo currency_path txHash_path io_path =
     Api.request
         "GET"
-        "/{currency}/txs/{tx_hash}/{io}"
+        "/{currency}/txs/{txHash}/{io}"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ), ( "io", stringFromIo io_path ) ]
         []
         []
         Nothing
         (Json.Decode.list Api.Data.txValueDecoder)
-

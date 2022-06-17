@@ -426,7 +426,8 @@ type Tx
 
 
 type alias TxAccount =
-    { fromAddress : String
+    { currency : String
+    , fromAddress : String
     , height : Int
     , timestamp : Int
     , toAddress : String
@@ -445,8 +446,11 @@ type alias TxSummary =
 
 type alias TxUtxo =
     { coinbase : Bool
+    , currency : String
     , height : Int
     , inputs : Maybe (List (TxValue))
+    , noInputs : Int
+    , noOutputs : Int
     , outputs : Maybe (List (TxValue))
     , timestamp : Int
     , totalInput : Values
@@ -1251,7 +1255,8 @@ encodeTxAccountPairs : TxAccount -> List EncodedField
 encodeTxAccountPairs model =
     let
         pairs =
-            [ encode "from_address" Json.Encode.string model.fromAddress
+            [ encode "currency" Json.Encode.string model.currency
+            , encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "to_address" Json.Encode.string model.toAddress
@@ -1300,8 +1305,11 @@ encodeTxUtxoPairs model =
     let
         pairs =
             [ encode "coinbase" Json.Encode.bool model.coinbase
+            , encode "currency" Json.Encode.string model.currency
             , encode "height" Json.Encode.int model.height
             , maybeEncode "inputs" (Json.Encode.list encodeTxValue) model.inputs
+            , encode "no_inputs" Json.Encode.int model.noInputs
+            , encode "no_outputs" Json.Encode.int model.noOutputs
             , maybeEncode "outputs" (Json.Encode.list encodeTxValue) model.outputs
             , encode "timestamp" Json.Encode.int model.timestamp
             , encode "total_input" encodeValues model.totalInput
@@ -1717,6 +1725,7 @@ txTagDecoder tag =
 txAccountDecoder : Json.Decode.Decoder TxAccount
 txAccountDecoder =
     Json.Decode.succeed TxAccount
+        |> decode "currency" Json.Decode.string 
         |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "timestamp" Json.Decode.int 
@@ -1738,8 +1747,11 @@ txUtxoDecoder : Json.Decode.Decoder TxUtxo
 txUtxoDecoder =
     Json.Decode.succeed TxUtxo
         |> decode "coinbase" Json.Decode.bool 
+        |> decode "currency" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> maybeDecode "inputs" (Json.Decode.list txValueDecoder) Nothing
+        |> decode "no_inputs" Json.Decode.int 
+        |> decode "no_outputs" Json.Decode.int 
         |> maybeDecode "outputs" (Json.Decode.list txValueDecoder) Nothing
         |> decode "timestamp" Json.Decode.int 
         |> decode "total_input" valuesDecoder 

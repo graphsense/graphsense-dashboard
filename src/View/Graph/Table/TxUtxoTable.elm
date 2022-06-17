@@ -1,0 +1,70 @@
+module View.Graph.Table.TxUtxoTable exposing (..)
+
+import Api.Data
+import Config.View as View
+import Css.View
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
+import Init.Graph.Table
+import Model.Graph.Table as T exposing (Table)
+import Msg.Graph exposing (Msg(..))
+import Route exposing (toUrl)
+import Route.Graph as Route
+import Table
+import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Locale as Locale
+
+
+columnTitleFromDirection : Bool -> String
+columnTitleFromDirection isOutgoing =
+    (if isOutgoing then
+        "Outgoing"
+
+     else
+        "Incoming"
+    )
+        ++ " address"
+
+
+init : Bool -> Table Api.Data.TxValue
+init =
+    columnTitleFromDirection
+        >> Init.Graph.Table.init
+
+
+config : View.Config -> Bool -> String -> Table.Config Api.Data.TxValue Msg
+config vc isOutgoing coinCode =
+    Table.customConfig
+        { toId = \data -> String.join "," data.address ++ String.fromInt data.value.value
+        , toMsg = TableNewState
+        , columns =
+            [ T.htmlColumn vc
+                (columnTitleFromDirection isOutgoing)
+                (.address >> String.join ",")
+                (\data ->
+                    [ case data.address of
+                        one :: [] ->
+                            text one
+                                |> List.singleton
+                                |> a
+                                    [ Route.addressRoute
+                                        { currency = coinCode
+                                        , address = one
+                                        , table = Nothing
+                                        , layer = Nothing
+                                        }
+                                        |> Route.graphRoute
+                                        |> toUrl
+                                        |> href
+                                    , Css.View.link vc |> css
+                                    ]
+
+                        _ ->
+                            String.join "," data.address
+                                |> text
+                    ]
+                )
+            , T.valueColumn vc coinCode "Value" .value
+            ]
+        , customizations = customizations vc
+        }

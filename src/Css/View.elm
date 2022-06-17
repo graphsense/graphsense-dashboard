@@ -91,7 +91,8 @@ input vc =
 
 link : Config -> List Style
 link vc =
-    vc.theme.link
+    cursor pointer
+        :: vc.theme.link
 
 
 overlay : Config -> List Style

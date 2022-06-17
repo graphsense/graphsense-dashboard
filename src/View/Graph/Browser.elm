@@ -37,6 +37,7 @@ import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Locale as Locale
 import View.Search as Search
 
@@ -65,6 +66,14 @@ browser plugins states vc gc model =
                     browseEntity plugins states vc gc model.now loadable
                         :: (table
                                 |> Maybe.map (browseEntityTable vc gc model.height loadable)
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
+
+                Browser.TxUtxo loadable table ->
+                    browseTxUtxo plugins states vc gc model.now loadable
+                        :: (table
+                                |> Maybe.map (browseTxUtxoTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -438,6 +447,12 @@ browseEntity plugins states vc gc now entity =
         |> propertyBox vc
 
 
+browseTxUtxo : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
+browseTxUtxo plugins states vc gc now tx =
+    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
 rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg))
 rowsEntity vc gc now ent =
     let
@@ -625,6 +640,109 @@ browseEntityTable vc gc height entity table =
             table_ vc height (EntityNeighborsTable.config vc True coinCode entityId) t
 
 
+browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
+browseTxUtxoTable vc gc height tx table =
+    let
+        ( coinCode, txHash ) =
+            case tx of
+                Loaded e ->
+                    ( e.currency, e.txHash |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
+    case table of
+        TxUtxoInputsTable t ->
+            table_ vc height (TxUtxoTable.config vc False coinCode) t
+
+        TxUtxoOutputsTable t ->
+            table_ vc height (TxUtxoTable.config vc True coinCode) t
+
+
 browsePlugin : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)
 browsePlugin plugins vc pid states =
     Plugin.View.Graph.Browser.browser plugins vc pid states
+
+
+rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg))
+rowsTxUtxo vc gc now tx =
+    let
+        mkTableLink title tableTag =
+            tx
+                |> makeTableLink
+                    .currency
+                    .txHash
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.txRoute
+                                { currency = currency
+                                , txHash = id
+                                , table = Just tableTag
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
+    [ Row
+        ( "Transaction"
+        , tx
+            |> ifLoaded (.txHash >> String)
+            |> elseShowAddress
+        , Nothing
+        )
+    , Row
+        ( "Included in block"
+        , tx |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Created"
+        , tx |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "No. inputs"
+        , tx
+            |> ifLoaded
+                (.inputs
+                    >> Maybe.map List.length
+                    >> Maybe.withDefault 0
+                    >> Locale.int vc.locale
+                    >> String
+                )
+            |> elseLoading
+        , mkTableLink "List sending addresses" Route.TxInputsTable
+        )
+    , Row
+        ( "No. outputs"
+        , tx
+            |> ifLoaded
+                (.outputs
+                    >> Maybe.map List.length
+                    >> Maybe.withDefault 0
+                    >> Locale.int vc.locale
+                    >> String
+                )
+            |> elseLoading
+        , mkTableLink "List receiving addresses" Route.TxOutputsTable
+        )
+    , Row
+        ( "total input"
+        , tx
+            |> ifLoaded
+                (\t -> Value t.currency t.totalInput)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "total output"
+        , tx
+            |> ifLoaded
+                (\t -> Value t.currency t.totalOutput)
+            |> elseLoading
+        , Nothing
+        )
+    ]

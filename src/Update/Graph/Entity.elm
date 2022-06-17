@@ -181,7 +181,7 @@ repositionAround pivot entities =
             { id = e.id, y = e.y }
 
         _ =
-            Log.log "repositionAround"
+            Log.log2 "repositionAround"
                 { pivot = pivot.id
                 , entities =
                     Dict.values entities
@@ -202,14 +202,15 @@ repositionAround pivot entities =
                 |> Maybe.withDefault ( sorted, [] )
                 |> mapFirst List.reverse
 
-        reposition p nodes ready repositioned =
+        reposition p isUpper nodes ready repositioned =
             case nodes of
                 nearest :: rest ->
                     let
                         _ =
-                            Log.log
+                            Log.log2
                                 "repo"
                                 { nearest = nearest.id
+                                , p = p.id
                                 , py = py
                                 , ph = ph
                                 , ny = ny
@@ -228,19 +229,19 @@ repositionAround pivot entities =
                         nh =
                             Entity.getHeight nearest
                     in
-                    if py + ph >= ny && py + ph <= ny + nh |> Log.log "overlapping below" then
+                    if py + ph >= ny && py <= ny + nh |> Log.log2 "overlapping below" then
                         let
                             newEntity =
                                 translate { x = 0, y = (py + ph - ny) + padding } nearest
                         in
-                        reposition newEntity rest (p :: ready) (Set.insert newEntity.id repositioned)
+                        reposition newEntity isUpper rest (p :: ready) (Set.insert newEntity.id repositioned)
 
-                    else if py >= ny && py <= ny + nh |> Log.log "overlapping above" then
+                    else if py >= ny && py <= ny + nh |> Log.log2 "overlapping above" then
                         let
                             newEntity =
                                 translate { x = 0, y = -(ny + nh - py) - padding } nearest
                         in
-                        reposition newEntity rest (p :: ready) (Set.insert newEntity.id repositioned)
+                        reposition newEntity isUpper rest (p :: ready) (Set.insert newEntity.id repositioned)
 
                     else
                         ( p :: ready ++ (nearest :: rest), repositioned )
@@ -249,10 +250,10 @@ repositionAround pivot entities =
                     ( p :: ready, repositioned )
 
         ( newUpper, repos1 ) =
-            reposition pivot upper [] Set.empty
+            reposition pivot True upper [] Set.empty
 
         ( newLower, repos2 ) =
-            reposition pivot lower [] Set.empty
+            reposition pivot False lower [] Set.empty
     in
     ( newUpper
         ++ newLower
@@ -260,7 +261,7 @@ repositionAround pivot entities =
         |> (\l ->
                 let
                     _ =
-                        Log.log "new" (List.map first l)
+                        Log.log2 "new" (List.map first l)
                 in
                 l
            )

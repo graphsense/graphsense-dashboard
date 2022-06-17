@@ -795,6 +795,18 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotTx data ->
+            { model
+                | browser = Browser.showTx data model.browser
+            }
+                |> n
+
+        BrowserGotTxUtxoAddresses id isOutgoing data ->
+            { model
+                | browser = Browser.showTxUtxoAddresses id isOutgoing data model.browser
+            }
+                |> n
+
         TableNewState state ->
             { model
                 | browser = Browser.tableNewState state model.browser
@@ -1574,8 +1586,29 @@ updateByRoute plugins route model =
                         )
                     )
 
-        Route.Currency currency (Route.Tx t) ->
-            n model
+        Route.Currency currency (Route.Tx t table) ->
+            let
+                ( browser, effect ) =
+                    if String.toLower currency == "eth" then
+                        Debug.todo "loadingTxAccount"
+
+                    else
+                        Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
+
+                ( browser2, effects ) =
+                    if String.toLower currency == "eth" then
+                        n browser
+
+                    else
+                        table
+                            |> Maybe.map (\tb -> Browser.showTxUtxoTable tb browser)
+                            |> Maybe.withDefault (n browser)
+            in
+            ( { model
+                | browser = browser2
+              }
+            , effect ++ effects
+            )
 
         Route.Currency currency (Route.Block b) ->
             n model

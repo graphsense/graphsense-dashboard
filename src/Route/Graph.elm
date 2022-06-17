@@ -4,6 +4,7 @@ module Route.Graph exposing
     , EntityTable(..)
     , Route(..)
     , Thing(..)
+    , TxTable(..)
     , addressRoute
     , entityRoute
     , parse
@@ -11,6 +12,7 @@ module Route.Graph exposing
     , pluginRoute
     , rootRoute
     , toUrl
+    , txRoute
     )
 
 import Json.Encode
@@ -39,7 +41,7 @@ type Thing
     = Address String (Maybe AddressTable) (Maybe Int)
     | Entity Int (Maybe EntityTable) (Maybe Int)
     | Block Int
-    | Tx String
+    | Tx String (Maybe TxTable)
 
 
 addressSegment : String
@@ -85,6 +87,11 @@ type EntityTable
     | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
+
+
+type TxTable
+    = TxInputsTable
+    | TxOutputsTable
 
 
 addressTableToString : AddressTable -> String
@@ -163,6 +170,29 @@ stringToEntityTable t =
             Nothing
 
 
+txTableToString : TxTable -> String
+txTableToString t =
+    case t of
+        TxInputsTable ->
+            "inputs"
+
+        TxOutputsTable ->
+            "outputs"
+
+
+stringToTxTable : String -> Maybe TxTable
+stringToTxTable t =
+    case t of
+        "inputs" ->
+            Just TxInputsTable
+
+        "outputs" ->
+            Just TxOutputsTable
+
+        _ ->
+            Nothing
+
+
 toUrl : Route -> String
 toUrl route =
     case route of
@@ -192,8 +222,14 @@ toUrl route =
         Currency curr (Block block) ->
             absolute [ curr, blockSegment, String.fromInt block ] []
 
-        Currency curr (Tx tx) ->
-            absolute [ curr, txSegment, tx ] []
+        Currency curr (Tx tx table) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (txTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            absolute [ curr, txSegment, tx ] query
 
         Label l ->
             absolute [ labelSegment, l ] []
@@ -214,6 +250,12 @@ rootRoute =
 addressRoute : { currency : String, address : String, layer : Maybe Int, table : Maybe AddressTable } -> Route
 addressRoute { currency, address, layer, table } =
     Address address table layer
+        |> Currency currency
+
+
+txRoute : { currency : String, txHash : String, table : Maybe TxTable } -> Route
+txRoute { currency, txHash, table } =
+    Tx txHash table
         |> Currency currency
 
 
@@ -263,12 +305,13 @@ thing =
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
             |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Entity
+        , s txSegment
+            |> P.slash P.string
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToTxTable))
+            |> map Tx
 
         {- , s blockSegment
-               </> P.int
-               |> map Block
-           , s txSegment
-               </> P.string
-               |> map Tx
+           </> P.int
+           |> map Block
         -}
         ]

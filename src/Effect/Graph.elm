@@ -102,6 +102,17 @@ type Effect
         , maxAddresses : Int
         , toMsg : List Api.Data.SearchResultLevel1 -> Msg
         }
+    | GetTxEffect
+        { currency : String
+        , txHash : String
+        , toMsg : Api.Data.Tx -> Msg
+        }
+    | GetTxUtxoAddressesEffect
+        { currency : String
+        , txHash : String
+        , isOutgoing : Bool
+        , toMsg : List Api.Data.TxValue -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
@@ -164,7 +175,16 @@ perform eff =
         GetEntityAddressTagsEffect _ ->
             Cmd.none
 
+        -- managed in Effect.elm
         SearchEntityNeighborsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetTxEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetTxUtxoAddressesEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

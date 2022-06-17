@@ -20,6 +20,11 @@ type EntityTable
     | EntityAddressesTable (Table Api.Data.Address)
 
 
+type TxUtxoTable
+    = TxUtxoInputsTable (Table Api.Data.TxValue)
+    | TxUtxoOutputsTable (Table Api.Data.TxValue)
+
+
 type alias Table a =
     { data : List a
     , loading : Bool

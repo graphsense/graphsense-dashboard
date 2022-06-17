@@ -31,6 +31,7 @@ import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsTable as AddressTxsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import View.Graph.Table.TxUtxoTable as TxUtxoTable
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -47,6 +48,32 @@ loadingEntity id model =
         | type_ = Entity (Loading id.currency id.entity) Nothing
         , visible = True
     }
+
+
+loadingTxUtxo : { currency : String, txHash : String } -> Model -> ( Model, List Effect )
+loadingTxUtxo id model =
+    let
+        ( type_, eff ) =
+            case model.type_ of
+                TxUtxo (Loaded tx) _ ->
+                    ( model.type_, [] )
+
+                _ ->
+                    ( TxUtxo (Loading id.currency id.txHash) Nothing
+                    , [ GetTxEffect
+                            { txHash = id.txHash
+                            , currency = id.currency
+                            , toMsg = BrowserGotTx
+                            }
+                      ]
+                    )
+    in
+    ( { model
+        | type_ = type_
+        , visible = True
+      }
+    , eff
+    )
 
 
 showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
@@ -216,6 +243,85 @@ createEntityTable route t currency entity =
             )
 
 
+showTxUtxoTable : Route.TxTable -> Model -> ( Model, List Effect )
+showTxUtxoTable route model =
+    case model.type_ of
+        TxUtxo loadable t ->
+            let
+                ( currency, txHash, tx ) =
+                    case loadable of
+                        Loading curr tx_ ->
+                            ( curr, tx_, Nothing )
+
+                        Loaded a ->
+                            ( a.currency, a.txHash, Just a )
+            in
+            createTxUtxoTable route t currency txHash tx
+                |> mapFirst (TxUtxo loadable)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createTxUtxoTable : Route.TxTable -> Maybe TxUtxoTable -> String -> String -> Maybe Api.Data.TxUtxo -> ( Maybe TxUtxoTable, List Effect )
+createTxUtxoTable route t currency txHash tx =
+    case ( route, t ) of
+        ( Route.TxInputsTable, Just (TxUtxoInputsTable _) ) ->
+            n t
+
+        ( Route.TxInputsTable, _ ) ->
+            case Maybe.andThen .inputs tx of
+                Nothing ->
+                    ( TxUtxoTable.init False
+                        |> TxUtxoInputsTable
+                        |> Just
+                    , [ GetTxUtxoAddressesEffect
+                            { currency = currency
+                            , txHash = txHash
+                            , isOutgoing = False
+                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } False
+                            }
+                      ]
+                    )
+
+                Just inputs ->
+                    ( TxUtxoTable.init False
+                        |> appendData Nothing inputs
+                        |> TxUtxoInputsTable
+                        |> Just
+                    , []
+                    )
+
+        ( Route.TxOutputsTable, Just (TxUtxoOutputsTable _) ) ->
+            n t
+
+        ( Route.TxOutputsTable, _ ) ->
+            case Maybe.andThen .outputs tx of
+                Nothing ->
+                    ( TxUtxoTable.init True
+                        |> TxUtxoOutputsTable
+                        |> Just
+                    , [ GetTxUtxoAddressesEffect
+                            { currency = currency
+                            , txHash = txHash
+                            , isOutgoing = True
+                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } True
+                            }
+                      ]
+                    )
+
+                Just outputs ->
+                    ( TxUtxoTable.init True
+                        |> appendData Nothing outputs
+                        |> TxUtxoOutputsTable
+                        |> Just
+                    , []
+                    )
+
+
 show : Model -> Model
 show model =
     { model
@@ -266,6 +372,34 @@ showAddress address model =
 
                     _ ->
                         Nothing
+            )
+
+
+showTx : Api.Data.Tx -> Model -> Model
+showTx data model =
+    show model
+        |> s_type_
+            (case data of
+                Api.Data.TxTxUtxo tx ->
+                    TxUtxo (Loaded tx) <|
+                        case model.type_ of
+                            TxUtxo loadable table ->
+                                if
+                                    loadableTxId loadable
+                                        == tx.txHash
+                                        && loadableTxCurrency loadable
+                                        == tx.currency
+                                then
+                                    table
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                Nothing
+
+                Api.Data.TxTxAccount _ ->
+                    Debug.todo ""
             )
 
 
@@ -571,6 +705,16 @@ matchEntityId { currency, entity } loadable =
 
         Loaded a ->
             a.entity.currency == currency && a.entity.entity == entity
+
+
+matchTxId : { currency : String, txHash : String } -> Loadable String { a | currency : String, txHash : String } -> Bool
+matchTxId { currency, txHash } loadable =
+    case loadable of
+        Loading c id ->
+            c == currency && id == txHash
+
+        Loaded a ->
+            a.currency == currency && a.txHash == txHash
 
 
 tableNewState : Table.State -> Model -> Model
@@ -908,3 +1052,46 @@ getEntityAddressesEffect nextpage { currency, entity } =
         , pagesize = 100
         , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
         }
+
+
+showTxUtxoAddresses : { currency : String, txHash : String } -> Bool -> List Api.Data.TxValue -> Model -> Model
+showTxUtxoAddresses id isOutgoing data model =
+    case model.type_ of
+        TxUtxo loadable table ->
+            if matchTxId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        TxUtxoTable.init isOutgoing
+                            |> appendData Nothing data
+                            |> (if isOutgoing then
+                                    TxUtxoOutputsTable
+
+                                else
+                                    TxUtxoInputsTable
+                               )
+                            |> Just
+                            |> TxUtxo
+                                (case loadable of
+                                    Loaded tx ->
+                                        (if isOutgoing then
+                                            { tx
+                                                | outputs = Just data
+                                            }
+
+                                         else
+                                            { tx
+                                                | inputs = Just data
+                                            }
+                                        )
+                                            |> Loaded
+
+                                    Loading _ _ ->
+                                        loadable
+                                )
+                }
+
+        _ ->
+            model

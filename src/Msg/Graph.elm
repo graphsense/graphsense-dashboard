@@ -11,6 +11,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
 import Model.Graph.Transform as Transform
+import Model.Tx as T
 import Msg.Search as Search
 import Plugin.Model as Plugin
 import Set exposing (Set)
@@ -64,6 +65,8 @@ type Msg
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
+    | BrowserGotTx Api.Data.Tx
+    | BrowserGotTxUtxoAddresses T.Tx Bool (List Api.Data.TxValue)
     | PluginMsg String Json.Encode.Value
     | TableNewState Table.State
     | UserClickedContextMenu

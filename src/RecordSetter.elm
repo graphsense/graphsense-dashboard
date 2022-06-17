@@ -2609,6 +2609,11 @@ s_noIncomingTxs value__ record__ =
     { record__ | noIncomingTxs = value__ }
 
 
+s_noInputs : a -> { b | noInputs : a } -> { b | noInputs : a }
+s_noInputs value__ record__ =
+    { record__ | noInputs = value__ }
+
+
 s_noLabels : a -> { b | noLabels : a } -> { b | noLabels : a }
 s_noLabels value__ record__ =
     { record__ | noLabels = value__ }
@@ -2617,6 +2622,11 @@ s_noLabels value__ record__ =
 s_noOutgoingTxs : a -> { b | noOutgoingTxs : a } -> { b | noOutgoingTxs : a }
 s_noOutgoingTxs value__ record__ =
     { record__ | noOutgoingTxs = value__ }
+
+
+s_noOutputs : a -> { b | noOutputs : a } -> { b | noOutputs : a }
+s_noOutputs value__ record__ =
+    { record__ | noOutputs = value__ }
 
 
 s_noTaggedAddresses : a -> { b | noTaggedAddresses : a } -> { b | noTaggedAddresses : a }
@@ -3002,6 +3012,11 @@ s_overflowWrap value__ record__ =
 s_overlay : a -> { b | overlay : a } -> { b | overlay : a }
 s_overlay value__ record__ =
     { record__ | overlay = value__ }
+
+
+s_p : a -> { b | p : a } -> { b | p : a }
+s_p value__ record__ =
+    { record__ | p = value__ }
 
 
 s_page : a -> { b | page : a } -> { b | page : a }

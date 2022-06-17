@@ -190,7 +190,10 @@ resultLineToHtml vc title asLink resultLine =
                     )
 
                 Tx a ->
-                    ( Route.Currency currency (Route.Tx a), FontAwesome.exchangeAlt, a )
+                    ( Route.txRoute { currency = currency, txHash = a, table = Nothing }
+                    , FontAwesome.exchangeAlt
+                    , a
+                    )
 
                 Block a ->
                     ( Route.Currency currency (Route.Block a), FontAwesome.cube, String.fromInt a )

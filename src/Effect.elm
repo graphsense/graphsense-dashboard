@@ -5,6 +5,7 @@ import Api.Request.Addresses
 import Api.Request.Entities
 import Api.Request.General
 import Api.Request.Tags
+import Api.Request.Txs
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
@@ -110,6 +111,22 @@ perform plugins key statusbarToken apiKey effect =
 
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetTxEffect { currency, txHash, toMsg } ->
+                    Api.Request.Txs.getTx currency txHash (Just False)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetTxUtxoAddressesEffect { currency, txHash, isOutgoing, toMsg } ->
+                    let
+                        io =
+                            if isOutgoing then
+                                Api.Request.Txs.IoOutputs
+
+                            else
+                                Api.Request.Txs.IoInputs
+                    in
+                    Api.Request.Txs.getTxIo currency txHash io
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.SearchEntityNeighborsEffect e ->

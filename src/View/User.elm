@@ -19,8 +19,7 @@ import View.Locale as Locale
 user : Config -> UserModel -> Html Msg
 user vc model =
     div
-        [ id "user"
-        , Css.root vc |> css
+        [ Css.root vc |> css
         ]
         [ Button.tool vc
             { icon = FontAwesome.user
