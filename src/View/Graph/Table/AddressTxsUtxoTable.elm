@@ -1,0 +1,57 @@
+module View.Graph.Table.AddressTxsUtxoTable exposing (..)
+
+import Api.Data
+import Config.View as View
+import Css.View
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
+import Init.Graph.Table
+import Model.Graph.Id exposing (AddressId)
+import Model.Graph.Table exposing (Table)
+import Msg.Graph exposing (Msg(..))
+import Route exposing (toUrl)
+import Route.Graph as Route
+import Table
+import Util.View
+import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Locale as Locale
+
+
+init : Table Api.Data.AddressTxUtxo
+init =
+    Init.Graph.Table.init "Transaction"
+
+
+config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
+config vc coinCode =
+    Table.customConfig
+        { toId = .txHash
+        , toMsg = TableNewState
+        , columns =
+            [ T.htmlColumn vc
+                "Transaction"
+                .txHash
+                (\data ->
+                    Util.View.truncate vc.theme.table.urlMaxLength data.txHash
+                        |> text
+                        |> List.singleton
+                        |> a
+                            [ Css.View.link vc |> css
+                            , Route.txRoute
+                                { currency = coinCode
+                                , txHash = data.txHash
+                                , table = Nothing
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                                |> href
+                            ]
+                        |> List.singleton
+                )
+            , T.valueColumn vc coinCode "Value" .value
+            , T.intColumn vc "Height" .height
+            , T.timestampColumn vc "Timestamp" .timestamp
+            ]
+        , customizations = customizations vc
+        }

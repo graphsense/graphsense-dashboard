@@ -9,6 +9,7 @@ import Init.Graph.Table
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.View exposing (truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
@@ -39,8 +40,7 @@ config vc =
 
                         truncated =
                             if String.length source > vc.theme.table.urlMaxLength then
-                                String.left vc.theme.table.urlMaxLength source
-                                    ++ "…"
+                                Util.View.truncate vc.theme.table.urlMaxLength source
 
                             else
                                 source

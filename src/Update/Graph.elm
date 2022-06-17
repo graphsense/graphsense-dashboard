@@ -785,13 +785,23 @@ update plugins uc msg model =
 
         BrowserGotAddressTxs id data ->
             { model
-                | browser = Browser.showAddressTxs id data model.browser
+                | browser =
+                    if String.toLower id.currency == "eth" then
+                        Browser.showAddressTxsAccount id data model.browser
+
+                    else
+                        Browser.showAddressTxsUtxo id data model.browser
             }
                 |> n
 
         BrowserGotEntityTxs id data ->
             { model
-                | browser = Browser.showEntityTxs id data model.browser
+                | browser =
+                    if String.toLower id.currency == "eth" then
+                        Browser.showEntityTxsAccount id data model.browser
+
+                    else
+                        Browser.showEntityTxsUtxo id data model.browser
             }
                 |> n
 
@@ -1590,7 +1600,7 @@ updateByRoute plugins route model =
             let
                 ( browser, effect ) =
                     if String.toLower currency == "eth" then
-                        Debug.todo "loadingTxAccount"
+                        Browser.loadingTxAccount { currency = currency, txHash = t } model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser

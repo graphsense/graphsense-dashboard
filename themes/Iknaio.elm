@@ -616,6 +616,7 @@ theme =
                 |> s_root
                     [ px 10 |> paddingX
                     ]
+                |> s_urlMaxLength 20
                 |> s_table
                     [ scaled 1 |> rem |> padding
                     ]

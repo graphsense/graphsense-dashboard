@@ -26,6 +26,7 @@ type Type
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
+    | TxAccount (Loadable String Api.Data.TxAccount)
       --| Label String (Maybe (Table Api.Data.AddressTag))
     | Plugin String
 

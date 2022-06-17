@@ -535,6 +535,7 @@ handleResponse plugins uc result model =
                 { model
                     | user =
                         updateRequestLimit headers model.user
+                            |> s_hovercardElement Nothing
                 }
 
         Err ( BadStatus 401, eff ) ->
@@ -558,7 +559,12 @@ handleResponse plugins uc result model =
             )
 
         Err ( BadBody err, _ ) ->
-            ( model
+            ( { model
+                | statusbar =
+                    Http.BadBody err
+                        |> Just
+                        |> Statusbar.add model.statusbar "error" []
+              }
             , PortsConsoleEffect err
                 |> List.singleton
             )

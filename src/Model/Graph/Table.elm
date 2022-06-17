@@ -7,14 +7,16 @@ import Util.InfiniteScroll as InfiniteScroll
 
 type AddressTable
     = AddressTagsTable (Table Api.Data.AddressTag)
-    | AddressTxsTable (Table Api.Data.AddressTxUtxo)
+    | AddressTxsUtxoTable (Table Api.Data.AddressTxUtxo)
+    | AddressTxsAccountTable (Table Api.Data.TxAccount)
     | AddressIncomingNeighborsTable (Table Api.Data.NeighborAddress)
     | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
 
 
 type EntityTable
     = EntityTagsTable (Table Api.Data.AddressTag)
-    | EntityTxsTable (Table Api.Data.AddressTxUtxo)
+    | EntityTxsUtxoTable (Table Api.Data.AddressTxUtxo)
+    | EntityTxsAccountTable (Table Api.Data.TxAccount)
     | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityAddressesTable (Table Api.Data.Address)

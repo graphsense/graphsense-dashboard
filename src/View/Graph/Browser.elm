@@ -34,7 +34,8 @@ import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
-import View.Graph.Table.AddressTxsTable as AddressTxsTable
+import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
+import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
@@ -77,6 +78,9 @@ browser plugins states vc gc model =
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
+
+                Browser.TxAccount loadable ->
+                    [ browseTxAccount plugins states vc gc model.now loadable ]
 
                 Browser.Plugin pid ->
                     browsePlugin plugins vc pid states
@@ -453,6 +457,12 @@ browseTxUtxo plugins states vc gc now tx =
         |> propertyBox vc
 
 
+browseTxAccount : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> Html Msg
+browseTxAccount plugins states vc gc now tx =
+    (rowsTxAccount vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
 rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg))
 rowsEntity vc gc now ent =
     let
@@ -590,8 +600,11 @@ browseAddressTable vc gc height address table =
                     ( curr, Nothing )
     in
     case table of
-        AddressTxsTable t ->
-            table_ vc height (AddressTxsTable.config vc coinCode) t
+        AddressTxsUtxoTable t ->
+            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+
+        AddressTxsAccountTable t ->
+            table_ vc height (AddressTxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
             table_ vc height (AddressTagsTable.config vc) t
@@ -627,8 +640,11 @@ browseEntityTable vc gc height entity table =
         EntityAddressesTable t ->
             table_ vc height (EntityAddressesTable.config vc coinCode entityId) t
 
-        EntityTxsTable t ->
-            table_ vc height (AddressTxsTable.config vc coinCode) t
+        EntityTxsUtxoTable t ->
+            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+
+        EntityTxsAccountTable t ->
+            table_ vc height (AddressTxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
             table_ vc height (AddressTagsTable.config vc) t
@@ -742,6 +758,60 @@ rowsTxUtxo vc gc now tx =
         , tx
             |> ifLoaded
                 (\t -> Value t.currency t.totalOutput)
+            |> elseLoading
+        , Nothing
+        )
+    ]
+
+
+rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> List (Row (Value Msg))
+rowsTxAccount vc gc now tx =
+    let
+        txLink getAddress tx_ =
+            a
+                [ Route.addressRoute
+                    { currency = tx_.currency
+                    , address = getAddress tx_
+                    , layer = Nothing
+                    , table = Nothing
+                    }
+                    |> Route.graphRoute
+                    |> toUrl
+                    |> href
+                , CssView.link vc |> css
+                ]
+                [ getAddress tx_ |> text
+                ]
+                |> Html
+    in
+    [ Row
+        ( "Transaction"
+        , tx
+            |> ifLoaded (.txHash >> String)
+            |> elseShowAddress
+        , Nothing
+        )
+    , Row
+        ( "Included in block"
+        , tx |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Created"
+        , tx |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Sending address"
+        , tx
+            |> ifLoaded (txLink .fromAddress)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Receiving address"
+        , tx
+            |> ifLoaded (txLink .toAddress)
             |> elseLoading
         , Nothing
         )

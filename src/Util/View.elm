@@ -45,3 +45,8 @@ firstToUpper str =
     String.left 1 str
         |> String.toUpper
         |> (\f -> f ++ String.dropLeft 1 str)
+
+
+truncate : Int -> String -> String
+truncate len str =
+    String.left len str ++ "…"

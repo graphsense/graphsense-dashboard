@@ -28,7 +28,8 @@ import Update.Search as Search
 import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
-import View.Graph.Table.AddressTxsTable as AddressTxsTable
+import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
+import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
@@ -48,6 +49,32 @@ loadingEntity id model =
         | type_ = Entity (Loading id.currency id.entity) Nothing
         , visible = True
     }
+
+
+loadingTxAccount : { currency : String, txHash : String } -> Model -> ( Model, List Effect )
+loadingTxAccount id model =
+    let
+        ( type_, eff ) =
+            case model.type_ of
+                TxAccount (Loaded tx) ->
+                    ( model.type_, [] )
+
+                _ ->
+                    ( TxAccount (Loading id.currency id.txHash)
+                    , [ GetTxEffect
+                            { txHash = id.txHash
+                            , currency = id.currency
+                            , toMsg = BrowserGotTx
+                            }
+                      ]
+                    )
+    in
+    ( { model
+        | type_ = type_
+        , visible = True
+      }
+    , eff
+    )
 
 
 loadingTxUtxo : { currency : String, txHash : String } -> Model -> ( Model, List Effect )
@@ -114,17 +141,30 @@ createAddressTable route t currency address =
               ]
             )
 
-        ( Route.AddressTxsTable, Just (AddressTxsTable _) ) ->
+        ( Route.AddressTxsTable, Just (AddressTxsUtxoTable _) ) ->
+            n t
+
+        ( Route.AddressTxsTable, Just (AddressTxsAccountTable _) ) ->
             n t
 
         ( Route.AddressTxsTable, _ ) ->
-            ( AddressTxsTable.init |> AddressTxsTable |> Just
-            , [ getAddressTxsEffect Nothing
-                    { currency = currency
-                    , address = address
-                    }
-              ]
-            )
+            if String.toLower currency == "eth" then
+                ( AddressTxsAccountTable.init |> AddressTxsAccountTable |> Just
+                , [ getAddressTxsEffect Nothing
+                        { currency = currency
+                        , address = address
+                        }
+                  ]
+                )
+
+            else
+                ( AddressTxsUtxoTable.init |> AddressTxsUtxoTable |> Just
+                , [ getAddressTxsEffect Nothing
+                        { currency = currency
+                        , address = address
+                        }
+                  ]
+                )
 
         ( Route.AddressIncomingNeighborsTable, Just (AddressIncomingNeighborsTable _) ) ->
             n t
@@ -192,17 +232,30 @@ createEntityTable route t currency entity =
               ]
             )
 
-        ( Route.EntityTxsTable, Just (EntityTxsTable _) ) ->
+        ( Route.EntityTxsTable, Just (EntityTxsUtxoTable _) ) ->
+            n t
+
+        ( Route.EntityTxsTable, Just (EntityTxsAccountTable _) ) ->
             n t
 
         ( Route.EntityTxsTable, _ ) ->
-            ( AddressTxsTable.init |> EntityTxsTable |> Just
-            , [ getEntityTxsEffect Nothing
-                    { currency = currency
-                    , entity = entity
-                    }
-              ]
-            )
+            if String.toLower currency == "eth" then
+                ( AddressTxsAccountTable.init |> EntityTxsAccountTable |> Just
+                , [ getEntityTxsEffect Nothing
+                        { currency = currency
+                        , entity = entity
+                        }
+                  ]
+                )
+
+            else
+                ( AddressTxsUtxoTable.init |> EntityTxsUtxoTable |> Just
+                , [ getEntityTxsEffect Nothing
+                        { currency = currency
+                        , entity = entity
+                        }
+                  ]
+                )
 
         ( Route.EntityIncomingNeighborsTable, Just (EntityIncomingNeighborsTable _) ) ->
             n t
@@ -398,8 +451,8 @@ showTx data model =
                             _ ->
                                 Nothing
 
-                Api.Data.TxTxAccount _ ->
-                    Debug.todo ""
+                Api.Data.TxTxAccount tx ->
+                    TxAccount (Loaded tx)
             )
 
 
@@ -419,8 +472,8 @@ updateAddress { currency, address } update model =
             model
 
 
-showAddressTxs : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
-showAddressTxs id data model =
+showAddressTxsUtxo : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
+showAddressTxsUtxo id data model =
     let
         addressTxs =
             data.addressTxs
@@ -444,16 +497,58 @@ showAddressTxs id data model =
                     | type_ =
                         Address loadable <|
                             case table of
-                                Just (AddressTxsTable t) ->
+                                Just (AddressTxsUtxoTable t) ->
                                     appendData data.nextPage addressTxs t
-                                        |> AddressTxsTable
+                                        |> AddressTxsUtxoTable
                                         |> Just
 
                                 _ ->
-                                    AddressTxsTable.init
+                                    AddressTxsUtxoTable.init
                                         |> s_data addressTxs
                                         |> s_nextpage data.nextPage
-                                        |> AddressTxsTable
+                                        |> AddressTxsUtxoTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showAddressTxsAccount : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
+showAddressTxsAccount id data model =
+    let
+        addressTxs =
+            data.addressTxs
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.AddressTxTxAccount tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Address loadable table ->
+            if matchAddressId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Address loadable <|
+                            case table of
+                                Just (AddressTxsAccountTable t) ->
+                                    appendData data.nextPage addressTxs t
+                                        |> AddressTxsAccountTable
+                                        |> Just
+
+                                _ ->
+                                    AddressTxsAccountTable.init
+                                        |> s_data addressTxs
+                                        |> s_nextpage data.nextPage
+                                        |> AddressTxsAccountTable
                                         |> Just
                 }
 
@@ -616,8 +711,8 @@ showEntityAddresses id data model =
             model
 
 
-showEntityTxs : { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
-showEntityTxs id data model =
+showEntityTxsUtxo : { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
+showEntityTxsUtxo id data model =
     let
         addressTxs =
             data.addressTxs
@@ -641,16 +736,58 @@ showEntityTxs id data model =
                     | type_ =
                         Entity loadable <|
                             case table of
-                                Just (EntityTxsTable t) ->
+                                Just (EntityTxsUtxoTable t) ->
                                     appendData data.nextPage addressTxs t
-                                        |> EntityTxsTable
+                                        |> EntityTxsUtxoTable
                                         |> Just
 
                                 _ ->
-                                    AddressTxsTable.init
+                                    AddressTxsUtxoTable.init
                                         |> s_data addressTxs
                                         |> s_nextpage data.nextPage
-                                        |> EntityTxsTable
+                                        |> EntityTxsUtxoTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showEntityTxsAccount : { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
+showEntityTxsAccount id data model =
+    let
+        addressTxs =
+            data.addressTxs
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.AddressTxTxAccount tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Entity loadable table ->
+            if matchEntityId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Entity loadable <|
+                            case table of
+                                Just (EntityTxsAccountTable t) ->
+                                    appendData data.nextPage addressTxs t
+                                        |> EntityTxsAccountTable
+                                        |> Just
+
+                                _ ->
+                                    AddressTxsAccountTable.init
+                                        |> s_data addressTxs
+                                        |> s_nextpage data.nextPage
+                                        |> EntityTxsAccountTable
                                         |> Just
                 }
 
@@ -725,9 +862,14 @@ tableNewState state model =
                 Address loadable table ->
                     Address loadable <|
                         case table of
-                            Just (AddressTxsTable t) ->
+                            Just (AddressTxsUtxoTable t) ->
                                 { t | state = state }
-                                    |> AddressTxsTable
+                                    |> AddressTxsUtxoTable
+                                    |> Just
+
+                            Just (AddressTxsAccountTable t) ->
+                                { t | state = state }
+                                    |> AddressTxsAccountTable
                                     |> Just
 
                             Just (AddressTagsTable t) ->
@@ -756,9 +898,14 @@ tableNewState state model =
                                     |> EntityAddressesTable
                                     |> Just
 
-                            Just (EntityTxsTable t) ->
+                            Just (EntityTxsUtxoTable t) ->
                                 { t | state = state }
-                                    |> EntityTxsTable
+                                    |> EntityTxsUtxoTable
+                                    |> Just
+
+                            Just (EntityTxsAccountTable t) ->
+                                { t | state = state }
+                                    |> EntityTxsAccountTable
                                     |> Just
 
                             Just (EntityTagsTable t) ->
@@ -804,13 +951,26 @@ infiniteScroll msg model =
             case model.type_ of
                 Address loadable table ->
                     (case table of
-                        Just (AddressTxsTable t) ->
+                        Just (AddressTxsUtxoTable t) ->
                             let
                                 ( is, cmd, needMore ) =
                                     InfiniteScroll.update msg t.infiniteScroll
                             in
                             ( { t | infiniteScroll = is }
-                                |> AddressTxsTable
+                                |> AddressTxsUtxoTable
+                                |> Just
+                            , loadableAddress loadable
+                                |> getAddressTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (AddressTxsAccountTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddressTxsAccountTable
                                 |> Just
                             , loadableAddress loadable
                                 |> getAddressTxsEffect t.nextpage
@@ -876,13 +1036,26 @@ infiniteScroll msg model =
                                 |> infiniteScrollEffects cmd needMore t
                             )
 
-                        Just (EntityTxsTable t) ->
+                        Just (EntityTxsUtxoTable t) ->
                             let
                                 ( is, cmd, needMore ) =
                                     InfiniteScroll.update msg t.infiniteScroll
                             in
                             ( { t | infiniteScroll = is }
-                                |> EntityTxsTable
+                                |> EntityTxsUtxoTable
+                                |> Just
+                            , loadableEntity loadable
+                                |> getEntityTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (EntityTxsAccountTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> EntityTxsAccountTable
                                 |> Just
                             , loadableEntity loadable
                                 |> getEntityTxsEffect t.nextpage

@@ -1,4 +1,4 @@
-module View.Graph.Table.AddressTxsTable exposing (..)
+module View.Graph.Table.AddressTxsAccountTable exposing (..)
 
 import Api.Data
 import Config.View as View
@@ -13,16 +13,17 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
 
-init : Table Api.Data.AddressTxUtxo
+init : Table Api.Data.TxAccount
 init =
     Init.Graph.Table.init "Transaction"
 
 
-config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
+config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
 config vc coinCode =
     Table.customConfig
         { toId = .txHash
@@ -32,7 +33,8 @@ config vc coinCode =
                 "Transaction"
                 .txHash
                 (\data ->
-                    text data.txHash
+                    Util.View.truncate vc.theme.table.urlMaxLength data.txHash
+                        |> text
                         |> List.singleton
                         |> a
                             [ Css.View.link vc |> css
@@ -50,6 +52,8 @@ config vc coinCode =
             , T.valueColumn vc coinCode "Value" .value
             , T.intColumn vc "Height" .height
             , T.timestampColumn vc "Timestamp" .timestamp
+            , T.stringColumn vc "Sending address" (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+            , T.stringColumn vc "Receiving address" (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
             ]
         , customizations = customizations vc
         }
