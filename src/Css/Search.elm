@@ -22,7 +22,7 @@ textarea : Config -> String -> List Style
 textarea vc input =
     [ overflow hidden
     , resize none
-    , ex 50 |> width
+    , rem 25 |> width
     ]
         ++ vc.theme.search.textarea input
 

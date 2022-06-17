@@ -1533,7 +1533,7 @@ hideContextmenu model =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
-    case route |> Debug.log "route" of
+    case route of
         Route.Root ->
             deselect model
                 |> n

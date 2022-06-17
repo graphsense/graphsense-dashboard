@@ -8,12 +8,8 @@ log str a =
 
 log2 : String -> a -> a
 log2 str a =
-    --a
-    Debug.log str a
-
-
-
---Debug.log str a
+    --Debug.log str a
+    a
 
 
 truncate : String -> a -> a

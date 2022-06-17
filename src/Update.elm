@@ -461,7 +461,7 @@ updateByUrl plugins uc url model =
     Route.parse plugins routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
-                case Debug.log "route" route of
+                case Log.log "route" route of
                     Route.Stats ->
                         n { model | page = Stats }
 
