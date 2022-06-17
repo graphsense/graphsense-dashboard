@@ -268,7 +268,8 @@ type Link
 
 
 type alias LinkUtxo =
-    { height : Int
+    { currency : String
+    , height : Int
     , inputValue : Values
     , outputValue : Values
     , timestamp : Int
@@ -278,7 +279,7 @@ type alias LinkUtxo =
 
 
 type alias Links =
-    { links : Maybe (List (Link))
+    { links : List (Link)
     , nextPage : Maybe String
     }
 
@@ -778,7 +779,8 @@ encodeLinkUtxoPairs : LinkUtxo -> List EncodedField
 encodeLinkUtxoPairs model =
     let
         pairs =
-            [ encode "height" Json.Encode.int model.height
+            [ encode "currency" Json.Encode.string model.currency
+            , encode "height" Json.Encode.int model.height
             , encode "input_value" encodeValues model.inputValue
             , encode "output_value" encodeValues model.outputValue
             , encode "timestamp" Json.Encode.int model.timestamp
@@ -803,7 +805,7 @@ encodeLinksPairs : Links -> List EncodedField
 encodeLinksPairs model =
     let
         pairs =
-            [ maybeEncode "links" (Json.Encode.list encodeLink) model.links
+            [ encode "links" (Json.Encode.list encodeLink) model.links
             , maybeEncode "next_page" Json.Encode.string model.nextPage
             ]
     in
@@ -1536,6 +1538,7 @@ linkTagDecoder tag =
 linkUtxoDecoder : Json.Decode.Decoder LinkUtxo
 linkUtxoDecoder =
     Json.Decode.succeed LinkUtxo
+        |> decode "currency" Json.Decode.string 
         |> decode "height" Json.Decode.int 
         |> decode "input_value" valuesDecoder 
         |> decode "output_value" valuesDecoder 
@@ -1547,7 +1550,7 @@ linkUtxoDecoder =
 linksDecoder : Json.Decode.Decoder Links
 linksDecoder =
     Json.Decode.succeed Links
-        |> maybeDecode "links" (Json.Decode.list linkDecoder) Nothing
+        |> decode "links" (Json.Decode.list linkDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
 
 

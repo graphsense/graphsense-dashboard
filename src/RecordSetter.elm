@@ -4139,6 +4139,11 @@ s_take value__ record__ =
     { record__ | take = value__ }
 
 
+s_target : a -> { b | target : a } -> { b | target : a }
+s_target value__ record__ =
+    { record__ | target = value__ }
+
+
 s_taxonomy : a -> { b | taxonomy : a } -> { b | taxonomy : a }
 s_taxonomy value__ record__ =
     { record__ | taxonomy = value__ }

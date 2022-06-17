@@ -63,7 +63,7 @@ second: Sekunde
 seconds: Sekunden
 addresses tagged: beschlagwortete Adressen
 source: Quelle
-destination: Ziel
+target: Ziel
 value: Wert
 timestamp: Zeitstempel
 outgoing address: ausgehende Adresse 

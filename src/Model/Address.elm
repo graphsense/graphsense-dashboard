@@ -11,6 +11,13 @@ type alias Address =
     }
 
 
+type alias Addresslink =
+    { currency : String
+    , source : String
+    , target : String
+    }
+
+
 fromId : AddressId -> Address
 fromId id =
     { currency = Id.currency id

@@ -34,7 +34,7 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-addresses : Plugins -> Config -> Graph.Config -> Id.AddressId -> Entity -> Svg Msg
+addresses : Plugins -> Config -> Graph.Config -> String -> Entity -> Svg Msg
 addresses plugins vc gc selected ent =
     ent.addresses
         |> Dict.foldl
@@ -48,7 +48,7 @@ addresses plugins vc gc selected ent =
         |> Keyed.node "g" []
 
 
-entity : Plugins -> Config -> Graph.Config -> Id.EntityId -> Entity -> Svg Msg
+entity : Plugins -> Config -> Graph.Config -> String -> Entity -> Svg Msg
 entity plugins vc gc selected ent =
     let
         _ =
@@ -70,7 +70,7 @@ entity plugins vc gc selected ent =
                 |> Util.toCssColor
 
         isSelected =
-            selected == ent.id
+            selected == Id.entityIdToString ent.id
 
         rectX =
             String.fromFloat expandHandleWidth
@@ -253,8 +253,8 @@ addressesCount vc gc ent =
         ]
 
 
-addressLinks : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
-addressLinks vc gc mn mx ent =
+addressLinks : Config -> Graph.Config -> String -> Float -> Float -> Entity -> Svg Msg
+addressLinks vc gc selected mn mx ent =
     let
         _ =
             Log.log "Entity.addressLinks" ent.id
@@ -263,7 +263,7 @@ addressLinks vc gc mn mx ent =
         |> Dict.foldl
             (\_ address svg ->
                 ( "addressLinks" ++ Id.addressIdToString address.id
-                , Svg.lazy5 Address.links vc gc mn mx address
+                , Svg.lazy6 Address.links vc gc selected mn mx address
                 )
                     :: svg
             )

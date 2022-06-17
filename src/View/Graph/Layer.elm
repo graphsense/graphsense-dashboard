@@ -21,7 +21,7 @@ import View.Graph.Entity as Entity
 import View.Graph.Link as Link
 
 
-addresses : Plugins -> View.Config -> Graph.Config -> Id.AddressId -> Layer -> Svg Msg
+addresses : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
 addresses plugins vc gc selected layer =
     let
         _ =
@@ -39,7 +39,7 @@ addresses plugins vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entities : Plugins -> View.Config -> Graph.Config -> Id.EntityId -> Layer -> Svg Msg
+entities : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
 entities plugins vc gc selected layer =
     let
         _ =
@@ -78,8 +78,8 @@ entityLinks vc gc layer =
         |> Keyed.node "g" []
 
 
-addressLinks : View.Config -> Graph.Config -> Layer -> Svg Msg
-addressLinks vc gc layer =
+addressLinks : View.Config -> Graph.Config -> String -> Layer -> Svg Msg
+addressLinks vc gc selected layer =
     let
         ( mn, mx ) =
             calcAddressRange vc gc layer
@@ -91,7 +91,7 @@ addressLinks vc gc layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( "addressLinks" ++ Id.entityIdToString entity.id
-                , Svg.lazy5 Entity.addressLinks vc gc mn mx entity
+                , Svg.lazy6 Entity.addressLinks vc gc selected mn mx entity
                 )
                     :: svg
             )

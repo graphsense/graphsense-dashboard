@@ -15,6 +15,7 @@ import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
+import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Model.Search as Search
@@ -30,6 +31,7 @@ import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -125,6 +127,14 @@ loadingLabel label model =
     , [ listAddressTagsEffect Nothing label
       ]
     )
+
+
+showAddresslink : { source : Address.Address, link : Link Address.Address } -> Model -> Model
+showAddresslink { source, link } model =
+    { model
+        | type_ = Addresslink source link Nothing
+        , visible = True
+    }
 
 
 showLabelAddressTags : String -> Api.Data.AddressTags -> Model -> Model
@@ -233,6 +243,55 @@ createAddressTable route t currency address =
                     }
               ]
             )
+
+
+showAddresslinkTable : Route.AddresslinkTable -> Model -> ( Model, List Effect )
+showAddresslinkTable route model =
+    case model.type_ of
+        Addresslink source link t ->
+            let
+                currency =
+                    Id.currency source.id
+            in
+            createAddresslinkTable route t currency (Id.addressId source.id) (Id.addressId link.node.id)
+                |> mapFirst (Addresslink source link)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createAddresslinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> String -> String -> ( Maybe AddresslinkTable, List Effect )
+createAddresslinkTable route t currency source target =
+    case ( route, t ) of
+        ( Route.AddresslinkTxsTable, Just (AddresslinkTxsUtxoTable _) ) ->
+            n t
+
+        ( Route.AddresslinkTxsTable, Just (AddresslinkTxsAccountTable _) ) ->
+            n t
+
+        ( Route.AddresslinkTxsTable, Nothing ) ->
+            if String.toLower currency == "eth" then
+                ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
+                , [ getAddresslinkTxsEffect Nothing
+                        { currency = currency
+                        , source = source
+                        , target = target
+                        }
+                  ]
+                )
+
+            else
+                ( AddresslinkTxsUtxoTable.init |> AddresslinkTxsUtxoTable |> Just
+                , [ getAddresslinkTxsEffect Nothing
+                        { currency = currency
+                        , source = source
+                        , target = target
+                        }
+                  ]
+                )
 
 
 showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
@@ -742,6 +801,90 @@ showAddressTxsAccount id data model =
             model
 
 
+showAddresslinkTxsUtxo : { currency : String, source : String, target : String } -> Api.Data.Links -> Model -> Model
+showAddresslinkTxsUtxo { currency, source, target } data model =
+    let
+        addressTxs =
+            data.links
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.LinkLinkUtxo tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Addresslink src link table ->
+            if Id.addressId src.id /= source || Id.addressId link.node.id /= target || Id.currency src.id /= currency then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Addresslink src link <|
+                            case table of
+                                Just (AddresslinkTxsUtxoTable t) ->
+                                    appendData data.nextPage addressTxs t
+                                        |> AddresslinkTxsUtxoTable
+                                        |> Just
+
+                                _ ->
+                                    AddresslinkTxsUtxoTable.init
+                                        |> s_data addressTxs
+                                        |> s_nextpage data.nextPage
+                                        |> AddresslinkTxsUtxoTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
+showAddresslinkTxsAccount : { currency : String, source : String, target : String } -> Api.Data.Links -> Model -> Model
+showAddresslinkTxsAccount { currency, source, target } data model =
+    let
+        addressTxs =
+            data.links
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.LinkTxAccount tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Addresslink src tgt table ->
+            if Id.addressId src.id /= source || Id.addressId tgt.node.id /= target || Id.currency src.id /= currency then
+                model
+
+            else
+                { model
+                    | type_ =
+                        Addresslink src tgt <|
+                            case table of
+                                Just (AddresslinkTxsAccountTable t) ->
+                                    appendData data.nextPage addressTxs t
+                                        |> AddresslinkTxsAccountTable
+                                        |> Just
+
+                                _ ->
+                                    TxsAccountTable.init
+                                        |> s_data addressTxs
+                                        |> s_nextpage data.nextPage
+                                        |> AddresslinkTxsAccountTable
+                                        |> Just
+                }
+
+        _ ->
+            model
+
+
 showAddressTags : { currency : String, address : String } -> Api.Data.AddressTags -> Model -> Model
 showAddressTags id data model =
     let
@@ -1164,6 +1307,22 @@ tableNewState state model =
                             Nothing ->
                                 table
 
+                Addresslink src lnk table ->
+                    Addresslink src lnk <|
+                        case table of
+                            Just (AddresslinkTxsUtxoTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkTxsUtxoTable
+                                    |> Just
+
+                            Just (AddresslinkTxsAccountTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
                 Plugin _ ->
                     model.type_
     }
@@ -1394,6 +1553,44 @@ infiniteScroll msg model =
                         |> infiniteScrollEffects cmd needMore t
                     )
 
+                Addresslink src link table ->
+                    let
+                        id =
+                            { currency = Id.currency src.id
+                            , source = Id.addressId src.id
+                            , target = Id.addressId link.node.id
+                            }
+                    in
+                    (case table of
+                        Just (AddresslinkTxsUtxoTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddresslinkTxsUtxoTable
+                                |> Just
+                            , getAddresslinkTxsEffect t.nextpage id
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (AddresslinkTxsAccountTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> AddresslinkTxsAccountTable
+                                |> Just
+                            , getAddresslinkTxsEffect t.nextpage id
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Nothing ->
+                            ( table, [] )
+                    )
+                        |> mapFirst (Addresslink src link)
+
                 Plugin _ ->
                     ( model.type_, [] )
 
@@ -1426,6 +1623,18 @@ getAddressTxsEffect nextpage { currency, address } =
         , nextpage = nextpage
         , pagesize = 100
         , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
+        }
+
+
+getAddresslinkTxsEffect : Maybe String -> A.Addresslink -> Effect
+getAddresslinkTxsEffect nextpage id =
+    GetAddresslinkTxsEffect
+        { currency = id.currency
+        , source = id.source
+        , target = id.target
+        , nextpage = nextpage
+        , pagesize = 100
+        , toMsg = BrowserGotAddresslinkTxs id
         }
 
 

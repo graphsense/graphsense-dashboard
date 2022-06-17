@@ -9,6 +9,7 @@ import Model.Block as B
 import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Time
@@ -30,6 +31,7 @@ type Type
     | TxAccount (Loadable String Api.Data.TxAccount)
     | Label String (Table Api.Data.AddressTag)
     | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
+    | Addresslink Address (Link Address) (Maybe AddresslinkTable)
     | Plugin String
 
 

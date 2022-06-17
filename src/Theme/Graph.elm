@@ -21,13 +21,13 @@ type alias Graph =
     , entityAddressesCount : List Style
     , entityRect : List Style
     , entityRoot : List Style
-    , link : NodeType -> Bool -> List Style
+    , link : NodeType -> Bool -> Bool -> List Style
     , linkThickness : Float
     , linkColorFaded : Color
     , linkColorStrong : Color
     , linkColorSelected : Color
-    , linkLabel : Bool -> List Style
-    , linkLabelBox : Bool -> List Style
+    , linkLabel : Bool -> Bool -> List Style
+    , linkLabelBox : Bool -> Bool -> List Style
     , expandHandle : NodeType -> List Style
     , expandHandlePath : NodeType -> Bool -> List Style
     , expandHandleText : NodeType -> List Style
@@ -76,13 +76,13 @@ default =
     , entityAddressesCount = []
     , entityRect = []
     , entityRoot = []
-    , link = \_ _ -> []
+    , link = \_ _ _ -> []
     , linkThickness = 1
     , linkColorFaded = Color.grey
     , linkColorStrong = Color.black
     , linkColorSelected = Color.red
-    , linkLabel = \_ -> []
-    , linkLabelBox = \_ -> []
+    , linkLabel = \_ _ -> []
+    , linkLabelBox = \_ _ -> []
     , expandHandle = always []
     , expandHandlePath = \_ _ -> []
     , expandHandleText = always []

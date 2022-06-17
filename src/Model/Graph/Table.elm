@@ -32,6 +32,11 @@ type BlockTable
     | BlockTxsAccountTable (Table Api.Data.TxAccount)
 
 
+type AddresslinkTable
+    = AddresslinkTxsUtxoTable (Table Api.Data.LinkUtxo)
+    | AddresslinkTxsAccountTable (Table Api.Data.TxAccount)
+
+
 type alias Table a =
     { data : List a
     , loading : Bool

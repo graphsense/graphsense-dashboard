@@ -1,5 +1,6 @@
 module Route.Graph exposing
     ( AddressTable(..)
+    , AddresslinkTable(..)
     , BlockTable(..)
     , Config
     , EntityTable(..)
@@ -7,6 +8,7 @@ module Route.Graph exposing
     , Thing(..)
     , TxTable(..)
     , addressRoute
+    , addresslinkRoute
     , blockRoute
     , entityRoute
     , parse
@@ -44,6 +46,7 @@ type Thing
     | Entity Int (Maybe EntityTable) (Maybe Int)
     | Block Int (Maybe BlockTable)
     | Tx String (Maybe TxTable)
+    | Addresslink String Int String Int (Maybe AddresslinkTable)
 
 
 addressSegment : String
@@ -64,6 +67,11 @@ blockSegment =
 txSegment : String
 txSegment =
     "tx"
+
+
+addresslinkSegment : String
+addresslinkSegment =
+    "addresslink"
 
 
 labelSegment : String
@@ -98,6 +106,10 @@ type TxTable
 
 type BlockTable
     = BlockTxsTable
+
+
+type AddresslinkTable
+    = AddresslinkTxsTable
 
 
 addressTableToString : AddressTable -> String
@@ -216,6 +228,23 @@ stringToBlockTable t =
             Nothing
 
 
+addresslinkTableToString : AddresslinkTable -> String
+addresslinkTableToString t =
+    case t of
+        AddresslinkTxsTable ->
+            "transactions"
+
+
+stringToAddresslinkTable : String -> Maybe AddresslinkTable
+stringToAddresslinkTable t =
+    case t of
+        "transactions" ->
+            Just AddresslinkTxsTable
+
+        _ ->
+            Nothing
+
+
 toUrl : Route -> String
 toUrl route =
     case route of
@@ -260,6 +289,23 @@ toUrl route =
             in
             absolute [ curr, txSegment, tx ] query
 
+        Currency curr (Addresslink src srcLayer dst dstLayer table) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (addresslinkTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            absolute
+                [ curr
+                , addresslinkSegment
+                , src
+                , String.fromInt srcLayer
+                , dst
+                , String.fromInt dstLayer
+                ]
+                query
+
         Label l ->
             absolute [ labelSegment, l ] []
 
@@ -279,6 +325,12 @@ rootRoute =
 addressRoute : { currency : String, address : String, layer : Maybe Int, table : Maybe AddressTable } -> Route
 addressRoute { currency, address, layer, table } =
     Address address table layer
+        |> Currency (String.toLower currency)
+
+
+addresslinkRoute : { currency : String, src : String, srcLayer : Int, dst : String, dstLayer : Int, table : Maybe AddresslinkTable } -> Route
+addresslinkRoute { currency, src, srcLayer, dst, dstLayer, table } =
+    Addresslink src srcLayer dst dstLayer table
         |> Currency (String.toLower currency)
 
 
@@ -348,4 +400,11 @@ thing =
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToBlockTable))
             |> map Block
+        , s addresslinkSegment
+            |> P.slash P.string
+            |> P.slash P.int
+            |> P.slash P.string
+            |> P.slash P.int
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddresslinkTable))
+            |> map Addresslink
         ]

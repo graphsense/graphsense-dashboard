@@ -451,9 +451,12 @@ theme =
                         ]
                     )
                 |> s_link
-                    (\nodeType hovered ->
+                    (\nodeType hovered selected ->
                         [ (if hovered then
                             colors.black
+
+                           else if selected then
+                            colors.red
 
                            else if nodeType == Address then
                             colors.grey
@@ -467,12 +470,15 @@ theme =
                     )
                 |> s_linkColorFaded colors.grey
                 |> s_linkColorStrong colors.black
-                |> s_linkColorSelected colors.brandRed
+                |> s_linkColorSelected colors.red
                 |> s_linkLabel
-                    (\hovered ->
+                    (\hovered selected ->
                         [ fontFamily monospace
                         , (if hovered then
                             colors.black
+
+                           else if selected then
+                            colors.red
 
                            else
                             colors.grey
@@ -483,7 +489,7 @@ theme =
                         ]
                     )
                 |> s_linkLabelBox
-                    (\_ ->
+                    (\_ _ ->
                         [ Color.toCssString colors.brandLightest
                             |> property "fill"
                         , num 0.8 |> opacity

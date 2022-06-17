@@ -55,6 +55,7 @@ type NodeType
 type Selected
     = SelectedAddress AddressId
     | SelectedEntity EntityId
+    | SelectedAddresslink (LinkId AddressId)
     | SelectedNone
 
 

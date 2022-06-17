@@ -22,7 +22,7 @@ import Maybe.Extra
 import Model.Address as A
 import Model.Entity as E
 import Model.Graph exposing (..)
-import Model.Graph.Address exposing (Address)
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity exposing (Entity)
@@ -402,6 +402,20 @@ update plugins uc msg model =
                 | hovered = HoveredAddressLink id
             }
                 |> n
+
+        UserClicksAddressLink id ->
+            ( model
+            , Route.addresslinkRoute
+                { currency = first id |> Id.currency
+                , src = first id |> Id.addressId
+                , srcLayer = first id |> Id.layer
+                , dst = second id |> Id.addressId
+                , dstLayer = second id |> Id.layer
+                , table = Nothing
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         UserLeavesThing ->
             { model
@@ -797,6 +811,17 @@ update plugins uc msg model =
 
                     else
                         Browser.showAddressTxsUtxo id data model.browser
+            }
+                |> n
+
+        BrowserGotAddresslinkTxs id data ->
+            { model
+                | browser =
+                    if String.toLower id.currency == "eth" then
+                        Browser.showAddresslinkTxsAccount id data model.browser
+
+                    else
+                        Browser.showAddresslinkTxsUtxo id data model.browser
             }
                 |> n
 
@@ -1664,6 +1689,46 @@ updateByRoute plugins route model =
               ]
                 ++ effects
             )
+
+        Route.Currency currency (Route.Addresslink src srcLayer dst dstLayer table) ->
+            let
+                s =
+                    Id.initAddressId { id = src, layer = srcLayer, currency = currency }
+
+                t =
+                    Id.initAddressId { id = dst, layer = dstLayer, currency = currency }
+            in
+            Layer.getAddress s model.layers
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Address.Links links ->
+                                Dict.get t links
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    let
+                                        browser =
+                                            Browser.showAddresslink
+                                                { source = source
+                                                , link = link
+                                                }
+                                                model.browser
+
+                                        ( browser2, effects ) =
+                                            table
+                                                |> Maybe.map (\tb -> Browser.showAddresslinkTable tb browser)
+                                                |> Maybe.withDefault (n browser)
+                                    in
+                                    ( { model
+                                        | browser = browser2
+                                        , selected = SelectedAddresslink ( source.id, link.node.id )
+                                      }
+                                    , effects
+                                    )
+                                )
+                    )
+                |> Maybe.withDefault (n model)
 
         Route.Label l ->
             let

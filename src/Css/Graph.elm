@@ -172,24 +172,24 @@ nodeSeparatorToExpandHandle vc nodeType =
         ++ vc.theme.graph.nodeSeparatorToExpandHandle nodeType
 
 
-link : Config -> NodeType -> Bool -> List Style
-link vc nodeType hovered =
+link : Config -> NodeType -> Bool -> Bool -> List Style
+link vc nodeType hovered selected =
     [ property "stroke" "currentColor"
     , property "fill" "none"
     ]
-        ++ vc.theme.graph.link nodeType hovered
+        ++ vc.theme.graph.link nodeType hovered selected
 
 
-linkLabel : Config -> Bool -> List Style
-linkLabel vc hovered =
+linkLabel : Config -> Bool -> Bool -> List Style
+linkLabel vc hovered selected =
     (px linkLabelHeight |> fontSize)
         :: property "fill" "currentColor"
-        :: vc.theme.graph.linkLabel hovered
+        :: vc.theme.graph.linkLabel hovered selected
 
 
-linkLabelBox : Config -> Bool -> List Style
-linkLabelBox vc hovered =
-    vc.theme.graph.linkLabelBox hovered
+linkLabelBox : Config -> Bool -> Bool -> List Style
+linkLabelBox vc hovered selected =
+    vc.theme.graph.linkLabelBox hovered selected
 
 
 searchTextarea : Config -> List Style

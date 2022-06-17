@@ -6,6 +6,7 @@ import Config.View as View
 import Css exposing (..)
 import Css.Graph
 import Init.Graph.Id as Id
+import Json.Decode
 import List.Extra
 import Log
 import Model.Currency as Currency
@@ -38,7 +39,9 @@ type alias Options =
     , label : String
     , amount : Float
     , hovered : Bool
+    , selected : Bool
     , onMouseOver : Msg
+    , onClick : Msg
     , nodeType : NodeType
     }
 
@@ -46,6 +49,7 @@ type alias Options =
 entityLinkOptions : View.Config -> Graph.Config -> Entity -> Link Entity -> Options
 entityLinkOptions vc gc entity link =
     { hovered = False
+    , selected = False
     , sx = Entity.getX entity + Entity.getWidth entity
     , sy =
         Entity.getY entity + Entity.getHeight entity / 2
@@ -57,13 +61,15 @@ entityLinkOptions vc gc entity link =
     , label =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
+    , onClick = NoOp
     , nodeType = Model.Graph.Entity
     }
 
 
-addressLinkOptions : View.Config -> Graph.Config -> Address -> Link Address -> Options
-addressLinkOptions vc gc address link =
+addressLinkOptions : View.Config -> Graph.Config -> String -> Address -> Link Address -> Options
+addressLinkOptions vc gc selected address link =
     { hovered = False
+    , selected = selected == Id.addressLinkIdToString ( address.id, link.node.id )
     , sx = Address.getX address + Address.getWidth address
     , sy =
         Address.getY address + Address.getHeight address / 2
@@ -75,6 +81,7 @@ addressLinkOptions vc gc address link =
     , label =
         getLabel vc gc link.node.address.currency link
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
+    , onClick = Id.initLinkId address.id link.node.id |> UserClicksAddressLink
     , nodeType = Model.Graph.Address
     }
 
@@ -101,10 +108,10 @@ entityLinkHovered vc gc mn mx entity link =
         mx
 
 
-addressLink : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
-addressLink vc gc mn mx address link =
+addressLink : View.Config -> Graph.Config -> String -> Float -> Float -> Address -> Link Address -> Svg Msg
+addressLink vc gc selected mn mx address link =
     drawLink
-        (addressLinkOptions vc gc address link)
+        (addressLinkOptions vc gc selected address link)
         vc
         gc
         mn
@@ -114,7 +121,7 @@ addressLink vc gc mn mx address link =
 addressLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
 addressLinkHovered vc gc mn mx address link =
     drawLink
-        (addressLinkOptions vc gc address link
+        (addressLinkOptions vc gc "" address link
             |> s_hovered True
         )
         vc
@@ -124,7 +131,7 @@ addressLinkHovered vc gc mn mx address link =
 
 
 drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
-drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver, nodeType } vc gc mn mx =
+drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, nodeType } vc gc mn mx =
     let
         cx =
             sx + (tx - sx) / 2
@@ -153,16 +160,21 @@ drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver, nodeType } vc gc
     in
     g
         [ Svg.onMouseOver onMouseOver
+        , Json.Decode.succeed ( onClick, True )
+            |> Svg.stopPropagationOn "click"
         , onMouseOut UserLeavesThing
         ]
         [ S.path
             [ dd
-            , Css.Graph.link vc nodeType hovered
+            , Css.Graph.link vc nodeType hovered selected
                 ++ [ thickness
                         |> (\x -> String.fromFloat x ++ "px")
                         |> property "stroke-width"
                    , (if hovered then
                         vc.theme.graph.linkColorStrong
+
+                      else if selected then
+                        vc.theme.graph.linkColorSelected
 
                       else
                         vc.theme.graph.linkColorFaded
@@ -189,12 +201,12 @@ drawLink { hovered, sx, sy, tx, ty, amount, label, onMouseOver, nodeType } vc gc
                 |> css
             ]
             []
-        , drawLabel vc gc lx ly hovered label
+        , drawLabel vc gc lx ly hovered selected label
         ]
 
 
-drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> String -> Svg Msg
-drawLabel vc gc x y hovered lbl =
+drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> Bool -> String -> Svg Msg
+drawLabel vc gc x y hovered selected lbl =
     let
         width =
             toFloat (String.length lbl) * linkLabelHeight / 1.5
@@ -211,12 +223,12 @@ drawLabel vc gc x y hovered lbl =
             , y - height * 0.85 |> String.fromFloat |> Svg.y
             , String.fromFloat width |> Svg.width
             , String.fromFloat height |> Svg.height
-            , Css.Graph.linkLabelBox vc hovered |> css
+            , Css.Graph.linkLabelBox vc hovered selected |> css
             , class "rectLabel"
             ]
             []
         , S.text_
-            [ Css.Graph.linkLabel vc hovered
+            [ Css.Graph.linkLabel vc hovered selected
                 |> css
             , textAnchor "middle"
             , String.fromFloat x |> Svg.x

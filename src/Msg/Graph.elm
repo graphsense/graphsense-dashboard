@@ -32,6 +32,7 @@ type Msg
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
     | UserHoversAddressLink (LinkId AddressId)
+    | UserClicksAddressLink (LinkId AddressId)
     | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool
@@ -61,6 +62,7 @@ type Msg
         Api.Data.Entity
     | BrowserGotEntityNeighborsTable E.Entity Bool Api.Data.NeighborEntities
     | BrowserGotAddressTxs A.Address Api.Data.AddressTxs
+    | BrowserGotAddresslinkTxs A.Addresslink Api.Data.Links
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
     | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
     | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs

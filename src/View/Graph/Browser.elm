@@ -16,6 +16,8 @@ import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Id as Id
+import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
@@ -29,12 +31,14 @@ import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Time
+import Tuple exposing (..)
 import Util.InfiniteScroll as InfiniteScroll
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -91,6 +95,14 @@ browser plugins states vc gc model =
 
                 Browser.TxAccount loadable ->
                     [ browseTxAccount plugins states vc gc model.now loadable ]
+
+                Browser.Addresslink source link table ->
+                    browseAddresslink plugins states vc source link
+                        :: (table
+                                |> Maybe.map (browseAddresslinkTable vc gc model.height source)
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
 
                 Browser.Label label table ->
                     table
@@ -904,3 +916,84 @@ rowsTxAccount vc gc now tx =
         , Nothing
         )
     ]
+
+
+browseAddresslink : Plugins -> PluginStates -> View.Config -> Address -> Link Address -> Html Msg
+browseAddresslink plugins states vc source link =
+    (rowsAddresslink vc source link |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
+rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg))
+rowsAddresslink vc source link =
+    let
+        currency =
+            Id.currency source.id
+
+        linkData =
+            case link.link of
+                Link.LinkData ld ->
+                    Just ( ld.value, ld.noTxs )
+
+                Link.PlaceholderLinkData ->
+                    Nothing
+    in
+    [ Row
+        ( "Source"
+        , source.id
+            |> Id.addressId
+            |> String
+        , Nothing
+        )
+    , Row
+        ( "Target"
+        , link.node.id
+            |> Id.addressId
+            |> String
+        , Nothing
+        )
+    , Row
+        ( "Transactions"
+        , linkData
+            |> Maybe.map
+                (second >> Locale.int vc.locale)
+            |> Maybe.withDefault ""
+            |> String
+        , Just
+            { title = Locale.string vc.locale "Transactions"
+            , link =
+                Route.addresslinkRoute
+                    { currency = currency
+                    , src = Id.addressId source.id
+                    , srcLayer = Id.layer source.id
+                    , dst = Id.addressId link.node.id
+                    , dstLayer = Id.layer link.node.id
+                    , table = Just Route.AddresslinkTxsTable
+                    }
+                    |> Route.graphRoute
+                    |> toUrl
+            , active = False
+            }
+        )
+    , Row
+        ( "Value"
+        , linkData
+            |> Maybe.map (first >> Value currency)
+            |> Maybe.withDefault (String "")
+        , Nothing
+        )
+    ]
+
+
+browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> Address -> AddresslinkTable -> Html Msg
+browseAddresslinkTable vc gc height source table =
+    let
+        coinCode =
+            Id.currency source.id
+    in
+    case table of
+        AddresslinkTxsUtxoTable t ->
+            table_ vc height (AddresslinkTxsUtxoTable.config vc coinCode) t
+
+        AddresslinkTxsAccountTable t ->
+            table_ vc height (TxsAccountTable.config vc coinCode) t
