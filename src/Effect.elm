@@ -2,6 +2,7 @@ module Effect exposing (n, perform)
 
 import Api
 import Api.Request.Addresses
+import Api.Request.Blocks
 import Api.Request.Entities
 import Api.Request.General
 import Api.Request.Tags
@@ -89,6 +90,10 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Entities.getEntity currency entity
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetBlockEffect { currency, height, toMsg } ->
+                    Api.Request.Blocks.getBlock currency height
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
                 Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
                     Api.Request.Addresses.getAddressEntity currency address
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
@@ -111,6 +116,10 @@ perform plugins key statusbarToken apiKey effect =
 
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
                     Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
+                Graph.GetBlockTxsEffect { currency, block, toMsg } ->
+                    Api.Request.Blocks.listBlockTxs currency block
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetTxEffect { currency, txHash, toMsg } ->

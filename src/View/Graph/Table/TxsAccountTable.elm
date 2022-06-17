@@ -1,4 +1,4 @@
-module View.Graph.Table.AddressTxsAccountTable exposing (..)
+module View.Graph.Table.TxsAccountTable exposing (..)
 
 import Api.Data
 import Config.View as View

@@ -5,6 +5,7 @@ import Browser.Dom
 import File
 import Json.Encode
 import Model.Address as A
+import Model.Block as B
 import Model.Entity as E
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
@@ -50,6 +51,7 @@ type Msg
     | BrowserGotNow Time.Posix
     | BrowserGotAddress Api.Data.Address
     | BrowserGotEntity Api.Data.Entity
+    | BrowserGotBlock Api.Data.Block
     | BrowserGotEntityForAddress String Api.Data.Entity
     | BrowserGotEntityForAddressNeighbor
         { anchor : AddressId
@@ -62,6 +64,7 @@ type Msg
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
     | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
     | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs
+    | BrowserGotBlockTxs B.Block (List Api.Data.Tx)
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags

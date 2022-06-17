@@ -1,11 +1,13 @@
 module Route.Graph exposing
     ( AddressTable(..)
+    , BlockTable(..)
     , Config
     , EntityTable(..)
     , Route(..)
     , Thing(..)
     , TxTable(..)
     , addressRoute
+    , blockRoute
     , entityRoute
     , parse
     , parser
@@ -40,7 +42,7 @@ type Route
 type Thing
     = Address String (Maybe AddressTable) (Maybe Int)
     | Entity Int (Maybe EntityTable) (Maybe Int)
-    | Block Int
+    | Block Int (Maybe BlockTable)
     | Tx String (Maybe TxTable)
 
 
@@ -92,6 +94,10 @@ type EntityTable
 type TxTable
     = TxInputsTable
     | TxOutputsTable
+
+
+type BlockTable
+    = BlockTxsTable
 
 
 addressTableToString : AddressTable -> String
@@ -193,6 +199,23 @@ stringToTxTable t =
             Nothing
 
 
+blockTableToString : BlockTable -> String
+blockTableToString t =
+    case t of
+        BlockTxsTable ->
+            "transactions"
+
+
+stringToBlockTable : String -> Maybe BlockTable
+stringToBlockTable t =
+    case t of
+        "transactions" ->
+            Just BlockTxsTable
+
+        _ ->
+            Nothing
+
+
 toUrl : Route -> String
 toUrl route =
     case route of
@@ -219,8 +242,14 @@ toUrl route =
             Maybe.map String.fromInt layer
                 |> B.custom Absolute [ curr, entitySegment, String.fromInt entity ] query
 
-        Currency curr (Block block) ->
-            absolute [ curr, blockSegment, String.fromInt block ] []
+        Currency curr (Block block table) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (blockTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            absolute [ curr, blockSegment, String.fromInt block ] query
 
         Currency curr (Tx tx table) ->
             let
@@ -256,6 +285,12 @@ addressRoute { currency, address, layer, table } =
 txRoute : { currency : String, txHash : String, table : Maybe TxTable } -> Route
 txRoute { currency, txHash, table } =
     Tx txHash table
+        |> Currency (String.toLower currency)
+
+
+blockRoute : { currency : String, block : Int, table : Maybe BlockTable } -> Route
+blockRoute { currency, block, table } =
+    Block block table
         |> Currency (String.toLower currency)
 
 
@@ -309,9 +344,8 @@ thing =
             |> P.slash P.string
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToTxTable))
             |> map Tx
-
-        {- , s blockSegment
-           </> P.int
-           |> map Block
-        -}
+        , s blockSegment
+            |> P.slash P.int
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToBlockTable))
+            |> map Block
         ]

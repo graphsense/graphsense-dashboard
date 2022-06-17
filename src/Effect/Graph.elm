@@ -32,6 +32,11 @@ type Effect
         , entity : Int
         , toMsg : Api.Data.Entity -> Msg
         }
+    | GetBlockEffect
+        { currency : String
+        , height : Int
+        , toMsg : Api.Data.Block -> Msg
+        }
     | GetEntityForAddressEffect
         { currency : String
         , address : String
@@ -83,6 +88,13 @@ type Effect
         , pagesize : Int
         , nextpage : Maybe String
         , toMsg : Api.Data.AddressTags -> Msg
+        }
+    | GetBlockTxsEffect
+        { currency : String
+        , block : Int
+        , pagesize : Int
+        , nextpage : Maybe String
+        , toMsg : List Api.Data.Tx -> Msg
         }
     | GetEntityAddressTagsEffect
         { currency : String
@@ -158,6 +170,10 @@ perform eff =
             Cmd.none
 
         -- managed in Effect.elm
+        GetBlockEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
         GetEntityForAddressEffect _ ->
             Cmd.none
 
@@ -175,6 +191,10 @@ perform eff =
 
         -- managed in Effect.elm
         GetAddressTagsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetBlockTxsEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

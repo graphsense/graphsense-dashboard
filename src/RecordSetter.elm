@@ -334,6 +334,11 @@ s_black value__ record__ =
     { record__ | black = value__ }
 
 
+s_block : a -> { b | block : a } -> { b | block : a }
+s_block value__ record__ =
+    { record__ | block = value__ }
+
+
 s_blockAxisOverflow : a -> { b | blockAxisOverflow : a } -> { b | blockAxisOverflow : a }
 s_blockAxisOverflow value__ record__ =
     { record__ | blockAxisOverflow = value__ }

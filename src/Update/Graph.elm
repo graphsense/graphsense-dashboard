@@ -823,6 +823,23 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotBlock data ->
+            { model
+                | browser = Browser.showBlock data model.browser
+            }
+                |> n
+
+        BrowserGotBlockTxs id data ->
+            { model
+                | browser =
+                    if String.toLower id.currency == "eth" then
+                        Browser.showBlockTxsAccount id data model.browser
+
+                    else
+                        Browser.showBlockTxsUtxo id data model.browser
+            }
+                |> n
+
         TableNewState state ->
             { model
                 | browser = Browser.tableNewState state model.browser
@@ -1516,7 +1533,7 @@ hideContextmenu model =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
-    case route of
+    case route |> Debug.log "route" of
         Route.Root ->
             deselect model
                 |> n
@@ -1626,8 +1643,27 @@ updateByRoute plugins route model =
             , effect ++ effects
             )
 
-        Route.Currency currency (Route.Block b) ->
-            n model
+        Route.Currency currency (Route.Block b table) ->
+            let
+                browser =
+                    Browser.loadingBlock { currency = currency, block = b } model.browser
+
+                ( browser2, effects ) =
+                    table
+                        |> Maybe.map (\tb -> Browser.showBlockTable tb browser)
+                        |> Maybe.withDefault (n browser)
+            in
+            ( { model
+                | browser = browser2
+              }
+            , [ GetBlockEffect
+                    { height = b
+                    , currency = currency
+                    , toMsg = BrowserGotBlock
+                    }
+              ]
+                ++ effects
+            )
 
         Route.Label l ->
             let

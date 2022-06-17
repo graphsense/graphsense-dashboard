@@ -34,12 +34,13 @@ import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
-import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
+import View.Graph.Table.TxsAccountTable as TxsAccountTable
+import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Locale as Locale
 import View.Search as Search
 
@@ -68,6 +69,14 @@ browser plugins states vc gc model =
                     browseEntity plugins states vc gc model.now loadable
                         :: (table
                                 |> Maybe.map (browseEntityTable vc gc model.height loadable)
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
+
+                Browser.Block loadable table ->
+                    browseBlock plugins states vc gc model.now loadable
+                        :: (table
+                                |> Maybe.map (browseBlockTable vc gc model.height loadable)
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -457,6 +466,12 @@ browseEntity plugins states vc gc now entity =
         |> propertyBox vc
 
 
+browseBlock : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
+browseBlock plugins states vc gc now block =
+    (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
 browseTxUtxo : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
 browseTxUtxo plugins states vc gc now tx =
     (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
@@ -594,6 +609,58 @@ rowsEntity vc gc now ent =
     ]
 
 
+rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg))
+rowsBlock vc gc now block =
+    let
+        mkTableLink title tableTag =
+            block
+                |> makeTableLink
+                    .currency
+                    .height
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.blockRoute
+                                { currency = currency
+                                , block = id
+                                , table = Just tableTag
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
+    [ Row ( "Height", block |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading, Nothing )
+    , Row
+        ( "Currency"
+        , block
+            |> ifLoaded (.currency >> String.toUpper >> String)
+            |> elseShowCurrency
+        , Nothing
+        )
+    , Row
+        ( "Transactions"
+        , block
+            |> ifLoaded (.noTxs >> Locale.int vc.locale >> String)
+            |> elseLoading
+        , mkTableLink "List block transactions" Route.BlockTxsTable
+        )
+    , Row
+        ( "Block hash"
+        , block
+            |> ifLoaded (.blockHash >> String)
+            |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Created"
+        , block |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , Nothing
+        )
+    ]
+
+
 browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Address -> AddressTable -> Html Msg
 browseAddressTable vc gc height address table =
     let
@@ -610,7 +677,7 @@ browseAddressTable vc gc height address table =
             table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
 
         AddressTxsAccountTable t ->
-            table_ vc height (AddressTxsAccountTable.config vc coinCode) t
+            table_ vc height (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
             table_ vc height (AddressTagsTable.config vc) t
@@ -650,7 +717,7 @@ browseEntityTable vc gc height entity table =
             table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
 
         EntityTxsAccountTable t ->
-            table_ vc height (AddressTxsAccountTable.config vc coinCode) t
+            table_ vc height (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
             table_ vc height (AddressTagsTable.config vc) t
@@ -660,6 +727,25 @@ browseEntityTable vc gc height entity table =
 
         EntityOutgoingNeighborsTable t ->
             table_ vc height (EntityNeighborsTable.config vc True coinCode entityId) t
+
+
+browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
+browseBlockTable vc gc height block table =
+    let
+        ( coinCode, blockId ) =
+            case block of
+                Loaded e ->
+                    ( e.currency, e.height |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
+    case table of
+        BlockTxsUtxoTable t ->
+            table_ vc height (TxsUtxoTable.config vc coinCode) t
+
+        BlockTxsAccountTable t ->
+            table_ vc height (TxsAccountTable.config vc coinCode) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
@@ -729,9 +815,7 @@ rowsTxUtxo vc gc now tx =
         ( "No. inputs"
         , tx
             |> ifLoaded
-                (.inputs
-                    >> Maybe.map List.length
-                    >> Maybe.withDefault 0
+                (.noInputs
                     >> Locale.int vc.locale
                     >> String
                 )
@@ -742,9 +826,7 @@ rowsTxUtxo vc gc now tx =
         ( "No. outputs"
         , tx
             |> ifLoaded
-                (.outputs
-                    >> Maybe.map List.length
-                    >> Maybe.withDefault 0
+                (.noOutputs
                     >> Locale.int vc.locale
                     >> String
                 )

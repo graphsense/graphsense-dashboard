@@ -27,6 +27,11 @@ type TxUtxoTable
     | TxUtxoOutputsTable (Table Api.Data.TxValue)
 
 
+type BlockTable
+    = BlockTxsUtxoTable (Table Api.Data.TxUtxo)
+    | BlockTxsAccountTable (Table Api.Data.TxAccount)
+
+
 type alias Table a =
     { data : List a
     , loading : Bool

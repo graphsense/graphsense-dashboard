@@ -30,4 +30,4 @@ docker run --rm \
 rm $temp $temp2
 
 sed -i 's/"txType"/"tx_type"/' "${dir}/../openapi/src/Api/Data.elm"
-sed -i 's/"tx_hash"/"txHash"/' "${dir}/../openapi/src/Api/Request/Txs.elm"
+sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"

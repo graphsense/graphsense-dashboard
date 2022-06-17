@@ -196,7 +196,7 @@ resultLineToHtml vc title asLink resultLine =
                     )
 
                 Block a ->
-                    ( Route.Currency currency (Route.Block a), FontAwesome.cube, String.fromInt a )
+                    ( Route.blockRoute { currency = currency, block = a, table = Nothing }, FontAwesome.cube, String.fromInt a )
 
                 Label a ->
                     ( Route.Label a, FontAwesome.tag, a )

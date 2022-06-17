@@ -5,6 +5,7 @@ import Config.Graph as Graph
 import Html.Styled exposing (Html)
 import Json.Encode exposing (Value)
 import Model.Address as A
+import Model.Block as B
 import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
@@ -28,6 +29,7 @@ type Type
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
     | TxAccount (Loadable String Api.Data.TxAccount)
     | Label String (Table Api.Data.AddressTag)
+    | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
     | Plugin String
 
 
@@ -88,6 +90,20 @@ loadableEntity l =
             }
 
 
+loadableBlock : Loadable Int Api.Data.Block -> B.Block
+loadableBlock l =
+    case l of
+        Loading curr id ->
+            { currency = curr
+            , block = id
+            }
+
+        Loaded a ->
+            { currency = a.currency
+            , block = a.height
+            }
+
+
 loadableAddressCurrency : Loadable id Address -> String
 loadableAddressCurrency l =
     case l of
@@ -108,8 +124,8 @@ loadableEntityCurrency l =
             a.entity.currency
 
 
-loadableTxCurrency : Loadable id { a | currency : String } -> String
-loadableTxCurrency l =
+loadableCurrency : Loadable id { a | currency : String } -> String
+loadableCurrency l =
     case l of
         Loading curr _ ->
             curr
@@ -146,3 +162,13 @@ loadableTxId l =
 
         Loaded a ->
             a.txHash
+
+
+loadableBlockId : Loadable Int { a | height : Int } -> Int
+loadableBlockId l =
+    case l of
+        Loading _ id ->
+            id
+
+        Loaded a ->
+            a.height

@@ -207,10 +207,11 @@ type alias AddressTxs =
 
 
 type alias Block =
-    { blockHash : Maybe String
-    , height : Maybe Int
-    , noTxs : Maybe Int
-    , timestamp : Maybe Int
+    { blockHash : String
+    , currency : String
+    , height : Int
+    , noTxs : Int
+    , timestamp : Int
     }
 
 
@@ -635,10 +636,11 @@ encodeBlockPairs : Block -> List EncodedField
 encodeBlockPairs model =
     let
         pairs =
-            [ maybeEncode "block_hash" Json.Encode.string model.blockHash
-            , maybeEncode "height" Json.Encode.int model.height
-            , maybeEncode "no_txs" Json.Encode.int model.noTxs
-            , maybeEncode "timestamp" Json.Encode.int model.timestamp
+            [ encode "block_hash" Json.Encode.string model.blockHash
+            , encode "currency" Json.Encode.string model.currency
+            , encode "height" Json.Encode.int model.height
+            , encode "no_txs" Json.Encode.int model.noTxs
+            , encode "timestamp" Json.Encode.int model.timestamp
             ]
     in
     pairs
@@ -1454,10 +1456,11 @@ addressTxsDecoder =
 blockDecoder : Json.Decode.Decoder Block
 blockDecoder =
     Json.Decode.succeed Block
-        |> maybeDecode "block_hash" Json.Decode.string Nothing
-        |> maybeDecode "height" Json.Decode.int Nothing
-        |> maybeDecode "no_txs" Json.Decode.int Nothing
-        |> maybeDecode "timestamp" Json.Decode.int Nothing
+        |> decode "block_hash" Json.Decode.string 
+        |> decode "currency" Json.Decode.string 
+        |> decode "height" Json.Decode.int 
+        |> decode "no_txs" Json.Decode.int 
+        |> decode "timestamp" Json.Decode.int 
 
 
 conceptDecoder : Json.Decode.Decoder Concept

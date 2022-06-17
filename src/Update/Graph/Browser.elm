@@ -9,6 +9,7 @@ import Init.Graph.Tag as Tag
 import Json.Encode
 import Log
 import Model.Address as A
+import Model.Block as B
 import Model.Entity as E
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
@@ -28,12 +29,13 @@ import Update.Search as Search
 import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
-import View.Graph.Table.AddressTxsAccountTable as AddressTxsAccountTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
+import View.Graph.Table.TxsAccountTable as TxsAccountTable
+import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -48,6 +50,14 @@ loadingEntity : { currency : String, entity : Int } -> Model -> Model
 loadingEntity id model =
     { model
         | type_ = Entity (Loading id.currency id.entity) Nothing
+        , visible = True
+    }
+
+
+loadingBlock : { currency : String, block : Int } -> Model -> Model
+loadingBlock id model =
+    { model
+        | type_ = Block (Loading id.currency id.block) Nothing
         , visible = True
     }
 
@@ -181,7 +191,7 @@ createAddressTable route t currency address =
 
         ( Route.AddressTxsTable, _ ) ->
             if String.toLower currency == "eth" then
-                ( AddressTxsAccountTable.init |> AddressTxsAccountTable |> Just
+                ( TxsAccountTable.init |> AddressTxsAccountTable |> Just
                 , [ getAddressTxsEffect Nothing
                         { currency = currency
                         , address = address
@@ -272,7 +282,7 @@ createEntityTable route t currency entity =
 
         ( Route.EntityTxsTable, _ ) ->
             if String.toLower currency == "eth" then
-                ( AddressTxsAccountTable.init |> EntityTxsAccountTable |> Just
+                ( TxsAccountTable.init |> EntityTxsAccountTable |> Just
                 , [ getEntityTxsEffect Nothing
                         { currency = currency
                         , entity = entity
@@ -326,6 +336,59 @@ createEntityTable route t currency entity =
                     }
               ]
             )
+
+
+showBlockTable : Route.BlockTable -> Model -> ( Model, List Effect )
+showBlockTable route model =
+    case model.type_ |> Log.log "showBlockTable" of
+        Block loadable t ->
+            let
+                ( currency, block ) =
+                    case loadable of
+                        Loading curr e ->
+                            ( curr, e )
+
+                        Loaded a ->
+                            ( a.currency, a.height )
+            in
+            createBlockTable route t currency block
+                |> Log.log "table"
+                |> mapFirst (Block loadable)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createBlockTable : Route.BlockTable -> Maybe BlockTable -> String -> Int -> ( Maybe BlockTable, List Effect )
+createBlockTable route t currency block =
+    case ( route, t ) of
+        ( Route.BlockTxsTable, Just (BlockTxsUtxoTable _) ) ->
+            n t
+
+        ( Route.BlockTxsTable, Just (BlockTxsAccountTable _) ) ->
+            n t
+
+        ( Route.BlockTxsTable, Nothing ) ->
+            if String.toLower currency == "eth" then
+                ( TxsAccountTable.init |> BlockTxsAccountTable |> Just
+                , [ getBlockTxsEffect Nothing
+                        { currency = currency
+                        , block = block
+                        }
+                  ]
+                )
+
+            else
+                ( TxsUtxoTable.init |> BlockTxsUtxoTable |> Just
+                , [ getBlockTxsEffect Nothing
+                        { currency = currency
+                        , block = block
+                        }
+                  ]
+                )
 
 
 showTxUtxoTable : Route.TxTable -> Model -> ( Model, List Effect )
@@ -472,7 +535,7 @@ showTx data model =
                                 if
                                     loadableTxId loadable
                                         == tx.txHash
-                                        && loadableTxCurrency loadable
+                                        && loadableCurrency loadable
                                         == tx.currency
                                 then
                                     table
@@ -486,6 +549,97 @@ showTx data model =
                 Api.Data.TxTxAccount tx ->
                     TxAccount (Loaded tx)
             )
+
+
+showBlock : Api.Data.Block -> Model -> Model
+showBlock block model =
+    show model
+        |> s_type_
+            (Block (Loaded block) <|
+                case model.type_ of
+                    Block loadable table ->
+                        if
+                            loadableBlockId loadable
+                                == block.height
+                                && loadableCurrency loadable
+                                == block.currency
+                        then
+                            table
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
+
+
+showBlockTxsUtxo : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
+showBlockTxsUtxo id data model =
+    let
+        blockTxs =
+            data
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.TxTxUtxo tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Block loadable table ->
+            if matchBlockId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        TxsUtxoTable.init
+                            |> appendData Nothing blockTxs
+                            |> BlockTxsUtxoTable
+                            |> Just
+                            |> Block loadable
+                }
+
+        _ ->
+            model
+
+
+showBlockTxsAccount : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
+showBlockTxsAccount id data model =
+    let
+        blockTxs =
+            data
+                |> List.filterMap
+                    (\tx ->
+                        case tx of
+                            Api.Data.TxTxAccount tx_ ->
+                                Just tx_
+
+                            _ ->
+                                Nothing
+                    )
+    in
+    case model.type_ of
+        Block loadable table ->
+            if matchBlockId id loadable |> not then
+                model
+
+            else
+                { model
+                    | type_ =
+                        TxsAccountTable.init
+                            |> appendData Nothing blockTxs
+                            |> BlockTxsAccountTable
+                            |> Just
+                            |> Block loadable
+                }
+
+        _ ->
+            model
 
 
 updateAddress : A.Address -> (Address.Address -> Address.Address) -> Model -> Model
@@ -577,7 +731,7 @@ showAddressTxsAccount id data model =
                                         |> Just
 
                                 _ ->
-                                    AddressTxsAccountTable.init
+                                    TxsAccountTable.init
                                         |> s_data addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsAccountTable
@@ -816,7 +970,7 @@ showEntityTxsAccount id data model =
                                         |> Just
 
                                 _ ->
-                                    AddressTxsAccountTable.init
+                                    TxsAccountTable.init
                                         |> s_data addressTxs
                                         |> s_nextpage data.nextPage
                                         |> EntityTxsAccountTable
@@ -884,6 +1038,16 @@ matchTxId { currency, txHash } loadable =
 
         Loaded a ->
             a.currency == currency && a.txHash == txHash
+
+
+matchBlockId : { currency : String, block : Int } -> Loadable Int Api.Data.Block -> Bool
+matchBlockId { currency, block } loadable =
+    case loadable of
+        Loading c id ->
+            c == currency && id == block
+
+        Loaded a ->
+            a.currency == currency && a.height == block
 
 
 tableNewState : Table.State -> Model -> Model
@@ -958,7 +1122,49 @@ tableNewState state model =
                             Nothing ->
                                 table
 
-                _ ->
+                TxUtxo loadable table ->
+                    TxUtxo loadable <|
+                        case table of
+                            Just (TxUtxoInputsTable t) ->
+                                { t | state = state }
+                                    |> TxUtxoInputsTable
+                                    |> Just
+
+                            Just (TxUtxoOutputsTable t) ->
+                                { t | state = state }
+                                    |> TxUtxoOutputsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                TxAccount _ ->
+                    model.type_
+
+                None ->
+                    model.type_
+
+                Label label t ->
+                    { t | state = state }
+                        |> Label label
+
+                Block loadable table ->
+                    Block loadable <|
+                        case table of
+                            Just (BlockTxsUtxoTable t) ->
+                                { t | state = state }
+                                    |> BlockTxsUtxoTable
+                                    |> Just
+
+                            Just (BlockTxsAccountTable t) ->
+                                { t | state = state }
+                                    |> BlockTxsAccountTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                Plugin _ ->
                     model.type_
     }
 
@@ -1137,6 +1343,39 @@ infiniteScroll msg model =
                             ( table, [] )
                     )
                         |> mapFirst (Entity loadable)
+
+                Block loadable table ->
+                    (case table of
+                        Just (BlockTxsUtxoTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> BlockTxsUtxoTable
+                                |> Just
+                            , loadableBlock loadable
+                                |> getBlockTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Just (BlockTxsAccountTable t) ->
+                            let
+                                ( is, cmd, needMore ) =
+                                    InfiniteScroll.update msg t.infiniteScroll
+                            in
+                            ( { t | infiniteScroll = is }
+                                |> BlockTxsAccountTable
+                                |> Just
+                            , loadableBlock loadable
+                                |> getBlockTxsEffect t.nextpage
+                                |> infiniteScrollEffects cmd needMore t
+                            )
+
+                        Nothing ->
+                            ( table, [] )
+                    )
+                        |> mapFirst (Block loadable)
 
                 TxUtxo _ _ ->
                     ( model.type_, [] )
@@ -1329,4 +1568,15 @@ listAddressTagsEffect nextpage label =
         , pagesize = Nothing
         , nextpage = nextpage
         , toMsg = BrowserGotLabelAddressTags label
+        }
+
+
+getBlockTxsEffect : Maybe String -> B.Block -> Effect
+getBlockTxsEffect nextpage { currency, block } =
+    GetBlockTxsEffect
+        { currency = currency
+        , block = block
+        , nextpage = nextpage
+        , pagesize = 100
+        , toMsg = BrowserGotBlockTxs { currency = currency, block = block }
         }
