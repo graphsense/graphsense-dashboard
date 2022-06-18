@@ -4,8 +4,11 @@ import Color
 import Config.View as View
 import Css
 import Css.Graph as Css
+import Css.View
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Html exposing (..)
+import Html.Styled.Events as Html exposing (..)
+import Json.Decode
 import Model.Graph.Legend exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Util.View exposing (toCssColor)
@@ -27,7 +30,7 @@ legend vc items =
         items
             |> List.map
                 (\item ->
-                    div
+                    a
                         [ Css.legendItem vc |> css
                         ]
                         [ span
@@ -39,8 +42,15 @@ legend vc items =
                                 |> css
                             ]
                             [ text "◼" ]
-                        , span
-                            [ Css.legendItemTitle vc |> css
+                        , a
+                            [ [ Css.legendItemTitle vc |> Css.batch
+                              , Css.View.link vc |> Css.batch
+                              ]
+                                |> css
+                            , href item.uri
+                            , target "_blank"
+                            , Json.Decode.succeed ( NoOp, True )
+                                |> stopPropagationOn "click"
                             ]
                             [ text item.title
                             ]
