@@ -11,6 +11,7 @@ module Route.Graph exposing
     , addresslinkRoute
     , blockRoute
     , entityRoute
+    , entitylinkRoute
     , parse
     , parser
     , pluginRoute
@@ -47,6 +48,7 @@ type Thing
     | Block Int (Maybe BlockTable)
     | Tx String (Maybe TxTable)
     | Addresslink String Int String Int (Maybe AddresslinkTable)
+    | Entitylink Int Int Int Int (Maybe AddresslinkTable)
 
 
 addressSegment : String
@@ -72,6 +74,11 @@ txSegment =
 addresslinkSegment : String
 addresslinkSegment =
     "addresslink"
+
+
+entitylinkSegment : String
+entitylinkSegment =
+    "entitylink"
 
 
 labelSegment : String
@@ -306,6 +313,23 @@ toUrl route =
                 ]
                 query
 
+        Currency curr (Entitylink src srcLayer dst dstLayer table) ->
+            let
+                query =
+                    table
+                        |> Maybe.map (addresslinkTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            absolute
+                [ curr
+                , entitylinkSegment
+                , String.fromInt src
+                , String.fromInt srcLayer
+                , String.fromInt dst
+                , String.fromInt dstLayer
+                ]
+                query
+
         Label l ->
             absolute [ labelSegment, l ] []
 
@@ -331,6 +355,12 @@ addressRoute { currency, address, layer, table } =
 addresslinkRoute : { currency : String, src : String, srcLayer : Int, dst : String, dstLayer : Int, table : Maybe AddresslinkTable } -> Route
 addresslinkRoute { currency, src, srcLayer, dst, dstLayer, table } =
     Addresslink src srcLayer dst dstLayer table
+        |> Currency (String.toLower currency)
+
+
+entitylinkRoute : { currency : String, src : Int, srcLayer : Int, dst : Int, dstLayer : Int, table : Maybe AddresslinkTable } -> Route
+entitylinkRoute { currency, src, srcLayer, dst, dstLayer, table } =
+    Entitylink src srcLayer dst dstLayer table
         |> Currency (String.toLower currency)
 
 
@@ -407,4 +437,11 @@ thing =
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddresslinkTable))
             |> map Addresslink
+        , s entitylinkSegment
+            |> P.slash P.int
+            |> P.slash P.int
+            |> P.slash P.int
+            |> P.slash P.int
+            |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddresslinkTable))
+            |> map Entitylink
         ]

@@ -139,6 +139,14 @@ type Effect
         , pagesize : Int
         , toMsg : Api.Data.Links -> Msg
         }
+    | GetEntitylinkTxsEffect
+        { currency : String
+        , source : Int
+        , target : Int
+        , nextpage : Maybe String
+        , pagesize : Int
+        , toMsg : Api.Data.Links -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
@@ -191,6 +199,10 @@ perform eff =
 
         -- managed in Effect.elm
         GetAddresslinkTxsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        GetEntitylinkTxsEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

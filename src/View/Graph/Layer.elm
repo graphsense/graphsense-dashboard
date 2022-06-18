@@ -57,8 +57,8 @@ entities plugins vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entityLinks : View.Config -> Graph.Config -> Layer -> Svg Msg
-entityLinks vc gc layer =
+entityLinks : View.Config -> Graph.Config -> String -> Layer -> Svg Msg
+entityLinks vc gc selected layer =
     let
         ( mn, mx ) =
             calcRange vc gc layer
@@ -70,7 +70,7 @@ entityLinks vc gc layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( "entityLinks" ++ Id.entityIdToString entity.id
-                , Svg.lazy5 Entity.links vc gc mn mx entity
+                , Svg.lazy6 Entity.links vc gc selected mn mx entity
                 )
                     :: svg
             )

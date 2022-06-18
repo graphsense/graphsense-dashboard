@@ -46,10 +46,10 @@ type alias Options =
     }
 
 
-entityLinkOptions : View.Config -> Graph.Config -> Entity -> Link Entity -> Options
-entityLinkOptions vc gc entity link =
+entityLinkOptions : View.Config -> Graph.Config -> String -> Entity -> Link Entity -> Options
+entityLinkOptions vc gc selected entity link =
     { hovered = False
-    , selected = False
+    , selected = selected == Id.entityLinkIdToString ( entity.id, link.node.id )
     , sx = Entity.getX entity + Entity.getWidth entity
     , sy =
         Entity.getY entity + Entity.getHeight entity / 2
@@ -61,7 +61,7 @@ entityLinkOptions vc gc entity link =
     , label =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
-    , onClick = NoOp
+    , onClick = Id.initLinkId entity.id link.node.id |> UserClicksEntityLink
     , nodeType = Model.Graph.Entity
     }
 
@@ -86,10 +86,10 @@ addressLinkOptions vc gc selected address link =
     }
 
 
-entityLink : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
-entityLink vc gc mn mx entity link =
+entityLink : View.Config -> Graph.Config -> String -> Float -> Float -> Entity -> Link Entity -> Svg Msg
+entityLink vc gc selected mn mx entity link =
     drawLink
-        (entityLinkOptions vc gc entity link)
+        (entityLinkOptions vc gc selected entity link)
         vc
         gc
         mn
@@ -99,7 +99,7 @@ entityLink vc gc mn mx entity link =
 entityLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
 entityLinkHovered vc gc mn mx entity link =
     drawLink
-        (entityLinkOptions vc gc entity link
+        (entityLinkOptions vc gc "" entity link
             |> s_hovered True
         )
         vc

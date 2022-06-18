@@ -31,6 +31,7 @@ type Msg
     | UserRightClickedEntity EntityId Coords
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
+    | UserClicksEntityLink (LinkId EntityId)
     | UserHoversAddressLink (LinkId AddressId)
     | UserClicksAddressLink (LinkId AddressId)
     | UserLeavesThing
@@ -66,6 +67,7 @@ type Msg
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
     | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
     | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs
+    | BrowserGotEntitylinkTxs E.Entitylink Api.Data.Links
     | BrowserGotBlockTxs B.Block (List Api.Data.Tx)
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags

@@ -25,7 +25,7 @@ import Model.Graph exposing (..)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
-import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
@@ -396,6 +396,20 @@ update plugins uc msg model =
                 | hovered = HoveredEntityLink id
             }
                 |> n
+
+        UserClicksEntityLink id ->
+            ( model
+            , Route.entitylinkRoute
+                { currency = first id |> Id.currency
+                , src = first id |> Id.entityId
+                , srcLayer = first id |> Id.layer
+                , dst = second id |> Id.entityId
+                , dstLayer = second id |> Id.layer
+                , table = Nothing
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         UserHoversAddressLink id ->
             { model
@@ -833,6 +847,17 @@ update plugins uc msg model =
 
                     else
                         Browser.showEntityTxsUtxo id data model.browser
+            }
+                |> n
+
+        BrowserGotEntitylinkTxs id data ->
+            { model
+                | browser =
+                    if String.toLower id.currency == "eth" then
+                        Browser.showEntitylinkTxsAccount id data model.browser
+
+                    else
+                        Browser.showEntitylinkTxsUtxo id data model.browser
             }
                 |> n
 
@@ -1723,6 +1748,46 @@ updateByRoute plugins route model =
                                     ( { model
                                         | browser = browser2
                                         , selected = SelectedAddresslink ( source.id, link.node.id )
+                                      }
+                                    , effects
+                                    )
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        Route.Currency currency (Route.Entitylink src srcLayer dst dstLayer table) ->
+            let
+                s =
+                    Id.initEntityId { id = src, layer = srcLayer, currency = currency }
+
+                t =
+                    Id.initEntityId { id = dst, layer = dstLayer, currency = currency }
+            in
+            Layer.getEntity s model.layers
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Entity.Links links ->
+                                Dict.get t links
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    let
+                                        browser =
+                                            Browser.showEntitylink
+                                                { source = source
+                                                , link = link
+                                                }
+                                                model.browser
+
+                                        ( browser2, effects ) =
+                                            table
+                                                |> Maybe.map (\tb -> Browser.showEntitylinkTable tb browser)
+                                                |> Maybe.withDefault (n browser)
+                                    in
+                                    ( { model
+                                        | browser = browser2
+                                        , selected = SelectedEntitylink ( source.id, link.node.id )
                                       }
                                     , effects
                                     )

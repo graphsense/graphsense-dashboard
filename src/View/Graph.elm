@@ -110,13 +110,14 @@ graphSvg plugins states vc gc model size =
         (let
             def =
                 { selectedAddresslink = Id.noAddressLinkId |> Id.addressLinkIdToString
+                , selectedEntitylink = Id.noEntityLinkId |> Id.entityLinkIdToString
                 , selectedAddress = Id.noAddressId |> Id.addressIdToString
                 , selectedEntity = Id.noEntityId |> Id.entityIdToString
                 }
 
             -- avoid Maybe EntityId/AddressId to make the selected
             -- value work with lazy
-            { selectedEntity, selectedAddress, selectedAddresslink } =
+            { selectedEntity, selectedAddress, selectedAddresslink, selectedEntitylink } =
                 case model.selected of
                     SelectedEntity id ->
                         { def
@@ -131,6 +132,11 @@ graphSvg plugins states vc gc model size =
                     SelectedAddresslink id ->
                         { def
                             | selectedAddresslink = Id.addressLinkIdToString id
+                        }
+
+                    SelectedEntitylink id ->
+                        { def
+                            | selectedEntitylink = Id.entityLinkIdToString id
                         }
 
                     SelectedNone ->
@@ -148,7 +154,7 @@ graphSvg plugins states vc gc model size =
                         ( Id.noEntityLinkId, Id.noAddressLinkId )
          in
          [ Svg.lazy2 arrowMarkers vc gc
-         , Svg.lazy3 entityLinks vc gc model.layers
+         , Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
          , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
          , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
          , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
@@ -193,8 +199,8 @@ entities plugins vc gc selected layers =
         |> Keyed.node "g" []
 
 
-entityLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
-entityLinks vc gc layers =
+entityLinks : Config -> Graph.Config -> String -> IntDict Layer -> Svg Msg
+entityLinks vc gc selected layers =
     let
         _ =
             Log.log "Graph.entityLinks" ""
@@ -203,7 +209,7 @@ entityLinks vc gc layers =
         |> IntDict.foldl
             (\layerId layer svg ->
                 ( "entityLinks" ++ String.fromInt layerId
-                , Svg.lazy3 ViewLayer.entityLinks vc gc layer
+                , Svg.lazy4 ViewLayer.entityLinks vc gc selected layer
                 )
                     :: svg
             )

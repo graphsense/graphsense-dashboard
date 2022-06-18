@@ -106,6 +106,10 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Addresses.listAddressLinks currency source target nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
+                Graph.GetEntitylinkTxsEffect { currency, source, target, pagesize, nextpage, toMsg } ->
+                    Api.Request.Entities.listEntityLinks currency source target nextpage (Just pagesize)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+
                 Graph.GetAddressTagsEffect { currency, address, pagesize, nextpage, toMsg } ->
                     Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)

@@ -32,6 +32,7 @@ type Type
     | Label String (Table Api.Data.AddressTag)
     | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
     | Addresslink Address (Link Address) (Maybe AddresslinkTable)
+    | Entitylink Entity (Link Entity) (Maybe AddresslinkTable)
     | Plugin String
 
 

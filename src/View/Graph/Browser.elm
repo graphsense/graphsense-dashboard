@@ -97,9 +97,25 @@ browser plugins states vc gc model =
                     [ browseTxAccount plugins states vc gc model.now loadable ]
 
                 Browser.Addresslink source link table ->
+                    let
+                        currency =
+                            Id.currency source.id
+                    in
                     browseAddresslink plugins states vc source link
                         :: (table
-                                |> Maybe.map (browseAddresslinkTable vc gc model.height source)
+                                |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
+
+                Browser.Entitylink source link table ->
+                    let
+                        currency =
+                            Id.currency source.id
+                    in
+                    browseEntitylink plugins states vc source link
+                        :: (table
+                                |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -985,12 +1001,77 @@ rowsAddresslink vc source link =
     ]
 
 
-browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> Address -> AddresslinkTable -> Html Msg
-browseAddresslinkTable vc gc height source table =
+browseEntitylink : Plugins -> PluginStates -> View.Config -> Entity -> Link Entity -> Html Msg
+browseEntitylink plugins states vc source link =
+    (rowsEntitylink vc source link |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
+rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg))
+rowsEntitylink vc source link =
     let
-        coinCode =
+        currency =
             Id.currency source.id
+
+        linkData =
+            case link.link of
+                Link.LinkData ld ->
+                    Just ( ld.value, ld.noTxs )
+
+                Link.PlaceholderLinkData ->
+                    Nothing
     in
+    [ Row
+        ( "Source"
+        , source.id
+            |> Id.entityId
+            |> String.fromInt
+            |> String
+        , Nothing
+        )
+    , Row
+        ( "Target"
+        , link.node.id
+            |> Id.entityId
+            |> String.fromInt
+            |> String
+        , Nothing
+        )
+    , Row
+        ( "Transactions"
+        , linkData
+            |> Maybe.map
+                (second >> Locale.int vc.locale)
+            |> Maybe.withDefault ""
+            |> String
+        , Just
+            { title = Locale.string vc.locale "Transactions"
+            , link =
+                Route.entitylinkRoute
+                    { currency = currency
+                    , src = Id.entityId source.id
+                    , srcLayer = Id.layer source.id
+                    , dst = Id.entityId link.node.id
+                    , dstLayer = Id.layer link.node.id
+                    , table = Just Route.AddresslinkTxsTable
+                    }
+                    |> Route.graphRoute
+                    |> toUrl
+            , active = False
+            }
+        )
+    , Row
+        ( "Value"
+        , linkData
+            |> Maybe.map (first >> Value currency)
+            |> Maybe.withDefault (String "")
+        , Nothing
+        )
+    ]
+
+
+browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddresslinkTable -> Html Msg
+browseAddresslinkTable vc gc height coinCode table =
     case table of
         AddresslinkTxsUtxoTable t ->
             table_ vc height (AddresslinkTxsUtxoTable.config vc coinCode) t

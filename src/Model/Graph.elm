@@ -56,6 +56,7 @@ type Selected
     = SelectedAddress AddressId
     | SelectedEntity EntityId
     | SelectedAddresslink (LinkId AddressId)
+    | SelectedEntitylink (LinkId EntityId)
     | SelectedNone
 
 

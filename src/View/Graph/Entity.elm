@@ -271,15 +271,15 @@ addressLinks vc gc selected mn mx ent =
         |> Keyed.node "g" []
 
 
-links : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
-links vc gc mn mx ent =
+links : Config -> Graph.Config -> String -> Float -> Float -> Entity -> Svg Msg
+links vc gc selected mn mx ent =
     case ent.links of
         Entity.Links lnks ->
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
                         ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
-                        , Svg.lazy6 Link.entityLink vc gc mn mx ent link
+                        , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
                         )
                             :: svg
                     )

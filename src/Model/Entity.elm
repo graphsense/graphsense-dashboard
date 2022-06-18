@@ -11,6 +11,13 @@ type alias Entity =
     }
 
 
+type alias Entitylink =
+    { currency : String
+    , source : Int
+    , target : Int
+    }
+
+
 fromId : EntityId -> Entity
 fromId id =
     { currency = Id.currency id
