@@ -10,8 +10,8 @@ type Msg
     = BrowserGotSearchResult Api.Data.SearchResult
     | UserInputsSearch String
     | UserHitsEnter
-    | UserLeavesSearch
     | UserClicksResult
     | UserClicksResultLine ResultLine
     | RuntimeBounced
     | PluginMsg String Json.Encode.Value
+    | NoOp

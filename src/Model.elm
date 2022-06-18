@@ -69,6 +69,7 @@ type Msg
     | UserInputsApiKeyForm String
     | UserHoversUserIcon String
     | UserLeftUserHovercard
+    | UserClickedLayout
     | BrowserGotElement (Result Dom.Error Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)

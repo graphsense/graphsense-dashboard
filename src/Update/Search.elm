@@ -16,6 +16,9 @@ import Route.Graph as Route
 update : Msg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
+        NoOp ->
+            n model
+
         BrowserGotSearchResult result ->
             if model.loading then
                 n
@@ -32,15 +35,6 @@ update msg model =
 
         UserClicksResultLine _ ->
             n <| clear model
-
-        UserLeavesSearch ->
-            ( clear model
-            , if model.loading then
-                [ CancelEffect ]
-
-              else
-                []
-            )
 
         UserInputsSearch input ->
             ( { model

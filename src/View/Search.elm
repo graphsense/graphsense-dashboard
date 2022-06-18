@@ -9,7 +9,7 @@ import FontAwesome
 import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (keyCode, onBlur, onClick, onInput, preventDefaultOn)
+import Html.Styled.Events exposing (..)
 import Init.Search as Search
 import Json.Decode
 import Model.Search exposing (..)
@@ -46,6 +46,8 @@ search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
 search plugins vc sc model =
     Html.Styled.form
         [ Css.form vc |> css
+        , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
+        , onSubmit UserHitsEnter
         ]
         [ div
             [ Css.frame vc |> css
@@ -73,7 +75,6 @@ search plugins vc sc model =
                             |> placeholder
                 , onInput UserInputsSearch
                 , onEnter UserHitsEnter
-                , onBlur UserLeavesSearch
                 , value model.input
                 ]
                 []
@@ -82,6 +83,7 @@ search plugins vc sc model =
         , if sc.showIcon then
             button
                 [ Css.View.primary vc |> css
+                , type_ "submit"
                 ]
                 [ FontAwesome.icon FontAwesome.search
                     |> Html.Styled.fromUnstyled
