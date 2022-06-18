@@ -82,6 +82,7 @@ simpleTheadHelp vc ( name, status, click ) =
 
                 Table.Sortable selected ->
                     [ n
+                    , Html.text " "
                     , if selected then
                         FontAwesome.sortUp
                             |> FontAwesome.icon
@@ -94,6 +95,7 @@ simpleTheadHelp vc ( name, status, click ) =
 
                 Table.Reversible Nothing ->
                     [ n
+                    , Html.text " "
                     , FontAwesome.sort
                         |> FontAwesome.icon
                     ]
@@ -101,6 +103,7 @@ simpleTheadHelp vc ( name, status, click ) =
 
                 Table.Reversible (Just isReversed) ->
                     [ n
+                    , Html.text " "
                     , if isReversed then
                         FontAwesome.sortUp
                             |> FontAwesome.icon
