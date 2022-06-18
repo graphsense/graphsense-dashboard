@@ -822,8 +822,8 @@ borderRadiusSm =
         (Tuple.second borderRadiusSmRaw)
 
 
-inputStyleRaw : List ( String, String )
-inputStyleRaw =
+inputStyleRaw : Maybe Float -> List ( String, String )
+inputStyleRaw len =
     [ ( "background-color", Color.toCssString colors.greyLight )
     , ( "color", Color.toCssString colors.black )
     , borderRadiusSmRaw
@@ -831,6 +831,9 @@ inputStyleRaw =
     , ( "padding", (scaled 1 |> String.fromFloat) ++ "rem" )
     , ( "marginBottom", (scaled 1 |> String.fromFloat) ++ "rem" )
     ]
+        ++ (Maybe.map (\l -> [ ( "width", String.fromFloat l ++ "ex" ) ]) len
+                |> Maybe.withDefault []
+           )
 
 
 inputStyle : Style

@@ -77,9 +77,14 @@ hovercard vc =
     vc.theme.hovercard.root
 
 
+inputRawWithLength : Config -> Float -> List ( String, String )
+inputRawWithLength vc px =
+    vc.theme.inputRaw (Just px)
+
+
 inputRaw : Config -> List ( String, String )
 inputRaw vc =
-    vc.theme.inputRaw
+    vc.theme.inputRaw Nothing
 
 
 input : Config -> List Style

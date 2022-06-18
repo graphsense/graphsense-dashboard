@@ -55,7 +55,7 @@ inputHovercard plugins vc model =
                     , minValue = Just 1
                     , maxLength = Just 1
                     }
-                    (Css.View.inputRaw vc
+                    (Css.View.inputRawWithLength vc 5
                         |> List.map (uncurry HA.style)
                     )
                     (Just model.depth)
@@ -70,7 +70,7 @@ inputHovercard plugins vc model =
                     , minValue = Just 1
                     , maxLength = Just 3
                     }
-                    (Css.View.inputRaw vc
+                    (Css.View.inputRawWithLength vc 6
                         |> List.map (uncurry HA.style)
                     )
                     (Just model.breadth)
@@ -85,10 +85,8 @@ inputHovercard plugins vc model =
                     , minValue = Just 1
                     , maxLength = Nothing
                     }
-                    (HA.style "width" "8ex"
-                        :: (Css.View.inputRaw vc
-                                |> List.map (uncurry HA.style)
-                           )
+                    (Css.View.inputRawWithLength vc 8
+                        |> List.map (uncurry HA.style)
                     )
                     (Just model.maxAddresses)
                     |> Html.fromUnstyled
