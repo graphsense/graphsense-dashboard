@@ -9,7 +9,7 @@ import FontAwesome
 import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (keyCode, onClick, onInput, preventDefaultOn)
+import Html.Styled.Events exposing (keyCode, onBlur, onClick, onInput, preventDefaultOn)
 import Init.Search as Search
 import Json.Decode
 import Model.Search exposing (..)
@@ -73,6 +73,7 @@ search plugins vc sc model =
                             |> placeholder
                 , onInput UserInputsSearch
                 , onEnter UserHitsEnter
+                , onBlur UserLeavesSearch
                 , value model.input
                 ]
                 []

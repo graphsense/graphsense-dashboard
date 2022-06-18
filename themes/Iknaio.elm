@@ -207,7 +207,9 @@ theme =
                         , scaled 1 |> rem |> paddingBottom
                         ]
                             ++ (if String.isEmpty input then
-                                    [ fontFamilies fontFam ]
+                                    [ fontFamilies fontFam
+                                    , scaled 3.5 |> rem |> fontSize
+                                    ]
 
                                 else
                                     []

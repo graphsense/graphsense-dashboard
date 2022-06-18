@@ -33,6 +33,15 @@ update msg model =
         UserClicksResultLine _ ->
             n <| clear model
 
+        UserLeavesSearch ->
+            ( clear model
+            , if model.loading then
+                [ CancelEffect ]
+
+              else
+                []
+            )
+
         UserInputsSearch input ->
             ( { model
                 | input = input
