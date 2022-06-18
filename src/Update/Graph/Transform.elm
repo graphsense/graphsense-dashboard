@@ -27,7 +27,7 @@ wheel { width, height } x y w model =
             y - height / 2
 
         factor =
-            0.01
+            0.005
 
         z =
             w
