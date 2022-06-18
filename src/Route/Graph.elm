@@ -12,6 +12,7 @@ module Route.Graph exposing
     , blockRoute
     , entityRoute
     , entitylinkRoute
+    , labelRoute
     , parse
     , parser
     , pluginRoute
@@ -374,6 +375,11 @@ blockRoute : { currency : String, block : Int, table : Maybe BlockTable } -> Rou
 blockRoute { currency, block, table } =
     Block block table
         |> Currency (String.toLower currency)
+
+
+labelRoute : String -> Route
+labelRoute =
+    Label
 
 
 entityRoute : { currency : String, entity : Int, layer : Maybe Int, table : Maybe EntityTable } -> Route

@@ -9,6 +9,7 @@ import Model.Search exposing (..)
 type Msg
     = BrowserGotSearchResult Api.Data.SearchResult
     | UserInputsSearch String
+    | UserHitsEnter
     | UserClicksResult
     | UserClicksResultLine ResultLine
     | RuntimeBounced

@@ -222,6 +222,16 @@ update plugins uc msg model =
                     )
                         |> updateByPluginOutMsg plugins ( pid, outMsg )
 
+                Search.UserHitsEnter ->
+                    ( { model
+                        | search = Search.clear model.search
+                      }
+                    , Search.getFirstResultUrl model.search
+                        |> Maybe.map
+                            (NavPushUrlEffect >> List.singleton)
+                        |> Maybe.withDefault []
+                    )
+
                 _ ->
                     let
                         ( search, searchEffects ) =
@@ -341,6 +351,14 @@ update plugins uc msg model =
                                 | graph = Graph.importTagPack uc yaml model.graph
                             }
                                 |> n
+
+                Graph.PortDeserializedGS data ->
+                    let
+                        deser =
+                            Graph.deserialize data
+                                |> Debug.log "dser"
+                    in
+                    n model
 
                 _ ->
                     let

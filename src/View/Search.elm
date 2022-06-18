@@ -9,8 +9,9 @@ import FontAwesome
 import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onClick, onInput)
+import Html.Styled.Events exposing (keyCode, onClick, onInput, preventDefaultOn)
 import Init.Search as Search
+import Json.Decode
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin exposing (Plugins)
@@ -20,7 +21,7 @@ import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
 import Route.Graph as Route exposing (Route)
 import Util.RemoteData exposing (webdata)
-import Util.View exposing (loadingSpinner)
+import Util.View exposing (loadingSpinner, truncate)
 import View.Locale as Locale
 
 
@@ -71,6 +72,7 @@ search plugins vc sc model =
                         Locale.string vc.locale "Label"
                             |> placeholder
                 , onInput UserInputsSearch
+                , onEnter UserHitsEnter
                 , value model.input
                 ]
                 []
@@ -192,14 +194,14 @@ resultLineToHtml vc title asLink resultLine =
                 Tx a ->
                     ( Route.txRoute { currency = currency, txHash = a, table = Nothing }
                     , FontAwesome.exchangeAlt
-                    , a
+                    , Util.View.truncate 50 a
                     )
 
                 Block a ->
                     ( Route.blockRoute { currency = currency, block = a, table = Nothing }, FontAwesome.cube, String.fromInt a )
 
                 Label a ->
-                    ( Route.Label a, FontAwesome.tag, a )
+                    ( Route.labelRoute a, FontAwesome.tag, a )
 
         el attr =
             if asLink then
@@ -254,3 +256,17 @@ blocksToResult input latestBlock =
                     Nothing
             )
         |> Maybe.withDefault []
+
+
+onEnter : msg -> Attribute msg
+onEnter onEnterAction =
+    preventDefaultOn "keypress" <|
+        Json.Decode.andThen
+            (\keyCode ->
+                if keyCode == 13 then
+                    Json.Decode.succeed ( onEnterAction, True )
+
+                else
+                    Json.Decode.fail (String.fromInt keyCode)
+            )
+            keyCode
