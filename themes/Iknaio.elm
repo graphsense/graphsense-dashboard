@@ -621,6 +621,8 @@ theme =
             (Table.default
                 |> s_root
                     [ px 10 |> paddingX
+                    , displayFlex
+                    , flexDirection column
                     ]
                 |> s_urlMaxLength 20
                 |> s_table
@@ -659,6 +661,12 @@ theme =
                     )
                 |> s_loadingSpinner
                     [ loadingSpinner
+                    ]
+                |> s_emptyHint
+                    [ displayFlex
+                    , flexGrow (int 1)
+                    , alignItems center
+                    , justifyContent center
                     ]
             )
         |> s_contextMenu

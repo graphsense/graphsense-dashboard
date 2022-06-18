@@ -16,6 +16,7 @@ type alias Table =
     , valuesCell : Bool -> List Style
     , loadingSpinner : List Style
     , urlMaxLength : Int
+    , emptyHint : List Style
     }
 
 
@@ -32,4 +33,5 @@ default =
     , valuesCell = \_ -> []
     , loadingSpinner = []
     , urlMaxLength = 40
+    , emptyHint = []
     }

@@ -54,3 +54,8 @@ numberCell vc =
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.table.loadingSpinner
+
+
+emptyHint : Config -> List Style
+emptyHint vc =
+    vc.theme.table.emptyHint

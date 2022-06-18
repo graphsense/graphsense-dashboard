@@ -1024,6 +1024,16 @@ s_dragging value__ record__ =
     { record__ | dragging = value__ }
 
 
+s_dst : a -> { b | dst : a } -> { b | dst : a }
+s_dst value__ record__ =
+    { record__ | dst = value__ }
+
+
+s_dstLayer : a -> { b | dstLayer : a } -> { b | dstLayer : a }
+s_dstLayer value__ record__ =
+    { record__ | dstLayer = value__ }
+
+
 s_duration : a -> { b | duration : a } -> { b | duration : a }
 s_duration value__ record__ =
     { record__ | duration = value__ }
@@ -1092,6 +1102,11 @@ s_ellipse value__ record__ =
 s_elm : a -> { b | elm : a } -> { b | elm : a }
 s_elm value__ record__ =
     { record__ | elm = value__ }
+
+
+s_emptyHint : a -> { b | emptyHint : a } -> { b | emptyHint : a }
+s_emptyHint value__ record__ =
+    { record__ | emptyHint = value__ }
 
 
 s_emptyItem : a -> { b | emptyItem : a } -> { b | emptyItem : a }
@@ -3734,6 +3749,26 @@ s_selected value__ record__ =
     { record__ | selected = value__ }
 
 
+s_selectedAddress : a -> { b | selectedAddress : a } -> { b | selectedAddress : a }
+s_selectedAddress value__ record__ =
+    { record__ | selectedAddress = value__ }
+
+
+s_selectedAddresslink : a -> { b | selectedAddresslink : a } -> { b | selectedAddresslink : a }
+s_selectedAddresslink value__ record__ =
+    { record__ | selectedAddresslink = value__ }
+
+
+s_selectedEntity : a -> { b | selectedEntity : a } -> { b | selectedEntity : a }
+s_selectedEntity value__ record__ =
+    { record__ | selectedEntity = value__ }
+
+
+s_selectedEntitylink : a -> { b | selectedEntitylink : a } -> { b | selectedEntitylink : a }
+s_selectedEntitylink value__ record__ =
+    { record__ | selectedEntitylink = value__ }
+
+
 s_sent : a -> { b | sent : a } -> { b | sent : a }
 s_sent value__ record__ =
     { record__ | sent = value__ }
@@ -3897,6 +3932,11 @@ s_spaces value__ record__ =
 s_src : a -> { b | src : a } -> { b | src : a }
 s_src value__ record__ =
     { record__ | src = value__ }
+
+
+s_srcLayer : a -> { b | srcLayer : a } -> { b | srcLayer : a }
+s_srcLayer value__ record__ =
+    { record__ | srcLayer = value__ }
 
 
 s_start : a -> { b | start : a } -> { b | start : a }

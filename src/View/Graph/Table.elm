@@ -38,6 +38,14 @@ table vc attributes height config tbl =
                     [ loadingSpinner vc Css.Table.loadingSpinner
                     ]
 
+                else if List.isEmpty tbl.data then
+                    [ div
+                        [ Css.Table.emptyHint vc |> css
+                        ]
+                        [ Locale.string vc.locale "This table is empty" |> text
+                        ]
+                    ]
+
                 else
                     []
                )
