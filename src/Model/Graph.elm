@@ -70,3 +70,16 @@ type Dragging
     = NoDragging
     | Dragging Transform.Model Coords Coords
     | DraggingNode EntityId Coords Coords
+
+
+type alias Deserialized =
+    { addresses : List DeserializedAddress
+    }
+
+
+type alias DeserializedAddress =
+    { id : AddressId
+    , x : Float
+    , y : Float
+    , userTag : Maybe Tag.UserTag
+    }

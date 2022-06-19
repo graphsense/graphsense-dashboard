@@ -23,6 +23,7 @@ import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
 import Plugin.Update.Graph
 import Ports
+import Process
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
@@ -191,6 +192,12 @@ update plugins uc msg model =
         UserClickedStatusbar ->
             { model
                 | statusbar = Statusbar.toggle model.statusbar
+            }
+                |> n
+
+        UserClickedLayout ->
+            { model
+                | search = Search.clear model.search
             }
                 |> n
 

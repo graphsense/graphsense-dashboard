@@ -13,7 +13,7 @@ import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
 import Util.View exposing (none, toCssColor)
 import View.Graph.Configuration as Configuration
-import View.Graph.Export as Export
+import View.Graph.ExportImport as Export
 import View.Graph.Legend as Legend
 import View.Locale as Locale
 

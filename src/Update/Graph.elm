@@ -5,6 +5,7 @@ import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
+import Decode.Graph.Graph050 as Graph050
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
@@ -15,6 +16,7 @@ import Init.Graph.Id as Id
 import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
 import IntDict exposing (IntDict)
+import Json.Decode
 import Json.Encode exposing (Value)
 import List.Extra
 import Log
@@ -442,28 +444,42 @@ update plugins uc msg model =
                 |> Maybe.map
                     (\entity ->
                         if entity.entity.noAddresses < maxExpandableAddresses then
-                            ( model
-                            , GetEntityAddressesEffect
-                                { currency = Id.currency id
-                                , entity = Id.entityId id
-                                , pagesize = maxExpandableAddresses
-                                , nextpage = Nothing
-                                , toMsg = BrowserGotEntityAddresses id
+                            if Dict.size entity.addresses == entity.entity.noAddresses then
+                                { model
+                                    | layers =
+                                        entity.addresses
+                                            |> Dict.foldl
+                                                (\i _ layers ->
+                                                    Layer.removeAddress i layers
+                                                )
+                                                model.layers
                                 }
-                            )
+                                    |> n
+
+                            else
+                                ( model
+                                , [ GetEntityAddressesEffect
+                                        { currency = Id.currency id
+                                        , entity = Id.entityId id
+                                        , pagesize = maxExpandableAddresses
+                                        , nextpage = Nothing
+                                        , toMsg = BrowserGotEntityAddresses id
+                                        }
+                                  ]
+                                )
 
                         else
                             ( model
-                            , Route.entityRoute
-                                { currency = Id.currency id
-                                , entity = Id.entityId id
-                                , table = Just Route.EntityAddressesTable
-                                , layer = Id.layer id |> Just
-                                }
-                                |> NavPushRouteEffect
+                            , [ Route.entityRoute
+                                    { currency = Id.currency id
+                                    , entity = Id.entityId id
+                                    , table = Just Route.EntityAddressesTable
+                                    , layer = Id.layer id |> Just
+                                    }
+                                    |> NavPushRouteEffect
+                              ]
                             )
                     )
-                |> Maybe.map (mapSecond List.singleton)
                 |> Maybe.withDefault (n model)
 
         UserClickedEntityExpandHandle id isOutgoing ->
@@ -1402,6 +1418,17 @@ update plugins uc msg model =
             -- handled upstream
             n model
 
+        UserClickedImportGS ->
+            ( model
+            , Ports.deserialize ()
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        PortDeserializedGS data ->
+            -- handled upstream
+            n model
+
         NoOp ->
             n model
 
@@ -1583,7 +1610,7 @@ hideContextmenu model =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
-    case route of
+    case route |> Debug.log "route" of
         Route.Root ->
             deselect model
                 |> n
@@ -2438,3 +2465,21 @@ decodeYamlTag =
         (Yaml.Decode.oneOf [ Yaml.Decode.field "source" Yaml.Decode.string, Yaml.Decode.succeed "" ])
         (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
         (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))
+
+
+deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
+deserialize =
+    Json.Decode.decodeValue
+        (Json.Decode.index 0 Json.Decode.string
+            |> Json.Decode.andThen deserializeByVersion
+        )
+
+
+deserializeByVersion : String -> Json.Decode.Decoder Deserialized
+deserializeByVersion version =
+    case version of
+        "0.5.0" ->
+            Graph050.decoder
+
+        _ ->
+            Json.Decode.fail ("unknown version " ++ version)

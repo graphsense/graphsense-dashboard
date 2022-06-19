@@ -68,19 +68,14 @@ loadingTxAccount : { currency : String, txHash : String } -> Model -> ( Model, L
 loadingTxAccount id model =
     let
         ( type_, eff ) =
-            case model.type_ of
-                TxAccount (Loaded tx) ->
-                    ( model.type_, [] )
-
-                _ ->
-                    ( TxAccount (Loading id.currency id.txHash)
-                    , [ GetTxEffect
-                            { txHash = id.txHash
-                            , currency = id.currency
-                            , toMsg = BrowserGotTx
-                            }
-                      ]
-                    )
+            ( TxAccount (Loading id.currency id.txHash)
+            , [ GetTxEffect
+                    { txHash = id.txHash
+                    , currency = id.currency
+                    , toMsg = BrowserGotTx
+                    }
+              ]
+            )
     in
     ( { model
         | type_ = type_
@@ -94,19 +89,14 @@ loadingTxUtxo : { currency : String, txHash : String } -> Model -> ( Model, List
 loadingTxUtxo id model =
     let
         ( type_, eff ) =
-            case model.type_ of
-                TxUtxo (Loaded tx) _ ->
-                    ( model.type_, [] )
-
-                _ ->
-                    ( TxUtxo (Loading id.currency id.txHash) Nothing
-                    , [ GetTxEffect
-                            { txHash = id.txHash
-                            , currency = id.currency
-                            , toMsg = BrowserGotTx
-                            }
-                      ]
-                    )
+            ( TxUtxo (Loading id.currency id.txHash) Nothing
+            , [ GetTxEffect
+                    { txHash = id.txHash
+                    , currency = id.currency
+                    , toMsg = BrowserGotTx
+                    }
+              ]
+            )
     in
     ( { model
         | type_ = type_

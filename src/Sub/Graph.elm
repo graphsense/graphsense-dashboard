@@ -4,6 +4,7 @@ import Browser.Events
 import Json.Decode
 import Model.Graph exposing (Dragging(..), Model)
 import Msg.Graph exposing (Msg(..))
+import Ports
 import Time
 
 
@@ -15,5 +16,6 @@ subscriptions model =
 
         _ ->
             Browser.Events.onMouseUp (Json.Decode.succeed UserReleasesMouseButton)
+    , Ports.deserialized PortDeserializedGS
     ]
         |> Sub.batch

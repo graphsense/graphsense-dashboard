@@ -2,6 +2,7 @@ module Msg.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom
+import Bytes exposing (Bytes)
 import File
 import Json.Encode
 import Model.Address as A
@@ -125,4 +126,6 @@ type Msg
     | UserClickedImportTagPack
     | BrowserGotTagPackFile File.File
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.YamlTag))
+    | UserClickedImportGS
+    | PortDeserializedGS Json.Encode.Value
     | NoOp

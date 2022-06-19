@@ -1,4 +1,4 @@
-module View.Graph.Export exposing (..)
+module View.Graph.ExportImport exposing (..)
 
 import Config.View as View
 import Css.ContextMenu
@@ -32,6 +32,7 @@ import_ vc =
         [ Dialog.part vc
             "Import"
             [ option vc "TagPack (.yaml)" UserClickedImportTagPack
+            , option vc "Graphsense File (.gs)" UserClickedImportGS
             ]
         ]
     ]

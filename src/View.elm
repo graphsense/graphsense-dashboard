@@ -12,6 +12,7 @@ import Html
 import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Plugin as Plugin exposing (Plugins)
@@ -50,6 +51,7 @@ body :
 body plugins vc model =
     div
         [ Css.View.body vc |> css
+        , onClick UserClickedLayout
         ]
         ([ Header.header
             plugins
