@@ -33,7 +33,7 @@ type Type
     | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
     | Addresslink Address (Link Address) (Maybe AddresslinkTable)
     | Entitylink Entity (Link Entity) (Maybe AddresslinkTable)
-      --| UserTags (Table Tag.UserTag)
+    | UserTags (Table Tag.UserTag)
     | Plugin String
 
 

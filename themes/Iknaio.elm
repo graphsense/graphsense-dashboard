@@ -897,6 +897,7 @@ numberCell =
 loadingSpinner : Style
 loadingSpinner =
     [ scaled spinnerHeight |> rem |> height
+    , scaled spinnerHeight |> rem |> width
     , scaled spinnerPadding |> rem |> padding
     ]
         |> batch

@@ -1074,7 +1074,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedUserTags ->
             { model
-                | browser = Debug.todo "Browser.showUserTags model.userAddressTags model.browser"
+                | browser = Browser.showUserTags (Dict.values model.userAddressTags) model.browser
             }
                 |> n
 
@@ -2218,14 +2218,18 @@ storeUserTag uc model tag =
             colors =
                 tag.category
                     |> Color.update uc model.config.colors
+
+            userAddressTags =
+                Dict.insert ( tag.currency, tag.address ) tag model.userAddressTags
         in
         { model
             | userAddressTags =
-                Dict.insert ( tag.currency, tag.address ) tag model.userAddressTags
+                userAddressTags
             , config =
                 model.config
                     |> s_colors colors
             , tag = Nothing
+            , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
         }
             |> updateLegend
             |> updateAddresses { currency = tag.currency, address = tag.address } (\a -> { a | userTag = Just tag })

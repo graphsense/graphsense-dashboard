@@ -45,6 +45,7 @@ import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
 import View.Search as Search
 
@@ -123,6 +124,11 @@ browser plugins states vc gc model =
                 Browser.Label label table ->
                     table
                         |> table_ vc model.height (LabelAddressTagsTable.config vc)
+                        |> List.singleton
+
+                Browser.UserTags table ->
+                    table
+                        |> table_ vc model.height (UserAddressTagsTable.config vc)
                         |> List.singleton
 
                 Browser.Plugin pid ->

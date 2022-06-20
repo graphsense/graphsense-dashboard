@@ -38,6 +38,7 @@ import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -131,6 +132,17 @@ showEntitylink : { source : Entity.Entity, link : Link Entity.Entity } -> Model 
 showEntitylink { source, link } model =
     { model
         | type_ = Entitylink source link Nothing
+        , visible = True
+    }
+
+
+showUserTags : List Tag.UserTag -> Model -> Model
+showUserTags tags model =
+    { model
+        | type_ =
+            UserAddressTagsTable.init
+                |> appendData Nothing tags
+                |> UserTags
         , visible = True
     }
 
@@ -759,6 +771,21 @@ updateAddress { currency, address } update model =
 
             else
                 model
+
+        _ ->
+            model
+
+
+updateUserTags : List Tag.UserTag -> Model -> Model
+updateUserTags tags model =
+    case model.type_ of
+        UserTags table ->
+            { model
+                | type_ =
+                    table
+                        |> s_data tags
+                        |> UserTags
+            }
 
         _ ->
             model
@@ -1470,6 +1497,10 @@ tableNewState state model =
                             Nothing ->
                                 table
 
+                UserTags t ->
+                    { t | state = state }
+                        |> UserTags
+
                 Plugin _ ->
                     model.type_
     }
@@ -1775,6 +1806,9 @@ infiniteScroll msg model =
                             ( table, [] )
                     )
                         |> mapFirst (Entitylink src link)
+
+                UserTags _ ->
+                    ( model.type_, [] )
 
                 Plugin _ ->
                     ( model.type_, [] )

@@ -6,6 +6,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model.Graph exposing (ActiveTool, History(..), Model)
+import Model.Graph.Browser as Browser
 import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
@@ -36,7 +37,13 @@ navbarLeft plugins states vc model =
               , title = "My tags"
               , msg = \_ -> UserClickedUserTags
               , color = Nothing
-              , status = Tool.Disabled
+              , status =
+                    case model.browser.type_ of
+                        Browser.UserTags _ ->
+                            Tool.Active
+
+                        _ ->
+                            Tool.Inactive
               }
             ]
             ++ Plugin.View.Graph.Navbar.left plugins states vc model
