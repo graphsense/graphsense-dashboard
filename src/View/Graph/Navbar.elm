@@ -5,7 +5,7 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model.Graph exposing (ActiveTool, Model)
+import Model.Graph exposing (ActiveTool, History(..), Model)
 import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
 import Plugin as Plugin exposing (Plugins)
@@ -105,15 +105,29 @@ navbarRight vc model =
               }
             , { title = "Undo last graph change"
               , icon = FontAwesome.icon FontAwesome.undo
-              , msg = ToBeDone
+              , msg = \_ -> UserClickedUndo
               , color = Nothing
-              , status = Tool.Disabled
+              , status =
+                    case model.history of
+                        History past _ ->
+                            if List.isEmpty past then
+                                Tool.Disabled
+
+                            else
+                                Tool.Inactive
               }
             , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
-              , msg = ToBeDone
+              , msg = \_ -> UserClickedRedo
               , color = Nothing
-              , status = Tool.Disabled
+              , status =
+                    case model.history of
+                        History _ future ->
+                            if List.isEmpty future then
+                                Tool.Disabled
+
+                            else
+                                Tool.Inactive
               }
             , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter

@@ -38,7 +38,12 @@ type alias Model =
     , entityConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , activeTool : ActiveTool
+    , history : History
     }
+
+
+type History
+    = History (List (IntDict Layer)) (List (IntDict Layer))
 
 
 type alias ActiveTool =

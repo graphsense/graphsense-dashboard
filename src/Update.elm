@@ -363,7 +363,6 @@ update plugins uc msg model =
                     let
                         deser =
                             Graph.deserialize data
-                                |> Debug.log "dser"
                     in
                     n model
 

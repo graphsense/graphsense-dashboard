@@ -58,6 +58,11 @@ import Yaml.Decode
 import Yaml.Encode
 
 
+maxHistory : Int
+maxHistory =
+    10
+
+
 addAddress :
     Plugins
     -> Update.Config
@@ -180,6 +185,13 @@ addEntity plugins uc { entity, incoming, outgoing } model =
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
+    model
+        |> pushHistory msg
+        |> updateByMsg plugins uc msg
+
+
+updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
+updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
         InfiniteScrollMsg m ->
             let
@@ -1429,6 +1441,34 @@ update plugins uc msg model =
             -- handled upstream
             n model
 
+        UserClickedUndo ->
+            case model.history of
+                History (recent :: rest) future ->
+                    { model
+                        | layers = recent
+                        , history =
+                            model.layers
+                                :: future
+                                |> History rest
+                    }
+                        |> n
+
+                _ ->
+                    n model
+
+        UserClickedRedo ->
+            case model.history of
+                History past (recent :: future) ->
+                    { model
+                        | layers = recent
+                        , history =
+                            History (model.layers :: past) future
+                    }
+                        |> n
+
+                _ ->
+                    n model
+
         NoOp ->
             n model
 
@@ -1610,7 +1650,7 @@ hideContextmenu model =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
-    case route |> Debug.log "route" of
+    case route |> Log.log "route" of
         Route.Root ->
             deselect model
                 |> n
@@ -2483,3 +2523,63 @@ deserializeByVersion version =
 
         _ ->
             Json.Decode.fail ("unknown version " ++ version)
+
+
+pushHistory : Msg -> Model -> Model
+pushHistory msg model =
+    if shallPushHistory msg model then
+        case model.history of
+            History past future ->
+                { model
+                    | history =
+                        History
+                            (model.layers
+                                :: (if List.length past >= maxHistory then
+                                        List.take (maxHistory - 1) past
+
+                                    else
+                                        past
+                                   )
+                            )
+                            []
+                }
+
+    else
+        model
+
+
+shallPushHistory : Msg -> Model -> Bool
+shallPushHistory msg model =
+    case msg of
+        UserClickedEntityExpandHandle _ _ ->
+            True
+
+        UserClickedAddressExpandHandle _ _ ->
+            True
+
+        UserClickedAddressesExpand _ ->
+            True
+
+        UserClickedRemoveAddress _ ->
+            True
+
+        UserClickedRemoveEntity _ ->
+            True
+
+        UserClickedAddressInEntityAddressesTable _ _ ->
+            True
+
+        UserClickedAddressInNeighborsTable _ _ _ ->
+            True
+
+        UserClickedEntityInNeighborsTable _ _ _ ->
+            True
+
+        UserSubmitsTagInput ->
+            True
+
+        UserSubmitsSearchInput ->
+            True
+
+        _ ->
+            False

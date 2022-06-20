@@ -33,4 +33,5 @@ init plugins now =
         , toolbox = Legend []
         }
     , search = Nothing
+    , history = History [] []
     }

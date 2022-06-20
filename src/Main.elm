@@ -51,11 +51,7 @@ main =
                     |> performEffect
         , update =
             \msg model ->
-                update
-                    plugins
-                    uc
-                    msg
-                    model
+                update plugins uc msg model
                     |> performEffect
         , view =
             \model ->

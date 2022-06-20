@@ -128,4 +128,6 @@ type Msg
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.YamlTag))
     | UserClickedImportGS
     | PortDeserializedGS Json.Encode.Value
+    | UserClickedUndo
+    | UserClickedRedo
     | NoOp
