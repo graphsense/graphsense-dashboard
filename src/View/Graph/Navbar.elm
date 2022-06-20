@@ -34,7 +34,7 @@ navbarLeft plugins states vc model =
         (List.map (Tool.tool vc)
             [ { icon = FontAwesome.icon FontAwesome.tag
               , title = "My tags"
-              , msg = ToBeDone
+              , msg = \_ -> UserClickedUserTags
               , color = Nothing
               , status = Tool.Disabled
               }

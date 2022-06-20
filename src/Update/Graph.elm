@@ -1072,6 +1072,12 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault model
                 |> n
 
+        UserClickedUserTags ->
+            { model
+                | browser = Debug.todo "Browser.showUserTags model.userAddressTags model.browser"
+            }
+                |> n
+
         UserClickedRemoveAddress id ->
             { model
                 | layers = Layer.removeAddress id model.layers
@@ -2202,40 +2208,27 @@ draggingToClick start current =
     Coords.betrag start current < 2
 
 
-storeUserTag : Update.Config -> Model -> Tag.YamlTag -> Model
+storeUserTag : Update.Config -> Model -> Tag.UserTag -> Model
 storeUserTag uc model tag =
     if String.isEmpty tag.label then
         model
 
     else
         let
-            tag_ =
-                { label = tag.label
-                , category = tag.category
-                , abuse = tag.abuse
-                , source = tag.source
-                }
-
-            currency =
-                tag.currency
-
-            address =
-                tag.address
-
             colors =
-                tag_.category
+                tag.category
                     |> Color.update uc model.config.colors
         in
         { model
             | userAddressTags =
-                Dict.insert ( currency, address ) tag_ model.userAddressTags
+                Dict.insert ( tag.currency, tag.address ) tag model.userAddressTags
             , config =
                 model.config
                     |> s_colors colors
             , tag = Nothing
         }
             |> updateLegend
-            |> updateAddresses { currency = currency, address = address } (\a -> { a | userTag = Just tag_ })
+            |> updateAddresses { currency = tag.currency, address = tag.address } (\a -> { a | userTag = Just tag })
 
 
 updateLegend : Model -> Model
@@ -2398,82 +2391,51 @@ makeLegend model =
 
 makeTagPack : Model -> Time.Posix -> String
 makeTagPack model time =
-    Layer.addresses model.layers
-        |> List.foldl
-            (\address dict ->
-                address.userTag
-                    |> Maybe.map
-                        (\userTag ->
-                            let
-                                addr =
-                                    { currency = address.address.currency
-                                    , address = address.address.address
-                                    }
-
-                                id =
-                                    tagId addr userTag
-
-                                tag =
-                                    { currency = addr.currency
-                                    , address = addr.address
-                                    , label = userTag.label
-                                    , source = userTag.source
-                                    , category = userTag.category
-                                    , abuse = userTag.abuse
-                                    }
-                            in
-                            Dict.insert id tag dict
-                        )
-                    |> Maybe.withDefault dict
-            )
-            Dict.empty
-        |> Dict.values
-        |> (\tags ->
-                Yaml.Encode.record
-                    [ ( "title", Yaml.Encode.string "TagPack exported from Iknaio Dashboard" )
-                    , ( "creator", Yaml.Encode.string "tbd" )
-                    , ( "tags"
-                      , tags
-                            |> Yaml.Encode.list
-                                (\{ currency, address, label, source, category, abuse } ->
-                                    Yaml.Encode.record
-                                        [ ( "currency", Yaml.Encode.string currency )
-                                        , ( "address", Yaml.Encode.string address )
-                                        , ( "label", Yaml.Encode.string label )
-                                        , ( "category"
-                                          , category
-                                                |> Maybe.map Yaml.Encode.string
-                                                |> Maybe.withDefault Yaml.Encode.null
-                                          )
-                                        , ( "abuse"
-                                          , abuse
-                                                |> Maybe.map Yaml.Encode.string
-                                                |> Maybe.withDefault Yaml.Encode.null
-                                          )
-                                        , ( "lastmod"
-                                          , DateFormat.format
-                                                [ DateFormat.yearNumber
-                                                , DateFormat.text "-"
-                                                , DateFormat.monthFixed
-                                                , DateFormat.text "-"
-                                                , DateFormat.dayOfMonthFixed
-                                                , DateFormat.text " "
-                                                , DateFormat.hourMilitaryFixed
-                                                , DateFormat.text ":"
-                                                , DateFormat.minuteFixed
-                                                , DateFormat.text ":"
-                                                , DateFormat.secondFixed
-                                                ]
-                                                Time.utc
-                                                time
-                                                |> Yaml.Encode.string
-                                          )
-                                        ]
-                                )
-                      )
-                    ]
-                    |> Yaml.Encode.toString 2
-           )
+    Yaml.Encode.record
+        [ ( "title", Yaml.Encode.string "TagPack exported from Iknaio Dashboard" )
+        , ( "creator", Yaml.Encode.string "tbd" )
+        , ( "tags"
+          , model.userAddressTags
+                |> Dict.values
+                |> Yaml.Encode.list
+                    (\{ currency, address, label, source, category, abuse } ->
+                        Yaml.Encode.record
+                            [ ( "currency", Yaml.Encode.string currency )
+                            , ( "address", Yaml.Encode.string address )
+                            , ( "label", Yaml.Encode.string label )
+                            , ( "category"
+                              , category
+                                    |> Maybe.map Yaml.Encode.string
+                                    |> Maybe.withDefault Yaml.Encode.null
+                              )
+                            , ( "abuse"
+                              , abuse
+                                    |> Maybe.map Yaml.Encode.string
+                                    |> Maybe.withDefault Yaml.Encode.null
+                              )
+                            , ( "lastmod"
+                              , DateFormat.format
+                                    [ DateFormat.yearNumber
+                                    , DateFormat.text "-"
+                                    , DateFormat.monthFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.dayOfMonthFixed
+                                    , DateFormat.text " "
+                                    , DateFormat.hourMilitaryFixed
+                                    , DateFormat.text ":"
+                                    , DateFormat.minuteFixed
+                                    , DateFormat.text ":"
+                                    , DateFormat.secondFixed
+                                    ]
+                                    Time.utc
+                                    time
+                                    |> Yaml.Encode.string
+                              )
+                            ]
+                    )
+          )
+        ]
+        |> Yaml.Encode.toString 2
 
 
 tagId : A.Address -> Tag.UserTag -> String
@@ -2486,7 +2448,7 @@ tagId { currency, address } { label, source } =
         |> String.join "|"
 
 
-importTagPack : Update.Config -> List Tag.YamlTag -> Model -> Model
+importTagPack : Update.Config -> List Tag.UserTag -> Model -> Model
 importTagPack uc tags model =
     tags
         |> List.foldl
@@ -2496,9 +2458,9 @@ importTagPack uc tags model =
             model
 
 
-decodeYamlTag : Yaml.Decode.Decoder Tag.YamlTag
+decodeYamlTag : Yaml.Decode.Decoder Tag.UserTag
 decodeYamlTag =
-    Yaml.Decode.map6 Tag.YamlTag
+    Yaml.Decode.map6 Tag.UserTag
         (Yaml.Decode.field "currency" Yaml.Decode.string)
         (Yaml.Decode.field "address" Yaml.Decode.string)
         (Yaml.Decode.field "label" Yaml.Decode.string)

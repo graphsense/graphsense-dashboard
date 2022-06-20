@@ -125,9 +125,10 @@ type Msg
     | UserClickedExportTagPack (Maybe Time.Posix)
     | UserClickedImportTagPack
     | BrowserGotTagPackFile File.File
-    | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.YamlTag))
+    | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.UserTag))
     | UserClickedImportGS
     | PortDeserializedGS Json.Encode.Value
     | UserClickedUndo
     | UserClickedRedo
+    | UserClickedUserTags
     | NoOp

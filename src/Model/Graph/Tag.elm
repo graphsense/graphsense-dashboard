@@ -13,14 +13,6 @@ type alias Model =
 
 
 type alias UserTag =
-    { label : String
-    , source : String
-    , category : Maybe String
-    , abuse : Maybe String
-    }
-
-
-type alias YamlTag =
     { currency : String
     , address : String
     , label : String
