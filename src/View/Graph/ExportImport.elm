@@ -17,7 +17,8 @@ export vc =
         ]
         [ Dialog.part vc
             "Export"
-            [ option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
+            [ option vc "GraphSense File (.gs)" (UserClickedExportGS Nothing)
+            , option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
             , option vc "TagPack (.yaml)" (UserClickedExportTagPack Nothing)
             ]
         ]

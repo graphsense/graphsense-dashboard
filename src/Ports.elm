@@ -13,3 +13,6 @@ port deserialize : () -> Cmd msg
 
 
 port deserialized : (( String, Value ) -> msg) -> Sub msg
+
+
+port serialize : ( String, Value ) -> Cmd msg

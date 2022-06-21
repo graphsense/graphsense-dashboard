@@ -23,7 +23,16 @@ module Update.Graph.Layer exposing
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph as Graph exposing (entityWidth, expandHandleWidth, layerMargin, padding, txMaxWidth)
+import Config.Graph as Graph
+    exposing
+        ( entityToAddressesPaddingLeft
+        , entityToAddressesPaddingTop
+        , entityWidth
+        , expandHandleWidth
+        , layerMargin
+        , padding
+        , txMaxWidth
+        )
 import Config.Update as Update
 import Dict exposing (Dict)
 import Init.Graph.Entity as Entity
@@ -45,6 +54,7 @@ import Model.Locale as Locale
 import Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
+import Tuple3
 import Update.Graph.Color as Color
 import Update.Graph.Entity as Entity
 
@@ -85,9 +95,9 @@ addEntity plugins uc colors entity layers =
         }
 
 
-addAddressAtEntity : Plugins -> Update.Config -> Dict String Color -> EntityId -> Api.Data.Address -> IntDict Layer -> Acc AddressId
-addAddressAtEntity plugins uc colors entityId address layers =
-    IntDict.get (Id.layer entityId) layers
+addAddressAtEntity : Plugins -> Update.Config -> EntityId -> Api.Data.Address -> Acc AddressId -> Acc AddressId
+addAddressAtEntity plugins uc entityId address acc =
+    IntDict.get (Id.layer entityId) acc.layers
         |> Maybe.map
             (\layer ->
                 let
@@ -97,24 +107,19 @@ addAddressAtEntity plugins uc colors entityId address layers =
                             layer.id
                             address
                             { entities = layer.entities
-                            , new = Set.empty
-                            , colors = colors
-                            , repositioned = Set.empty
+                            , new = acc.new
+                            , colors = acc.colors
+                            , repositioned = acc.repositioned
                             }
                 in
                 { layers =
-                    IntDict.insert layer.id { layer | entities = accEntity.entities } layers
+                    IntDict.insert layer.id { layer | entities = accEntity.entities } acc.layers
                 , new = accEntity.new
                 , colors = accEntity.colors
                 , repositioned = accEntity.repositioned
                 }
             )
-        |> Maybe.withDefault
-            { layers = layers
-            , new = Set.empty
-            , repositioned = Set.empty
-            , colors = colors
-            }
+        |> Maybe.withDefault acc
 
 
 {-| Add neighbors next to an entity. Also insert placeholder links
@@ -934,7 +939,16 @@ removeEntity id layers =
         |> Maybe.withDefault layers
 
 
-deserialize : Plugins -> Update.Config -> Deserializing -> { layers : IntDict Layer, colors : Dict String Color }
+deserialize :
+    Plugins
+    -> Update.Config
+    -> Deserializing
+    ->
+        { layers : IntDict Layer
+        , newEntityIds : Set EntityId
+        , newAddressIds : Set AddressId
+        , colors : Dict String Color
+        }
 deserialize plugins uc { deserialized, addresses, entities } =
     let
         entitiesDict : Dict ( String, Int ) Api.Data.Entity
@@ -955,12 +969,12 @@ deserialize plugins uc { deserialized, addresses, entities } =
                     )
                     Dict.empty
 
-        addressNodesByLayer : List (List DeserializedAddress)
+        addressNodesByLayer : List ( Int, List DeserializedAddress )
         addressNodesByLayer =
             deserialized.addresses
                 |> List.Extra.gatherEqualsBy (.id >> Id.layer)
                 |> List.sortBy (first >> .id >> Id.layer)
-                |> List.map (\( fst, more ) -> fst :: more)
+                |> List.map (\( fst, more ) -> ( Id.layer fst.id, fst :: more ))
                 |> Debug.log "addressNodesByLayer"
 
         entityByAddress : Dict ( String, String ) Int
@@ -976,8 +990,8 @@ deserialize plugins uc { deserialized, addresses, entities } =
         addressNodesByLayerWithEntity : List ( Int, List ( DeserializedAddress, Int ) )
         addressNodesByLayerWithEntity =
             addressNodesByLayer
-                |> List.indexedMap
-                    (\i addrs ->
+                |> List.map
+                    (\( i, addrs ) ->
                         addrs
                             |> List.filterMap
                                 (\address ->
@@ -987,55 +1001,80 @@ deserialize plugins uc { deserialized, addresses, entities } =
                             |> pair i
                     )
 
-        entitiesWithPositionByLayer : List ( Int, List ( Api.Data.Entity, Position ) )
+        entitiesWithPositionByLayer : IntDict (List ( Api.Data.Entity, Position ))
         entitiesWithPositionByLayer =
             addressNodesByLayerWithEntity
-                |> List.map
-                    (mapSecond
-                        (List.Extra.gatherEqualsBy second
-                            >> List.map (\( fst, more ) -> ( second fst, first fst :: List.map first more ))
-                            >> List.filterMap
-                                (\( e, addrs ) ->
-                                    List.Extra.find (.entity >> (==) e) entities
-                                        |> Maybe.andThen
-                                            (\entity ->
-                                                addressesToPosition addrs
-                                                    |> Maybe.map (pair entity)
-                                            )
-                                )
-                            >> (++)
-                                (deserialized.entities
+                |> List.foldl
+                    (\( layerId, addressesWithEntity ) ->
+                        let
+                            ents =
+                                addressesWithEntity
+                                    |> List.Extra.gatherEqualsBy second
+                                    |> List.map (\( fst, more ) -> ( second fst, first fst :: List.map first more ))
                                     |> List.filterMap
-                                        (\e ->
-                                            List.Extra.find
-                                                (\entity ->
-                                                    entity.entity
-                                                        == Id.entityId e.id
-                                                        && entity.currency
-                                                        == Id.currency e.id
-                                                )
-                                                entities
-                                                |> Maybe.map
-                                                    (\entity -> ( entity, Position e.x e.y ))
+                                        (\( e, addrs ) ->
+                                            List.Extra.find (.entity >> (==) e) entities
+                                                |> Maybe.andThen
+                                                    (\entity ->
+                                                        addressesToPosition addrs
+                                                            |> Maybe.map (pair entity)
+                                                    )
                                         )
-                                )
+                        in
+                        IntDict.update layerId (Maybe.map ((++) ents) >> Maybe.withDefault ents >> Just)
+                    )
+                    entitiesWithoutAddressesByLayer
+
+        entitiesWithoutAddressesByLayer : IntDict (List ( Api.Data.Entity, Position ))
+        entitiesWithoutAddressesByLayer =
+            deserialized.entities
+                |> List.filterMap
+                    (\e ->
+                        List.Extra.find
+                            (\entity ->
+                                entity.entity
+                                    == Id.entityId e.id
+                                    && entity.currency
+                                    == Id.currency e.id
+                            )
+                            entities
+                            |> Maybe.map
+                                (\entity -> ( Id.layer e.id, entity, Position e.x e.y ))
+                    )
+                |> List.Extra.gatherEqualsBy Tuple3.first
+                |> List.map
+                    (\( fst, more ) ->
+                        ( Tuple3.first fst
+                        , (fst :: more)
+                            |> List.map (\tuple -> ( Tuple3.second tuple, Tuple3.third tuple ))
                         )
                     )
+                |> List.foldl
+                    (\( layerId, ents ) ->
+                        IntDict.insert layerId ents
+                    )
+                    IntDict.empty
 
         _ =
             entitiesWithPositionByLayer
+                |> IntDict.toList
                 |> List.map (\( i, list ) -> ( i, List.map (\( e, p ) -> ( e.entity, p )) list ))
                 |> Debug.log "entitiesWithPositionByLayer"
 
         addressesToPosition : List DeserializedAddress -> Maybe Position
         addressesToPosition addrs =
             List.Extra.minimumBy .y addrs
-                |> Maybe.map (\{ x, y } -> Position x y)
+                |> Maybe.map
+                    (\{ x, y } ->
+                        Position
+                            (x - entityToAddressesPaddingLeft)
+                            (y - entityToAddressesPaddingTop)
+                    )
 
         entitiesAdded =
             entitiesWithPositionByLayer
-                |> List.foldl
-                    (\( i, entitiesWithPosition ) acc ->
+                |> IntDict.foldl
+                    (\i entitiesWithPosition acc ->
                         entitiesWithPosition
                             |> List.foldl
                                 (\( entity, position ) ->
@@ -1074,10 +1113,9 @@ deserialize plugins uc { deserialized, addresses, entities } =
                             addAddressAtEntity
                                 plugins
                                 uc
-                                acc_.colors
                                 entityId
                                 address
-                                acc_.layers
+                                acc_
                         )
                         acc
             )
@@ -1086,4 +1124,10 @@ deserialize plugins uc { deserialized, addresses, entities } =
             , new = Set.empty
             , repositioned = Set.empty
             }
-        |> (\{ layers, colors } -> { layers = layers, colors = colors })
+        |> (\{ layers, colors, new } ->
+                { layers = layers
+                , newEntityIds = entitiesAdded.new
+                , newAddressIds = new
+                , colors = colors
+                }
+           )

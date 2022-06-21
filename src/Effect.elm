@@ -203,6 +203,17 @@ perform plugins key statusbarToken apiKey effect =
                             )
                         |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
 
+                Graph.BulkGetAddressEntityEffect e ->
+                    listWithMaybes Api.Data.entityDecoder
+                        |> Api.Request.MyBulk.bulkJson
+                            e.currency
+                            Api.Request.MyBulk.OperationGetAddressEntity
+                            (Json.Encode.object
+                                [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                                ]
+                            )
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
+
                 Graph.BulkGetEntityNeighborsEffect e ->
                     listWithMaybes
                         (Json.Decode.field "_request_entity" Json.Decode.int

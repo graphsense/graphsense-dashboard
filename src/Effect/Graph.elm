@@ -162,6 +162,11 @@ type Effect
         , entities : List Int
         , toMsg : List Api.Data.Entity -> Msg
         }
+    | BulkGetAddressEntityEffect
+        { currency : String
+        , addresses : List String
+        , toMsg : List Api.Data.Entity -> Msg
+        }
     | BulkGetEntityNeighborsEffect
         { currency : String
         , isOutgoing : Bool
@@ -272,6 +277,10 @@ perform eff =
 
         -- managed in Effect.elm
         BulkGetEntityEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        BulkGetAddressEntityEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

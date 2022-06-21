@@ -1,7 +1,16 @@
 module Init.Graph.Address exposing (init)
 
 import Api.Data
-import Config.Graph exposing (addressHeight, addressWidth, expandHandleWidth, labelHeight, padding)
+import Config.Graph
+    exposing
+        ( addressHeight
+        , addressWidth
+        , entityToAddressesPaddingLeft
+        , entityToAddressesPaddingTop
+        , expandHandleWidth
+        , labelHeight
+        , padding
+        )
 import Config.Update exposing (Config)
 import Dict
 import Init.Graph.Id as Id exposing (..)
@@ -26,14 +35,11 @@ init plugins entity address =
     , x =
         entity.x
             + entity.dx
-            + expandHandleWidth
-            + padding
+            + entityToAddressesPaddingLeft
     , y =
         entity.y
             + entity.dy
-            + 2
-            * padding
-            + labelHeight
+            + entityToAddressesPaddingTop
             + (toFloat (Dict.size entity.addresses) * addressHeight)
     , dx = 0
     , dy = 0

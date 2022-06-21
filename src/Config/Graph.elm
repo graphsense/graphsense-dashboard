@@ -82,6 +82,19 @@ entityMinHeight =
         + padding
 
 
+entityToAddressesPaddingTop : Float
+entityToAddressesPaddingTop =
+    2
+        * padding
+        + labelHeight
+
+
+entityToAddressesPaddingLeft : Float
+entityToAddressesPaddingLeft =
+    expandHandleWidth
+        + padding
+
+
 type AddressLabelType
     = ID
     | Balance

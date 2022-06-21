@@ -127,6 +127,7 @@ type Msg
     | UserClickedImportTagPack
     | BrowserGotTagPackFile File.File
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.UserTag))
+    | UserClickedExportGS (Maybe Time.Posix)
     | UserClickedImportGS
     | PortDeserializedGS ( String, Json.Encode.Value )
     | UserClickedUndo
@@ -135,5 +136,6 @@ type Msg
     | BrowserGotBulkAddresses String Deserializing (List Api.Data.Address)
     | BrowserGotBulkAddressTags String (List Api.Data.AddressTag)
     | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
+    | BrowserGotBulkAddressEntities String Deserializing (List Api.Data.Entity)
     | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
     | NoOp

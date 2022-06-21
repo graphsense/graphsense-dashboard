@@ -5,10 +5,12 @@ import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
-import Decode.Graph.Graph050 as Graph050
+import Decode.Graph050 as Graph050
+import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Graph exposing (Effect(..), getEntityEgonet)
+import Encode.Graph as Encode
 import File
 import File.Select
 import Init.Graph.ContextMenu as ContextMenu
@@ -723,15 +725,7 @@ updateByMsg plugins uc msg model =
             let
                 added =
                     List.foldl
-                        (\address acc ->
-                            Layer.addAddressAtEntity
-                                plugins
-                                uc
-                                acc.colors
-                                entityId
-                                address
-                                acc.layers
-                        )
+                        (Layer.addAddressAtEntity plugins uc entityId)
                         { layers = model.layers
                         , new = Set.empty
                         , repositioned = Set.empty
@@ -1096,10 +1090,13 @@ updateByMsg plugins uc msg model =
                     Layer.addAddressAtEntity
                         plugins
                         uc
-                        model.config.colors
                         entityId
                         address
-                        model.layers
+                        { colors = model.config.colors
+                        , layers = model.layers
+                        , new = Set.empty
+                        , repositioned = Set.empty
+                        }
             in
             ( { model
                 | layers =
@@ -1140,7 +1137,15 @@ updateByMsg plugins uc msg model =
                         }
 
                 added =
-                    Layer.addAddressAtEntity plugins uc model.config.colors entityId neighbor.address model.layers
+                    Layer.addAddressAtEntity plugins
+                        uc
+                        entityId
+                        neighbor.address
+                        { layers = model.layers
+                        , colors = model.config.colors
+                        , new = Set.empty
+                        , repositioned = Set.empty
+                        }
             in
             if Set.isEmpty added.new then
                 ( model
@@ -1443,6 +1448,10 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedExportGS _ ->
+            -- handled upstream
+            n model
+
         PortDeserializedGS data ->
             -- handled upstream
             n model
@@ -1450,36 +1459,83 @@ updateByMsg plugins uc msg model =
         BrowserGotBulkAddresses currency deserializing addresses ->
             let
                 entities =
-                    (List.map (.id >> Id.entityId) deserializing.deserialized.entities
+                    ((deserializing.deserialized.entities
+                        |> List.filterMap
+                            (\e ->
+                                case e.rootAddress of
+                                    Nothing ->
+                                        e.id |> Id.entityId |> Just
+
+                                    Just _ ->
+                                        Nothing
+                            )
+                     )
                         ++ List.map .entity addresses
                     )
                         |> List.foldl Set.insert Set.empty
                         |> Set.toList
+
+                toMsg theMsg =
+                    deserializing
+                        |> s_addresses addresses
+                        |> theMsg currency
             in
             ( model
-            , [ BulkGetEntityEffect
-                    { currency = currency
-                    , entities = entities
-                    , toMsg =
-                        deserializing
-                            |> s_addresses addresses
-                            |> BrowserGotBulkEntities currency
-                    }
+            , [ if List.isEmpty entities then
+                    Task.succeed []
+                        |> Task.perform (toMsg BrowserGotBulkEntities)
+                        |> CmdEffect
+
+                else
+                    BulkGetEntityEffect
+                        { currency = currency
+                        , entities = entities
+                        , toMsg = toMsg BrowserGotBulkEntities
+                        }
               ]
             )
 
         BrowserGotBulkEntities currency deserializing entities ->
-            ( let
-                acc =
+            let
+                rootAddresses =
+                    deserializing.deserialized.entities
+                        |> List.filterMap .rootAddress
+
+                toMsg theMsg =
                     deserializing
                         |> s_entities entities
+                        |> theMsg currency
+            in
+            ( model
+            , [ if List.isEmpty rootAddresses then
+                    Task.succeed []
+                        |> Task.perform (toMsg BrowserGotBulkAddressEntities)
+                        |> CmdEffect
+
+                else
+                    BulkGetAddressEntityEffect
+                        { currency = currency
+                        , addresses = rootAddresses
+                        , toMsg = toMsg BrowserGotBulkAddressEntities
+                        }
+              ]
+            )
+
+        BrowserGotBulkAddressEntities currency deserializing entities ->
+            let
+                deser =
+                    deserializing
+                        |> s_entities (entities ++ deserializing.entities)
+
+                acc =
+                    deser
                         |> Layer.deserialize plugins uc
 
                 tags =
                     deserializing.deserialized.addresses
                         |> List.filterMap .userTag
-              in
-              tags
+            in
+            ( tags
                 |> Debug.log "Usertags"
                 |> List.foldl (storeUserTag uc)
                     { model
@@ -1491,23 +1547,34 @@ updateByMsg plugins uc msg model =
             , [ BulkGetEntityNeighborsEffect
                     { currency = currency
                     , isOutgoing = True
-                    , entities = List.map .entity entities
+                    , entities = List.map .entity deser.entities
                     , toMsg = BrowserGotBulkEntityNeighbors currency True
                     }
               , BulkGetEntityNeighborsEffect
                     { currency = currency
                     , isOutgoing = False
-                    , entities = List.map .entity entities
+                    , entities = List.map .entity deser.entities
                     , toMsg = BrowserGotBulkEntityNeighbors currency False
                     }
-              , BulkGetAddressTagsEffect
-                    { currency = currency
-                    , addresses =
-                        deserializing.addresses
-                            |> List.map .address
-                    , toMsg = BrowserGotBulkAddressTags currency
-                    }
+              , InternalGraphAddedAddressesEffect <| Debug.log "newAddressIds" acc.newAddressIds
+              , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
+                ++ (deserializing.addresses
+                        |> List.map
+                            (\address ->
+                                GetAddressTagsEffect
+                                    { currency = address.currency
+                                    , address = address.address
+                                    , pagesize = 10
+                                    , nextpage = Nothing
+                                    , toMsg =
+                                        BrowserGotAddressTags
+                                            { currency = address.currency
+                                            , address = address.address
+                                            }
+                                    }
+                            )
+                   )
             )
 
         BrowserGotBulkEntityNeighbors currency isOutgoing entityNeighbors ->
@@ -1521,9 +1588,9 @@ updateByMsg plugins uc msg model =
                                 (\anchor model__ ->
                                     let
                                         neighborsWithEntity =
-                                            entityNeighbors
+                                            neighbors
                                                 |> List.filterMap
-                                                    (\( _, neighbor ) ->
+                                                    (\neighbor ->
                                                         let
                                                             entityId =
                                                                 Id.initEntityId
@@ -2033,14 +2100,14 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
                                 (\neighbor added_ ->
                                     let
                                         added__ =
-                                            Layer.addAddressAtEntity plugins uc model.config.colors new neighbor.address added_.layers
+                                            Layer.addAddressAtEntity plugins uc new neighbor.address added_
                                     in
                                     { layers =
                                         added__.layers
                                             |> addUserTag added__.new model.userAddressTags
-                                    , new = Set.union added__.new added_.new
-                                    , repositioned = Set.union added_.repositioned added__.repositioned
-                                    , colors = Dict.union added__.colors added_.colors
+                                    , new = added__.new
+                                    , repositioned = added__.repositioned
+                                    , colors = added__.colors
                                     }
                                 )
                                 { layers = acc.layers
@@ -2600,12 +2667,14 @@ deserialize =
 
 deserializeByVersion : String -> Json.Decode.Decoder Deserialized
 deserializeByVersion version =
-    case version of
-        "0.5.0" ->
-            Graph050.decoder
+    if String.startsWith "0.5." version then
+        Graph050.decoder
 
-        _ ->
-            Json.Decode.fail ("unknown version " ++ version)
+    else if String.startsWith "1.0." version then
+        Graph100.decoder
+
+    else
+        Json.Decode.fail ("unknown version " ++ version)
 
 
 pushHistory : Msg -> Model -> Model
@@ -2695,3 +2764,8 @@ fromDeserialized deserialized model =
                     }
             )
         |> pair model
+
+
+serialize : String -> Model -> Value
+serialize =
+    Encode.encode

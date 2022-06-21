@@ -304,6 +304,26 @@ update plugins uc msg model =
                     }
                         |> n
 
+                Graph.UserClickedExportGS time ->
+                    ( model
+                    , (case time of
+                        Nothing ->
+                            Time.now
+                                |> Task.perform (Just >> Graph.UserClickedExportGS)
+
+                        Just t ->
+                            Graph.serialize version model.graph
+                                |> pair
+                                    (makeTimestampFilename model.locale t
+                                        |> (\tt -> tt ++ ".gs")
+                                    )
+                                |> Ports.serialize
+                      )
+                        |> Graph.CmdEffect
+                        |> GraphEffect
+                        |> List.singleton
+                    )
+
                 Graph.UserClickedExportGraphics time ->
                     ( model
                     , (case time of
@@ -363,14 +383,24 @@ update plugins uc msg model =
                 Graph.PortDeserializedGS ( filename, data ) ->
                     case Graph.deserialize data of
                         Err err ->
-                            { model
+                            ( { model
                                 | statusbar =
-                                    Json.Decode.errorToString err
+                                    (case err of
+                                        Json.Decode.Failure message _ ->
+                                            message
+
+                                        _ ->
+                                            "could not read"
+                                    )
                                         |> Http.BadBody
                                         |> Just
                                         |> Statusbar.add model.statusbar filename []
-                            }
-                                |> n
+                              }
+                            , Json.Decode.errorToString err
+                                |> Ports.console
+                                |> CmdEffect
+                                |> List.singleton
+                            )
 
                         Ok deser ->
                             let

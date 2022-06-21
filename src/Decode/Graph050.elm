@@ -1,4 +1,4 @@
-module Decode.Graph.Graph050 exposing (decoder)
+module Decode.Graph050 exposing (decoder)
 
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
