@@ -12,4 +12,4 @@ port exportGraphics : String -> Cmd msg
 port deserialize : () -> Cmd msg
 
 
-port deserialized : (Value -> msg) -> Sub msg
+port deserialized : (( String, Value ) -> msg) -> Sub msg

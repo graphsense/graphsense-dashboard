@@ -13,9 +13,7 @@
 -}
 
 
-module Api.Request.Rates exposing
-    ( getExchangeRates
-    )
+module Api.Request.Rates exposing (..)
 
 import Api
 import Api.Data

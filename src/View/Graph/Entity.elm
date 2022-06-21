@@ -179,7 +179,7 @@ getLabel vc gc ent =
                 else
                     Just tag.label
             )
-        |> Maybe.withDefault ""
+        |> Maybe.withDefault (String.fromInt ent.entity.entity)
 
 
 flags : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg

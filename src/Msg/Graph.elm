@@ -1,6 +1,7 @@
 module Msg.Graph exposing (..)
 
 import Api.Data
+import Api.Request.Entities
 import Browser.Dom
 import Bytes exposing (Bytes)
 import File
@@ -8,7 +9,7 @@ import Json.Encode
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
-import Model.Graph exposing (Dragging)
+import Model.Graph exposing (Deserializing, Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
@@ -127,8 +128,12 @@ type Msg
     | BrowserGotTagPackFile File.File
     | BrowserReadTagPackFile String (Result Yaml.Decode.Error (List Tag.UserTag))
     | UserClickedImportGS
-    | PortDeserializedGS Json.Encode.Value
+    | PortDeserializedGS ( String, Json.Encode.Value )
     | UserClickedUndo
     | UserClickedRedo
     | UserClickedUserTags
+    | BrowserGotBulkAddresses String Deserializing (List Api.Data.Address)
+    | BrowserGotBulkAddressTags String (List Api.Data.AddressTag)
+    | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
+    | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
     | NoOp

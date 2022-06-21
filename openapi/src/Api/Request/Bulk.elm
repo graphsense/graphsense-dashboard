@@ -13,10 +13,7 @@
 -}
 
 
-module Api.Request.Bulk exposing
-    ( bulkCsv, Operation(..), operationVariants
-    , bulkJson, Operation(..), operationVariants
-    )
+module Api.Request.Bulk exposing (..)
 
 import Api
 import Api.Data
@@ -123,6 +120,65 @@ stringFromOperation model =
             "get_exchange_rates"
 
 
+makeOperationFromString : String -> Maybe Operation
+makeOperationFromString str =
+    case str of
+    "get_block" ->
+        Just OperationGetBlock
+
+    "list_block_txs" ->
+        Just OperationListBlockTxs
+
+    "get_address" ->
+        Just OperationGetAddress
+
+    "list_address_txs" ->
+        Just OperationListAddressTxs
+
+    "list_tags_by_address" ->
+        Just OperationListTagsByAddress
+
+    "list_address_neighbors" ->
+        Just OperationListAddressNeighbors
+
+    "get_address_entity" ->
+        Just OperationGetAddressEntity
+
+    "list_address_links" ->
+        Just OperationListAddressLinks
+
+    "get_entity" ->
+        Just OperationGetEntity
+
+    "list_tags_by_entity" ->
+        Just OperationListTagsByEntity
+
+    "list_entity_neighbors" ->
+        Just OperationListEntityNeighbors
+
+    "list_entity_txs" ->
+        Just OperationListEntityTxs
+
+    "list_entity_links" ->
+        Just OperationListEntityLinks
+
+    "list_entity_addresses" ->
+        Just OperationListEntityAddresses
+
+    "get_tx" ->
+        Just OperationGetTx
+
+    "get_tx_io" ->
+        Just OperationGetTxIo
+
+    "get_exchange_rates" ->
+        Just OperationGetExchangeRates
+
+    _ ->
+        Nothing
+
+
+
 
 
 type Operation
@@ -220,6 +276,65 @@ stringFromOperation model =
 
         OperationGetExchangeRates ->
             "get_exchange_rates"
+
+
+makeOperationFromString : String -> Maybe Operation
+makeOperationFromString str =
+    case str of
+    "get_block" ->
+        Just OperationGetBlock
+
+    "list_block_txs" ->
+        Just OperationListBlockTxs
+
+    "get_address" ->
+        Just OperationGetAddress
+
+    "list_address_txs" ->
+        Just OperationListAddressTxs
+
+    "list_tags_by_address" ->
+        Just OperationListTagsByAddress
+
+    "list_address_neighbors" ->
+        Just OperationListAddressNeighbors
+
+    "get_address_entity" ->
+        Just OperationGetAddressEntity
+
+    "list_address_links" ->
+        Just OperationListAddressLinks
+
+    "get_entity" ->
+        Just OperationGetEntity
+
+    "list_tags_by_entity" ->
+        Just OperationListTagsByEntity
+
+    "list_entity_neighbors" ->
+        Just OperationListEntityNeighbors
+
+    "list_entity_txs" ->
+        Just OperationListEntityTxs
+
+    "list_entity_links" ->
+        Just OperationListEntityLinks
+
+    "list_entity_addresses" ->
+        Just OperationListEntityAddresses
+
+    "get_tx" ->
+        Just OperationGetTx
+
+    "get_tx_io" ->
+        Just OperationGetTxIo
+
+    "get_exchange_rates" ->
+        Just OperationGetExchangeRates
+
+    _ ->
+        Nothing
+
 
 
 

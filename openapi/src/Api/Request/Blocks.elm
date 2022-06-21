@@ -13,10 +13,7 @@
 -}
 
 
-module Api.Request.Blocks exposing
-    ( getBlock
-    , listBlockTxs
-    )
+module Api.Request.Blocks exposing (..)
 
 import Api
 import Api.Data

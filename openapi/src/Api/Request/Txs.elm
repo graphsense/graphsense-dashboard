@@ -13,10 +13,7 @@
 -}
 
 
-module Api.Request.Txs exposing
-    ( getTx
-    , getTxIo, Io(..), ioVariants
-    )
+module Api.Request.Txs exposing (..)
 
 import Api
 import Api.Data
@@ -46,6 +43,20 @@ stringFromIo model =
 
         IoOutputs ->
             "outputs"
+
+
+makeIoFromString : String -> Maybe Io
+makeIoFromString str =
+    case str of
+    "inputs" ->
+        Just IoInputs
+
+    "outputs" ->
+        Just IoOutputs
+
+    _ ->
+        Nothing
+
 
 
 

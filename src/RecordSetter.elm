@@ -124,6 +124,11 @@ s_addressesAdded value__ record__ =
     { record__ | addressesAdded = value__ }
 
 
+s_addressesByEntity : a -> { b | addressesByEntity : a } -> { b | addressesByEntity : a }
+s_addressesByEntity value__ record__ =
+    { record__ | addressesByEntity = value__ }
+
+
 s_aliases : a -> { b | aliases : a } -> { b | aliases : a }
 s_aliases value__ record__ =
     { record__ | aliases = value__ }
@@ -952,6 +957,11 @@ s_descendantsCount value__ record__ =
 s_description : a -> { b | description : a } -> { b | description : a }
 s_description value__ record__ =
     { record__ | description = value__ }
+
+
+s_deserialized : a -> { b | deserialized : a } -> { b | deserialized : a }
+s_deserialized value__ record__ =
+    { record__ | deserialized = value__ }
 
 
 s_details : a -> { b | details : a } -> { b | details : a }
@@ -1817,11 +1827,6 @@ s_index value__ record__ =
 s_infiniteScroll : a -> { b | infiniteScroll : a } -> { b | infiniteScroll : a }
 s_infiniteScroll value__ record__ =
     { record__ | infiniteScroll = value__ }
-
-
-s_info : a -> { b | info : a } -> { b | info : a }
-s_info value__ record__ =
-    { record__ | info = value__ }
 
 
 s_init : a -> { b | init : a } -> { b | init : a }
@@ -3482,16 +3487,6 @@ s_reqs value__ record__ =
 s_request : a -> { b | request : a } -> { b | request : a }
 s_request value__ record__ =
     { record__ | request = value__ }
-
-
-s_requestDirection : a -> { b | requestDirection : a } -> { b | requestDirection : a }
-s_requestDirection value__ record__ =
-    { record__ | requestDirection = value__ }
-
-
-s_requestEntity : a -> { b | requestEntity : a } -> { b | requestEntity : a }
-s_requestEntity value__ record__ =
-    { record__ | requestEntity = value__ }
 
 
 s_requestLimit : a -> { b | requestLimit : a } -> { b | requestLimit : a }

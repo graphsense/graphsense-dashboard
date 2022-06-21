@@ -1068,7 +1068,7 @@ updateByMsg plugins uc msg model =
                             Id.addressId tag.input.id
                         }
                     )
-                |> Maybe.map (storeUserTag uc model)
+                |> Maybe.map (\tag -> storeUserTag uc tag model)
                 |> Maybe.withDefault model
                 |> n
 
@@ -1446,6 +1446,125 @@ updateByMsg plugins uc msg model =
         PortDeserializedGS data ->
             -- handled upstream
             n model
+
+        BrowserGotBulkAddresses currency deserializing addresses ->
+            let
+                entities =
+                    (List.map (.id >> Id.entityId) deserializing.deserialized.entities
+                        ++ List.map .entity addresses
+                    )
+                        |> List.foldl Set.insert Set.empty
+                        |> Set.toList
+            in
+            ( model
+            , [ BulkGetEntityEffect
+                    { currency = currency
+                    , entities = entities
+                    , toMsg =
+                        deserializing
+                            |> s_addresses addresses
+                            |> BrowserGotBulkEntities currency
+                    }
+              ]
+            )
+
+        BrowserGotBulkEntities currency deserializing entities ->
+            ( let
+                acc =
+                    deserializing
+                        |> s_entities entities
+                        |> Layer.deserialize plugins uc
+
+                tags =
+                    deserializing.deserialized.addresses
+                        |> List.filterMap .userTag
+              in
+              tags
+                |> Debug.log "Usertags"
+                |> List.foldl (storeUserTag uc)
+                    { model
+                        | layers = acc.layers
+                        , config =
+                            model.config
+                                |> s_colors acc.colors
+                    }
+            , [ BulkGetEntityNeighborsEffect
+                    { currency = currency
+                    , isOutgoing = True
+                    , entities = List.map .entity entities
+                    , toMsg = BrowserGotBulkEntityNeighbors currency True
+                    }
+              , BulkGetEntityNeighborsEffect
+                    { currency = currency
+                    , isOutgoing = False
+                    , entities = List.map .entity entities
+                    , toMsg = BrowserGotBulkEntityNeighbors currency False
+                    }
+              , BulkGetAddressTagsEffect
+                    { currency = currency
+                    , addresses =
+                        deserializing.addresses
+                            |> List.map .address
+                    , toMsg = BrowserGotBulkAddressTags currency
+                    }
+              ]
+            )
+
+        BrowserGotBulkEntityNeighbors currency isOutgoing entityNeighbors ->
+            entityNeighbors
+                |> List.Extra.gatherEqualsBy first
+                |> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+                |> List.foldl
+                    (\( requestEntity, neighbors ) model_ ->
+                        Layer.getEntities currency requestEntity model_.layers
+                            |> List.foldl
+                                (\anchor model__ ->
+                                    let
+                                        neighborsWithEntity =
+                                            entityNeighbors
+                                                |> List.filterMap
+                                                    (\( _, neighbor ) ->
+                                                        let
+                                                            entityId =
+                                                                Id.initEntityId
+                                                                    { currency = currency
+                                                                    , id = neighbor.entity.entity
+                                                                    , layer =
+                                                                        Id.layer anchor.id
+                                                                            + (if isOutgoing then
+                                                                                1
+
+                                                                               else
+                                                                                -1
+                                                                              )
+                                                                    }
+                                                        in
+                                                        Layer.getEntity entityId model__.layers
+                                                            |> Maybe.map (pair neighbor)
+                                                    )
+                                    in
+                                    addEntityLinks anchor isOutgoing neighborsWithEntity model__
+                                )
+                                model_
+                    )
+                    model
+                |> n
+
+        BrowserGotBulkAddressTags currency tags ->
+            (tags
+                |> List.Extra.groupWhile
+                    (\t1 t2 -> t1.currency == t2.currency && t1.address == t2.address)
+                |> List.foldl
+                    (\( fst, more ) ->
+                        updateAddresses
+                            { currency = String.toLower fst.currency
+                            , address = fst.address
+                            }
+                            (Address.updateTags (fst :: more))
+                    )
+                    model
+            )
+                |> n
 
         UserClickedUndo ->
             case model.history of
@@ -2208,8 +2327,8 @@ draggingToClick start current =
     Coords.betrag start current < 2
 
 
-storeUserTag : Update.Config -> Model -> Tag.UserTag -> Model
-storeUserTag uc model tag =
+storeUserTag : Update.Config -> Tag.UserTag -> Model -> Model
+storeUserTag uc tag model =
     if String.isEmpty tag.label then
         model
 
@@ -2456,9 +2575,7 @@ importTagPack : Update.Config -> List Tag.UserTag -> Model -> Model
 importTagPack uc tags model =
     tags
         |> List.foldl
-            (\tag mo ->
-                storeUserTag uc model tag
-            )
+            (storeUserTag uc)
             model
 
 
@@ -2549,3 +2666,32 @@ shallPushHistory msg model =
 
         _ ->
             False
+
+
+fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
+fromDeserialized deserialized model =
+    let
+        unique =
+            deserialized.addresses
+                |> List.map .id
+                |> List.map (\id -> ( Id.currency id, Id.addressId id ))
+                |> Set.fromList
+                |> Set.toList
+                |> List.Extra.gatherEqualsBy first
+                |> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+    in
+    unique
+        |> List.map
+            (\( currency, addrs ) ->
+                BulkGetAddressEffect
+                    { currency = currency
+                    , addresses = addrs
+                    , toMsg =
+                        { deserialized = deserialized
+                        , addresses = []
+                        , entities = []
+                        }
+                            |> BrowserGotBulkAddresses currency
+                    }
+            )
+        |> pair model

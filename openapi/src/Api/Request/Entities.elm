@@ -13,19 +13,7 @@
 -}
 
 
-module Api.Request.Entities exposing
-    ( Direction(..)
-    , Key(..)
-    , directionVariants
-    , getEntity
-    , keyVariants
-    , listAddressTagsByEntity
-    , listEntityAddresses
-    , listEntityLinks
-    , listEntityNeighbors
-    , listEntityTxs
-    , searchEntityNeighbors
-    )
+module Api.Request.Entities exposing (..)
 
 import Api
 import Api.Data
@@ -55,6 +43,19 @@ stringFromDirection model =
 
         DirectionOut ->
             "out"
+
+
+makeDirectionFromString : String -> Maybe Direction
+makeDirectionFromString str =
+    case str of
+        "in" ->
+            Just DirectionIn
+
+        "out" ->
+            Just DirectionOut
+
+        _ ->
+            Nothing
 
 
 type Key
@@ -92,6 +93,28 @@ stringFromKey model =
 
         KeyBalance ->
             "balance"
+
+
+makeKeyFromString : String -> Maybe Key
+makeKeyFromString str =
+    case str of
+        "category" ->
+            Just KeyCategory
+
+        "addresses" ->
+            Just KeyAddresses
+
+        "entities" ->
+            Just KeyEntities
+
+        "total_received" ->
+            Just KeyTotalReceived
+
+        "balance" ->
+            Just KeyBalance
+
+        _ ->
+            Nothing
 
 
 getEntity : String -> Int -> Api.Request Api.Data.Entity

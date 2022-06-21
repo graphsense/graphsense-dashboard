@@ -13,14 +13,7 @@
 -}
 
 
-module Api.Request.Addresses exposing
-    ( getAddress
-    , getAddressEntity
-    , listAddressLinks
-    , listAddressNeighbors, Direction(..), directionVariants
-    , listAddressTxs
-    , listTagsByAddress
-    )
+module Api.Request.Addresses exposing (..)
 
 import Api
 import Api.Data
@@ -50,6 +43,20 @@ stringFromDirection model =
 
         DirectionOut ->
             "out"
+
+
+makeDirectionFromString : String -> Maybe Direction
+makeDirectionFromString str =
+    case str of
+    "in" ->
+        Just DirectionIn
+
+    "out" ->
+        Just DirectionOut
+
+    _ ->
+        Nothing
+
 
 
 

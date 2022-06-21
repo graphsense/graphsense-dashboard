@@ -10,6 +10,7 @@ import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
 import Http exposing (Error(..))
+import Json.Decode
 import Json.Encode exposing (Value)
 import Log
 import Model exposing (..)
@@ -359,12 +360,26 @@ update plugins uc msg model =
                             }
                                 |> n
 
-                Graph.PortDeserializedGS data ->
-                    let
-                        deser =
-                            Graph.deserialize data
-                    in
-                    n model
+                Graph.PortDeserializedGS ( filename, data ) ->
+                    case Graph.deserialize data of
+                        Err err ->
+                            { model
+                                | statusbar =
+                                    Json.Decode.errorToString err
+                                        |> Http.BadBody
+                                        |> Just
+                                        |> Statusbar.add model.statusbar filename []
+                            }
+                                |> n
+
+                        Ok deser ->
+                            let
+                                ( graph, graphEffects ) =
+                                    Graph.fromDeserialized deser model.graph
+                            in
+                            ( { model | graph = graph }
+                            , List.map GraphEffect graphEffects
+                            )
 
                 _ ->
                     let

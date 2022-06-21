@@ -13,10 +13,7 @@
 -}
 
 
-module Api.Request.General exposing
-    ( getStatistics
-    , search
-    )
+module Api.Request.General exposing (..)
 
 import Api
 import Api.Data

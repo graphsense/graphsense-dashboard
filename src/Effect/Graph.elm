@@ -147,6 +147,27 @@ type Effect
         , pagesize : Int
         , toMsg : Api.Data.Links -> Msg
         }
+    | BulkGetAddressEffect
+        { currency : String
+        , addresses : List String
+        , toMsg : List Api.Data.Address -> Msg
+        }
+    | BulkGetAddressTagsEffect
+        { currency : String
+        , addresses : List String
+        , toMsg : List Api.Data.AddressTag -> Msg
+        }
+    | BulkGetEntityEffect
+        { currency : String
+        , entities : List Int
+        , toMsg : List Api.Data.Entity -> Msg
+        }
+    | BulkGetEntityNeighborsEffect
+        { currency : String
+        , isOutgoing : Bool
+        , entities : List Int
+        , toMsg : List ( Int, Api.Data.NeighborEntity ) -> Msg
+        }
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
@@ -239,6 +260,22 @@ perform eff =
 
         -- managed in Effect.elm
         ListAddressTagsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        BulkGetAddressEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        BulkGetAddressTagsEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        BulkGetEntityEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        BulkGetEntityNeighborsEffect _ ->
             Cmd.none
 
         -- managed in Effect.elm

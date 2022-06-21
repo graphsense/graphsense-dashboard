@@ -1,10 +1,12 @@
 module Effect exposing (n, perform)
 
 import Api
+import Api.Data
 import Api.Request.Addresses
 import Api.Request.Blocks
 import Api.Request.Entities
 import Api.Request.General
+import Api.Request.MyBulk
 import Api.Request.Tags
 import Api.Request.Txs
 import Bounce
@@ -14,6 +16,8 @@ import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
+import Json.Decode
+import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -166,6 +170,68 @@ perform plugins key statusbarToken apiKey effect =
                     Graph.perform eff
                         |> Cmd.map GraphMsg
 
+                Graph.BulkGetAddressEffect e ->
+                    listWithMaybes Api.Data.addressDecoder
+                        |> Api.Request.MyBulk.bulkJson
+                            e.currency
+                            Api.Request.MyBulk.OperationGetAddress
+                            (Json.Encode.object
+                                [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                                ]
+                            )
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
+
+                Graph.BulkGetAddressTagsEffect e ->
+                    listWithMaybes Api.Data.addressTagDecoder
+                        |> Api.Request.MyBulk.bulkJson
+                            e.currency
+                            Api.Request.MyBulk.OperationListTagsByAddress
+                            (Json.Encode.object
+                                [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                                ]
+                            )
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
+
+                Graph.BulkGetEntityEffect e ->
+                    listWithMaybes Api.Data.entityDecoder
+                        |> Api.Request.MyBulk.bulkJson
+                            e.currency
+                            Api.Request.MyBulk.OperationGetEntity
+                            (Json.Encode.object
+                                [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
+                                ]
+                            )
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
+
+                Graph.BulkGetEntityNeighborsEffect e ->
+                    listWithMaybes
+                        (Json.Decode.field "_request_entity" Json.Decode.int
+                            |> Json.Decode.andThen
+                                (\requestEntity ->
+                                    Json.Decode.map
+                                        (\entity -> ( requestEntity, entity ))
+                                        Api.Data.neighborEntityDecoder
+                                )
+                        )
+                        |> Api.Request.MyBulk.bulkJson
+                            e.currency
+                            Api.Request.MyBulk.OperationListEntityNeighbors
+                            (Json.Encode.object
+                                [ ( "entity", Json.Encode.list Json.Encode.int e.entities )
+                                , ( "direction"
+                                  , Json.Encode.string <|
+                                        Api.Request.Entities.stringFromDirection <|
+                                            if e.isOutgoing then
+                                                Api.Request.Entities.DirectionOut
+
+                                            else
+                                                Api.Request.Entities.DirectionIn
+                                  )
+                                , ( "only_ids", Json.Encode.list Json.Encode.int e.entities )
+                                ]
+                            )
+                        |> send statusbarToken apiKey effect (e.toMsg >> GraphMsg)
+
                 Graph.InternalGraphAddedAddressesEffect ids ->
                     Task.succeed ids
                         |> Task.perform (Graph.InternalGraphAddedAddresses >> GraphMsg)
@@ -245,3 +311,9 @@ isOutgoingToDirection isOutgoing =
 
         False ->
             Api.Request.Entities.DirectionIn
+
+
+listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
+listWithMaybes decoder =
+    Json.Decode.list (Json.Decode.maybe decoder)
+        |> Json.Decode.map (List.filterMap identity)

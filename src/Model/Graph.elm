@@ -1,6 +1,7 @@
 module Model.Graph exposing (..)
 
 import Api.Data
+import Api.Request.Entities
 import Browser.Dom as Dom
 import Color exposing (Color)
 import Config.Graph exposing (Config)
@@ -77,8 +78,16 @@ type Dragging
     | DraggingNode EntityId Coords Coords
 
 
+type alias Deserializing =
+    { deserialized : Deserialized
+    , addresses : List Api.Data.Address
+    , entities : List Api.Data.Entity
+    }
+
+
 type alias Deserialized =
     { addresses : List DeserializedAddress
+    , entities : List DeserializedEntity
     }
 
 
@@ -87,4 +96,12 @@ type alias DeserializedAddress =
     , x : Float
     , y : Float
     , userTag : Maybe Tag.UserTag
+    }
+
+
+type alias DeserializedEntity =
+    { id : EntityId
+    , rootAddress : Maybe String
+    , x : Float
+    , y : Float
     }

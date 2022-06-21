@@ -99,7 +99,7 @@ app.ports.deserialize.subscribe(() => {
           data[0] = data[0].split(' ')[0]
           data[0] = data[0].split('-')[0]
           console.log(data)
-          app.ports.deserialized.send(data)
+          app.ports.deserialized.send([file.name, data])
         }
         reader.readAsArrayBuffer(file)
 

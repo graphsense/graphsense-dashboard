@@ -13,11 +13,7 @@
 -}
 
 
-module Api.Request.Tags exposing
-    ( listAddressTags
-    , listConcepts
-    , listTaxonomies
-    )
+module Api.Request.Tags exposing (..)
 
 import Api
 import Api.Data
