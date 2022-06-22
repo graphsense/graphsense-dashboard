@@ -53,6 +53,7 @@ string model key =
 
         fix =
             Dict.get lower
+                >> Debug.log ("get locale " ++ lower)
                 >> Maybe.withDefault key
                 >> raise
     in

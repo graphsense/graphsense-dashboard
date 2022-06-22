@@ -80,6 +80,36 @@ messageFromEffect model effect =
             )
                 |> Just
 
+        Model.GraphEffect (Graph.GetAddressTagsEffect e) ->
+            ( "loading tags of address {0}"
+            , [ e.address ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.BulkGetAddressEffect e) ->
+            ( "loading {0} addresses"
+            , [ List.length e.addresses |> String.fromInt ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.BulkGetEntityEffect e) ->
+            ( "loading {0} entities"
+            , [ List.length e.entities |> String.fromInt ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.BulkGetAddressEntityEffect e) ->
+            ( "loading entities of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.BulkGetEntityNeighborsEffect e) ->
+            ( "loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
+            , [ List.length e.entities |> String.fromInt ]
+            )
+                |> Just
+
         _ ->
             Nothing
 

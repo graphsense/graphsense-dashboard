@@ -729,6 +729,7 @@ theme =
                             , Css.Transitions.transition
                                 [ Css.Transitions.minHeight 200
                                 ]
+                            , overflowY auto
                             ]
 
                          else
@@ -740,11 +741,12 @@ theme =
                                     50
 
                                   else
-                                    5
+                                    4
                                  )
                                     |> scaled
                                     |> rem
                                     |> minHeight
+                               , scaled 50 |> rem |> maxHeight
                                , colors.greyDark |> toCssColor |> color
                                , scaled 2.75 |> rem |> fontSize
                                ]
@@ -757,10 +759,10 @@ theme =
                 |> s_log
                     (\noerror ->
                         [ displayFlex
-                        , alignItems center
                         ]
                             ++ (if noerror then
-                                    []
+                                    [ alignItems center
+                                    ]
 
                                 else
                                     [ colors.brandRed |> toCssColor |> color
@@ -775,7 +777,7 @@ theme =
                     , border (px 0)
                     , position absolute
                     , scaled 2 |> rem |> top
-                    , scaled 1 |> rem |> right
+                    , scaled 4 |> rem |> right
                     , cursor pointer
                     ]
             )

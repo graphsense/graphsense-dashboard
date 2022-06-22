@@ -176,6 +176,12 @@ loading msg incoming: eingehende
 "loading incoming neighbors of entity {0}": "lade eingehende Nachbarn von Entität {0}"
 "loading outgoing neighbors of address {0}": "lade ausgehende Nachbarn von Adresse {0}"
 "loading incoming neighbors of address {0}": "lade eingehende Nachbarn von Adresse {0}"
+"loading {0} addresses": "lade {0} Addressen"
+"loading {0} entities": "lade {0} Entitäten"
+"loading entities of {0} addresses": "lade Entitäten zu {0} Adressen"
+"loading outgoing neighbors of {0} entities": "lade ausgehende Nachbarn von {0} Entitäten"
+"loading incoming neighbors of {0} entities": "lade eingehende Nachbarn von {0} Entitäten"
+"loading tags of address {0}": "lade Tags der Adresse {0}"
 loaded neighbors for: %0 Nachbarn von %1 %2 geladen
 saving to file: speichern in Datei
 saved to file: in Datei %0 gespeichert
