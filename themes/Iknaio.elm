@@ -627,6 +627,13 @@ theme =
                             ]
                         ]
                     )
+                |> s_propertyBoxEntityId
+                    [ scaled 3 |> rem |> fontSize
+                    , scaled 1 |> rem |> paddingLeft
+                    , colors.greyDark
+                        |> toCssColor
+                        |> color
+                    ]
             )
         |> s_table
             (Table.default

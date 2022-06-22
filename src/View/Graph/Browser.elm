@@ -229,11 +229,15 @@ browseValue vc value =
                                 [ text tag.label
                                 ]
                         )
-                    |> Maybe.withDefault none
+                    |> Maybe.withDefault (span [] [ Locale.string vc.locale "Unknown" |> text ])
                 , span
                     [ Css.propertyBoxEntityId vc |> css
                     ]
-                    [ String.fromInt entity.entity.entity
+                    [ "("
+                        ++ Locale.string vc.locale "ID"
+                        ++ ": "
+                        ++ String.fromInt entity.entity.entity
+                        ++ ")"
                         |> text
                     ]
                 ]

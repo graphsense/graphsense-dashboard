@@ -29,6 +29,5 @@ docker run --rm \
     -t /templates 
 rm $temp $temp2
 
-rm "${dir}/../openapi/src/Api/Request/Bulk.elm"
 sed -i 's/"txType"/"tx_type"/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"
