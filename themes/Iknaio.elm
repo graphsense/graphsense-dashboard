@@ -311,14 +311,12 @@ theme =
                 |> s_buttons
                     [ displayFlex
                     , justifyContent spaceBetween
-                    , alignSelf center
+                    , margin2 zero auto
                     , px 100 |> minWidth
                     , pct 50 |> width
                     ]
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
-                    , displayFlex
-                    , flexDirection column
                     , scaled 2 |> rem |> paddingRight
                     ]
                 |> s_heading
@@ -865,7 +863,8 @@ inputStyleRaw len =
     , borderRadiusSmRaw
     , ( "border", "0" )
     , ( "padding", (scaled 1 |> String.fromFloat) ++ "rem" )
-    , ( "marginBottom", (scaled 1 |> String.fromFloat) ++ "rem" )
+    , ( "margin-bottom", (scaled 1 |> String.fromFloat) ++ "rem" )
+    , ( "display", "block" )
     ]
         ++ (Maybe.map (\l -> [ ( "width", String.fromFloat l ++ "ex" ) ]) len
                 |> Maybe.withDefault []
@@ -874,14 +873,9 @@ inputStyleRaw len =
 
 inputStyle : Style
 inputStyle =
-    batch
-        [ backgroundColor <| toCssColor colors.greyLight
-        , color <| toCssColor colors.black
-        , borderRadiusSm
-        , border zero
-        , scaled 1 |> rem |> padding
-        , scaled 1 |> rem |> marginBottom
-        ]
+    inputStyleRaw Nothing
+        |> List.map (\( k, v ) -> property k v)
+        |> batch
 
 
 spinnerHeight : Float

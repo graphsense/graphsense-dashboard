@@ -11,7 +11,7 @@ import Time
 
 locales : List ( String, String )
 locales =
-    [ ( "de", "german" ), ( "en", "english" ) ]
+    [ ( "de", "German" ), ( "en", "English" ) ]
 
 
 type State

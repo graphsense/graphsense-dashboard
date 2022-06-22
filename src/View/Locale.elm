@@ -39,7 +39,10 @@ string : Model -> String -> String
 string model key =
     let
         lower =
-            String.toLower key
+            (String.left 1 key
+                |> String.toLower
+            )
+                ++ String.dropLeft 1 key
 
         raise s =
             if String.left 1 key /= String.left 1 lower then
