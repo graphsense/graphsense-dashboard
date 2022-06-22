@@ -975,7 +975,6 @@ deserialize plugins uc { deserialized, addresses, entities } =
                 |> List.Extra.gatherEqualsBy (.id >> Id.layer)
                 |> List.sortBy (first >> .id >> Id.layer)
                 |> List.map (\( fst, more ) -> ( Id.layer fst.id, fst :: more ))
-                |> Debug.log "addressNodesByLayer"
 
         entityByAddress : Dict ( String, String ) Int
         entityByAddress =
@@ -985,7 +984,6 @@ deserialize plugins uc { deserialized, addresses, entities } =
                         Dict.insert ( currency, address ) entity
                     )
                     Dict.empty
-                |> Debug.log "entityByAddress"
 
         addressNodesByLayerWithEntity : List ( Int, List ( DeserializedAddress, Int ) )
         addressNodesByLayerWithEntity =
@@ -1054,12 +1052,6 @@ deserialize plugins uc { deserialized, addresses, entities } =
                         IntDict.insert layerId ents
                     )
                     IntDict.empty
-
-        _ =
-            entitiesWithPositionByLayer
-                |> IntDict.toList
-                |> List.map (\( i, list ) -> ( i, List.map (\( e, p ) -> ( e.entity, p )) list ))
-                |> Debug.log "entitiesWithPositionByLayer"
 
         addressesToPosition : List DeserializedAddress -> Maybe Position
         addressesToPosition addrs =

@@ -1537,7 +1537,6 @@ updateByMsg plugins uc msg model =
                         |> List.filterMap .userTag
             in
             ( tags
-                |> Debug.log "Usertags"
                 |> List.foldl (storeUserTag uc)
                     { model
                         | layers = acc.layers
@@ -1557,7 +1556,7 @@ updateByMsg plugins uc msg model =
                     , entities = List.map .entity deser.entities
                     , toMsg = BrowserGotBulkEntityNeighbors currency False
                     }
-              , InternalGraphAddedAddressesEffect <| Debug.log "newAddressIds" acc.newAddressIds
+              , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
                 ++ (deserializing.addresses

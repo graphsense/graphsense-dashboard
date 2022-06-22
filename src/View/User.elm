@@ -6,7 +6,8 @@ import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events as Events exposing (onInput)
+import Html.Styled.Events as Events exposing (onInput, stopPropagationOn)
+import Json.Decode
 import Model exposing (Auth(..), Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
 import Time
