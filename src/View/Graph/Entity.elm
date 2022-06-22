@@ -1,4 +1,4 @@
-module View.Graph.Entity exposing (addressLinks, addresses, entity, links)
+module View.Graph.Entity exposing (addressLinks, addresses, entity, links, shadowLink)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
@@ -310,6 +310,22 @@ links vc gc selected mn mx ent =
                     (\_ link svg ->
                         ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
                         , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
+                        )
+                            :: svg
+                    )
+                    []
+                |> Keyed.node "g" []
+
+
+shadowLink : Config -> Entity -> Svg Msg
+shadowLink vc ent =
+    case ent.shadowLinks of
+        Entity.Links lnks ->
+            lnks
+                |> Dict.foldr
+                    (\_ link svg ->
+                        ( "shadowLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
+                        , Svg.lazy3 Link.shadowLink vc ent link
                         )
                             :: svg
                     )

@@ -3804,6 +3804,16 @@ s_set value__ record__ =
     { record__ | set = value__ }
 
 
+s_shadowLink : a -> { b | shadowLink : a } -> { b | shadowLink : a }
+s_shadowLink value__ record__ =
+    { record__ | shadowLink = value__ }
+
+
+s_shadowLinks : a -> { b | shadowLinks : a } -> { b | shadowLinks : a }
+s_shadowLinks value__ record__ =
+    { record__ | shadowLinks = value__ }
+
+
 s_shift : a -> { b | shift : a } -> { b | shift : a }
 s_shift value__ record__ =
     { record__ | shift = value__ }

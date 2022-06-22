@@ -35,13 +35,15 @@ inputHovercard plugins vc model =
             , direction vc "incoming" dir
             , direction vc "both" dir
             ]
-        , Dialog.part vc
-            "Criterion"
-            [ criterion vc "category" current
-            , criterion vc "addresses" current
-            , criterion vc "final balance" current
-            , criterion vc "total received" current
-            ]
+
+        {- , Dialog.part vc
+           "Criterion"
+           [ criterion vc "category" current
+           , criterion vc "addresses" current
+           , criterion vc "final balance" current
+           , criterion vc "total received" current
+           ]
+        -}
         , partByCriterion vc model.criterion
         , div
             [ Css.searchSettingsRow vc |> css

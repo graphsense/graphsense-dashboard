@@ -21,6 +21,7 @@ type alias Entity =
     , dx : Float
     , dy : Float
     , links : Links
+    , shadowLinks : Links
     , plugins : PluginStates
     }
 

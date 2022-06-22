@@ -523,6 +523,14 @@ theme =
                         , property "stroke-width" "0"
                         ]
                     )
+                |> s_shadowLink
+                    [ colors.brandLighter
+                        |> Color.toRgba
+                        |> (\c -> { c | alpha = 0.3 })
+                        |> Color.fromRgba
+                        |> Color.toCssString
+                        |> property "fill"
+                    ]
                 |> s_navbar
                     [ toCssColor colors.brandWhite |> backgroundColor
                     ]

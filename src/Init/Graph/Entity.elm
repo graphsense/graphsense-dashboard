@@ -21,5 +21,6 @@ init plugins { x, y, layer } entity =
     , dx = 0
     , dy = 0
     , links = Links Dict.empty
+    , shadowLinks = Links Dict.empty
     , plugins = Plugin.initAddress plugins
     }

@@ -64,13 +64,31 @@ entityLinks vc gc selected layer =
             calcRange vc gc layer
 
         _ =
-            Log.log "Graph.entityLinks" layer.id
+            Log.log "Layer.entityLinks" layer.id
     in
     layer.entities
         |> Dict.foldl
             (\_ entity svg ->
                 ( "entityLinks" ++ Id.entityIdToString entity.id
                 , Svg.lazy6 Entity.links vc gc selected mn mx entity
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+shadowLinks : View.Config -> Layer -> Svg Msg
+shadowLinks vc layer =
+    let
+        _ =
+            Log.log "Layer.shadowLinks" layer.id
+    in
+    layer.entities
+        |> Dict.foldl
+            (\_ entity svg ->
+                ( "shadowLinks" ++ Id.entityIdToString entity.id
+                , Svg.lazy2 Entity.shadowLink vc entity
                 )
                     :: svg
             )

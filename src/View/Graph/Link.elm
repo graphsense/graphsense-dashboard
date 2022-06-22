@@ -108,6 +108,84 @@ entityLinkHovered vc gc mn mx entity link =
         mx
 
 
+bezier : Float -> Float -> Float -> Float -> String
+bezier =
+    bezierInv False
+
+
+bezierInv : Bool -> Float -> Float -> Float -> Float -> String
+bezierInv inv sx sy tx ty =
+    let
+        cx =
+            sx + (tx - sx) / 2
+
+        templ =
+            if inv then
+                "M{3} {4}C{2} {4} {2} {1} {0} {1}"
+
+            else
+                "M{0} {1}C{2} {1} {2} {4} {3} {4}"
+    in
+    [ sx, sy, cx, tx, ty ]
+        |> List.map String.fromFloat
+        |> String.Interpolate.interpolate templ
+
+
+shadowLink : View.Config -> Entity -> Link Entity -> Svg Msg
+shadowLink vc entity link =
+    let
+        sx1 =
+            Entity.getX entity + Entity.getWidth entity
+
+        sy1 =
+            Entity.getY entity
+
+        tx1 =
+            Entity.getX link.node
+
+        ty1 =
+            Entity.getY link.node
+
+        sx2 =
+            Entity.getX entity + Entity.getWidth entity
+
+        sy2 =
+            Entity.getY entity + Entity.getHeight entity
+
+        tx2 =
+            Entity.getX link.node
+
+        ty2 =
+            Entity.getY link.node + Entity.getHeight link.node
+
+        th =
+            Entity.getHeight link.node
+
+        dd =
+            [ sx1 -- 0
+            , sy1 -- 1
+            , sx1 + (tx1 - sx1) / 2 -- 2
+            , tx1 -- 3
+            , ty1 -- 4
+            , th -- 5
+            , sx2 -- 6
+            , sy2 -- 7
+            , sx2 + (tx2 - sx2) / 2 -- 8
+            , tx2 -- 9
+            , ty2 -- 10
+            ]
+                |> List.map String.fromFloat
+                |> String.Interpolate.interpolate
+                    "M{0} {1}C{2} {1} {2} {4} {3} {4} V {10} C{8} {10} {8} {7} {6} {7} Z"
+                |> d
+    in
+    S.path
+        [ dd
+        , Css.Graph.shadowLink vc |> css
+        ]
+        []
+
+
 addressLink : View.Config -> Graph.Config -> String -> Float -> Float -> Address -> Link Address -> Svg Msg
 addressLink vc gc selected mn mx address link =
     drawLink
@@ -133,9 +211,6 @@ addressLinkHovered vc gc mn mx address link =
 drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
 drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, nodeType } vc gc mn mx =
     let
-        cx =
-            sx + (tx - sx) / 2
-
         thickness =
             vc.theme.graph.linkThickness
                 * (if mn == mx then
@@ -146,10 +221,7 @@ drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClic
                   )
 
         dd =
-            [ sx, sy, cx, tx, ty ]
-                |> List.map String.fromFloat
-                |> String.Interpolate.interpolate
-                    "M{0} {1}C{2} {1} {2} {4} {3} {4}"
+            bezier sx sy tx ty
                 |> d
 
         lx =

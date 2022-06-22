@@ -154,6 +154,7 @@ graphSvg plugins states vc gc model size =
                         ( Id.noEntityLinkId, Id.noAddressLinkId )
          in
          [ Svg.lazy2 arrowMarkers vc gc
+         , Svg.lazy2 shadowLinks vc model.layers
          , Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
          , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
          , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
@@ -192,6 +193,24 @@ entities plugins vc gc selected layers =
             (\layerId layer svg ->
                 ( "layer" ++ String.fromInt layerId
                 , Svg.lazy5 ViewLayer.entities plugins vc gc selected layer
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+shadowLinks : Config -> IntDict Layer -> Svg Msg
+shadowLinks vc layers =
+    let
+        _ =
+            Log.log "Graph.shadowLinks" ""
+    in
+    layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                ( "shadowLinks" ++ String.fromInt layerId
+                , Svg.lazy2 ViewLayer.shadowLinks vc layer
                 )
                     :: svg
             )

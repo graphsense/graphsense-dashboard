@@ -95,12 +95,12 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
             { newModel
                 | layers =
                     added.layers
-                        |> Layer.syncLinks added.repositioned
                         |> addUserTag added.new model.userAddressTags
                 , config =
                     newModel.config
                         |> s_colors added.colors
             }
+                |> syncLinks added.repositioned
 
         addedAddress =
             added.new
@@ -210,7 +210,7 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedAddresses _ ->
             n model
 
-        InternalGraphAddedEntities _ ->
+        InternalGraphAddedEntities ids ->
             n model
 
         BrowserGotSvgElement result ->
@@ -324,9 +324,9 @@ updateByMsg plugins uc msg model =
                     { model
                         | layers =
                             Layer.moveEntity id vector model.layers
-                                |> Layer.syncLinks (Set.singleton id)
                         , dragging = DraggingNode id start coords
                     }
+                        |> syncLinks (Set.singleton id)
             )
                 |> n
 
@@ -2347,8 +2347,14 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
 
 syncLinks : Set EntityId -> Model -> Model
 syncLinks repositioned model =
+    let
+        ids =
+            Set.toList repositioned
+    in
     { model
-        | layers = Layer.syncLinks repositioned model.layers
+        | layers =
+            Layer.syncLinks ids model.layers
+                |> Layer.insertShadowLinks ids
     }
 
 

@@ -1,4 +1,4 @@
-module Update.Graph.Entity exposing (BoundingBox, addAddress, move, release, repositionAround, translate, updateEntity)
+module Update.Graph.Entity exposing (BoundingBox, addAddress, insertShadowLink, move, release, repositionAround, translate, updateEntity)
 
 import Api.Data
 import Color exposing (Color)
@@ -13,6 +13,7 @@ import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
+import Model.Graph.Link as Link
 import Plugin exposing (Plugins)
 import Plugin.Model as Plugin
 import Set exposing (Set)
@@ -268,3 +269,18 @@ repositionAround pivot entities =
         |> Dict.fromList
     , Set.union repos1 repos2
     )
+
+
+insertShadowLink : Entity -> Entity -> Entity
+insertShadowLink target source =
+    case source.shadowLinks of
+        Entity.Links links ->
+            { source
+                | shadowLinks =
+                    Dict.insert target.id
+                        { node = target
+                        , link = Link.PlaceholderLinkData
+                        }
+                        links
+                        |> Entity.Links
+            }

@@ -140,6 +140,11 @@ entityLabel vc =
         :: vc.theme.graph.entityLabel
 
 
+shadowLink : Config -> List Style
+shadowLink vc =
+    vc.theme.graph.shadowLink
+
+
 entityCurrency : Config -> List Style
 entityCurrency vc =
     property "fill" "currentColor"

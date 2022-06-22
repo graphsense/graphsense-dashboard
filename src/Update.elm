@@ -268,28 +268,38 @@ update plugins uc msg model =
                     let
                         ( new, outMsg, cmd ) =
                             Plugin.Update.Graph.addressesAdded plugins model.plugins ids
+
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
                     in
                     outMsg
                         |> List.foldl
                             (updateByPluginOutMsg plugins)
                             ( { model
                                 | plugins = new
+                                , graph = graph
                               }
                             , List.map PluginEffect cmd
+                                ++ List.map GraphEffect graphEffects
                             )
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
                         ( new, outMsg, cmd ) =
                             Plugin.Update.Graph.entitiesAdded plugins model.plugins ids
+
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
                     in
                     outMsg
                         |> List.foldl
                             (updateByPluginOutMsg plugins)
                             ( { model
                                 | plugins = new
+                                , graph = graph
                               }
                             , List.map PluginEffect cmd
+                                ++ List.map GraphEffect graphEffects
                             )
 
                 Graph.UserChangesCurrency currency ->

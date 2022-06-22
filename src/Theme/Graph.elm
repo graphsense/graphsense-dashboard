@@ -29,6 +29,7 @@ type alias Graph =
     , linkColorSelected : Color
     , linkLabel : Bool -> Bool -> List Style
     , linkLabelBox : Bool -> Bool -> List Style
+    , shadowLink : List Style
     , expandHandle : NodeType -> List Style
     , expandHandlePath : NodeType -> Bool -> List Style
     , expandHandleText : NodeType -> List Style
@@ -85,6 +86,7 @@ default =
     , linkColorSelected = Color.red
     , linkLabel = \_ _ -> []
     , linkLabelBox = \_ _ -> []
+    , shadowLink = []
     , expandHandle = always []
     , expandHandlePath = \_ _ -> []
     , expandHandleText = always []
