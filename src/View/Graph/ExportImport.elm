@@ -18,8 +18,8 @@ export vc =
         [ Dialog.part vc
             "Export"
             [ option vc "GraphSense File (.gs)" (UserClickedExportGS Nothing)
-            , option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
             , option vc "TagPack (.yaml)" (UserClickedExportTagPack Nothing)
+            , option vc "Graphics (.svg)" (UserClickedExportGraphics Nothing)
             ]
         ]
     ]
@@ -32,8 +32,8 @@ import_ vc =
         ]
         [ Dialog.part vc
             "Import"
-            [ option vc "TagPack (.yaml)" UserClickedImportTagPack
-            , option vc "Graphsense File (.gs)" UserClickedImportGS
+            [ option vc "Graphsense File (.gs)" UserClickedImportGS
+            , option vc "TagPack (.yaml)" UserClickedImportTagPack
             ]
         ]
     ]
