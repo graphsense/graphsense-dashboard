@@ -50,28 +50,6 @@ navbarLeft plugins states vc model =
         )
 
 
-
-{-
-   entityTag : Html Msg
-   entityTag =
-       S.svg
-           [ S.viewBox "0 0 24 24"
-           ]
-           [ S.path
-               [ S.strokeLineCap "round"
-               , S.strokeLineJoin "round"
-               , S.strokeWidth "2"
-               , S.css
-                   [ stroke currentColor
-                   , fill none
-                   ]
-               , S.d "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-               ]
-               []
-           ]
--}
-
-
 isActive : (Tool.Toolbox -> Bool) -> ActiveTool -> Tool.Status
 isActive is at =
     at.element
@@ -94,9 +72,9 @@ navbarRight vc model =
         (List.map (Tool.tool vc)
             [ { title = "Start from scratch"
               , icon = FontAwesome.icon FontAwesome.file
-              , msg = ToBeDone
+              , msg = \_ -> UserClickedNew
               , color = Nothing
-              , status = Tool.Disabled
+              , status = Tool.Inactive
               }
             , { title = "Load from file ..."
               , icon = FontAwesome.icon FontAwesome.folderOpen

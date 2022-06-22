@@ -138,4 +138,6 @@ type Msg
     | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
     | BrowserGotBulkAddressEntities String Deserializing (List Api.Data.Entity)
     | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
+    | UserClickedNew
+    | UserClickedNewYes
     | NoOp

@@ -13,6 +13,7 @@ import Effect.Graph exposing (Effect(..), getEntityEgonet)
 import Encode.Graph as Encode
 import File
 import File.Select
+import Init.Graph
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Id as Id
 import Init.Graph.Search as Search
@@ -1661,6 +1662,17 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
+        UserClickedNew ->
+            -- handled upstream
+            n model
+
+        UserClickedNewYes ->
+            Time.posixToMillis model.browser.now
+                |> Init.Graph.init plugins
+                |> s_history model.history
+                |> s_config model.config
+                |> n
+
         NoOp ->
             n model
 
@@ -2731,6 +2743,9 @@ shallPushHistory msg model =
             True
 
         UserSubmitsSearchInput ->
+            True
+
+        UserClickedNewYes ->
             True
 
         _ ->

@@ -4,7 +4,9 @@ import Css exposing (Style)
 
 
 type alias Dialog =
-    { heading : List Style
+    { dialog : List Style
+    , buttons : List Style
+    , heading : List Style
     , part : List Style
     , headRow : List Style
     , body : List Style
@@ -15,7 +17,9 @@ type alias Dialog =
 
 default : Dialog
 default =
-    { heading = []
+    { dialog = []
+    , buttons = []
+    , heading = []
     , part = []
     , headRow = []
     , body = []

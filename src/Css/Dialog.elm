@@ -4,6 +4,16 @@ import Config.View exposing (Config)
 import Css exposing (..)
 
 
+dialog : Config -> List Style
+dialog vc =
+    vc.theme.dialog.dialog
+
+
+buttons : Config -> List Style
+buttons vc =
+    vc.theme.dialog.buttons
+
+
 part : Config -> List Style
 part vc =
     vc.theme.dialog.part

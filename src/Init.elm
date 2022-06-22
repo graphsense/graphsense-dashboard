@@ -40,6 +40,7 @@ init plugins flags url key =
       , height = flags.height
       , error = ""
       , statusbar = Statusbar.init
+      , dialog = Nothing
       , plugins = Plugin.init plugins
       }
     , List.map LocaleEffect localeEffect

@@ -19,6 +19,7 @@ import Plugin as Plugin exposing (Plugins)
 import RemoteData
 import Route
 import Route.Graph
+import View.Dialog as Dialog
 import View.Graph.Search as Search
 import View.Graph.Tag as Tag
 import View.Header as Header
@@ -218,4 +219,10 @@ overlay vc model =
                 |> Maybe.withDefault []
 
         _ ->
-            []
+            case model.dialog of
+                Just dialog ->
+                    Dialog.view vc dialog
+                        |> ov
+
+                Nothing ->
+                    []

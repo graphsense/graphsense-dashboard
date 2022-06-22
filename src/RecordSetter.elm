@@ -499,6 +499,11 @@ s_button value__ record__ =
     { record__ | button = value__ }
 
 
+s_buttons : a -> { b | buttons : a } -> { b | buttons : a }
+s_buttons value__ record__ =
+    { record__ | buttons = value__ }
+
+
 s_bytes : a -> { b | bytes : a } -> { b | bytes : a }
 s_bytes value__ record__ =
     { record__ | bytes = value__ }
@@ -2869,6 +2874,11 @@ s_onMouseOver value__ record__ =
     { record__ | onMouseOver = value__ }
 
 
+s_onNo : a -> { b | onNo : a } -> { b | onNo : a }
+s_onNo value__ record__ =
+    { record__ | onNo = value__ }
+
+
 s_onNotAsked : a -> { b | onNotAsked : a } -> { b | onNotAsked : a }
 s_onNotAsked value__ record__ =
     { record__ | onNotAsked = value__ }
@@ -2897,6 +2907,11 @@ s_onUrlChange value__ record__ =
 s_onUrlRequest : a -> { b | onUrlRequest : a } -> { b | onUrlRequest : a }
 s_onUrlRequest value__ record__ =
     { record__ | onUrlRequest = value__ }
+
+
+s_onYes : a -> { b | onYes : a } -> { b | onYes : a }
+s_onYes value__ record__ =
+    { record__ | onYes = value__ }
 
 
 s_only : a -> { b | only : a } -> { b | only : a }

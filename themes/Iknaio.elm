@@ -300,8 +300,26 @@ theme =
             )
         |> s_dialog
             (Dialog.default
+                |> s_dialog
+                    [ colors.brandWhite |> toCssColor |> backgroundColor
+                    , scaled 3 |> rem |> padding
+                    , borderRadiusSm
+                    , colors.brandLight |> toCssColor |> borderColor
+                    , borderWidth (px 1)
+                    , borderStyle solid
+                    ]
+                |> s_buttons
+                    [ displayFlex
+                    , justifyContent spaceBetween
+                    , alignSelf center
+                    , px 100 |> minWidth
+                    , pct 50 |> width
+                    ]
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
+                    , displayFlex
+                    , flexDirection column
+                    , scaled 2 |> rem |> paddingRight
                     ]
                 |> s_heading
                     [ fontNormal

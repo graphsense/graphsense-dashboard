@@ -32,6 +32,7 @@ import Route.Graph
 import Task
 import Time
 import Tuple exposing (..)
+import Update.Dialog as Dialog
 import Update.Graph as Graph
 import Update.Graph.Adding as Adding
 import Update.Graph.Browser as Browser
@@ -411,6 +412,35 @@ update plugins uc msg model =
                             , List.map GraphEffect graphEffects
                             )
 
+                Graph.UserClickedNew ->
+                    { model
+                        | dialog =
+                            { message = Locale.string model.locale "Do you want to start from scratch?"
+                            , onYes = GraphMsg Graph.UserClickedNewYes
+                            , onNo = UserClickedNo
+                            }
+                                |> Dialog.confirm
+                                |> Just
+                    }
+                        |> n
+
+                Graph.UserClickedNewYes ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+                    in
+                    ( { model
+                        | dialog = Nothing
+                        , graph = graph
+                      }
+                    , (Route.Graph.Root
+                        |> Route.graphRoute
+                        |> Route.toUrl
+                        |> NavPushUrlEffect
+                      )
+                        :: List.map GraphEffect graphEffects
+                    )
+
                 _ ->
                     let
                         ( graph, graphEffects ) =
@@ -419,6 +449,9 @@ update plugins uc msg model =
                     ( { model | graph = graph }
                     , List.map GraphEffect graphEffects
                     )
+
+        UserClickedNo ->
+            n { model | dialog = Nothing }
 
         PluginMsg pid msgValue ->
             let

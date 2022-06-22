@@ -12,6 +12,7 @@ import Html exposing (Attribute, Html)
 import Http
 import Json.Encode
 import Model.Address exposing (Address)
+import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph
 import Model.Locale
@@ -53,6 +54,7 @@ type alias Model navigationKey =
     , height : Int
     , error : String
     , statusbar : Model.Statusbar.Model
+    , dialog : Maybe (Model.Dialog.Model Msg)
     , plugins : Dict String Json.Encode.Value
     }
 
@@ -74,6 +76,7 @@ type Msg
     | UserHoversUserIcon String
     | UserLeftUserHovercard
     | UserClickedLayout
+    | UserClickedNo
     | BrowserGotElement (Result Dom.Error Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
