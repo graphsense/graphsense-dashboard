@@ -407,6 +407,15 @@ theme =
                         |> property "stroke"
                     , property "stroke-width" "10px"
                     ]
+                |> s_tagsFlag
+                    [ colors.white
+                        |> Color.toCssString
+                        |> property "stroke"
+                    , colors.black
+                        |> Color.toCssString
+                        |> property "fill"
+                    , property "stroke-width" "10px"
+                    ]
                 |> s_entityCurrency
                     ((px 12 |> fontSize) :: fillBlack)
                 |> s_entityAddressesCount

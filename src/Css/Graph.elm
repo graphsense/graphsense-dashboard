@@ -98,6 +98,11 @@ abuseFlag vc =
     vc.theme.graph.abuseFlag
 
 
+tagsFlag : Config -> List Style
+tagsFlag vc =
+    vc.theme.graph.tagsFlag
+
+
 addressLabel : Config -> List Style
 addressLabel vc =
     property "fill" "currentColor"

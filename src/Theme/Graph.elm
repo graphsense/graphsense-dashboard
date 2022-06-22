@@ -10,6 +10,7 @@ type alias Graph =
     { root : List Style
     , addressFlags : List Style
     , abuseFlag : List Style
+    , tagsFlag : List Style
     , flagsGap : Float
     , addressLabel : List Style
     , addressRect : List Style
@@ -65,6 +66,7 @@ default =
     { root = []
     , addressFlags = []
     , abuseFlag = []
+    , tagsFlag = []
     , flagsGap = 5
     , addressLabel = []
     , addressRect = []

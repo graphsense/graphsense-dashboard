@@ -184,6 +184,17 @@ getLabel vc gc ent =
 
 flags : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
 flags plugins vc gc ent =
+    let
+        tf =
+            tagsFlag vc ent
+
+        offset =
+            if List.isEmpty tf then
+                0
+
+            else
+                15
+    in
     g
         [ Css.entityFlags vc |> css
         , Graph.padding
@@ -194,7 +205,26 @@ flags plugins vc gc ent =
             |> Util.Graph.scale 0.75
             |> transform
         ]
-        (Plugin.View.Graph.Entity.flags plugins vc 0 ent)
+        (tf
+            ++ Plugin.View.Graph.Entity.flags plugins vc offset ent
+        )
+
+
+tagsFlag : Config -> Entity -> List (Svg Msg)
+tagsFlag vc ent =
+    if ent.entity.noAddressTags > 0 && ent.entity.bestAddressTag == Nothing then
+        [ Svg.path
+            [ translate 0 0
+                |> Util.Graph.scale 0.033
+                |> transform
+            , Css.tagsFlag vc |> css
+            , d "M48 32H197.5C214.5 32 230.7 38.74 242.7 50.75L418.7 226.7C443.7 251.7 443.7 292.3 418.7 317.3L285.3 450.7C260.3 475.7 219.7 475.7 194.7 450.7L18.75 274.7C6.743 262.7 0 246.5 0 229.5V80C0 53.49 21.49 32 48 32L48 32zM112 176C129.7 176 144 161.7 144 144C144 126.3 129.7 112 112 112C94.33 112 80 126.3 80 144C80 161.7 94.33 176 112 176z"
+            ]
+            []
+        ]
+
+    else
+        []
 
 
 currency : Config -> Graph.Config -> Entity -> Svg Msg

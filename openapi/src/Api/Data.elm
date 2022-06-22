@@ -245,6 +245,7 @@ type alias Entity =
     , firstTx : TxSummary
     , inDegree : Int
     , lastTx : TxSummary
+    , noAddressTags : Int
     , noAddresses : Int
     , noIncomingTxs : Int
     , noOutgoingTxs : Int
@@ -720,6 +721,7 @@ encodeEntityPairs model =
             , encode "first_tx" encodeTxSummary model.firstTx
             , encode "in_degree" Json.Encode.int model.inDegree
             , encode "last_tx" encodeTxSummary model.lastTx
+            , encode "no_address_tags" Json.Encode.int model.noAddressTags
             , encode "no_addresses" Json.Encode.int model.noAddresses
             , encode "no_incoming_txs" Json.Encode.int model.noIncomingTxs
             , encode "no_outgoing_txs" Json.Encode.int model.noOutgoingTxs
@@ -1499,6 +1501,7 @@ entityDecoder =
         |> decode "first_tx" txSummaryDecoder 
         |> decode "in_degree" Json.Decode.int 
         |> decode "last_tx" txSummaryDecoder 
+        |> decode "no_address_tags" Json.Decode.int 
         |> decode "no_addresses" Json.Decode.int 
         |> decode "no_incoming_txs" Json.Decode.int 
         |> decode "no_outgoing_txs" Json.Decode.int 

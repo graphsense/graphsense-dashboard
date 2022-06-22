@@ -567,8 +567,8 @@ rowsEntity vc gc now ent =
         ( "Address Tags"
         , ent
             |> ifLoaded
-                (.addressTags
-                    >> List.length
+                (.entity
+                    >> .noAddressTags
                     >> String.fromInt
                     >> String
                 )

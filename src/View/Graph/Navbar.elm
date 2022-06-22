@@ -33,7 +33,7 @@ navbarLeft plugins states vc model =
         [ Css.navbarLeft vc |> css
         ]
         (List.map (Tool.tool vc)
-            [ { icon = FontAwesome.icon FontAwesome.tag
+            [ { icon = FontAwesome.icon FontAwesome.userTag
               , title = "My tags"
               , msg = \_ -> UserClickedUserTags
               , color = Nothing

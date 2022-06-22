@@ -124,11 +124,6 @@ s_addressesAdded value__ record__ =
     { record__ | addressesAdded = value__ }
 
 
-s_addressesByEntity : a -> { b | addressesByEntity : a } -> { b | addressesByEntity : a }
-s_addressesByEntity value__ record__ =
-    { record__ | addressesByEntity = value__ }
-
-
 s_aliases : a -> { b | aliases : a } -> { b | aliases : a }
 s_aliases value__ record__ =
     { record__ | aliases = value__ }
@@ -2569,6 +2564,11 @@ s_new value__ record__ =
     { record__ | new = value__ }
 
 
+s_newAddressIds : a -> { b | newAddressIds : a } -> { b | newAddressIds : a }
+s_newAddressIds value__ record__ =
+    { record__ | newAddressIds = value__ }
+
+
 s_newAddresses : a -> { b | newAddresses : a } -> { b | newAddresses : a }
 s_newAddresses value__ record__ =
     { record__ | newAddresses = value__ }
@@ -2577,6 +2577,11 @@ s_newAddresses value__ record__ =
 s_newEntities : a -> { b | newEntities : a } -> { b | newEntities : a }
 s_newEntities value__ record__ =
     { record__ | newEntities = value__ }
+
+
+s_newEntityIds : a -> { b | newEntityIds : a } -> { b | newEntityIds : a }
+s_newEntityIds value__ record__ =
+    { record__ | newEntityIds = value__ }
 
 
 s_newLines : a -> { b | newLines : a } -> { b | newLines : a }
@@ -2612,6 +2617,11 @@ s_nh value__ record__ =
 s_noAddressRelations : a -> { b | noAddressRelations : a } -> { b | noAddressRelations : a }
 s_noAddressRelations value__ record__ =
     { record__ | noAddressRelations = value__ }
+
+
+s_noAddressTags : a -> { b | noAddressTags : a } -> { b | noAddressTags : a }
+s_noAddressTags value__ record__ =
+    { record__ | noAddressTags = value__ }
 
 
 s_noAddresses : a -> { b | noAddresses : a } -> { b | noAddresses : a }
@@ -4162,6 +4172,11 @@ s_tagpackUri value__ record__ =
 s_tags : a -> { b | tags : a } -> { b | tags : a }
 s_tags value__ record__ =
     { record__ | tags = value__ }
+
+
+s_tagsFlag : a -> { b | tagsFlag : a } -> { b | tagsFlag : a }
+s_tagsFlag value__ record__ =
+    { record__ | tagsFlag = value__ }
 
 
 s_tail : a -> { b | tail : a } -> { b | tail : a }
