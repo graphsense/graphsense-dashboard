@@ -1,13 +1,18 @@
 module View.Graph.Table.AddressTagsTable exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Config.View as View
+import Css
+import Css.Table
 import Css.View
+import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
+import RecordSetter exposing (..)
 import Table
 import Util.View exposing (truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
@@ -19,8 +24,8 @@ init =
     Init.Graph.Table.initSorted True "Confidence"
 
 
-config : View.Config -> Table.Config Api.Data.AddressTag Msg
-config vc =
+config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Table.Config Api.Data.AddressTag Msg
+config vc gc bestAddressTag =
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
@@ -86,7 +91,35 @@ config vc =
                 )
             , T.stringColumn vc "Creator" .tagpackCreator
             ]
-        , customizations = customizations vc
+        , customizations =
+            customizations vc
+                |> s_rowAttrs
+                    (\data ->
+                        [ Css.Table.row vc
+                            ++ (bestAddressTag
+                                    |> Maybe.andThen
+                                        (\tag ->
+                                            if tag == data then
+                                                tag.category
+                                                    |> Maybe.andThen
+                                                        (\category ->
+                                                            Dict.get category gc.colors
+                                                                |> Maybe.map
+                                                                    (Util.View.setAlpha 0.7
+                                                                        >> Util.View.toCssColor
+                                                                        >> Css.backgroundColor
+                                                                        >> List.singleton
+                                                                    )
+                                                        )
+
+                                            else
+                                                Nothing
+                                        )
+                                    |> Maybe.withDefault []
+                               )
+                            |> css
+                        ]
+                    )
         }
 
 

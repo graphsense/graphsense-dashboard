@@ -50,3 +50,10 @@ firstToUpper str =
 truncate : Int -> String -> String
 truncate len str =
     String.left len str ++ "…"
+
+
+setAlpha : Float -> Color.Color -> Color.Color
+setAlpha alpha =
+    Color.toRgba
+        >> (\c -> { c | alpha = alpha })
+        >> Color.fromRgba

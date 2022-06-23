@@ -525,9 +525,7 @@ theme =
                     )
                 |> s_shadowLink
                     [ colors.brandLighter
-                        |> Color.toRgba
-                        |> (\c -> { c | alpha = 0.3 })
-                        |> Color.fromRgba
+                        |> Util.View.setAlpha 0.3
                         |> Color.toCssString
                         |> property "fill"
                     ]

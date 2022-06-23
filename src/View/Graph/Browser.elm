@@ -718,7 +718,7 @@ browseAddressTable vc gc height address table =
             table_ vc height (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc) t
+            table_ vc height (AddressTagsTable.config vc gc Nothing) t
 
         AddressIncomingNeighborsTable t ->
             table_ vc height (AddressNeighborsTable.config vc False coinCode addressId) t
@@ -739,13 +739,13 @@ table_ vc =
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
 browseEntityTable vc gc height entity table =
     let
-        ( coinCode, entityId ) =
+        ( coinCode, entityId, bestAddressTag ) =
             case entity of
                 Loaded e ->
-                    ( e.entity.currency, e.id |> Just )
+                    ( e.entity.currency, e.id |> Just, e.entity.bestAddressTag )
 
                 Loading curr _ ->
-                    ( curr, Nothing )
+                    ( curr, Nothing, Nothing )
     in
     case table of
         EntityAddressesTable t ->
@@ -758,7 +758,7 @@ browseEntityTable vc gc height entity table =
             table_ vc height (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc) t
+            table_ vc height (AddressTagsTable.config vc gc bestAddressTag) t
 
         EntityIncomingNeighborsTable t ->
             table_ vc height (EntityNeighborsTable.config vc False coinCode entityId) t
