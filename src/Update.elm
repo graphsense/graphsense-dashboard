@@ -1,5 +1,6 @@
 module Update exposing (update, updateByUrl)
 
+import Api
 import Browser
 import Browser.Navigation as Nav
 import Config.Update exposing (Config)
@@ -102,6 +103,9 @@ update plugins uc msg model =
                             | statusbar =
                                 Statusbar.update t
                                     (case result of
+                                        Err ( Http.BadStatus 401, _ ) ->
+                                            Nothing
+
                                         Err ( err, _ ) ->
                                             Just err
 
@@ -170,7 +174,19 @@ update plugins uc msg model =
                     | user =
                         model.user
                             |> s_auth
-                                (Unauthorized True [])
+                                (if List.isEmpty effs then
+                                    Unknown
+
+                                 else
+                                    Unauthorized True []
+                                )
+                            |> s_hovercardElement
+                                (if List.isEmpty effs then
+                                    Nothing
+
+                                 else
+                                    model.user.hovercardElement
+                                )
                   }
                 , effs
                 )
@@ -200,6 +216,49 @@ update plugins uc msg model =
         UserClickedLayout ->
             { model
                 | search = Search.clear model.search
+            }
+                |> n
+
+        UserClickedLogout ->
+            ( { model
+                | user =
+                    model.user
+                        |> s_auth
+                            (case model.user.auth of
+                                Authorized auth ->
+                                    Authorized
+                                        { auth | loggingOut = True }
+
+                                _ ->
+                                    model.user.auth
+                            )
+              }
+            , LogoutEffect
+                |> List.singleton
+            )
+
+        BrowserGotLoggedOut result ->
+            { model
+                | user =
+                    result
+                        |> Result.map
+                            (\_ ->
+                                model.user
+                                    |> s_auth (Unauthorized False [])
+                                    |> s_apiKey ""
+                            )
+                        |> Result.withDefault
+                            (model.user
+                                |> s_auth
+                                    (case model.user.auth of
+                                        Authorized auth ->
+                                            { auth | loggingOut = False }
+                                                |> Authorized
+
+                                        _ ->
+                                            model.user.auth
+                                    )
+                            )
             }
                 |> n
 
@@ -632,6 +691,7 @@ updateRequestLimit headers model =
                     (get "ratelimit-reset")
                     |> Maybe.withDefault Unlimited
             , expiration = Nothing
+            , loggingOut = False
             }
                 |> Authorized
     }

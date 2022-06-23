@@ -2309,6 +2309,11 @@ s_logo value__ record__ =
     { record__ | logo = value__ }
 
 
+s_logoutButton : a -> { b | logoutButton : a } -> { b | logoutButton : a }
+s_logoutButton value__ record__ =
+    { record__ | logoutButton = value__ }
+
+
 s_lower : a -> { b | lower : a } -> { b | lower : a }
 s_lower value__ record__ =
     { record__ | lower = value__ }

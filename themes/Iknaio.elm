@@ -308,6 +308,17 @@ theme =
                 |> s_hovercardRoot
                     [ scaled 3 |> rem |> padding
                     ]
+                |> s_logoutButton
+                    [ padding zero
+                    , backgroundColor transparent
+                    , border zero
+                    , colors.brandText |> toCssColor |> color
+                    , textDecoration underline
+                    , cursor pointer
+                    , hover
+                        [ textDecoration none
+                        ]
+                    ]
             )
         |> s_dialog
             (Dialog.default
@@ -630,6 +641,10 @@ theme =
                             |> backgroundColor
                         , scaled 2 |> rem |> padding
                         , shadowMd
+
+                        --, borderWidth (px 1)
+                        --, borderStyle solid
+                        --, colors.brandDark |> toCssColor |> borderColor
                         ]
                     )
                 |> s_propertyBoxRule

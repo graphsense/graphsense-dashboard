@@ -77,6 +77,8 @@ type Msg
     | UserLeftUserHovercard
     | UserClickedLayout
     | UserClickedNo
+    | UserClickedLogout
+    | BrowserGotLoggedOut (Result Http.Error ())
     | BrowserGotElement (Result Dom.Error Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
@@ -104,6 +106,7 @@ type Auth
     = Authorized
         { requestLimit : RequestLimit
         , expiration : Maybe Time.Posix
+        , loggingOut : Bool
         }
     | Unauthorized Bool (List Effect)
     | Unknown
@@ -121,6 +124,7 @@ type Effect
     | PluginEffect ( String, Cmd Json.Encode.Value )
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)
+    | LogoutEffect
 
 
 type Thing

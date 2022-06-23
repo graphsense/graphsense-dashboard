@@ -6,7 +6,7 @@ import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events as Events exposing (onInput, stopPropagationOn)
+import Html.Styled.Events as Events exposing (onClick, onInput, stopPropagationOn)
 import Json.Decode
 import Model exposing (Auth(..), Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
@@ -51,6 +51,23 @@ hovercard vc model =
                 "Language"
                 [ localeSwitch vc ]
            ]
+        ++ (case model.auth of
+                Authorized auth ->
+                    [ if auth.loggingOut then
+                        loadingSpinner vc Css.loadingSpinner
+
+                      else
+                        button
+                            [ Css.logoutButton vc |> css
+                            , onClick UserClickedLogout
+                            ]
+                            [ Locale.string vc.locale "Logout" |> text
+                            ]
+                    ]
+
+                _ ->
+                    []
+           )
         |> div
             [ Events.onMouseLeave UserLeftUserHovercard
             , Css.hovercardRoot vc |> css

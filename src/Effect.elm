@@ -58,6 +58,17 @@ perform plugins key statusbarToken apiKey effect =
             Locale.perform eff
                 |> Cmd.map LocaleMsg
 
+        LogoutEffect ->
+            Http.riskyRequest
+                { method = "GET"
+                , headers = [ Http.header "Authorization" apiKey ]
+                , url = Api.baseUrl ++ "/search?logout"
+                , body = Http.emptyBody
+                , expect = Http.expectWhatever BrowserGotLoggedOut
+                , timeout = Nothing
+                , tracker = Nothing
+                }
+
         GraphEffect eff ->
             case eff of
                 Graph.NavPushRouteEffect route ->

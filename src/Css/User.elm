@@ -27,3 +27,8 @@ requestLimit vc =
 requestReset : Config -> List Style
 requestReset vc =
     vc.theme.user.requestReset
+
+
+logoutButton : Config -> List Style
+logoutButton vc =
+    vc.theme.user.logoutButton

@@ -9,6 +9,7 @@ type alias User =
     , requestLimitRoot : List Style
     , requestLimit : List Style
     , requestReset : List Style
+    , logoutButton : List Style
     }
 
 
@@ -19,4 +20,5 @@ default =
     , requestLimitRoot = []
     , requestLimit = []
     , requestReset = []
+    , logoutButton = []
     }
