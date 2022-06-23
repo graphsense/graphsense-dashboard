@@ -2272,6 +2272,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     in
     ( addEntityLinks anchor isOutgoing new newModel
         |> syncLinks repositioned
+        |> insertShadowLinks (List.map (second >> .id) new |> Set.fromList)
     , neighbors
         |> List.map
             (\{ entity } ->
@@ -2355,6 +2356,17 @@ syncLinks repositioned model =
         | layers =
             Layer.syncLinks ids model.layers
                 |> Layer.insertShadowLinks ids
+    }
+
+
+insertShadowLinks : Set EntityId -> Model -> Model
+insertShadowLinks new model =
+    let
+        ids =
+            Set.toList new
+    in
+    { model
+        | layers = Layer.insertShadowLinks ids model.layers
     }
 
 
