@@ -217,6 +217,39 @@ getAddressLink ( src, tgt ) =
             )
 
 
+getAddressLinksByTarget : AddressId -> Layer -> List ( Address, Link Address )
+getAddressLinksByTarget tgt layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity found ->
+                entity.addresses
+                    |> Dict.foldl
+                        (\_ address found_ ->
+                            case address.links of
+                                Address.Links links ->
+                                    Dict.get tgt links
+                                        |> Maybe.map (\link -> ( address, link ) :: found_)
+                                        |> Maybe.withDefault found_
+                        )
+                        found
+            )
+            []
+
+
+getEntityLinksByTarget : EntityId -> Layer -> List ( Entity, Link Entity )
+getEntityLinksByTarget tgt layer =
+    layer.entities
+        |> Dict.foldl
+            (\_ entity found_ ->
+                case entity.links of
+                    Entity.Links links ->
+                        Dict.get tgt links
+                            |> Maybe.map (\link -> ( entity, link ) :: found_)
+                            |> Maybe.withDefault found_
+            )
+            []
+
+
 getFirstAddress : { currency : String, address : String } -> IntDict Layer -> Maybe Address
 getFirstAddress { currency, address } layers =
     layers

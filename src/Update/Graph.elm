@@ -374,7 +374,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserHoversAddress id ->
-            n model
+            n { model | hovered = HoveredAddress id }
 
         UserClickedEntity id moved ->
             if draggingToClick { x = 0, y = 0 } moved then
@@ -406,7 +406,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserHoversEntity id ->
-            n model
+            n { model | hovered = HoveredEntity id }
 
         UserHoversEntityLink id ->
             { model

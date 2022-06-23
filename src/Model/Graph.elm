@@ -69,6 +69,8 @@ type Selected
 type Hovered
     = HoveredEntityLink (LinkId EntityId)
     | HoveredAddressLink (LinkId AddressId)
+    | HoveredAddress AddressId
+    | HoveredEntity EntityId
     | HoveredNone
 
 

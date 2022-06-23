@@ -5,6 +5,7 @@ import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css.Graph as Css
+import Dict
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Html exposing (..)
 import IntDict exposing (IntDict)
@@ -12,8 +13,10 @@ import Json.Decode
 import List.Extra
 import Log
 import Model.Graph exposing (..)
+import Model.Graph.Address as Address
 import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Transform as Transform
@@ -141,17 +144,6 @@ graphSvg plugins states vc gc model size =
 
                     SelectedNone ->
                         def
-
-            ( hoveredEntityLink, hoveredAddressLink ) =
-                case model.hovered of
-                    HoveredEntityLink id ->
-                        ( id, Id.noAddressLinkId )
-
-                    HoveredAddressLink id ->
-                        ( Id.noEntityLinkId, id )
-
-                    HoveredNone ->
-                        ( Id.noEntityLinkId, Id.noAddressLinkId )
          in
          [ Svg.lazy2 arrowMarkers vc gc
          , Svg.lazy2 shadowLinks vc model.layers
@@ -159,7 +151,7 @@ graphSvg plugins states vc gc model size =
          , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
          , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
          , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
-         , Svg.lazy5 hoveredLink vc gc hoveredEntityLink hoveredAddressLink model.layers
+         , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
          ]
         )
 
@@ -254,43 +246,113 @@ addressLinks vc gc selected layers =
         |> Keyed.node "g" []
 
 
-hoveredLink : Config -> Graph.Config -> Id.LinkId Id.EntityId -> Id.LinkId Id.AddressId -> IntDict Layer -> Svg Msg
-hoveredLink vc gc hoveredEntityLink hoveredAddressLink layers =
-    let
-        el =
-            if hoveredEntityLink /= Id.noEntityLinkId then
-                Id.getSourceId hoveredEntityLink
+hoveredLinks : Config -> Graph.Config -> Hovered -> IntDict Layer -> Svg Msg
+hoveredLinks vc gc hovered layers =
+    g []
+        (case hovered of
+            HoveredEntityLink id ->
+                Id.getSourceId id
                     |> Id.layer
                     |> (\l -> IntDict.get l layers)
                     |> Maybe.map (ViewLayer.calcRange vc gc)
                     |> Maybe.andThen
                         (\( mn, mx ) ->
-                            Layer.getEntityLink hoveredEntityLink layers
+                            Layer.getEntityLink id layers
                                 |> Maybe.map
                                     (\( source, target ) ->
-                                        Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                        [ Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                        ]
                                     )
                         )
+                    |> Maybe.withDefault []
 
-            else if hoveredAddressLink /= Id.noAddressLinkId then
-                Id.getSourceId hoveredAddressLink
+            HoveredAddressLink id ->
+                Id.getSourceId id
                     |> Id.layer
                     |> (\l -> IntDict.get l layers)
                     |> Maybe.map (ViewLayer.calcAddressRange vc gc)
                     |> Maybe.andThen
                         (\( mn, mx ) ->
-                            Layer.getAddressLink hoveredAddressLink layers
+                            Layer.getAddressLink id layers
                                 |> Maybe.map
                                     (\( source, target ) ->
-                                        Svg.lazy6 Link.addressLinkHovered vc gc mn mx source target
+                                        [ Svg.lazy6 Link.addressLinkHovered vc gc mn mx source target
+                                        ]
                                     )
                         )
+                    |> Maybe.withDefault []
 
-            else
-                Nothing
-    in
-    el
-        |> Maybe.withDefault none
+            HoveredAddress id ->
+                Id.layer id
+                    - 1
+                    |> (\l -> IntDict.get l layers)
+                    |> Maybe.map
+                        (\layer ->
+                            ViewLayer.calcAddressRange vc gc layer
+                                |> (\( mn, mx ) ->
+                                        Layer.getAddressLinksByTarget id layer
+                                            |> List.map
+                                                (\( source, target ) ->
+                                                    Svg.lazy6 Link.addressLinkHovered vc gc mn mx source target
+                                                )
+                                   )
+                        )
+                    |> Maybe.withDefault []
+                    |> (++)
+                        (Maybe.map2
+                            (\layer source ->
+                                ViewLayer.calcAddressRange vc gc layer
+                                    |> (\( mn, mx ) ->
+                                            case source.links of
+                                                Address.Links links ->
+                                                    links
+                                                        |> Dict.values
+                                                        |> List.map
+                                                            (Svg.lazy6 Link.addressLinkHovered vc gc mn mx source)
+                                       )
+                            )
+                            (IntDict.get (Id.layer id) layers)
+                            (Layer.getAddress id layers)
+                            |> Maybe.withDefault []
+                        )
+
+            HoveredEntity id ->
+                Id.layer id
+                    - 1
+                    |> (\l -> IntDict.get l layers)
+                    |> Maybe.map
+                        (\layer ->
+                            ViewLayer.calcRange vc gc layer
+                                |> (\( mn, mx ) ->
+                                        Layer.getEntityLinksByTarget id layer
+                                            |> List.map
+                                                (\( source, target ) ->
+                                                    Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                )
+                                   )
+                        )
+                    |> Maybe.withDefault []
+                    |> (++)
+                        (Maybe.map2
+                            (\layer source ->
+                                ViewLayer.calcRange vc gc layer
+                                    |> (\( mn, mx ) ->
+                                            case source.links of
+                                                Entity.Links links ->
+                                                    links
+                                                        |> Dict.values
+                                                        |> List.map
+                                                            (Svg.lazy6 Link.entityLinkHovered vc gc mn mx source)
+                                       )
+                            )
+                            (IntDict.get (Id.layer id) layers)
+                            (Layer.getEntity id layers)
+                            |> Maybe.withDefault []
+                        )
+
+            HoveredNone ->
+                []
+        )
 
 
 arrowMarkers : Config -> Graph.Config -> Svg Msg
