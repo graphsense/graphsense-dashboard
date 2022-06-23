@@ -169,7 +169,15 @@ getLabel vc gc addr =
                 |> Maybe.map .label
                 |> Maybe.Extra.orElseLazy
                     (\_ ->
-                        Address.bestTag addr.address.tags |> Maybe.map .label
+                        Address.bestTag addr.address.tags
+                            |> Maybe.map
+                                (\tag ->
+                                    if not tag.tagpackIsPublic && String.isEmpty tag.label then
+                                        "tag locked"
+
+                                    else
+                                        tag.label
+                                )
                     )
                 |> Maybe.withDefault (addr.address.address |> String.left 8)
 
