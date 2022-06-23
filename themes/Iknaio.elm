@@ -795,7 +795,7 @@ theme =
                                     |> minHeight
                                , scaled 50 |> rem |> maxHeight
                                , colors.greyDark |> toCssColor |> color
-                               , scaled 2.75 |> rem |> fontSize
+                               , scaled 3 |> rem |> fontSize
                                ]
                     )
                 |> s_loadingSpinner

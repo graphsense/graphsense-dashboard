@@ -381,10 +381,10 @@ contextMenu plugins states vc model cm =
                 ++ Plugin.View.Graph.Address.contextMenu plugins states vc model address
 
         ContextMenu.Entity entity ->
-            [ UserClickedRemoveEntity entity.id
-                |> option "Remove"
-            , UserClickedSearch entity.id
+            [ UserClickedSearch entity.id
                 |> option "Search neighbors"
+            , UserClickedRemoveEntity entity.id
+                |> option "Remove"
             ]
     )
         |> ContextMenu.view vc cm.coords
