@@ -298,7 +298,7 @@ browseValue vc value =
                 ]
 
         LoadingValue ->
-            text "loading"
+            Util.View.loadingSpinner vc Css.loadingSpinner
 
 
 browseAddress : Plugins -> PluginStates -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg

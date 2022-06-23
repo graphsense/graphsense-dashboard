@@ -246,3 +246,13 @@ radioText vc =
 searchSettingsRow : Config -> List Style
 searchSettingsRow vc =
     vc.theme.graph.searchSettingsRow
+
+
+tagLockedIcon : Config -> List Style
+tagLockedIcon vc =
+    vc.theme.graph.tagLockedIcon
+
+
+tagLockedText : Config -> List Style
+tagLockedText vc =
+    vc.theme.graph.tagLockedText

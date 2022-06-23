@@ -16,6 +16,7 @@ type alias Stats =
     , tableCellValue : List Style
     , currencyBackground : List Style
     , currencyBackgroundPath : List Style
+    , loadingSpinner : List Style
     }
 
 
@@ -33,4 +34,5 @@ default =
     , tableCellValue = []
     , currencyBackground = []
     , currencyBackgroundPath = []
+    , loadingSpinner = []
     }

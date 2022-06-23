@@ -96,3 +96,8 @@ propertyBoxTableLink vc active =
     position absolute
         :: right (px 0)
         :: vc.theme.browser.propertyBoxTableLink active
+
+
+loadingSpinner : Config -> List Style
+loadingSpinner vc =
+    vc.theme.browser.loadingSpinner

@@ -20,6 +20,7 @@ type alias Browser =
     , propertyBoxUsageRelative : List Style
     , propertyBoxActivityPeriod : List Style
     , propertyBoxTableLink : Bool -> List Style
+    , loadingSpinner : List Style
     }
 
 
@@ -40,4 +41,5 @@ default =
     , propertyBoxUsageRelative = []
     , propertyBoxActivityPeriod = []
     , propertyBoxTableLink = \_ -> []
+    , loadingSpinner = []
     }

@@ -89,5 +89,6 @@ currencyBackgroundPath vc =
         ++ vc.theme.stats.currencyBackgroundPath
 
 
-
--- w-auto p-2 bg-gs-light font-hairline pt-3 pl-4
+loadingSpinner : Config -> List Style
+loadingSpinner vc =
+    vc.theme.stats.loadingSpinner

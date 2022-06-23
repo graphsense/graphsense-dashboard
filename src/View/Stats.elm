@@ -3,7 +3,7 @@ module View.Stats exposing (stats)
 import Api.Data
 import Config.View exposing (Config)
 import Css.Stats as Css
-import Css.View as Css
+import Css.View
 import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -13,6 +13,7 @@ import RemoteData as RD exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
 import Util.RemoteData exposing (webdata)
+import Util.View
 import View.CurrencyMeta exposing (currencies)
 import View.Locale as Locale
 
@@ -22,7 +23,7 @@ stats vc sts =
     div
         [ Css.root vc |> css ]
         [ h2
-            [ Css.heading2 vc |> css
+            [ Css.View.heading2 vc |> css
             ]
             [ Locale.text vc.locale "ledger statistics"
             ]
@@ -43,7 +44,7 @@ statsLoadFailure vc error =
 
 statsLoading : Config -> Html msg
 statsLoading vc =
-    text "loading"
+    Util.View.loadingSpinner vc Css.loadingSpinner
 
 
 statsLoaded : Config -> Api.Data.Stats -> Html msg

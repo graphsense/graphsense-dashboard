@@ -196,6 +196,12 @@ theme =
                 |> s_currencyBackground
                     [ rgba 0 0 0 0.2 |> color
                     ]
+                |> s_loadingSpinner
+                    [ scaled 8 |> rem |> height
+                    , scaled 8 |> rem |> width
+                    , scaled 2 |> rem |> paddingTop
+                    , scaled -1 |> rem |> marginLeft
+                    ]
             )
         |> s_search
             (Search.default
@@ -598,6 +604,10 @@ theme =
                     [ displayFlex
                     , justifyContent spaceBetween
                     ]
+                |> s_tagLockedIcon
+                    [ opacity (num 0.5) ]
+                |> s_tagLockedText
+                    [ fontStyle italic ]
             )
         |> s_browser
             (Browser.default
@@ -681,6 +691,10 @@ theme =
                     , colors.greyDark
                         |> toCssColor
                         |> color
+                    ]
+                |> s_loadingSpinner
+                    [ scaled 3.5 |> rem |> height
+                    , scaled 3.5 |> rem |> width
                     ]
             )
         |> s_table

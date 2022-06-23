@@ -2304,6 +2304,11 @@ s_log value__ record__ =
     { record__ | log = value__ }
 
 
+s_loggingOut : a -> { b | loggingOut : a } -> { b | loggingOut : a }
+s_loggingOut value__ record__ =
+    { record__ | loggingOut = value__ }
+
+
 s_logo : a -> { b | logo : a } -> { b | logo : a }
 s_logo value__ record__ =
     { record__ | logo = value__ }
@@ -4182,6 +4187,16 @@ s_tables value__ record__ =
 s_tag : a -> { b | tag : a } -> { b | tag : a }
 s_tag value__ record__ =
     { record__ | tag = value__ }
+
+
+s_tagLockedIcon : a -> { b | tagLockedIcon : a } -> { b | tagLockedIcon : a }
+s_tagLockedIcon value__ record__ =
+    { record__ | tagLockedIcon = value__ }
+
+
+s_tagLockedText : a -> { b | tagLockedText : a } -> { b | tagLockedText : a }
+s_tagLockedText value__ record__ =
+    { record__ | tagLockedText = value__ }
 
 
 s_tagger : a -> { b | tagger : a } -> { b | tagger : a }

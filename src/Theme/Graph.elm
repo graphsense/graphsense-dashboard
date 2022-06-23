@@ -59,6 +59,8 @@ type alias Graph =
     , radioInput : List Style
     , radioText : List Style
     , searchSettingsRow : List Style
+    , tagLockedIcon : List Style
+    , tagLockedText : List Style
     }
 
 
@@ -116,4 +118,6 @@ default =
     , radioInput = []
     , radioText = []
     , searchSettingsRow = []
+    , tagLockedIcon = []
+    , tagLockedText = []
     }
