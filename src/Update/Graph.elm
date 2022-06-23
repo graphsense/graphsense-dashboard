@@ -1544,6 +1544,7 @@ updateByMsg plugins uc msg model =
                             model.config
                                 |> s_colors acc.colors
                     }
+                |> insertShadowLinks acc.newEntityIds
             , [ BulkGetEntityNeighborsEffect
                     { currency = currency
                     , isOutgoing = True
