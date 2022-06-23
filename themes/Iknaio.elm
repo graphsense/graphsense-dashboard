@@ -804,7 +804,7 @@ theme =
 
 scaled : Float -> Float
 scaled =
-    (*) 0.25
+    (*) 0.22
 
 
 fontHairline : Style
