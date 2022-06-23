@@ -22,12 +22,26 @@ import View.Locale as Locale
 
 table : View.Config -> List (Attribute msg) -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
 table vc attributes height config tbl =
+    let
+        minHeight =
+            tbl.data
+                |> List.length
+                |> toFloat
+                |> (+) 2
+                |> (*) vc.theme.table.rowHeight
+                |> Basics.min vc.theme.table.maxHeight
+    in
     div
         ([ (height
-                |> Maybe.withDefault 250
+                |> Maybe.withDefault vc.theme.table.maxHeight
+                |> Basics.max minHeight
                 |> Css.px
                 |> Css.maxHeight
            )
+            :: (minHeight
+                    |> Css.px
+                    |> Css.height
+               )
             :: Css.Table.root vc
             |> css
          ]

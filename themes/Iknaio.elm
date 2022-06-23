@@ -235,6 +235,7 @@ theme =
                         (scaled 1 |> rem)
                     , backgroundColor <| toCssColor colors.brandWhite
                     , spinnerHeight |> scaled |> rem |> minHeight
+                    , scaled 3.5 |> rem |> fontSize
                     ]
                 |> s_loadingSpinner
                     [ position absolute
@@ -688,6 +689,9 @@ theme =
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
                     ]
+                |> s_maxHeight 250
+                |> s_rowHeight
+                    (scaled 100)
                 |> s_row
                     [ nthChild "2n"
                         [ colors.brandLightest |> toCssColor |> backgroundColor

@@ -3669,6 +3669,11 @@ s_rowAttrs value__ record__ =
     { record__ | rowAttrs = value__ }
 
 
+s_rowHeight : a -> { b | rowHeight : a } -> { b | rowHeight : a }
+s_rowHeight value__ record__ =
+    { record__ | rowHeight = value__ }
+
+
 s_run : a -> { b | run : a } -> { b | run : a }
 s_run value__ record__ =
     { record__ | run = value__ }

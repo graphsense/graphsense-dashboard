@@ -10,6 +10,8 @@ type alias Table =
     , headCell : List Style
     , headRow : List Style
     , row : List Style
+    , maxHeight : Float
+    , rowHeight : Float
     , headCellSortable : List ( String, String )
     , cell : List Style
     , numberCell : List Style
@@ -28,6 +30,8 @@ default =
     , headCell = []
     , headRow = []
     , headCellSortable = []
+    , maxHeight = 250
+    , rowHeight = 15
     , cell = []
     , numberCell = []
     , valuesCell = \_ -> []
