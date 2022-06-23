@@ -4,7 +4,7 @@ import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Header as Css
 import Css.Search
-import Html.Styled exposing (Attribute, Html, div, header, img, text)
+import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css, id, src)
 import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
@@ -49,8 +49,12 @@ header plugins states vc hc =
 
 logo : Config -> Html Msg
 logo vc =
-    img
-        [ src vc.theme.logo
-        , Css.headerLogo vc |> css
+    div
+        [ Css.headerLogoWrap vc |> css ]
+        [ img
+            [ src vc.theme.logo
+            , Css.headerLogo vc |> css
+            ]
+            []
+        , h1 [ Css.headerTitle vc |> css ] [ text "App" ]
         ]
-        []

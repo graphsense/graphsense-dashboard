@@ -13,6 +13,16 @@ header vc =
         ++ vc.theme.header
 
 
+headerLogoWrap : Config -> List Style
+headerLogoWrap vc =
+    vc.theme.headerLogoWrap
+
+
 headerLogo : Config -> List Style
 headerLogo vc =
     vc.theme.headerLogo
+
+
+headerTitle : Config -> List Style
+headerTitle vc =
+    vc.theme.headerTitle

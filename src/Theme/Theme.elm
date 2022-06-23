@@ -21,6 +21,8 @@ type alias Theme =
     , sectionBelowHeader : List Style
     , header : List Style
     , headerLogo : List Style
+    , headerLogoWrap : List Style
+    , headerTitle : List Style
     , heading2 : List Style
     , inputRaw : Maybe Float -> List ( String, String )
     , addonsNav : List Style
@@ -59,6 +61,8 @@ default =
     , heading2 = []
     , inputRaw = \_ -> []
     , headerLogo = []
+    , headerLogoWrap = []
+    , headerTitle = []
     , addonsNav = []
     , sidebar = []
     , sidebarIcon = \_ -> []

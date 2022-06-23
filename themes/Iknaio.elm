@@ -91,6 +91,14 @@ theme =
             , scaled 3 |> rem |> padding
             , alignItems center
             ]
+        |> s_headerTitle
+            [ fontFamilies [ "Conv_Octarine-Light" ]
+            , scaled 5 |> rem |> fontSize
+            , fontWeight bold
+            , letterSpacingWide
+            , display inline
+            , scaled 2 |> rem |> marginLeft
+            ]
         |> s_heading2
             [ fontFamilies [ "Conv_Octarine-Light" ]
             , letterSpacingWide
@@ -102,6 +110,8 @@ theme =
         |> s_headerLogo
             [ maxWidth <| px 190
             ]
+        |> s_headerLogoWrap
+            []
         |> s_sidebar
             [ colors.brandWhite |> toCssColor |> backgroundColor
             ]

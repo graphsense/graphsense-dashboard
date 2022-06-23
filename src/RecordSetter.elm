@@ -1644,6 +1644,16 @@ s_headerLogo value__ record__ =
     { record__ | headerLogo = value__ }
 
 
+s_headerLogoWrap : a -> { b | headerLogoWrap : a } -> { b | headerLogoWrap : a }
+s_headerLogoWrap value__ record__ =
+    { record__ | headerLogoWrap = value__ }
+
+
+s_headerTitle : a -> { b | headerTitle : a } -> { b | headerTitle : a }
+s_headerTitle value__ record__ =
+    { record__ | headerTitle = value__ }
+
+
 s_headers : a -> { b | headers : a } -> { b | headers : a }
 s_headers value__ record__ =
     { record__ | headers = value__ }
