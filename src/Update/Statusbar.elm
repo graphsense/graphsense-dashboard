@@ -3,6 +3,8 @@ module Update.Statusbar exposing (..)
 import Api.Request.Entities
 import Dict
 import Effect.Graph as Graph
+import Effect.Locale as Locale
+import Effect.Search as Search
 import Http
 import List.Extra
 import Model
@@ -19,10 +21,14 @@ messagesFromEffects model effects =
                 messageFromEffect model eff
                     |> Maybe.map
                         (\( key, message ) ->
+                            let
+                                keyJoined =
+                                    key ++ String.join "" message
+                            in
                             ( { statusbar
-                                | messages = Dict.insert key message statusbar.messages
+                                | messages = Dict.insert keyJoined ( key, message ) statusbar.messages
                               }
-                            , ( Just key, eff ) :: newEffects
+                            , ( Just keyJoined, eff ) :: newEffects
                             )
                         )
                     |> Maybe.withDefault ( statusbar, ( Nothing, eff ) :: newEffects )
@@ -37,6 +43,54 @@ messagesFromEffects model effects =
 messageFromEffect : Model.Model key -> Model.Effect -> Maybe ( String, List String )
 messageFromEffect model effect =
     case effect of
+        Model.NavLoadEffect _ ->
+            Nothing
+
+        Model.NavPushUrlEffect _ ->
+            Nothing
+
+        Model.GetStatisticsEffect ->
+            Nothing
+
+        Model.GetConceptsEffect taxonomy _ ->
+            ( "loading concepts for taxonomy {0}"
+            , [ taxonomy ]
+            )
+                |> Just
+
+        Model.GetElementEffect _ ->
+            Nothing
+
+        Model.LocaleEffect (Locale.GetTranslationEffect _) ->
+            Nothing
+
+        Model.LocaleEffect (Locale.GetTimezoneEffect _) ->
+            Nothing
+
+        Model.SearchEffect (Search.SearchEffect { query }) ->
+            ( "searching for {0}"
+            , [ query ]
+            )
+                |> Just
+
+        Model.SearchEffect Search.CancelEffect ->
+            Nothing
+
+        Model.SearchEffect (Search.BounceEffect _ _) ->
+            Nothing
+
+        Model.PluginEffect _ ->
+            Nothing
+
+        Model.PortsConsoleEffect _ ->
+            Nothing
+
+        Model.CmdEffect _ ->
+            Nothing
+
+        Model.LogoutEffect ->
+            Nothing
+
         Model.GraphEffect (Graph.SearchEntityNeighborsEffect e) ->
             ( "searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)"
             , [ case e.isOutgoing of
@@ -68,6 +122,42 @@ messageFromEffect model effect =
             )
                 |> Just
 
+        Model.GraphEffect (Graph.GetAddressEffect e) ->
+            ( "loading address {0}"
+            , [ e.address ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntityForAddressEffect e) ->
+            ( "loading entity for address {0}"
+            , [ e.address ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntityEffect e) ->
+            ( "loading entity {0}"
+            , [ String.fromInt e.entity ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetBlockEffect e) ->
+            ( "loading block {0}"
+            , [ String.fromInt e.height ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetTxEffect e) ->
+            ( "loading transactions {0}"
+            , [ e.txHash ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetTxUtxoAddressesEffect e) ->
+            ( "loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
+            , [ e.txHash ]
+            )
+                |> Just
+
         Model.GraphEffect (Graph.GetAddressNeighborsEffect e) ->
             ( "loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
             , [ e.address ]
@@ -83,6 +173,36 @@ messageFromEffect model effect =
         Model.GraphEffect (Graph.GetAddressTagsEffect e) ->
             ( "loading tags of address {0}"
             , [ e.address ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntityAddressTagsEffect e) ->
+            ( "loading address tags of entity {0}"
+            , [ String.fromInt e.entity ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetAddressTxsEffect e) ->
+            ( "loading transactions of address {0}"
+            , [ e.address ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntityTxsEffect e) ->
+            ( "loading transactions of entity {0}"
+            , [ String.fromInt e.entity ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetBlockTxsEffect e) ->
+            ( "loading transactions of block {0}"
+            , [ String.fromInt e.block ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntityAddressesEffect e) ->
+            ( "loading addresses of entity {0}"
+            , [ String.fromInt e.entity ]
             )
                 |> Just
 
@@ -110,7 +230,52 @@ messageFromEffect model effect =
             )
                 |> Just
 
-        _ ->
+        Model.GraphEffect (Graph.NavPushRouteEffect _) ->
+            Nothing
+
+        Model.GraphEffect Graph.GetSvgElementEffect ->
+            Nothing
+
+        Model.GraphEffect Graph.GetBrowserElementEffect ->
+            Nothing
+
+        Model.GraphEffect (Graph.ListAddressTagsEffect e) ->
+            ( "loading tags with label {0}"
+            , [ e.label ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetAddresslinkTxsEffect e) ->
+            ( "loading address link transactions between {0} and {1}"
+            , [ e.source, e.target ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.GetEntitylinkTxsEffect e) ->
+            ( "loading entity link transactions between {0} and {1}"
+            , [ String.fromInt e.source, String.fromInt e.target ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.BulkGetAddressTagsEffect e) ->
+            ( "loading tags of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt ]
+            )
+                |> Just
+
+        Model.GraphEffect (Graph.PluginEffect _) ->
+            Nothing
+
+        Model.GraphEffect (Graph.InternalGraphAddedAddressesEffect _) ->
+            Nothing
+
+        Model.GraphEffect (Graph.InternalGraphAddedEntitiesEffect _) ->
+            Nothing
+
+        Model.GraphEffect (Graph.TagSearchEffect _) ->
+            Nothing
+
+        Model.GraphEffect (Graph.CmdEffect _) ->
             Nothing
 
 
@@ -123,6 +288,15 @@ isOutgoingToString isOutgoing =
         "incoming"
 
 
+isOutputToString : Bool -> String
+isOutputToString isOutgoing =
+    if isOutgoing then
+        "output"
+
+    else
+        "input"
+
+
 update : String -> Maybe Http.Error -> Model -> Model
 update key error model =
     Dict.get key model.messages
@@ -130,7 +304,7 @@ update key error model =
             (\msg ->
                 { model
                     | messages = Dict.remove key model.messages
-                    , log = ( key, msg, error ) :: model.log
+                    , log = ( first msg, second msg, error ) :: model.log
                     , visible =
                         error
                             |> Maybe.map (\_ -> True)

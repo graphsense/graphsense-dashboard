@@ -8,23 +8,18 @@ import Yaml.Decode exposing (dict, fromString, string)
 
 
 type Effect
-    = NoEffect
-    | GetTranslationEffect { url : String, toMsg : Result Http.Error String -> Msg }
+    = GetTranslationEffect { url : String, toMsg : Result Http.Error String -> Msg }
     | GetTimezoneEffect (Time.Zone -> Msg)
-    | BatchEffect (List Effect)
 
 
-n : model -> ( model, Effect )
+n : model -> ( model, List Effect )
 n model =
-    ( model, NoEffect )
+    ( model, [] )
 
 
 perform : Effect -> Cmd Msg
 perform effect =
     case effect of
-        NoEffect ->
-            Cmd.none
-
         GetTranslationEffect { url, toMsg } ->
             Http.get
                 { url = url
@@ -34,10 +29,6 @@ perform effect =
         GetTimezoneEffect toMsg ->
             Time.here
                 |> Task.perform toMsg
-
-        BatchEffect effs ->
-            List.map perform effs
-                |> Cmd.batch
 
 
 getTranslationEffect : String -> Effect

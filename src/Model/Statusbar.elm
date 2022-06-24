@@ -10,7 +10,7 @@ import Model.Graph.Search as Search
 
 
 type alias Model =
-    { messages : Dict String (List String)
+    { messages : Dict String ( String, List String )
     , log : List ( String, List String, Maybe Http.Error )
     , visible : Bool
     }

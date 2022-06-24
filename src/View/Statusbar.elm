@@ -32,7 +32,7 @@ view vc model =
         )
         (if not model.visible then
             model.messages
-                |> Dict.toList
+                |> Dict.values
                 |> List.head
                 |> Maybe.map (message vc >> List.singleton)
                 |> Maybe.withDefault []
@@ -46,7 +46,7 @@ view vc model =
                     |> Html.Styled.fromUnstyled
                 ]
                 :: (model.messages
-                        |> Dict.toList
+                        |> Dict.values
                         |> List.map (message vc)
                         |> (\m ->
                                 m

@@ -172,16 +172,6 @@ loading transactions between: lade Transaktionen zwischen %0 und %1
 loaded: %0 %1 geladen # eg. loaded address xy
 loading msg outgoing: ausgehende
 loading msg incoming: eingehende
-"loading outgoing neighbors of entity {0}": "lade ausgehende Nachbarn von Entität {0}"
-"loading incoming neighbors of entity {0}": "lade eingehende Nachbarn von Entität {0}"
-"loading outgoing neighbors of address {0}": "lade ausgehende Nachbarn von Adresse {0}"
-"loading incoming neighbors of address {0}": "lade eingehende Nachbarn von Adresse {0}"
-"loading {0} addresses": "lade {0} Addressen"
-"loading {0} entities": "lade {0} Entitäten"
-"loading entities of {0} addresses": "lade Entitäten zu {0} Adressen"
-"loading outgoing neighbors of {0} entities": "lade ausgehende Nachbarn von {0} Entitäten"
-"loading incoming neighbors of {0} entities": "lade eingehende Nachbarn von {0} Entitäten"
-"loading tags of address {0}": "lade Tags der Adresse {0}"
 loaded neighbors for: %0 Nachbarn von %1 %2 geladen
 saving to file: speichern in Datei
 saved to file: in Datei %0 gespeichert
@@ -238,3 +228,31 @@ not found: Nicht gefunden
 data error: Datenfehler
 this table is empty: Diese Tabelle ist leer
 "Do you want to start from scratch?": "Wirklich neu loslegen?"
+tag locked: Tag unfrei
+"loading concepts for taxonomy {0}": "lade Konzepte zur Taxonomie {0}"
+"searching for {0}": "suche nach {0}"
+"loading address {0}": "lade Adresse {0}"
+"loading block {0}": "lade Block {0}"
+"loading transaction {0}": "lade Transaktion {0}"
+"loading entity {0}": "lade Entität {0}"
+"loading entity for address {0}": "lade Entität zur Adresse {0}"
+"loading input addresses of transaction {0}": "lade eingehende Adressen der Transaktion {0}"
+"loading output addresses of transaction {0}": "lade ausgehende Adressen der Transaktion {0}"
+"loading outgoing neighbors of entity {0}": "lade ausgehende Nachbarn von Entität {0}"
+"loading incoming neighbors of entity {0}": "lade eingehende Nachbarn von Entität {0}"
+"loading outgoing neighbors of address {0}": "lade ausgehende Nachbarn von Adresse {0}"
+"loading incoming neighbors of address {0}": "lade eingehende Nachbarn von Adresse {0}"
+"loading {0} addresses": "lade {0} Addressen"
+"loading {0} entities": "lade {0} Entitäten"
+"loading entities of {0} addresses": "lade Entitäten zu {0} Adressen"
+"loading outgoing neighbors of {0} entities": "lade ausgehende Nachbarn von {0} Entitäten"
+"loading incoming neighbors of {0} entities": "lade eingehende Nachbarn von {0} Entitäten"
+"loading tags of address {0}": "lade Tags der Adresse {0}"
+"loading tags {0} addresses": "lade Tags zu {0} Adressen"
+"loading address tags of entity {0}": "lade Adress-Tags der Entität {0}"
+"loading transactions of address {0}": "lade Transaktionen der Adresse {0}"
+"loading transactions of block {0}": "lade Transaktionen des Blocks {0}"
+"loading addresses of entity {0}": "lade Adressen der Entität {0}"
+"loading tags with label {0}": "lade Tags mit Schlagwort {0}"
+"loading address link transactions between {0} and {1}": "lade Transaktionen zwischen {0} and {1}"
+"loading entity link transactions between {0} and {1}": "lade Transaktionen zwischen {0} and {1}"
