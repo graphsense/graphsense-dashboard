@@ -1,5 +1,6 @@
 module Encode.Graph exposing (..)
 
+import Color
 import Dict
 import Json.Encode exposing (..)
 import Model.Graph exposing (..)
@@ -8,6 +9,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Tag as Tag
+import Tuple exposing (..)
 
 
 encode : String -> Model -> Value
@@ -18,6 +20,7 @@ encode version model =
     , Layer.entities model.layers
         |> List.filter (.addresses >> Dict.isEmpty)
         |> list encodeEntity
+    , model.highlights.highlights |> encodeHighlights
     ]
         |> list identity
 
@@ -37,6 +40,7 @@ encodeAddress address =
     , float address.x
     , float address.y
     , encodeUserTag address.userTag
+    , encodeColor address.color
     ]
         |> list identity
 
@@ -56,8 +60,24 @@ encodeEntity entity =
     , string entity.entity.rootAddress
     , float entity.x
     , float entity.y
+    , encodeColor entity.color
     ]
         |> list identity
+
+
+encodeColor : Maybe Color.Color -> Value
+encodeColor =
+    Maybe.map Color.toRgba
+        >> Maybe.map
+            (\c ->
+                [ c.red
+                , c.green
+                , c.blue
+                , c.alpha
+                ]
+                    |> list float
+            )
+        >> Maybe.withDefault null
 
 
 encodeUserTag : Maybe Tag.UserTag -> Value
@@ -76,3 +96,10 @@ encodeUserTag =
                 |> list identity
         )
         >> Maybe.withDefault null
+
+
+encodeHighlights : List ( String, Color.Color ) -> Value
+encodeHighlights colors =
+    colors
+        |> List.map (\( s, c ) -> list identity [ string s, Just c |> encodeColor ])
+        |> list identity

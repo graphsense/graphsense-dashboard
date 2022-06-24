@@ -1,25 +1,30 @@
 module Decode.Graph050 exposing (decoder)
 
+import Color
+import Color.Convert
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
 import Model.Graph exposing (..)
 import Model.Graph.Id as Id
 import Model.Graph.Tag as Tag
+import Tuple exposing (..)
 
 
 decoder : Decoder Deserialized
 decoder =
-    map3 merge
+    map4 merge
         (index 1 decoderTags)
         (index 2 decoderAddresses)
         (index 2 decoderEntities)
+        (index 3 (index 2 decodeHighlights))
 
 
 type alias Address =
     { id : Id.AddressId
     , x : Float
     , y : Float
+    , color : Maybe Color.Color
     }
 
 
@@ -34,8 +39,8 @@ type alias CurrenyAddress =
     ( String, String )
 
 
-merge : Dict CurrenyAddress Tag.UserTag -> List Address -> List Entity -> Deserialized
-merge tags addresses entities =
+merge : Dict CurrenyAddress Tag.UserTag -> List Address -> List Entity -> List ( String, Color.Color ) -> Deserialized
+merge tags addresses entities highlights =
     { addresses =
         addresses
             |> List.map
@@ -44,6 +49,7 @@ merge tags addresses entities =
                     , x = address.x
                     , y = address.y
                     , userTag = Dict.get ( Id.currency address.id, Id.addressId address.id ) tags
+                    , color = address.color
                     }
                 )
     , entities =
@@ -53,9 +59,11 @@ merge tags addresses entities =
                 , x = e.x
                 , y = e.y
                 , rootAddress = Nothing
+                , color = Nothing
                 }
             )
             entities
+    , highlights = highlights
     }
 
 
@@ -118,9 +126,10 @@ decoderEntities =
 
 decodeAddress : Decoder Address
 decodeAddress =
-    map2 (\id ( x, y ) -> Address id x y)
+    map3 (\id ( x, y ) color -> Address id x y color)
         (index 0 decodeAddressId)
         decodeCoords
+        (maybe (index 1 (index 4 decodeColor)))
 
 
 decodeEntityWithoutAddresses : Decoder Entity
@@ -183,3 +192,21 @@ decodeEntityId =
         (index 0 int)
         (index 1 int)
         (index 2 string)
+
+
+decodeColor : Decoder Color.Color
+decodeColor =
+    andThen
+        (Color.Convert.hexToColor
+            >> Result.map succeed
+            >> Result.withDefault (fail "could not convert color")
+        )
+        string
+
+
+decodeHighlights : Decoder (List ( String, Color.Color ))
+decodeHighlights =
+    map2 pair
+        (index 1 string)
+        (index 0 decodeColor)
+        |> list

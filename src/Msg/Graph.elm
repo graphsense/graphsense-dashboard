@@ -4,6 +4,7 @@ import Api.Data
 import Api.Request.Entities
 import Browser.Dom
 import Bytes exposing (Bytes)
+import Color
 import File
 import Json.Encode
 import Model.Address as A
@@ -104,10 +105,12 @@ type Msg
     | UserClicksConfiguraton String
     | UserClickedExport String
     | UserClickedImport String
+    | UserClickedHighlighter String
     | BrowserGotLegendElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotConfigurationElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotExportElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotImportElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotHighlighterElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserChangesCurrency String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
@@ -140,4 +143,8 @@ type Msg
     | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
     | UserClickedNew
     | UserClickedNewYes
+    | UserClickedHighlightColor Color.Color
+    | UserClickedHighlightTrash Int
+    | UserInputsHighlightTitle Int String
+    | UserClicksHighlight Int
     | NoOp

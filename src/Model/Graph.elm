@@ -11,6 +11,7 @@ import Model.Graph.Adding as Adding
 import Model.Graph.Browser as Browser
 import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Search as Search
@@ -38,6 +39,7 @@ type alias Model =
     , hovercardTBD : Maybe Dom.Element
     , activeTool : ActiveTool
     , history : History
+    , highlights : Highlighter.Model
     }
 
 
@@ -88,6 +90,7 @@ type alias Deserializing =
 type alias Deserialized =
     { addresses : List DeserializedAddress
     , entities : List DeserializedEntity
+    , highlights : List ( String, Color.Color )
     }
 
 
@@ -96,6 +99,7 @@ type alias DeserializedAddress =
     , x : Float
     , y : Float
     , userTag : Maybe Tag.UserTag
+    , color : Maybe Color.Color
     }
 
 
@@ -104,4 +108,5 @@ type alias DeserializedEntity =
     , rootAddress : Maybe String
     , x : Float
     , y : Float
+    , color : Maybe Color.Color
     }

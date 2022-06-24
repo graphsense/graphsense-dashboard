@@ -39,20 +39,24 @@ address plugins vc gc selected addr =
             Log.log "rednerAddress" addr.id
 
         color =
-            addr.userTag
-                |> Maybe.andThen .category
-                |> Maybe.Extra.orElse addr.category
-                |> Maybe.andThen
-                    (\category -> Dict.get category gc.colors)
-                |> Maybe.withDefault vc.theme.graph.defaultColor
-                |> Color.toHsla
-                |> (\hsl ->
-                        { hsl
-                            | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.address
-                            , saturation = hsl.saturation * vc.theme.graph.saturationFactor.address
-                        }
-                   )
-                |> Color.fromHsla
+            addr.color
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        addr.userTag
+                            |> Maybe.andThen .category
+                            |> Maybe.Extra.orElse addr.category
+                            |> Maybe.andThen
+                                (\category -> Dict.get category gc.colors)
+                            |> Maybe.withDefault vc.theme.graph.defaultColor
+                            |> Color.toHsla
+                            |> (\hsl ->
+                                    { hsl
+                                        | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.address
+                                        , saturation = hsl.saturation * vc.theme.graph.saturationFactor.address
+                                    }
+                               )
+                            |> Color.fromHsla
+                    )
                 |> Util.toCssColor
 
         isSelected =
@@ -62,7 +66,7 @@ address plugins vc gc selected addr =
             String.fromFloat expandHandleWidth
     in
     g
-        [ Css.addressRoot vc |> css
+        [ Css.addressRoot vc gc.highlighter |> css
         , Json.Decode.succeed ( UserClickedAddress addr.id, True )
             |> stopPropagationOn "click"
         , decodeCoords Coords

@@ -1,6 +1,7 @@
 module Model.Graph.Entity exposing (..)
 
 import Api.Data
+import Color exposing (Color)
 import Config.Graph exposing (addressHeight, addressesCountHeight, entityMinHeight, expandHandleWidth, labelHeight, padding)
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
@@ -22,6 +23,7 @@ type alias Entity =
     , dy : Float
     , links : Links
     , shadowLinks : Links
+    , color : Maybe Color
     , plugins : PluginStates
     }
 

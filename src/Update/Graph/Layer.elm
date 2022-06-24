@@ -15,10 +15,12 @@ module Update.Graph.Layer exposing
     , removeEntity
     , syncLinks
     , updateAddress
+    , updateAddressColor
     , updateAddressLink
     , updateAddresses
     , updateEntities
     , updateEntity
+    , updateEntityColor
     , updateEntityLinks
     )
 
@@ -1190,3 +1192,33 @@ insertShadowLinksDescendants layerId entity layers =
                     |> Just
             )
         |> Maybe.withDefault layers
+
+
+updateEntityColor : Color -> Maybe Color -> IntDict Layer -> IntDict Layer
+updateEntityColor before color layers =
+    let
+        updated =
+            Layer.entities layers
+                |> List.filter
+                    (.color >> Maybe.map Color.toCssString >> (==) (Color.toCssString before |> Just))
+    in
+    updated
+        |> List.foldl
+            (\entity -> updateEntity entity.id (\e -> { e | color = color }))
+            layers
+        |> syncLinks (List.map .id updated)
+
+
+updateAddressColor : Color -> Maybe Color -> IntDict Layer -> IntDict Layer
+updateAddressColor before color layers =
+    let
+        updated =
+            Layer.addresses layers
+                |> List.filter
+                    (.color >> Maybe.map Color.toCssString >> (==) (Color.toCssString before |> Just))
+    in
+    updated
+        |> List.foldl
+            (\address -> updateAddress address.id (\e -> { e | color = color }))
+            layers
+        |> syncLinks (List.map .entityId updated)

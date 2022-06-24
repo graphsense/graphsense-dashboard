@@ -1684,6 +1684,56 @@ s_hex value__ record__ =
     { record__ | hex = value__ }
 
 
+s_highlightColor : a -> { b | highlightColor : a } -> { b | highlightColor : a }
+s_highlightColor value__ record__ =
+    { record__ | highlightColor = value__ }
+
+
+s_highlightRoot : a -> { b | highlightRoot : a } -> { b | highlightRoot : a }
+s_highlightRoot value__ record__ =
+    { record__ | highlightRoot = value__ }
+
+
+s_highlightTitle : a -> { b | highlightTitle : a } -> { b | highlightTitle : a }
+s_highlightTitle value__ record__ =
+    { record__ | highlightTitle = value__ }
+
+
+s_highlightTrash : a -> { b | highlightTrash : a } -> { b | highlightTrash : a }
+s_highlightTrash value__ record__ =
+    { record__ | highlightTrash = value__ }
+
+
+s_highlighter : a -> { b | highlighter : a } -> { b | highlighter : a }
+s_highlighter value__ record__ =
+    { record__ | highlighter = value__ }
+
+
+s_highlights : a -> { b | highlights : a } -> { b | highlights : a }
+s_highlights value__ record__ =
+    { record__ | highlights = value__ }
+
+
+s_highlightsColor : a -> { b | highlightsColor : a } -> { b | highlightsColor : a }
+s_highlightsColor value__ record__ =
+    { record__ | highlightsColor = value__ }
+
+
+s_highlightsColorScheme : a -> { b | highlightsColorScheme : a } -> { b | highlightsColorScheme : a }
+s_highlightsColorScheme value__ record__ =
+    { record__ | highlightsColorScheme = value__ }
+
+
+s_highlightsColors : a -> { b | highlightsColors : a } -> { b | highlightsColors : a }
+s_highlightsColors value__ record__ =
+    { record__ | highlightsColors = value__ }
+
+
+s_highlightsRoot : a -> { b | highlightsRoot : a } -> { b | highlightsRoot : a }
+s_highlightsRoot value__ record__ =
+    { record__ | highlightsRoot = value__ }
+
+
 s_history : a -> { b | history : a } -> { b | history : a }
 s_history value__ record__ =
     { record__ | history = value__ }

@@ -2,6 +2,7 @@ module Update.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
+import Color
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
@@ -15,6 +16,7 @@ import File
 import File.Select
 import Init.Graph
 import Init.Graph.ContextMenu as ContextMenu
+import Init.Graph.Highlighter as Highlighter
 import Init.Graph.Id as Id
 import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
@@ -31,6 +33,7 @@ import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
+import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Id as Id exposing (EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
@@ -53,6 +56,8 @@ import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
+import Update.Graph.Entity as Entity
+import Update.Graph.Highlighter as Highlighter
 import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
 import Update.Graph.Tag as Tag
@@ -349,16 +354,30 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedAddress id ->
-            ( model
-            , Route.addressRoute
-                { currency = Id.currency id
-                , address = Id.addressId id
-                , table = Nothing
-                , layer = Id.layer id |> Just
-                }
-                |> NavPushRouteEffect
-                |> List.singleton
-            )
+            case Highlighter.getSelectedColor model.highlights of
+                Nothing ->
+                    Route.addressRoute
+                        { currency = Id.currency id
+                        , address = Id.addressId id
+                        , table = Nothing
+                        , layer = Id.layer id |> Just
+                        }
+                        |> NavPushRouteEffect
+                        |> List.singleton
+                        |> pair model
+
+                Just color ->
+                    { model
+                        | layers =
+                            Layer.updateAddress id (Address.updateColor color) model.layers
+                                |> Layer.syncLinks
+                                    (Layer.getAddress id model.layers
+                                        |> Maybe.map .entityId
+                                        |> Maybe.map List.singleton
+                                        |> Maybe.withDefault []
+                                    )
+                    }
+                        |> n
 
         UserRightClickedAddress id coords ->
             Layer.getAddress id model.layers
@@ -378,16 +397,26 @@ updateByMsg plugins uc msg model =
 
         UserClickedEntity id moved ->
             if draggingToClick { x = 0, y = 0 } moved then
-                ( model
-                , Route.entityRoute
-                    { currency = Id.currency id
-                    , entity = Id.entityId id
-                    , table = Nothing
-                    , layer = Id.layer id |> Just
-                    }
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
+                case Highlighter.getSelectedColor model.highlights of
+                    Nothing ->
+                        ( model
+                        , Route.entityRoute
+                            { currency = Id.currency id
+                            , entity = Id.entityId id
+                            , table = Nothing
+                            , layer = Id.layer id |> Just
+                            }
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                        )
+
+                    Just color ->
+                        { model
+                            | layers =
+                                Layer.updateEntity id (Entity.updateColor color) model.layers
+                                    |> Layer.syncLinks [ id ]
+                        }
+                            |> n
 
             else
                 n model
@@ -1283,6 +1312,74 @@ updateByMsg plugins uc msg model =
         BrowserGotImportElement result ->
             toolElementResultToTool result model Tool.Import
 
+        UserClickedHighlighter id ->
+            case ( model.activeTool.toolbox, model.activeTool.element ) of
+                ( Tool.Highlighter, Just ( el, vis ) ) ->
+                    toolVisible model el vis
+
+                _ ->
+                    getToolElement model id BrowserGotHighlighterElement
+
+        BrowserGotHighlighterElement result ->
+            Tool.Highlighter
+                |> toolElementResultToTool result model
+
+        UserClickedHighlightColor color ->
+            let
+                highlights =
+                    Highlighter.selectColor color model.highlights
+            in
+            { model
+                | highlights = highlights
+                , config =
+                    model.config
+                        |> s_highlighter (highlights.selected /= Nothing)
+                , layers =
+                    Highlighter.getSelectedColor model.highlights
+                        |> Maybe.map
+                            (\before ->
+                                Layer.updateEntityColor before (Just color) model.layers
+                                    |> Layer.updateAddressColor before (Just color)
+                            )
+                        |> Maybe.withDefault model.layers
+            }
+                |> n
+
+        UserClicksHighlight i ->
+            let
+                highlights =
+                    Highlighter.selectHighlight i model.highlights
+            in
+            { model
+                | highlights = highlights
+                , config =
+                    model.config
+                        |> s_highlighter (highlights.selected /= Nothing)
+            }
+                |> n
+
+        UserClickedHighlightTrash i ->
+            { model
+                | highlights =
+                    Highlighter.removeHighlight i model.highlights
+                , layers =
+                    Highlighter.getColor i model.highlights
+                        |> Maybe.map
+                            (\color ->
+                                Layer.updateEntityColor color Nothing model.layers
+                                    |> Layer.updateAddressColor color Nothing
+                            )
+                        |> Maybe.withDefault model.layers
+            }
+                |> n
+
+        UserInputsHighlightTitle i title ->
+            { model
+                | highlights =
+                    Highlighter.setHighlightTitle i title model.highlights
+            }
+                |> n
+
         UserChangesCurrency currency ->
             -- handled upstream
             n model
@@ -1535,11 +1632,46 @@ updateByMsg plugins uc msg model =
                 tags =
                     deserializing.deserialized.addresses
                         |> List.filterMap .userTag
+
+                colorfulAddresses =
+                    deserializing.deserialized.addresses
+                        |> List.filterMap
+                            (\a ->
+                                a.color
+                                    |> Maybe.map (pair a.id)
+                            )
+
+                colorfulEntities =
+                    deserializing.deserialized.entities
+                        |> List.filterMap
+                            (\a ->
+                                a.color
+                                    |> Maybe.map (pair a.id)
+                            )
             in
             ( tags
                 |> List.foldl (storeUserTag uc)
                     { model
-                        | layers = acc.layers
+                        | layers =
+                            colorfulEntities
+                                |> List.foldl
+                                    (\( id, color ) ->
+                                        Layer.updateEntity id (Entity.updateColor color)
+                                            >> Layer.syncLinks [ id ]
+                                    )
+                                    (colorfulAddresses
+                                        |> List.foldl
+                                            (\( id, color ) ->
+                                                Layer.updateAddress id (Address.updateColor color)
+                                                    >> Layer.syncLinks
+                                                        (Layer.getAddress id model.layers
+                                                            |> Maybe.map .entityId
+                                                            |> Maybe.map List.singleton
+                                                            |> Maybe.withDefault []
+                                                        )
+                                            )
+                                            acc.layers
+                                    )
                         , config =
                             model.config
                                 |> s_colors acc.colors
@@ -2796,7 +2928,12 @@ fromDeserialized deserialized model =
                             |> BrowserGotBulkAddresses currency
                     }
             )
-        |> pair model
+        |> pair
+            { model
+                | highlights =
+                    Highlighter.init
+                        |> s_highlights deserialized.highlights
+            }
 
 
 serialize : String -> Model -> Value

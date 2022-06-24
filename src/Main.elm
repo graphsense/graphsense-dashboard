@@ -37,6 +37,7 @@ main =
         uc =
             { defaultColor = config.theme.graph.defaultColor
             , colorScheme = config.theme.graph.colorScheme
+            , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             }
     in
     Browser.application

@@ -391,6 +391,17 @@ theme =
                     , rgb255 184 176 172
                     , rgb255 87 120 164
                     ]
+                |> (\graph ->
+                        s_highlightsColorScheme
+                            (graph.colorScheme
+                                |> List.map
+                                    (Color.toHsla
+                                        >> (\c -> { c | saturation = 1 })
+                                        >> Color.fromHsla
+                                    )
+                            )
+                            graph
+                   )
                 |> s_lightnessFactor
                     { entity = 1
                     , address = 0.9
@@ -506,18 +517,22 @@ theme =
                         ]
                     )
                 |> s_link
-                    (\nodeType hovered selected ->
+                    (\nodeType hovered selected highlight ->
                         [ (if hovered then
                             colors.black
 
                            else if selected then
                             colors.red
 
-                           else if nodeType == Address then
-                            colors.grey
-
                            else
-                            colors.greyLighter
+                            highlight
+                                |> Maybe.withDefault
+                                    (if nodeType == Address then
+                                        colors.grey
+
+                                     else
+                                        colors.greyLighter
+                                    )
                           )
                             |> Color.toCssString
                             |> property "stroke"
@@ -527,7 +542,7 @@ theme =
                 |> s_linkColorStrong colors.black
                 |> s_linkColorSelected colors.red
                 |> s_linkLabel
-                    (\hovered selected ->
+                    (\hovered selected color ->
                         [ fontFamily monospace
                         , (if hovered then
                             colors.black
@@ -536,7 +551,9 @@ theme =
                             colors.red
 
                            else
-                            colors.grey
+                            color
+                                |> Maybe.withDefault
+                                    colors.grey
                           )
                             |> Color.toCssString
                             |> property "fill"
@@ -608,6 +625,51 @@ theme =
                     [ opacity (num 0.5) ]
                 |> s_tagLockedText
                     [ fontStyle italic ]
+                |> s_highlightsColors
+                    [ scaled 2 |> rem |> marginBottom
+                    ]
+                |> s_highlightsColor
+                    [ scaled 5 |> rem |> fontSize
+                    , scaled 1 |> rem |> paddingRight
+                    , cursor pointer
+                    ]
+                |> s_highlightRoot
+                    [ displayFlex
+                    ]
+                |> s_highlightColor
+                    (\selected ->
+                        [ scaled 5 |> rem |> fontSize
+                        , scaled 1 |> rem |> marginRight
+                        , Css.Transitions.transition
+                            [ Css.Transitions.transform 200 ]
+                        , property "transform" "scale(1)"
+                        , cursor pointer
+                        ]
+                            ++ (if selected then
+                                    [ property "transform" "scale(1.3)"
+                                    ]
+
+                                else
+                                    []
+                               )
+                    )
+                |> s_highlightTitle
+                    [ inputStyle
+                    , scaled 3 |> rem |> fontSize
+                    ]
+                |> s_highlightTrash
+                    [ iconInactive
+                        |> toCssColor
+                        |> color
+                    , hover
+                        [ iconHovered
+                            |> toCssColor
+                            |> color
+                        ]
+                    , scaled 1 |> rem |> paddingLeft
+                    , cursor pointer
+                    , scaled 1 |> rem |> marginTop
+                    ]
             )
         |> s_browser
             (Browser.default

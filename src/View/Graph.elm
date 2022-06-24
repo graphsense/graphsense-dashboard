@@ -62,7 +62,7 @@ graph plugins states vc gc model =
         , Html.id "graph"
         ]
         [ browser plugins states vc gc model.browser
-        , Tool.toolbox vc model.activeTool
+        , Tool.toolbox vc model
         , model.size
             |> Maybe.map (graphSvg plugins states vc gc model)
             |> Maybe.withDefault none
@@ -361,6 +361,7 @@ arrowMarkers vc gc =
     , vc.theme.graph.linkColorStrong
     , vc.theme.graph.linkColorSelected
     ]
+        ++ vc.theme.graph.highlightsColorScheme
         |> List.map (Link.arrowMarker vc gc)
         |> defs []
 

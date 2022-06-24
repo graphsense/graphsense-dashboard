@@ -56,18 +56,22 @@ entity plugins vc gc selected ent =
             Log.log "rednerEntity" ent.id
 
         color =
-            ent.category
-                |> Maybe.andThen
-                    (\category -> Dict.get category gc.colors)
-                |> Maybe.withDefault vc.theme.graph.defaultColor
-                |> Color.toHsla
-                |> (\hsl ->
-                        { hsl
-                            | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.entity
-                            , saturation = hsl.saturation * vc.theme.graph.saturationFactor.entity
-                        }
-                   )
-                |> Color.fromHsla
+            ent.color
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        ent.category
+                            |> Maybe.andThen
+                                (\category -> Dict.get category gc.colors)
+                            |> Maybe.withDefault vc.theme.graph.defaultColor
+                            |> Color.toHsla
+                            |> (\hsl ->
+                                    { hsl
+                                        | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.entity
+                                        , saturation = hsl.saturation * vc.theme.graph.saturationFactor.entity
+                                    }
+                               )
+                            |> Color.fromHsla
+                    )
                 |> Util.toCssColor
 
         isSelected =
@@ -77,7 +81,7 @@ entity plugins vc gc selected ent =
             String.fromFloat expandHandleWidth
     in
     g
-        [ Css.entityRoot vc |> css
+        [ Css.entityRoot vc gc.highlighter |> css
         , Json.Decode.succeed ( UserClickedEntity ent.id { x = ent.dx, y = ent.dy }, True )
             |> stopPropagationOn "click"
         , decodeCoords Coords

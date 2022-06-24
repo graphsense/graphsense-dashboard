@@ -1,6 +1,7 @@
 module Update.Graph.Address exposing (..)
 
 import Api.Data
+import Color exposing (Color)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import RecordSetter exposing (..)
@@ -40,4 +41,16 @@ updateTags tags address =
                 |> s_tags (Just tags)
         , category =
             tagsToCategory (Just tags)
+    }
+
+
+updateColor : Color -> Address -> Address
+updateColor color address =
+    { address
+        | color =
+            if Just (Color.toCssString color) == Maybe.map Color.toCssString address.color then
+                Nothing
+
+            else
+                Just color
     }

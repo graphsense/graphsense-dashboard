@@ -57,6 +57,7 @@
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "mgold/elm-nonempty-list": "4.2.0",
+            "noahzgordon/elm-color-extra": "1.0.2",
             "rtfeldman/elm-css": "17.1.1",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "ryannhg/date-format": "2.3.0"
@@ -64,6 +65,7 @@
         "indirect": {
             "elm/random": "1.0.0",
             "elm/virtual-dom": "1.0.3",
+            "fredcy/elm-parseint": "2.0.1",
             "ianmackenzie/elm-1d-parameter": "1.0.1",
             "ianmackenzie/elm-float-extra": "1.1.0",
             "ianmackenzie/elm-interval": "2.0.0",

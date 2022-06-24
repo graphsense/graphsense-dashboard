@@ -1,6 +1,6 @@
 module View.Graph.Link exposing (..)
 
-import Color exposing (Color)
+import Color
 import Config.Graph as Graph exposing (expandHandleWidth, linkLabelHeight, txMaxWidth)
 import Config.View as View
 import Css exposing (..)
@@ -23,6 +23,7 @@ import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Util.View
 import View.Locale as Locale
 
 
@@ -43,6 +44,7 @@ type alias Options =
     , onMouseOver : Msg
     , onClick : Msg
     , nodeType : NodeType
+    , color : Maybe Color.Color
     }
 
 
@@ -63,6 +65,12 @@ entityLinkOptions vc gc selected entity link =
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
     , onClick = Id.initLinkId entity.id link.node.id |> UserClicksEntityLink
     , nodeType = Model.Graph.Entity
+    , color =
+        if entity.color /= Nothing && entity.color == link.node.color then
+            entity.color
+
+        else
+            Nothing
     }
 
 
@@ -83,6 +91,12 @@ addressLinkOptions vc gc selected address link =
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
     , onClick = Id.initLinkId address.id link.node.id |> UserClicksAddressLink
     , nodeType = Model.Graph.Address
+    , color =
+        if address.color /= Nothing && address.color == link.node.color then
+            address.color
+
+        else
+            Nothing
     }
 
 
@@ -209,7 +223,7 @@ addressLinkHovered vc gc mn mx address link =
 
 
 drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
-drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, nodeType } vc gc mn mx =
+drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, nodeType } vc gc mn mx =
     let
         thickness =
             vc.theme.graph.linkThickness
@@ -238,7 +252,7 @@ drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClic
         ]
         [ S.path
             [ dd
-            , Css.Graph.link vc nodeType hovered selected
+            , Css.Graph.link vc nodeType hovered selected color
                 ++ [ thickness
                         |> (\x -> String.fromFloat x ++ "px")
                         |> property "stroke-width"
@@ -249,7 +263,9 @@ drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClic
                         vc.theme.graph.linkColorSelected
 
                       else
-                        vc.theme.graph.linkColorFaded
+                        color
+                            |> Maybe.withDefault
+                                vc.theme.graph.linkColorFaded
                      )
                         |> arrowMarkerId
                         |> List.singleton
@@ -273,12 +289,12 @@ drawLink { selected, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClic
                 |> css
             ]
             []
-        , drawLabel vc gc lx ly hovered selected label
+        , drawLabel vc gc lx ly hovered selected color label
         ]
 
 
-drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> Bool -> String -> Svg Msg
-drawLabel vc gc x y hovered selected lbl =
+drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> Bool -> Maybe Color.Color -> String -> Svg Msg
+drawLabel vc gc x y hovered selected color lbl =
     let
         width =
             toFloat (String.length lbl) * linkLabelHeight / 1.5
@@ -300,7 +316,7 @@ drawLabel vc gc x y hovered selected lbl =
             ]
             []
         , S.text_
-            [ Css.Graph.linkLabel vc hovered selected
+            [ Css.Graph.linkLabel vc hovered selected color
                 |> css
             , textAnchor "middle"
             , String.fromFloat x |> Svg.x

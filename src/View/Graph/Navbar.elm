@@ -116,9 +116,9 @@ navbarRight vc model =
               }
             , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
-              , msg = ToBeDone
+              , msg = UserClickedHighlighter
               , color = Nothing
-              , status = Tool.Disabled
+              , status = isActive Tool.isHighlighter model.activeTool
               }
             , { title = "Configuration options"
               , icon = FontAwesome.icon FontAwesome.cog

@@ -3,6 +3,7 @@ module Model.Graph.Tool exposing (..)
 import Color exposing (Color)
 import Config.Graph exposing (Config)
 import Html exposing (Html)
+import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Legend as Legend
 
 
@@ -20,6 +21,7 @@ type Toolbox
     | Configuration Config
     | Export
     | Import
+    | Highlighter
 
 
 type Status
@@ -62,6 +64,16 @@ isImport : Toolbox -> Bool
 isImport tb =
     case tb of
         Import ->
+            True
+
+        _ ->
+            False
+
+
+isHighlighter : Toolbox -> Bool
+isHighlighter tb =
+    case tb of
+        Highlighter ->
             True
 
         _ ->

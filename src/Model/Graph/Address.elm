@@ -1,6 +1,7 @@
 module Model.Graph.Address exposing (..)
 
 import Api.Data
+import Color exposing (Color)
 import Config.Graph exposing (expandHandleWidth)
 import Dict exposing (Dict)
 import Json.Encode
@@ -22,6 +23,7 @@ type alias Address =
     , dy : Float
     , links : Links
     , userTag : Maybe Tag.UserTag
+    , color : Maybe Color
     , plugins : PluginStates
     }
 

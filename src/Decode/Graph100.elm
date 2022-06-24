@@ -1,18 +1,21 @@
 module Decode.Graph100 exposing (decoder)
 
+import Color
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
 import Model.Graph exposing (..)
 import Model.Graph.Id as Id
 import Model.Graph.Tag as Tag
+import Tuple exposing (..)
 
 
 decoder : Decoder Deserialized
 decoder =
-    map2 Deserialized
+    map3 Deserialized
         (index 1 decodeAddresses)
         (index 2 decodeEntities)
+        (index 3 decodeHighlights)
 
 
 decodeAddresses : Decoder (List DeserializedAddress)
@@ -20,22 +23,24 @@ decodeAddresses =
     index 0 decodeAddressId
         |> andThen
             (\addressId ->
-                map4 DeserializedAddress
+                map5 DeserializedAddress
                     (succeed addressId)
                     (index 1 float)
                     (index 2 float)
                     (index 3 (decodeUserTag addressId |> maybe))
+                    (maybe (index 4 decodeColor))
             )
         |> list
 
 
 decodeEntities : Decoder (List DeserializedEntity)
 decodeEntities =
-    map4 DeserializedEntity
+    map5 DeserializedEntity
         (index 0 decodeEntityId)
         (index 1 (string |> map Just))
         (index 2 float)
         (index 3 float)
+        (maybe (index 4 decodeColor))
         |> list
 
 
@@ -85,3 +90,20 @@ decodeUserTag id =
         (index 1 string)
         (index 2 (maybe string))
         (index 3 (maybe string))
+
+
+decodeColor : Decoder Color.Color
+decodeColor =
+    map4 (\r g b a -> Color.fromRgba { red = r, green = g, blue = b, alpha = a })
+        (index 0 float)
+        (index 1 float)
+        (index 2 float)
+        (index 3 float)
+
+
+decodeHighlights : Decoder (List ( String, Color.Color ))
+decodeHighlights =
+    map2 pair
+        (index 0 string)
+        (index 1 decodeColor)
+        |> list

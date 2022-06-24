@@ -1,5 +1,6 @@
 module Css.Graph exposing (..)
 
+import Color
 import Config.Graph exposing (addressesCountHeight, labelHeight, linkLabelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
@@ -69,9 +70,15 @@ svgRoot vc =
         ++ vc.theme.graph.svgRoot
 
 
-addressRoot : Config -> List Style
-addressRoot vc =
-    cursor pointer
+addressRoot : Config -> Bool -> List Style
+addressRoot vc highlighter =
+    cursor
+        (if highlighter then
+            crosshair
+
+         else
+            pointer
+        )
         :: vc.theme.graph.addressRoot
 
 
@@ -110,9 +117,15 @@ addressLabel vc =
         :: vc.theme.graph.addressLabel
 
 
-entityRoot : Config -> List Style
-entityRoot vc =
-    cursor pointer
+entityRoot : Config -> Bool -> List Style
+entityRoot vc highlighter =
+    cursor
+        (if highlighter then
+            crosshair
+
+         else
+            pointer
+        )
         :: vc.theme.graph.entityRoot
 
 
@@ -182,19 +195,19 @@ nodeSeparatorToExpandHandle vc nodeType =
         ++ vc.theme.graph.nodeSeparatorToExpandHandle nodeType
 
 
-link : Config -> NodeType -> Bool -> Bool -> List Style
-link vc nodeType hovered selected =
+link : Config -> NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
+link vc nodeType hovered selected highlight =
     [ property "stroke" "currentColor"
     , property "fill" "none"
     ]
-        ++ vc.theme.graph.link nodeType hovered selected
+        ++ vc.theme.graph.link nodeType hovered selected highlight
 
 
-linkLabel : Config -> Bool -> Bool -> List Style
-linkLabel vc hovered selected =
+linkLabel : Config -> Bool -> Bool -> Maybe Color.Color -> List Style
+linkLabel vc hovered selected color =
     (px linkLabelHeight |> fontSize)
         :: property "fill" "currentColor"
-        :: vc.theme.graph.linkLabel hovered selected
+        :: vc.theme.graph.linkLabel hovered selected color
 
 
 linkLabelBox : Config -> Bool -> Bool -> List Style
@@ -256,3 +269,43 @@ tagLockedIcon vc =
 tagLockedText : Config -> List Style
 tagLockedText vc =
     vc.theme.graph.tagLockedText
+
+
+highlightsRoot : Config -> List Style
+highlightsRoot vc =
+    vc.theme.graph.highlightsRoot
+
+
+highlights : Config -> List Style
+highlights vc =
+    vc.theme.graph.highlights
+
+
+highlightsColors : Config -> List Style
+highlightsColors vc =
+    vc.theme.graph.highlightsColors
+
+
+highlightsColor : Config -> List Style
+highlightsColor vc =
+    vc.theme.graph.highlightsColor
+
+
+highlightRoot : Config -> List Style
+highlightRoot vc =
+    vc.theme.graph.highlightRoot
+
+
+highlightColor : Config -> Bool -> List Style
+highlightColor vc selected =
+    vc.theme.graph.highlightColor selected
+
+
+highlightTitle : Config -> List Style
+highlightTitle vc =
+    vc.theme.graph.highlightTitle
+
+
+highlightTrash : Config -> List Style
+highlightTrash vc =
+    vc.theme.graph.highlightTrash

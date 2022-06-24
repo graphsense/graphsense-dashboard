@@ -22,12 +22,12 @@ type alias Graph =
     , entityAddressesCount : List Style
     , entityRect : List Style
     , entityRoot : List Style
-    , link : NodeType -> Bool -> Bool -> List Style
+    , link : NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
     , linkThickness : Float
     , linkColorFaded : Color
     , linkColorStrong : Color
     , linkColorSelected : Color
-    , linkLabel : Bool -> Bool -> List Style
+    , linkLabel : Bool -> Bool -> Maybe Color.Color -> List Style
     , linkLabelBox : Bool -> Bool -> List Style
     , shadowLink : List Style
     , expandHandle : NodeType -> List Style
@@ -41,6 +41,7 @@ type alias Graph =
     , navbarRight : List Style
     , tool : Tool.Status -> List Style
     , colorScheme : List Color
+    , highlightsColorScheme : List Color
     , lightnessFactor :
         { entity : Float
         , address : Float
@@ -61,6 +62,14 @@ type alias Graph =
     , searchSettingsRow : List Style
     , tagLockedIcon : List Style
     , tagLockedText : List Style
+    , highlightsRoot : List Style
+    , highlights : List Style
+    , highlightsColors : List Style
+    , highlightsColor : List Style
+    , highlightRoot : List Style
+    , highlightColor : Bool -> List Style
+    , highlightTitle : List Style
+    , highlightTrash : List Style
     }
 
 
@@ -81,12 +90,12 @@ default =
     , entityAddressesCount = []
     , entityRect = []
     , entityRoot = []
-    , link = \_ _ _ -> []
+    , link = \_ _ _ _ -> []
     , linkThickness = 1
     , linkColorFaded = Color.grey
     , linkColorStrong = Color.black
     , linkColorSelected = Color.red
-    , linkLabel = \_ _ -> []
+    , linkLabel = \_ _ _ -> []
     , linkLabelBox = \_ _ -> []
     , shadowLink = []
     , expandHandle = always []
@@ -100,6 +109,7 @@ default =
     , navbarRight = []
     , tool = \_ -> []
     , colorScheme = []
+    , highlightsColorScheme = []
     , lightnessFactor =
         { entity = 1
         , address = 1
@@ -120,4 +130,12 @@ default =
     , searchSettingsRow = []
     , tagLockedIcon = []
     , tagLockedText = []
+    , highlightsRoot = []
+    , highlights = []
+    , highlightsColors = []
+    , highlightsColor = []
+    , highlightRoot = []
+    , highlightTitle = []
+    , highlightColor = \_ -> []
+    , highlightTrash = []
     }

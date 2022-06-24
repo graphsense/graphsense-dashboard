@@ -1,4 +1,4 @@
-module Update.Graph.Entity exposing (BoundingBox, addAddress, insertShadowLink, move, release, repositionAround, translate, updateEntity)
+module Update.Graph.Entity exposing (BoundingBox, addAddress, insertShadowLink, move, release, repositionAround, translate, updateColor, updateEntity)
 
 import Api.Data
 import Color exposing (Color)
@@ -284,3 +284,15 @@ insertShadowLink target source =
                         links
                         |> Entity.Links
             }
+
+
+updateColor : Color -> Entity -> Entity
+updateColor color entity =
+    { entity
+        | color =
+            if Just (Color.toCssString color) == Maybe.map Color.toCssString entity.color then
+                Nothing
+
+            else
+                Just color
+    }

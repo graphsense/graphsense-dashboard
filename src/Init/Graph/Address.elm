@@ -45,5 +45,6 @@ init plugins entity address =
     , dy = 0
     , links = Model.Graph.Address.Links Dict.empty
     , userTag = Nothing
+    , color = Nothing
     , plugins = Plugin.initAddress plugins
     }

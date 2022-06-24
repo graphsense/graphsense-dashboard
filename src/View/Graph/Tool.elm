@@ -7,13 +7,14 @@ import Css.Graph as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Graph exposing (ActiveTool)
+import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Tool as Tool exposing (Tool)
 import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
 import Util.View exposing (none, toCssColor)
 import View.Graph.Configuration as Configuration
 import View.Graph.ExportImport as Export
+import View.Graph.Highlighter as Highlighter
 import View.Graph.Legend as Legend
 import View.Locale as Locale
 
@@ -33,16 +34,40 @@ tool vc t =
         ]
 
 
-toolbox : Config -> ActiveTool -> Html Msg
-toolbox vc activeTool =
+toolbox : Config -> Model -> Html Msg
+toolbox vc model =
+    let
+        isRight =
+            case model.activeTool.toolbox of
+                Tool.Legend data ->
+                    True
+
+                Tool.Configuration config ->
+                    True
+
+                Tool.Export ->
+                    False
+
+                Tool.Import ->
+                    False
+
+                Tool.Highlighter ->
+                    True
+    in
     div
-        [ [ activeTool.element
+        [ [ model.activeTool.element
                 |> Maybe.map
                     (\( el, visible ) ->
-                        el.element.x
-                            + el.element.width
-                            |> Css.px
-                            |> Css.left
+                        if isRight then
+                            Css.right (Css.px 0)
+
+                        else
+                            el.element.x
+                                + el.element.width
+                                - 80
+                                -- TODO matches the sidebar width hardcoded
+                                |> Css.px
+                                |> Css.left
                     )
                 |> Maybe.withDefault (Css.right (Css.px 0))
           , Css.position Css.absolute
@@ -50,16 +75,20 @@ toolbox vc activeTool =
             |> css
         ]
         [ div
-            [ [ Css.right (Css.px 60) -- TODO matches the sidebar width hardcoded
+            [ [ if isRight then
+                    Css.right (Css.px 0)
+
+                else
+                    Css.left (Css.px 0)
               ]
-                ++ (activeTool.element
+                ++ (model.activeTool.element
                         |> Maybe.map second
                         |> Maybe.withDefault False
                         |> Css.toolbox vc
                    )
                 |> css
             ]
-            (case activeTool.toolbox of
+            (case model.activeTool.toolbox of
                 Tool.Legend data ->
                     Legend.legend vc data
 
@@ -71,5 +100,8 @@ toolbox vc activeTool =
 
                 Tool.Import ->
                     Export.import_ vc
+
+                Tool.Highlighter ->
+                    Highlighter.tool vc model.highlights
             )
         ]

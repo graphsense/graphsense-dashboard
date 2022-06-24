@@ -4,6 +4,7 @@ import Config.Graph as Config
 import Dict
 import Init.Graph.Adding as Adding
 import Init.Graph.Browser as Browser
+import Init.Graph.Highlighter as Highlighter
 import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
@@ -32,4 +33,5 @@ init plugins now =
         }
     , search = Nothing
     , history = History [] []
+    , highlights = Highlighter.init
     }

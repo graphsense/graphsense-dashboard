@@ -114,6 +114,7 @@ type alias Config =
     , colors : Dict String Color
     , entityConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
+    , highlighter : Bool
     }
 
 
@@ -125,4 +126,5 @@ default =
     , colors = Dict.empty
     , entityConcepts = []
     , abuseConcepts = []
+    , highlighter = False
     }
