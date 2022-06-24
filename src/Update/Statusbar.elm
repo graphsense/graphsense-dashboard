@@ -68,10 +68,7 @@ messageFromEffect model effect =
             Nothing
 
         Model.SearchEffect (Search.SearchEffect { query }) ->
-            ( "searching for {0}"
-            , [ query ]
-            )
-                |> Just
+            Nothing
 
         Model.SearchEffect Search.CancelEffect ->
             Nothing
