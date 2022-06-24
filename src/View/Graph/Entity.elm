@@ -219,7 +219,7 @@ flags plugins vc gc ent =
 
 tagsFlag : Config -> Entity -> List (Svg Msg)
 tagsFlag vc ent =
-    if ent.entity.noAddressTags > 0 && ent.entity.bestAddressTag == Nothing then
+    if ent.entity.noAddressTags > 0 then
         [ Svg.path
             [ translate 0 0
                 |> Util.Graph.scale 0.033
