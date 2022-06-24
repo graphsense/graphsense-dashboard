@@ -12,6 +12,7 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Encode
+import List.Extra
 import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
@@ -226,7 +227,19 @@ browseValue vc value =
                                     |> Maybe.withDefault []
                                     |> css
                                 ]
-                                [ text tag.label
+                                [ text
+                                    (if String.isEmpty tag.label && not tag.tagpackIsPublic then
+                                        tag.category
+                                            |> Maybe.andThen
+                                                (\cat ->
+                                                    List.Extra.find (.id >> (==) cat) gc.entityConcepts
+                                                )
+                                            |> Maybe.map .label
+                                            |> Maybe.withDefault (Locale.string vc.locale "tag locked")
+
+                                     else
+                                        tag.label
+                                    )
                                 ]
                         )
                     |> Maybe.withDefault (span [] [ Locale.string vc.locale "Unknown" |> text ])

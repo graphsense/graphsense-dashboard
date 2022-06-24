@@ -1340,7 +1340,7 @@ updateByMsg plugins uc msg model =
                 |> Result.map
                     (\element ->
                         { model
-                            | search = Search.init model.entityConcepts element id |> Just
+                            | search = Search.init model.config.entityConcepts element id |> Just
                         }
                     )
                 |> Result.withDefault model
@@ -1352,7 +1352,7 @@ updateByMsg plugins uc msg model =
         UserSelectsCriterion criterion ->
             updateSearch
                 (Search.selectCriterion
-                    { categories = model.entityConcepts
+                    { categories = model.config.entityConcepts
                     }
                     criterion
                 )
@@ -2597,7 +2597,7 @@ makeLegend model =
         |> Dict.toList
         |> List.filterMap
             (\( cat, color ) ->
-                List.Extra.find (.id >> (==) cat) model.entityConcepts
+                List.Extra.find (.id >> (==) cat) model.config.entityConcepts
                     |> Maybe.map
                         (\category ->
                             { color = color
@@ -2802,3 +2802,21 @@ fromDeserialized deserialized model =
 serialize : String -> Model -> Value
 serialize =
     Encode.encode
+
+
+setEntityConcepts : List Api.Data.Concept -> Model -> Model
+setEntityConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_entityConcepts concepts
+    }
+
+
+setAbuseConcepts : List Api.Data.Concept -> Model -> Model
+setAbuseConcepts concepts model =
+    { model
+        | config =
+            model.config
+                |> s_abuseConcepts concepts
+    }

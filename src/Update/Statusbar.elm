@@ -106,7 +106,7 @@ messageFromEffect model effect =
                             |> List.head
                             |> Maybe.map
                                 (\cat ->
-                                    List.Extra.find (.id >> (==) cat) model.graph.entityConcepts
+                                    List.Extra.find (.id >> (==) cat) model.graph.config.entityConcepts
                                         |> Maybe.map .label
                                         |> Maybe.withDefault cat
                                 )

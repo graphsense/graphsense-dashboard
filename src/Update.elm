@@ -82,16 +82,14 @@ update plugins uc msg model =
         BrowserGotEntityTaxonomy concepts ->
             { model
                 | graph =
-                    model.graph
-                        |> s_entityConcepts concepts
+                    Graph.setEntityConcepts concepts model.graph
             }
                 |> n
 
         BrowserGotAbuseTaxonomy concepts ->
             { model
                 | graph =
-                    model.graph
-                        |> s_abuseConcepts concepts
+                    Graph.setAbuseConcepts concepts model.graph
             }
                 |> n
 

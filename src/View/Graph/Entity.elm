@@ -8,6 +8,7 @@ import Css.Graph as Css
 import Dict
 import Init.Graph.Id as Id
 import Json.Decode
+import List.Extra
 import Log
 import Maybe.Extra
 import Model.Graph exposing (NodeType(..))
@@ -175,6 +176,12 @@ getLabel vc gc ent =
             (\tag ->
                 if String.isEmpty tag.label then
                     tag.category
+                        |> Maybe.map
+                            (\cat ->
+                                List.Extra.find (.id >> (==) cat) gc.entityConcepts
+                                    |> Maybe.map .label
+                                    |> Maybe.withDefault cat
+                            )
 
                 else
                     Just tag.label

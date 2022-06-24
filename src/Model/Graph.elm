@@ -36,8 +36,6 @@ type alias Model =
     , search : Maybe Search.Model
     , userAddressTags : Dict ( String, String ) Tag.UserTag
     , hovercardTBD : Maybe Dom.Element
-    , entityConcepts : List Api.Data.Concept
-    , abuseConcepts : List Api.Data.Concept
     , activeTool : ActiveTool
     , history : History
     }

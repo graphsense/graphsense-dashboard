@@ -1,5 +1,6 @@
 module Config.Graph exposing (..)
 
+import Api.Data
 import Color exposing (Color)
 import Dict exposing (Dict)
 
@@ -111,6 +112,8 @@ type alias Config =
     , txLabelType : TxLabelType
     , maxLettersPerLabelRow : Int
     , colors : Dict String Color
+    , entityConcepts : List Api.Data.Concept
+    , abuseConcepts : List Api.Data.Concept
     }
 
 
@@ -120,4 +123,6 @@ default =
     , txLabelType = Value
     , maxLettersPerLabelRow = 19
     , colors = Dict.empty
+    , entityConcepts = []
+    , abuseConcepts = []
     }

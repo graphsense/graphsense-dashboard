@@ -10,6 +10,7 @@ import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
+import List.Extra
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
@@ -63,8 +64,20 @@ config vc gc bestAddressTag =
                         text truncated
                     ]
                 )
-            , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
-            , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
+            , T.stringColumn vc
+                "Category"
+                (.category
+                    >> Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.entityConcepts)
+                    >> Maybe.map .label
+                    >> Maybe.withDefault ""
+                )
+            , T.stringColumn vc
+                "Abuse"
+                (.abuse
+                    >> Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
+                    >> Maybe.map .label
+                    >> Maybe.withDefault ""
+                )
             , T.intColumn vc
                 "Confidence"
                 (.confidenceLevel >> Maybe.withDefault 0)
