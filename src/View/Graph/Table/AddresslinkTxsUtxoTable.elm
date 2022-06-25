@@ -20,7 +20,13 @@ import View.Locale as Locale
 
 init : Table Api.Data.LinkUtxo
 init =
-    Init.Graph.Table.init "Transaction"
+    Init.Graph.Table.init filter "Transaction"
+
+
+filter : String -> Api.Data.LinkUtxo -> Bool
+filter f a =
+    String.contains f a.txHash
+        || String.contains f (String.fromInt a.height)
 
 
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg

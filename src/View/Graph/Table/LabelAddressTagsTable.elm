@@ -18,7 +18,13 @@ import View.Locale as Locale
 
 init : Table Api.Data.AddressTag
 init =
-    Init.Graph.Table.initSorted True "Confidence"
+    Init.Graph.Table.initSorted True filter "Confidence"
+
+
+filter : String -> Api.Data.AddressTag -> Bool
+filter f a =
+    String.contains f a.address
+        || String.contains f a.label
 
 
 config : View.Config -> Table.Config Api.Data.AddressTag Msg

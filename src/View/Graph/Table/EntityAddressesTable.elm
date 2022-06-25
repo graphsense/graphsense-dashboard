@@ -16,7 +16,12 @@ import View.Graph.Table as T exposing (customizations, valueColumn)
 
 init : Table Api.Data.Address
 init =
-    Init.Graph.Table.init "Address"
+    Init.Graph.Table.init filter "Address"
+
+
+filter : String -> Api.Data.Address -> Bool
+filter f a =
+    String.contains f a.address
 
 
 config : View.Config -> String -> Maybe EntityId -> Table.Config Api.Data.Address Msg

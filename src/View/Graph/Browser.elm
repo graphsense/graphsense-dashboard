@@ -747,6 +747,7 @@ table_ vc =
             |> Html.Styled.Attributes.fromUnstyled
             |> Html.Styled.Attributes.map InfiniteScrollMsg
         ]
+        (Just UserInputsFilterTable)
 
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg

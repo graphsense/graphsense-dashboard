@@ -18,8 +18,14 @@ import View.Locale as Locale
 
 init : Table Tag.UserTag
 init =
-    Init.Graph.Table.initSorted True "Label"
+    Init.Graph.Table.initSorted True filter "Label"
         |> s_loading False
+
+
+filter : String -> Tag.UserTag -> Bool
+filter f a =
+    String.contains f a.address
+        || String.contains f a.label
 
 
 config : View.Config -> Table.Config Tag.UserTag Msg

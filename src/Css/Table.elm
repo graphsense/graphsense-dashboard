@@ -6,9 +6,29 @@ import Css exposing (..)
 
 root : Config -> List Style
 root vc =
+    vc.theme.table.root
+
+
+tableRoot : Config -> List Style
+tableRoot vc =
     overflowY auto
         :: overflowX auto
-        :: vc.theme.table.root
+        :: vc.theme.table.tableRoot
+
+
+sidebar : Config -> List Style
+sidebar vc =
+    vc.theme.table.sidebar
+
+
+filter : Config -> List Style
+filter vc =
+    vc.theme.table.filter
+
+
+filterInput : Config -> List Style
+filterInput vc =
+    vc.theme.table.filterInput
 
 
 table : Config -> List Style

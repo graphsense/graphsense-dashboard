@@ -39,8 +39,11 @@ type AddresslinkTable
 
 type alias Table a =
     { data : List a
+    , filtered : List a
     , loading : Bool
     , state : Table.State
     , nextpage : Maybe String
     , infiniteScroll : InfiniteScroll.Model
+    , filter : Maybe String
+    , filterFunction : String -> a -> Bool
     }

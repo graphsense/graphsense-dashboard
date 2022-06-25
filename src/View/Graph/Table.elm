@@ -9,6 +9,7 @@ import Html
 import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
 import Model.Currency as Currency
 import Model.Graph.Table as T
 import Msg.Graph exposing (Msg(..))
@@ -20,8 +21,8 @@ import Util.View exposing (loadingSpinner)
 import View.Locale as Locale
 
 
-table : View.Config -> List (Attribute msg) -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
-table vc attributes height config tbl =
+table : View.Config -> List (Attribute msg) -> Maybe (Maybe String -> msg) -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
+table vc attributes filterMsg height config tbl =
     let
         minHeight =
             tbl.data
@@ -32,38 +33,82 @@ table vc attributes height config tbl =
                 |> Basics.min vc.theme.table.maxHeight
     in
     div
-        ([ (height
-                |> Maybe.withDefault vc.theme.table.maxHeight
-                |> Basics.max minHeight
-                |> Css.px
-                |> Css.maxHeight
-           )
-            :: (minHeight
+        [ Css.Table.root vc |> css
+        ]
+        [ div
+            ([ (height
+                    |> Maybe.withDefault vc.theme.table.maxHeight
+                    |> Basics.max minHeight
                     |> Css.px
-                    |> Css.height
+                    |> Css.maxHeight
                )
-            :: Css.Table.root vc
-            |> css
-         ]
-            ++ attributes
-        )
-        (Table.view config tbl.state tbl.data
-            :: (if tbl.loading || InfiniteScroll.isLoading tbl.infiniteScroll then
-                    [ loadingSpinner vc Css.Table.loadingSpinner
-                    ]
-
-                else if List.isEmpty tbl.data then
-                    [ div
-                        [ Css.Table.emptyHint vc |> css
+                :: (minHeight
+                        |> Css.px
+                        |> Css.height
+                   )
+                :: Css.Table.tableRoot vc
+                |> css
+             ]
+                ++ attributes
+            )
+            ((Maybe.map2
+                (\filter fm ->
+                    div
+                        [ Css.Table.filter vc |> css
                         ]
-                        [ Locale.string vc.locale "This table is empty" |> text
+                        [ input
+                            [ Css.Table.filterInput vc |> css
+                            , type_ "text"
+                            , onInput (Just >> fm)
+                            , id "tableFilter"
+                            , autocomplete False
+                            , spellcheck False
+                            ]
+                            []
                         ]
-                    ]
+                )
+                tbl.filter
+                filterMsg
+                |> Maybe.withDefault Util.View.none
+             )
+                :: Table.view config tbl.state tbl.filtered
+                :: (if tbl.loading || InfiniteScroll.isLoading tbl.infiniteScroll then
+                        [ loadingSpinner vc Css.Table.loadingSpinner
+                        ]
 
-                else
-                    []
-               )
-        )
+                    else if List.isEmpty tbl.data then
+                        [ div
+                            [ Css.Table.emptyHint vc |> css
+                            ]
+                            [ Locale.string vc.locale "This table is empty" |> text
+                            ]
+                        ]
+
+                    else
+                        []
+                   )
+            )
+        , Maybe.map
+            (\fm ->
+                div
+                    [ Css.Table.sidebar vc |> css
+                    , onClick
+                        (fm
+                            (if tbl.filter == Nothing then
+                                Just ""
+
+                             else
+                                Nothing
+                            )
+                        )
+                    ]
+                    [ FontAwesome.icon FontAwesome.search
+                        |> Html.Styled.fromUnstyled
+                    ]
+            )
+            filterMsg
+            |> Maybe.withDefault Util.View.none
+        ]
 
 
 customizations : View.Config -> Table.Customizations data msg

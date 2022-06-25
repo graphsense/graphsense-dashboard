@@ -4,6 +4,11 @@
 module RecordSetter exposing (..)
 
 
+s_a : a -> { b | a : a } -> { b | a : a }
+s_a value__ record__ =
+    { record__ | a = value__ }
+
+
 s_abbreviation : a -> { b | abbreviation : a } -> { b | abbreviation : a }
 s_abbreviation value__ record__ =
     { record__ | abbreviation = value__ }
@@ -154,6 +159,11 @@ s_alpha value__ record__ =
     { record__ | alpha = value__ }
 
 
+s_alphaScale : a -> { b | alphaScale : a } -> { b | alphaScale : a }
+s_alphaScale value__ record__ =
+    { record__ | alphaScale = value__ }
+
+
 s_altKey : a -> { b | altKey : a } -> { b | altKey : a }
 s_altKey value__ record__ =
     { record__ | altKey = value__ }
@@ -232,6 +242,11 @@ s_axialDirection value__ record__ =
 s_axis : a -> { b | axis : a } -> { b | axis : a }
 s_axis value__ record__ =
     { record__ | axis = value__ }
+
+
+s_b : a -> { b | b : a } -> { b | b : a }
+s_b value__ record__ =
+    { record__ | b = value__ }
 
 
 s_backgroundAttachment : a -> { b | backgroundAttachment : a } -> { b | backgroundAttachment : a }
@@ -352,6 +367,11 @@ s_blockHash value__ record__ =
 s_blue : a -> { b | blue : a } -> { b | blue : a }
 s_blue value__ record__ =
     { record__ | blue = value__ }
+
+
+s_blueScale : a -> { b | blueScale : a } -> { b | blueScale : a }
+s_blueScale value__ record__ =
+    { record__ | blueScale = value__ }
 
 
 s_body : a -> { b | body : a } -> { b | body : a }
@@ -1349,6 +1369,16 @@ s_filename value__ record__ =
     { record__ | filename = value__ }
 
 
+s_filter : a -> { b | filter : a } -> { b | filter : a }
+s_filter value__ record__ =
+    { record__ | filter = value__ }
+
+
+s_filterInput : a -> { b | filterInput : a } -> { b | filterInput : a }
+s_filterInput value__ record__ =
+    { record__ | filterInput = value__ }
+
+
 s_firstControlPoint : a -> { b | firstControlPoint : a } -> { b | firstControlPoint : a }
 s_firstControlPoint value__ record__ =
     { record__ | firstControlPoint = value__ }
@@ -1539,6 +1569,11 @@ s_good value__ record__ =
     { record__ | good = value__ }
 
 
+s_gradient : a -> { b | gradient : a } -> { b | gradient : a }
+s_gradient value__ record__ =
+    { record__ | gradient = value__ }
+
+
 s_graph : a -> { b | graph : a } -> { b | graph : a }
 s_graph value__ record__ =
     { record__ | graph = value__ }
@@ -1552,6 +1587,11 @@ s_graphRoot value__ record__ =
 s_green : a -> { b | green : a } -> { b | green : a }
 s_green value__ record__ =
     { record__ | green = value__ }
+
+
+s_greenScale : a -> { b | greenScale : a } -> { b | greenScale : a }
+s_greenScale value__ record__ =
+    { record__ | greenScale = value__ }
 
 
 s_grey : a -> { b | grey : a } -> { b | grey : a }
@@ -2049,6 +2089,11 @@ s_kind value__ record__ =
     { record__ | kind = value__ }
 
 
+s_l : a -> { b | l : a } -> { b | l : a }
+s_l value__ record__ =
+    { record__ | l = value__ }
+
+
 s_label : a -> { b | label : a } -> { b | label : a }
 s_label value__ record__ =
     { record__ | label = value__ }
@@ -2252,6 +2297,11 @@ s_lightness value__ record__ =
 s_lightnessFactor : a -> { b | lightnessFactor : a } -> { b | lightnessFactor : a }
 s_lightnessFactor value__ record__ =
     { record__ | lightnessFactor = value__ }
+
+
+s_lightnessScale : a -> { b | lightnessScale : a } -> { b | lightnessScale : a }
+s_lightnessScale value__ record__ =
+    { record__ | lightnessScale = value__ }
 
 
 s_limit : a -> { b | limit : a } -> { b | limit : a }
@@ -3149,6 +3199,11 @@ s_pagesize value__ record__ =
     { record__ | pagesize = value__ }
 
 
+s_palette : a -> { b | palette : a } -> { b | palette : a }
+s_palette value__ record__ =
+    { record__ | palette = value__ }
+
+
 s_param0 : a -> { b | param0 : a } -> { b | param0 : a }
 s_param0 value__ record__ =
     { record__ | param0 = value__ }
@@ -3544,6 +3599,11 @@ s_red value__ record__ =
     { record__ | red = value__ }
 
 
+s_redScale : a -> { b | redScale : a } -> { b | redScale : a }
+s_redScale value__ record__ =
+    { record__ | redScale = value__ }
+
+
 s_refs : a -> { b | refs : a } -> { b | refs : a }
 s_refs value__ record__ =
     { record__ | refs = value__ }
@@ -3757,6 +3817,11 @@ s_saturation value__ record__ =
 s_saturationFactor : a -> { b | saturationFactor : a } -> { b | saturationFactor : a }
 s_saturationFactor value__ record__ =
     { record__ | saturationFactor = value__ }
+
+
+s_saturationScale : a -> { b | saturationScale : a } -> { b | saturationScale : a }
+s_saturationScale value__ record__ =
+    { record__ | saturationScale = value__ }
 
 
 s_scaled : a -> { b | scaled : a } -> { b | scaled : a }
@@ -4109,6 +4174,16 @@ s_steps value__ record__ =
     { record__ | steps = value__ }
 
 
+s_stop1 : a -> { b | stop1 : a } -> { b | stop1 : a }
+s_stop1 value__ record__ =
+    { record__ | stop1 = value__ }
+
+
+s_stop2 : a -> { b | stop2 : a } -> { b | stop2 : a }
+s_stop2 value__ record__ =
+    { record__ | stop2 = value__ }
+
+
 s_stopPropagation : a -> { b | stopPropagation : a } -> { b | stopPropagation : a }
 s_stopPropagation value__ record__ =
     { record__ | stopPropagation = value__ }
@@ -4212,6 +4287,11 @@ s_tableCellValue value__ record__ =
 s_tableLayout : a -> { b | tableLayout : a } -> { b | tableLayout : a }
 s_tableLayout value__ record__ =
     { record__ | tableLayout = value__ }
+
+
+s_tableRoot : a -> { b | tableRoot : a } -> { b | tableRoot : a }
+s_tableRoot value__ record__ =
+    { record__ | tableRoot = value__ }
 
 
 s_tableRow : a -> { b | tableRow : a } -> { b | tableRow : a }

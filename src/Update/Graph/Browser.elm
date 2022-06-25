@@ -25,7 +25,7 @@ import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
-import Update.Graph.Table exposing (appendData)
+import Update.Graph.Table exposing (appendData, applyFilter)
 import Update.Search as Search
 import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -2020,3 +2020,158 @@ getBlockTxsEffect nextpage { currency, block } =
         , pagesize = 100
         , toMsg = BrowserGotBlockTxs { currency = currency, block = block }
         }
+
+
+filterTable : Maybe String -> Model -> Model
+filterTable filter model =
+    { model
+        | type_ =
+            case model.type_ of
+                Address loadable table ->
+                    Address loadable <|
+                        case table of
+                            Just (AddressTxsUtxoTable t) ->
+                                applyFilter filter t
+                                    |> AddressTxsUtxoTable
+                                    |> Just
+
+                            Just (AddressTxsAccountTable t) ->
+                                applyFilter filter t
+                                    |> AddressTxsAccountTable
+                                    |> Just
+
+                            Just (AddressTagsTable t) ->
+                                applyFilter filter t
+                                    |> AddressTagsTable
+                                    |> Just
+
+                            Just (AddressIncomingNeighborsTable t) ->
+                                applyFilter filter t
+                                    |> AddressIncomingNeighborsTable
+                                    |> Just
+
+                            Just (AddressOutgoingNeighborsTable t) ->
+                                applyFilter filter t
+                                    |> AddressOutgoingNeighborsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                Entity loadable table ->
+                    Entity loadable <|
+                        case table of
+                            Just (EntityAddressesTable t) ->
+                                applyFilter filter t
+                                    |> EntityAddressesTable
+                                    |> Just
+
+                            Just (EntityTxsUtxoTable t) ->
+                                applyFilter filter t
+                                    |> EntityTxsUtxoTable
+                                    |> Just
+
+                            Just (EntityTxsAccountTable t) ->
+                                applyFilter filter t
+                                    |> EntityTxsAccountTable
+                                    |> Just
+
+                            Just (EntityTagsTable t) ->
+                                applyFilter filter t
+                                    |> EntityTagsTable
+                                    |> Just
+
+                            Just (EntityIncomingNeighborsTable t) ->
+                                applyFilter filter t
+                                    |> EntityIncomingNeighborsTable
+                                    |> Just
+
+                            Just (EntityOutgoingNeighborsTable t) ->
+                                applyFilter filter t
+                                    |> EntityOutgoingNeighborsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                TxUtxo loadable table ->
+                    TxUtxo loadable <|
+                        case table of
+                            Just (TxUtxoInputsTable t) ->
+                                applyFilter filter t
+                                    |> TxUtxoInputsTable
+                                    |> Just
+
+                            Just (TxUtxoOutputsTable t) ->
+                                applyFilter filter t
+                                    |> TxUtxoOutputsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                TxAccount _ ->
+                    model.type_
+
+                None ->
+                    model.type_
+
+                Label label t ->
+                    applyFilter filter t
+                        |> Label label
+
+                Block loadable table ->
+                    Block loadable <|
+                        case table of
+                            Just (BlockTxsUtxoTable t) ->
+                                applyFilter filter t
+                                    |> BlockTxsUtxoTable
+                                    |> Just
+
+                            Just (BlockTxsAccountTable t) ->
+                                applyFilter filter t
+                                    |> BlockTxsAccountTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                Addresslink src lnk table ->
+                    Addresslink src lnk <|
+                        case table of
+                            Just (AddresslinkTxsUtxoTable t) ->
+                                applyFilter filter t
+                                    |> AddresslinkTxsUtxoTable
+                                    |> Just
+
+                            Just (AddresslinkTxsAccountTable t) ->
+                                applyFilter filter t
+                                    |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                Entitylink src lnk table ->
+                    Entitylink src lnk <|
+                        case table of
+                            Just (AddresslinkTxsUtxoTable t) ->
+                                applyFilter filter t
+                                    |> AddresslinkTxsUtxoTable
+                                    |> Just
+
+                            Just (AddresslinkTxsAccountTable t) ->
+                                applyFilter filter t
+                                    |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
+                UserTags t ->
+                    applyFilter filter t
+                        |> UserTags
+
+                Plugin _ ->
+                    model.type_
+    }

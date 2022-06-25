@@ -20,7 +20,15 @@ import View.Locale as Locale
 
 init : Table Api.Data.TxAccount
 init =
-    Init.Graph.Table.init "Transaction"
+    Init.Graph.Table.init filter "Transaction"
+
+
+filter : String -> Api.Data.TxAccount -> Bool
+filter f a =
+    String.contains f a.txHash
+        || String.contains f (String.fromInt a.height)
+        || String.contains f a.fromAddress
+        || String.contains f a.toAddress
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg

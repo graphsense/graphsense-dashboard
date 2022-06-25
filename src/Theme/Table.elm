@@ -6,6 +6,10 @@ import Css exposing (Style)
 
 type alias Table =
     { root : List Style
+    , tableRoot : List Style
+    , sidebar : List Style
+    , filter : List Style
+    , filterInput : List Style
     , table : List Style
     , headCell : List Style
     , headRow : List Style
@@ -25,6 +29,10 @@ type alias Table =
 default : Table
 default =
     { root = []
+    , tableRoot = []
+    , sidebar = []
+    , filter = []
+    , filterInput = []
     , table = []
     , row = []
     , headCell = []

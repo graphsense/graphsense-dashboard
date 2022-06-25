@@ -29,7 +29,12 @@ columnTitleFromDirection isOutgoing =
 init : Bool -> Table Api.Data.TxValue
 init =
     columnTitleFromDirection
-        >> Init.Graph.Table.init
+        >> Init.Graph.Table.init filter
+
+
+filter : String -> Api.Data.TxValue -> Bool
+filter f a =
+    List.any (String.contains f) a.address
 
 
 config : View.Config -> Bool -> String -> Table.Config Api.Data.TxValue Msg

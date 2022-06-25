@@ -147,4 +147,5 @@ type Msg
     | UserClickedHighlightTrash Int
     | UserInputsHighlightTitle Int String
     | UserClicksHighlight Int
+    | UserInputsFilterTable (Maybe String)
     | NoOp

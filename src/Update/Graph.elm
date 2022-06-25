@@ -1805,6 +1805,16 @@ updateByMsg plugins uc msg model =
                 |> s_config model.config
                 |> n
 
+        UserInputsFilterTable input ->
+            ( { model
+                | browser = Browser.filterTable input model.browser
+              }
+            , Dom.focus "tableFilter"
+                |> Task.attempt (\_ -> NoOp)
+                |> CmdEffect
+                |> List.singleton
+            )
+
         NoOp ->
             n model
 

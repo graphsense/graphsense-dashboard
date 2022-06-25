@@ -762,9 +762,30 @@ theme =
         |> s_table
             (Table.default
                 |> s_root
-                    [ px 10 |> paddingX
+                    [ displayFlex
+                    , flexDirection row
+                    ]
+                |> s_tableRoot
+                    [ scaled 2 |> rem |> paddingLeft
                     , displayFlex
                     , flexDirection column
+                    ]
+                |> s_sidebar
+                    [ borderLeftWidth (px 1)
+                    , borderStyle solid
+                    , colors.greyLightest |> toCssColor |> borderColor
+                    , scaled 2 |> rem |> paddingLeft
+                    , scaled 1 |> rem |> paddingTop
+                    ]
+                |> s_filter
+                    [ displayFlex
+                    , justifyContent flexEnd
+                    , padding (px 2)
+                    ]
+                |> s_filterInput
+                    [ inputStyle
+                    , scaled 3 |> rem |> fontSize
+                    , width <| ex 40
                     ]
                 |> s_urlMaxLength 20
                 |> s_table
@@ -945,6 +966,17 @@ paddingX x =
     batch
         [ paddingLeft x
         , paddingRight x
+        ]
+
+
+
+--marginX : Length compatibleB unitsB -> Style
+
+
+marginX x =
+    batch
+        [ marginLeft x
+        , marginRight x
         ]
 
 

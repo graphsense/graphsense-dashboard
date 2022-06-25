@@ -29,7 +29,13 @@ columnTitleFromDirection isOutgoing =
 
 init : Bool -> Table Api.Data.NeighborEntity
 init =
-    columnTitleFromDirection >> Init.Graph.Table.init
+    columnTitleFromDirection >> Init.Graph.Table.init filter
+
+
+filter : String -> Api.Data.NeighborEntity -> Bool
+filter f a =
+    String.contains f (String.fromInt a.entity.entity)
+        || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
 
 
 config : View.Config -> Bool -> String -> Maybe EntityId -> Table.Config Api.Data.NeighborEntity Msg
