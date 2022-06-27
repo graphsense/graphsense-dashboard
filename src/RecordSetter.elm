@@ -1374,9 +1374,19 @@ s_filter value__ record__ =
     { record__ | filter = value__ }
 
 
+s_filterFunction : a -> { b | filterFunction : a } -> { b | filterFunction : a }
+s_filterFunction value__ record__ =
+    { record__ | filterFunction = value__ }
+
+
 s_filterInput : a -> { b | filterInput : a } -> { b | filterInput : a }
 s_filterInput value__ record__ =
     { record__ | filterInput = value__ }
+
+
+s_filtered : a -> { b | filtered : a } -> { b | filtered : a }
+s_filtered value__ record__ =
+    { record__ | filtered = value__ }
 
 
 s_firstControlPoint : a -> { b | firstControlPoint : a } -> { b | firstControlPoint : a }
@@ -2097,6 +2107,11 @@ s_l value__ record__ =
 s_label : a -> { b | label : a } -> { b | label : a }
 s_label value__ record__ =
     { record__ | label = value__ }
+
+
+s_labelText : a -> { b | labelText : a } -> { b | labelText : a }
+s_labelText value__ record__ =
+    { record__ | labelText = value__ }
 
 
 s_labels : a -> { b | labels : a } -> { b | labels : a }
@@ -3482,6 +3497,11 @@ s_propertyBoxKey value__ record__ =
 s_propertyBoxOutgoingTxs : a -> { b | propertyBoxOutgoingTxs : a } -> { b | propertyBoxOutgoingTxs : a }
 s_propertyBoxOutgoingTxs value__ record__ =
     { record__ | propertyBoxOutgoingTxs = value__ }
+
+
+s_propertyBoxRoot : a -> { b | propertyBoxRoot : a } -> { b | propertyBoxRoot : a }
+s_propertyBoxRoot value__ record__ =
+    { record__ | propertyBoxRoot = value__ }
 
 
 s_propertyBoxRow : a -> { b | propertyBoxRow : a } -> { b | propertyBoxRow : a }

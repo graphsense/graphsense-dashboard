@@ -163,13 +163,11 @@ label vc gc ent =
     g
         [ Css.entityLabel vc |> css
         , Graph.entityPaddingTop
-            + labelHeight
-            / 2
             |> translate (Graph.padding * 2.5)
             |> transform
         ]
         [ getLabel vc gc ent
-            |> Label.label vc gc
+            |> Label.label vc gc Model.Graph.Entity
         ]
 
 
@@ -208,10 +206,11 @@ flags plugins vc gc ent =
     in
     g
         [ Css.entityFlags vc |> css
-        , Graph.padding
-            * 1.5
+        , Graph.entityPaddingTop
+            + Graph.padding
+            * 0.5
             + labelHeight
-            / 3
+            / 2
             |> translate (Graph.entityWidth - Graph.padding / 2)
             |> Util.Graph.scale 0.75
             |> transform
@@ -241,13 +240,13 @@ tagsFlag vc ent =
 currency : Config -> Graph.Config -> Entity -> Svg Msg
 currency vc gc ent =
     g
-        [ Css.entityCurrency vc |> css
-        , (Graph.padding + labelHeight / 3.5)
+        [ Graph.entityPaddingTop
             |> translate (Entity.getWidth ent - Graph.padding - expandHandleWidth)
             |> transform
         ]
         [ text_
             [ textAnchor "end"
+            , Css.entityCurrency vc |> css
             ]
             [ text (String.toUpper ent.entity.currency) ]
         ]

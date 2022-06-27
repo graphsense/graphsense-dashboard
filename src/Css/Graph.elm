@@ -153,6 +153,11 @@ entityLabel vc =
         :: vc.theme.graph.entityLabel
 
 
+labelText : Config -> NodeType -> List Style
+labelText vc nodeType =
+    vc.theme.graph.labelText nodeType
+
+
 shadowLink : Config -> List Style
 shadowLink vc =
     vc.theme.graph.shadowLink

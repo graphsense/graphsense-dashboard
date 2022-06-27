@@ -5,6 +5,7 @@ import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Graph as Css
 import List.Extra
+import Model.Graph
 import Msg.Graph exposing (Msg(..))
 import String.Extra
 import Svg.Styled exposing (..)
@@ -16,12 +17,22 @@ import Util.View exposing (truncate)
 import View.Locale as Locale
 
 
-label : Config -> Graph.Config -> String -> Svg Msg
-label vc gc title =
+label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
+label vc gc nodeType title =
     if title == "tag locked" then
+        let
+            offset =
+                String.fromInt <|
+                    case nodeType of
+                        Model.Graph.Address ->
+                            10
+
+                        Model.Graph.Entity ->
+                            0
+        in
         g []
             [ Svg.Styled.path
-                [ (Css.property "transform" "translateY(-17px) scale(0.04)"
+                [ (Css.property "transform" ("translateY(-" ++ offset ++ "px) scale(0.03)")
                     :: Css.tagLockedIcon vc
                   )
                     |> css
@@ -29,8 +40,11 @@ label vc gc title =
                 ]
                 []
             , Svg.Styled.text_
-                [ Util.translate 25 0 |> Svg.transform
-                , (px labelHeight |> Css.fontSize) :: Css.tagLockedText vc |> css
+                [ Util.translate 17 0 |> Svg.transform
+                , (px labelHeight |> Css.fontSize)
+                    :: Css.labelText vc nodeType
+                    ++ Css.tagLockedText vc
+                    |> css
                 ]
                 [ Locale.string vc.locale "tag locked" |> text
                 ]
@@ -73,8 +87,10 @@ label vc gc title =
                         ]
                 )
             |> Svg.Styled.text_
-                [ Util.translate 0 dy |> Svg.transform
-                , css [ px height |> Css.fontSize ]
+                [ ((px height |> Css.fontSize)
+                    :: Css.labelText vc nodeType
+                  )
+                    |> css
                 ]
 
 

@@ -18,6 +18,7 @@ type alias Graph =
     , addressRoot : List Style
     , entityFlags : List Style
     , entityLabel : List Style
+    , labelText : NodeType -> List Style
     , entityCurrency : List Style
     , entityAddressesCount : List Style
     , entityRect : List Style
@@ -86,6 +87,7 @@ default =
     , addressRoot = []
     , entityFlags = []
     , entityLabel = []
+    , labelText = \_ -> []
     , entityCurrency = []
     , entityAddressesCount = []
     , entityRect = []

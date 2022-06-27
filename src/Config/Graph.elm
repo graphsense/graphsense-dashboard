@@ -32,7 +32,7 @@ expandHandleWidth =
 
 entityPaddingTop : Float
 entityPaddingTop =
-    15
+    10
 
 
 padding : Float
@@ -82,16 +82,20 @@ linkLabelHeight =
 
 entityMinHeight : Float
 entityMinHeight =
-    (2 * padding)
+    (entityPaddingTop + padding)
         + labelHeight
+        + padding
+        / 2
         + addressesCountHeight
         + padding
 
 
 entityToAddressesPaddingTop : Float
 entityToAddressesPaddingTop =
-    2
-        * padding
+    entityPaddingTop
+        + padding
+        + padding
+        / 2
         + labelHeight
 
 

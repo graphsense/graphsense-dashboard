@@ -453,6 +453,18 @@ theme =
                     fillBlack
                 |> s_entityLabel
                     fillBlack
+                |> s_labelText
+                    (\nodeType ->
+                        [ property "dominant-baseline"
+                            (case nodeType of
+                                Address ->
+                                    "middle"
+
+                                Entity ->
+                                    "hanging"
+                            )
+                        ]
+                    )
                 |> s_abuseFlag
                     [ colors.red
                         |> Color.toCssString
@@ -472,7 +484,10 @@ theme =
                     , property "stroke-width" "10px"
                     ]
                 |> s_entityCurrency
-                    ((px 12 |> fontSize) :: fillBlack)
+                    ((px 12 |> fontSize)
+                        :: property "dominant-baseline" "hanging"
+                        :: fillBlack
+                    )
                 |> s_entityAddressesCount
                     ((px 14 |> fontSize) :: fillBlack)
                 |> s_expandHandlePath
@@ -622,7 +637,7 @@ theme =
                     , justifyContent spaceBetween
                     ]
                 |> s_tagLockedIcon
-                    [ opacity (num 0.5) ]
+                    [ opacity (num 0.7) ]
                 |> s_tagLockedText
                     [ fontStyle italic ]
                 |> s_highlightsColors

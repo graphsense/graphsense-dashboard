@@ -147,13 +147,13 @@ label vc gc addr =
         [ Css.addressLabel vc |> css
         , Graph.addressHeight
             / 2
-            + labelHeight
-            / 3
             |> translate (Graph.padding + expandHandleWidth)
             |> transform
         ]
         [ getLabel vc gc addr
-            |> Label.label vc gc
+            |> Label.label vc
+                gc
+                Model.Graph.Address
         ]
 
 
