@@ -25,7 +25,7 @@ stats vc sts =
         [ h2
             [ Css.View.heading2 vc |> css
             ]
-            [ Locale.text vc.locale "ledger statistics"
+            [ Locale.text vc.locale "Ledger statistics"
             ]
         , sts
             |> webdata
