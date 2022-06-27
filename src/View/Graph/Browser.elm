@@ -144,6 +144,8 @@ propertyBox vc =
         [ Css.propertyBoxTable vc |> css
         , id "propertyBox"
         ]
+        >> List.singleton
+        >> div [ Css.propertyBoxRoot vc |> css ]
 
 
 rule : View.Config -> Html msg

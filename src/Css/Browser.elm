@@ -23,6 +23,11 @@ frame vc visible =
         :: vc.theme.browser.frame visible
 
 
+propertyBoxRoot : Config -> List Style
+propertyBoxRoot vc =
+    vc.theme.browser.propertyBoxRoot
+
+
 propertyBoxTable : Config -> List Style
 propertyBoxTable vc =
     [ display table
