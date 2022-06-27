@@ -8,6 +8,7 @@ import Css.Graph as Css
 import Dict
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as Html exposing (..)
+import Html.Styled.Lazy as Html exposing (..)
 import IntDict exposing (IntDict)
 import Json.Decode
 import List.Extra
@@ -61,7 +62,7 @@ graph plugins states vc gc model =
         [ Css.graphRoot vc |> Html.css
         , Html.id "graph"
         ]
-        [ browser plugins states vc gc model.browser
+        [ Html.lazy5 browser plugins states vc gc model.browser
         , Tool.toolbox vc model
         , model.size
             |> Maybe.map (graphSvg plugins states vc gc model)

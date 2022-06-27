@@ -174,6 +174,7 @@ type alias AddressTag =
     , tagpackTitle : String
     , tagpackUri : Maybe String
     , address : String
+    , entity : Int
     }
 
 
@@ -539,6 +540,7 @@ encodeAddressTagPairs model =
             , encode "tagpack_title" Json.Encode.string model.tagpackTitle
             , maybeEncode "tagpack_uri" Json.Encode.string model.tagpackUri
             , encode "address" Json.Encode.string model.address
+            , encode "entity" Json.Encode.int model.entity
             ]
     in
     pairs
@@ -1409,6 +1411,7 @@ addressTagDecoder =
         |> decode "tagpack_title" Json.Decode.string 
         |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
         |> decode "address" Json.Decode.string 
+        |> decode "entity" Json.Decode.int 
 
 
 addressTagsDecoder : Json.Decode.Decoder AddressTags

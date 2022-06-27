@@ -9,13 +9,16 @@ import Css.View
 import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import List.Extra
+import Model.Address as A
+import Model.Graph.Id as Id
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
-import Util.View exposing (truncate)
+import Util.View exposing (none, truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
@@ -31,15 +34,40 @@ filter f a =
         || String.contains f a.label
 
 
-config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Table.Config Api.Data.AddressTag Msg
-config vc gc bestAddressTag =
+config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Maybe Id.EntityId -> (Id.EntityId -> A.Address -> Bool) -> Table.Config Api.Data.AddressTag Msg
+config vc gc bestAddressTag entityId entityHasAddress =
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.stringColumn vc "Address" .address
-
-            --, T.stringColumn vc "Currency" (.currency >> String.toUpper)
+            [ T.htmlColumn vc
+                "Address"
+                .address
+                (\data ->
+                    [ entityId
+                        |> Maybe.map
+                            (\id ->
+                                T.tickIf
+                                    (entityHasAddress id)
+                                    { currency = String.toLower data.currency, address = data.address }
+                            )
+                        |> Maybe.withDefault none
+                    , span
+                        (entityId
+                            |> Maybe.map
+                                (\id ->
+                                    [ UserClickedAddressInEntityTagsTable id data.address
+                                        |> onClick
+                                    , css [ Css.cursor Css.pointer ]
+                                    ]
+                                )
+                            |> Maybe.withDefault []
+                        )
+                        [ text data.address
+                        ]
+                    ]
+                )
+            , T.stringColumn vc "Entity" (.entity >> String.fromInt)
             , T.stringColumn vc "Label" .label
             , T.htmlColumn vc
                 "Source"

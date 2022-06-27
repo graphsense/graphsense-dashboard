@@ -7,6 +7,8 @@ import Color exposing (Color)
 import Config.Graph exposing (Config)
 import Dict exposing (Dict)
 import IntDict exposing (IntDict)
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Adding as Adding
 import Model.Graph.Browser as Browser
 import Model.Graph.ContextMenu as ContextMenu
@@ -40,6 +42,7 @@ type alias Model =
     , activeTool : ActiveTool
     , history : History
     , highlights : Highlighter.Model
+    , selectIfLoaded : Maybe SelectIfLoaded
     }
 
 
@@ -56,6 +59,11 @@ type alias ActiveTool =
 type NodeType
     = Address
     | Entity
+
+
+type SelectIfLoaded
+    = SelectAddress A.Address
+    | SelectEntity E.Entity
 
 
 type Selected

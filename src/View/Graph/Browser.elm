@@ -601,7 +601,7 @@ rowsEntity vc gc now ent =
         , mkTableLink "List addresses" Route.EntityAddressesTable
         )
     , Row
-        ( "Address Tags"
+        ( "Address tags"
         , ent
             |> ifLoaded
                 (.entity
@@ -751,7 +751,7 @@ browseAddressTable vc gc height address table =
             table_ vc height (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc Nothing) t
+            table_ vc height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
             table_ vc height (AddressNeighborsTable.config vc False coinCode addressId) t
@@ -792,7 +792,7 @@ browseEntityTable vc gc height entityHasAddress entity table =
             table_ vc height (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc bestAddressTag) t
+            table_ vc height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
             table_ vc height (EntityNeighborsTable.config vc False coinCode entityId) t

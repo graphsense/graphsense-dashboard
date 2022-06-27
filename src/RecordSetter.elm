@@ -3924,6 +3924,16 @@ s_seed value__ record__ =
     { record__ | seed = value__ }
 
 
+s_selectAddress : a -> { b | selectAddress : a } -> { b | selectAddress : a }
+s_selectAddress value__ record__ =
+    { record__ | selectAddress = value__ }
+
+
+s_selectIfLoaded : a -> { b | selectIfLoaded : a } -> { b | selectIfLoaded : a }
+s_selectIfLoaded value__ record__ =
+    { record__ | selectIfLoaded = value__ }
+
+
 s_selected : a -> { b | selected : a } -> { b | selected : a }
 s_selected value__ record__ =
     { record__ | selected = value__ }

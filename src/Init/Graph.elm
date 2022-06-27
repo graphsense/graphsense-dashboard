@@ -34,4 +34,5 @@ init plugins now =
     , search = Nothing
     , history = History [] []
     , highlights = Highlighter.init
+    , selectIfLoaded = Nothing
     }

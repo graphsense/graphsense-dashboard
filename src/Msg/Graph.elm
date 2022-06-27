@@ -68,6 +68,7 @@ type Msg
     | BrowserGotAddressTxs A.Address Api.Data.AddressTxs
     | BrowserGotAddresslinkTxs A.Addresslink Api.Data.Links
     | BrowserGotEntityAddresses EntityId Api.Data.EntityAddresses
+    | BrowserGotAddressForEntity EntityId Api.Data.Address
     | BrowserGotEntityAddressesForTable E.Entity Api.Data.EntityAddresses
     | BrowserGotEntityTxs E.Entity Api.Data.AddressTxs
     | BrowserGotEntitylinkTxs E.Entitylink Api.Data.Links
@@ -86,6 +87,8 @@ type Msg
     | UserClickedRemoveAddress AddressId
     | UserClickedRemoveEntity EntityId
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
+    | UserClickedAddressInEntityTagsTable EntityId String
+    | UserClickedAddressInLabelTagsTable A.Address
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)

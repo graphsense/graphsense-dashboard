@@ -2,9 +2,11 @@ module View.Graph.Table.LabelAddressTagsTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
@@ -37,23 +39,19 @@ config vc =
                 "Address"
                 .address
                 (\data ->
-                    a
-                        [ Css.View.link vc |> css
-                        , Route.addressRoute
-                            { currency = data.currency
-                            , address = data.address
-                            , table = Nothing
-                            , layer = Nothing
+                    [ span
+                        [ UserClickedAddressInLabelTagsTable
+                            { address = data.address
+                            , currency = String.toLower data.currency
                             }
-                            |> Route.graphRoute
-                            |> toUrl
-                            |> href
+                            |> onClick
+                        , css [ Css.cursor Css.pointer ]
                         ]
-                        [ text
-                            data.address
+                        [ text data.address
                         ]
-                        |> List.singleton
+                    ]
                 )
+            , T.stringColumn vc "Entity" (.entity >> String.fromInt)
             , T.stringColumn vc "Currency" (.currency >> String.toUpper)
             , T.stringColumn vc "Label" .label
             , T.htmlColumn vc
