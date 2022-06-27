@@ -1,0 +1,97 @@
+module Update.Graph.Search exposing (..)
+
+import Api.Data
+import Api.Request.Entities
+import Effect exposing (n)
+import Effect.Graph exposing (Effect(..))
+import Init.Graph.Search exposing (initCriterion)
+import Model.Graph.Id as Id
+import Model.Graph.Search exposing (..)
+import Msg.Graph exposing (Msg(..))
+
+
+type alias Config =
+    { categories : List Api.Data.Concept
+    }
+
+
+selectCriterion : Config -> String -> Model -> ( Model, List Effect )
+selectCriterion config criterion model =
+    { model
+        | criterion =
+            case criterion of
+                "category" ->
+                    initCriterion config.categories
+
+                _ ->
+                    initCriterion config.categories
+    }
+        |> n
+
+
+selectCategory : String -> Model -> ( Model, List Effect )
+selectCategory category model =
+    case model.criterion of
+        Category categories active ->
+            { model
+                | criterion = Category categories category
+            }
+                |> n
+
+
+selectDirection : String -> Model -> ( Model, List Effect )
+selectDirection direction model =
+    { model
+        | direction =
+            case direction of
+                "incoming" ->
+                    Incoming
+
+                "outgoing" ->
+                    Outgoing
+
+                "both" ->
+                    Both
+
+                _ ->
+                    Outgoing
+    }
+        |> n
+
+
+submit : Model -> ( Model, List Effect )
+submit model =
+    let
+        ( key, value ) =
+            case model.criterion of
+                Category _ active ->
+                    ( Api.Request.Entities.KeyCategory
+                    , [ active ]
+                    )
+
+        makeEffect isOutgoing =
+            SearchEntityNeighborsEffect
+                { currency = Id.currency model.id
+                , entity = Id.entityId model.id
+                , isOutgoing = isOutgoing
+                , key = key
+                , value = value
+                , depth = model.depth
+                , breadth = model.breadth
+                , maxAddresses = model.maxAddresses
+                , toMsg = BrowserGotEntitySearchResult model.id isOutgoing
+                }
+    in
+    ( model
+    , case model.direction of
+        Outgoing ->
+            [ makeEffect True ]
+
+        Incoming ->
+            [ makeEffect False ]
+
+        Both ->
+            [ makeEffect True
+            , makeEffect False
+            ]
+    )

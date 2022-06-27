@@ -3,10 +3,14 @@ node_modules
 dist
 official
 .vimrc
-Makefile
 testdata
 connect_cassandra.sh
 tags
 ctags_exclude
 .env
 test/*.gs
+elm-stuff
+.parcel-cache
+.venv
+plugins/*
+config/Config.elm

@@ -1,4 +1,5 @@
 node_modules/
+elm-stuff
 Dockerfile
 README.md
 npm-debug.log
