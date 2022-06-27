@@ -188,7 +188,8 @@ getLabel vc gc ent =
                             )
 
                 else
-                    Just tag.label
+                    Just "123456789 12345678"
+             --tag.label
             )
         |> Maybe.withDefault (String.fromInt ent.entity.entity)
 

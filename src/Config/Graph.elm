@@ -122,7 +122,7 @@ default : Config
 default =
     { addressLabelType = Tag
     , txLabelType = Value
-    , maxLettersPerLabelRow = 19
+    , maxLettersPerLabelRow = 18
     , colors = Dict.empty
     , entityConcepts = []
     , abuseConcepts = []

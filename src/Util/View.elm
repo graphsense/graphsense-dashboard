@@ -49,7 +49,11 @@ firstToUpper str =
 
 truncate : Int -> String -> String
 truncate len str =
-    String.left len str ++ "…"
+    if String.length str > len then
+        String.left len str ++ "…"
+
+    else
+        str
 
 
 setAlpha : Float -> Color.Color -> Color.Color

@@ -235,7 +235,7 @@ browseValue vc value =
                                                     List.Extra.find (.id >> (==) cat) gc.entityConcepts
                                                 )
                                             |> Maybe.map .label
-                                            |> Maybe.withDefault (Locale.string vc.locale "tag locked")
+                                            |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
                                      else
                                         tag.label

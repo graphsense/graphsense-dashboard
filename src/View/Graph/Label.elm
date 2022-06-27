@@ -12,6 +12,7 @@ import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events exposing (..)
 import Tuple exposing (mapSecond)
 import Util.Graph as Util exposing (translate)
+import Util.View exposing (truncate)
 import View.Locale as Locale
 
 
@@ -43,10 +44,13 @@ label vc gc title =
             ll =
                 String.length lbl
 
+            maxLettersBeforeResize =
+                15
+
             height =
                 labelHeight
-                    * (if List.length spl > 1 then
-                        0.5
+                    * (if String.length lbl > maxLettersBeforeResize then
+                        0.8
 
                        else
                         1
@@ -56,7 +60,7 @@ label vc gc title =
                 split gc.maxLettersPerLabelRow lbl
 
             dy =
-                toFloat (List.length spl - 1) * height / 2.5 |> negate
+                toFloat (List.length spl) * height / 5 |> negate
         in
         spl
             |> List.indexedMap
