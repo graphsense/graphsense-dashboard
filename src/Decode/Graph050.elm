@@ -175,8 +175,17 @@ decodeAddressId =
                 }
         )
         (index 0 string)
-        (index 1 int)
+        (index 1 decodeInt)
         (index 2 string)
+
+
+decodeInt : Decoder Int
+decodeInt =
+    oneOf
+        [ int
+        , string
+            |> andThen (String.toInt >> Maybe.map succeed >> Maybe.withDefault (fail "no an integer"))
+        ]
 
 
 decodeEntityId : Decoder Id.EntityId
@@ -189,8 +198,8 @@ decodeEntityId =
                 , layer = layer
                 }
         )
-        (index 0 int)
-        (index 1 int)
+        (index 0 decodeInt)
+        (index 1 decodeInt)
         (index 2 string)
 
 
