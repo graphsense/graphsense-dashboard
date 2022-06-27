@@ -1,5 +1,6 @@
 module Init.Graph.Browser exposing (..)
 
+import IntDict
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Table exposing (Table)
 import Table
@@ -13,4 +14,5 @@ init now =
     , type_ = None
     , now = Time.millisToPosix now
     , height = Nothing
+    , layers = IntDict.empty
     }

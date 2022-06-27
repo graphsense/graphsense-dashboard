@@ -17,7 +17,7 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Util.InfiniteScroll as InfiniteScroll
-import Util.View exposing (loadingSpinner)
+import Util.View exposing (loadingSpinner, none)
 import View.Locale as Locale
 
 
@@ -245,3 +245,13 @@ valuesSorter : View.Config -> Api.Data.Values -> Float
 valuesSorter vc values =
     Currency.valuesToFloat vc.locale.currency values
         |> Maybe.withDefault 0
+
+
+tickIf : (a -> Bool) -> a -> Html msg
+tickIf has a =
+    if has a then
+        FontAwesome.icon FontAwesome.check
+            |> Html.Styled.fromUnstyled
+
+    else
+        none

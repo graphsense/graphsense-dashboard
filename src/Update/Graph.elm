@@ -196,6 +196,16 @@ update plugins uc msg model =
     model
         |> pushHistory msg
         |> updateByMsg plugins uc msg
+        |> mapFirst syncBrowser
+
+
+syncBrowser : Model -> Model
+syncBrowser model =
+    { model
+        | browser =
+            model.browser
+                |> s_layers model.layers
+    }
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )

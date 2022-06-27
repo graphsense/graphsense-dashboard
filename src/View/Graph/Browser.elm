@@ -11,13 +11,16 @@ import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Init.Graph.Id as Id
 import Json.Encode
 import List.Extra
 import Maybe.Extra
+import Model.Address as A
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
@@ -74,7 +77,22 @@ browser plugins states vc gc model =
                 Browser.Entity loadable table ->
                     browseEntity plugins states vc gc model.now loadable
                         :: (table
-                                |> Maybe.map (browseEntityTable vc gc model.height loadable)
+                                |> Maybe.map
+                                    (\t ->
+                                        let
+                                            entityHasAddress entityId address =
+                                                Layer.getAddress
+                                                    (Id.initAddressId
+                                                        { currency = address.currency
+                                                        , id = address.address
+                                                        , layer = Id.layer entityId
+                                                        }
+                                                    )
+                                                    model.layers
+                                                    |> Maybe.Extra.isJust
+                                        in
+                                        browseEntityTable vc gc model.height entityHasAddress loadable t
+                                    )
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -752,8 +770,8 @@ table_ vc =
         (Just UserInputsFilterTable)
 
 
-browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Entity -> EntityTable -> Html Msg
-browseEntityTable vc gc height entity table =
+browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> (Id.EntityId -> A.Address -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg
+browseEntityTable vc gc height entityHasAddress entity table =
     let
         ( coinCode, entityId, bestAddressTag ) =
             case entity of
@@ -765,7 +783,7 @@ browseEntityTable vc gc height entity table =
     in
     case table of
         EntityAddressesTable t ->
-            table_ vc height (EntityAddressesTable.config vc coinCode entityId) t
+            table_ vc height (EntityAddressesTable.config vc coinCode entityId entityHasAddress) t
 
         EntityTxsUtxoTable t ->
             table_ vc height (AddressTxsUtxoTable.config vc coinCode) t

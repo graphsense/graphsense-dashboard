@@ -3,12 +3,14 @@ module Model.Graph.Browser exposing (..)
 import Api.Data
 import Config.Graph as Graph
 import Html.Styled exposing (Html)
+import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Layer as Layer
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
@@ -20,6 +22,7 @@ type alias Model =
     , visible : Bool
     , now : Time.Posix
     , height : Maybe Float
+    , layers : IntDict Layer.Layer
     }
 
 

@@ -7,10 +7,12 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Model.Address as A
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 
 
@@ -24,8 +26,8 @@ filter f a =
     String.contains f a.address
 
 
-config : View.Config -> String -> Maybe EntityId -> Table.Config Api.Data.Address Msg
-config vc coinCode entityId =
+config : View.Config -> String -> Maybe EntityId -> (EntityId -> A.Address -> Bool) -> Table.Config Api.Data.Address Msg
+config vc coinCode entityId entityHasAddress =
     Table.customConfig
         { toId = .address
         , toMsg = TableNewState
@@ -34,20 +36,28 @@ config vc coinCode entityId =
                 "Address"
                 .address
                 (\data ->
-                    text data.address
-                        |> List.singleton
-                        |> div
-                            (entityId
-                                |> Maybe.map
-                                    (\id ->
-                                        [ UserClickedAddressInEntityAddressesTable id data
-                                            |> onClick
-                                        , css [ cursor pointer ]
-                                        ]
-                                    )
-                                |> Maybe.withDefault []
+                    [ entityId
+                        |> Maybe.map
+                            (\id ->
+                                T.tickIf
+                                    (entityHasAddress id)
+                                    { currency = data.currency, address = data.address }
                             )
-                        |> List.singleton
+                        |> Maybe.withDefault none
+                    , span
+                        (entityId
+                            |> Maybe.map
+                                (\id ->
+                                    [ UserClickedAddressInEntityAddressesTable id data
+                                        |> onClick
+                                    , css [ cursor pointer ]
+                                    ]
+                                )
+                            |> Maybe.withDefault []
+                        )
+                        [ text data.address
+                        ]
+                    ]
                 )
             , T.timestampColumn vc "First usage" (.firstTx >> .timestamp)
             , T.timestampColumn vc "Last usage" (.lastTx >> .timestamp)
