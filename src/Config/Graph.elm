@@ -30,6 +30,11 @@ expandHandleWidth =
     15
 
 
+entityPaddingTop : Float
+entityPaddingTop =
+    15
+
+
 padding : Float
 padding =
     10

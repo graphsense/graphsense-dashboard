@@ -2,7 +2,16 @@ module Model.Graph.Entity exposing (..)
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph exposing (addressHeight, addressesCountHeight, entityMinHeight, expandHandleWidth, labelHeight, padding)
+import Config.Graph
+    exposing
+        ( addressHeight
+        , addressesCountHeight
+        , entityMinHeight
+        , entityPaddingTop
+        , expandHandleWidth
+        , labelHeight
+        , padding
+        )
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph.Address exposing (..)
@@ -42,7 +51,7 @@ getHeight entity =
            else
             0
           )
-        * padding
+        * entityPaddingTop
 
 
 getInnerWidth : Entity -> Float

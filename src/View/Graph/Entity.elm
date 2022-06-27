@@ -162,7 +162,7 @@ label : Config -> Graph.Config -> Entity -> Svg Msg
 label vc gc ent =
     g
         [ Css.entityLabel vc |> css
-        , Graph.padding
+        , Graph.entityPaddingTop
             + labelHeight
             / 2
             |> translate (Graph.padding * 2.5)
@@ -188,8 +188,7 @@ getLabel vc gc ent =
                             )
 
                 else
-                    Just "123456789 12345678"
-             --tag.label
+                    Just tag.label
             )
         |> Maybe.withDefault (String.fromInt ent.entity.entity)
 
