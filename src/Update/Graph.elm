@@ -218,16 +218,13 @@ syncBrowser old model =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
-        InfiniteScrollMsg m ->
+        UserScrolledTable pos ->
             let
-                ( browser, eff ) =
-                    Browser.infiniteScroll m model.browser
+                ( browser, effects ) =
+                    Browser.infiniteScroll pos model.browser
             in
-            ( { model
-                | browser = browser
-              }
-            , eff
-            )
+            effects
+                |> pair { model | browser = browser }
 
         InternalGraphAddedAddresses _ ->
             n model

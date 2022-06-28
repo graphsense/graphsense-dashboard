@@ -27,7 +27,6 @@ import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData, applyFilter)
 import Update.Search as Search
-import Util.InfiniteScroll as InfiniteScroll
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
@@ -115,7 +114,7 @@ loadingLabel label model =
                 |> Label label
         , visible = True
       }
-    , [ listAddressTagsEffect Nothing label
+    , [ listAddressTagsEffect label Nothing
       ]
     )
 
@@ -196,10 +195,11 @@ createAddressTable route t currency address =
 
         ( Route.AddressTagsTable, _ ) ->
             ( AddressTagsTable.init |> AddressTagsTable |> Just
-            , [ getAddressTagsEffect Nothing
+            , [ getAddressTagsEffect
                     { currency = currency
                     , address = address
                     }
+                    Nothing
               ]
             )
 
@@ -212,19 +212,21 @@ createAddressTable route t currency address =
         ( Route.AddressTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddressTxsAccountTable |> Just
-                , [ getAddressTxsEffect Nothing
+                , [ getAddressTxsEffect
                         { currency = currency
                         , address = address
                         }
+                        Nothing
                   ]
                 )
 
             else
                 ( AddressTxsUtxoTable.init |> AddressTxsUtxoTable |> Just
-                , [ getAddressTxsEffect Nothing
+                , [ getAddressTxsEffect
                         { currency = currency
                         , address = address
                         }
+                        Nothing
                   ]
                 )
 
@@ -233,11 +235,12 @@ createAddressTable route t currency address =
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
             ( AddressNeighborsTable.init False |> AddressIncomingNeighborsTable |> Just
-            , [ getAddressNeighborsEffect Nothing
+            , [ getAddressNeighborsEffect
                     False
                     { currency = currency
                     , address = address
                     }
+                    Nothing
               ]
             )
 
@@ -246,11 +249,12 @@ createAddressTable route t currency address =
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
             ( AddressNeighborsTable.init True |> AddressOutgoingNeighborsTable |> Just
-            , [ getAddressNeighborsEffect Nothing
+            , [ getAddressNeighborsEffect
                     True
                     { currency = currency
                     , address = address
                     }
+                    Nothing
               ]
             )
 
@@ -303,21 +307,23 @@ createAddresslinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Nothing ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
-                , [ getAddresslinkTxsEffect Nothing
+                , [ getAddresslinkTxsEffect
                         { currency = currency
                         , source = source
                         , target = target
                         }
+                        Nothing
                   ]
                 )
 
             else
                 ( AddresslinkTxsUtxoTable.init |> AddresslinkTxsUtxoTable |> Just
-                , [ getAddresslinkTxsEffect Nothing
+                , [ getAddresslinkTxsEffect
                         { currency = currency
                         , source = source
                         , target = target
                         }
+                        Nothing
                   ]
                 )
 
@@ -334,21 +340,23 @@ createEntitylinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Nothing ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
-                , [ getEntitylinkTxsEffect Nothing
+                , [ getEntitylinkTxsEffect
                         { currency = currency
                         , source = source
                         , target = target
                         }
+                        Nothing
                   ]
                 )
 
             else
                 ( AddresslinkTxsUtxoTable.init |> AddresslinkTxsUtxoTable |> Just
-                , [ getEntitylinkTxsEffect Nothing
+                , [ getEntitylinkTxsEffect
                         { currency = currency
                         , source = source
                         , target = target
                         }
+                        Nothing
                   ]
                 )
 
@@ -385,10 +393,11 @@ createEntityTable route t currency entity =
 
         ( Route.EntityTagsTable, _ ) ->
             ( AddressTagsTable.init |> EntityTagsTable |> Just
-            , [ getEntityAddressTagsEffect Nothing
+            , [ getEntityAddressTagsEffect
                     { currency = currency
                     , entity = entity
                     }
+                    Nothing
               ]
             )
 
@@ -401,19 +410,21 @@ createEntityTable route t currency entity =
         ( Route.EntityTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> EntityTxsAccountTable |> Just
-                , [ getEntityTxsEffect Nothing
+                , [ getEntityTxsEffect
                         { currency = currency
                         , entity = entity
                         }
+                        Nothing
                   ]
                 )
 
             else
                 ( AddressTxsUtxoTable.init |> EntityTxsUtxoTable |> Just
-                , [ getEntityTxsEffect Nothing
+                , [ getEntityTxsEffect
                         { currency = currency
                         , entity = entity
                         }
+                        Nothing
                   ]
                 )
 
@@ -422,11 +433,12 @@ createEntityTable route t currency entity =
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
             ( EntityNeighborsTable.init False |> EntityIncomingNeighborsTable |> Just
-            , [ getEntityNeighborsEffect Nothing
+            , [ getEntityNeighborsEffect
                     False
                     { currency = currency
                     , entity = entity
                     }
+                    Nothing
               ]
             )
 
@@ -435,11 +447,12 @@ createEntityTable route t currency entity =
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
             ( EntityNeighborsTable.init False |> EntityOutgoingNeighborsTable |> Just
-            , [ getEntityNeighborsEffect Nothing
+            , [ getEntityNeighborsEffect
                     True
                     { currency = currency
                     , entity = entity
                     }
+                    Nothing
               ]
             )
 
@@ -448,10 +461,11 @@ createEntityTable route t currency entity =
 
         ( Route.EntityAddressesTable, _ ) ->
             ( EntityAddressesTable.init |> EntityAddressesTable |> Just
-            , [ getEntityAddressesEffect Nothing
+            , [ getEntityAddressesEffect
                     { currency = currency
                     , entity = entity
                     }
+                    Nothing
               ]
             )
 
@@ -492,19 +506,21 @@ createBlockTable route t currency block =
         ( Route.BlockTxsTable, Nothing ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> BlockTxsAccountTable |> Just
-                , [ getBlockTxsEffect Nothing
+                , [ getBlockTxsEffect
                         { currency = currency
                         , block = block
                         }
+                        Nothing
                   ]
                 )
 
             else
                 ( TxsUtxoTable.init |> BlockTxsUtxoTable |> Just
-                , [ getBlockTxsEffect Nothing
+                , [ getBlockTxsEffect
                         { currency = currency
                         , block = block
                         }
+                        Nothing
                   ]
                 )
 
@@ -1519,302 +1535,188 @@ setHeight height browser =
     }
 
 
-infiniteScroll : InfiniteScroll.Msg -> Model -> ( Model, List Effect )
-infiniteScroll msg model =
+infiniteScroll : ScrollPos -> Model -> ( Model, List Effect )
+infiniteScroll { scrollTop, contentHeight, containerHeight } model =
     let
+        excessHeight =
+            contentHeight - containerHeight
+
+        needMore =
+            scrollTop >= toFloat (excessHeight - 50)
+
+        wrap t tag effect =
+            if not t.loading && t.nextpage /= Nothing then
+                ( { t | loading = True }
+                    |> tag
+                    |> Just
+                , effect t.nextpage
+                    |> List.singleton
+                )
+
+            else
+                t |> tag |> Just |> n
+
         ( type_, eff ) =
-            case model.type_ of
-                Address loadable table ->
-                    (case table of
-                        Just (AddressTxsUtxoTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddressTxsUtxoTable
-                                |> Just
-                            , loadableAddress loadable
-                                |> getAddressTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
+            if not needMore then
+                n model.type_
+
+            else
+                case model.type_ of
+                    Address loadable table ->
+                        (case table of
+                            Just (AddressTxsUtxoTable t) ->
+                                loadableAddress loadable
+                                    |> getAddressTxsEffect
+                                    |> wrap t AddressTxsUtxoTable
+
+                            Just (AddressTxsAccountTable t) ->
+                                loadableAddress loadable
+                                    |> getAddressTxsEffect
+                                    |> wrap t AddressTxsAccountTable
+
+                            Just (AddressTagsTable t) ->
+                                loadableAddress loadable
+                                    |> getAddressTagsEffect
+                                    |> wrap t AddressTagsTable
+
+                            Just (AddressIncomingNeighborsTable t) ->
+                                loadableAddress loadable
+                                    |> getAddressNeighborsEffect False
+                                    |> wrap t AddressIncomingNeighborsTable
+
+                            Just (AddressOutgoingNeighborsTable t) ->
+                                loadableAddress loadable
+                                    |> getAddressNeighborsEffect True
+                                    |> wrap t AddressOutgoingNeighborsTable
+
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Address loadable)
+
+                    Entity loadable table ->
+                        (case table of
+                            Just (EntityAddressesTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityAddressesEffect
+                                    |> wrap t EntityAddressesTable
+
+                            Just (EntityTxsUtxoTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityTxsEffect
+                                    |> wrap t EntityTxsUtxoTable
+
+                            Just (EntityTxsAccountTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityTxsEffect
+                                    |> wrap t EntityTxsAccountTable
+
+                            Just (EntityTagsTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityAddressTagsEffect
+                                    |> wrap t EntityTagsTable
+
+                            Just (EntityIncomingNeighborsTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityNeighborsEffect False
+                                    |> wrap t EntityIncomingNeighborsTable
+
+                            Just (EntityOutgoingNeighborsTable t) ->
+                                loadableEntity loadable
+                                    |> getEntityNeighborsEffect True
+                                    |> wrap t EntityOutgoingNeighborsTable
+
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Entity loadable)
+
+                    Block loadable table ->
+                        (case table of
+                            Just (BlockTxsUtxoTable t) ->
+                                loadableBlock loadable
+                                    |> getBlockTxsEffect
+                                    |> wrap t BlockTxsUtxoTable
+
+                            Just (BlockTxsAccountTable t) ->
+                                loadableBlock loadable
+                                    |> getBlockTxsEffect
+                                    |> wrap t BlockTxsAccountTable
+
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Block loadable)
+
+                    TxUtxo _ _ ->
+                        ( model.type_, [] )
+
+                    TxAccount _ ->
+                        ( model.type_, [] )
+
+                    Label label t ->
+                        if not t.loading && t.nextpage /= Nothing then
+                            ( { t | loading = True }
+                                |> Label label
+                            , listAddressTagsEffect label t.nextpage
+                                |> List.singleton
                             )
 
-                        Just (AddressTxsAccountTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddressTxsAccountTable
-                                |> Just
-                            , loadableAddress loadable
-                                |> getAddressTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                        else
+                            Label label t |> n
 
-                        Just (AddressTagsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddressTagsTable
-                                |> Just
-                            , loadableAddress loadable
-                                |> getAddressTagsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                    Addresslink src link table ->
+                        let
+                            id =
+                                { currency = Id.currency src.id
+                                , source = Id.addressId src.id
+                                , target = Id.addressId link.node.id
+                                }
+                        in
+                        (case table of
+                            Just (AddresslinkTxsUtxoTable t) ->
+                                getAddresslinkTxsEffect id
+                                    |> wrap t AddresslinkTxsUtxoTable
 
-                        Just (AddressIncomingNeighborsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddressIncomingNeighborsTable
-                                |> Just
-                            , loadableAddress loadable
-                                |> getAddressNeighborsEffect t.nextpage False
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                            Just (AddresslinkTxsAccountTable t) ->
+                                getAddresslinkTxsEffect id
+                                    |> wrap t AddresslinkTxsAccountTable
 
-                        Just (AddressOutgoingNeighborsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddressOutgoingNeighborsTable
-                                |> Just
-                            , loadableAddress loadable
-                                |> getAddressNeighborsEffect t.nextpage True
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Addresslink src link)
 
-                        Nothing ->
-                            ( table, [] )
-                    )
-                        |> mapFirst (Address loadable)
+                    Entitylink src link table ->
+                        let
+                            id =
+                                { currency = Id.currency src.id
+                                , source = Id.entityId src.id
+                                , target = Id.entityId link.node.id
+                                }
+                        in
+                        (case table of
+                            Just (AddresslinkTxsUtxoTable t) ->
+                                getEntitylinkTxsEffect id
+                                    |> wrap t AddresslinkTxsUtxoTable
 
-                Entity loadable table ->
-                    (case table of
-                        Just (EntityAddressesTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityAddressesTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityAddressesEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                            Just (AddresslinkTxsAccountTable t) ->
+                                getEntitylinkTxsEffect id
+                                    |> wrap t AddresslinkTxsAccountTable
 
-                        Just (EntityTxsUtxoTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityTxsUtxoTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Entitylink src link)
 
-                        Just (EntityTxsAccountTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityTxsAccountTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                    UserTags _ ->
+                        ( model.type_, [] )
 
-                        Just (EntityTagsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityTagsTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityAddressTagsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
+                    Plugin _ ->
+                        ( model.type_, [] )
 
-                        Just (EntityIncomingNeighborsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityIncomingNeighborsTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityNeighborsEffect t.nextpage False
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Just (EntityOutgoingNeighborsTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> EntityOutgoingNeighborsTable
-                                |> Just
-                            , loadableEntity loadable
-                                |> getEntityNeighborsEffect t.nextpage True
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Nothing ->
-                            ( table, [] )
-                    )
-                        |> mapFirst (Entity loadable)
-
-                Block loadable table ->
-                    (case table of
-                        Just (BlockTxsUtxoTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> BlockTxsUtxoTable
-                                |> Just
-                            , loadableBlock loadable
-                                |> getBlockTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Just (BlockTxsAccountTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> BlockTxsAccountTable
-                                |> Just
-                            , loadableBlock loadable
-                                |> getBlockTxsEffect t.nextpage
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Nothing ->
-                            ( table, [] )
-                    )
-                        |> mapFirst (Block loadable)
-
-                TxUtxo _ _ ->
-                    ( model.type_, [] )
-
-                TxAccount _ ->
-                    ( model.type_, [] )
-
-                Label label t ->
-                    let
-                        ( is, cmd, needMore ) =
-                            InfiniteScroll.update msg t.infiniteScroll
-                    in
-                    ( { t | infiniteScroll = is }
-                        |> Label label
-                    , listAddressTagsEffect t.nextpage label
-                        |> infiniteScrollEffects cmd needMore t
-                    )
-
-                Addresslink src link table ->
-                    let
-                        id =
-                            { currency = Id.currency src.id
-                            , source = Id.addressId src.id
-                            , target = Id.addressId link.node.id
-                            }
-                    in
-                    (case table of
-                        Just (AddresslinkTxsUtxoTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddresslinkTxsUtxoTable
-                                |> Just
-                            , getAddresslinkTxsEffect t.nextpage id
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Just (AddresslinkTxsAccountTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddresslinkTxsAccountTable
-                                |> Just
-                            , getAddresslinkTxsEffect t.nextpage id
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Nothing ->
-                            ( table, [] )
-                    )
-                        |> mapFirst (Addresslink src link)
-
-                Entitylink src link table ->
-                    let
-                        id =
-                            { currency = Id.currency src.id
-                            , source = Id.entityId src.id
-                            , target = Id.entityId link.node.id
-                            }
-                    in
-                    (case table of
-                        Just (AddresslinkTxsUtxoTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddresslinkTxsUtxoTable
-                                |> Just
-                            , getEntitylinkTxsEffect t.nextpage id
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Just (AddresslinkTxsAccountTable t) ->
-                            let
-                                ( is, cmd, needMore ) =
-                                    InfiniteScroll.update msg t.infiniteScroll
-                            in
-                            ( { t | infiniteScroll = is }
-                                |> AddresslinkTxsAccountTable
-                                |> Just
-                            , getEntitylinkTxsEffect t.nextpage id
-                                |> infiniteScrollEffects cmd needMore t
-                            )
-
-                        Nothing ->
-                            ( table, [] )
-                    )
-                        |> mapFirst (Entitylink src link)
-
-                UserTags _ ->
-                    ( model.type_, [] )
-
-                Plugin _ ->
-                    ( model.type_, [] )
-
-                None ->
-                    ( model.type_, [] )
+                    None ->
+                        ( model.type_, [] )
     in
     ( { model
         | type_ = type_
@@ -1823,19 +1725,8 @@ infiniteScroll msg model =
     )
 
 
-infiniteScrollEffects : Cmd InfiniteScroll.Msg -> Bool -> Table a -> Effect -> List Effect
-infiniteScrollEffects cmd needMore { nextpage } effect =
-    CmdEffect (Cmd.map InfiniteScrollMsg cmd)
-        :: (if needMore && nextpage /= Nothing then
-                [ effect ]
-
-            else
-                []
-           )
-
-
-getAddressTxsEffect : Maybe String -> A.Address -> Effect
-getAddressTxsEffect nextpage { currency, address } =
+getAddressTxsEffect : A.Address -> Maybe String -> Effect
+getAddressTxsEffect { currency, address } nextpage =
     GetAddressTxsEffect
         { currency = currency
         , address = address
@@ -1845,8 +1736,8 @@ getAddressTxsEffect nextpage { currency, address } =
         }
 
 
-getAddresslinkTxsEffect : Maybe String -> A.Addresslink -> Effect
-getAddresslinkTxsEffect nextpage id =
+getAddresslinkTxsEffect : A.Addresslink -> Maybe String -> Effect
+getAddresslinkTxsEffect id nextpage =
     GetAddresslinkTxsEffect
         { currency = id.currency
         , source = id.source
@@ -1857,8 +1748,8 @@ getAddresslinkTxsEffect nextpage id =
         }
 
 
-getEntitylinkTxsEffect : Maybe String -> E.Entitylink -> Effect
-getEntitylinkTxsEffect nextpage id =
+getEntitylinkTxsEffect : E.Entitylink -> Maybe String -> Effect
+getEntitylinkTxsEffect id nextpage =
     GetEntitylinkTxsEffect
         { currency = id.currency
         , source = id.source
@@ -1869,8 +1760,8 @@ getEntitylinkTxsEffect nextpage id =
         }
 
 
-getAddressTagsEffect : Maybe String -> A.Address -> Effect
-getAddressTagsEffect nextpage { currency, address } =
+getAddressTagsEffect : A.Address -> Maybe String -> Effect
+getAddressTagsEffect { currency, address } nextpage =
     GetAddressTagsEffect
         { currency = currency
         , address = address
@@ -1884,8 +1775,8 @@ getAddressTagsEffect nextpage { currency, address } =
         }
 
 
-getAddressNeighborsEffect : Maybe String -> Bool -> A.Address -> Effect
-getAddressNeighborsEffect nextpage isOutgoing { currency, address } =
+getAddressNeighborsEffect : Bool -> A.Address -> Maybe String -> Effect
+getAddressNeighborsEffect isOutgoing { currency, address } nextpage =
     GetAddressNeighborsEffect
         { currency = currency
         , address = address
@@ -1902,8 +1793,8 @@ getAddressNeighborsEffect nextpage isOutgoing { currency, address } =
         }
 
 
-getEntityAddressTagsEffect : Maybe String -> E.Entity -> Effect
-getEntityAddressTagsEffect nextpage { currency, entity } =
+getEntityAddressTagsEffect : E.Entity -> Maybe String -> Effect
+getEntityAddressTagsEffect { currency, entity } nextpage =
     GetEntityAddressTagsEffect
         { currency = currency
         , entity = entity
@@ -1917,8 +1808,8 @@ getEntityAddressTagsEffect nextpage { currency, entity } =
         }
 
 
-getEntityTxsEffect : Maybe String -> E.Entity -> Effect
-getEntityTxsEffect nextpage { currency, entity } =
+getEntityTxsEffect : E.Entity -> Maybe String -> Effect
+getEntityTxsEffect { currency, entity } nextpage =
     GetEntityTxsEffect
         { currency = currency
         , entity = entity
@@ -1928,8 +1819,8 @@ getEntityTxsEffect nextpage { currency, entity } =
         }
 
 
-getEntityNeighborsEffect : Maybe String -> Bool -> E.Entity -> Effect
-getEntityNeighborsEffect nextpage isOutgoing { currency, entity } =
+getEntityNeighborsEffect : Bool -> E.Entity -> Maybe String -> Effect
+getEntityNeighborsEffect isOutgoing { currency, entity } nextpage =
     GetEntityNeighborsEffect
         { currency = currency
         , entity = entity
@@ -1947,8 +1838,8 @@ getEntityNeighborsEffect nextpage isOutgoing { currency, entity } =
         }
 
 
-getEntityAddressesEffect : Maybe String -> E.Entity -> Effect
-getEntityAddressesEffect nextpage { currency, entity } =
+getEntityAddressesEffect : E.Entity -> Maybe String -> Effect
+getEntityAddressesEffect { currency, entity } nextpage =
     GetEntityAddressesEffect
         { currency = currency
         , entity = entity
@@ -2001,8 +1892,8 @@ showTxUtxoAddresses id isOutgoing data model =
             model
 
 
-listAddressTagsEffect : Maybe String -> String -> Effect
-listAddressTagsEffect nextpage label =
+listAddressTagsEffect : String -> Maybe String -> Effect
+listAddressTagsEffect label nextpage =
     ListAddressTagsEffect
         { label = label
         , pagesize = Nothing
@@ -2011,8 +1902,8 @@ listAddressTagsEffect nextpage label =
         }
 
 
-getBlockTxsEffect : Maybe String -> B.Block -> Effect
-getBlockTxsEffect nextpage { currency, block } =
+getBlockTxsEffect : B.Block -> Maybe String -> Effect
+getBlockTxsEffect { currency, block } nextpage =
     GetBlockTxsEffect
         { currency = currency
         , block = block

@@ -69,6 +69,13 @@ type Row r
     | Rule
 
 
+type alias ScrollPos =
+    { scrollTop : Float
+    , contentHeight : Int
+    , containerHeight : Int
+    }
+
+
 loadableAddress : Loadable String Address -> A.Address
 loadableAddress l =
     case l of

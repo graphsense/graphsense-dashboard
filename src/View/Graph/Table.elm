@@ -16,7 +16,6 @@ import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
-import Util.InfiniteScroll as InfiniteScroll
 import Util.View exposing (loadingSpinner, none)
 import View.Locale as Locale
 
@@ -72,7 +71,7 @@ table vc attributes filterMsg height config tbl =
                 |> Maybe.withDefault Util.View.none
              )
                 :: Table.view config tbl.state tbl.filtered
-                :: (if tbl.loading || InfiniteScroll.isLoading tbl.infiniteScroll then
+                :: (if tbl.loading then
                         [ loadingSpinner vc Css.Table.loadingSpinner
                         ]
 

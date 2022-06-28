@@ -2,7 +2,6 @@ module Init.Graph.Table exposing (..)
 
 import Model.Graph.Table exposing (..)
 import Table
-import Util.InfiniteScroll as InfiniteScroll
 
 
 init : (String -> a -> Bool) -> String -> Table a
@@ -17,7 +16,6 @@ initSorted desc filterFunction col =
     , loading = True
     , state = Table.sortBy col desc
     , nextpage = Nothing
-    , infiniteScroll = InfiniteScroll.init
     , filter = Nothing
     , filterFunction = filterFunction
     }

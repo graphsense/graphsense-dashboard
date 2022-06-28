@@ -12,6 +12,7 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Id as Id
+import Json.Decode as JD
 import Json.Encode
 import List.Extra
 import Maybe.Extra
@@ -36,7 +37,6 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
-import Util.InfiniteScroll as InfiniteScroll
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -763,11 +763,27 @@ browseAddressTable vc gc height address table =
 table_ : View.Config -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
 table_ vc =
     Table.table vc
-        [ InfiniteScroll.infiniteScroll
-            |> Html.Styled.Attributes.fromUnstyled
-            |> Html.Styled.Attributes.map InfiniteScrollMsg
+        [ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
         ]
         (Just UserInputsFilterTable)
+
+
+decodeScrollPos : JD.Decoder ScrollPos
+decodeScrollPos =
+    JD.map3 ScrollPos
+        (JD.oneOf [ JD.at [ "target", "scrollTop" ] JD.float, JD.at [ "target", "scrollingElement", "scrollTop" ] JD.float ])
+        (JD.oneOf [ JD.at [ "target", "scrollHeight" ] JD.int, JD.at [ "target", "scrollingElement", "scrollHeight" ] JD.int ])
+        (JD.map2 Basics.max offsetHeight clientHeight)
+
+
+offsetHeight : JD.Decoder Int
+offsetHeight =
+    JD.oneOf [ JD.at [ "target", "offsetHeight" ] JD.int, JD.at [ "target", "scrollingElement", "offsetHeight" ] JD.int ]
+
+
+clientHeight : JD.Decoder Int
+clientHeight =
+    JD.oneOf [ JD.at [ "target", "clientHeight" ] JD.int, JD.at [ "target", "scrollingElement", "clientHeight" ] JD.int ]
 
 
 browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> (Id.EntityId -> A.Address -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg

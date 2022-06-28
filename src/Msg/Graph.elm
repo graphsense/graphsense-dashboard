@@ -11,6 +11,7 @@ import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
 import Model.Graph exposing (Deserializing, Dragging)
+import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
@@ -21,7 +22,6 @@ import Plugin.Model as Plugin
 import Set exposing (Set)
 import Table
 import Time
-import Util.InfiniteScroll as InfiniteScroll
 import Yaml.Decode
 
 
@@ -93,7 +93,7 @@ type Msg
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
     | InternalGraphAddedEntities (Set EntityId)
-    | InfiniteScrollMsg InfiniteScroll.Msg
+    | UserScrolledTable Browser.ScrollPos
     | TagSearchMsg Search.Msg
     | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)
     | UserInputsTagSource String
