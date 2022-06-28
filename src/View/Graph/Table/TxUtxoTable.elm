@@ -2,9 +2,11 @@ module View.Graph.Table.TxUtxoTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
@@ -49,20 +51,16 @@ config vc isOutgoing coinCode =
                 (\data ->
                     [ case data.address of
                         one :: [] ->
-                            text one
-                                |> List.singleton
-                                |> a
-                                    [ Route.addressRoute
-                                        { currency = coinCode
-                                        , address = one
-                                        , table = Nothing
-                                        , layer = Nothing
-                                        }
-                                        |> Route.graphRoute
-                                        |> toUrl
-                                        |> href
-                                    , Css.View.link vc |> css
-                                    ]
+                            span
+                                [ UserClickedAddressInTable
+                                    { address = one
+                                    , currency = coinCode
+                                    }
+                                    |> onClick
+                                , css [ Css.cursor Css.pointer ]
+                                ]
+                                [ text one
+                                ]
 
                         _ ->
                             String.join "," data.address

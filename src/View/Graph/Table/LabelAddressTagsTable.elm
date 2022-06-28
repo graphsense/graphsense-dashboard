@@ -40,7 +40,7 @@ config vc =
                 .address
                 (\data ->
                     [ span
-                        [ UserClickedAddressInLabelTagsTable
+                        [ UserClickedAddressInTable
                             { address = data.address
                             , currency = String.toLower data.currency
                             }

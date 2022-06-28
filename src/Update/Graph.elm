@@ -1105,7 +1105,7 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        UserClickedAddressInLabelTagsTable { address, currency } ->
+        UserClickedAddressInTable { address, currency } ->
             model
                 |> s_selectIfLoaded Nothing
                 |> loadAddress plugins currency address Nothing Nothing

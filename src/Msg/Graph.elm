@@ -88,7 +88,7 @@ type Msg
     | UserClickedRemoveEntity EntityId
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | UserClickedAddressInEntityTagsTable EntityId String
-    | UserClickedAddressInLabelTagsTable A.Address
+    | UserClickedAddressInTable A.Address
     | UserClickedAddressInNeighborsTable AddressId Bool Api.Data.NeighborAddress
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
