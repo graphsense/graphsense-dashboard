@@ -14,6 +14,7 @@ type alias Search =
     , resultLine : List Style
     , resultLineIcon : List Style
     , loadingSpinner : List Style
+    , button : List Style
     }
 
 
@@ -29,4 +30,5 @@ default =
     , resultLine = []
     , resultLineIcon = []
     , loadingSpinner = []
+    , button = []
     }

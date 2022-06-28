@@ -4,7 +4,7 @@ import Css exposing (Style)
 
 
 type alias Button =
-    { base : List Style
+    { button : List Style
     , primary : List Style
     , danger : List Style
     , disabled : List Style
@@ -13,7 +13,7 @@ type alias Button =
 
 default : Button
 default =
-    { base = []
+    { button = []
     , primary = []
     , danger = []
     , disabled = []

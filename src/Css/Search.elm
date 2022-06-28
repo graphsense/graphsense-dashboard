@@ -66,3 +66,8 @@ resultLine vc =
 resultLineIcon : Config -> List Style
 resultLineIcon vc =
     vc.theme.search.resultLineIcon
+
+
+button : Config -> List Style
+button vc =
+    vc.theme.search.button

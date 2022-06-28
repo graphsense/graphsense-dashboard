@@ -52,12 +52,7 @@ search plugins vc sc model =
         [ div
             [ Css.frame vc |> css
             ]
-            [ (if sc.multiline then
-                textarea
-
-               else
-                input
-              )
+            [ input
                 [ sc.css model.input |> css
                 , autocomplete False
                 , spellcheck False
@@ -82,7 +77,11 @@ search plugins vc sc model =
             ]
         , if sc.showIcon then
             button
-                [ Css.View.primary vc |> css
+                [ [ Css.View.button vc |> Css.batch
+                  , Css.View.primary vc |> Css.batch
+                  , Css.button vc |> Css.batch
+                  ]
+                    |> css
                 , type_ "submit"
                 ]
                 [ FontAwesome.icon FontAwesome.search

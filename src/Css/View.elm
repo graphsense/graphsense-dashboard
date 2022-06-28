@@ -49,7 +49,7 @@ main_ vc =
 
 button : Config -> List Style
 button vc =
-    cursor pointer :: vc.theme.button.base
+    cursor pointer :: vc.theme.button.button
 
 
 primary : Config -> List Style

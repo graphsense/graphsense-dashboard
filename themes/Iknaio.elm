@@ -266,15 +266,16 @@ theme =
                     [ opacity <| num 0.5
                     , scaled 1 |> rem |> paddingRight
                     ]
+                |> s_button
+                    []
             )
         |> s_button
             (Button.default
-                |> s_base
+                |> s_button
                     [ fontWeight bold
                     , scaled 1 |> rem |> paddingY
                     , scaled 2 |> rem |> paddingX
                     , borderRadiusSm
-                    , calc (pct 100) minus (px 1) |> height
                     , border zero
                     , hover
                         [ backgroundColor <| toCssColor colors.brandLighter
