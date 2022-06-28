@@ -7,6 +7,7 @@ import Effect.Search as Effect exposing (Effect(..))
 import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
+import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra as RE
 import Route exposing (toUrl)
@@ -73,7 +74,7 @@ maybeTriggerSearch ( model, cmd ) =
             100
 
         multi =
-            String.split "\n" model.input
+            String.split " " model.input
     in
     if
         Bounce.steady model.bounce
@@ -93,7 +94,9 @@ maybeTriggerSearch ( model, cmd ) =
         )
 
     else
-        n model
+        model
+            |> s_loading False
+            |> n
 
 
 getFirstResultUrl : Model -> Maybe String
