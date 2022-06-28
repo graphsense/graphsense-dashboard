@@ -74,7 +74,7 @@ maybeTriggerSearch ( model, cmd ) =
             100
 
         multi =
-            String.split " " model.input
+            getMulti model
     in
     if
         Bounce.steady model.bounce

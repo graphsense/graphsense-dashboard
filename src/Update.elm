@@ -19,6 +19,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
+import Model.Search as Search
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin as Plugin exposing (Plugins)
@@ -289,14 +290,42 @@ update plugins uc msg model =
                         |> updateByPluginOutMsg plugins ( pid, outMsg )
 
                 Search.UserHitsEnter ->
-                    ( { model
-                        | search = Search.clear model.search
-                      }
-                    , Search.getFirstResultUrl model.search
-                        |> Maybe.map
-                            (NavPushUrlEffect >> List.singleton)
-                        |> Maybe.withDefault []
-                    )
+                    let
+                        newModel =
+                            { model
+                                | search = Search.clear model.search
+                            }
+                    in
+                    Search.getMulti model.search
+                        |> (\multi ->
+                                if List.length multi == 1 then
+                                    Search.getFirstResultUrl model.search
+                                        |> Maybe.map
+                                            (NavPushUrlEffect >> List.singleton)
+                                        |> Maybe.withDefault []
+                                        |> pair newModel
+
+                                else
+                                    model.stats
+                                        |> RD.map
+                                            (.currencies
+                                                >> List.map .name
+                                                >> List.foldl
+                                                    (\currency ( mod, effects ) ->
+                                                        List.foldl
+                                                            (\a ( mo, effs ) ->
+                                                                Graph.loadAddress plugins currency a Nothing Nothing mo
+                                                                    |> mapSecond ((++) effs)
+                                                            )
+                                                            ( mod, effects )
+                                                            multi
+                                                    )
+                                                    ( newModel.graph, [] )
+                                                >> mapSecond (List.map GraphEffect)
+                                                >> mapFirst (\graph -> { newModel | graph = graph })
+                                            )
+                                        |> RD.withDefault (n newModel)
+                           )
 
                 _ ->
                     let

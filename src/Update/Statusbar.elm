@@ -89,7 +89,7 @@ messageFromEffect model effect =
             Nothing
 
         Model.GraphEffect (Graph.SearchEntityNeighborsEffect e) ->
-            ( "searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)"
+            ( "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)"
             , [ case e.isOutgoing of
                     False ->
                         "for incoming neighbors"
@@ -115,115 +115,152 @@ messageFromEffect model effect =
               , String.fromInt e.depth
               , String.fromInt e.breadth
               , String.fromInt e.maxAddresses
+              , e.currency |> String.toUpper
               ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetAddressEffect e) ->
-            ( "loading address {0}"
-            , [ e.address ]
+            ( "{1}: loading address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityForAddressEffect e) ->
-            ( "loading entity for address {0}"
-            , [ e.address ]
+            ( "{1}: loading entity for address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityEffect e) ->
-            ( "loading entity {0}"
-            , [ String.fromInt e.entity ]
+            ( "{1}: loading entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetBlockEffect e) ->
-            ( "loading block {0}"
-            , [ String.fromInt e.height ]
+            ( "{1}: loading block {0}"
+            , [ String.fromInt e.height
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetTxEffect e) ->
-            ( "loading transactions {0}"
-            , [ e.txHash ]
+            ( "{1}: loading transactions {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetTxUtxoAddressesEffect e) ->
-            ( "loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
-            , [ e.txHash ]
+            ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetAddressNeighborsEffect e) ->
-            ( "loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
-            , [ e.address ]
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityNeighborsEffect e) ->
-            ( "loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
-            , [ e.entity |> String.fromInt ]
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
+            , [ e.entity |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetAddressTagsEffect e) ->
-            ( "loading tags of address {0}"
-            , [ e.address ]
+            ( "{1}: loading tags of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityAddressTagsEffect e) ->
-            ( "loading address tags of entity {0}"
-            , [ String.fromInt e.entity ]
+            ( "{1}: loading address tags of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetAddressTxsEffect e) ->
-            ( "loading transactions of address {0}"
-            , [ e.address ]
+            ( "{1}: loading transactions of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityTxsEffect e) ->
-            ( "loading transactions of entity {0}"
-            , [ String.fromInt e.entity ]
+            ( "{1}: loading transactions of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetBlockTxsEffect e) ->
-            ( "loading transactions of block {0}"
-            , [ String.fromInt e.block ]
+            ( "{1}: loading transactions of block {0}"
+            , [ String.fromInt e.block
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntityAddressesEffect e) ->
-            ( "loading addresses of entity {0}"
-            , [ String.fromInt e.entity ]
+            ( "{1}: loading addresses of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.BulkGetAddressEffect e) ->
-            ( "loading {0} addresses"
-            , [ List.length e.addresses |> String.fromInt ]
+            ( "{1}: loading {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.BulkGetEntityEffect e) ->
-            ( "loading {0} entities"
-            , [ List.length e.entities |> String.fromInt ]
+            ( "{1}: loading {0} entities"
+            , [ List.length e.entities |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.BulkGetAddressEntityEffect e) ->
-            ( "loading entities of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt ]
+            ( "{1}: loading entities of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.BulkGetEntityNeighborsEffect e) ->
-            ( "loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
-            , [ List.length e.entities |> String.fromInt ]
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
+            , [ List.length e.entities |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
@@ -237,26 +274,34 @@ messageFromEffect model effect =
             Nothing
 
         Model.GraphEffect (Graph.ListAddressTagsEffect e) ->
-            ( "loading tags with label {0}"
+            ( "{1}: loading tags with label {0}"
             , [ e.label ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetAddresslinkTxsEffect e) ->
-            ( "loading address link transactions between {0} and {1}"
-            , [ e.source, e.target ]
+            ( "{2}: loading address link transactions between {0} and {1}"
+            , [ e.source
+              , e.target
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.GetEntitylinkTxsEffect e) ->
-            ( "loading entity link transactions between {0} and {1}"
-            , [ String.fromInt e.source, String.fromInt e.target ]
+            ( "{2}: loading entity link transactions between {0} and {1}"
+            , [ String.fromInt e.source
+              , String.fromInt e.target
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 
         Model.GraphEffect (Graph.BulkGetAddressTagsEffect e) ->
-            ( "loading tags of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt ]
+            ( "{1}: loading tags of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
             )
                 |> Just
 

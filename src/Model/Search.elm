@@ -18,3 +18,8 @@ type ResultLine
     | Tx String
     | Block Int
     | Label String
+
+
+getMulti : Model -> List String
+getMulti model =
+    String.split " " model.input
