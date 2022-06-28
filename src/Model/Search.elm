@@ -23,3 +23,5 @@ type ResultLine
 getMulti : Model -> List String
 getMulti model =
     String.split " " model.input
+        |> List.map (String.replace "," "")
+        |> List.map String.trim
