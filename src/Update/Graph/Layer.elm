@@ -54,7 +54,7 @@ import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link exposing (..)
 import Model.Locale as Locale
-import Plugin exposing (Plugins)
+import Plugin.Update as Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Tuple3

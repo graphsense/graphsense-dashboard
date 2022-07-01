@@ -1,5 +1,7 @@
 module View.Graph exposing (view)
 
+--import Plugin.View.Graph.Address
+
 import Browser.Dom as Dom
 import Conditional exposing (applyIf)
 import Config.Graph as Graph
@@ -22,9 +24,8 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
-import Plugin.Model exposing (PluginStates)
-import Plugin.View.Graph.Address
+import Plugin.Model exposing (ModelState)
+import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
@@ -46,7 +47,7 @@ import View.Graph.Transform as Transform
 import View.Locale as Locale
 
 
-view : Plugins -> PluginStates -> Config -> Model -> Html Msg
+view : Plugins -> ModelState -> Config -> Model -> Html Msg
 view plugins states vc model =
     section
         [ Css.root vc |> Html.css
@@ -56,7 +57,7 @@ view plugins states vc model =
         ]
 
 
-graph : Plugins -> PluginStates -> Config -> Graph.Config -> Model -> Html Msg
+graph : Plugins -> ModelState -> Config -> Graph.Config -> Model -> Html Msg
 graph plugins states vc gc model =
     Html.section
         [ Css.graphRoot vc |> Html.css
@@ -71,7 +72,7 @@ graph plugins states vc gc model =
         ]
 
 
-graphSvg : Plugins -> PluginStates -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
+graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
 graphSvg plugins states vc gc model size =
     let
         dim =
@@ -367,7 +368,7 @@ arrowMarkers vc gc =
         |> defs []
 
 
-contextMenu : Plugins -> PluginStates -> Config -> Model -> ContextMenu.Model -> Html Msg
+contextMenu : Plugins -> ModelState -> Config -> Model -> ContextMenu.Model -> Html Msg
 contextMenu plugins states vc model cm =
     let
         option title msg =
@@ -380,7 +381,7 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
-                ++ Plugin.View.Graph.Address.contextMenu plugins states vc model address
+                ++ Plugin.addressContextMenu plugins states vc address
 
         ContextMenu.Entity entity ->
             [ UserClickedSearch entity.id

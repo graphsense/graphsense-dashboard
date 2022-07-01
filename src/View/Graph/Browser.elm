@@ -1,5 +1,9 @@
 module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, ifLoaded, propertyBox, rule)
 
+--import Plugin.View.Graph.Address
+--import Plugin.View.Graph.Browser
+--import Plugin.View.Graph.Entity
+
 import Api.Data
 import Config.Graph as Graph
 import Config.View as View
@@ -26,12 +30,8 @@ import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
-import Plugin exposing (Plugins)
-import Plugin.Html
-import Plugin.Model exposing (PluginStates)
-import Plugin.View.Graph.Address
-import Plugin.View.Graph.Browser
-import Plugin.View.Graph.Entity
+import Plugin.Model exposing (ModelState)
+import Plugin.View exposing (Plugins)
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
@@ -51,10 +51,9 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import View.Search as Search
 
 
-browser : Plugins -> PluginStates -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
+browser : Plugins -> ModelState -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
 browser plugins states vc gc model =
     div
         [ Css.root vc |> css
@@ -150,8 +149,8 @@ browser plugins states vc gc model =
                         |> table_ vc model.height (UserAddressTagsTable.config vc)
                         |> List.singleton
 
-                Browser.Plugin pid ->
-                    browsePlugin plugins vc pid states
+                Browser.Plugin ->
+                    browsePlugin plugins vc states
             )
         ]
 
@@ -334,7 +333,7 @@ browseValue vc value =
             Util.View.loadingSpinner vc Css.loadingSpinner
 
 
-browseAddress : Plugins -> PluginStates -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress : Plugins -> ModelState -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
 browseAddress plugins states vc now address =
     (rowsAddress vc now address |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
@@ -343,7 +342,7 @@ browseAddress plugins states vc now address =
                     []
 
                 Loaded ad ->
-                    Plugin.View.Graph.Address.properties plugins states ad.plugins vc
+                    Plugin.View.addressProperties plugins states ad.plugins vc
            )
         |> propertyBox vc
 
@@ -523,7 +522,7 @@ elseShowCurrency l =
             v
 
 
-browseEntity : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
+browseEntity : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
 browseEntity plugins states vc gc now entity =
     (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
@@ -532,24 +531,24 @@ browseEntity plugins states vc gc now entity =
                     []
 
                 Loaded en ->
-                    Plugin.View.Graph.Entity.properties plugins states en.plugins vc
+                    Plugin.View.entityProperties plugins states en.plugins vc
            )
         |> propertyBox vc
 
 
-browseBlock : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
+browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
 browseBlock plugins states vc gc now block =
     (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-browseTxUtxo : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
+browseTxUtxo : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
 browseTxUtxo plugins states vc gc now tx =
     (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-browseTxAccount : Plugins -> PluginStates -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> Html Msg
+browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> Html Msg
 browseTxAccount plugins states vc gc now tx =
     (rowsTxAccount vc gc now tx |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
@@ -855,9 +854,9 @@ browseTxUtxoTable vc gc height tx table =
             table_ vc height (TxUtxoTable.config vc True coinCode) t
 
 
-browsePlugin : Plugins -> View.Config -> String -> PluginStates -> List (Html Msg)
-browsePlugin plugins vc pid states =
-    Plugin.View.Graph.Browser.browser plugins vc pid states
+browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
+browsePlugin plugins vc states =
+    Plugin.View.browser plugins vc states
 
 
 rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg))
@@ -994,7 +993,7 @@ rowsTxAccount vc gc now tx =
     ]
 
 
-browseAddresslink : Plugins -> PluginStates -> View.Config -> Address -> Link Address -> Html Msg
+browseAddresslink : Plugins -> ModelState -> View.Config -> Address -> Link Address -> Html Msg
 browseAddresslink plugins states vc source link =
     (rowsAddresslink vc source link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
@@ -1061,7 +1060,7 @@ rowsAddresslink vc source link =
     ]
 
 
-browseEntitylink : Plugins -> PluginStates -> View.Config -> Entity -> Link Entity -> Html Msg
+browseEntitylink : Plugins -> ModelState -> View.Config -> Entity -> Link Entity -> Html Msg
 browseEntitylink plugins states vc source link =
     (rowsEntitylink vc source link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc

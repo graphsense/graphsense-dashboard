@@ -37,7 +37,7 @@ type Type
     | Addresslink Address (Link Address) (Maybe AddresslinkTable)
     | Entitylink Entity (Link Entity) (Maybe AddresslinkTable)
     | UserTags (Table Tag.UserTag)
-    | Plugin String
+    | Plugin
 
 
 type Loadable id thing

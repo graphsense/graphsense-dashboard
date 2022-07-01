@@ -14,9 +14,8 @@ import Init.Search as Search
 import Json.Decode
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Plugin exposing (Plugins)
-import Plugin.Model exposing (PluginStates)
-import Plugin.View.Search
+import Plugin.Model exposing (ModelState)
+import Plugin.View as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
 import Route.Graph as Route exposing (Route)
@@ -37,7 +36,7 @@ type alias SearchConfig =
 type Searchable
     = SearchAll
         { latestBlocks : List ( String, Int )
-        , pluginStates : PluginStates
+        , pluginStates : ModelState
         }
     | SearchTagsOnly
 
@@ -61,7 +60,7 @@ search plugins vc sc model =
                     SearchAll _ ->
                         [ "Addresses", "transaction", "label", "block" ]
                             |> List.map (Locale.string vc.locale)
-                            |> (\st -> st ++ Plugin.View.Search.placeholder plugins vc)
+                            |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
                             |> String.join ", "
                             |> placeholder
 
@@ -176,7 +175,7 @@ resultList plugins vc sc { found, input } =
                    ]
                 |> List.filterMap badgeToResult
             )
-                ++ Plugin.View.Search.resultList plugins pluginStates vc
+                ++ Plugin.searchResultList plugins pluginStates vc
 
 
 resultLineToHtml : Config -> String -> Bool -> ResultLine -> Html Msg

@@ -168,11 +168,3 @@ config vc gc bestAddressTag entityId entityHasAddress =
                         ]
                     )
         }
-
-
-
-{-
-   Address
-
-   Creator (tagpack.creator)
--}

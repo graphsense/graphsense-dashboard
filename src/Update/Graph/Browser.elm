@@ -1517,15 +1517,15 @@ tableNewState state model =
                     { t | state = state }
                         |> UserTags
 
-                Plugin _ ->
+                Plugin ->
                     model.type_
     }
 
 
-showPlugin : String -> Model -> Model
-showPlugin pid model =
+showPlugin : Model -> Model
+showPlugin model =
     show model
-        |> s_type_ (Plugin pid)
+        |> s_type_ Plugin
 
 
 setHeight : Float -> Model -> Model
@@ -1712,7 +1712,7 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                     UserTags _ ->
                         ( model.type_, [] )
 
-                    Plugin _ ->
+                    Plugin ->
                         ( model.type_, [] )
 
                     None ->
@@ -2063,6 +2063,6 @@ filterTable filter model =
                     applyFilter filter t
                         |> UserTags
 
-                Plugin _ ->
+                Plugin ->
                     model.type_
     }

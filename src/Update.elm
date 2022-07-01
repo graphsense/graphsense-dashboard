@@ -1,5 +1,7 @@
 module Update exposing (update, updateByUrl)
 
+--import Plugin.Update.Graph
+
 import Api
 import Browser
 import Browser.Navigation as Nav
@@ -22,9 +24,10 @@ import Model.Locale as Locale
 import Model.Search as Search
 import Msg.Graph as Graph
 import Msg.Search as Search
-import Plugin as Plugin exposing (Plugins)
 import Plugin.Model as Plugin
-import Plugin.Update.Graph
+import Plugin.Msg as Plugin
+import Plugin.Update as Plugin exposing (Plugins)
+import PluginInterface.Msg as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
@@ -213,10 +216,7 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
-            { model
-                | search = Search.clear model.search
-            }
-                |> n
+            clearSearch plugins model
 
         UserClickedLogout ->
             ( { model
@@ -277,17 +277,20 @@ update plugins uc msg model =
 
         SearchMsg m ->
             case m of
-                Search.PluginMsg pid ms ->
+                Search.PluginMsg ms ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.update pid plugins model.plugins ms .model
+                            Plugin.update plugins ms model.plugins
                     in
                     ( { model
                         | plugins = new
                       }
-                    , [ PluginEffect ( pid, cmd ) ]
+                    , [ PluginEffect cmd ]
                     )
-                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                        |> updateByPluginOutMsg plugins outMsg
+
+                Search.UserClicksResult ->
+                    clearSearch plugins model
 
                 Search.UserHitsEnter ->
                     let
@@ -338,55 +341,51 @@ update plugins uc msg model =
 
         GraphMsg m ->
             case m of
-                Graph.PluginMsg pid ms ->
+                Graph.PluginMsg ms ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.update pid plugins model.plugins ms .model
+                            Plugin.update plugins ms model.plugins
                     in
                     ( { model
                         | plugins = new
                       }
-                    , [ PluginEffect ( pid, cmd ) ]
+                    , [ PluginEffect cmd ]
                     )
-                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                        |> updateByPluginOutMsg plugins outMsg
 
                 Graph.InternalGraphAddedAddresses ids ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.Update.Graph.addressesAdded plugins model.plugins ids
+                            Plugin.addressesAdded plugins model.plugins ids
 
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
                     in
-                    outMsg
-                        |> List.foldl
-                            (updateByPluginOutMsg plugins)
-                            ( { model
-                                | plugins = new
-                                , graph = graph
-                              }
-                            , List.map PluginEffect cmd
-                                ++ List.map GraphEffect graphEffects
-                            )
+                    ( { model
+                        | plugins = new
+                        , graph = graph
+                      }
+                    , PluginEffect cmd
+                        :: List.map GraphEffect graphEffects
+                    )
+                        |> updateByPluginOutMsg plugins outMsg
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
                         ( new, outMsg, cmd ) =
-                            Plugin.Update.Graph.entitiesAdded plugins model.plugins ids
+                            Plugin.entitiesAdded plugins model.plugins ids
 
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
                     in
-                    outMsg
-                        |> List.foldl
-                            (updateByPluginOutMsg plugins)
-                            ( { model
-                                | plugins = new
-                                , graph = graph
-                              }
-                            , List.map PluginEffect cmd
-                                ++ List.map GraphEffect graphEffects
-                            )
+                    ( { model
+                        | plugins = new
+                        , graph = graph
+                      }
+                    , PluginEffect cmd
+                        :: List.map GraphEffect graphEffects
+                    )
+                        |> updateByPluginOutMsg plugins outMsg
 
                 Graph.UserChangesCurrency currency ->
                     let
@@ -549,26 +548,26 @@ update plugins uc msg model =
         UserClickedNo ->
             n { model | dialog = Nothing }
 
-        PluginMsg pid msgValue ->
+        PluginMsg msgValue ->
             let
                 ( new, outMsg, cmd ) =
-                    Plugin.update pid plugins model.plugins msgValue .model
+                    Plugin.update plugins msgValue model.plugins
             in
             ( { model
                 | plugins = new
               }
-            , [ PluginEffect ( pid, cmd ) ]
+            , [ PluginEffect cmd ]
             )
-                |> updateByPluginOutMsg plugins ( pid, outMsg )
+                |> updateByPluginOutMsg plugins outMsg
 
 
-updateByPluginOutMsg : Plugins -> ( String, Plugin.OutMsgs ) -> ( Model key, List Effect ) -> ( Model key, List Effect )
-updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
+updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
     let
         updateGraphByPluginOutMsg model eff =
             let
                 ( graph, graphEffect ) =
-                    Graph.updateByPluginOutMsg plugins pid outMsgs model.graph
+                    Graph.updateByPluginOutMsg plugins outMsgs model.graph
             in
             ( { model
                 | graph = graph
@@ -580,31 +579,27 @@ updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
         |> List.foldl
             (\msg ( model, eff ) ->
                 case Log.log "outMsg" msg of
-                    Plugin.ShowBrowser ->
+                    PluginInterface.ShowBrowser ->
                         updateGraphByPluginOutMsg model eff
 
-                    Plugin.UpdateAddresses id msgValue ->
+                    PluginInterface.UpdateAddresses id msgValue ->
                         updateGraphByPluginOutMsg model eff
 
-                    Plugin.UpdateAddressEntities id msgValue ->
+                    PluginInterface.UpdateAddressEntities id msgValue ->
                         updateGraphByPluginOutMsg model eff
 
-                    Plugin.UpdateEntities id msgValue ->
+                    PluginInterface.UpdateEntities id msgValue ->
                         updateGraphByPluginOutMsg model eff
 
-                    Plugin.PushGraphUrl url ->
+                    PluginInterface.PushUrl url ->
                         ( model
                         , url
-                            |> pair pid
-                            |> Route.Graph.pluginRoute
-                            |> Route.graphRoute
-                            |> Route.toUrl
                             |> NavPushUrlEffect
                             |> List.singleton
                             |> (++) eff
                         )
 
-                    Plugin.GetEntitiesForAddresses addresses toMsg ->
+                    PluginInterface.GetEntitiesForAddresses addresses toMsg ->
                         addresses
                             |> List.filterMap
                                 (\address ->
@@ -614,17 +609,17 @@ updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
                             |> (\entities ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update pid plugins model.plugins (toMsg entities) .model
+                                            Plugin.update plugins (toMsg entities) model.plugins
                                     in
                                     ( { model
                                         | plugins = new
                                       }
-                                    , PluginEffect ( pid, cmd ) :: eff
+                                    , PluginEffect cmd :: eff
                                     )
-                                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                                        |> updateByPluginOutMsg plugins outMsg
                                )
 
-                    Plugin.GetEntities entities toMsg ->
+                    PluginInterface.GetEntities entities toMsg ->
                         entities
                             |> List.map
                                 (\entity -> Layer.getEntities entity.currency entity.entity model.graph.layers)
@@ -633,14 +628,14 @@ updateByPluginOutMsg plugins ( pid, outMsgs ) ( mo, effects ) =
                             |> (\ents ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update pid plugins model.plugins (toMsg ents) .model
+                                            Plugin.update plugins (toMsg ents) model.plugins
                                     in
                                     ( { model
                                         | plugins = new
                                       }
-                                    , PluginEffect ( pid, cmd ) :: eff
+                                    , PluginEffect cmd :: eff
                                     )
-                                        |> updateByPluginOutMsg plugins ( pid, outMsg )
+                                        |> updateByPluginOutMsg plugins outMsg
                                )
             )
             ( mo, effects )
@@ -656,7 +651,7 @@ updateByUrl plugins uc url model =
                 |> (\c -> { currencies = c })
                 |> (\g -> { graph = g })
     in
-    Route.parse plugins routeConfig url
+    Route.parse routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
                 case Log.log "route" route of
@@ -664,20 +659,20 @@ updateByUrl plugins uc url model =
                         n { model | page = Stats }
 
                     Route.Graph graphRoute ->
-                        case graphRoute of
+                        case graphRoute |> Debug.log "graphRoute" of
                             Route.Graph.Plugin ( pid, value ) ->
                                 let
                                     ( new, outMsg, cmd ) =
-                                        Plugin.updateByRoute pid plugins model.plugins value
+                                        Plugin.updateByUrl pid plugins value model.plugins
                                 in
                                 ( { model
                                     | plugins = new
                                     , page = Graph
                                     , url = url
                                   }
-                                , [ PluginEffect ( pid, cmd ) ]
+                                , [ PluginEffect cmd ]
                                 )
-                                    |> updateByPluginOutMsg plugins ( pid, outMsg )
+                                    |> updateByPluginOutMsg plugins outMsg
 
                             _ ->
                                 let
@@ -695,7 +690,7 @@ updateByUrl plugins uc url model =
                     _ ->
                         n model
             )
-            (Route.parse plugins routeConfig model.url)
+            (Route.parse routeConfig model.url)
         |> Maybe.withDefault (n model)
 
 
@@ -790,3 +785,16 @@ makeTimestampFilename locale t =
             , DateFormat.secondFixed
             ]
             locale
+
+
+clearSearch : Plugins -> Model key -> ( Model key, List Effect )
+clearSearch plugins model =
+    let
+        new =
+            Plugin.clearSearch plugins model.plugins
+    in
+    { model
+        | search = Search.clear model.search
+        , plugins = new
+    }
+        |> n

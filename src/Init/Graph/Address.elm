@@ -18,7 +18,7 @@ import Json.Encode
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
-import Plugin exposing (Plugins)
+import Plugin.Update as Plugin exposing (Plugins)
 
 
 init : Plugins -> Entity -> Api.Data.Address -> Address

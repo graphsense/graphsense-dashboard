@@ -1,5 +1,7 @@
 module View.Graph.Navbar exposing (..)
 
+--import Plugin.View.Graph.Navbar
+
 import Config.View exposing (Config)
 import Css.Graph as Css
 import FontAwesome
@@ -9,15 +11,14 @@ import Model.Graph exposing (ActiveTool, History(..), Model)
 import Model.Graph.Browser as Browser
 import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
-import Plugin.Model exposing (PluginStates)
-import Plugin.View.Graph.Navbar
+import Plugin.Model exposing (ModelState)
+import Plugin.View as Plugin exposing (Plugins)
 import Tuple exposing (..)
 import View.Graph.Tool as Tool
 import View.Locale as Locale
 
 
-navbar : Plugins -> PluginStates -> Config -> Model -> Html Msg
+navbar : Plugins -> ModelState -> Config -> Model -> Html Msg
 navbar plugins states vc model =
     nav
         [ Css.navbar vc |> css
@@ -27,7 +28,7 @@ navbar plugins states vc model =
         ]
 
 
-navbarLeft : Plugins -> PluginStates -> Config -> Model -> Html Msg
+navbarLeft : Plugins -> ModelState -> Config -> Model -> Html Msg
 navbarLeft plugins states vc model =
     div
         [ Css.navbarLeft vc |> css
@@ -46,7 +47,7 @@ navbarLeft plugins states vc model =
                             Tool.Inactive
               }
             ]
-            ++ Plugin.View.Graph.Navbar.left plugins states vc model
+            ++ Plugin.navbarLeft plugins states vc
         )
 
 

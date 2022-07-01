@@ -22,6 +22,7 @@ import Msg.Graph
 import Msg.Locale
 import Msg.Search
 import Plugin.Model as Plugin
+import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
 import Theme.Theme exposing (Theme)
 import Time
@@ -55,7 +56,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
-    , plugins : Dict String Json.Encode.Value
+    , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     }
 
 
@@ -87,7 +88,7 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
-    | PluginMsg String Json.Encode.Value
+    | PluginMsg Plugin.Msg
 
 
 type RequestLimit
@@ -121,7 +122,7 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
-    | PluginEffect ( String, Cmd Json.Encode.Value )
+    | PluginEffect (Cmd Plugin.Msg)
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)
     | LogoutEffect

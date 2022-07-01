@@ -1,5 +1,7 @@
 module Model.Graph.Address exposing (..)
 
+--import Plugin.Model as Plugin exposing (PluginStates)
+
 import Api.Data
 import Color exposing (Color)
 import Config.Graph exposing (expandHandleWidth)
@@ -9,7 +11,7 @@ import List.Extra
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Tag as Tag
-import Plugin.Model as Plugin exposing (PluginStates)
+import Plugin.Model as Plugin
 
 
 type alias Address =
@@ -24,7 +26,7 @@ type alias Address =
     , links : Links
     , userTag : Maybe Tag.UserTag
     , color : Maybe Color
-    , plugins : PluginStates
+    , plugins : Plugin.AddressState
     }
 
 

@@ -1,5 +1,7 @@
 module View.Graph.Address exposing (address, links)
 
+--import Plugin.View.Graph.Address
+
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth, labelHeight)
 import Config.View exposing (Config)
@@ -15,8 +17,7 @@ import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Msg.Graph exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
-import Plugin.View.Graph.Address
+import Plugin.View as Plugin exposing (Plugins)
 import Route
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
@@ -197,10 +198,13 @@ flags plugins vc gc addr =
                 0
 
             else
-                10
+                15
     in
     af
-        ++ (Plugin.View.Graph.Address.flags plugins vc offset addr |> Log.log "View.Graph.Address flags result")
+        ++ [ Plugin.addressFlags plugins addr.plugins vc
+                |> g [ translate -offset 0 |> transform ]
+                |> Log.log "View.Graph.Address flags result"
+           ]
         |> g
             [ Css.addressFlags vc |> css
             , Graph.padding
@@ -232,7 +236,7 @@ abuseFlag vc addr =
             (\_ ->
                 [ Svg.path
                     [ translate 5 0
-                        |> Util.Graph.scale 0.025
+                        |> Util.Graph.scale 0.03
                         |> transform
                     , Css.abuseFlag vc |> css
                     , d "M296 160H180.6l42.6-129.8C227.2 15 215.7 0 200 0H56C44 0 33.8 8.9 32.2 20.8l-32 240C-1.7 275.2 9.5 288 24 288h118.7L96.6 482.5c-3.6 15.2 8 29.5 23.3 29.5 8.4 0 16.4-4.4 20.8-12l176-304c9.3-15.9-2.2-36-20.7-36z"

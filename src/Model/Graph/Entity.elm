@@ -17,7 +17,7 @@ import Dict exposing (Dict)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
-import Plugin.Model as Plugin exposing (PluginStates)
+import Plugin.Model as Plugin exposing (EntityState)
 
 
 type alias Entity =
@@ -33,7 +33,7 @@ type alias Entity =
     , links : Links
     , shadowLinks : Links
     , color : Maybe Color
-    , plugins : PluginStates
+    , plugins : EntityState
     }
 
 

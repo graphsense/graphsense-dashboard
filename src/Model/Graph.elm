@@ -20,7 +20,6 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Graph.Transform as Transform
-import Plugin.Model as Plugin exposing (PluginStates)
 import Set exposing (Set)
 
 

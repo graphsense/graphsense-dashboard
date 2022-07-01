@@ -8,6 +8,7 @@ import Effect exposing (perform)
 import Init exposing (init)
 import Model exposing (Flags, Model, Msg(..))
 import Model.Locale as Locale
+import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
@@ -17,8 +18,7 @@ import View.Locale as Locale
 
 
 plugins =
-    Dict.fromList
-        Config.plugins
+    Config.plugins
 
 
 main : Program Flags (Model Nav.Key) Msg
@@ -29,7 +29,7 @@ main =
                 |> mapSecond
                     (List.map
                         (\( statusbarToken, eff ) ->
-                            perform plugins model.key statusbarToken model.user.apiKey eff
+                            perform (Plugin.effectsPlugins plugins) model.key statusbarToken model.user.apiKey eff
                         )
                     )
                 |> mapSecond Cmd.batch
@@ -39,25 +39,28 @@ main =
             , colorScheme = config.theme.graph.colorScheme
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             }
+
+        updPlug =
+            Plugin.updatePlugins plugins
     in
     Browser.application
         { init =
             \flags url key ->
                 let
                     ( model, effects ) =
-                        init plugins flags url key
+                        init updPlug flags url key
                 in
-                updateByUrl plugins uc url model
+                updateByUrl updPlug uc url model
                     |> mapSecond ((++) effects)
                     |> performEffect
         , update =
             \msg model ->
-                update plugins uc msg model
+                update updPlug uc msg model
                     |> performEffect
         , view =
             \model ->
                 view
-                    plugins
+                    (Plugin.viewPlugins plugins)
                     model.config
                     model
         , subscriptions = subscriptions

@@ -9,11 +9,10 @@ import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
 import Model.Graph.Tool exposing (Toolbox(..))
-import Plugin exposing (Plugins)
 
 
-init : Plugins -> Int -> Model
-init plugins now =
+init : Int -> Model
+init now =
     { config = Config.default
     , layers = IntDict.empty
     , browser = Browser.init now

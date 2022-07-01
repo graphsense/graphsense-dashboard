@@ -4,7 +4,7 @@ import Config.View exposing (Config)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Model exposing (Model, Msg(..), Page(..))
-import Plugin as Plugin exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import View.Graph as Graph
 import View.Stats as Stats
 

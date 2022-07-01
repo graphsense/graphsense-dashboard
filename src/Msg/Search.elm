@@ -4,6 +4,7 @@ import Api.Data
 import Http
 import Json.Encode
 import Model.Search exposing (..)
+import Plugin.Msg
 
 
 type Msg
@@ -13,5 +14,5 @@ type Msg
     | UserClicksResult
     | UserClicksResultLine ResultLine
     | RuntimeBounced
-    | PluginMsg String Json.Encode.Value
+    | PluginMsg Plugin.Msg.Msg
     | NoOp

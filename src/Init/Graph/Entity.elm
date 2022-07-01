@@ -4,7 +4,7 @@ import Api.Data
 import Dict
 import Init.Graph.Id exposing (..)
 import Model.Graph.Entity exposing (..)
-import Plugin exposing (Plugins)
+import Plugin.Update as Plugin exposing (Plugins)
 
 
 init : Plugins -> { x : Float, y : Float, layer : Int } -> Api.Data.Entity -> Entity
@@ -23,5 +23,5 @@ init plugins { x, y, layer } entity =
     , links = Links Dict.empty
     , shadowLinks = Links Dict.empty
     , color = Nothing
-    , plugins = Plugin.initAddress plugins
+    , plugins = Plugin.initEntity plugins
     }

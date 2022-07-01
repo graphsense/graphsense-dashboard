@@ -7,7 +7,7 @@ import Init.Locale as Locale
 import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Model exposing (..)
-import Plugin exposing (Plugins)
+import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Url exposing (Url)
 
@@ -29,7 +29,7 @@ init plugins flags url key =
       , locale = locale
       , page = Stats
       , search = Search.init
-      , graph = Graph.init plugins flags.now
+      , graph = Graph.init flags.now
       , user =
             { apiKey = ""
             , auth = Unknown

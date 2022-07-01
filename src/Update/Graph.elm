@@ -41,8 +41,9 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Msg.Graph as Msg exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
-import Plugin.Model as Plugin
+import Plugin.Msg as Plugin
+import Plugin.Update as Plugin exposing (Plugins)
+import PluginInterface.Msg as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
@@ -926,56 +927,10 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        PluginMsg pid msgValue ->
+        PluginMsg msgValue ->
             -- handled in src/Update.elm
             n model
 
-        {- case context of
-                 Plugin.Model ->
-              let
-                  ( new, outMsg, cmd ) =
-                      Plugin.update pid plugins model.plugins msgValue (.graph >> .model)
-              in
-              ( List.foldl
-                  (\( ctx, nw ) model ->
-                      case ctx of
-                          Plugin.Model ->
-                              { model
-                                  | plugins = new
-                              }
-
-                          Plugin.Address a ->
-                              Layer.getAddress a model.layers
-                                  |> Maybe.map
-                                      (\address ->
-                                          { model
-                                              | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = nw }) model.layers
-                                          }
-                                      )
-                                  |> Maybe.withDefault model
-                  )
-                  new
-                  |> updateByPluginOutMsg pid outMsg
-              , List.map (PluginEffect context) cmd
-              )
-
-           Plugin.Address a ->
-             Layer.getAddress a model.layers
-                 |> Maybe.map
-                     (\address ->
-                         let
-                             ( new, outMsg, cmd ) =
-                                 Plugin.update pid plugins address.plugins msgValue (.graph >> .address)
-                         in
-                         ( { model
-                             | layers = Layer.updateAddress address.id (\ad -> { ad | plugins = new }) model.layers
-                           }
-                             |> updateByPluginOutMsg pid outMsg
-                         , List.map (PluginEffect context) cmd
-                         )
-                     )
-                     |> Maybe.withDefault (n model)
-        -}
         UserClickedContextMenu ->
             hideContextmenu model
 
@@ -1796,7 +1751,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedNewYes ->
             Time.posixToMillis model.browser.now
-                |> Init.Graph.init plugins
+                |> Init.Graph.init
                 |> s_history model.history
                 |> s_config model.config
                 |> n
@@ -2589,28 +2544,28 @@ updateAddresses id upd model =
     }
 
 
-updateByPluginOutMsg : Plugins -> String -> Plugin.OutMsgs -> Model -> ( Model, List Effect )
-updateByPluginOutMsg plugins pid outMsgs model =
+updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> Model -> ( Model, List Effect )
+updateByPluginOutMsg plugins outMsgs model =
     outMsgs
         |> List.foldl
             (\msg ( mo, eff ) ->
                 case Log.log "outMsg" msg of
-                    Plugin.ShowBrowser ->
+                    PluginInterface.ShowBrowser ->
                         ( { mo
-                            | browser = Browser.showPlugin pid mo.browser
+                            | browser = Browser.showPlugin mo.browser
                           }
                         , eff
                         )
 
-                    Plugin.UpdateAddresses id msgValue ->
+                    PluginInterface.UpdateAddresses id pmsg ->
                         ( { mo
-                            | layers = Layer.updateAddresses id (Plugin.updateAddress pid plugins msgValue) mo.layers
+                            | layers = Layer.updateAddresses id (Plugin.updateAddress plugins pmsg) mo.layers
                           }
                             |> refreshBrowserAddress id
                         , eff
                         )
 
-                    Plugin.UpdateAddressEntities id msgValue ->
+                    PluginInterface.UpdateAddressEntities id pmsg ->
                         let
                             entityIds =
                                 Layer.getAddresses id mo.layers
@@ -2624,27 +2579,27 @@ updateByPluginOutMsg plugins pid outMsgs model =
                                     | layers =
                                         entityIds
                                             |> List.foldl
-                                                (\i -> Layer.updateEntity i (Plugin.updateEntity pid plugins msgValue))
+                                                (\i -> Layer.updateEntity i (Plugin.updateEntity plugins pmsg))
                                                 mo.layers
                                 }
                         , eff
                         )
 
-                    Plugin.UpdateEntities id msgValue ->
+                    PluginInterface.UpdateEntities id pmsg ->
                         ( { mo
-                            | layers = Layer.updateEntities id (Plugin.updateEntity pid plugins msgValue) mo.layers
+                            | layers = Layer.updateEntities id (Plugin.updateEntity plugins pmsg) mo.layers
                           }
                             |> refreshBrowserEntity id
                         , eff
                         )
 
-                    Plugin.GetEntitiesForAddresses _ _ ->
+                    PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, [] )
 
-                    Plugin.GetEntities _ _ ->
+                    PluginInterface.GetEntities _ _ ->
                         ( mo, [] )
 
-                    Plugin.PushGraphUrl url ->
+                    PluginInterface.PushUrl url ->
                         ( mo, [] )
             )
             ( model, [] )

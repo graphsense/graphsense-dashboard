@@ -14,8 +14,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Link as Link
-import Plugin exposing (Plugins)
-import Plugin.Model as Plugin
+import Plugin.Update as Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Address as Address

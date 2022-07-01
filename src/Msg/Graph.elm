@@ -18,7 +18,7 @@ import Model.Graph.Tag as Tag
 import Model.Graph.Transform as Transform
 import Model.Tx as T
 import Msg.Search as Search
-import Plugin.Model as Plugin
+import Plugin.Msg as Plugin
 import Set exposing (Set)
 import Table
 import Time
@@ -79,7 +79,7 @@ type Msg
     | BrowserGotTx Api.Data.Tx
     | BrowserGotTxUtxoAddresses T.Tx Bool (List Api.Data.TxValue)
     | BrowserGotLabelAddressTags String Api.Data.AddressTags
-    | PluginMsg String Json.Encode.Value
+    | PluginMsg Plugin.Msg
     | TableNewState Table.State
     | UserClickedContextMenu
     | UserLeftContextMenu

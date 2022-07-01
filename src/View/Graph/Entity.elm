@@ -17,8 +17,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
-import Plugin.View.Graph.Entity
+import Plugin.View as Plugin exposing (Plugins)
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
@@ -202,7 +201,7 @@ flags plugins vc gc ent =
                 0
 
             else
-                15
+                18
     in
     g
         [ Css.entityFlags vc |> css
@@ -216,7 +215,9 @@ flags plugins vc gc ent =
             |> transform
         ]
         (tf
-            ++ Plugin.View.Graph.Entity.flags plugins vc offset ent
+            ++ [ Plugin.entityFlags plugins ent.plugins vc
+                    |> g [ translate -offset 0 |> transform ]
+               ]
         )
 
 

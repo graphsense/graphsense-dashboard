@@ -113,11 +113,3 @@ config vc =
             ]
         , customizations = customizations vc
         }
-
-
-
-{-
-   Address
-
-   Creator (tagpack.creator)
--}

@@ -24,7 +24,8 @@ module Route.Graph exposing
 import Json.Encode
 import List.Extra
 import Maybe.Extra
-import Plugin exposing (Plugins)
+import Plugin.Route as Plugin
+import Tuple exposing (..)
 import Url exposing (..)
 import Url.Builder as B exposing (..)
 import Util.Url.Parser as P exposing (..)
@@ -334,12 +335,8 @@ toUrl route =
         Label l ->
             absolute [ labelSegment, l ] []
 
-        Plugin ( pid, p ) ->
-            "/" ++ pid ++ p
-
-
-
---++ p
+        Plugin ( ns, p ) ->
+            "/" ++ ns ++ "/" ++ p
 
 
 rootRoute : Route
@@ -390,20 +387,28 @@ entityRoute { currency, entity, layer, table } =
 
 pluginRoute : ( String, String ) -> Route
 pluginRoute =
-    Plugin
+    mapSecond
+        (\url ->
+            if String.startsWith "/" url then
+                String.dropLeft 1 url
+
+            else
+                url
+        )
+        >> Plugin
 
 
-parse : Plugins -> Config -> Url -> Maybe Route
-parse plugins c =
-    P.parse (parser plugins c)
+parse : Config -> Url -> Maybe Route
+parse c =
+    P.parse (parser c)
 
 
-parser : Plugins -> Config -> Parser (Route -> a) a
-parser plugins c =
+parser : Config -> Parser (Route -> a) a
+parser c =
     oneOf
         [ map Currency (parseCurrency c |> P.slash thing)
         , map Label (P.s labelSegment |> P.slash P.string)
-        , map Plugin (P.remainder (Plugin.parseUrl plugins))
+        , map Plugin (P.remainder Plugin.parseUrl)
         , map Root P.top
         ]
 

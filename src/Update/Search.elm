@@ -32,7 +32,8 @@ update msg model =
                 n model
 
         UserClicksResult ->
-            n <| clear model
+            -- handled upstream
+            n model
 
         UserClicksResultLine _ ->
             n <| clear model
@@ -62,7 +63,7 @@ update msg model =
                 |> n
                 |> maybeTriggerSearch
 
-        PluginMsg pid msgValue ->
+        PluginMsg msgValue ->
             -- handled in src/Update.elm
             n model
 

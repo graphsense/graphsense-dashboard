@@ -9,7 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Graph.Tag exposing (..)
 import Msg.Graph exposing (Msg(..))
-import Plugin exposing (Plugins)
+import Plugin.View exposing (Plugins)
 import View.Dialog as Dialog
 import View.Locale as Locale
 import View.Search as Search

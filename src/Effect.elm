@@ -1,5 +1,7 @@
 module Effect exposing (n, perform)
 
+--import Plugin.Effect
+
 import Api
 import Api.Data
 import Api.Request.Addresses
@@ -21,8 +23,7 @@ import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
-import Plugin exposing (Plugins)
-import Plugin.Effect
+import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
 import Route
 import Task
@@ -283,9 +284,9 @@ perform plugins key statusbarToken apiKey effect =
         PortsConsoleEffect msg ->
             Ports.console msg
 
-        PluginEffect ( pid, cmd ) ->
+        PluginEffect cmd ->
             cmd
-                |> Cmd.map (PluginMsg pid)
+                |> Cmd.map PluginMsg
 
         CmdEffect cmd ->
             cmd
@@ -300,8 +301,9 @@ handleSearchEffect apiKey plugins tag tagEffect effect =
                 |> send Nothing apiKey (tagEffect effect) (toMsg >> tag)
             )
                 :: (plugins
-                        |> Maybe.map (\p -> Plugin.Effect.search p query)
+                        |> Maybe.map (\p -> Plugin.search p query)
                         |> Maybe.withDefault []
+                        |> List.map (Cmd.map PluginMsg)
                    )
                 |> Cmd.batch
 

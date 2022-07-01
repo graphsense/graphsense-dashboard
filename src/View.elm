@@ -15,7 +15,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
-import Plugin as Plugin exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Route
 import Route.Graph

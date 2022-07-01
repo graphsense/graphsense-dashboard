@@ -11,7 +11,7 @@ import Html.Styled.Events exposing (..)
 import Input.Number
 import Model.Graph.Search exposing (..)
 import Msg.Graph exposing (Msg(..))
-import Plugin exposing (Plugins)
+import Plugin.View exposing (Plugins)
 import Tuple2 exposing (uncurry)
 import View.Dialog as Dialog
 import View.Locale as Locale

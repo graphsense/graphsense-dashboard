@@ -12,7 +12,7 @@ import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Search exposing (Criterion)
 import Msg.Graph exposing (Msg(..))
-import Plugin.Model as Plugin
+import Plugin.Msg as Plugin
 import Route.Graph exposing (Route)
 import Set exposing (Set)
 import Task
@@ -173,7 +173,7 @@ type Effect
         , entities : List Int
         , toMsg : List ( Int, Api.Data.NeighborEntity ) -> Msg
         }
-    | PluginEffect ( String, Cmd Json.Encode.Value )
+    | PluginEffect (Cmd Plugin.Msg)
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
     | TagSearchEffect Search.Effect
@@ -295,9 +295,9 @@ perform eff =
         InternalGraphAddedEntitiesEffect _ ->
             Cmd.none
 
-        PluginEffect ( pid, cmd ) ->
+        PluginEffect cmd ->
             cmd
-                |> Cmd.map (PluginMsg pid)
+                |> Cmd.map PluginMsg
 
         -- managed in Effect.elm
         TagSearchEffect _ ->

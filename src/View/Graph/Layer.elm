@@ -9,7 +9,7 @@ import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer exposing (..)
 import Msg.Graph exposing (Msg(..))
-import Plugin as Plugin exposing (Plugins)
+import Plugin.View as Plugin exposing (Plugins)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
