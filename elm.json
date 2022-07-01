@@ -5,7 +5,7 @@
         "openapi/src",
         "themes",
         "config",
-        "plugins/generated",
+        "plugins/casemgm/generated",
         "plugins/casemgm/src",
         "elm-hovercard/src",
         "elm-css-sortable-table/src"
