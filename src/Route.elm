@@ -1,6 +1,8 @@
 module Route exposing (Route(..), graphRoute, graphSegment, parse, pluginRoute, statsRoute, toUrl)
 
 import List.Extra
+import Plugin.Model
+import Plugin.Route as Plugin
 import Route.Graph as Graph
 import Url exposing (..)
 import Url.Builder as B exposing (..)
@@ -16,7 +18,7 @@ type alias Config =
 type Route
     = Graph Graph.Route
     | Stats
-    | Plugin ( String, String )
+    | Plugin ( Plugin.Model.PluginType, String )
 
 
 graphSegment : String
@@ -34,6 +36,7 @@ parser c =
     oneOf
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
         , map Stats top
+        , map Plugin (remainder Plugin.parseUrl)
         ]
 
 
@@ -48,8 +51,17 @@ graphRoute =
 
 
 pluginRoute : ( String, String ) -> Route
-pluginRoute =
-    Plugin
+pluginRoute ( ns, url ) =
+    ns
+        |> Plugin.Model.namespaceToPluginType
+        |> Maybe.map
+            (\type_ ->
+                ( type_
+                , url
+                )
+                    |> Plugin
+            )
+        |> Maybe.withDefault Stats
 
 
 toUrl : Route -> String
@@ -62,4 +74,4 @@ toUrl route =
             absolute [] []
 
         Plugin ( pid, _ ) ->
-            absolute [ pid ] []
+            absolute [ Plugin.Model.pluginTypeToNamespace pid ] []

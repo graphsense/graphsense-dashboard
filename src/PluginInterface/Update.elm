@@ -10,6 +10,7 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , updateAddress : Maybe (addressMsg -> addressState -> addressState)
     , updateEntity : Maybe (entityMsg -> entityState -> entityState)
     , updateByUrl : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , updateGraphByUrl : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     , addressesAdded : Maybe (Set Id.AddressId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     , entitiesAdded : Maybe (Set Id.EntityId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     , init : Maybe modelState
@@ -25,6 +26,7 @@ init =
     , updateAddress = Nothing
     , updateEntity = Nothing
     , updateByUrl = Nothing
+    , updateGraphByUrl = Nothing
     , addressesAdded = Nothing
     , entitiesAdded = Nothing
     , init = Nothing

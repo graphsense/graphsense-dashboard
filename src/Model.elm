@@ -63,6 +63,7 @@ type alias Model navigationKey =
 type Page
     = Stats
     | Graph
+    | Plugin Plugin.PluginType
 
 
 type Msg

@@ -69,7 +69,7 @@ body plugins vc model =
          , section
             [ Css.View.sectionBelowHeader vc |> css
             ]
-            [ sidebar vc model.page
+            [ sidebar plugins vc model
             , main_
                 [ Css.View.main_ vc |> css
                 ]
@@ -87,31 +87,33 @@ body plugins vc model =
         )
 
 
-sidebar : Config -> Page -> Html Msg
-sidebar vc page =
+sidebar : Plugins -> Config -> Model key -> Html Msg
+sidebar plugins vc model =
     div
         [ Css.View.sidebar vc |> css
         ]
-        [ FontAwesome.icon FontAwesome.home
+        ([ FontAwesome.icon FontAwesome.home
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
-                [ page == Stats |> Css.View.sidebarIcon vc |> css
+                [ model.page == Stats |> Css.View.sidebarIcon vc |> css
                 , Route.statsRoute
                     |> Route.toUrl
                     |> href
                 ]
-        , FontAwesome.icon FontAwesome.projectDiagram
+         , FontAwesome.icon FontAwesome.projectDiagram
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
-                [ page == Graph |> Css.View.sidebarIcon vc |> css
+                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
                 , Route.Graph.rootRoute
                     |> Route.graphRoute
                     |> Route.toUrl
                     |> href
                 ]
-        ]
+         ]
+            ++ Plugin.sidebar plugins model.plugins model.page vc
+        )
 
 
 hovercard : Config -> Dom.Element -> List (Html.Html Msg) -> List (Html Msg)

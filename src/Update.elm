@@ -654,7 +654,7 @@ updateByUrl plugins uc url model =
     Route.parse routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
-                case Log.log "route" route of
+                case Debug.log "route" route of
                     Route.Stats ->
                         n { model | page = Stats }
 
@@ -663,7 +663,7 @@ updateByUrl plugins uc url model =
                             Route.Graph.Plugin ( pid, value ) ->
                                 let
                                     ( new, outMsg, cmd ) =
-                                        Plugin.updateByUrl pid plugins value model.plugins
+                                        Plugin.updateGraphByUrl pid plugins value model.plugins
                                 in
                                 ( { model
                                     | plugins = new
@@ -687,8 +687,19 @@ updateByUrl plugins uc url model =
                                 , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
                                 )
 
-                    _ ->
-                        n model
+                    Route.Plugin ( pluginType, urlValue ) ->
+                        let
+                            ( new, outMsg, cmd ) =
+                                Plugin.updateByUrl pluginType plugins urlValue model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                            , page = Plugin pluginType
+                            , url = url
+                          }
+                        , [ PluginEffect cmd ]
+                        )
+                            |> updateByPluginOutMsg plugins outMsg
             )
             (Route.parse routeConfig model.url)
         |> Maybe.withDefault (n model)

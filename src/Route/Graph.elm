@@ -24,6 +24,7 @@ module Route.Graph exposing
 import Json.Encode
 import List.Extra
 import Maybe.Extra
+import Plugin.Model
 import Plugin.Route as Plugin
 import Tuple exposing (..)
 import Url exposing (..)
@@ -41,7 +42,7 @@ type Route
     = Currency String Thing
     | Label String
     | Root
-    | Plugin ( String, String )
+    | Plugin ( Plugin.Model.PluginType, String )
 
 
 type Thing
@@ -336,7 +337,7 @@ toUrl route =
             absolute [ labelSegment, l ] []
 
         Plugin ( ns, p ) ->
-            "/" ++ ns ++ "/" ++ p
+            "/" ++ Plugin.Model.pluginTypeToNamespace ns ++ "/" ++ p
 
 
 rootRoute : Route
@@ -386,16 +387,21 @@ entityRoute { currency, entity, layer, table } =
 
 
 pluginRoute : ( String, String ) -> Route
-pluginRoute =
-    mapSecond
-        (\url ->
-            if String.startsWith "/" url then
-                String.dropLeft 1 url
+pluginRoute ( ns, url ) =
+    ns
+        |> Plugin.Model.namespaceToPluginType
+        |> Maybe.map
+            (\type_ ->
+                ( type_
+                , if String.startsWith "/" url then
+                    String.dropLeft 1 url
 
-            else
-                url
-        )
-        >> Plugin
+                  else
+                    url
+                )
+                    |> Plugin
+            )
+        |> Maybe.withDefault Root
 
 
 parse : Config -> Url -> Maybe Route

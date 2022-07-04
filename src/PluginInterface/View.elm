@@ -16,6 +16,8 @@ type alias View modelState addressState entityState msg =
     , navbarLeft : Maybe (View.Config -> modelState -> List (Html msg))
     , searchPlaceholder : Maybe (View.Config -> String)
     , searchResultList : Maybe (View.Config -> modelState -> List (Html msg))
+    , sidebar : Maybe (View.Config -> Bool -> modelState -> List (Html msg))
+    , main : Maybe (View.Config -> modelState -> Html msg)
     }
 
 
@@ -30,4 +32,6 @@ init =
     , navbarLeft = Nothing
     , searchPlaceholder = Nothing
     , searchResultList = Nothing
+    , sidebar = Nothing
+    , main = Nothing
     }
