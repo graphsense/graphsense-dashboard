@@ -2601,6 +2601,12 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.PushUrl url ->
                         ( mo, [] )
+
+                    PluginInterface.GetSerialized pmsg ->
+                        ( mo, [] )
+
+                    PluginInterface.Deserialize _ _ ->
+                        ( mo, [] )
             )
             ( model, [] )
 
@@ -2867,11 +2873,17 @@ fromDeserialized deserialized model =
                             |> BrowserGotBulkAddresses currency
                     }
             )
+        |> (::)
+            (Route.rootRoute
+                |> NavPushRouteEffect
+            )
         |> pair
             { model
                 | highlights =
                     Highlighter.init
                         |> s_highlights deserialized.highlights
+                , history = History [] []
+                , layers = IntDict.empty
             }
 
 

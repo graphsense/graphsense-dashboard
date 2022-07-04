@@ -1,6 +1,7 @@
 module PluginInterface.Msg exposing (..)
 
 import Api.Data
+import Json.Encode
 import Model.Address exposing (Address)
 import Model.Entity exposing (Entity)
 
@@ -13,6 +14,8 @@ type OutMsg msg addressMsg entityMsg
     | PushUrl String
     | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Entity ) -> msg)
     | GetEntities (List Entity) (List Api.Data.Entity -> msg)
+    | GetSerialized (Json.Encode.Value -> msg)
+    | Deserialize String Json.Encode.Value
 
 
 mapOutMsg : (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -43,3 +46,9 @@ mapOutMsg mapMsg mapAddressMsg mapEntityMsg outMsg =
         GetEntities a b ->
             (b >> mapMsg)
                 |> GetEntities a
+
+        GetSerialized msg ->
+            (msg >> mapMsg) |> GetSerialized
+
+        Deserialize filename json ->
+            Deserialize filename json

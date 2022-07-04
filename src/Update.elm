@@ -477,35 +477,7 @@ update plugins uc msg model =
                                 |> n
 
                 Graph.PortDeserializedGS ( filename, data ) ->
-                    case Graph.deserialize data of
-                        Err err ->
-                            ( { model
-                                | statusbar =
-                                    (case err of
-                                        Json.Decode.Failure message _ ->
-                                            message
-
-                                        _ ->
-                                            "could not read"
-                                    )
-                                        |> Http.BadBody
-                                        |> Just
-                                        |> Statusbar.add model.statusbar filename []
-                              }
-                            , Json.Decode.errorToString err
-                                |> Ports.console
-                                |> CmdEffect
-                                |> List.singleton
-                            )
-
-                        Ok deser ->
-                            let
-                                ( graph, graphEffects ) =
-                                    Graph.fromDeserialized deser model.graph
-                            in
-                            ( { model | graph = graph }
-                            , List.map GraphEffect graphEffects
-                            )
+                    deserialize filename data model
 
                 Graph.UserClickedNew ->
                     { model
@@ -637,6 +609,25 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                                     )
                                         |> updateByPluginOutMsg plugins outMsg
                                )
+
+                    PluginInterface.GetSerialized toMsg ->
+                        let
+                            serialized =
+                                Graph.serialize version model.graph
+
+                            ( new, outMsg, cmd ) =
+                                Plugin.update plugins (toMsg serialized) model.plugins
+                        in
+                        ( { model
+                            | plugins = new
+                          }
+                        , PluginEffect cmd :: eff
+                        )
+                            |> updateByPluginOutMsg plugins outMsg
+
+                    PluginInterface.Deserialize filename data ->
+                        deserialize filename data model
+                            |> mapSecond ((++) eff)
             )
             ( mo, effects )
 
@@ -654,12 +645,12 @@ updateByUrl plugins uc url model =
     Route.parse routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
-                case Debug.log "route" route of
+                case Log.log "route" route of
                     Route.Stats ->
                         n { model | page = Stats }
 
                     Route.Graph graphRoute ->
-                        case graphRoute |> Debug.log "graphRoute" of
+                        case graphRoute |> Log.log "graphRoute" of
                             Route.Graph.Plugin ( pid, value ) ->
                                 let
                                     ( new, outMsg, cmd ) =
@@ -809,3 +800,36 @@ clearSearch plugins model =
         , plugins = new
     }
         |> n
+
+
+deserialize : String -> Value -> Model key -> ( Model key, List Effect )
+deserialize filename data model =
+    case Graph.deserialize data of
+        Err err ->
+            ( { model
+                | statusbar =
+                    (case err of
+                        Json.Decode.Failure message _ ->
+                            message
+
+                        _ ->
+                            "could not read"
+                    )
+                        |> Http.BadBody
+                        |> Just
+                        |> Statusbar.add model.statusbar filename []
+              }
+            , Json.Decode.errorToString err
+                |> Ports.console
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        Ok deser ->
+            let
+                ( graph, graphEffects ) =
+                    Graph.fromDeserialized deser model.graph
+            in
+            ( { model | graph = graph }
+            , List.map GraphEffect graphEffects
+            )
