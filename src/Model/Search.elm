@@ -7,6 +7,7 @@ import RemoteData exposing (WebData)
 
 type alias Model =
     { loading : Bool
+    , visible : Bool
     , found : Maybe Api.Data.SearchResult
     , input : String
     , bounce : Bounce

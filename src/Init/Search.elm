@@ -8,6 +8,7 @@ import RemoteData exposing (RemoteData(..))
 init : Model
 init =
     { loading = False
+    , visible = False
     , found = Nothing
     , input = ""
     , bounce = Bounce.init

@@ -52,25 +52,31 @@ search plugins vc sc model =
             [ Css.frame vc |> css
             ]
             [ input
-                [ sc.css model.input |> css
-                , autocomplete False
-                , spellcheck False
-                , Locale.string vc.locale "The search" |> title
-                , case sc.searchable of
-                    SearchAll _ ->
-                        [ "Addresses", "transaction", "label", "block" ]
-                            |> List.map (Locale.string vc.locale)
-                            |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
-                            |> String.join ", "
-                            |> placeholder
+                ([ sc.css model.input |> css
+                 , autocomplete False
+                 , spellcheck False
+                 , Locale.string vc.locale "The search" |> title
+                 , onInput UserInputsSearch
+                 , onEnter UserHitsEnter
+                 , onFocus UserFocusSearch
+                 , value model.input
+                 ]
+                    ++ (case sc.searchable of
+                            SearchAll _ ->
+                                [ "Addresses", "transaction", "label", "block" ]
+                                    |> List.map (Locale.string vc.locale)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> String.join ", "
+                                    |> placeholder
+                                    |> List.singleton
 
-                    SearchTagsOnly ->
-                        Locale.string vc.locale "Label"
-                            |> placeholder
-                , onInput UserInputsSearch
-                , onEnter UserHitsEnter
-                , value model.input
-                ]
+                            SearchTagsOnly ->
+                                [ Locale.string vc.locale "Label"
+                                    |> placeholder
+                                , onBlur UserLeavesSearch
+                                ]
+                       )
+                )
                 []
             , searchResult plugins vc sc model
             ]
@@ -98,7 +104,7 @@ searchResult plugins vc sc model =
         rl =
             resultList plugins vc sc model
     in
-    if not model.loading && List.isEmpty rl then
+    if not model.visible || not model.loading && List.isEmpty rl then
         span [] []
 
     else

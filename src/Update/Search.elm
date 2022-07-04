@@ -56,6 +56,12 @@ update msg model =
             -- handled upstream
             n model
 
+        UserLeavesSearch ->
+            n { model | visible = False }
+
+        UserFocusSearch ->
+            n { model | visible = True }
+
         RuntimeBounced ->
             { model
                 | bounce = Bounce.pop model.bounce

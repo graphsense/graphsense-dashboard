@@ -10,6 +10,8 @@ import Plugin.Msg
 type Msg
     = BrowserGotSearchResult Api.Data.SearchResult
     | UserInputsSearch String
+    | UserLeavesSearch
+    | UserFocusSearch
     | UserHitsEnter
     | UserClicksResult
     | UserClicksResultLine ResultLine
