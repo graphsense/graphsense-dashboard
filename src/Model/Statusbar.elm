@@ -9,6 +9,11 @@ import Model.Graph.Id as Id
 import Model.Graph.Search as Search
 
 
+searchNeighborsKey : String
+searchNeighborsKey =
+    "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)"
+
+
 type alias Model =
     { messages : Dict String ( String, List String )
     , log : List ( String, List String, Maybe Http.Error )

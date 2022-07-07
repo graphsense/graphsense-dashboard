@@ -104,6 +104,15 @@ log vc ( key, values, error ) =
                                 Http.BadStatus 404 ->
                                     Locale.string vc.locale "not found"
 
+                                Http.BadStatus 504 ->
+                                    Locale.string vc.locale "timeout"
+                                        ++ (if key == searchNeighborsKey then
+                                                ". " ++ Locale.string vc.locale "Please try again with a lower depth/breadth setting."
+
+                                            else
+                                                ""
+                                           )
+
                                 Http.BadStatus s ->
                                     Locale.string vc.locale "bad status" ++ ": " ++ String.fromInt s
 

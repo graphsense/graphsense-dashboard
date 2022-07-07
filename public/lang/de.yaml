@@ -256,3 +256,4 @@ tag locked: Tag unfrei
 "{1}: loading tags with label {0}": "{1}: lade Tags mit Schlagwort {0}"
 "{2}: loading address link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
 "{2}: loading entity link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
+"Please try again with a lower depth/breadth setting.": "Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite."
