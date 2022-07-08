@@ -1102,68 +1102,80 @@ updateByMsg plugins uc msg model =
                 |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
         UserClickedAddressInNeighborsTable addressId isOutgoing neighbor ->
-            let
-                entityId =
-                    Id.initEntityId
-                        { currency = Id.currency addressId
-                        , layer =
-                            Id.layer addressId
-                                + (if isOutgoing then
-                                    1
+            Layer.getAddress addressId model.layers
+                |> Maybe.map
+                    (\address ->
+                        let
+                            entityId =
+                                Id.initEntityId
+                                    { currency = Id.currency addressId
+                                    , layer =
+                                        Id.layer addressId
+                                            + (if isOutgoing then
+                                                1
 
-                                   else
-                                    -1
-                                  )
-                        , id = neighbor.address.entity
-                        }
+                                               else
+                                                -1
+                                              )
+                                    , id = neighbor.address.entity
+                                    }
 
-                added =
-                    Layer.addAddressAtEntity plugins
-                        uc
-                        entityId
-                        neighbor.address
-                        { layers = model.layers
-                        , colors = model.config.colors
-                        , new = Set.empty
-                        , repositioned = Set.empty
-                        }
-            in
-            if Set.isEmpty added.new then
-                ( model
-                , [ GetEntityEffect
-                        { entity = neighbor.address.entity
-                        , currency = Id.currency addressId
-                        , toMsg =
-                            BrowserGotEntityForAddressNeighbor
-                                { anchor = addressId
-                                , isOutgoing = isOutgoing
-                                , neighbors = [ neighbor ]
-                                }
-                        }
-                  ]
-                )
+                            added =
+                                Layer.addAddressAtEntity plugins
+                                    uc
+                                    entityId
+                                    neighbor.address
+                                    { layers = model.layers
+                                    , colors = model.config.colors
+                                    , new = Set.empty
+                                    , repositioned = Set.empty
+                                    }
+                        in
+                        case Set.toList added.new of
+                            [] ->
+                                ( model
+                                , [ GetEntityEffect
+                                        { entity = neighbor.address.entity
+                                        , currency = Id.currency addressId
+                                        , toMsg =
+                                            BrowserGotEntityForAddressNeighbor
+                                                { anchor = addressId
+                                                , isOutgoing = isOutgoing
+                                                , neighbors = [ neighbor ]
+                                                }
+                                        }
+                                  ]
+                                )
 
-            else
-                ( { model
-                    | layers =
-                        added.layers
-                            |> addUserTag added.new model.userAddressTags
-                    , config = model.config |> s_colors added.colors
-                  }
-                , [ GetAddressTagsEffect
-                        { currency = Id.currency addressId
-                        , address = Id.addressId addressId
-                        , pagesize = 10
-                        , nextpage = Nothing
-                        , toMsg =
-                            BrowserGotAddressTags
-                                { currency = Id.currency addressId
-                                , address = Id.addressId addressId
-                                }
-                        }
-                  ]
-                )
-                    |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
+                            addedAddressId :: _ ->
+                                Layer.getAddress addedAddressId added.layers
+                                    |> Maybe.map
+                                        (\addedAddress ->
+                                            ( { model
+                                                | layers =
+                                                    added.layers
+                                                        |> addUserTag added.new model.userAddressTags
+                                                , config = model.config |> s_colors added.colors
+                                              }
+                                                |> addAddressLink address isOutgoing ( neighbor, addedAddress )
+                                            , [ GetAddressTagsEffect
+                                                    { currency = Id.currency addressId
+                                                    , address = Id.addressId addressId
+                                                    , pagesize = 10
+                                                    , nextpage = Nothing
+                                                    , toMsg =
+                                                        BrowserGotAddressTags
+                                                            { currency = Id.currency addressId
+                                                            , address = Id.addressId addressId
+                                                            }
+                                                    }
+                                              ]
+                                            )
+                                                |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
+                                        )
+                                    |> Maybe.withDefault (n model)
+                    )
+                |> Maybe.withDefault (n model)
 
         UserClickedEntityInNeighborsTable entityId isOutgoing neighbor ->
             Layer.getEntity entityId model.layers
