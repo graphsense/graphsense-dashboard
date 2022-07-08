@@ -63,9 +63,7 @@ toolbox vc model =
 
                         else
                             el.element.x
-                                + el.element.width
-                                - 80
-                                -- TODO matches the sidebar width hardcoded
+                                - (Maybe.map .x model.size |> Maybe.withDefault 80)
                                 |> Css.px
                                 |> Css.left
                     )
