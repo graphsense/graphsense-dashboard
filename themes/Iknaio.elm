@@ -701,6 +701,7 @@ theme =
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
                     , scaled 0.5 |> rem |> paddingY
+                    , whiteSpace noWrap
                     ]
                 |> s_propertyBoxValue
                     [ fontNormal
