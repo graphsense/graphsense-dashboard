@@ -1767,9 +1767,24 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedFitGraph ->
+            let
+                marginX =
+                    Config.Graph.entityWidth / 2
+
+                marginY =
+                    Config.Graph.entityMinHeight / 2
+
+                addMargin bbox =
+                    { x = bbox.x - marginX
+                    , y = bbox.y - marginY
+                    , width = bbox.width + marginX * 2
+                    , height = bbox.height + marginY * 2
+                    }
+            in
             { model
                 | transform =
                     Layer.getBoundingBox model.layers
+                        |> Maybe.map addMargin
                         |> Maybe.map2
                             (Transform.updateByBoundingBox
                                 model.transform
