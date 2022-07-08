@@ -6,11 +6,3 @@ type alias Model =
     , y : Float
     , z : Float
     }
-
-
-type alias BBox =
-    { x : Float
-    , y : Float
-    , width : Float
-    , height : Float
-    }

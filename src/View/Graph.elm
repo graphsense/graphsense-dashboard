@@ -18,7 +18,7 @@ import Log
 import Model.Graph exposing (..)
 import Model.Graph.Address as Address
 import Model.Graph.ContextMenu as ContextMenu
-import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
@@ -72,11 +72,11 @@ graph plugins states vc gc model =
         ]
 
 
-graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> Coords -> Svg Msg
-graphSvg plugins states vc gc model size =
+graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> BBox -> Svg Msg
+graphSvg plugins states vc gc model bbox =
     let
         dim =
-            { width = size.x, height = size.y }
+            { width = bbox.width, height = bbox.height }
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"

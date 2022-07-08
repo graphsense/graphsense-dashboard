@@ -1,7 +1,7 @@
 module Util.Graph exposing (..)
 
 import Json.Decode
-import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Coords exposing (BBox, Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg
 
@@ -24,8 +24,8 @@ scale f others =
 decodeCoords : (Float -> Float -> a) -> Json.Decode.Decoder a
 decodeCoords decoded =
     Json.Decode.map2 decoded
-        (Json.Decode.field "offsetX" Json.Decode.float)
-        (Json.Decode.field "offsetY" Json.Decode.float)
+        (Json.Decode.field "pageX" Json.Decode.float)
+        (Json.Decode.field "pageY" Json.Decode.float)
 
 
 mousedown : (Coords -> msg) -> Svg.Attribute msg

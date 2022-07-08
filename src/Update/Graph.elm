@@ -239,8 +239,10 @@ updateByMsg plugins uc msg model =
                     (\{ element } ->
                         { model
                             | size =
-                                { x = element.width
-                                , y = element.height
+                                { width = element.width
+                                , height = element.height
+                                , x = element.x
+                                , y = element.y
                                 }
                                     |> Just
                         }
@@ -289,8 +291,8 @@ updateByMsg plugins uc msg model =
                         { model
                             | transform =
                                 Transform.wheel
-                                    { width = size.x
-                                    , height = size.y
+                                    { width = size.width
+                                    , height = size.height
                                     }
                                     x
                                     y
@@ -400,7 +402,7 @@ updateByMsg plugins uc msg model =
                     (\address ->
                         { model
                             | contextMenu =
-                                ContextMenu.initAddress coords address
+                                ContextMenu.initAddress (Coords.relativeToGraph model.size coords) address
                                     |> Just
                         }
                     )
@@ -442,7 +444,7 @@ updateByMsg plugins uc msg model =
                     (\entity ->
                         { model
                             | contextMenu =
-                                ContextMenu.initEntity coords entity
+                                ContextMenu.initEntity (Coords.relativeToGraph model.size coords) entity
                                     |> Just
                         }
                     )
@@ -1803,9 +1805,9 @@ updateByMsg plugins uc msg model =
                             )
                             (model.size
                                 |> Maybe.map
-                                    (\{ x, y } ->
-                                        { width = x
-                                        , height = y
+                                    (\{ width, height } ->
+                                        { width = width
+                                        , height = height
                                         }
                                     )
                             )
@@ -2195,9 +2197,10 @@ updateSize w h model =
         | size =
             model.size
                 |> Maybe.map
-                    (\{ x, y } ->
-                        { x = x + toFloat w
-                        , y = y + toFloat h
+                    (\size ->
+                        { size
+                            | width = size.width + toFloat w
+                            , height = size.height + toFloat h
                         }
                     )
     }

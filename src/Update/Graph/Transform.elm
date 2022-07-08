@@ -2,7 +2,7 @@ module Update.Graph.Transform exposing (update, updateByBoundingBox, vector, whe
 
 import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
 import List.Extra
-import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (..)
 import Pixels
 import Point2d

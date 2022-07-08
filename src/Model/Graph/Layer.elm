@@ -9,6 +9,7 @@ import List.Extra
 import Maybe.Extra
 import Model.Address as A
 import Model.Graph.Address as Address exposing (..)
+import Model.Graph.Coords as Coords
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Link as Link exposing (..)
@@ -282,7 +283,7 @@ getFirstEntity { currency, entity } layers =
             Nothing
 
 
-getBoundingBox : IntDict Layer -> Maybe Transform.BBox
+getBoundingBox : IntDict Layer -> Maybe Coords.BBox
 getBoundingBox layers =
     let
         getTopMost =
