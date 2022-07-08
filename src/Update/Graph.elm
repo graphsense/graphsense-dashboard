@@ -342,7 +342,6 @@ updateByMsg plugins uc msg model =
                     let
                         vector =
                             Transform.vector start coords model.transform
-                                |> Debug.log "vector"
                     in
                     { model
                         | layers =

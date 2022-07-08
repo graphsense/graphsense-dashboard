@@ -193,7 +193,7 @@ estimated value: geschätzter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
-API rate limit exceeded: API rate limit exceeded. Please try again later.
+API rate limit exceeded. Please try again later.: API Abfragelimit überschritten. Bitte versuche es später nochmal.
 legend empty: Legende noch leer
 from: von
 to: bis

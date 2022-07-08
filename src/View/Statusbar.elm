@@ -101,6 +101,9 @@ log vc ( key, values, error ) =
                                 Http.BadStatus 500 ->
                                     Locale.string vc.locale "server error"
 
+                                Http.BadStatus 429 ->
+                                    Locale.string vc.locale "API rate limit exceeded. Please try again later."
+
                                 Http.BadStatus 404 ->
                                     Locale.string vc.locale "not found"
 

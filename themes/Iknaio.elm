@@ -917,7 +917,7 @@ theme =
                                 else
                                     [ colors.brandRed |> toCssColor |> color
                                     , fontWeight bold
-                                    , scaled 3 |> rem |> fontSize
+                                    , scaled 4 |> rem |> fontSize
                                     ]
                                )
                     )
