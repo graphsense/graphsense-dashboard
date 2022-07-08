@@ -151,4 +151,5 @@ type Msg
     | UserInputsHighlightTitle Int String
     | UserClicksHighlight Int
     | UserInputsFilterTable (Maybe String)
+    | UserClickedFitGraph
     | NoOp

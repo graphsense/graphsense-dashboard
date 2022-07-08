@@ -1766,6 +1766,26 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedFitGraph ->
+            { model
+                | transform =
+                    Layer.getBoundingBox model.layers
+                        |> Maybe.map2
+                            (Transform.updateByBoundingBox
+                                model.transform
+                            )
+                            (model.size
+                                |> Maybe.map
+                                    (\{ x, y } ->
+                                        { width = x
+                                        , height = y
+                                        }
+                                    )
+                            )
+                        |> Maybe.withDefault model.transform
+            }
+                |> n
+
         NoOp ->
             n model
 

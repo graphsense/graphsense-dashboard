@@ -6,11 +6,13 @@ import Dict exposing (Dict)
 import Init.Graph.Id as Id exposing (..)
 import IntDict exposing (IntDict)
 import List.Extra
+import Maybe.Extra
 import Model.Address as A
 import Model.Graph.Address as Address exposing (..)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Link as Link exposing (..)
+import Model.Graph.Transform as Transform
 import Tuple exposing (..)
 
 
@@ -278,3 +280,55 @@ getFirstEntity { currency, entity } layers =
                         getEntity (Id.initEntityId { currency = currency, id = entity, layer = layerId }) layers
             )
             Nothing
+
+
+getBoundingBox : IntDict Layer -> Maybe Transform.BBox
+getBoundingBox layers =
+    let
+        getTopMost =
+            Dict.foldl
+                (\_ entity topMost ->
+                    case topMost of
+                        Nothing ->
+                            Just entity
+
+                        Just tm ->
+                            if Entity.getY tm > Entity.getY entity then
+                                Just entity
+
+                            else
+                                Just tm
+                )
+                Nothing
+
+        getBottomMost =
+            Dict.foldl
+                (\_ entity topMost ->
+                    case topMost of
+                        Nothing ->
+                            Just entity
+
+                        Just tm ->
+                            if Entity.getY tm + Entity.getHeight tm > Entity.getY entity + Entity.getHeight entity then
+                                Just entity
+
+                            else
+                                Just tm
+                )
+                Nothing
+    in
+    Maybe.Extra.andThen2
+        (\( _, fst ) ( _, lst ) ->
+            Maybe.map2
+                (\upperLeft lowerRight ->
+                    { x = Entity.getX upperLeft
+                    , y = Entity.getY upperLeft
+                    , width = Entity.getX upperLeft + Entity.getX lowerRight + Entity.getWidth lowerRight
+                    , height = Entity.getY upperLeft + Entity.getY lowerRight + Entity.getHeight lowerRight
+                    }
+                )
+                (getTopMost fst.entities)
+                (getBottomMost lst.entities)
+        )
+        (IntDict.findMin layers)
+        (IntDict.findMax layers)

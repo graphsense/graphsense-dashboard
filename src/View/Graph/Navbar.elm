@@ -115,6 +115,12 @@ navbarRight vc model =
                             else
                                 Tool.Inactive
               }
+            , { title = "Center graph"
+              , icon = FontAwesome.icon FontAwesome.compress
+              , msg = \_ -> UserClickedFitGraph
+              , color = Nothing
+              , status = Tool.Inactive
+              }
             , { title = "Highlight nodes"
               , icon = FontAwesome.icon FontAwesome.highlighter
               , msg = UserClickedHighlighter

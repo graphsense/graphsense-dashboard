@@ -1,4 +1,4 @@
-module Update.Graph.Transform exposing (update, vector, wheel)
+module Update.Graph.Transform exposing (update, updateByBoundingBox, vector, wheel)
 
 import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
 import List.Extra
@@ -51,4 +51,12 @@ vector : Coords -> Coords -> Model -> Coords
 vector a b { z } =
     { x = (b.x - a.x) * z
     , y = (b.y - a.y) * z
+    }
+
+
+updateByBoundingBox : Model -> { width : Float, height : Float } -> BBox -> Model
+updateByBoundingBox model { width, height } bbox =
+    { x = bbox.x + bbox.width / 2 - (2 * expandHandleWidth + entityWidth) / 2
+    , y = bbox.y + bbox.height / 2 - (entityMinHeight + addressHeight) / 2
+    , z = 1
     }
