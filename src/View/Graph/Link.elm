@@ -190,7 +190,9 @@ shadowLink vc entity link =
             ]
                 |> List.map String.fromFloat
                 |> String.Interpolate.interpolate
-                    "M{0} {1}C{2} {1} {2} {4} {3} {4} V {10} C{8} {10} {8} {7} {6} {7} Z"
+                    "M{0} {1} {3} {4} {3} {10} {6} {7} Z"
+                -- curved variant:
+                --"M{0} {1}C{2} {1} {2} {4} {3} {4} V {10} C{8} {10} {8} {7} {6} {7} Z"
                 |> d
     in
     S.path

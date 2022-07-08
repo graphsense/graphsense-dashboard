@@ -586,9 +586,9 @@ theme =
                     )
                 |> s_shadowLink
                     [ colors.brandLighter
-                        |> Util.View.setAlpha 0.3
                         |> Color.toCssString
                         |> property "fill"
+                    , property "fill-opacity" "0.5"
                     ]
                 |> s_navbar
                     [ toCssColor colors.brandWhite |> backgroundColor
