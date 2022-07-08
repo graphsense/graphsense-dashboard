@@ -264,7 +264,7 @@ addressesCount vc gc ent =
             Locale.int vc.locale ent.entity.noAddresses
 
         key =
-            "{0}/{1} address"
+            "{0} address"
                 ++ (if ent.entity.noAddresses > 1 then
                         "es"
 
@@ -273,7 +273,7 @@ addressesCount vc gc ent =
                    )
 
         string =
-            Locale.interpolated vc.locale key [ size, total ]
+            Locale.interpolated vc.locale key [ total ]
     in
     g
         [ Css.entityAddressesCount vc
