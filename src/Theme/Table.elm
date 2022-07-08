@@ -23,6 +23,7 @@ type alias Table =
     , loadingSpinner : List Style
     , urlMaxLength : Int
     , emptyHint : List Style
+    , tick : List Style
     }
 
 
@@ -46,4 +47,5 @@ default =
     , loadingSpinner = []
     , urlMaxLength = 40
     , emptyHint = []
+    , tick = []
     }

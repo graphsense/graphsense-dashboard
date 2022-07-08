@@ -39,7 +39,7 @@ config vc coinCode entityId entityHasAddress =
                     [ entityId
                         |> Maybe.map
                             (\id ->
-                                T.tickIf
+                                T.tickIf vc
                                     (entityHasAddress id)
                                     { currency = data.currency, address = data.address }
                             )

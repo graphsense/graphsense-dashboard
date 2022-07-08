@@ -7,10 +7,12 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Model.Address as A
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
@@ -38,8 +40,8 @@ filter f a =
         || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
 
 
-config : View.Config -> Bool -> String -> Maybe AddressId -> Table.Config Api.Data.NeighborAddress Msg
-config vc isOutgoing coinCode id =
+config : View.Config -> Bool -> String -> Maybe AddressId -> (AddressId -> Bool -> A.Address -> Bool) -> Table.Config Api.Data.NeighborAddress Msg
+config vc isOutgoing coinCode id neighborLayerHasAddress =
     Table.customConfig
         { toId = .address >> .address
         , toMsg = TableNewState
@@ -48,20 +50,30 @@ config vc isOutgoing coinCode id =
                 (columnTitleFromDirection isOutgoing)
                 (.address >> .address)
                 (\data ->
-                    text data.address.address
-                        |> List.singleton
-                        |> div
-                            (id
-                                |> Maybe.map
-                                    (\addressId ->
-                                        [ UserClickedAddressInNeighborsTable addressId isOutgoing data
-                                            |> onClick
-                                        , css [ cursor pointer ]
-                                        ]
-                                    )
-                                |> Maybe.withDefault []
+                    [ id
+                        |> Maybe.map
+                            (\aid ->
+                                T.tickIf vc
+                                    (neighborLayerHasAddress aid isOutgoing)
+                                    { currency = data.address.currency
+                                    , address = data.address.address
+                                    }
                             )
-                        |> List.singleton
+                        |> Maybe.withDefault none
+                    , span
+                        (id
+                            |> Maybe.map
+                                (\addressId ->
+                                    [ UserClickedAddressInNeighborsTable addressId isOutgoing data
+                                        |> onClick
+                                    , css [ cursor pointer ]
+                                    ]
+                                )
+                            |> Maybe.withDefault []
+                        )
+                        [ text data.address.address
+                        ]
+                    ]
                 )
             , T.stringColumn vc "Labels" (.labels >> Maybe.withDefault [] >> reduceLabels)
             , T.valueColumn vc coinCode "Address balance" (.address >> .balance)

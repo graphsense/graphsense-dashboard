@@ -850,6 +850,9 @@ theme =
                     , alignItems center
                     , justifyContent center
                     ]
+                |> s_tick
+                    [ scaled 1 |> rem |> marginRight
+                    ]
             )
         |> s_contextMenu
             (ContextMenu.default

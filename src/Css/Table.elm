@@ -79,3 +79,8 @@ loadingSpinner vc =
 emptyHint : Config -> List Style
 emptyHint vc =
     vc.theme.table.emptyHint
+
+
+tick : Config -> List Style
+tick vc =
+    vc.theme.table.tick

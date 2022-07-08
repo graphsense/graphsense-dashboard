@@ -246,11 +246,15 @@ valuesSorter vc values =
         |> Maybe.withDefault 0
 
 
-tickIf : (a -> Bool) -> a -> Html msg
-tickIf has a =
+tickIf : View.Config -> (a -> Bool) -> a -> Html msg
+tickIf vc has a =
     if has a then
         FontAwesome.icon FontAwesome.check
             |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> span
+                [ Css.Table.tick vc |> css
+                ]
 
     else
         none

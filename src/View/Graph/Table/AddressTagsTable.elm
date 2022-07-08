@@ -47,7 +47,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                     [ entityId
                         |> Maybe.map
                             (\id ->
-                                T.tickIf
+                                T.tickIf vc
                                     (entityHasAddress id)
                                     { currency = String.toLower data.currency, address = data.address }
                             )

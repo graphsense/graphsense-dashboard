@@ -21,6 +21,7 @@ import Json.Encode
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
@@ -68,7 +69,29 @@ browser plugins states vc gc model =
                 Browser.Address loadable table ->
                     browseAddress plugins states vc model.now loadable
                         :: (table
-                                |> Maybe.map (browseAddressTable vc gc model.height loadable)
+                                |> Maybe.map
+                                    (\t ->
+                                        let
+                                            neighborLayerHasAddress aid isOutgoing address =
+                                                Layer.getAddress
+                                                    (Id.initAddressId
+                                                        { currency = address.currency
+                                                        , id = address.address
+                                                        , layer =
+                                                            Id.layer aid
+                                                                + (if isOutgoing then
+                                                                    1
+
+                                                                   else
+                                                                    -1
+                                                                  )
+                                                        }
+                                                    )
+                                                    model.layers
+                                                    |> Maybe.Extra.isJust
+                                        in
+                                        browseAddressTable vc gc model.height neighborLayerHasAddress loadable t
+                                    )
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
                            )
@@ -89,8 +112,26 @@ browser plugins states vc gc model =
                                                     )
                                                     model.layers
                                                     |> Maybe.Extra.isJust
+
+                                            neighborLayerHasEntity eid isOutgoing entity =
+                                                Layer.getEntity
+                                                    (Id.initEntityId
+                                                        { currency = entity.currency
+                                                        , id = entity.entity
+                                                        , layer =
+                                                            Id.layer eid
+                                                                + (if isOutgoing then
+                                                                    1
+
+                                                                   else
+                                                                    -1
+                                                                  )
+                                                        }
+                                                    )
+                                                    model.layers
+                                                    |> Maybe.Extra.isJust
                                         in
-                                        browseEntityTable vc gc model.height entityHasAddress loadable t
+                                        browseEntityTable vc gc model.height entityHasAddress neighborLayerHasEntity loadable t
                                     )
                                 |> Maybe.map List.singleton
                                 |> Maybe.withDefault []
@@ -731,8 +772,8 @@ rowsBlock vc gc now block =
     ]
 
 
-browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Address -> AddressTable -> Html Msg
-browseAddressTable vc gc height address table =
+browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> (Id.AddressId -> Bool -> A.Address -> Bool) -> Loadable String Address -> AddressTable -> Html Msg
+browseAddressTable vc gc height neighborLayerHasAddress address table =
     let
         ( coinCode, addressId ) =
             case address of
@@ -753,10 +794,10 @@ browseAddressTable vc gc height address table =
             table_ vc height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc False coinCode addressId) t
+            table_ vc height (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
 
         AddressOutgoingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc True coinCode addressId) t
+            table_ vc height (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
 
 table_ : View.Config -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
@@ -785,8 +826,8 @@ clientHeight =
     JD.oneOf [ JD.at [ "target", "clientHeight" ] JD.int, JD.at [ "target", "scrollingElement", "clientHeight" ] JD.int ]
 
 
-browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> (Id.EntityId -> A.Address -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg
-browseEntityTable vc gc height entityHasAddress entity table =
+browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> (Id.EntityId -> A.Address -> Bool) -> (Id.EntityId -> Bool -> E.Entity -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg
+browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity table =
     let
         ( coinCode, entityId, bestAddressTag ) =
             case entity of
@@ -810,10 +851,10 @@ browseEntityTable vc gc height entityHasAddress entity table =
             table_ vc height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc False coinCode entityId) t
+            table_ vc height (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
 
         EntityOutgoingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc True coinCode entityId) t
+            table_ vc height (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
 
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
