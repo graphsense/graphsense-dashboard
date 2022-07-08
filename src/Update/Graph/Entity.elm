@@ -113,7 +113,7 @@ toLeftBound { left } entity x =
             (\l ->
                 x
                     + (l
-                        - (Entity.getX entity + x)
+                        - (entity.x + x)
                         |> max 0
                       )
             )
@@ -126,7 +126,7 @@ toRightBound { right } entity x =
         |> Maybe.map
             (\r ->
                 x
-                    - ((Entity.getX entity + Entity.getWidth entity + x)
+                    - ((entity.x + Entity.getWidth entity + x)
                         - r
                         |> max 0
                       )

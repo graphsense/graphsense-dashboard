@@ -158,6 +158,7 @@ getAddresses { currency, address } =
 getLeftBound : Layer -> Float
 getLeftBound =
     getX
+        >> (\x -> x - Config.Graph.minGapBetweenLayers)
 
 
 getX : Layer -> Float
@@ -194,6 +195,7 @@ getRightBound layer =
             )
             Nothing
         |> Maybe.withDefault (layer.x + entityWidth + 2 * expandHandleWidth)
+        |> (\x -> x + Config.Graph.minGapBetweenLayers)
 
 
 getEntityLink : LinkId EntityId -> IntDict Layer -> Maybe ( Entity, Link Entity )

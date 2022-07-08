@@ -105,6 +105,11 @@ entityToAddressesPaddingLeft =
         + padding
 
 
+minGapBetweenLayers : Float
+minGapBetweenLayers =
+    arrowHeight * 2
+
+
 type AddressLabelType
     = ID
     | Balance
