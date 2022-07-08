@@ -32,7 +32,6 @@ app.ports.exportGraphics.subscribe((filename) => {
   let sheets = ([...document.styleSheets]).filter(({href}) => !href)
   if (!sheets) return
   for (let i = 0; i < sheets.length; i++) {
-    console.log(sheets[i])
     const rules = sheets[i].cssRules
     for (let j = 0; j < rules.length; j++) {
       const selectorText = rules[j].selectorText
@@ -43,7 +42,6 @@ app.ports.exportGraphics.subscribe((filename) => {
     }
   }
   classMap.set('rectLabel', 'fill: white')
-  console.log('classMap', classMap)
   let svg = document.querySelector('#graph svg').outerHTML
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
@@ -57,13 +55,11 @@ app.ports.exportGraphics.subscribe((filename) => {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
-  console.log('svg', svg)
   download(filename, svg)
 })
 
 const download = (filename, buffer) => {
   var blob = new Blob([buffer], { type: 'application/octet-stream' }) // eslint-disable-line no-undef
-  console.log('saving', filename)
   FileSaver.saveAs(blob, filename)
 }
 
@@ -108,7 +104,6 @@ app.ports.deserialize.subscribe(() => {
 
 
 app.ports.serialize.subscribe(([filename, body]) => {
-  console.log(filename, body)
   download(filename, compress(body))
 })
 
