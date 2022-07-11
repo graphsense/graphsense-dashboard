@@ -29,6 +29,18 @@ update msg model =
         BrowserLoadedTranslation locale result ->
             result
                 |> Result.map
+                    (Dict.foldl
+                        (\k ->
+                            Dict.insert
+                                ((String.left 1 k
+                                    |> String.toLower
+                                 )
+                                    ++ String.dropLeft 1 k
+                                )
+                        )
+                        Dict.empty
+                    )
+                |> Result.map
                     (\mapping ->
                         { model
                             | mapping =

@@ -98,26 +98,32 @@ update plugins uc msg model =
                 |> n
 
         BrowserGotResponseWithHeaders statusbarToken result ->
-            statusbarToken
-                |> Maybe.map
-                    (\t ->
-                        { model
-                            | statusbar =
-                                Statusbar.update t
-                                    (case result of
-                                        Err ( Http.BadStatus 401, _ ) ->
-                                            Nothing
+            { model
+                | statusbar =
+                    case statusbarToken of
+                        Just t ->
+                            Statusbar.update t
+                                (case result of
+                                    Err ( Http.BadStatus 401, _ ) ->
+                                        Nothing
 
-                                        Err ( err, _ ) ->
-                                            Just err
+                                    Err ( err, _ ) ->
+                                        Just err
 
-                                        Ok _ ->
-                                            Nothing
-                                    )
+                                    Ok _ ->
+                                        Nothing
+                                )
+                                model.statusbar
+
+                        Nothing ->
+                            case result of
+                                Err ( Http.BadStatus 429, _ ) ->
+                                    Just (Http.BadStatus 429)
+                                        |> Statusbar.add model.statusbar "search" []
+
+                                _ ->
                                     model.statusbar
-                        }
-                    )
-                |> Maybe.withDefault model
+            }
                 |> handleResponse plugins
                     uc
                     result
