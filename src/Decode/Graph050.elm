@@ -33,6 +33,7 @@ type alias Entity =
     { id : Id.EntityId
     , x : Float
     , y : Float
+    , color : Maybe Color.Color
     , noAddresses : Int
     }
 
@@ -65,7 +66,7 @@ merge tags entityTags addresses entities highlights =
                 , x = e.x
                 , y = e.y
                 , rootAddress = Nothing
-                , color = Nothing
+                , color = e.color
                 , userTag =
                     Dict.get ( Id.currency e.id, Id.entityId e.id ) entityTags
                         |> Maybe.map DeserializedEntityUserTagTag
@@ -206,13 +207,14 @@ decodeEntity =
         |> index 1
         |> andThen
             (\addresses ->
-                map2
-                    (\id ( x, y ) ->
+                map3
+                    (\id ( x, y ) color ->
                         List.length addresses
-                            |> Entity id x y
+                            |> Entity id x y (Debug.log ("color " ++ String.fromInt (Id.entityId id)) color)
                     )
                     (index 0 decodeEntityId)
                     decodeCoords
+                    (maybe (index 1 (index 5 decodeColor)))
             )
 
 
