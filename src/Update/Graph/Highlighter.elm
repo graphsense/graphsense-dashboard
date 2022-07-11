@@ -28,6 +28,12 @@ removeHighlight i model =
     { model
         | highlights =
             List.Extra.removeAt i model.highlights
+        , selected =
+            if Just i == model.selected then
+                Nothing
+
+            else
+                model.selected
     }
 
 

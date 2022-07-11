@@ -8,6 +8,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Json.Decode
 import Model.Graph.Highlighter exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
@@ -76,8 +77,9 @@ viewHighlight vc selected i ( title, color ) =
             []
         , span
             [ Css.highlightTrash vc |> css
-            , UserClickedHighlightTrash i
-                |> onClick
+            , ( UserClickedHighlightTrash i, True )
+                |> Json.Decode.succeed
+                |> stopPropagationOn "click"
             ]
             [ FontAwesome.icon FontAwesome.trash
                 |> Html.Styled.fromUnstyled
