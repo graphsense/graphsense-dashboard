@@ -458,10 +458,10 @@ theme =
                     (\nodeType ->
                         [ property "dominant-baseline"
                             (case nodeType of
-                                Address ->
+                                AddressType ->
                                     "middle"
 
-                                Entity ->
+                                EntityType ->
                                     "hanging"
                             )
                         ]
@@ -543,7 +543,7 @@ theme =
                            else
                             highlight
                                 |> Maybe.withDefault
-                                    (if nodeType == Address then
+                                    (if nodeType == AddressType then
                                         colors.grey
 
                                      else

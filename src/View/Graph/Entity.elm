@@ -58,7 +58,9 @@ entity plugins vc gc selected ent =
             ent.color
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
-                        ent.category
+                        ent.userTag
+                            |> Maybe.andThen .category
+                            |> Maybe.Extra.orElse ent.category
                             |> Maybe.andThen
                                 (\category -> Dict.get category gc.colors)
                             |> Maybe.withDefault vc.theme.graph.defaultColor
@@ -106,7 +108,7 @@ entity plugins vc gc selected ent =
             []
         , Svg.path
             [ isSelected
-                |> Css.nodeFrame vc Model.Graph.Entity
+                |> Css.nodeFrame vc Model.Graph.EntityType
                 |> css
             , String.Interpolate.interpolate
                 "M {2} 0 H {0} Z M {2} {1} H {0} Z"
@@ -118,7 +120,7 @@ entity plugins vc gc selected ent =
             ]
             []
         , Svg.path
-            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.Entity |> css
+            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.EntityType |> css
             , String.Interpolate.interpolate
                 "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Entity.getHeight ent |> String.fromFloat
@@ -135,7 +137,7 @@ entity plugins vc gc selected ent =
         , Node.expand vc
             gc
             { isOutgoing = False
-            , nodeType = Model.Graph.Entity
+            , nodeType = Model.Graph.EntityType
             , degree = ent.entity.inDegree
             , onClick = UserClickedEntityExpandHandle ent.id
             , width = Entity.getInnerWidth ent
@@ -146,7 +148,7 @@ entity plugins vc gc selected ent =
         , Node.expand vc
             gc
             { isOutgoing = True
-            , nodeType = Model.Graph.Entity
+            , nodeType = Model.Graph.EntityType
             , degree = ent.entity.outDegree
             , onClick = UserClickedEntityExpandHandle ent.id
             , width = Entity.getInnerWidth ent
@@ -166,26 +168,31 @@ label vc gc ent =
             |> transform
         ]
         [ getLabel vc gc ent
-            |> Label.label vc gc Model.Graph.Entity
+            |> Label.label vc gc Model.Graph.EntityType
         ]
 
 
 getLabel : Config -> Graph.Config -> Entity -> String
 getLabel vc gc ent =
-    ent.entity.bestAddressTag
-        |> Maybe.andThen
-            (\tag ->
-                if String.isEmpty tag.label then
-                    tag.category
-                        |> Maybe.map
-                            (\cat ->
-                                List.Extra.find (.id >> (==) cat) gc.entityConcepts
-                                    |> Maybe.map .label
-                                    |> Maybe.withDefault cat
-                            )
+    ent.userTag
+        |> Maybe.map .label
+        |> Maybe.Extra.orElseLazy
+            (\_ ->
+                ent.entity.bestAddressTag
+                    |> Maybe.andThen
+                        (\tag ->
+                            if String.isEmpty tag.label then
+                                tag.category
+                                    |> Maybe.map
+                                        (\cat ->
+                                            List.Extra.find (.id >> (==) cat) gc.entityConcepts
+                                                |> Maybe.map .label
+                                                |> Maybe.withDefault cat
+                                        )
 
-                else
-                    Just tag.label
+                            else
+                                Just tag.label
+                        )
             )
         |> Maybe.withDefault (String.fromInt ent.entity.entity)
 

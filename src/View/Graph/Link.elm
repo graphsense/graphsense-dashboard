@@ -68,7 +68,7 @@ entityLinkOptions vc gc selected entity link =
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
     , onClick = Id.initLinkId entity.id link.node.id |> UserClicksEntityLink
     , onRightClick = Id.initLinkId entity.id link.node.id |> UserRightClicksEntityLink
-    , nodeType = Model.Graph.Entity
+    , nodeType = Model.Graph.EntityType
     , color =
         if entity.color /= Nothing && entity.color == link.node.color then
             entity.color
@@ -95,7 +95,7 @@ addressLinkOptions vc gc selected address link =
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
     , onClick = Id.initLinkId address.id link.node.id |> UserClicksAddressLink
     , onRightClick = Id.initLinkId address.id link.node.id |> UserRightClicksAddressLink
-    , nodeType = Model.Graph.Address
+    , nodeType = Model.Graph.AddressType
     , color =
         if address.color /= Nothing && address.color == link.node.color then
             address.color

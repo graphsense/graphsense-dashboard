@@ -24,10 +24,10 @@ label vc gc nodeType title =
             offset =
                 String.fromInt <|
                     case nodeType of
-                        Model.Graph.Address ->
+                        Model.Graph.AddressType ->
                             10
 
-                        Model.Graph.Entity ->
+                        Model.Graph.EntityType ->
                             0
         in
         g []

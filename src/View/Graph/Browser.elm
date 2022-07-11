@@ -187,7 +187,7 @@ browser plugins states vc gc model =
 
                 Browser.UserTags table ->
                     table
-                        |> table_ vc model.height (UserAddressTagsTable.config vc)
+                        |> table_ vc model.height (UserAddressTagsTable.config vc gc)
                         |> List.singleton
 
                 Browser.Plugin ->
@@ -644,10 +644,13 @@ rowsEntity vc gc now ent =
         ( "Address tags"
         , ent
             |> ifLoaded
-                (.entity
-                    >> .noAddressTags
-                    >> String.fromInt
-                    >> String
+                (\e ->
+                    (e.entity
+                        |> .noAddressTags
+                    )
+                        + (Maybe.map (\_ -> 1) e.userTag |> Maybe.withDefault 0)
+                        |> String.fromInt
+                        |> String
                 )
             |> elseLoading
         , mkTableLink "List address tags" Route.EntityTagsTable

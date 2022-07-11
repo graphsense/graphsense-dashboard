@@ -21,6 +21,7 @@ module Update.Graph.Layer exposing
     , updateAddressLink
     , updateAddresses
     , updateEntities
+    , updateEntitiesIf
     , updateEntity
     , updateEntityColor
     , updateEntityLinks

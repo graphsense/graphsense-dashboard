@@ -87,6 +87,7 @@ type Msg
     | UserLeftContextMenu
     | UserClickedAnnotateAddress AddressId
     | UserClickedRemoveAddress AddressId
+    | UserClickedAnnotateEntity EntityId
     | UserClickedRemoveEntity EntityId
     | UserClickedRemoveAddressLink (LinkId AddressId)
     | UserClickedRemoveEntityLink (LinkId EntityId)
@@ -100,6 +101,7 @@ type Msg
     | UserScrolledTable Browser.ScrollPos
     | TagSearchMsg Search.Msg
     | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotEntityElementForAnnotate EntityId (Result Browser.Dom.Error Browser.Dom.Element)
     | UserInputsTagSource String
     | UserInputsTagCategory String
     | UserInputsTagAbuse String

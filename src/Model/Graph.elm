@@ -56,8 +56,8 @@ type alias ActiveTool =
 
 
 type NodeType
-    = Address
-    | Entity
+    = AddressType
+    | EntityType
 
 
 type SelectIfLoaded
@@ -110,10 +110,26 @@ type alias DeserializedAddress =
     }
 
 
+type DeserializedEntityTag
+    = TagUserTag Tag.UserTag
+    | DeserializedEntityUserTagTag DeserializedEntityUserTag
+
+
 type alias DeserializedEntity =
     { id : EntityId
     , rootAddress : Maybe String
     , x : Float
     , y : Float
     , color : Maybe Color.Color
+    , userTag : Maybe DeserializedEntityTag
+    }
+
+
+type alias DeserializedEntityUserTag =
+    { currency : String
+    , entity : Int
+    , label : String
+    , source : String
+    , category : Maybe String
+    , abuse : Maybe String
     }

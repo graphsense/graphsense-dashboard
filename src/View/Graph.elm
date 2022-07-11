@@ -384,7 +384,9 @@ contextMenu plugins states vc model cm =
                 ++ Plugin.addressContextMenu plugins states vc address
 
         ContextMenu.Entity entity ->
-            [ UserClickedSearch entity.id
+            [ UserClickedAnnotateEntity entity.id
+                |> option "Annotate"
+            , UserClickedSearch entity.id
                 |> option "Search neighbors"
             , UserClickedRemoveEntity entity.id
                 |> option "Remove"

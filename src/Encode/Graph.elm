@@ -92,6 +92,8 @@ encodeUserTag =
             , tag.abuse
                 |> Maybe.map string
                 |> Maybe.withDefault null
+            , tag.isClusterDefiner
+                |> bool
             ]
                 |> list identity
         )

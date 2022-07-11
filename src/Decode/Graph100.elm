@@ -4,6 +4,7 @@ import Color
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
+import Model.Address as A
 import Model.Graph exposing (..)
 import Model.Graph.Id as Id
 import Model.Graph.Tag as Tag
@@ -27,7 +28,7 @@ decodeAddresses =
                     (succeed addressId)
                     (index 1 float)
                     (index 2 float)
-                    (index 3 (decodeUserTag addressId |> maybe))
+                    (index 3 (decodeUserTag False { currency = Id.currency addressId, address = Id.addressId addressId } |> maybe))
                     (maybe (index 4 decodeColor))
             )
         |> list
@@ -35,12 +36,28 @@ decodeAddresses =
 
 decodeEntities : Decoder (List DeserializedEntity)
 decodeEntities =
-    map5 DeserializedEntity
-        (index 0 decodeEntityId)
-        (index 1 (string |> map Just))
-        (index 2 float)
-        (index 3 float)
-        (maybe (index 4 decodeColor))
+    index 0 decodeEntityId
+        |> andThen
+            (\entityId ->
+                index 1 string
+                    |> andThen
+                        (\rootAddress ->
+                            map6 DeserializedEntity
+                                (succeed entityId)
+                                (succeed (Just rootAddress))
+                                (index 2 float)
+                                (index 3 float)
+                                (maybe (index 4 decodeColor))
+                                (maybe
+                                    (index 5
+                                        (decodeUserTag True
+                                            { currency = Id.currency entityId, address = rootAddress }
+                                            |> map TagUserTag
+                                        )
+                                    )
+                                )
+                        )
+            )
         |> list
 
 
@@ -74,16 +91,17 @@ decodeEntityId =
         (index 2 int)
 
 
-decodeUserTag : Id.AddressId -> Decoder Tag.UserTag
-decodeUserTag id =
+decodeUserTag : Bool -> A.Address -> Decoder Tag.UserTag
+decodeUserTag isClusterDefiner { currency, address } =
     map4
         (\label source category abuse ->
             { label = label
             , source = source
             , category = category
             , abuse = abuse
-            , currency = Id.currency id
-            , address = Id.addressId id
+            , currency = currency
+            , address = address
+            , isClusterDefiner = isClusterDefiner
             }
         )
         (index 0 string)

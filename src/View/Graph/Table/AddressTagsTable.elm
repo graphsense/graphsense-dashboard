@@ -155,6 +155,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                                                     (Util.View.setAlpha 0.7
                                                                         >> Util.View.toCssColor
                                                                         >> Css.backgroundColor
+                                                                        >> Css.important
                                                                         >> List.singleton
                                                                     )
                                                         )

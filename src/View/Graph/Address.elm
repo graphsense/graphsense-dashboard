@@ -94,7 +94,7 @@ address plugins vc gc selected addr =
             ]
             []
         , Svg.path
-            [ Css.nodeFrame vc Model.Graph.Address isSelected |> css
+            [ Css.nodeFrame vc Model.Graph.AddressType isSelected |> css
             , String.Interpolate.interpolate
                 "M {2} 0 H {0} Z M {2} {1} H {0} Z"
                 [ Address.getInnerWidth addr + expandHandleWidth |> String.fromFloat
@@ -105,7 +105,7 @@ address plugins vc gc selected addr =
             ]
             []
         , Svg.path
-            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.Address |> css
+            [ Css.nodeSeparatorToExpandHandle vc Model.Graph.AddressType |> css
             , String.Interpolate.interpolate
                 "M {2} 0 V {0} Z M {1} 0 V {0} Z"
                 [ Address.getHeight addr |> String.fromFloat
@@ -120,7 +120,7 @@ address plugins vc gc selected addr =
         , Node.expand vc
             gc
             { isOutgoing = False
-            , nodeType = Model.Graph.Address
+            , nodeType = Model.Graph.AddressType
             , degree = addr.address.inDegree
             , onClick = UserClickedAddressExpandHandle addr.id
             , width = Address.getInnerWidth addr
@@ -131,7 +131,7 @@ address plugins vc gc selected addr =
         , Node.expand vc
             gc
             { isOutgoing = True
-            , nodeType = Model.Graph.Address
+            , nodeType = Model.Graph.AddressType
             , degree = addr.address.outDegree
             , onClick = UserClickedAddressExpandHandle addr.id
             , width = Address.getInnerWidth addr
@@ -154,7 +154,7 @@ label vc gc addr =
         [ getLabel vc gc addr
             |> Label.label vc
                 gc
-                Model.Graph.Address
+                Model.Graph.AddressType
         ]
 
 

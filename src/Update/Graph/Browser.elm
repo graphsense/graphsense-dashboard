@@ -792,6 +792,22 @@ updateAddress { currency, address } update model =
             model
 
 
+updateEntityIf : (Entity.Entity -> Bool) -> (Entity.Entity -> Entity.Entity) -> Model -> Model
+updateEntityIf predicate update model =
+    case model.type_ of
+        Entity (Loaded a) table ->
+            if predicate a then
+                { model
+                    | type_ = Entity (update a |> Loaded) table
+                }
+
+            else
+                model
+
+        _ ->
+            model
+
+
 updateUserTags : List Tag.UserTag -> Model -> Model
 updateUserTags tags model =
     case model.type_ of
@@ -1066,7 +1082,15 @@ showAddressTags id data model =
             case load of
                 Loaded a ->
                     a.userTag
-                        |> Maybe.map (Tag.userTagToApiTag a.address False >> List.singleton)
+                        |> Maybe.map
+                            (Tag.userTagToApiTag
+                                { address = a.address.address
+                                , entity = a.address.entity
+                                , currency = a.address.currency
+                                }
+                                False
+                                >> List.singleton
+                            )
                         |> Maybe.withDefault []
 
                 Loading _ _ ->
@@ -1300,6 +1324,25 @@ showEntityTxsAccount id data model =
 
 showEntityAddressTags : { currency : String, entity : Int } -> Api.Data.AddressTags -> Model -> Model
 showEntityAddressTags id data model =
+    let
+        getUserTag load =
+            case load of
+                Loaded a ->
+                    a.userTag
+                        |> Maybe.map
+                            (Tag.userTagToApiTag
+                                { address = a.entity.rootAddress
+                                , entity = a.entity.entity
+                                , currency = a.entity.currency
+                                }
+                                False
+                                >> List.singleton
+                            )
+                        |> Maybe.withDefault []
+
+                Loading _ _ ->
+                    []
+    in
     case model.type_ of
         Entity loadable table ->
             if matchEntityId id loadable |> not then
@@ -1311,13 +1354,21 @@ showEntityAddressTags id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityTagsTable t) ->
-                                    appendData data.nextPage data.addressTags t
+                                    let
+                                        addressTags =
+                                            if List.isEmpty t.data then
+                                                getUserTag loadable ++ data.addressTags
+
+                                            else
+                                                data.addressTags
+                                    in
+                                    appendData data.nextPage addressTags t
                                         |> EntityTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> s_data data.addressTags
+                                        |> s_data (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> EntityTagsTable
                                         |> Just

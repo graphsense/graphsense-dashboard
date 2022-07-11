@@ -1,8 +1,12 @@
 module View.Graph.Table.UserAddressTagsTable exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Config.View as View
+import Css
+import Css.Table
 import Css.View
+import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
@@ -28,8 +32,8 @@ filter f a =
         || String.contains f a.label
 
 
-config : View.Config -> Table.Config Tag.UserTag Msg
-config vc =
+config : View.Config -> Graph.Config -> Table.Config Tag.UserTag Msg
+config vc gc =
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
@@ -68,5 +72,30 @@ config vc =
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
             ]
-        , customizations = customizations vc
+        , customizations =
+            customizations vc
+                |> s_rowAttrs
+                    (\data ->
+                        [ Css.Table.row vc
+                            ++ (if data.isClusterDefiner then
+                                    data.category
+                                        |> Maybe.andThen
+                                            (\category ->
+                                                Dict.get category gc.colors
+                                                    |> Maybe.map
+                                                        (Util.View.setAlpha 0.7
+                                                            >> Util.View.toCssColor
+                                                            >> Css.backgroundColor
+                                                            >> Css.important
+                                                            >> List.singleton
+                                                        )
+                                            )
+                                        |> Maybe.withDefault []
+
+                                else
+                                    []
+                               )
+                            |> css
+                        ]
+                    )
         }

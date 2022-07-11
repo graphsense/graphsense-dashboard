@@ -40,6 +40,7 @@ import Model.Graph.Link as Link
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
+import Model.Node as Node
 import Msg.Graph as Msg exposing (Msg(..))
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
@@ -973,7 +974,32 @@ updateByMsg plugins uc msg model =
                                 model.layers
                                     |> Layer.getAddress id
                                     |> Maybe.andThen .userTag
-                                    |> Tag.init id el
+                                    |> Tag.initAddressTag id el
+                                    |> Just
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
+        UserClickedAnnotateEntity id ->
+            ( model
+            , Id.entityIdToString id
+                |> Dom.getElement
+                |> Task.attempt (BrowserGotEntityElementForAnnotate id)
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        BrowserGotEntityElementForAnnotate id element ->
+            element
+                |> Result.map
+                    (\el ->
+                        { model
+                            | tag =
+                                model.layers
+                                    |> Layer.getEntity id
+                                    |> Maybe.andThen .userTag
+                                    |> Tag.initEntityTag id el
                                     |> Just
                         }
                     )
@@ -1021,27 +1047,48 @@ updateByMsg plugins uc msg model =
 
         UserSubmitsTagInput ->
             model.tag
-                |> Maybe.map
+                |> Maybe.andThen
                     (\tag ->
-                        { label = tag.input.label.input
-                        , category =
-                            if String.isEmpty tag.input.category then
-                                Nothing
+                        let
+                            ( currency, address ) =
+                                case tag.input.id of
+                                    Node.Address a ->
+                                        ( Id.currency a, Just (Id.addressId a) )
 
-                            else
-                                Just tag.input.category
-                        , abuse =
-                            if String.isEmpty tag.input.abuse then
-                                Nothing
+                                    Node.Entity a ->
+                                        ( Id.currency a
+                                        , Layer.getEntity a model.layers
+                                            |> Maybe.map (.entity >> .rootAddress)
+                                        )
+                        in
+                        address
+                            |> Maybe.map
+                                (\addr ->
+                                    { label = tag.input.label.input
+                                    , category =
+                                        if String.isEmpty tag.input.category then
+                                            Nothing
 
-                            else
-                                Just tag.input.abuse
-                        , source = tag.input.source
-                        , currency =
-                            Id.currency tag.input.id
-                        , address =
-                            Id.addressId tag.input.id
-                        }
+                                        else
+                                            Just tag.input.category
+                                    , abuse =
+                                        if String.isEmpty tag.input.abuse then
+                                            Nothing
+
+                                        else
+                                            Just tag.input.abuse
+                                    , source = tag.input.source
+                                    , currency = currency
+                                    , address = addr
+                                    , isClusterDefiner =
+                                        case tag.input.id of
+                                            Node.Address _ ->
+                                                False
+
+                                            Node.Entity _ ->
+                                                True
+                                    }
+                                )
                     )
                 |> Maybe.map (\tag -> storeUserTag uc tag model)
                 |> Maybe.withDefault model
@@ -1626,6 +1673,11 @@ updateByMsg plugins uc msg model =
                     deserializing.deserialized.addresses
                         |> List.filterMap .userTag
 
+                entityTags =
+                    deserializing.deserialized.entities
+                        |> List.filterMap .userTag
+                        |> List.filterMap (normalizeDeserializedEntityTag deserializing.entities)
+
                 colorfulAddresses =
                     deserializing.deserialized.addresses
                         |> List.filterMap
@@ -1643,6 +1695,7 @@ updateByMsg plugins uc msg model =
                             )
             in
             ( tags
+                ++ entityTags
                 |> List.foldl (storeUserTag uc)
                     { model
                         | layers =
@@ -2598,6 +2651,15 @@ storeUserTag uc tag model =
         }
             |> updateLegend
             |> updateAddresses { currency = tag.currency, address = tag.address } (\a -> { a | userTag = Just tag })
+            |> updateEntitiesIf
+                (\e ->
+                    tag.isClusterDefiner
+                        && e.entity.currency
+                        == tag.currency
+                        && e.entity.rootAddress
+                        == tag.address
+                )
+                (\a -> { a | userTag = Just tag })
 
 
 updateLegend : Model -> Model
@@ -2619,6 +2681,14 @@ updateAddresses id upd model =
     { model
         | layers = Layer.updateAddresses id upd model.layers
         , browser = Browser.updateAddress id upd model.browser
+    }
+
+
+updateEntitiesIf : (Entity -> Bool) -> (Entity -> Entity) -> Model -> Model
+updateEntitiesIf predicate upd model =
+    { model
+        | layers = Layer.updateEntitiesIf predicate upd model.layers
+        , browser = Browser.updateEntityIf predicate upd model.browser
     }
 
 
@@ -2773,10 +2843,11 @@ makeTagPack model time =
           , model.userAddressTags
                 |> Dict.values
                 |> Yaml.Encode.list
-                    (\{ currency, address, label, source, category, abuse } ->
+                    (\{ currency, address, label, source, category, abuse, isClusterDefiner } ->
                         Yaml.Encode.record
                             [ ( "currency", Yaml.Encode.string currency )
                             , ( "address", Yaml.Encode.string address )
+                            , ( "is_cluster_definer", Yaml.Encode.bool isClusterDefiner )
                             , ( "label", Yaml.Encode.string label )
                             , ( "category"
                               , category
@@ -2833,13 +2904,14 @@ importTagPack uc tags model =
 
 decodeYamlTag : Yaml.Decode.Decoder Tag.UserTag
 decodeYamlTag =
-    Yaml.Decode.map6 Tag.UserTag
+    Yaml.Decode.map7 Tag.UserTag
         (Yaml.Decode.field "currency" Yaml.Decode.string)
         (Yaml.Decode.field "address" Yaml.Decode.string)
         (Yaml.Decode.field "label" Yaml.Decode.string)
         (Yaml.Decode.oneOf [ Yaml.Decode.field "source" Yaml.Decode.string, Yaml.Decode.succeed "" ])
         (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
         (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))
+        (Yaml.Decode.field "is_cluster_definer" (Yaml.Decode.oneOf [ Yaml.Decode.bool, Yaml.Decode.succeed False ]))
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
@@ -3080,3 +3152,24 @@ loadAddress plugins currency a table layer model =
                     ++ effects
                 )
             )
+
+
+normalizeDeserializedEntityTag : List Api.Data.Entity -> DeserializedEntityTag -> Maybe Tag.UserTag
+normalizeDeserializedEntityTag entities entityTag =
+    case entityTag of
+        TagUserTag tag ->
+            Just tag
+
+        DeserializedEntityUserTagTag tag ->
+            List.Extra.find (.entity >> (==) tag.entity) entities
+                |> Maybe.map
+                    (\entity ->
+                        { currency = tag.currency
+                        , address = entity.rootAddress
+                        , label = tag.label
+                        , source = tag.source
+                        , category = tag.category
+                        , abuse = tag.abuse
+                        , isClusterDefiner = True
+                        }
+                    )

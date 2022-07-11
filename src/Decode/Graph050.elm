@@ -13,8 +13,9 @@ import Tuple exposing (..)
 
 decoder : Decoder Deserialized
 decoder =
-    map4 merge
+    map5 merge
         (index 1 decoderTags)
+        (index 1 decoderEntityTags)
         (index 2 decoderAddresses)
         (index 2 decoderEntities)
         (index 3 (index 2 decodeHighlights))
@@ -35,12 +36,16 @@ type alias Entity =
     }
 
 
-type alias CurrenyAddress =
+type alias CurrencyAddress =
     ( String, String )
 
 
-merge : Dict CurrenyAddress Tag.UserTag -> List Address -> List Entity -> List ( String, Color.Color ) -> Deserialized
-merge tags addresses entities highlights =
+type alias CurrencyEntity =
+    ( String, Int )
+
+
+merge : Dict CurrencyAddress Tag.UserTag -> Dict CurrencyEntity DeserializedEntityUserTag -> List Address -> List Entity -> List ( String, Color.Color ) -> Deserialized
+merge tags entityTags addresses entities highlights =
     { addresses =
         addresses
             |> List.map
@@ -60,6 +65,9 @@ merge tags addresses entities highlights =
                 , y = e.y
                 , rootAddress = Nothing
                 , color = Nothing
+                , userTag =
+                    Dict.get ( Id.currency e.id, Id.entityId e.id ) entityTags
+                        |> Maybe.map DeserializedEntityUserTagTag
                 }
             )
             entities
@@ -77,9 +85,25 @@ decoderTags =
         |> index 0
 
 
+decoderEntityTags : Decoder (Dict ( String, Int ) DeserializedEntityUserTag)
+decoderEntityTags =
+    decoderEntityTag
+        |> list
+        |> map (List.filterMap identity)
+        |> map (List.map (\tag -> ( ( tag.currency, tag.entity ), tag )))
+        |> map Dict.fromList
+        |> index 1
+
+
 decoderAddressTag : Decoder (Maybe Tag.UserTag)
 decoderAddressTag =
     decoderFirstTag
+        |> field "tags"
+
+
+decoderEntityTag : Decoder (Maybe DeserializedEntityUserTag)
+decoderEntityTag =
+    decoderFirstEntityTag
         |> field "tags"
 
 
@@ -90,15 +114,42 @@ decoderFirstTag =
         |> map (List.filterMap identity >> List.head)
 
 
+decoderFirstEntityTag : Decoder (Maybe DeserializedEntityUserTag)
+decoderFirstEntityTag =
+    maybe decodeDeserializedEntityUserDefinedTag
+        |> list
+        |> map (List.filterMap identity >> List.head)
+
+
 decodeUserDefinedTag : Decoder Tag.UserTag
 decodeUserDefinedTag =
     field "isUserDefined" bool
         |> andThen
             (\isUserDefined ->
                 if isUserDefined then
-                    map6 Tag.UserTag
+                    map7 Tag.UserTag
                         (field "keyspace" string |> map String.toLower)
                         (field "address" string)
+                        (field "label" string)
+                        (maybe (field "source" string) |> map (Maybe.withDefault ""))
+                        (maybe (field "category" string))
+                        (maybe (field "abuse" string))
+                        (succeed True)
+
+                else
+                    fail "no userdefined"
+            )
+
+
+decodeDeserializedEntityUserDefinedTag : Decoder DeserializedEntityUserTag
+decodeDeserializedEntityUserDefinedTag =
+    field "isUserDefined" bool
+        |> andThen
+            (\isUserDefined ->
+                if isUserDefined then
+                    map6 DeserializedEntityUserTag
+                        (field "keyspace" string |> map String.toLower)
+                        (field "entity" int)
                         (field "label" string)
                         (maybe (field "source" string) |> map (Maybe.withDefault ""))
                         (maybe (field "category" string))

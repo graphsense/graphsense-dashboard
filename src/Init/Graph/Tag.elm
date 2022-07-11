@@ -2,19 +2,27 @@ module Init.Graph.Tag exposing (..)
 
 import Browser.Dom as Dom
 import Init.Search as Search
-import Model.Graph.Id exposing (..)
+import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Tag exposing (..)
+import Model.Node exposing (Node(..))
 import RecordSetter exposing (..)
 
 
-init : AddressId -> Dom.Element -> Maybe UserTag -> Model
-init id element existing =
-    { input = initInput id existing
+initAddressTag : AddressId -> Dom.Element -> Maybe UserTag -> Model
+initAddressTag id element existing =
+    { input = initInput (Address id) existing
     , hovercardElement = element
     }
 
 
-initInput : AddressId -> Maybe UserTag -> Input
+initEntityTag : EntityId -> Dom.Element -> Maybe UserTag -> Model
+initEntityTag id element existing =
+    { input = initInput (Entity id) existing
+    , hovercardElement = element
+    }
+
+
+initInput : Node AddressId EntityId -> Maybe UserTag -> Input
 initInput id existing =
     { label =
         Search.init
