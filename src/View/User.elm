@@ -69,7 +69,14 @@ hovercard vc model =
                     []
            )
         |> div
-            [ Events.onMouseLeave UserLeftUserHovercard
+            [ Events.on "mouseleave"
+                (Json.Decode.oneOf
+                    [ Json.Decode.at [ "relatedTarget" ] (Json.Decode.null False)
+                        |> Json.Decode.map (\_ -> NoOp)
+                    , Json.Decode.succeed UserLeftUserHovercard
+                    ]
+                )
+            , Events.stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
             , Css.hovercardRoot vc |> css
             ]
         |> List.singleton
@@ -97,7 +104,7 @@ requestLimit vc rl =
                         ]
                         [ Locale.interpolated vc.locale "{0}/{1}" [ String.fromInt remaining, String.fromInt limit ] |> text
                         ]
-                    , if remaining > 20 then
+                    , if reset == 0 || remaining > Model.showResetCounterAtRemaining then
                         none
 
                       else

@@ -80,6 +80,7 @@ type Msg
     | UserClickedLayout
     | UserClickedNo
     | UserClickedLogout
+    | TimeUpdateReset Time.Posix
     | BrowserGotLoggedOut (Result Http.Error ())
     | BrowserGotElement (Result Dom.Error Dom.Element)
     | BrowserChangedWindowSize Int Int
@@ -95,6 +96,11 @@ type Msg
 type RequestLimit
     = Unlimited
     | Limited { remaining : Int, limit : Int, reset : Int }
+
+
+showResetCounterAtRemaining : Int
+showResetCounterAtRemaining =
+    20
 
 
 type alias UserModel =

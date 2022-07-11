@@ -216,7 +216,49 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
-            clearSearch plugins model
+            clearSearch plugins
+                { model
+                    | user =
+                        model.user
+                            |> s_hovercardElement Nothing
+                }
+
+        TimeUpdateReset time ->
+            { model
+                | user =
+                    model.user
+                        |> s_auth
+                            (case model.user.auth of
+                                Authorized auth ->
+                                    Authorized
+                                        { auth
+                                            | requestLimit =
+                                                case auth.requestLimit of
+                                                    Limited rl ->
+                                                        let
+                                                            reset =
+                                                                max 0 <| rl.reset - 1
+                                                        in
+                                                        Limited
+                                                            { rl
+                                                                | reset = reset
+                                                                , remaining =
+                                                                    if reset == 0 then
+                                                                        rl.limit
+
+                                                                    else
+                                                                        rl.remaining
+                                                            }
+
+                                                    _ ->
+                                                        auth.requestLimit
+                                        }
+
+                                _ ->
+                                    model.user.auth
+                            )
+            }
+                |> n
 
         UserClickedLogout ->
             ( { model
