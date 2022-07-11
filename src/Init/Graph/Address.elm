@@ -1,4 +1,4 @@
-module Init.Graph.Address exposing (init)
+module Init.Graph.Address exposing (init, initY)
 
 import Api.Data
 import Config.Graph
@@ -36,11 +36,7 @@ init plugins entity address =
         entity.x
             + entity.dx
             + entityToAddressesPaddingLeft
-    , y =
-        entity.y
-            + entity.dy
-            + entityToAddressesPaddingTop
-            + (toFloat (Dict.size entity.addresses) * addressHeight)
+    , y = initY entity
     , dx = 0
     , dy = 0
     , links = Model.Graph.Address.Links Dict.empty
@@ -48,3 +44,11 @@ init plugins entity address =
     , color = Nothing
     , plugins = Plugin.initAddress plugins
     }
+
+
+initY : Entity -> Float
+initY entity =
+    entity.y
+        + entity.dy
+        + entityToAddressesPaddingTop
+        + (toFloat (Dict.size entity.addresses) * addressHeight)

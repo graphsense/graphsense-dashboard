@@ -598,17 +598,30 @@ syncLinksOnEntity entity relevant =
     relevant
         |> List.foldl
             (\updEnt ( entity_, updated ) ->
-                case entity_.links of
-                    Entity.Links links ->
-                        case Dict.get updEnt.id links of
-                            Nothing ->
+                case ( entity_.links, entity_.shadowLinks ) of
+                    ( Entity.Links links, Entity.Links shadowLinks ) ->
+                        case ( Dict.get updEnt.id links, Dict.get updEnt.id shadowLinks ) of
+                            ( Nothing, Nothing ) ->
                                 ( entity_, updated )
 
-                            Just link ->
+                            ( link, shadowLink ) ->
                                 ( { entity_
                                     | links =
-                                        Dict.insert updEnt.id { link | node = updEnt } links
-                                            |> Entity.Links
+                                        link
+                                            |> Maybe.map
+                                                (\l ->
+                                                    Dict.insert updEnt.id { l | node = updEnt } links
+                                                        |> Entity.Links
+                                                )
+                                            |> Maybe.withDefault entity_.links
+                                    , shadowLinks =
+                                        shadowLink
+                                            |> Maybe.map
+                                                (\l ->
+                                                    Dict.insert updEnt.id { l | node = updEnt } shadowLinks
+                                                        |> Entity.Links
+                                                )
+                                            |> Maybe.withDefault entity_.shadowLinks
                                     , addresses =
                                         syncLinksOnAddresses entity_.addresses updEnt.addresses
                                   }
@@ -936,7 +949,12 @@ removeAddress id layers =
     Layer.getAddress id layers
         |> Maybe.map
             (\address ->
-                updateEntity address.entityId (\e -> { e | addresses = Dict.remove id e.addresses }) layers
+                updateEntity address.entityId
+                    (\e ->
+                        { e | addresses = Dict.remove id e.addresses }
+                            |> Entity.repositionAddresses
+                    )
+                    layers
                     |> syncLinks [ address.entityId ]
             )
         |> Maybe.map (removeAddressLinksTo id)

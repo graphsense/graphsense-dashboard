@@ -1,4 +1,15 @@
-module Update.Graph.Entity exposing (BoundingBox, addAddress, insertShadowLink, move, release, repositionAround, translate, updateColor, updateEntity)
+module Update.Graph.Entity exposing
+    ( BoundingBox
+    , addAddress
+    , insertShadowLink
+    , move
+    , release
+    , repositionAddresses
+    , repositionAround
+    , translate
+    , updateColor
+    , updateEntity
+    )
 
 import Api.Data
 import Color exposing (Color)
@@ -295,3 +306,20 @@ updateColor color entity =
             else
                 Just color
     }
+
+
+repositionAddresses : Entity -> Entity
+repositionAddresses e =
+    e.addresses
+        |> Dict.foldl
+            (\addressId address entity ->
+                { entity
+                    | addresses =
+                        Dict.insert addressId
+                            { address
+                                | y = Address.initY entity
+                            }
+                            entity.addresses
+                }
+            )
+            { e | addresses = Dict.empty }
