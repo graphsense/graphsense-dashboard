@@ -831,6 +831,26 @@ removeEntityLinksTo id layers =
         layers
 
 
+removeEntityShadowLinksTo : EntityId -> IntDict Layer -> IntDict Layer
+removeEntityShadowLinksTo id layers =
+    updateEntitiesIf
+        (\a ->
+            case a.shadowLinks of
+                Entity.Links links ->
+                    Dict.member id links
+        )
+        (\a ->
+            { a
+                | shadowLinks =
+                    case a.shadowLinks of
+                        Entity.Links links ->
+                            Dict.remove id links
+                                |> Entity.Links
+            }
+        )
+        layers
+
+
 removeAddressLinksTo : AddressId -> IntDict Layer -> IntDict Layer
 removeAddressLinksTo id layers =
     updateAddressesIf
@@ -939,6 +959,7 @@ removeEntity id layers =
                 )
             )
         |> Maybe.map (removeEntityLinksTo id)
+        |> Maybe.map (removeEntityShadowLinksTo id)
         |> Maybe.withDefault layers
 
 
