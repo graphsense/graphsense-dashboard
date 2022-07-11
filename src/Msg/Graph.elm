@@ -35,8 +35,10 @@ type Msg
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
     | UserClicksEntityLink (LinkId EntityId)
+    | UserRightClicksEntityLink (LinkId EntityId) Coords
     | UserHoversAddressLink (LinkId AddressId)
     | UserClicksAddressLink (LinkId AddressId)
+    | UserRightClicksAddressLink (LinkId AddressId) Coords
     | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool
@@ -86,6 +88,8 @@ type Msg
     | UserClickedAnnotateAddress AddressId
     | UserClickedRemoveAddress AddressId
     | UserClickedRemoveEntity EntityId
+    | UserClickedRemoveAddressLink (LinkId AddressId)
+    | UserClickedRemoveEntityLink (LinkId EntityId)
     | UserClickedAddressInEntityAddressesTable EntityId Api.Data.Address
     | UserClickedAddressInEntityTagsTable EntityId String
     | UserClickedAddressInTable A.Address

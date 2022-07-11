@@ -12,6 +12,7 @@ import Log
 import Model.Currency as Currency
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Link as Link exposing (Link)
@@ -23,6 +24,7 @@ import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Util.Graph exposing (decodeCoords, translate)
 import Util.View
 import View.Locale as Locale
 
@@ -43,6 +45,7 @@ type alias Options =
     , selected : Bool
     , onMouseOver : Msg
     , onClick : Msg
+    , onRightClick : Coords -> Msg
     , nodeType : NodeType
     , color : Maybe Color.Color
     }
@@ -64,6 +67,7 @@ entityLinkOptions vc gc selected entity link =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
     , onClick = Id.initLinkId entity.id link.node.id |> UserClicksEntityLink
+    , onRightClick = Id.initLinkId entity.id link.node.id |> UserRightClicksEntityLink
     , nodeType = Model.Graph.Entity
     , color =
         if entity.color /= Nothing && entity.color == link.node.color then
@@ -90,6 +94,7 @@ addressLinkOptions vc gc selected address link =
         getLabel vc gc link.node.address.currency link
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
     , onClick = Id.initLinkId address.id link.node.id |> UserClicksAddressLink
+    , onRightClick = Id.initLinkId address.id link.node.id |> UserRightClicksAddressLink
     , nodeType = Model.Graph.Address
     , color =
         if address.color /= Nothing && address.color == link.node.color then
@@ -225,7 +230,7 @@ addressLinkHovered vc gc mn mx address link =
 
 
 drawLink : Options -> View.Config -> Graph.Config -> Float -> Float -> Svg Msg
-drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, nodeType } vc gc mn mx =
+drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver, onClick, onRightClick, nodeType } vc gc mn mx =
     let
         thickness =
             vc.theme.graph.linkThickness
@@ -251,6 +256,9 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
         , Json.Decode.succeed ( onClick, True )
             |> Svg.stopPropagationOn "click"
         , onMouseOut UserLeavesThing
+        , decodeCoords Coords
+            |> Json.Decode.map (\c -> ( onRightClick c, True ))
+            |> preventDefaultOn "contextmenu"
         ]
         [ S.path
             [ dd

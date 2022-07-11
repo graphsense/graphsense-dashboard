@@ -11,8 +11,10 @@ module Update.Graph.Layer exposing
     , moveEntity
     , releaseEntity
     , removeAddress
+    , removeAddressLink
     , removeAddressLinksTo
     , removeEntity
+    , removeEntityLink
     , syncLinks
     , updateAddress
     , updateAddressColor
@@ -1261,3 +1263,33 @@ updateAddressColor before color layers =
             (\address -> updateAddress address.id (\e -> { e | color = color }))
             layers
         |> syncLinks (List.map .entityId updated)
+
+
+removeAddressLink : Id.LinkId Id.AddressId -> IntDict Layer -> IntDict Layer
+removeAddressLink ( src, tgt ) layers =
+    updateAddress src
+        (\a ->
+            { a
+                | links =
+                    case a.links of
+                        Address.Links links ->
+                            Dict.remove tgt links
+                                |> Address.Links
+            }
+        )
+        layers
+
+
+removeEntityLink : Id.LinkId Id.EntityId -> IntDict Layer -> IntDict Layer
+removeEntityLink ( src, tgt ) layers =
+    updateEntity src
+        (\a ->
+            { a
+                | links =
+                    case a.links of
+                        Entity.Links links ->
+                            Dict.remove tgt links
+                                |> Entity.Links
+            }
+        )
+        layers

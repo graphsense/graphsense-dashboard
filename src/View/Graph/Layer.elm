@@ -25,7 +25,7 @@ addresses : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
 addresses plugins vc gc selected layer =
     let
         _ =
-            Log.log "Graph.addresses" ""
+            Log.log "Layer.addresses" layer.id
     in
     layer.entities
         |> Dict.foldl
@@ -43,7 +43,7 @@ entities : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
 entities plugins vc gc selected layer =
     let
         _ =
-            Log.log "Graph.entities" ""
+            Log.log "Layer.entities" layer.id
     in
     layer.entities
         |> Dict.foldl

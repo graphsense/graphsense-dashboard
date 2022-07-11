@@ -474,6 +474,14 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserRightClicksEntityLink id coords ->
+            { model
+                | contextMenu =
+                    ContextMenu.initEntityLink (Coords.relativeToGraph model.size coords) id
+                        |> Just
+            }
+                |> n
+
         UserHoversAddressLink id ->
             { model
                 | hovered = HoveredAddressLink id
@@ -493,6 +501,14 @@ updateByMsg plugins uc msg model =
                 |> NavPushRouteEffect
                 |> List.singleton
             )
+
+        UserRightClicksAddressLink id coords ->
+            { model
+                | contextMenu =
+                    ContextMenu.initAddressLink (Coords.relativeToGraph model.size coords) id
+                        |> Just
+            }
+                |> n
 
         UserLeavesThing ->
             { model
@@ -1046,6 +1062,18 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveEntity id ->
             { model
                 | layers = Layer.removeEntity id model.layers
+            }
+                |> n
+
+        UserClickedRemoveAddressLink id ->
+            { model
+                | layers = Layer.removeAddressLink id model.layers
+            }
+                |> n
+
+        UserClickedRemoveEntityLink id ->
+            { model
+                | layers = Layer.removeEntityLink id model.layers
             }
                 |> n
 

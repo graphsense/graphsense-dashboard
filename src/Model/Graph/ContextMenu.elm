@@ -9,6 +9,8 @@ import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 type Type
     = Address Address
     | Entity Entity
+    | AddressLink (LinkId AddressId)
+    | EntityLink (LinkId EntityId)
 
 
 type alias Model =

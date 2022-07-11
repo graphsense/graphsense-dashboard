@@ -4,7 +4,7 @@ import Model.Graph.Address as Address
 import Model.Graph.ContextMenu exposing (..)
 import Model.Graph.Coords exposing (..)
 import Model.Graph.Entity as Entity
-import Model.Graph.Id exposing (..)
+import Model.Graph.Id as Id
 
 
 initAddress : Coords -> Address.Address -> Model
@@ -22,3 +22,13 @@ initEntity coords =
 init : Coords -> Type -> Model
 init =
     Model
+
+
+initEntityLink : Coords -> Id.LinkId Id.EntityId -> Model
+initEntityLink coords =
+    EntityLink >> init coords
+
+
+initAddressLink : Coords -> Id.LinkId Id.AddressId -> Model
+initAddressLink coords =
+    AddressLink >> init coords

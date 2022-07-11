@@ -389,5 +389,15 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveEntity entity.id
                 |> option "Remove"
             ]
+
+        ContextMenu.AddressLink id ->
+            [ UserClickedRemoveAddressLink id
+                |> option "Remove"
+            ]
+
+        ContextMenu.EntityLink id ->
+            [ UserClickedRemoveEntityLink id
+                |> option "Remove"
+            ]
     )
         |> ContextMenu.view vc cm.coords
