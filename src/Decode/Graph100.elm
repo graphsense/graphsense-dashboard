@@ -42,7 +42,7 @@ decodeEntities =
                 index 1 string
                     |> andThen
                         (\rootAddress ->
-                            map6 DeserializedEntity
+                            map7 DeserializedEntity
                                 (succeed entityId)
                                 (succeed (Just rootAddress))
                                 (index 2 float)
@@ -56,6 +56,7 @@ decodeEntities =
                                         )
                                     )
                                 )
+                                (succeed 0)
                         )
             )
         |> list

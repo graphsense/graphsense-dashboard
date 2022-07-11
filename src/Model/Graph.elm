@@ -122,6 +122,7 @@ type alias DeserializedEntity =
     , y : Float
     , color : Maybe Color.Color
     , userTag : Maybe DeserializedEntityTag
+    , noAddresses : Int
     }
 
 

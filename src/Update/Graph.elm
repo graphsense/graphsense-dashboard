@@ -1602,7 +1602,11 @@ updateByMsg plugins uc msg model =
                             (\e ->
                                 case e.rootAddress of
                                     Nothing ->
-                                        e.id |> Id.entityId |> Just
+                                        if e.noAddresses == 0 then
+                                            e.id |> Id.entityId |> Just
+
+                                        else
+                                            Nothing
 
                                     Just _ ->
                                         Nothing

@@ -3,8 +3,8 @@ module Log exposing (..)
 
 log : String -> a -> a
 log str a =
-    --a
-    Debug.log str a
+    --Debug.log str a
+    a
 
 
 log2 : String -> a -> a

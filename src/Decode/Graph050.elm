@@ -33,6 +33,7 @@ type alias Entity =
     { id : Id.EntityId
     , x : Float
     , y : Float
+    , noAddresses : Int
     }
 
 
@@ -68,6 +69,7 @@ merge tags entityTags addresses entities highlights =
                 , userTag =
                     Dict.get ( Id.currency e.id, Id.entityId e.id ) entityTags
                         |> Maybe.map DeserializedEntityUserTagTag
+                , noAddresses = e.noAddresses
                 }
             )
             entities
@@ -103,8 +105,22 @@ decoderAddressTag =
 
 decoderEntityTag : Decoder (Maybe DeserializedEntityUserTag)
 decoderEntityTag =
-    decoderFirstEntityTag
-        |> field "tags"
+    oneOf
+        [ int
+        , string
+            |> andThen
+                (\i ->
+                    String.toInt i
+                        |> Maybe.map succeed
+                        |> Maybe.withDefault (fail "no int")
+                )
+        ]
+        |> field "id"
+        |> andThen
+            (decoderFirstEntityTag
+                >> field "entity_tags"
+                >> field "tags"
+            )
 
 
 decoderFirstTag : Decoder (Maybe Tag.UserTag)
@@ -114,9 +130,9 @@ decoderFirstTag =
         |> map (List.filterMap identity >> List.head)
 
 
-decoderFirstEntityTag : Decoder (Maybe DeserializedEntityUserTag)
-decoderFirstEntityTag =
-    maybe decodeDeserializedEntityUserDefinedTag
+decoderFirstEntityTag : Int -> Decoder (Maybe DeserializedEntityUserTag)
+decoderFirstEntityTag entityId =
+    maybe (decodeDeserializedEntityUserDefinedTag entityId)
         |> list
         |> map (List.filterMap identity >> List.head)
 
@@ -141,15 +157,15 @@ decodeUserDefinedTag =
             )
 
 
-decodeDeserializedEntityUserDefinedTag : Decoder DeserializedEntityUserTag
-decodeDeserializedEntityUserDefinedTag =
+decodeDeserializedEntityUserDefinedTag : Int -> Decoder DeserializedEntityUserTag
+decodeDeserializedEntityUserDefinedTag entityId =
     field "isUserDefined" bool
         |> andThen
             (\isUserDefined ->
                 if isUserDefined then
                     map6 DeserializedEntityUserTag
                         (field "keyspace" string |> map String.toLower)
-                        (field "entity" int)
+                        (succeed entityId)
                         (field "label" string)
                         (maybe (field "source" string) |> map (Maybe.withDefault ""))
                         (maybe (field "category" string))
@@ -169,7 +185,7 @@ decoderAddresses =
 
 decoderEntities : Decoder (List Entity)
 decoderEntities =
-    maybe decodeEntityWithoutAddresses
+    maybe decodeEntity
         |> list
         |> map (List.filterMap identity)
         |> index 4
@@ -183,19 +199,20 @@ decodeAddress =
         (maybe (index 1 (index 4 decodeColor)))
 
 
-decodeEntityWithoutAddresses : Decoder Entity
-decodeEntityWithoutAddresses =
+decodeEntity : Decoder Entity
+decodeEntity =
     list (succeed ())
         |> index 4
+        |> index 1
         |> andThen
             (\addresses ->
-                if List.isEmpty addresses then
-                    fail "addresses found"
-
-                else
-                    map2 (\id ( x, y ) -> Entity id x y)
-                        (index 0 decodeEntityId)
-                        decodeCoords
+                map2
+                    (\id ( x, y ) ->
+                        List.length addresses
+                            |> Entity id x y
+                    )
+                    (index 0 decodeEntityId)
+                    decodeCoords
             )
 
 

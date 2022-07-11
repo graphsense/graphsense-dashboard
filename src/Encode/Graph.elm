@@ -18,7 +18,6 @@ encode version model =
     , Layer.addresses model.layers
         |> list encodeAddress
     , Layer.entities model.layers
-        |> List.filter (.addresses >> Dict.isEmpty)
         |> list encodeEntity
     , model.highlights.highlights |> encodeHighlights
     ]
@@ -61,6 +60,7 @@ encodeEntity entity =
     , float entity.x
     , float entity.y
     , encodeColor entity.color
+    , encodeUserTag entity.userTag
     ]
         |> list identity
 
