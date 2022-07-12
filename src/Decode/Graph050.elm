@@ -210,7 +210,7 @@ decodeEntity =
                 map3
                     (\id ( x, y ) color ->
                         List.length addresses
-                            |> Entity id x y (Debug.log ("color " ++ String.fromInt (Id.entityId id)) color)
+                            |> Entity id x y color
                     )
                     (index 0 decodeEntityId)
                     decodeCoords
