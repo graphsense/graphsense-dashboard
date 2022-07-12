@@ -179,19 +179,13 @@ getLabel vc gc ent =
         |> Maybe.Extra.orElseLazy
             (\_ ->
                 ent.entity.bestAddressTag
-                    |> Maybe.andThen
+                    |> Maybe.map
                         (\tag ->
-                            if String.isEmpty tag.label then
-                                tag.category
-                                    |> Maybe.map
-                                        (\cat ->
-                                            List.Extra.find (.id >> (==) cat) gc.entityConcepts
-                                                |> Maybe.map .label
-                                                |> Maybe.withDefault cat
-                                        )
+                            if not tag.tagpackIsPublic && String.isEmpty tag.label then
+                                "tag locked"
 
                             else
-                                Just tag.label
+                                tag.label
                         )
             )
         |> Maybe.withDefault (String.fromInt ent.entity.entity)
