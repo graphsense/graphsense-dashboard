@@ -603,12 +603,23 @@ syncLinksOnEntity entity relevant =
             (\updEnt ( entity_, updated ) ->
                 case ( entity_.links, entity_.shadowLinks ) of
                     ( Entity.Links links, Entity.Links shadowLinks ) ->
+                        let
+                            syncAddresses =
+                                syncLinksOnAddresses entity_.addresses updEnt.addresses
+
+                            ( newEntity, updated_ ) =
+                                if syncAddresses /= entity_.addresses then
+                                    ( { entity_ | addresses = syncAddresses }, True )
+
+                                else
+                                    ( entity_, updated )
+                        in
                         case ( Dict.get updEnt.id links, Dict.get updEnt.id shadowLinks ) of
                             ( Nothing, Nothing ) ->
-                                ( entity_, updated )
+                                ( newEntity, updated_ )
 
                             ( link, shadowLink ) ->
-                                ( { entity_
+                                ( { newEntity
                                     | links =
                                         link
                                             |> Maybe.map
@@ -625,8 +636,6 @@ syncLinksOnEntity entity relevant =
                                                         |> Entity.Links
                                                 )
                                             |> Maybe.withDefault entity_.shadowLinks
-                                    , addresses =
-                                        syncLinksOnAddresses entity_.addresses updEnt.addresses
                                   }
                                 , True
                                 )
@@ -639,27 +648,42 @@ syncLinksOnAddresses sources targets =
     sources
         |> Dict.foldl
             (\src source sources_ ->
-                sources_
-                    |> Dict.insert src
-                        { source
-                            | links =
-                                Address.Links <|
-                                    case source.links of
-                                        Address.Links links ->
-                                            links
-                                                |> Dict.foldl
-                                                    (\tgt link links_ ->
-                                                        case Dict.get tgt targets of
-                                                            Nothing ->
-                                                                links_
+                let
+                    oldLinks =
+                        case source.links of
+                            Address.Links links ->
+                                links
 
-                                                            Just found ->
-                                                                links_
-                                                                    |> Dict.insert tgt
-                                                                        { link | node = found }
-                                                    )
-                                                    links
-                        }
+                    newLinks =
+                        oldLinks
+                            |> Dict.foldl
+                                (\tgt link links_ ->
+                                    case Dict.get tgt targets of
+                                        Nothing ->
+                                            links_
+
+                                        Just found ->
+                                            links_
+                                                |> Dict.insert tgt
+                                                    { link | node = found }
+                                )
+                                oldLinks
+
+                    newSource =
+                        if oldLinks /= newLinks then
+                            { source
+                                | links = Address.Links newLinks
+                            }
+
+                        else
+                            source
+                in
+                if newSource /= source then
+                    sources_
+                        |> Dict.insert src newSource
+
+                else
+                    sources_
             )
             sources
 
