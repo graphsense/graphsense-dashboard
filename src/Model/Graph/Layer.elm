@@ -287,51 +287,64 @@ getFirstEntity { currency, entity } layers =
 
 getBoundingBox : IntDict Layer -> Maybe Coords.BBox
 getBoundingBox layers =
-    let
-        getTopMost =
-            Dict.foldl
-                (\_ entity topMost ->
-                    case topMost of
-                        Nothing ->
-                            Just entity
+    case entities layers of
+        [] ->
+            Nothing
 
-                        Just tm ->
-                            if Entity.getY tm > Entity.getY entity then
-                                Just entity
+        fst :: rest ->
+            let
+                box =
+                    rest
+                        |> List.foldl
+                            (\entity { left, top, right, bottom } ->
+                                let
+                                    l =
+                                        Entity.getX entity
 
-                            else
-                                Just tm
-                )
-                Nothing
+                                    t =
+                                        Entity.getY entity
 
-        getBottomMost =
-            Dict.foldl
-                (\_ entity topMost ->
-                    case topMost of
-                        Nothing ->
-                            Just entity
+                                    r =
+                                        Entity.getX entity + Entity.getWidth entity
 
-                        Just tm ->
-                            if Entity.getY tm + Entity.getHeight tm > Entity.getY entity + Entity.getHeight entity then
-                                Just entity
+                                    b =
+                                        Entity.getY entity + Entity.getHeight entity
+                                in
+                                { left =
+                                    if l < left then
+                                        l
 
-                            else
-                                Just tm
-                )
-                Nothing
-    in
-    Maybe.Extra.andThen2
-        (\( _, fst ) ( _, lst ) ->
-            Maybe.map2
-                (\upperLeft lowerRight ->
-                    { x = Entity.getX upperLeft
-                    , y = Entity.getY upperLeft
-                    , width = Entity.getX upperLeft + Entity.getX lowerRight + Entity.getWidth lowerRight
-                    , height = Entity.getY upperLeft + Entity.getY lowerRight + Entity.getHeight lowerRight
-                    }
-                )
-                (getTopMost fst.entities)
-                (getBottomMost lst.entities)
-        )
-        (IntDict.findMin layers)
-        (IntDict.findMax layers)
+                                    else
+                                        left
+                                , top =
+                                    if t < top then
+                                        t
+
+                                    else
+                                        top
+                                , right =
+                                    if r > right then
+                                        r
+
+                                    else
+                                        right
+                                , bottom =
+                                    if b > bottom then
+                                        b
+
+                                    else
+                                        bottom
+                                }
+                            )
+                            { left = Entity.getX fst
+                            , top = Entity.getY fst
+                            , right = Entity.getX fst + Entity.getWidth fst
+                            , bottom = Entity.getY fst + Entity.getHeight fst
+                            }
+            in
+            { x = box.left
+            , y = box.top
+            , width = box.right - box.left
+            , height = box.bottom - box.top
+            }
+                |> Just
