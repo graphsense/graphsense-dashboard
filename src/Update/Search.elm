@@ -1,0 +1,176 @@
+module Update.Search exposing (clear, getFirstResultUrl, update)
+
+import Api.Data
+import Bounce
+import Effect exposing (n)
+import Effect.Search as Effect exposing (Effect(..))
+import Maybe.Extra
+import Model.Search exposing (..)
+import Msg.Search exposing (Msg(..))
+import RecordSetter exposing (..)
+import RemoteData exposing (RemoteData(..))
+import Result.Extra as RE
+import Route exposing (toUrl)
+import Route.Graph as Route
+
+
+update : Msg -> Model -> ( Model, List Effect )
+update msg model =
+    case msg of
+        NoOp ->
+            n model
+
+        BrowserGotSearchResult result ->
+            if model.loading then
+                n
+                    { model
+                        | loading = False
+                        , found = Just result
+                    }
+
+            else
+                n model
+
+        UserClicksResult ->
+            -- handled upstream
+            n model
+
+        UserClicksResultLine _ ->
+            n <| clear model
+
+        UserInputsSearch input ->
+            ( { model
+                | input = input
+                , bounce = Bounce.push model.bounce
+              }
+            , BounceEffect 200 RuntimeBounced
+                :: (if model.loading then
+                        [ CancelEffect ]
+
+                    else
+                        []
+                   )
+            )
+
+        UserHitsEnter ->
+            -- handled upstream
+            n model
+
+        UserLeavesSearch ->
+            n { model | visible = False }
+
+        UserFocusSearch ->
+            n { model | visible = True }
+
+        RuntimeBounced ->
+            { model
+                | bounce = Bounce.pop model.bounce
+            }
+                |> n
+                |> maybeTriggerSearch
+
+        PluginMsg msgValue ->
+            -- handled in src/Update.elm
+            n model
+
+
+maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
+maybeTriggerSearch ( model, cmd ) =
+    let
+        limit =
+            100
+
+        multi =
+            getMulti model
+    in
+    if
+        Bounce.steady model.bounce
+            && (String.length model.input > 3)
+            && (List.length multi == 1)
+    then
+        ( { model
+            | loading = True
+          }
+        , SearchEffect
+            { query = model.input
+            , currency = Nothing
+            , limit = Just limit
+            , toMsg = BrowserGotSearchResult
+            }
+            :: cmd
+        )
+
+    else
+        model
+            |> s_loading False
+            |> n
+
+
+getFirstResultUrl : Model -> Maybe String
+getFirstResultUrl { input, found } =
+    found
+        |> Maybe.andThen
+            (\{ currencies, labels } ->
+                currencies
+                    |> List.filter
+                        (\{ addresses, txs } ->
+                            List.isEmpty addresses
+                                && List.isEmpty txs
+                                |> not
+                        )
+                    |> List.head
+                    |> Maybe.andThen
+                        (\{ addresses, currency, txs } ->
+                            addresses
+                                |> List.head
+                                |> Maybe.map
+                                    (\address ->
+                                        Route.addressRoute
+                                            { currency = currency
+                                            , address = address
+                                            , table = Nothing
+                                            , layer = Nothing
+                                            }
+                                    )
+                                |> Maybe.Extra.orElse
+                                    (txs
+                                        |> List.head
+                                        |> Maybe.map
+                                            (\tx ->
+                                                Route.txRoute
+                                                    { currency = currency
+                                                    , txHash = tx
+                                                    , table = Nothing
+                                                    }
+                                            )
+                                    )
+                        )
+                    |> Maybe.Extra.orElse
+                        (labels
+                            |> List.head
+                            |> Maybe.map Route.labelRoute
+                        )
+            )
+        |> Maybe.Extra.orElse
+            (if String.length input < 26 then
+                Nothing
+
+             else
+                Route.addressRoute
+                    { currency = "btc"
+                    , address = input
+                    , table = Nothing
+                    , layer = Nothing
+                    }
+                    |> Just
+            )
+        |> Maybe.map (Route.graphRoute >> toUrl)
+
+
+clear : Model -> Model
+clear model =
+    { model
+        | found = Nothing
+        , input = ""
+        , loading = False
+    }

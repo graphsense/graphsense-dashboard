@@ -1,0 +1,15 @@
+module Config exposing (config, plugins)
+
+import Plugin as Plugin exposing (PID, Plugin, Plugins)
+import Theme.Theme exposing (Theme)
+
+
+config : { theme : Theme }
+config =
+    { theme = Theme.default
+    }
+
+
+plugins : List ( PID, Plugin )
+plugins =
+    [ ]

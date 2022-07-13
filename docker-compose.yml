@@ -3,15 +3,15 @@ version: "3.1"
 services:
 
   graphsense-dashboard:
-    image: graphsense-dashboard
-    container_name: graphsense-dashboard
-    hostname: graphsense-dashboard
+    image: ${DOCKER_IMAGE_NAME:-graphsense-dashboard}
+    container_name: ${DOCKER_CONTAINER_NAME:-graphsense-dashboard}
+    hostname: ${DOCKER_HOSTNAME:-graphsense-dashboard}
     build:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - ${DASHBOARD_PORT:-8000}:8000
+      - ${DASHBOARD_PORT}:8000
     environment:
-      REST_ENDPOINT: "${REST_ENDPOINT}"
+      REST_URL: "${REST_URL}"
     command: ["nginx", "-g", "daemon off;"]
     restart: always

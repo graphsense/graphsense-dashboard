@@ -1,0 +1,279 @@
+module View.Search exposing (Searchable(..), search)
+
+import Api.Data
+import Config.View exposing (Config)
+import Css exposing (Style, block, display, none)
+import Css.Search as Css
+import Css.View
+import FontAwesome
+import Heroicons.Solid as Heroicons
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
+import Html.Styled.Events exposing (..)
+import Init.Search as Search
+import Json.Decode
+import Model.Search exposing (..)
+import Msg.Search exposing (Msg(..))
+import Plugin.Model exposing (ModelState)
+import Plugin.View as Plugin exposing (Plugins)
+import RemoteData exposing (RemoteData(..), WebData)
+import Route exposing (toUrl)
+import Route.Graph as Route exposing (Route)
+import Util.RemoteData exposing (webdata)
+import Util.View exposing (loadingSpinner, truncate)
+import View.Locale as Locale
+
+
+type alias SearchConfig =
+    { searchable : Searchable
+    , css : String -> List Style
+    , resultsAsLink : Bool
+    , multiline : Bool
+    , showIcon : Bool
+    }
+
+
+type Searchable
+    = SearchAll
+        { latestBlocks : List ( String, Int )
+        , pluginStates : ModelState
+        }
+    | SearchTagsOnly
+
+
+search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+search plugins vc sc model =
+    Html.Styled.form
+        [ Css.form vc |> css
+        , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
+        , onSubmit UserHitsEnter
+        ]
+        [ div
+            [ Css.frame vc |> css
+            ]
+            [ input
+                ([ sc.css model.input |> css
+                 , autocomplete False
+                 , spellcheck False
+                 , Locale.string vc.locale "The search" |> title
+                 , onInput UserInputsSearch
+                 , onEnter UserHitsEnter
+                 , onFocus UserFocusSearch
+                 , value model.input
+                 ]
+                    ++ (case sc.searchable of
+                            SearchAll _ ->
+                                [ "Addresses", "transaction", "label", "block" ]
+                                    |> List.map (Locale.string vc.locale)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> String.join ", "
+                                    |> placeholder
+                                    |> List.singleton
+
+                            SearchTagsOnly ->
+                                [ Locale.string vc.locale "Label"
+                                    |> placeholder
+                                , onBlur UserLeavesSearch
+                                ]
+                       )
+                )
+                []
+            , searchResult plugins vc sc model
+            ]
+        , if sc.showIcon then
+            button
+                [ [ Css.View.button vc |> Css.batch
+                  , Css.View.primary vc |> Css.batch
+                  , Css.button vc |> Css.batch
+                  ]
+                    |> css
+                , type_ "submit"
+                ]
+                [ FontAwesome.icon FontAwesome.search
+                    |> Html.Styled.fromUnstyled
+                ]
+
+          else
+            Util.View.none
+        ]
+
+
+searchResult : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+searchResult plugins vc sc model =
+    let
+        rl =
+            resultList plugins vc sc model
+    in
+    if not model.visible || not model.loading && List.isEmpty rl then
+        span [] []
+
+    else
+        div
+            [ id "search-result"
+            , css (Css.result vc)
+            , onClick UserClicksResult
+            ]
+            ((if model.loading then
+                [ loadingSpinner vc Css.loadingSpinner ]
+
+              else
+                []
+             )
+                ++ rl
+            )
+
+
+filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
+filterByPrefix input result =
+    { result
+        | currencies =
+            List.map
+                (\currency ->
+                    { currency
+                        | addresses = List.filter (String.startsWith input) currency.addresses
+                        , txs = List.filter (String.startsWith input) currency.txs
+                    }
+                )
+                result.currencies
+    }
+
+
+resultList : Plugins -> Config -> SearchConfig -> Model -> List (Html Msg)
+resultList plugins vc sc { found, input } =
+    let
+        filtered =
+            Maybe.map (filterByPrefix input) found
+
+        labelBadge =
+            { title = Locale.string vc.locale "Labels"
+            , badge =
+                Maybe.map .labels found
+                    |> Maybe.withDefault []
+                    |> List.map Label
+            }
+
+        badgeToResult { title, badge } =
+            if List.isEmpty badge then
+                Nothing
+
+            else
+                div
+                    [ Css.resultGroup vc |> css
+                    ]
+                    [ div
+                        [ Css.resultGroupTitle vc |> css
+                        ]
+                        [ text title
+                        ]
+                    , List.map (resultLineToHtml vc title sc.resultsAsLink) badge
+                        |> ol [ Css.resultGroupList vc |> css ]
+                    ]
+                    |> Just
+    in
+    case sc.searchable of
+        SearchTagsOnly ->
+            [ labelBadge ]
+                |> List.filterMap badgeToResult
+
+        SearchAll { latestBlocks, pluginStates } ->
+            (List.map (currencyToResult vc input filtered) latestBlocks
+                ++ [ labelBadge
+                   ]
+                |> List.filterMap badgeToResult
+            )
+                ++ Plugin.searchResultList plugins pluginStates vc
+
+
+resultLineToHtml : Config -> String -> Bool -> ResultLine -> Html Msg
+resultLineToHtml vc title asLink resultLine =
+    let
+        currency =
+            String.toLower title
+
+        ( route, icon, label ) =
+            case resultLine of
+                Address a ->
+                    ( Route.addressRoute { currency = currency, address = a, table = Nothing, layer = Nothing }
+                    , FontAwesome.at
+                    , a
+                    )
+
+                Tx a ->
+                    ( Route.txRoute { currency = currency, txHash = a, table = Nothing }
+                    , FontAwesome.exchangeAlt
+                    , Util.View.truncate 50 a
+                    )
+
+                Block a ->
+                    ( Route.blockRoute { currency = currency, block = a, table = Nothing }, FontAwesome.cube, String.fromInt a )
+
+                Label a ->
+                    ( Route.labelRoute a, FontAwesome.tag, a )
+
+        el attr =
+            if asLink then
+                a ((Route.graphRoute route |> toUrl |> href) :: attr)
+
+            else
+                div attr
+    in
+    el
+        [ Css.resultLine vc |> css
+        , onClick (UserClicksResultLine resultLine)
+        ]
+        [ FontAwesome.icon icon
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> span [ Css.resultLineIcon vc |> css ]
+        , text label
+        ]
+
+
+currencyToResult : Config -> String -> Maybe Api.Data.SearchResult -> ( String, Int ) -> { title : String, badge : List ResultLine }
+currencyToResult vc input found ( currency, latestBlock ) =
+    { title = String.toUpper currency
+    , badge =
+        (Maybe.map
+            (\{ currencies } ->
+                List.filter (.currency >> (==) currency) currencies
+                    |> List.head
+                    |> Maybe.map
+                        (\{ addresses, txs } ->
+                            List.map Address addresses
+                                ++ List.map Tx txs
+                        )
+                    |> Maybe.withDefault []
+            )
+            found
+            |> Maybe.withDefault []
+        )
+            ++ blocksToResult input latestBlock
+    }
+
+
+blocksToResult : String -> Int -> List ResultLine
+blocksToResult input latestBlock =
+    String.toInt input
+        |> Maybe.andThen
+            (\i ->
+                if i >= 0 && i <= latestBlock then
+                    Just [ Block i ]
+
+                else
+                    Nothing
+            )
+        |> Maybe.withDefault []
+
+
+onEnter : msg -> Attribute msg
+onEnter onEnterAction =
+    preventDefaultOn "keypress" <|
+        Json.Decode.andThen
+            (\keyCode ->
+                if keyCode == 13 then
+                    Json.Decode.succeed ( onEnterAction, True )
+
+                else
+                    Json.Decode.fail (String.fromInt keyCode)
+            )
+            keyCode
