@@ -1733,12 +1733,6 @@ updateByMsg plugins uc msg model =
                     , entities = List.map .entity deser.entities
                     , toMsg = BrowserGotBulkEntityNeighbors currency True
                     }
-              , BulkGetEntityNeighborsEffect
-                    { currency = currency
-                    , isOutgoing = False
-                    , entities = List.map .entity deser.entities
-                    , toMsg = BrowserGotBulkEntityNeighbors currency False
-                    }
               , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
