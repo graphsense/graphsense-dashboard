@@ -129,8 +129,16 @@ filterByPrefix input result =
         | currencies =
             List.map
                 (\currency ->
+                    let
+                        addr =
+                            if String.toLower currency.currency == "eth" then
+                                String.toLower input
+
+                            else
+                                input
+                    in
                     { currency
-                        | addresses = List.filter (String.startsWith input) currency.addresses
+                        | addresses = List.filter (String.startsWith addr) currency.addresses
                         , txs = List.filter (String.startsWith input) currency.txs
                     }
                 )
