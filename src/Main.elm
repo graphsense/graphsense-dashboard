@@ -42,6 +42,9 @@ main =
 
         updPlug =
             Plugin.updatePlugins plugins
+
+        viewPlugins =
+            Plugin.viewPlugins plugins
     in
     Browser.application
         { init =
@@ -60,7 +63,7 @@ main =
         , view =
             \model ->
                 view
-                    (Plugin.viewPlugins plugins)
+                    viewPlugins
                     model.config
                     model
         , subscriptions = subscriptions
