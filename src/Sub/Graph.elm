@@ -21,7 +21,7 @@ subscriptions model =
         (Json.Decode.field "key" Json.Decode.string
             |> Json.Decode.map
                 (\str ->
-                    if Debug.log "str" str == "Escape" then
+                    if str == "Escape" then
                         UserPressesEscape
 
                     else
