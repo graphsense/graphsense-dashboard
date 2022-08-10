@@ -1050,15 +1050,19 @@ updateByMsg plugins uc msg model =
                 |> Maybe.andThen
                     (\tag ->
                         let
-                            ( currency, address ) =
+                            ( currency, address, isClusterDefiner ) =
                                 case tag.input.id of
                                     Node.Address a ->
-                                        ( Id.currency a, Just (Id.addressId a) )
+                                        ( Id.currency a
+                                        , Just (Id.addressId a)
+                                        , False
+                                        )
 
                                     Node.Entity a ->
                                         ( Id.currency a
                                         , Layer.getEntity a model.layers
                                             |> Maybe.map (.entity >> .rootAddress)
+                                        , True
                                         )
                         in
                         address
@@ -1080,13 +1084,7 @@ updateByMsg plugins uc msg model =
                                     , source = tag.input.source
                                     , currency = currency
                                     , address = addr
-                                    , isClusterDefiner =
-                                        case tag.input.id of
-                                            Node.Address _ ->
-                                                False
-
-                                            Node.Entity _ ->
-                                                True
+                                    , isClusterDefiner = isClusterDefiner
                                     }
                                 )
                     )
@@ -2635,8 +2633,15 @@ storeUserTag uc tag model =
                 tag.category
                     |> Color.update uc model.config.colors
 
+            flag =
+                if tag.isClusterDefiner then
+                    "entity"
+
+                else
+                    "address"
+
             userAddressTags =
-                Dict.insert ( tag.currency, tag.address ) tag model.userAddressTags
+                Dict.insert ( tag.currency, tag.address, flag ) tag model.userAddressTags
         in
         { model
             | userAddressTags =
@@ -2648,7 +2653,17 @@ storeUserTag uc tag model =
             , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
         }
             |> updateLegend
-            |> updateAddresses { currency = tag.currency, address = tag.address } (\a -> { a | userTag = Just tag })
+            |> updateAddresses { currency = tag.currency, address = tag.address }
+                (\a ->
+                    { a
+                        | userTag =
+                            if a.userTag == Nothing || not tag.isClusterDefiner then
+                                Just tag
+
+                            else
+                                a.userTag
+                    }
+                )
             |> updateEntitiesIf
                 (\e ->
                     tag.isClusterDefiner
@@ -2801,13 +2816,17 @@ refreshBrowserEntity id model =
     }
 
 
-addUserTag : Set Id.AddressId -> Dict ( String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
+addUserTag : Set Id.AddressId -> Dict ( String, String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
 addUserTag ids userTags layers =
     ids
         |> Set.toList
         |> List.foldl
             (\id layers_ ->
-                Dict.get ( Id.currency id, Id.addressId id ) userTags
+                Dict.get ( Id.currency id, Id.addressId id, "address" ) userTags
+                    |> Maybe.Extra.orElseLazy
+                        (\_ ->
+                            Dict.get ( Id.currency id, Id.addressId id, "entity" ) userTags
+                        )
                     |> Maybe.map (\tag -> Layer.updateAddress id (\a -> { a | userTag = Just tag }) layers_)
                     |> Maybe.withDefault layers_
             )
