@@ -1128,6 +1128,7 @@ updateByMsg plugins uc msg model =
                 { address = address
                 , currency = Id.currency entityId
                 , toMsg = BrowserGotAddressForEntity entityId
+                , suppressErrors = False
                 }
                 |> List.singleton
             )
@@ -1135,7 +1136,13 @@ updateByMsg plugins uc msg model =
         UserClickedAddressInTable { address, currency } ->
             model
                 |> s_selectIfLoaded Nothing
-                |> loadAddress plugins currency address Nothing Nothing
+                |> loadAddress plugins
+                    { currency = currency
+                    , address = address
+                    , table = Nothing
+                    , layer = Nothing
+                    , suppressErrors = False
+                    }
 
         BrowserGotAddressForEntity entityId address ->
             addAddressesAtEntity plugins uc entityId [ address ] model
@@ -2081,7 +2088,13 @@ updateByRoute plugins route model =
         Route.Currency currency (Route.Address a table layer) ->
             model
                 |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = a }))
-                |> loadAddress plugins currency a table layer
+                |> loadAddress plugins
+                    { currency = currency
+                    , address = a
+                    , table = table
+                    , layer = layer
+                    , suppressErrors = False
+                    }
 
         Route.Currency currency (Route.Entity e table layer) ->
             layer
@@ -3118,26 +3131,36 @@ addAddressesAtEntity plugins uc entityId addresses model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-loadAddress : Plugins -> String -> String -> Maybe Route.AddressTable -> Maybe Int -> Model -> ( Model, List Effect )
-loadAddress plugins currency a table layer model =
+loadAddress :
+    Plugins
+    ->
+        { currency : String
+        , address : String
+        , table : Maybe Route.AddressTable
+        , layer : Maybe Int
+        , suppressErrors : Bool
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadAddress plugins { currency, address, table, layer, suppressErrors } model =
     layer
         |> Maybe.andThen
-            (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = a, layer = l }) model.layers)
+            (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = l }) model.layers)
         |> Maybe.Extra.orElseLazy
-            (\_ -> Layer.getFirstAddress { currency = currency, address = a } model.layers)
+            (\_ -> Layer.getFirstAddress { currency = currency, address = address } model.layers)
         |> Maybe.map
-            (\address ->
-                selectAddress address table model
+            (\a ->
+                selectAddress a table model
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
                 let
                     select =
-                        model.selectIfLoaded == Just (SelectAddress { currency = currency, address = a })
+                        model.selectIfLoaded == Just (SelectAddress { currency = currency, address = address })
 
                     browser =
                         if select then
-                            Browser.loadingAddress { currency = currency, address = a } model.browser
+                            Browser.loadingAddress { currency = currency, address = address } model.browser
 
                         else
                             model.browser
@@ -3152,18 +3175,20 @@ loadAddress plugins currency a table layer model =
                             n browser
                 in
                 ( { model
-                    | adding = Adding.loadAddress { currency = currency, address = a } model.adding
+                    | adding = Adding.loadAddress { currency = currency, address = address } model.adding
                     , browser = browser2
                   }
                 , [ GetEntityForAddressEffect
-                        { address = a
+                        { address = address
                         , currency = currency
-                        , toMsg = BrowserGotEntityForAddress a
+                        , toMsg = BrowserGotEntityForAddress address
+                        , suppressErrors = suppressErrors
                         }
                   , GetAddressEffect
-                        { address = a
+                        { address = address
                         , currency = currency
                         , toMsg = BrowserGotAddress
+                        , suppressErrors = suppressErrors
                         }
                   ]
                     ++ effects

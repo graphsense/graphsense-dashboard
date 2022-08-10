@@ -97,12 +97,13 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotResponseWithHeaders statusbarToken result ->
+        BrowserGotResponseWithHeaders statusbarToken suppressErrors result ->
             { model
                 | statusbar =
                     case statusbarToken of
                         Just t ->
-                            Statusbar.update t
+                            Statusbar.update suppressErrors
+                                t
                                 (case result of
                                     Err ( Http.BadStatus 401, _ ) ->
                                         Nothing
@@ -365,7 +366,14 @@ update plugins uc msg model =
                                                     (\currency ( mod, effects ) ->
                                                         List.foldl
                                                             (\a ( mo, effs ) ->
-                                                                Graph.loadAddress plugins currency a Nothing Nothing mo
+                                                                Graph.loadAddress plugins
+                                                                    { currency = currency
+                                                                    , address = a
+                                                                    , table = Nothing
+                                                                    , layer = Nothing
+                                                                    , suppressErrors = True
+                                                                    }
+                                                                    mo
                                                                     |> mapSecond ((++) effs)
                                                             )
                                                             ( mod, effects )

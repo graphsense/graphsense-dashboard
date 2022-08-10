@@ -98,9 +98,9 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Addresses.listAddressNeighbors currency address direction (Just includeLabels) nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetAddressEffect { currency, address, toMsg } ->
+                Graph.GetAddressEffect { currency, address, toMsg, suppressErrors } ->
                     Api.Request.Addresses.getAddress currency address
-                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+                        |> sendWithSuppressErrors suppressErrors statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityEffect { currency, entity, toMsg } ->
                     Api.Request.Entities.getEntity currency entity
@@ -110,9 +110,9 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Blocks.getBlock currency height
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
+                Graph.GetEntityForAddressEffect { currency, address, toMsg, suppressErrors } ->
                     Api.Request.Addresses.getAddressEntity currency address
-                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
+                        |> sendWithSuppressErrors suppressErrors statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
                     Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
@@ -322,9 +322,14 @@ withAuthorization apiKey request =
 
 
 send : Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
-send statusbarToken apiKey effect toMsg =
+send =
+    sendWithSuppressErrors False
+
+
+sendWithSuppressErrors : Bool -> Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
+sendWithSuppressErrors suppressErrors statusbarToken apiKey effect toMsg =
     withAuthorization apiKey
-        >> Api.sendAndAlsoReceiveHeaders (BrowserGotResponseWithHeaders statusbarToken) effect toMsg
+        >> Api.sendAndAlsoReceiveHeaders (BrowserGotResponseWithHeaders statusbarToken suppressErrors) effect toMsg
 
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction

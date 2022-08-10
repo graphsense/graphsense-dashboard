@@ -71,7 +71,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
-    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
+    | BrowserGotResponseWithHeaders (Maybe String) Bool (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
