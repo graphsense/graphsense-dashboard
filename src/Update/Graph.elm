@@ -371,6 +371,9 @@ updateByMsg plugins uc msg model =
             )
                 |> n
 
+        UserPressesEscape ->
+            deselectHighlighter model |> n
+
         UserClickedAddress id ->
             case Highlighter.getSelectedColor model.highlights of
                 Nothing ->
@@ -1360,7 +1363,15 @@ updateByMsg plugins uc msg model =
         UserClickedHighlighter id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Highlighter, Just ( el, vis ) ) ->
-                    toolVisible model el vis
+                    toolVisible
+                        (if vis then
+                            deselectHighlighter model
+
+                         else
+                            model
+                        )
+                        el
+                        vis
 
                 _ ->
                     getToolElement model id BrowserGotHighlighterElement
@@ -3215,3 +3226,17 @@ normalizeDeserializedEntityTag entities entityTag =
                         , isClusterDefiner = True
                         }
                     )
+
+
+deselectHighlighter : Model -> Model
+deselectHighlighter model =
+    let
+        highlights =
+            Highlighter.deselect model.highlights
+    in
+    { model
+        | highlights = highlights
+        , config =
+            model.config
+                |> s_highlighter False
+    }

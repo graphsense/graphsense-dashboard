@@ -158,4 +158,5 @@ type Msg
     | UserClicksHighlight Int
     | UserInputsFilterTable (Maybe String)
     | UserClickedFitGraph
+    | UserPressesEscape
     | NoOp
