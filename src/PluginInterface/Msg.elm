@@ -1,9 +1,11 @@
 module PluginInterface.Msg exposing (..)
 
 import Api.Data
+import Browser.Dom
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Entity exposing (Entity)
+import Model.Graph.Id as Id
 
 
 type OutMsg msg addressMsg entityMsg
@@ -16,6 +18,7 @@ type OutMsg msg addressMsg entityMsg
     | GetEntities (List Entity) (List Api.Data.Entity -> msg)
     | GetSerialized (Json.Encode.Value -> msg)
     | Deserialize String Json.Encode.Value
+    | GetAddressDomElement Id.AddressId (Result Browser.Dom.Error Browser.Dom.Element -> msg)
 
 
 mapOutMsg : (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -52,3 +55,6 @@ mapOutMsg mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         Deserialize filename json ->
             Deserialize filename json
+
+        GetAddressDomElement element msg ->
+            (msg >> mapMsg) |> GetAddressDomElement element

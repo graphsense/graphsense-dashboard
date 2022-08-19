@@ -289,10 +289,6 @@ theme =
                     [ backgroundColor <| toCssColor colors.brandWhite
                     , color <| toCssColor colors.brandRed
                     ]
-                |> s_danger
-                    [ backgroundColor <| toCssColor colors.brandWhite
-                    , color <| toCssColor colors.brandRed
-                    ]
                 |> s_disabled
                     [ color <| toCssColor colors.brandLight
                     ]
@@ -361,6 +357,7 @@ theme =
                     , displayFlex
                     , justifyContent spaceBetween
                     , alignItems center
+                    , whiteSpace noWrap
                     ]
                 |> s_body
                     [ scaled 3 |> rem |> padding

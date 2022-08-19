@@ -2792,6 +2792,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
+
+                    PluginInterface.GetAddressDomElement id pmsg ->
+                        ( mo, [] )
             )
             ( model, [] )
 

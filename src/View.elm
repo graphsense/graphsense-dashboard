@@ -19,6 +19,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Route
 import Route.Graph
+import Util.View exposing (hovercard)
 import View.Dialog as Dialog
 import View.Graph.Search as Search
 import View.Graph.Tag as Tag
@@ -116,24 +117,6 @@ sidebar plugins vc model =
         )
 
 
-hovercard : Config -> Dom.Element -> List (Html.Html Msg) -> List (Html Msg)
-hovercard vc element =
-    Hovercard.hovercard
-        { maxWidth = 300
-        , maxHeight = 500
-        , tickLength = 0
-        , borderColor = vc.theme.hovercard.borderColor
-        , backgroundColor = vc.theme.hovercard.backgroundColor
-        , borderWidth = vc.theme.hovercard.borderWidth
-        }
-        element
-        (Css.View.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
-        >> Html.Styled.fromUnstyled
-        >> List.singleton
-
-
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
 hovercards plugins vc model =
     (model.user.hovercardElement
@@ -185,6 +168,7 @@ hovercards plugins vc model =
                     )
                 |> Maybe.withDefault []
            )
+        ++ Plugin.hovercards plugins model.plugins vc
 
 
 overlay : Config -> Model key -> List (Html Msg)

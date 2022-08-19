@@ -47,6 +47,7 @@
             "elm-community/result-extra": "2.4.0",
             "elm-community/string-extra": "4.0.1",
             "elm-explorations/test": "1.2.2",
+            "etaque/elm-form": "4.0.0",
             "ggb/numeral-elm": "1.5.0",
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",

@@ -2,7 +2,7 @@ module Model exposing (..)
 
 import Api.Data
 import Browser exposing (UrlRequest)
-import Browser.Dom as Dom
+import Browser.Dom
 import Config.View
 import Dict exposing (Dict)
 import Effect.Graph
@@ -82,10 +82,11 @@ type Msg
     | UserClickedLogout
     | TimeUpdateReset Time.Posix
     | BrowserGotLoggedOut (Result Http.Error ())
-    | BrowserGotElement (Result Dom.Error Dom.Element)
+    | BrowserGotElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
+    | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | UserClickedStatusbar
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
@@ -106,7 +107,7 @@ showResetCounterAtRemaining =
 type alias UserModel =
     { auth : Auth
     , apiKey : String
-    , hovercardElement : Maybe Dom.Element
+    , hovercardElement : Maybe Browser.Dom.Element
     }
 
 
@@ -125,7 +126,7 @@ type Effect
     | NavPushUrlEffect String
     | GetStatisticsEffect
     | GetConceptsEffect String (List Api.Data.Concept -> Msg)
-    | GetElementEffect { id : String, msg : Result Dom.Error Dom.Element -> Msg }
+    | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect

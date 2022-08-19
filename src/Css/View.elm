@@ -59,7 +59,7 @@ primary vc =
 
 danger : Config -> List Style
 danger vc =
-    button vc ++ vc.theme.button.primary
+    button vc ++ vc.theme.button.danger
 
 
 disabled : Config -> List Style
