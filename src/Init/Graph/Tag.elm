@@ -11,6 +11,7 @@ import RecordSetter exposing (..)
 initAddressTag : AddressId -> Dom.Element -> Maybe UserTag -> Model
 initAddressTag id element existing =
     { input = initInput (Address id) existing
+    , existing = existing
     , hovercardElement = element
     }
 
@@ -18,6 +19,7 @@ initAddressTag id element existing =
 initEntityTag : EntityId -> Dom.Element -> Maybe UserTag -> Model
 initEntityTag id element existing =
     { input = initInput (Entity id) existing
+    , existing = existing
     , hovercardElement = element
     }
 

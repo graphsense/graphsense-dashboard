@@ -258,3 +258,4 @@ proprietary tag: Proprietäres Tag
 "{2}: loading entity link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
 "Please try again with a lower depth/breadth setting.": "Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite."
 defines entity: definiert Entität
+delete: löschen

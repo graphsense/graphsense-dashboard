@@ -11,6 +11,7 @@ import Model.Search as Search
 
 type alias Model =
     { input : Input
+    , existing : Maybe UserTag
     , hovercardElement : Dom.Element
     }
 

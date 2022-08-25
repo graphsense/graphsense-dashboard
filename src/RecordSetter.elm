@@ -539,6 +539,11 @@ s_buttons value__ record__ =
     { record__ | buttons = value__ }
 
 
+s_buttonsRow : a -> { b | buttonsRow : a } -> { b | buttonsRow : a }
+s_buttonsRow value__ record__ =
+    { record__ | buttonsRow = value__ }
+
+
 s_bytes : a -> { b | bytes : a } -> { b | bytes : a }
 s_bytes value__ record__ =
     { record__ | bytes = value__ }
@@ -902,6 +907,11 @@ s_customizations value__ record__ =
 s_danger : a -> { b | danger : a } -> { b | danger : a }
 s_danger value__ record__ =
     { record__ | danger = value__ }
+
+
+s_dark : a -> { b | dark : a } -> { b | dark : a }
+s_dark value__ record__ =
+    { record__ | dark = value__ }
 
 
 s_data : a -> { b | data : a } -> { b | data : a }
@@ -2387,6 +2397,11 @@ s_lengthOrNumberOrAutoOrNoneOrContent value__ record__ =
 s_level : a -> { b | level : a } -> { b | level : a }
 s_level value__ record__ =
     { record__ | level = value__ }
+
+
+s_light : a -> { b | light : a } -> { b | light : a }
+s_light value__ record__ =
+    { record__ | light = value__ }
 
 
 s_lightmode : a -> { b | lightmode : a } -> { b | lightmode : a }

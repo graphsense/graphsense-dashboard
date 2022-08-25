@@ -48,6 +48,7 @@ type alias Theme =
     , statusbar : Statusbar
     , footer : List Style
     , hovercard : Bool -> Hovercard
+    , buttonsRow : List Style
     , custom : String
     }
 
@@ -86,6 +87,7 @@ default =
     , browser = Browser.default
     , contextMenu = ContextMenu.default
     , table = Table.default
+    , buttonsRow = []
     , custom = ""
     }
 

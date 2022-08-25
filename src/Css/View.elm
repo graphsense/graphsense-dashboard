@@ -131,3 +131,10 @@ footer vc =
         :: width (pct 100)
         :: Util.Css.zIndexMain
         :: vc.theme.footer
+
+
+buttonsRow : Config -> List Style
+buttonsRow vc =
+    displayFlex
+        :: justifyContent spaceBetween
+        :: vc.theme.buttonsRow

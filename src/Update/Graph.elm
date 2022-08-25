@@ -1048,49 +1048,17 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClicksDeleteTag ->
+            model.tag
+                |> Maybe.andThen .existing
+                |> Maybe.map (\tag -> deleteUserTag tag model)
+                |> Maybe.withDefault model
+                |> n
+
         UserSubmitsTagInput ->
             model.tag
                 |> Maybe.andThen
-                    (\tag ->
-                        let
-                            ( currency, address, isClusterDefiner ) =
-                                case tag.input.id of
-                                    Node.Address a ->
-                                        ( Id.currency a
-                                        , Just (Id.addressId a)
-                                        , False
-                                        )
-
-                                    Node.Entity a ->
-                                        ( Id.currency a
-                                        , Layer.getEntity a model.layers
-                                            |> Maybe.map (.entity >> .rootAddress)
-                                        , True
-                                        )
-                        in
-                        address
-                            |> Maybe.map
-                                (\addr ->
-                                    { label = tag.input.label.input
-                                    , category =
-                                        if String.isEmpty tag.input.category then
-                                            Nothing
-
-                                        else
-                                            Just tag.input.category
-                                    , abuse =
-                                        if String.isEmpty tag.input.abuse then
-                                            Nothing
-
-                                        else
-                                            Just tag.input.abuse
-                                    , source = tag.input.source
-                                    , currency = currency
-                                    , address = addr
-                                    , isClusterDefiner = isClusterDefiner
-                                    }
-                                )
-                    )
+                    (.input >> tagInputToUserTag model)
                 |> Maybe.map (\tag -> storeUserTag uc tag model)
                 |> Maybe.withDefault model
                 |> n
@@ -2699,6 +2667,48 @@ storeUserTag uc tag model =
                 (\a -> { a | userTag = Just tag })
 
 
+deleteUserTag : Tag.UserTag -> Model -> Model
+deleteUserTag tag model =
+    let
+        flag =
+            if tag.isClusterDefiner then
+                "entity"
+
+            else
+                "address"
+
+        userAddressTags =
+            Dict.remove ( tag.currency, tag.address, flag ) model.userAddressTags
+    in
+    { model
+        | userAddressTags =
+            userAddressTags
+        , tag = Nothing
+        , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
+    }
+        |> updateLegend
+        |> updateAddresses { currency = tag.currency, address = tag.address }
+            (\a ->
+                { a
+                    | userTag =
+                        if Maybe.map .isClusterDefiner a.userTag == Just tag.isClusterDefiner then
+                            Nothing
+
+                        else
+                            a.userTag
+                }
+            )
+        |> updateEntitiesIf
+            (\e ->
+                tag.isClusterDefiner
+                    && e.entity.currency
+                    == tag.currency
+                    && e.entity.rootAddress
+                    == tag.address
+            )
+            (\a -> { a | userTag = Nothing })
+
+
 updateLegend : Model -> Model
 updateLegend model =
     { model
@@ -3243,3 +3253,45 @@ deselectHighlighter model =
             model.config
                 |> s_highlighter False
     }
+
+
+tagInputToUserTag : Model -> Tag.Input -> Maybe Tag.UserTag
+tagInputToUserTag model input =
+    let
+        ( currency, address, isClusterDefiner ) =
+            case input.id of
+                Node.Address a ->
+                    ( Id.currency a
+                    , Just (Id.addressId a)
+                    , False
+                    )
+
+                Node.Entity a ->
+                    ( Id.currency a
+                    , Layer.getEntity a model.layers
+                        |> Maybe.map (.entity >> .rootAddress)
+                    , True
+                    )
+    in
+    address
+        |> Maybe.map
+            (\addr ->
+                { label = input.label.input
+                , category =
+                    if String.isEmpty input.category then
+                        Nothing
+
+                    else
+                        Just input.category
+                , abuse =
+                    if String.isEmpty input.abuse then
+                        Nothing
+
+                    else
+                        Just input.abuse
+                , source = input.source
+                , currency = currency
+                , address = addr
+                , isClusterDefiner = isClusterDefiner
+                }
+            )
