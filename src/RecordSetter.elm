@@ -2544,6 +2544,11 @@ s_logo value__ record__ =
     { record__ | logo = value__ }
 
 
+s_logo_lightmode : a -> { b | logo_lightmode : a } -> { b | logo_lightmode : a }
+s_logo_lightmode value__ record__ =
+    { record__ | logo_lightmode = value__ }
+
+
 s_logoutButton : a -> { b | logoutButton : a } -> { b | logoutButton : a }
 s_logoutButton value__ record__ =
     { record__ | logoutButton = value__ }

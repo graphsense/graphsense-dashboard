@@ -52,7 +52,12 @@ logo vc =
     div
         [ Css.headerLogoWrap vc |> css ]
         [ img
-            [ src <| vc.theme.logo vc.lightmode
+            [ src <|
+                if vc.lightmode then
+                    vc.theme.logo_lightmode
+
+                else
+                    vc.theme.logo
             , Css.headerLogo vc |> css
             ]
             []

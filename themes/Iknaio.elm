@@ -161,15 +161,7 @@ theme =
                 ]
             )
         |> s_loadingSpinner [ loadingSpinner ]
-        |> s_logo
-            (\lightmode ->
-                if lightmode then
-                    "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_light.svg]"
-
-                else
-                    "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_light.svg]"
-                        |> String.replace "_light" ""
-            )
+        |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
         |> s_popup
             (\lightmode ->
                 [ scaled 5 |> rem |> padding
@@ -178,6 +170,7 @@ theme =
                 , borderRadius <| px 5
                 ]
             )
+        |> s_logo_lightmode "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_light.svg]"
         |> s_overlay
             [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
             ]

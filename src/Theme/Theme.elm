@@ -17,7 +17,8 @@ import Theme.User as User exposing (User)
 
 type alias Theme =
     { scaled : Float -> Float
-    , logo : Bool -> String
+    , logo : String
+    , logo_lightmode : String
     , body : Bool -> List Style
     , sectionBelowHeader : List Style
     , header : Bool -> List Style
@@ -56,7 +57,8 @@ type alias Theme =
 default : Theme
 default =
     { scaled = (*) 1
-    , logo = \_ -> ""
+    , logo = ""
+    , logo_lightmode = ""
     , body = \_ -> []
     , sectionBelowHeader = []
     , header = \_ -> []
