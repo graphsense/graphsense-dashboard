@@ -228,7 +228,7 @@ not found: Nicht gefunden
 data error: Datenfehler
 this table is empty: Diese Tabelle ist leer
 "Do you want to start from scratch?": "Wirklich neu loslegen?"
-tag locked: Tag unfrei
+proprietary tag: Proprietäres Tag
 "{1}: loading concepts for taxonomy {0}": "{1}: lade Konzepte zur Taxonomie {0}"
 "{1}: searching for {0}": "{1}: suche nach {0}"
 "{1}: loading address {0}": "{1}: lade Adresse {0}"
