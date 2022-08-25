@@ -25,7 +25,7 @@ init plugins flags url key =
       , config =
             { locale = locale
             , theme = config.theme
-            , lightmode = True
+            , lightmode = False
             }
       , locale = locale
       , page = Stats
