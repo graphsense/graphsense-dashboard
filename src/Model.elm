@@ -80,6 +80,7 @@ type Msg
     | UserClickedLayout
     | UserClickedNo
     | UserClickedLogout
+    | UserClickedLightmode
     | TimeUpdateReset Time.Posix
     | BrowserGotLoggedOut (Result Http.Error ())
     | BrowserGotElement (Result Browser.Dom.Error Browser.Dom.Element)

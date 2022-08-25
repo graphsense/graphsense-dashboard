@@ -18,7 +18,7 @@ tableRoot vc =
 
 sidebar : Config -> List Style
 sidebar vc =
-    vc.theme.table.sidebar
+    vc.theme.table.sidebar vc.lightmode
 
 
 filter : Config -> List Style
@@ -28,7 +28,7 @@ filter vc =
 
 filterInput : Config -> List Style
 filterInput vc =
-    vc.theme.table.filterInput
+    vc.theme.table.filterInput vc.lightmode
 
 
 table : Config -> List Style
@@ -53,7 +53,7 @@ headCellSortable vc =
 
 row : Config -> List Style
 row vc =
-    vc.theme.table.row
+    vc.theme.table.row vc.lightmode
 
 
 cell : Config -> List Style
@@ -63,7 +63,7 @@ cell vc =
 
 valuesCell : Config -> Bool -> List Style
 valuesCell vc isNegative =
-    vc.theme.table.valuesCell isNegative
+    vc.theme.table.valuesCell vc.lightmode isNegative
 
 
 numberCell : Config -> List Style

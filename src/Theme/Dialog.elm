@@ -4,25 +4,25 @@ import Css exposing (Style)
 
 
 type alias Dialog =
-    { dialog : List Style
+    { dialog : Bool -> List Style
     , buttons : List Style
     , heading : List Style
     , part : List Style
-    , headRow : List Style
+    , headRow : Bool -> List Style
     , body : List Style
     , headRowText : List Style
-    , headRowClose : List Style
+    , headRowClose : Bool -> List Style
     }
 
 
 default : Dialog
 default =
-    { dialog = []
+    { dialog = \_ -> []
     , buttons = []
     , heading = []
     , part = []
-    , headRow = []
+    , headRow = \_ -> []
     , body = []
     , headRowText = []
-    , headRowClose = []
+    , headRowClose = \_ -> []
     }

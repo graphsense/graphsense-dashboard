@@ -158,6 +158,14 @@ update plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedLightmode ->
+            { model
+                | config =
+                    model.config
+                        |> s_lightmode (not model.config.lightmode)
+            }
+                |> n
+
         UserInputsApiKeyForm input ->
             { model
                 | user =

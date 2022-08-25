@@ -6,7 +6,7 @@ import Css exposing (..)
 
 root : Config -> List Style
 root vc =
-    vc.theme.user.root
+    vc.theme.user.root vc.lightmode
 
 
 hovercardRoot : Config -> List Style
@@ -31,4 +31,4 @@ requestReset vc =
 
 logoutButton : Config -> List Style
 logoutButton vc =
-    vc.theme.user.logoutButton
+    vc.theme.user.logoutButton vc.lightmode

@@ -4,17 +4,17 @@ import Css exposing (Style)
 
 
 type alias Button =
-    { button : List Style
-    , primary : List Style
-    , danger : List Style
-    , disabled : List Style
+    { button : Bool -> List Style
+    , primary : Bool -> List Style
+    , danger : Bool -> List Style
+    , disabled : Bool -> List Style
     }
 
 
 default : Button
 default =
-    { button = []
-    , primary = []
-    , danger = []
-    , disabled = []
+    { button = \_ -> []
+    , primary = \_ -> []
+    , danger = \_ -> []
+    , disabled = \_ -> []
     }

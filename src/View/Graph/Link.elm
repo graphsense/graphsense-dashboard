@@ -267,15 +267,15 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
                         |> (\x -> String.fromFloat x ++ "px")
                         |> property "stroke-width"
                    , (if hovered then
-                        vc.theme.graph.linkColorStrong
+                        vc.theme.graph.linkColorStrong vc.lightmode
 
                       else if selected then
-                        vc.theme.graph.linkColorSelected
+                        vc.theme.graph.linkColorSelected vc.lightmode
 
                       else
                         color
                             |> Maybe.withDefault
-                                vc.theme.graph.linkColorFaded
+                                (vc.theme.graph.linkColorFaded vc.lightmode)
                      )
                         |> arrowMarkerId
                         |> List.singleton

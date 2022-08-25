@@ -190,9 +190,9 @@ overlay vc model =
                             { maxWidth = 300
                             , maxHeight = 500
                             , tickLength = 0
-                            , borderColor = vc.theme.hovercard.borderColor
-                            , backgroundColor = vc.theme.hovercard.backgroundColor
-                            , borderWidth = vc.theme.hovercard.borderWidth
+                            , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
+                            , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
+                            , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
                             }
                             element
                             (Css.View.hovercard vc

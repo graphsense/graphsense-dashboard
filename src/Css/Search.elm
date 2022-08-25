@@ -24,7 +24,7 @@ textarea vc input =
     , resize none
     , rem 25 |> width
     ]
-        ++ vc.theme.search.textarea input
+        ++ vc.theme.search.textarea vc.lightmode input
 
 
 result : Config -> List Style
@@ -32,7 +32,7 @@ result vc =
     [ position absolute
     , zIndex <| int 200
     ]
-        ++ vc.theme.search.result
+        ++ vc.theme.search.result vc.lightmode
 
 
 loadingSpinner : Config -> List Style
@@ -60,7 +60,7 @@ resultGroupList vc =
 resultLine : Config -> List Style
 resultLine vc =
     cursor pointer
-        :: vc.theme.search.resultLine
+        :: vc.theme.search.resultLine vc.lightmode
 
 
 resultLineIcon : Config -> List Style
