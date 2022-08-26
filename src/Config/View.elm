@@ -11,4 +11,5 @@ import Theme.Theme exposing (Theme)
 type alias Config =
     { theme : Theme
     , locale : Locale.Model
+    , lightmode : Bool
     }

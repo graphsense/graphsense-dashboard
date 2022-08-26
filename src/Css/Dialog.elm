@@ -6,7 +6,7 @@ import Css exposing (..)
 
 dialog : Config -> List Style
 dialog vc =
-    vc.theme.dialog.dialog
+    vc.theme.dialog.dialog vc.lightmode
 
 
 buttons : Config -> List Style
@@ -26,7 +26,7 @@ heading vc =
 
 headRow : Config -> List Style
 headRow vc =
-    vc.theme.dialog.headRow
+    vc.theme.dialog.headRow vc.lightmode
 
 
 body : Config -> List Style
@@ -41,4 +41,4 @@ headRowText vc =
 
 headRowClose : Config -> List Style
 headRowClose vc =
-    vc.theme.dialog.headRowClose
+    vc.theme.dialog.headRowClose vc.lightmode

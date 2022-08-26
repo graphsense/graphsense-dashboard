@@ -6,21 +6,21 @@ import Css exposing (Style)
 
 type alias Browser =
     { root : List Style
-    , frame : Bool -> List Style
+    , frame : Bool -> Bool -> List Style
     , propertyBoxRoot : List Style
     , propertyBoxTable : List Style
-    , propertyBoxRow : List Style
+    , propertyBoxRow : Bool -> List Style
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
     , propertyBoxValueInner : List Style
-    , propertyBoxEntityId : List Style
+    , propertyBoxEntityId : Bool -> List Style
     , propertyBoxRule : List Style
-    , propertyBoxIncomingTxs : List Style
-    , propertyBoxOutgoingTxs : List Style
+    , propertyBoxIncomingTxs : Bool -> List Style
+    , propertyBoxOutgoingTxs : Bool -> List Style
     , propertyBoxUsageTimestamp : List Style
     , propertyBoxUsageRelative : List Style
     , propertyBoxActivityPeriod : List Style
-    , propertyBoxTableLink : Bool -> List Style
+    , propertyBoxTableLink : Bool -> Bool -> List Style
     , loadingSpinner : List Style
     }
 
@@ -28,20 +28,20 @@ type alias Browser =
 default : Browser
 default =
     { root = []
-    , frame = \_ -> []
+    , frame = \_ _ -> []
     , propertyBoxRoot = []
     , propertyBoxTable = []
-    , propertyBoxRow = []
+    , propertyBoxRow = \_ -> []
     , propertyBoxKey = []
     , propertyBoxValue = []
     , propertyBoxValueInner = []
-    , propertyBoxEntityId = []
+    , propertyBoxEntityId = \_ -> []
     , propertyBoxRule = []
-    , propertyBoxIncomingTxs = []
-    , propertyBoxOutgoingTxs = []
+    , propertyBoxIncomingTxs = \_ -> []
+    , propertyBoxOutgoingTxs = \_ -> []
     , propertyBoxUsageTimestamp = []
     , propertyBoxUsageRelative = []
     , propertyBoxActivityPeriod = []
-    , propertyBoxTableLink = \_ -> []
+    , propertyBoxTableLink = \_ _ -> []
     , loadingSpinner = []
     }

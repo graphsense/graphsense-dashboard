@@ -25,7 +25,7 @@ import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
-import Update.Graph.Table exposing (appendData, applyFilter)
+import Update.Graph.Table exposing (appendData, applyFilter, setData)
 import Update.Search as Search
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -815,7 +815,7 @@ updateUserTags tags model =
             { model
                 | type_ =
                     table
-                        |> s_data tags
+                        |> setData tags
                         |> UserTags
             }
 

@@ -18,6 +18,7 @@ type alias View modelState addressState entityState msg =
     , searchResultList : Maybe (View.Config -> modelState -> List (Html msg))
     , sidebar : Maybe (View.Config -> Bool -> modelState -> List (Html msg))
     , main : Maybe (View.Config -> modelState -> Html msg)
+    , hovercards : Maybe (View.Config -> modelState -> List (Html msg))
     }
 
 
@@ -34,4 +35,5 @@ init =
     , searchResultList = Nothing
     , sidebar = Nothing
     , main = Nothing
+    , hovercards = Nothing
     }

@@ -18,7 +18,7 @@
     "level": "^8.0.0",
     "setem": "^0.3.6",
     "vite": "^2.9.0",
-    "vite-plugin-elm": "^2.6.0"
+    "vite-plugin-elm": "^2.7.2"
   },
   "dependencies": {
     "file-saver": "^2.0.5",

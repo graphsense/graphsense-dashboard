@@ -371,6 +371,9 @@ updateByMsg plugins uc msg model =
             )
                 |> n
 
+        UserPressesEscape ->
+            deselectHighlighter model |> n
+
         UserClickedAddress id ->
             case Highlighter.getSelectedColor model.highlights of
                 Nothing ->
@@ -1045,51 +1048,17 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClicksDeleteTag ->
+            model.tag
+                |> Maybe.andThen .existing
+                |> Maybe.map (\tag -> deleteUserTag tag model)
+                |> Maybe.withDefault model
+                |> n
+
         UserSubmitsTagInput ->
             model.tag
                 |> Maybe.andThen
-                    (\tag ->
-                        let
-                            ( currency, address ) =
-                                case tag.input.id of
-                                    Node.Address a ->
-                                        ( Id.currency a, Just (Id.addressId a) )
-
-                                    Node.Entity a ->
-                                        ( Id.currency a
-                                        , Layer.getEntity a model.layers
-                                            |> Maybe.map (.entity >> .rootAddress)
-                                        )
-                        in
-                        address
-                            |> Maybe.map
-                                (\addr ->
-                                    { label = tag.input.label.input
-                                    , category =
-                                        if String.isEmpty tag.input.category then
-                                            Nothing
-
-                                        else
-                                            Just tag.input.category
-                                    , abuse =
-                                        if String.isEmpty tag.input.abuse then
-                                            Nothing
-
-                                        else
-                                            Just tag.input.abuse
-                                    , source = tag.input.source
-                                    , currency = currency
-                                    , address = addr
-                                    , isClusterDefiner =
-                                        case tag.input.id of
-                                            Node.Address _ ->
-                                                False
-
-                                            Node.Entity _ ->
-                                                True
-                                    }
-                                )
-                    )
+                    (.input >> tagInputToUserTag model)
                 |> Maybe.map (\tag -> storeUserTag uc tag model)
                 |> Maybe.withDefault model
                 |> n
@@ -1130,6 +1099,7 @@ updateByMsg plugins uc msg model =
                 { address = address
                 , currency = Id.currency entityId
                 , toMsg = BrowserGotAddressForEntity entityId
+                , suppressErrors = False
                 }
                 |> List.singleton
             )
@@ -1137,7 +1107,13 @@ updateByMsg plugins uc msg model =
         UserClickedAddressInTable { address, currency } ->
             model
                 |> s_selectIfLoaded Nothing
-                |> loadAddress plugins currency address Nothing Nothing
+                |> loadAddress plugins
+                    { currency = currency
+                    , address = address
+                    , table = Nothing
+                    , layer = Nothing
+                    , suppressErrors = False
+                    }
 
         BrowserGotAddressForEntity entityId address ->
             addAddressesAtEntity plugins uc entityId [ address ] model
@@ -1355,7 +1331,15 @@ updateByMsg plugins uc msg model =
         UserClickedHighlighter id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Highlighter, Just ( el, vis ) ) ->
-                    toolVisible model el vis
+                    toolVisible
+                        (if vis then
+                            deselectHighlighter model
+
+                         else
+                            model
+                        )
+                        el
+                        vis
 
                 _ ->
                     getToolElement model id BrowserGotHighlighterElement
@@ -1733,12 +1717,6 @@ updateByMsg plugins uc msg model =
                     , entities = List.map .entity deser.entities
                     , toMsg = BrowserGotBulkEntityNeighbors currency True
                     }
-              , BulkGetEntityNeighborsEffect
-                    { currency = currency
-                    , isOutgoing = False
-                    , entities = List.map .entity deser.entities
-                    , toMsg = BrowserGotBulkEntityNeighbors currency False
-                    }
               , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
@@ -2089,7 +2067,13 @@ updateByRoute plugins route model =
         Route.Currency currency (Route.Address a table layer) ->
             model
                 |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = a }))
-                |> loadAddress plugins currency a table layer
+                |> loadAddress plugins
+                    { currency = currency
+                    , address = a
+                    , table = table
+                    , layer = layer
+                    , suppressErrors = False
+                    }
 
         Route.Currency currency (Route.Entity e table layer) ->
             layer
@@ -2641,8 +2625,15 @@ storeUserTag uc tag model =
                 tag.category
                     |> Color.update uc model.config.colors
 
+            flag =
+                if tag.isClusterDefiner then
+                    "entity"
+
+                else
+                    "address"
+
             userAddressTags =
-                Dict.insert ( tag.currency, tag.address ) tag model.userAddressTags
+                Dict.insert ( tag.currency, tag.address, flag ) tag model.userAddressTags
         in
         { model
             | userAddressTags =
@@ -2654,7 +2645,17 @@ storeUserTag uc tag model =
             , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
         }
             |> updateLegend
-            |> updateAddresses { currency = tag.currency, address = tag.address } (\a -> { a | userTag = Just tag })
+            |> updateAddresses { currency = tag.currency, address = tag.address }
+                (\a ->
+                    { a
+                        | userTag =
+                            if a.userTag == Nothing || not tag.isClusterDefiner then
+                                Just tag
+
+                            else
+                                a.userTag
+                    }
+                )
             |> updateEntitiesIf
                 (\e ->
                     tag.isClusterDefiner
@@ -2664,6 +2665,48 @@ storeUserTag uc tag model =
                         == tag.address
                 )
                 (\a -> { a | userTag = Just tag })
+
+
+deleteUserTag : Tag.UserTag -> Model -> Model
+deleteUserTag tag model =
+    let
+        flag =
+            if tag.isClusterDefiner then
+                "entity"
+
+            else
+                "address"
+
+        userAddressTags =
+            Dict.remove ( tag.currency, tag.address, flag ) model.userAddressTags
+    in
+    { model
+        | userAddressTags =
+            userAddressTags
+        , tag = Nothing
+        , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
+    }
+        |> updateLegend
+        |> updateAddresses { currency = tag.currency, address = tag.address }
+            (\a ->
+                { a
+                    | userTag =
+                        if Maybe.map .isClusterDefiner a.userTag == Just tag.isClusterDefiner then
+                            Nothing
+
+                        else
+                            a.userTag
+                }
+            )
+        |> updateEntitiesIf
+            (\e ->
+                tag.isClusterDefiner
+                    && e.entity.currency
+                    == tag.currency
+                    && e.entity.rootAddress
+                    == tag.address
+            )
+            (\a -> { a | userTag = Nothing })
 
 
 updateLegend : Model -> Model
@@ -2759,6 +2802,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
+
+                    PluginInterface.GetAddressDomElement id pmsg ->
+                        ( mo, [] )
             )
             ( model, [] )
 
@@ -2807,13 +2853,17 @@ refreshBrowserEntity id model =
     }
 
 
-addUserTag : Set Id.AddressId -> Dict ( String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
+addUserTag : Set Id.AddressId -> Dict ( String, String, String ) Tag.UserTag -> IntDict Layer -> IntDict Layer
 addUserTag ids userTags layers =
     ids
         |> Set.toList
         |> List.foldl
             (\id layers_ ->
-                Dict.get ( Id.currency id, Id.addressId id ) userTags
+                Dict.get ( Id.currency id, Id.addressId id, "address" ) userTags
+                    |> Maybe.Extra.orElseLazy
+                        (\_ ->
+                            Dict.get ( Id.currency id, Id.addressId id, "entity" ) userTags
+                        )
                     |> Maybe.map (\tag -> Layer.updateAddress id (\a -> { a | userTag = Just tag }) layers_)
                     |> Maybe.withDefault layers_
             )
@@ -3105,26 +3155,36 @@ addAddressesAtEntity plugins uc entityId addresses model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-loadAddress : Plugins -> String -> String -> Maybe Route.AddressTable -> Maybe Int -> Model -> ( Model, List Effect )
-loadAddress plugins currency a table layer model =
+loadAddress :
+    Plugins
+    ->
+        { currency : String
+        , address : String
+        , table : Maybe Route.AddressTable
+        , layer : Maybe Int
+        , suppressErrors : Bool
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadAddress plugins { currency, address, table, layer, suppressErrors } model =
     layer
         |> Maybe.andThen
-            (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = a, layer = l }) model.layers)
+            (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = l }) model.layers)
         |> Maybe.Extra.orElseLazy
-            (\_ -> Layer.getFirstAddress { currency = currency, address = a } model.layers)
+            (\_ -> Layer.getFirstAddress { currency = currency, address = address } model.layers)
         |> Maybe.map
-            (\address ->
-                selectAddress address table model
+            (\a ->
+                selectAddress a table model
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
                 let
                     select =
-                        model.selectIfLoaded == Just (SelectAddress { currency = currency, address = a })
+                        model.selectIfLoaded == Just (SelectAddress { currency = currency, address = address })
 
                     browser =
                         if select then
-                            Browser.loadingAddress { currency = currency, address = a } model.browser
+                            Browser.loadingAddress { currency = currency, address = address } model.browser
 
                         else
                             model.browser
@@ -3139,18 +3199,20 @@ loadAddress plugins currency a table layer model =
                             n browser
                 in
                 ( { model
-                    | adding = Adding.loadAddress { currency = currency, address = a } model.adding
+                    | adding = Adding.loadAddress { currency = currency, address = address } model.adding
                     , browser = browser2
                   }
                 , [ GetEntityForAddressEffect
-                        { address = a
+                        { address = address
                         , currency = currency
-                        , toMsg = BrowserGotEntityForAddress a
+                        , toMsg = BrowserGotEntityForAddress address
+                        , suppressErrors = suppressErrors
                         }
                   , GetAddressEffect
-                        { address = a
+                        { address = address
                         , currency = currency
                         , toMsg = BrowserGotAddress
+                        , suppressErrors = suppressErrors
                         }
                   ]
                     ++ effects
@@ -3177,3 +3239,59 @@ normalizeDeserializedEntityTag entities entityTag =
                         , isClusterDefiner = True
                         }
                     )
+
+
+deselectHighlighter : Model -> Model
+deselectHighlighter model =
+    let
+        highlights =
+            Highlighter.deselect model.highlights
+    in
+    { model
+        | highlights = highlights
+        , config =
+            model.config
+                |> s_highlighter False
+    }
+
+
+tagInputToUserTag : Model -> Tag.Input -> Maybe Tag.UserTag
+tagInputToUserTag model input =
+    let
+        ( currency, address, isClusterDefiner ) =
+            case input.id of
+                Node.Address a ->
+                    ( Id.currency a
+                    , Just (Id.addressId a)
+                    , False
+                    )
+
+                Node.Entity a ->
+                    ( Id.currency a
+                    , Layer.getEntity a model.layers
+                        |> Maybe.map (.entity >> .rootAddress)
+                    , True
+                    )
+    in
+    address
+        |> Maybe.map
+            (\addr ->
+                { label = input.label.input
+                , category =
+                    if String.isEmpty input.category then
+                        Nothing
+
+                    else
+                        Just input.category
+                , abuse =
+                    if String.isEmpty input.abuse then
+                        Nothing
+
+                    else
+                        Just input.abuse
+                , source = input.source
+                , currency = currency
+                , address = addr
+                , isClusterDefiner = isClusterDefiner
+                }
+            )

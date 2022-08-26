@@ -1,5 +1,6 @@
-module Theme.Theme exposing (Theme, default)
+module Theme.Theme exposing (..)
 
+import Color
 import Css exposing (Style)
 import Theme.Browser as Browser exposing (Browser)
 import Theme.Button as Button exposing (Button)
@@ -17,23 +18,24 @@ import Theme.User as User exposing (User)
 type alias Theme =
     { scaled : Float -> Float
     , logo : String
-    , body : List Style
+    , logo_lightmode : String
+    , body : Bool -> List Style
     , sectionBelowHeader : List Style
-    , header : List Style
+    , header : Bool -> List Style
     , headerLogo : List Style
     , headerLogoWrap : List Style
     , headerTitle : List Style
     , heading2 : List Style
-    , inputRaw : Maybe Float -> List ( String, String )
+    , inputRaw : Bool -> Maybe Float -> List ( String, String )
     , addonsNav : List Style
-    , sidebar : List Style
-    , sidebarIcon : Bool -> List Style
-    , main : List Style
-    , link : List Style
+    , sidebar : Bool -> List Style
+    , sidebarIcon : Bool -> Bool -> List Style
+    , main : Bool -> List Style
+    , link : Bool -> List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
     , overlay : List Style
-    , popup : List Style
+    , popup : Bool -> List Style
     , stats : Stats
     , search : Search
     , button : Button
@@ -46,7 +48,8 @@ type alias Theme =
     , user : User
     , statusbar : Statusbar
     , footer : List Style
-    , hovercard : Hovercard
+    , hovercard : Bool -> Hovercard
+    , buttonsRow : List Style
     , custom : String
     }
 
@@ -55,28 +58,29 @@ default : Theme
 default =
     { scaled = (*) 1
     , logo = ""
-    , body = []
+    , logo_lightmode = ""
+    , body = \_ -> []
     , sectionBelowHeader = []
-    , header = []
+    , header = \_ -> []
     , heading2 = []
-    , inputRaw = \_ -> []
+    , inputRaw = \_ _ -> []
     , headerLogo = []
     , headerLogoWrap = []
     , headerTitle = []
     , addonsNav = []
-    , sidebar = []
-    , sidebarIcon = \_ -> []
-    , main = []
-    , link = []
+    , sidebar = \_ -> []
+    , sidebarIcon = \_ _ -> []
+    , main = \_ -> []
+    , link = \_ -> []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""
     , overlay = []
-    , popup = []
+    , popup = \_ -> []
     , stats = Stats.default
     , search = Search.default
     , button = Button.default
     , tool = []
-    , hovercard = Hovercard.default
+    , hovercard = \_ -> Hovercard.default
     , dialog = Dialog.default
     , user = User.default
     , statusbar = Statusbar.default
@@ -85,5 +89,12 @@ default =
     , browser = Browser.default
     , contextMenu = ContextMenu.default
     , table = Table.default
+    , buttonsRow = []
     , custom = ""
+    }
+
+
+type alias SwitchableColor =
+    { dark : Color.Color
+    , light : Color.Color
     }

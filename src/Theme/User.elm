@@ -4,21 +4,21 @@ import Css exposing (Style)
 
 
 type alias User =
-    { root : List Style
+    { root : Bool -> List Style
     , hovercardRoot : List Style
     , requestLimitRoot : List Style
     , requestLimit : List Style
     , requestReset : List Style
-    , logoutButton : List Style
+    , logoutButton : Bool -> List Style
     }
 
 
 default : User
 default =
-    { root = []
+    { root = \_ -> []
     , hovercardRoot = []
     , requestLimitRoot = []
     , requestLimit = []
     , requestReset = []
-    , logoutButton = []
+    , logoutButton = \_ -> []
     }

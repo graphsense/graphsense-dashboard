@@ -19,12 +19,12 @@ stats vc =
 
 currency : Config -> List Style
 currency vc =
-    vc.theme.stats.currency
+    vc.theme.stats.currency vc.lightmode
 
 
 currencyHeading : Config -> List Style
 currencyHeading vc =
-    vc.theme.stats.currencyHeading
+    vc.theme.stats.currencyHeading vc.lightmode
 
 
 statsTableWrapper : Config -> List Style

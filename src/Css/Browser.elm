@@ -20,7 +20,7 @@ frame vc visible =
             else
                 display none
            )
-        :: vc.theme.browser.frame visible
+        :: vc.theme.browser.frame vc.lightmode visible
 
 
 propertyBoxRoot : Config -> List Style
@@ -41,7 +41,7 @@ propertyBoxRow : Config -> List Style
 propertyBoxRow vc =
     display tableRow
         :: position relative
-        :: vc.theme.browser.propertyBoxRow
+        :: vc.theme.browser.propertyBoxRow vc.lightmode
 
 
 propertyBoxKey : Config -> List Style
@@ -63,7 +63,7 @@ propertyBoxValueInner vc =
 
 propertyBoxEntityId : Config -> List Style
 propertyBoxEntityId vc =
-    vc.theme.browser.propertyBoxEntityId
+    vc.theme.browser.propertyBoxEntityId vc.lightmode
 
 
 propertyBoxRule : Config -> List Style
@@ -73,12 +73,12 @@ propertyBoxRule vc =
 
 propertyBoxIncomingTxs : Config -> List Style
 propertyBoxIncomingTxs vc =
-    vc.theme.browser.propertyBoxIncomingTxs
+    vc.theme.browser.propertyBoxIncomingTxs vc.lightmode
 
 
 propertyBoxOutgoingTxs : Config -> List Style
 propertyBoxOutgoingTxs vc =
-    vc.theme.browser.propertyBoxOutgoingTxs
+    vc.theme.browser.propertyBoxOutgoingTxs vc.lightmode
 
 
 propertyBoxUsageTimestamp : Config -> List Style
@@ -100,7 +100,7 @@ propertyBoxTableLink : Config -> Bool -> List Style
 propertyBoxTableLink vc active =
     position absolute
         :: right (px 0)
-        :: vc.theme.browser.propertyBoxTableLink active
+        :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
 
 
 loadingSpinner : Config -> List Style

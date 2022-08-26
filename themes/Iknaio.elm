@@ -19,56 +19,64 @@ import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
 import Tuple exposing (..)
+import Util.Theme
+    exposing
+        ( backgroundColorWithLightmode
+        , borderColor_backgroundColorWithLightmode
+        , colorWithLightmode
+        , color_backgroundColorWithLightmode
+        , switchColor
+        )
 import Util.View exposing (toCssColor)
 import VitePluginHelper
 
 
 type alias Colors =
-    { black : Color.Color
-    , greyDarkest : Color.Color
-    , greyDarker : Color.Color
-    , greyDark : Color.Color
-    , grey : Color.Color
-    , greyLight : Color.Color
-    , greyLighter : Color.Color
-    , greyLightest : Color.Color
-    , white : Color.Color
-    , red : Color.Color
-    , brandText : Color.Color
-    , brandDarker : Color.Color
-    , brandDark : Color.Color
-    , brandBase : Color.Color
-    , brandLight : Color.Color
-    , brandLighter : Color.Color
-    , brandLightest : Color.Color
-    , brandRed : Color.Color
-    , brandRedLight : Color.Color
-    , brandWhite : Color.Color
+    { black : Theme.SwitchableColor
+    , greyDarkest : Theme.SwitchableColor
+    , greyDarker : Theme.SwitchableColor
+    , greyDark : Theme.SwitchableColor
+    , grey : Theme.SwitchableColor
+    , greyLight : Theme.SwitchableColor
+    , greyLighter : Theme.SwitchableColor
+    , greyLightest : Theme.SwitchableColor
+    , white : Theme.SwitchableColor
+    , red : Theme.SwitchableColor
+    , brandText : Theme.SwitchableColor
+    , brandDarker : Theme.SwitchableColor
+    , brandDark : Theme.SwitchableColor
+    , brandBase : Theme.SwitchableColor
+    , brandLight : Theme.SwitchableColor
+    , brandLighter : Theme.SwitchableColor
+    , brandLightest : Theme.SwitchableColor
+    , brandRed : Theme.SwitchableColor
+    , brandRedLight : Theme.SwitchableColor
+    , brandWhite : Theme.SwitchableColor
     }
 
 
 colors : Colors
 colors =
-    { black = rgb255 255 255 255
-    , greyDarkest = rgb255 210 213 215
-    , greyDarker = rgb255 185 196 204
-    , greyDark = rgb255 136 158 174
-    , grey = rgb255 88 109 125
-    , greyLight = rgb255 45 70 91
-    , greyLighter = rgb255 45 70 91
-    , greyLightest = rgb255 5 50 84
-    , white = rgb255 34 41 47
-    , red = rgb255 227 52 47
-    , brandText = rgb255 236 243 249
-    , brandDarker = rgb255 236 243 249
-    , brandDark = rgb255 211 227 241
-    , brandBase = rgb255 132 165 194
-    , brandLight = rgb255 70 109 145
-    , brandLighter = rgb255 7 69 116
-    , brandLightest = rgb255 5 50 84
-    , brandRed = rgb255 185 86 86
-    , brandRedLight = rgb255 241 182 182
-    , brandWhite = rgb255 3 31 53
+    { black = { dark = rgb255 255 255 255, light = rgb255 0 0 0 }
+    , greyDarkest = { dark = rgb255 210 213 215, light = rgb255 61 72 82 }
+    , greyDarker = { dark = rgb255 185 196 204, light = rgb255 96 111 123 }
+    , greyDark = { dark = rgb255 136 158 174, light = rgb255 113 127 133 }
+    , grey = { dark = rgb255 88 109 125, light = rgb255 199 209 210 }
+    , greyLight = { dark = rgb255 45 70 91, light = rgb255 241 245 248 }
+    , greyLighter = { dark = rgb255 45 70 91, light = rgb255 241 245 248 }
+    , greyLightest = { dark = rgb255 5 50 84, light = rgb255 248 250 252 }
+    , white = { dark = rgb255 34 41 47, light = rgb255 255 255 255 }
+    , red = { dark = rgb255 227 52 47, light = rgb255 227 52 47 }
+    , brandText = { dark = rgb255 236 243 249, light = rgb255 51 51 51 }
+    , brandDarker = { dark = rgb255 236 243 249, light = rgb255 113 133 138 }
+    , brandDark = { dark = rgb255 211 227 241, light = rgb255 113 161 165 }
+    , brandBase = { dark = rgb255 132 165 194, light = rgb255 107 194 194 }
+    , brandLight = { dark = rgb255 70 109 145, light = rgb255 192 226 225 }
+    , brandLighter = { dark = rgb255 7 69 116, light = rgb255 210 236 237 }
+    , brandLightest = { dark = rgb255 5 50 84, light = rgb255 248 250 252 }
+    , brandRed = { dark = rgb255 185 86 86, light = rgb255 204 106 66 }
+    , brandRedLight = { dark = rgb255 241 182 182, light = rgb255 238 204 190 }
+    , brandWhite = { dark = rgb255 3 31 53, light = rgb255 255 255 255 }
     }
 
 
@@ -82,15 +90,20 @@ theme =
         |> s_scaled scaled
         |> s_loadingSpinnerUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/loading.gif]"
         |> s_body
-            [ color <| toCssColor colors.brandText
-            , fontFamilies fontFam
-            , scaled 3.5 |> rem |> fontSize
-            ]
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandText
+                , fontFamilies fontFam
+                , scaled 3.5 |> rem |> fontSize
+                ]
+            )
         |> s_header
-            [ backgroundColor <| toCssColor colors.brandWhite
-            , scaled 3 |> rem |> padding
-            , alignItems center
-            ]
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandWhite
+                , scaled 3 |> rem |> padding
+                , alignItems center
+                , shadowSm
+                ]
+            )
         |> s_headerTitle
             [ fontFamilies [ "Conv_Octarine-Light" ]
             , scaled 5 |> rem |> fontSize
@@ -105,56 +118,59 @@ theme =
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
             ]
-        |> s_inputRaw
-            inputStyleRaw
+        |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
             [ maxWidth <| px 190
             ]
         |> s_headerLogoWrap
             []
         |> s_sidebar
-            [ colors.brandWhite |> toCssColor |> backgroundColor
-            ]
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandWhite
+                , shadowSm
+                ]
+            )
         |> s_sidebarIcon
-            (\active ->
-                [ iconInactive |> toCssColor |> color
+            (\lightmode active ->
+                [ colorWithLightmode lightmode iconInactive
                 , scaled 5 |> rem |> fontSize
                 , scaled 4 |> rem |> padding
                 ]
                     ++ (if active then
-                            [ colors.brandLightest
-                                |> toCssColor
-                                |> backgroundColor
-                            , iconActive
-                                |> toCssColor
-                                |> color
+                            [ color_backgroundColorWithLightmode lightmode iconActive colors.brandLightest
                             ]
 
                         else
                             [ hover
-                                [ iconHovered |> toCssColor |> color
+                                [ switchColor lightmode iconHovered |> toCssColor |> color
                                 ]
                             ]
                        )
             )
         |> s_main
-            [ backgroundColor <| toCssColor colors.brandLightest
-            ]
-        |> s_link
-            [ color <| toCssColor colors.brandText
-            , hover
-                [ textDecoration none
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandLightest
                 ]
-            ]
+            )
+        |> s_link
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandText
+                , hover
+                    [ textDecoration none
+                    ]
+                ]
+            )
         |> s_loadingSpinner [ loadingSpinner ]
         |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
         |> s_popup
-            [ scaled 5 |> rem |> padding
-            , backgroundColor <| toCssColor colors.brandWhite
-            , borderColor <| toCssColor colors.greyLight
-            , borderWidth <| px 1
-            , borderRadius <| px 5
-            ]
+            (\lightmode ->
+                [ scaled 5 |> rem |> padding
+                , borderColor_backgroundColorWithLightmode lightmode colors.greyLight colors.brandWhite
+                , borderWidth <| px 1
+                , borderRadius <| px 5
+                ]
+            )
+        |> s_logo_lightmode "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo_light.svg]"
         |> s_overlay
             [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
             ]
@@ -165,20 +181,24 @@ theme =
                 |> s_stats
                     [ scaled -statsMargin |> rem |> marginLeft ]
                 |> s_currency
-                    [ backgroundColor <| toCssColor colors.greyLight
-                    , scaled statsMargin |> rem |> margin
-                    , borderRadiusSm
-                    ]
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.greyLight
+                        , scaled statsMargin |> rem |> margin
+                        , borderRadiusSm
+                        ]
+                    )
                 |> s_currencyHeading
-                    [ backgroundColor <| toCssColor colors.brandLight
-                    , fontHairline
-                    , scaled 2 |> rem |> padding
-                    , scaled 5 |> rem |> fontSize
-                    , scaled 3.5 |> rem |> paddingTop
-                    , scaled currencyPadding |> rem |> paddingLeft
-                    , width auto
-                    , fontFamilies [ "Conv_Octarine-Light" ]
-                    ]
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.brandLight
+                        , fontHairline
+                        , scaled 2 |> rem |> padding
+                        , scaled 5 |> rem |> fontSize
+                        , scaled 3.5 |> rem |> paddingTop
+                        , scaled currencyPadding |> rem |> paddingLeft
+                        , width auto
+                        , fontFamilies [ "Conv_Octarine-Light" ]
+                        ]
+                    )
                 |> s_tableWrapperInner
                     [ currencyPadding / 2 |> scaled |> rem |> padding
                     ]
@@ -214,10 +234,10 @@ theme =
                     , fontFamily monospace
                     ]
                 |> s_textarea
-                    (\input ->
+                    (\lightmode input ->
                         [ scaled 1 |> rem |> padding
                         , scaled 5 |> rem |> height
-                        , inputStyle
+                        , inputStyle lightmode
                         , scaled 2 |> rem |> paddingX
                         , scaled 2 |> rem |> paddingTop
                         , scaled 1 |> rem |> paddingBottom
@@ -232,17 +252,20 @@ theme =
                                )
                     )
                 |> s_result
-                    [ calc (pct 100) minus (scaled 4 |> rem) |> width
-                    , scaled 2 |> rem |> padding
-                    , borderRadius4
-                        zero
-                        zero
-                        (scaled 1 |> rem)
-                        (scaled 1 |> rem)
-                    , backgroundColor <| toCssColor colors.brandWhite
-                    , spinnerHeight |> scaled |> rem |> minHeight
-                    , scaled 3.5 |> rem |> fontSize
-                    ]
+                    (\lightmode ->
+                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
+                        , scaled 2 |> rem |> padding
+                        , borderRadius4
+                            zero
+                            zero
+                            (scaled 1 |> rem)
+                            (scaled 1 |> rem)
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        , spinnerHeight |> scaled |> rem |> minHeight
+                        , scaled 3.5 |> rem |> fontSize
+                        , shadowMd
+                        ]
+                    )
                 |> s_loadingSpinner
                     [ position absolute
                     , top zero
@@ -254,14 +277,16 @@ theme =
                     , paddingY (scaled 1 |> rem)
                     ]
                 |> s_resultLine
-                    [ textDecoration none
-                    , color <| toCssColor colors.black
-                    , display block
-                    , scaled 0.5 |> rem |> paddingY
-                    , hover
-                        [ backgroundColor <| toCssColor colors.brandLighter
+                    (\lightmode ->
+                        [ textDecoration none
+                        , colorWithLightmode lightmode colors.black
+                        , display block
+                        , scaled 0.5 |> rem |> paddingY
+                        , hover
+                            [ backgroundColorWithLightmode lightmode colors.brandLighter
+                            ]
                         ]
-                    ]
+                    )
                 |> s_resultLineIcon
                     [ opacity <| num 0.5
                     , scaled 1 |> rem |> paddingRight
@@ -272,71 +297,80 @@ theme =
         |> s_button
             (Button.default
                 |> s_button
-                    [ fontWeight bold
-                    , scaled 1 |> rem |> paddingY
-                    , scaled 2 |> rem |> paddingX
-                    , borderRadiusSm
-                    , border zero
-                    , hover
-                        [ backgroundColor <| toCssColor colors.brandLighter
+                    (\lightmode ->
+                        [ fontWeight bold
+                        , scaled 1 |> rem |> paddingY
+                        , scaled 2 |> rem |> paddingX
+                        , borderRadiusSm
+                        , border zero
+                        , hover
+                            [ backgroundColorWithLightmode lightmode colors.brandLighter
+                            ]
                         ]
-                    ]
+                    )
                 |> s_primary
-                    [ backgroundColor <| toCssColor colors.greyLight
-                    , color <| toCssColor colors.brandDark
-                    ]
+                    (\lightmode ->
+                        [ color_backgroundColorWithLightmode lightmode colors.brandDark colors.greyLighter
+                        ]
+                    )
                 |> s_danger
-                    [ backgroundColor <| toCssColor colors.brandWhite
-                    , color <| toCssColor colors.brandRed
-                    ]
-                |> s_danger
-                    [ backgroundColor <| toCssColor colors.brandWhite
-                    , color <| toCssColor colors.brandRed
-                    ]
+                    (\lightmode ->
+                        [ color_backgroundColorWithLightmode lightmode colors.brandRed colors.brandWhite
+                        ]
+                    )
                 |> s_disabled
-                    [ color <| toCssColor colors.brandLight
-                    ]
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode colors.brandLight
+                        ]
+                    )
             )
         |> s_hovercard
-            (Hovercard.default
-                |> s_borderColor colors.greyLight
-                |> s_backgroundColor colors.brandWhite
-                |> s_borderWidth 1
-                |> s_root
-                    [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
-                    , ( "border-radius", scaled borderRadiusSmValue |> String.fromFloat |> (\s -> s ++ "rem") )
-                    ]
+            (\lightmode ->
+                Hovercard.default
+                    |> s_borderColor (switchColor lightmode colors.greyLight)
+                    |> s_backgroundColor (switchColor lightmode colors.brandWhite)
+                    |> s_borderWidth 1
+                    |> s_root
+                        [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
+                        , ( "border-radius", scaled borderRadiusSmValue |> String.fromFloat |> (\s -> s ++ "rem") )
+                        ]
             )
         |> s_user
             (User.default
                 |> s_root
-                    [ scaled 5 |> rem |> fontSize
-                    ]
+                    (\lightmode ->
+                        [ scaled 5 |> rem |> fontSize
+                        , colorWithLightmode lightmode iconActive
+                        ]
+                    )
                 |> s_hovercardRoot
                     [ scaled 3 |> rem |> padding
                     ]
                 |> s_logoutButton
-                    [ padding zero
-                    , backgroundColor transparent
-                    , border zero
-                    , colors.brandText |> toCssColor |> color
-                    , textDecoration underline
-                    , cursor pointer
-                    , hover
-                        [ textDecoration none
+                    (\lightmode ->
+                        [ padding zero
+                        , backgroundColor transparent
+                        , border zero
+                        , colors.brandText |> colorWithLightmode lightmode
+                        , textDecoration underline
+                        , cursor pointer
+                        , hover
+                            [ textDecoration none
+                            ]
                         ]
-                    ]
+                    )
             )
         |> s_dialog
             (Dialog.default
                 |> s_dialog
-                    [ colors.brandWhite |> toCssColor |> backgroundColor
-                    , scaled 3 |> rem |> padding
-                    , borderRadiusSm
-                    , colors.brandLight |> toCssColor |> borderColor
-                    , borderWidth (px 1)
-                    , borderStyle solid
-                    ]
+                    (\lightmode ->
+                        [ borderColor_backgroundColorWithLightmode lightmode colors.brandLight colors.brandWhite
+                        , scaled 3 |> rem |> padding
+                        , borderRadiusSm
+                        , borderWidth (px 1)
+                        , borderStyle solid
+                        ]
+                    )
                 |> s_buttons
                     [ displayFlex
                     , justifyContent spaceBetween
@@ -356,27 +390,32 @@ theme =
                     , whiteSpace noWrap
                     ]
                 |> s_headRow
-                    [ scaled 3 |> rem |> padding
-                    , colors.brandLight |> toCssColor |> backgroundColor
-                    , displayFlex
-                    , justifyContent spaceBetween
-                    , alignItems center
-                    ]
+                    (\lightmode ->
+                        [ scaled 3 |> rem |> padding
+                        , backgroundColorWithLightmode lightmode colors.brandLight
+                        , displayFlex
+                        , justifyContent spaceBetween
+                        , alignItems center
+                        , whiteSpace noWrap
+                        ]
+                    )
                 |> s_body
                     [ scaled 3 |> rem |> padding
                     ]
                 |> s_headRowClose
-                    [ colors.brandText |> toCssColor |> color
-                    , backgroundColor transparent
-                    , border (px 0)
+                    (\lightmode ->
+                        [ colors.brandText |> colorWithLightmode lightmode
+                        , backgroundColor transparent
+                        , border (px 0)
 
-                    --, position absolute
-                    --, scaled 3 |> rem |> top
-                    --, scaled 1 |> rem |> right
-                    , px 15 |> width
-                    , px 20 |> height
-                    , cursor pointer
-                    ]
+                        --, position absolute
+                        --, scaled 3 |> rem |> top
+                        --, scaled 1 |> rem |> right
+                        , px 15 |> width
+                        , px 20 |> height
+                        , cursor pointer
+                        ]
+                    )
             )
         |> s_graph
             (Graph.default
@@ -414,27 +453,26 @@ theme =
                 |> s_defaultColor
                     (rgb255 128 128 128)
                 |> s_tool
-                    (\status ->
+                    (\lightmode status ->
                         [ scaled 2 |> rem |> padding
                         , scaled 4 |> rem |> fontSize
                         , textAlign center
-                        , color <|
-                            toCssColor <|
-                                case status of
-                                    Tool.Active ->
-                                        iconActive
+                        , colorWithLightmode lightmode <|
+                            case status of
+                                Tool.Active ->
+                                    iconActive
 
-                                    Tool.Disabled ->
-                                        iconDisabled
+                                Tool.Disabled ->
+                                    iconDisabled
 
-                                    Tool.Inactive ->
-                                        iconInactive
+                                Tool.Inactive ->
+                                    iconInactive
                         , transparent
                             |> backgroundColor
                         , border (px 0)
                         , hover
                             (if status /= Tool.Disabled then
-                                [ iconHovered |> toCssColor |> color
+                                [ switchColor lightmode iconHovered |> toCssColor |> color
                                 ]
 
                              else
@@ -443,17 +481,19 @@ theme =
                         ]
                     )
                 |> s_svgRoot
-                    [ colors.black
-                        |> Color.toCssString
-                        |> property "color"
-                    , fontWeight (int 300)
-                    ]
+                    (\lightmode ->
+                        [ Util.Theme.switchColor lightmode colors.black
+                            |> Color.toCssString
+                            |> property "color"
+                        , fontWeight (int 300)
+                        ]
+                    )
                 |> s_expandHandleText
-                    (\_ -> fillBlack)
+                    (\lightmode _ -> fillBlack lightmode)
                 |> s_addressLabel
-                    fillBlack
+                    (\lightmode -> fillBlack lightmode)
                 |> s_entityLabel
-                    fillBlack
+                    (\lightmode -> fillBlack lightmode)
                 |> s_labelText
                     (\nodeType ->
                         [ property "dominant-baseline"
@@ -467,39 +507,49 @@ theme =
                         ]
                     )
                 |> s_abuseFlag
-                    [ colors.red
-                        |> Color.toCssString
-                        |> property "fill"
-                    , colors.white
-                        |> Color.toCssString
-                        |> property "stroke"
-                    , property "stroke-width" "10px"
-                    ]
+                    (\lightmode ->
+                        [ colors.red
+                            |> switchColor lightmode
+                            |> Color.toCssString
+                            |> property "fill"
+                        , colors.white
+                            |> switchColor lightmode
+                            |> Color.toCssString
+                            |> property "stroke"
+                        , property "stroke-width" "10px"
+                        ]
+                    )
                 |> s_tagsFlag
-                    [ colors.white
-                        |> Color.toCssString
-                        |> property "stroke"
-                    , colors.black
-                        |> Color.toCssString
-                        |> property "fill"
-                    , property "stroke-width" "10px"
-                    ]
+                    (\lightmode ->
+                        [ colors.white
+                            |> switchColor lightmode
+                            |> Color.toCssString
+                            |> property "stroke"
+                        , Util.Theme.switchColor lightmode colors.black
+                            |> Color.toCssString
+                            |> property "fill"
+                        , property "stroke-width" "10px"
+                        ]
+                    )
                 |> s_entityCurrency
-                    ((px 12 |> fontSize)
-                        :: property "dominant-baseline" "hanging"
-                        :: fillBlack
+                    (\lightmode ->
+                        (px 12 |> fontSize)
+                            :: property "dominant-baseline" "hanging"
+                            :: fillBlack lightmode
                     )
                 |> s_entityAddressesCount
-                    ((px 14 |> fontSize) :: fillBlack)
+                    (\lightmode ->
+                        (px 14 |> fontSize) :: fillBlack lightmode
+                    )
                 |> s_expandHandlePath
-                    (\_ isSelected ->
+                    (\lightmode _ isSelected ->
                         let
                             ( color, width ) =
                                 if isSelected then
-                                    ( colors.red, nodeStrokeWidth * 4 )
+                                    ( switchColor lightmode colors.red, nodeStrokeWidth * 4 )
 
                                 else
-                                    ( colors.white, nodeStrokeWidth )
+                                    ( switchColor lightmode colors.black, nodeStrokeWidth )
                         in
                         [ color
                             |> Color.toCssString
@@ -508,24 +558,24 @@ theme =
                         ]
                     )
                 |> s_nodeFrame
-                    (\_ isSelected ->
+                    (\lightmode _ isSelected ->
                         let
                             ( color, width ) =
                                 if isSelected then
-                                    ( colors.red, nodeStrokeWidth * 4 )
+                                    ( switchColor lightmode colors.red, nodeStrokeWidth * 4 )
 
                                 else
-                                    ( colors.white, nodeStrokeWidth )
+                                    ( switchColor lightmode colors.black, nodeStrokeWidth )
                         in
                         [ color
                             |> Color.toCssString
                             |> property "stroke"
-                        , property "stroke-width" <| String.fromFloat width
+                        , property "stroke-width" <| String.fromFloat <| width * 0.8
                         ]
                     )
                 |> s_nodeSeparatorToExpandHandle
-                    (\_ ->
-                        [ colors.white
+                    (\lightmode _ ->
+                        [ switchColor lightmode colors.black
                             |> Color.toCssString
                             |> property "stroke"
                         , opacity <| num 0.5
@@ -533,43 +583,43 @@ theme =
                         ]
                     )
                 |> s_link
-                    (\nodeType hovered selected highlight ->
+                    (\lightmode nodeType hovered selected highlight ->
                         [ (if hovered then
-                            colors.black
+                            Util.Theme.switchColor lightmode colors.black
 
                            else if selected then
-                            colors.red
+                            switchColor lightmode colors.red
 
                            else
                             highlight
                                 |> Maybe.withDefault
                                     (if nodeType == AddressType then
-                                        colors.grey
+                                        switchColor lightmode colors.grey
 
                                      else
-                                        colors.greyLighter
+                                        switchColor lightmode colors.grey
                                     )
                           )
                             |> Color.toCssString
                             |> property "stroke"
                         ]
                     )
-                |> s_linkColorFaded colors.grey
-                |> s_linkColorStrong colors.black
-                |> s_linkColorSelected colors.red
+                |> s_linkColorFaded (\lightmode -> Util.Theme.switchColor lightmode colors.grey)
+                |> s_linkColorStrong (\lightmode -> Util.Theme.switchColor lightmode colors.black)
+                |> s_linkColorSelected (\lightmode -> switchColor lightmode colors.red)
                 |> s_linkLabel
-                    (\hovered selected color ->
+                    (\lightmode hovered selected color ->
                         [ fontFamily monospace
                         , (if hovered then
-                            colors.black
+                            Util.Theme.switchColor lightmode colors.black
 
                            else if selected then
-                            colors.red
+                            switchColor lightmode colors.red
 
                            else
                             color
                                 |> Maybe.withDefault
-                                    colors.grey
+                                    (Util.Theme.switchColor lightmode colors.grey)
                           )
                             |> Color.toCssString
                             |> property "fill"
@@ -577,29 +627,37 @@ theme =
                         ]
                     )
                 |> s_linkLabelBox
-                    (\_ _ ->
-                        [ Color.toCssString colors.brandLightest
+                    (\lightmode _ _ ->
+                        [ switchColor lightmode colors.brandLightest
+                            |> Color.toCssString
                             |> property "fill"
                         , num 0.8 |> opacity
                         , property "stroke-width" "0"
                         ]
                     )
                 |> s_shadowLink
-                    [ colors.brandLighter
-                        |> Color.toCssString
-                        |> property "fill"
-                    , property "fill-opacity" "0.5"
-                    ]
+                    (\lightmode ->
+                        [ switchColor lightmode colors.brandLighter
+                            |> Color.toCssString
+                            |> property "fill"
+                        , property "fill-opacity" "0.5"
+                        ]
+                    )
                 |> s_navbar
-                    [ toCssColor colors.brandWhite |> backgroundColor
-                    ]
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.brandWhite
+                        , shadowSm
+                        ]
+                    )
                 |> s_searchTextarea
-                    [ inputStyle
-                    , scaled 1 |> rem |> padding
-                    , fontFamilies fontFam
-                    ]
+                    (\lightmode ->
+                        [ inputStyle lightmode
+                        , scaled 1 |> rem |> padding
+                        , fontFamilies fontFam
+                        ]
+                    )
                 |> s_toolbox
-                    (\visible ->
+                    (\lightmode visible ->
                         let
                             p =
                                 if visible then
@@ -608,12 +666,13 @@ theme =
                                 else
                                     -110
                         in
-                        [ toCssColor colors.brandWhite |> backgroundColor
+                        [ backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
                         , Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
                         , translateY (pct p) |> transform
+                        , shadowSm
                         ]
                     )
                 |> s_legendItem
@@ -670,22 +729,24 @@ theme =
                                )
                     )
                 |> s_highlightTitle
-                    [ inputStyle
-                    , scaled 3 |> rem |> fontSize
-                    ]
-                |> s_highlightTrash
-                    [ iconInactive
-                        |> toCssColor
-                        |> color
-                    , hover
-                        [ iconHovered
-                            |> toCssColor
-                            |> color
+                    (\lightmode ->
+                        [ inputStyle lightmode
+                        , scaled 3 |> rem |> fontSize
                         ]
-                    , scaled 1 |> rem |> paddingLeft
-                    , cursor pointer
-                    , scaled 1 |> rem |> marginTop
-                    ]
+                    )
+                |> s_highlightTrash
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode iconInactive
+                        , hover
+                            [ switchColor lightmode iconHovered
+                                |> toCssColor
+                                |> color
+                            ]
+                        , scaled 1 |> rem |> paddingLeft
+                        , cursor pointer
+                        , scaled 1 |> rem |> marginTop
+                        ]
+                    )
             )
         |> s_browser
             (Browser.default
@@ -693,10 +754,12 @@ theme =
                     [ letterSpacingWide
                     ]
                 |> s_propertyBoxRow
-                    [ hover
-                        [ colors.brandLightest |> toCssColor |> backgroundColor
+                    (\lightmode ->
+                        [ hover
+                            [ backgroundColorWithLightmode lightmode colors.brandLightest
+                            ]
                         ]
-                    ]
+                    )
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
@@ -711,25 +774,24 @@ theme =
                     , justifyContent spaceBetween
                     ]
                 |> s_frame
-                    (\visible ->
+                    (\lightmode visible ->
                         let
                             p =
                                 if visible then
                                     0
 
                                 else
-                                    -110
+                                    -120
                         in
                         [ Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
                         , displayFlex
                         , translateY (pct p) |> transform
-                        , colors.brandWhite
-                            |> toCssColor
-                            |> backgroundColor
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
-                        , shadowMd
+                        , shadowSm
+                        , minHeight <| px 30
 
                         --, borderWidth (px 1)
                         --, borderStyle solid
@@ -741,36 +803,40 @@ theme =
                     , scaled 1 |> rem |> margin
                     ]
                 |> s_propertyBoxOutgoingTxs
-                    [ toCssColor colors.brandRed |> color
-                    ]
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode colors.brandRed
+                        ]
+                    )
                 |> s_propertyBoxIncomingTxs
-                    [ toCssColor colors.brandBase |> color
-                    ]
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode colors.brandBase
+                        ]
+                    )
                 |> s_propertyBoxTableLink
-                    (\isActive ->
-                        [ toCssColor
+                    (\lightmode isActive ->
+                        [ colorWithLightmode lightmode
                             (if isActive then
                                 colors.brandBase
 
                              else
                                 colors.brandLight
                             )
-                            |> color
                         , hover
-                            [ toCssColor colors.brandBase |> color
+                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
                             ]
                         , active
-                            [ toCssColor colors.brandBase |> color
+                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
                             ]
                         ]
                     )
                 |> s_propertyBoxEntityId
-                    [ scaled 3 |> rem |> fontSize
-                    , scaled 1 |> rem |> paddingLeft
-                    , colors.greyDark
-                        |> toCssColor
-                        |> color
-                    ]
+                    (\lightmode ->
+                        [ scaled 3 |> rem |> fontSize
+                        , scaled 1 |> rem |> paddingLeft
+                        , colors.greyDark
+                            |> colorWithLightmode lightmode
+                        ]
+                    )
                 |> s_loadingSpinner
                     [ scaled 3.5 |> rem |> height
                     , scaled 3.5 |> rem |> width
@@ -788,22 +854,26 @@ theme =
                     , flexDirection column
                     ]
                 |> s_sidebar
-                    [ borderLeftWidth (px 1)
-                    , borderStyle solid
-                    , colors.greyLightest |> toCssColor |> borderColor
-                    , scaled 2 |> rem |> paddingLeft
-                    , scaled 1 |> rem |> paddingTop
-                    ]
+                    (\lightmode ->
+                        [ borderLeftWidth (px 1)
+                        , borderStyle solid
+                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 2 |> rem |> paddingLeft
+                        , scaled 1 |> rem |> paddingTop
+                        ]
+                    )
                 |> s_filter
                     [ displayFlex
                     , justifyContent flexEnd
                     , padding (px 2)
                     ]
                 |> s_filterInput
-                    [ inputStyle
-                    , scaled 3 |> rem |> fontSize
-                    , width <| ex 40
-                    ]
+                    (\lightmode ->
+                        [ inputStyle lightmode
+                        , scaled 3 |> rem |> fontSize
+                        , width <| ex 40
+                        ]
+                    )
                 |> s_urlMaxLength 20
                 |> s_table
                     [ scaled 1 |> rem |> padding
@@ -822,10 +892,12 @@ theme =
                 |> s_rowHeight
                     (scaled 100)
                 |> s_row
-                    [ nthChild "2n"
-                        [ colors.brandLightest |> toCssColor |> backgroundColor
+                    (\lightmode ->
+                        [ nthChild "2n"
+                            [ backgroundColorWithLightmode lightmode colors.brandLightest
+                            ]
                         ]
-                    ]
+                    )
                 |> s_cell
                     [ tableCell
                     ]
@@ -833,10 +905,10 @@ theme =
                     [ numberCell
                     ]
                 |> s_valuesCell
-                    (\isNegative ->
+                    (\lightmode isNegative ->
                         numberCell
                             :: (if isNegative then
-                                    [ toCssColor colors.brandRed |> color ]
+                                    [ colorWithLightmode lightmode colors.brandRed ]
 
                                 else
                                     []
@@ -858,21 +930,25 @@ theme =
         |> s_contextMenu
             (ContextMenu.default
                 |> s_root
-                    [ colors.brandWhite |> toCssColor |> backgroundColor
-                    , shadowMd
-                    ]
-                |> s_option
-                    [ scaled 2 |> rem |> padding
-                    , whiteSpace noWrap
-                    , hover
-                        [ backgroundHoverColor |> toCssColor |> backgroundColor
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.brandWhite
+                        , shadowMd
                         ]
-                    ]
+                    )
+                |> s_option
+                    (\lightmode ->
+                        [ scaled 2 |> rem |> padding
+                        , whiteSpace noWrap
+                        , hover
+                            [ switchColor lightmode backgroundHoverColor |> toCssColor |> backgroundColor
+                            ]
+                        ]
+                    )
             )
         |> s_statusbar
             (Statusbar.default
                 |> s_root
-                    (\visible ->
+                    (\lightmode visible ->
                         (if visible then
                             [ scaled 2 |> rem |> padding
                             , scaled 1 |> rem |> paddingLeft
@@ -886,7 +962,7 @@ theme =
                             [ cursor pointer
                             ]
                         )
-                            ++ [ colors.brandWhite |> toCssColor |> backgroundColor
+                            ++ [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
                                , (if visible then
                                     50
 
@@ -897,7 +973,7 @@ theme =
                                     |> rem
                                     |> minHeight
                                , scaled 50 |> rem |> maxHeight
-                               , colors.greyDark |> toCssColor |> color
+                               , colors.greyDark |> colorWithLightmode lightmode
                                , scaled 3 |> rem |> fontSize
                                ]
                     )
@@ -907,7 +983,7 @@ theme =
                     , scaled 1 |> rem |> paddingRight
                     ]
                 |> s_log
-                    (\noerror ->
+                    (\lightmode noerror ->
                         [ displayFlex
                         ]
                             ++ (if noerror then
@@ -915,21 +991,23 @@ theme =
                                     ]
 
                                 else
-                                    [ colors.brandRed |> toCssColor |> color
+                                    [ colorWithLightmode lightmode colors.brandRed
                                     , fontWeight bold
                                     , scaled 4 |> rem |> fontSize
                                     ]
                                )
                     )
                 |> s_close
-                    [ colors.brandText |> toCssColor |> color
-                    , backgroundColor transparent
-                    , border (px 0)
-                    , position absolute
-                    , scaled 2 |> rem |> top
-                    , scaled 4 |> rem |> right
-                    , cursor pointer
-                    ]
+                    (\lightmode ->
+                        [ colors.brandText |> colorWithLightmode lightmode
+                        , backgroundColor transparent
+                        , border (px 0)
+                        , position absolute
+                        , scaled 2 |> rem |> top
+                        , scaled 4 |> rem |> right
+                        , cursor pointer
+                        ]
+                    )
             )
         |> s_custom
             -- need to put these special references in separate string expressions to make the vite resolution work
@@ -1019,10 +1097,18 @@ borderRadiusSm =
         (Tuple.second borderRadiusSmRaw)
 
 
-inputStyleRaw : Maybe Float -> List ( String, String )
-inputStyleRaw len =
-    [ ( "background-color", Color.toCssString colors.greyLight )
-    , ( "color", Color.toCssString colors.black )
+inputStyleRaw : Bool -> Maybe Float -> List ( String, String )
+inputStyleRaw lm len =
+    [ ( "transition"
+      , "color "
+            ++ String.fromInt Util.Theme.duration
+            ++ "ms,"
+            ++ "background-color "
+            ++ String.fromInt Util.Theme.duration
+            ++ "ms"
+      )
+    , ( "background-color", Color.toCssString <| switchColor lm colors.greyLighter )
+    , ( "color", Color.toCssString <| Util.Theme.switchColor lm colors.black )
     , borderRadiusSmRaw
     , ( "border", "0" )
     , ( "padding", (scaled 1 |> String.fromFloat) ++ "rem" )
@@ -1034,9 +1120,9 @@ inputStyleRaw len =
            )
 
 
-inputStyle : Style
-inputStyle =
-    inputStyleRaw Nothing
+inputStyle : Bool -> Style
+inputStyle lightmode =
+    inputStyleRaw lightmode Nothing
         |> List.map (\( k, v ) -> property k v)
         |> batch
 
@@ -1064,6 +1150,11 @@ entityStrokeDashArray =
 nodeStrokeWidth : Float
 nodeStrokeWidth =
     0.5
+
+
+shadowSm : Style
+shadowSm =
+    property "box-shadow" "1px 1px 1px 0 rgba(0, 0, 0, .1)"
 
 
 shadowMd : Style
@@ -1096,34 +1187,34 @@ loadingSpinner =
         |> batch
 
 
-fillBlack : List Style
-fillBlack =
-    [ colors.black
+fillBlack : Bool -> List Style
+fillBlack lightmode =
+    [ Util.Theme.switchColor lightmode colors.black
         |> Color.toCssString
         |> property "fill"
     ]
 
 
-iconDisabled : Color.Color
+iconDisabled : Theme.SwitchableColor
 iconDisabled =
     colors.greyLighter
 
 
-iconInactive : Color.Color
+iconInactive : Theme.SwitchableColor
 iconInactive =
     colors.brandLight
 
 
-iconActive : Color.Color
+iconActive : Theme.SwitchableColor
 iconActive =
     colors.brandBase
 
 
-iconHovered : Color.Color
+iconHovered : Theme.SwitchableColor
 iconHovered =
     colors.brandBase
 
 
-backgroundHoverColor : Color.Color
+backgroundHoverColor : Theme.SwitchableColor
 backgroundHoverColor =
     colors.brandLighter

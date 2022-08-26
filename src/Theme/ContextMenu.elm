@@ -5,13 +5,13 @@ import Css exposing (Style)
 
 
 type alias ContextMenu =
-    { root : List Style
-    , option : List Style
+    { root : Bool -> List Style
+    , option : Bool -> List Style
     }
 
 
 default : ContextMenu
 default =
-    { root = []
-    , option = []
+    { root = \_ -> []
+    , option = \_ -> []
     }

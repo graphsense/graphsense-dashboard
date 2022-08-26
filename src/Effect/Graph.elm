@@ -26,6 +26,7 @@ type Effect
         { currency : String
         , address : String
         , toMsg : Api.Data.Address -> Msg
+        , suppressErrors : Bool
         }
     | GetEntityEffect
         { currency : String
@@ -41,6 +42,7 @@ type Effect
         { currency : String
         , address : String
         , toMsg : Api.Data.Entity -> Msg
+        , suppressErrors : Bool
         }
     | GetEntityNeighborsEffect
         { currency : String

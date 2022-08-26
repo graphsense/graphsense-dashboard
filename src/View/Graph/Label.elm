@@ -46,7 +46,7 @@ label vc gc nodeType title =
                     ++ Css.tagLockedText vc
                     |> css
                 ]
-                [ Locale.string vc.locale "tag locked" |> text
+                [ Locale.string vc.locale "proprietary tag" |> text
                 ]
             ]
 

@@ -50,6 +50,17 @@ hovercard vc model =
         ++ [ Dialog.part vc
                 "Language"
                 [ localeSwitch vc ]
+           , Dialog.part vc
+                "Display"
+                [ input
+                    [ type_ "checkbox"
+                    , checked vc.lightmode
+                    , onClick UserClickedLightmode
+                    ]
+                    []
+                , Locale.string vc.locale "Light mode"
+                    |> text
+                ]
            ]
         ++ (case model.auth of
                 Authorized auth ->

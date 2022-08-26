@@ -6,6 +6,7 @@ import Config.View exposing (Config)
 import Css exposing (..)
 import Model.Graph exposing (NodeType)
 import Model.Graph.Tool as Tool
+import Util.Css
 
 
 root : Config -> List Style
@@ -19,11 +20,11 @@ root vc =
 
 navbar : Config -> List Style
 navbar vc =
-    [ zIndex <| int 50
+    [ Util.Css.zIndexMain
     , displayFlex
     , flexDirection row
     ]
-        ++ vc.theme.graph.navbar
+        ++ vc.theme.graph.navbar vc.lightmode
 
 
 navbarLeft : Config -> List Style
@@ -50,7 +51,7 @@ navbarRight vc =
 tool : Config -> Tool.Status -> List Style
 tool vc status =
     cursor pointer
-        :: vc.theme.graph.tool status
+        :: vc.theme.graph.tool vc.lightmode status
 
 
 graphRoot : Config -> List Style
@@ -67,7 +68,7 @@ svgRoot vc =
     [ pct 100 |> width
     , property "color" "black"
     ]
-        ++ vc.theme.graph.svgRoot
+        ++ vc.theme.graph.svgRoot vc.lightmode
 
 
 addressRoot : Config -> Bool -> List Style
@@ -92,7 +93,7 @@ nodeFrame vc nodeType isSelected =
     [ property "stroke" "currentColor"
     , property "stroke-width" "1px"
     ]
-        ++ vc.theme.graph.nodeFrame nodeType isSelected
+        ++ vc.theme.graph.nodeFrame vc.lightmode nodeType isSelected
 
 
 addressFlags : Config -> List Style
@@ -102,19 +103,19 @@ addressFlags vc =
 
 abuseFlag : Config -> List Style
 abuseFlag vc =
-    vc.theme.graph.abuseFlag
+    vc.theme.graph.abuseFlag vc.lightmode
 
 
 tagsFlag : Config -> List Style
 tagsFlag vc =
-    vc.theme.graph.tagsFlag
+    vc.theme.graph.tagsFlag vc.lightmode
 
 
 addressLabel : Config -> List Style
 addressLabel vc =
     property "fill" "currentColor"
         :: (px labelHeight |> fontSize)
-        :: vc.theme.graph.addressLabel
+        :: vc.theme.graph.addressLabel vc.lightmode
 
 
 entityRoot : Config -> Bool -> List Style
@@ -150,7 +151,7 @@ entityLabel : Config -> List Style
 entityLabel vc =
     property "fill" "currentColor"
         :: (px labelHeight |> fontSize)
-        :: vc.theme.graph.entityLabel
+        :: vc.theme.graph.entityLabel vc.lightmode
 
 
 labelText : Config -> NodeType -> List Style
@@ -160,20 +161,20 @@ labelText vc nodeType =
 
 shadowLink : Config -> List Style
 shadowLink vc =
-    vc.theme.graph.shadowLink
+    vc.theme.graph.shadowLink vc.lightmode
 
 
 entityCurrency : Config -> List Style
 entityCurrency vc =
     property "fill" "currentColor"
-        :: vc.theme.graph.entityCurrency
+        :: vc.theme.graph.entityCurrency vc.lightmode
 
 
 entityAddressesCount : Config -> List Style
 entityAddressesCount vc =
     property "fill" "currentColor"
         :: (px addressesCountHeight |> fontSize)
-        :: vc.theme.graph.entityAddressesCount
+        :: vc.theme.graph.entityAddressesCount vc.lightmode
 
 
 expandHandle : Config -> NodeType -> List Style
@@ -185,19 +186,19 @@ expandHandle vc nodeType =
 expandHandlePath : Config -> NodeType -> Bool -> List Style
 expandHandlePath vc nodeType isSelected =
     frameStyle
-        ++ vc.theme.graph.expandHandlePath nodeType isSelected
+        ++ vc.theme.graph.expandHandlePath vc.lightmode nodeType isSelected
 
 
 expandHandleText : Config -> NodeType -> List Style
 expandHandleText vc nodeType =
     property "fill" "currentColor"
-        :: vc.theme.graph.expandHandleText nodeType
+        :: vc.theme.graph.expandHandleText vc.lightmode nodeType
 
 
 nodeSeparatorToExpandHandle : Config -> NodeType -> List Style
 nodeSeparatorToExpandHandle vc nodeType =
     frameStyle
-        ++ vc.theme.graph.nodeSeparatorToExpandHandle nodeType
+        ++ vc.theme.graph.nodeSeparatorToExpandHandle vc.lightmode nodeType
 
 
 link : Config -> NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
@@ -205,30 +206,31 @@ link vc nodeType hovered selected highlight =
     [ property "stroke" "currentColor"
     , property "fill" "none"
     ]
-        ++ vc.theme.graph.link nodeType hovered selected highlight
+        ++ vc.theme.graph.link vc.lightmode nodeType hovered selected highlight
 
 
 linkLabel : Config -> Bool -> Bool -> Maybe Color.Color -> List Style
 linkLabel vc hovered selected color =
     (px linkLabelHeight |> fontSize)
         :: property "fill" "currentColor"
-        :: vc.theme.graph.linkLabel hovered selected color
+        :: vc.theme.graph.linkLabel vc.lightmode hovered selected color
 
 
 linkLabelBox : Config -> Bool -> Bool -> List Style
 linkLabelBox vc hovered selected =
-    vc.theme.graph.linkLabelBox hovered selected
+    vc.theme.graph.linkLabelBox vc.lightmode hovered selected
 
 
 searchTextarea : Config -> List Style
 searchTextarea vc =
-    vc.theme.graph.searchTextarea
+    vc.theme.graph.searchTextarea vc.lightmode
 
 
 toolbox : Config -> Bool -> List Style
 toolbox vc visible =
     position absolute
-        :: vc.theme.graph.toolbox visible
+        :: Util.Css.zIndexMain
+        :: vc.theme.graph.toolbox vc.lightmode visible
 
 
 legendItem : Config -> List Style
@@ -308,9 +310,9 @@ highlightColor vc selected =
 
 highlightTitle : Config -> List Style
 highlightTitle vc =
-    vc.theme.graph.highlightTitle
+    vc.theme.graph.highlightTitle vc.lightmode
 
 
 highlightTrash : Config -> List Style
 highlightTrash vc =
-    vc.theme.graph.highlightTrash
+    vc.theme.graph.highlightTrash vc.lightmode

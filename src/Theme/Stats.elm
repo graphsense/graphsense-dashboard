@@ -6,8 +6,8 @@ import Css exposing (Style)
 type alias Stats =
     { root : List Style
     , stats : List Style
-    , currency : List Style
-    , currencyHeading : List Style
+    , currency : Bool -> List Style
+    , currencyHeading : Bool -> List Style
     , tableWrapper : List Style
     , tableWrapperInner : List Style
     , table : List Style
@@ -24,8 +24,8 @@ default : Stats
 default =
     { root = []
     , stats = []
-    , currency = []
-    , currencyHeading = []
+    , currency = \_ -> []
+    , currencyHeading = \_ -> []
     , tableWrapper = []
     , tableWrapperInner = []
     , table = []

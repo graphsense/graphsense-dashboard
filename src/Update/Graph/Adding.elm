@@ -8,10 +8,19 @@ import RemoteData exposing (RemoteData(..))
 import Set exposing (Set)
 
 
+normalizeEth : String -> String -> String
+normalizeEth currency address =
+    if String.toLower currency == "eth" then
+        String.toLower address
+
+    else
+        address
+
+
 loadAddress : { currency : String, address : String } -> Model -> Model
 loadAddress { currency, address } model =
     { model
-        | addresses = Dict.insert ( currency, address ) Init.addresses model.addresses
+        | addresses = Dict.insert ( currency, normalizeEth currency address ) Init.addresses model.addresses
     }
 
 
@@ -20,7 +29,7 @@ setAddress { currency, address } data model =
     { model
         | addresses =
             Dict.update
-                ( currency, address )
+                ( currency, normalizeEth currency address )
                 (Maybe.map (\a -> { a | address = Just data }))
                 model.addresses
     }
@@ -31,7 +40,7 @@ setEntityForAddress { currency, address } data model =
     { model
         | addresses =
             Dict.update
-                ( currency, address )
+                ( currency, normalizeEth currency address )
                 (Maybe.map (\a -> { a | entity = Just data }))
                 model.addresses
     }
@@ -42,7 +51,7 @@ setOutgoingForAddress { currency, address } data model =
     { model
         | addresses =
             Dict.update
-                ( currency, address )
+                ( currency, normalizeEth currency address )
                 (Maybe.map (\a -> { a | outgoing = Just data }))
                 model.addresses
     }
@@ -53,7 +62,7 @@ setIncomingForAddress { currency, address } data model =
     { model
         | addresses =
             Dict.update
-                ( currency, address )
+                ( currency, normalizeEth currency address )
                 (Maybe.map (\a -> { a | incoming = Just data }))
                 model.addresses
     }
@@ -109,13 +118,13 @@ addLabel label model =
 removeAddress : { currency : String, address : String } -> Model -> Model
 removeAddress { currency, address } model =
     { model
-        | addresses = Dict.remove ( currency, address ) model.addresses
+        | addresses = Dict.remove ( currency, normalizeEth currency address ) model.addresses
     }
 
 
 readyAddress : { currency : String, address : String } -> Model -> Maybe { address : Api.Data.Address, entity : Api.Data.Entity, outgoing : List Api.Data.NeighborEntity, incoming : List Api.Data.NeighborEntity }
 readyAddress { currency, address } model =
-    Dict.get ( currency, address ) model.addresses
+    Dict.get ( currency, normalizeEth currency address ) model.addresses
         |> Maybe.andThen
             (\add ->
                 Maybe.map4

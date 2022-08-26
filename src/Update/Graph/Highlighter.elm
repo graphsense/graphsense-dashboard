@@ -55,3 +55,8 @@ selectHighlight i model =
             else
                 Just i
     }
+
+
+deselect : Model -> Model
+deselect model =
+    { model | selected = Nothing }

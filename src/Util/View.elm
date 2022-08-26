@@ -1,9 +1,13 @@
 module Util.View exposing (..)
 
+import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
 import Css.View as Css
+import Hovercard
+import Html
+import Html.Attributes
 import Html.Styled exposing (Attribute, Html, img, span)
 import Html.Styled.Attributes exposing (classList, css, src)
 
@@ -61,3 +65,21 @@ setAlpha alpha =
     Color.toRgba
         >> (\c -> { c | alpha = alpha })
         >> Color.fromRgba
+
+
+hovercard : View.Config -> Dom.Element -> List (Html.Html msg) -> List (Html.Styled.Html msg)
+hovercard vc element =
+    Hovercard.hovercard
+        { maxWidth = 300
+        , maxHeight = 500
+        , tickLength = 0
+        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
+        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
+        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+        }
+        element
+        (Css.hovercard vc
+            |> List.map (\( k, v ) -> Html.Attributes.style k v)
+        )
+        >> Html.Styled.fromUnstyled
+        >> List.singleton

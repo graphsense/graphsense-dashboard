@@ -36,7 +36,7 @@ type alias Model =
     , contextMenu : Maybe ContextMenu.Model
     , tag : Maybe Tag.Model
     , search : Maybe Search.Model
-    , userAddressTags : Dict ( String, String ) Tag.UserTag
+    , userAddressTags : Dict ( String, String, String ) Tag.UserTag
     , hovercardTBD : Maybe Dom.Element
     , activeTool : ActiveTool
     , history : History

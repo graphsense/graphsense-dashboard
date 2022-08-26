@@ -4,6 +4,7 @@ module Update exposing (update, updateByUrl)
 
 import Api
 import Browser
+import Browser.Dom
 import Browser.Navigation as Nav
 import Config.Update exposing (Config)
 import DateFormat
@@ -47,6 +48,7 @@ import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
+import Version exposing (version)
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -97,12 +99,13 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotResponseWithHeaders statusbarToken result ->
+        BrowserGotResponseWithHeaders statusbarToken suppressErrors result ->
             { model
                 | statusbar =
                     case statusbarToken of
                         Just t ->
-                            Statusbar.update t
+                            Statusbar.update suppressErrors
+                                t
                                 (case result of
                                     Err ( Http.BadStatus 401, _ ) ->
                                         Nothing
@@ -155,6 +158,14 @@ update plugins uc msg model =
                 |> LocaleEffect
                 |> List.singleton
             )
+
+        UserClickedLightmode ->
+            { model
+                | config =
+                    model.config
+                        |> s_lightmode (not model.config.lightmode)
+            }
+                |> n
 
         UserInputsApiKeyForm input ->
             { model
@@ -309,6 +320,9 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotElementForPlugin pmsg element ->
+            updatePlugins plugins (pmsg element) model
+
         LocaleMsg m ->
             let
                 ( locale, localeEffects ) =
@@ -326,16 +340,7 @@ update plugins uc msg model =
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
-                    let
-                        ( new, outMsg, cmd ) =
-                            Plugin.update plugins ms model.plugins
-                    in
-                    ( { model
-                        | plugins = new
-                      }
-                    , [ PluginEffect cmd ]
-                    )
-                        |> updateByPluginOutMsg plugins outMsg
+                    updatePlugins plugins ms model
 
                 Search.UserClicksResult ->
                     clearSearch plugins model
@@ -365,7 +370,14 @@ update plugins uc msg model =
                                                     (\currency ( mod, effects ) ->
                                                         List.foldl
                                                             (\a ( mo, effs ) ->
-                                                                Graph.loadAddress plugins currency a Nothing Nothing mo
+                                                                Graph.loadAddress plugins
+                                                                    { currency = currency
+                                                                    , address = a
+                                                                    , table = Nothing
+                                                                    , layer = Nothing
+                                                                    , suppressErrors = True
+                                                                    }
+                                                                    mo
                                                                     |> mapSecond ((++) effs)
                                                             )
                                                             ( mod, effects )
@@ -390,16 +402,7 @@ update plugins uc msg model =
         GraphMsg m ->
             case m of
                 Graph.PluginMsg ms ->
-                    let
-                        ( new, outMsg, cmd ) =
-                            Plugin.update plugins ms model.plugins
-                    in
-                    ( { model
-                        | plugins = new
-                      }
-                    , [ PluginEffect cmd ]
-                    )
-                        |> updateByPluginOutMsg plugins outMsg
+                    updatePlugins plugins ms model
 
                 Graph.InternalGraphAddedAddresses ids ->
                     let
@@ -569,16 +572,7 @@ update plugins uc msg model =
             n { model | dialog = Nothing }
 
         PluginMsg msgValue ->
-            let
-                ( new, outMsg, cmd ) =
-                    Plugin.update plugins msgValue model.plugins
-            in
-            ( { model
-                | plugins = new
-              }
-            , [ PluginEffect cmd ]
-            )
-                |> updateByPluginOutMsg plugins outMsg
+            updatePlugins plugins msgValue model
 
 
 updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
@@ -602,14 +596,23 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.ShowBrowser ->
                         updateGraphByPluginOutMsg model eff
 
-                    PluginInterface.UpdateAddresses id msgValue ->
+                    PluginInterface.UpdateAddresses _ _ ->
                         updateGraphByPluginOutMsg model eff
 
-                    PluginInterface.UpdateAddressEntities id msgValue ->
+                    PluginInterface.UpdateAddressEntities _ _ ->
                         updateGraphByPluginOutMsg model eff
 
-                    PluginInterface.UpdateEntities id msgValue ->
+                    PluginInterface.UpdateEntities _ _ ->
                         updateGraphByPluginOutMsg model eff
+
+                    PluginInterface.GetAddressDomElement id pmsg ->
+                        ( mo
+                        , Id.addressIdToString id
+                            |> Browser.Dom.getElement
+                            |> Task.attempt (BrowserGotElementForPlugin pmsg)
+                            |> CmdEffect
+                            |> List.singleton
+                        )
 
                     PluginInterface.PushUrl url ->
                         ( model
@@ -881,3 +884,17 @@ deserialize filename data model =
             ( { model | graph = graph }
             , List.map GraphEffect graphEffects
             )
+
+
+updatePlugins : Plugins -> Plugin.Msg -> Model key -> ( Model key, List Effect )
+updatePlugins plugins msg model =
+    let
+        ( new, outMsg, cmd ) =
+            Plugin.update plugins msg model.plugins
+    in
+    ( { model
+        | plugins = new
+      }
+    , [ PluginEffect cmd ]
+    )
+        |> updateByPluginOutMsg plugins outMsg

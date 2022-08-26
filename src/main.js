@@ -24,6 +24,17 @@ const now = +(new Date())
 
 const app = Elm.Main.init({flags: {locale, width, height, now}});
 
+window.onbeforeunload = function (evt) {
+  const message = 'You are about to leave the site. Your work will be lost. Sure?'
+  if (typeof evt === 'undefined') {
+    evt = window.event
+  }
+  if (evt) {
+    evt.returnValue = message
+  }
+  return message
+}
+
 
 app.ports.console.subscribe(console.error)
 

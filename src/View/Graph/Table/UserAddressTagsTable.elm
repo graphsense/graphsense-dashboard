@@ -7,6 +7,7 @@ import Css
 import Css.Table
 import Css.View
 import Dict
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
@@ -41,6 +42,24 @@ config vc gc =
             [ T.stringColumn vc "Address" .address
             , T.stringColumn vc "Currency" (.currency >> String.toUpper)
             , T.stringColumn vc "Label" .label
+            , T.htmlColumn vc
+                "Defines entity"
+                (\tag ->
+                    if tag.isClusterDefiner then
+                        "Y"
+
+                    else
+                        "N"
+                )
+                (\tag ->
+                    if tag.isClusterDefiner then
+                        FontAwesome.icon FontAwesome.check
+                            |> Html.Styled.fromUnstyled
+                            |> List.singleton
+
+                    else
+                        []
+                )
             , T.htmlColumn vc
                 "Source"
                 .source

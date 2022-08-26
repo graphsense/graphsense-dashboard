@@ -17,5 +17,16 @@ subscriptions model =
         _ ->
             Browser.Events.onMouseUp (Json.Decode.succeed UserReleasesMouseButton)
     , Ports.deserialized PortDeserializedGS
+    , Browser.Events.onKeyUp
+        (Json.Decode.field "key" Json.Decode.string
+            |> Json.Decode.map
+                (\str ->
+                    if str == "Escape" then
+                        UserPressesEscape
+
+                    else
+                        NoOp
+                )
+        )
     ]
         |> Sub.batch

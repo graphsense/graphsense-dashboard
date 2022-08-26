@@ -9,38 +9,38 @@ import Model.Graph.Tool as Tool
 type alias Graph =
     { root : List Style
     , addressFlags : List Style
-    , abuseFlag : List Style
-    , tagsFlag : List Style
+    , abuseFlag : Bool -> List Style
+    , tagsFlag : Bool -> List Style
     , flagsGap : Float
-    , addressLabel : List Style
+    , addressLabel : Bool -> List Style
     , addressRect : List Style
-    , nodeFrame : NodeType -> Bool -> List Style
+    , nodeFrame : Bool -> NodeType -> Bool -> List Style
     , addressRoot : List Style
     , entityFlags : List Style
-    , entityLabel : List Style
+    , entityLabel : Bool -> List Style
     , labelText : NodeType -> List Style
-    , entityCurrency : List Style
-    , entityAddressesCount : List Style
+    , entityCurrency : Bool -> List Style
+    , entityAddressesCount : Bool -> List Style
     , entityRect : List Style
     , entityRoot : List Style
-    , link : NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
+    , link : Bool -> NodeType -> Bool -> Bool -> Maybe Color.Color -> List Style
     , linkThickness : Float
-    , linkColorFaded : Color
-    , linkColorStrong : Color
-    , linkColorSelected : Color
-    , linkLabel : Bool -> Bool -> Maybe Color.Color -> List Style
-    , linkLabelBox : Bool -> Bool -> List Style
-    , shadowLink : List Style
+    , linkColorFaded : Bool -> Color
+    , linkColorStrong : Bool -> Color
+    , linkColorSelected : Bool -> Color
+    , linkLabel : Bool -> Bool -> Bool -> Maybe Color.Color -> List Style
+    , linkLabelBox : Bool -> Bool -> Bool -> List Style
+    , shadowLink : Bool -> List Style
     , expandHandle : NodeType -> List Style
-    , expandHandlePath : NodeType -> Bool -> List Style
-    , expandHandleText : NodeType -> List Style
-    , nodeSeparatorToExpandHandle : NodeType -> List Style
+    , expandHandlePath : Bool -> NodeType -> Bool -> List Style
+    , expandHandleText : Bool -> NodeType -> List Style
+    , nodeSeparatorToExpandHandle : Bool -> NodeType -> List Style
     , graphRoot : List Style
-    , svgRoot : List Style
-    , navbar : List Style
+    , svgRoot : Bool -> List Style
+    , navbar : Bool -> List Style
     , navbarLeft : List Style
     , navbarRight : List Style
-    , tool : Tool.Status -> List Style
+    , tool : Bool -> Tool.Status -> List Style
     , colorScheme : List Color
     , highlightsColorScheme : List Color
     , lightnessFactor :
@@ -52,8 +52,8 @@ type alias Graph =
         , address : Float
         }
     , defaultColor : Color
-    , searchTextarea : List Style
-    , toolbox : Bool -> List Style
+    , searchTextarea : Bool -> List Style
+    , toolbox : Bool -> Bool -> List Style
     , legendItem : List Style
     , legendItemColor : List Style
     , legendItemTitle : List Style
@@ -69,8 +69,8 @@ type alias Graph =
     , highlightsColor : List Style
     , highlightRoot : List Style
     , highlightColor : Bool -> List Style
-    , highlightTitle : List Style
-    , highlightTrash : List Style
+    , highlightTitle : Bool -> List Style
+    , highlightTrash : Bool -> List Style
     }
 
 
@@ -78,38 +78,38 @@ default : Graph
 default =
     { root = []
     , addressFlags = []
-    , abuseFlag = []
-    , tagsFlag = []
+    , abuseFlag = \_ -> []
+    , tagsFlag = \_ -> []
     , flagsGap = 5
-    , addressLabel = []
+    , addressLabel = \_ -> []
     , addressRect = []
-    , nodeFrame = \_ _ -> []
+    , nodeFrame = \_ _ _ -> []
     , addressRoot = []
     , entityFlags = []
-    , entityLabel = []
+    , entityLabel = \_ -> []
     , labelText = \_ -> []
-    , entityCurrency = []
-    , entityAddressesCount = []
+    , entityCurrency = \_ -> []
+    , entityAddressesCount = \_ -> []
     , entityRect = []
     , entityRoot = []
-    , link = \_ _ _ _ -> []
+    , link = \_ _ _ _ _ -> []
     , linkThickness = 1
-    , linkColorFaded = Color.grey
-    , linkColorStrong = Color.black
-    , linkColorSelected = Color.red
-    , linkLabel = \_ _ _ -> []
-    , linkLabelBox = \_ _ -> []
-    , shadowLink = []
+    , linkColorFaded = \_ -> Color.grey
+    , linkColorStrong = \_ -> Color.black
+    , linkColorSelected = \_ -> Color.red
+    , linkLabel = \_ _ _ _ -> []
+    , linkLabelBox = \_ _ _ -> []
+    , shadowLink = \_ -> []
     , expandHandle = always []
-    , expandHandlePath = \_ _ -> []
-    , expandHandleText = always []
-    , nodeSeparatorToExpandHandle = always []
+    , expandHandlePath = \_ _ _ -> []
+    , expandHandleText = \_ _ -> []
+    , nodeSeparatorToExpandHandle = \_ _ -> []
     , graphRoot = []
-    , svgRoot = []
-    , navbar = []
+    , svgRoot = \_ -> []
+    , navbar = \_ -> []
     , navbarLeft = []
     , navbarRight = []
-    , tool = \_ -> []
+    , tool = \_ _ -> []
     , colorScheme = []
     , highlightsColorScheme = []
     , lightnessFactor =
@@ -121,8 +121,8 @@ default =
         , address = 1
         }
     , defaultColor = Color.rgb 255 255 255
-    , searchTextarea = []
-    , toolbox = \_ -> []
+    , searchTextarea = \_ -> []
+    , toolbox = \_ _ -> []
     , legendItem = []
     , legendItemColor = []
     , legendItemTitle = []
@@ -137,7 +137,7 @@ default =
     , highlightsColors = []
     , highlightsColor = []
     , highlightRoot = []
-    , highlightTitle = []
+    , highlightTitle = \_ -> []
     , highlightColor = \_ -> []
-    , highlightTrash = []
+    , highlightTrash = \_ -> []
     }

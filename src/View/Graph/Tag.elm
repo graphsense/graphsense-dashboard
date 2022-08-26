@@ -10,6 +10,7 @@ import Html.Styled.Events exposing (..)
 import Model.Graph.Tag exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Plugin.View exposing (Plugins)
+import Util.View exposing (none)
 import View.Dialog as Dialog
 import View.Locale as Locale
 import View.Search as Search
@@ -87,12 +88,28 @@ inputHovercard plugins vc tc model =
                     , Css.View.input vc |> css
                     ]
             ]
-        , input
-            [ type_ "submit"
-            , Css.View.primary vc |> css
-            , Locale.string vc.locale "Save" |> value
+        , div
+            [ Css.View.buttonsRow vc |> css
             ]
-            []
+            [ input
+                [ type_ "submit"
+                , Css.View.primary vc |> css
+                , Locale.string vc.locale "Save" |> value
+                ]
+                []
+            , model.existing
+                |> Maybe.map
+                    (\_ ->
+                        input
+                            [ type_ "button"
+                            , Css.View.danger vc |> css
+                            , Locale.string vc.locale "Delete" |> value
+                            , onClick UserClicksDeleteTag
+                            ]
+                            []
+                    )
+                |> Maybe.withDefault none
+            ]
         ]
     ]
         |> Html.form

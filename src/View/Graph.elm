@@ -359,9 +359,9 @@ hoveredLinks vc gc hovered layers =
 
 arrowMarkers : Config -> Graph.Config -> Svg Msg
 arrowMarkers vc gc =
-    [ vc.theme.graph.linkColorFaded
-    , vc.theme.graph.linkColorStrong
-    , vc.theme.graph.linkColorSelected
+    [ vc.theme.graph.linkColorFaded vc.lightmode
+    , vc.theme.graph.linkColorStrong vc.lightmode
+    , vc.theme.graph.linkColorSelected vc.lightmode
     ]
         ++ vc.theme.graph.highlightsColorScheme
         |> List.map (Link.arrowMarker vc gc)

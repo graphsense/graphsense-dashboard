@@ -6,7 +6,7 @@ import Css exposing (..)
 
 root : Config -> Bool -> List Style
 root vc visible =
-    vc.theme.statusbar.root visible
+    vc.theme.statusbar.root vc.lightmode visible
 
 
 loadingSpinner : Config -> List Style
@@ -16,9 +16,9 @@ loadingSpinner vc =
 
 log : Config -> Bool -> List Style
 log vc noerror =
-    vc.theme.statusbar.log noerror
+    vc.theme.statusbar.log vc.lightmode noerror
 
 
 close : Config -> List Style
 close vc =
-    vc.theme.statusbar.close
+    vc.theme.statusbar.close vc.lightmode

@@ -13,6 +13,16 @@ appendData nextpage data table =
     }
 
 
+setData : List a -> Table a -> Table a
+setData data table =
+    { table
+        | data = data
+        , filtered = filterData table.filter data table.filterFunction
+        , nextpage = table.nextpage
+        , loading = False
+    }
+
+
 applyFilter : Maybe String -> Table a -> Table a
 applyFilter filter table =
     { table
