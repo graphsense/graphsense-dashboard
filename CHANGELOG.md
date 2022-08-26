@@ -3,6 +3,39 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased 
+
+### Added
+- add favicon
+- light mode, #315
+- plugin hooks
+
+### Changed
+- fix loading eth address from table
+- local fontawesome, #338
+- fix updating user tags table on annotating
+- delete tag #337
+- rename tag locked to proprietary tag
+- warn before closing window
+- stop highlighter by escape and clicking highlighting tool again, fix #324
+- suppress errors on bulk address input, #326
+- distinguish entity/address tag on root address tags, #332
+- improve rendering performance
+- fix search input matching result list for ETH (case insensitive)
+- on deserialize, only load outgoing entity neighbors in bulk 
+
+## [1.0.0] - 2022-07-13
+
+Complete rewrite in [Elm](https://elm-lang.org).
+
+## Added
+- plugin architecture
+
+## Removed
+- entity tags
+- export feature REST calls and audit log
+- hints
+
 ## [0.5.2] - 2022-03-25
 ### Added
 - Show number of tagged addresses and tag coverage
