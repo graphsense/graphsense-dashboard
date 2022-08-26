@@ -29,10 +29,6 @@ import Time
 import Url exposing (Url)
 
 
-version =
-    "1.0.0"
-
-
 type alias Flags =
     { locale : String
     , now : Int

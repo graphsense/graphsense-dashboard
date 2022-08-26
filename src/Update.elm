@@ -48,6 +48,7 @@ import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
+import Version exposing (version)
 import View.Locale as Locale
 import Yaml.Decode
 
