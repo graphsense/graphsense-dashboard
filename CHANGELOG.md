@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased 
+## [1.0.1] - 2022-08-26
 
 ### Added
 - add favicon
@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - plugin hooks
 
 ### Changed
-- fix loading eth address from table
+- fix loading ETH address from table
 - local fontawesome, #338
 - fix updating user tags table on annotating
 - delete tag #337
