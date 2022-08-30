@@ -126,15 +126,15 @@ const colors = {
   'pink-lighter': '#ffbbca',
   'pink-lightest': '#ffebef',
 
-  'gs-text': '#5c6f77',
-  'gs-darker': '#71858a',
-  'gs-dark': '#71a1a5',
-  'gs-base': '#6bc2c2',
-  'gs-light': '#c0e2e1',
-  'gs-lighter': '#d2eced',
-  'gs-lightest': '#d2eced',
-  'gs-red': '#cc6a42',
-  'gs-red-light': '#eeccbe',
+  'gs-text': '#4f87d1',
+  'gs-darker': '#4f87d1',
+  'gs-dark': '#4f87d1',
+  'gs-base': '#4f87d1',
+  'gs-light': '#4f87d1',
+  'gs-lighter': '#4f87d1',
+  'gs-lightest': '#4f87d1',
+  'gs-red': '#4f87d1',
+  'gs-red-light': '#4f87d1',
   'gs-white': '#fff'
 
 }
