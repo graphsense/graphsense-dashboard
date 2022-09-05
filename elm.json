@@ -8,6 +8,8 @@
         "plugins/casemgm/generated",
         "plugins/casemgm/src",
         "lib/elm-hovercard/src",
+        "lib/yaml/src",
+        "lib/elm-parser-extras/src",
         "lib/elm-css-sortable-table/src"
     ],
     "elm-version": "0.19.1",
@@ -15,7 +17,6 @@
         "direct": {
             "BrianHicks/elm-csv": "3.0.3",
             "FabienHenon/elm-infinite-list-view": "3.2.0",
-            "MaybeJustJames/yaml": "2.1.1",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "PanagiotisGeorgiadis/elm-datetime": "1.3.0",
             "TSFoster/elm-tuple-extra": "2.0.0",
