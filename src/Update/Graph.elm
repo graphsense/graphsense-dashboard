@@ -2902,7 +2902,11 @@ makeTagPack model time =
                             [ ( "currency", Yaml.Encode.string currency )
                             , ( "address", Yaml.Encode.string address )
                             , ( "is_cluster_definer", Yaml.Encode.bool isClusterDefiner )
-                            , ( "label", Yaml.Encode.string label )
+                            , ( "label"
+                              , Json.Encode.string label
+                                    |> Json.Encode.encode 0
+                                    |> Yaml.Encode.string
+                              )
                             , ( "category"
                               , category
                                     |> Maybe.map Yaml.Encode.string
@@ -2929,6 +2933,7 @@ makeTagPack model time =
                                     ]
                                     Time.utc
                                     time
+                                    |> (\s -> "\"" ++ s ++ "\"")
                                     |> Yaml.Encode.string
                               )
                             ]
@@ -2958,14 +2963,25 @@ importTagPack uc tags model =
 
 decodeYamlTag : Yaml.Decode.Decoder Tag.UserTag
 decodeYamlTag =
+    let
+        optionalFieldWithDefault default name decoder =
+            Yaml.Decode.oneOf
+                [ Yaml.Decode.field name decoder
+                , Yaml.Decode.succeed default
+                ]
+
+        optionalField name decoder =
+            Yaml.Decode.field name decoder
+                |> Yaml.Decode.maybe
+    in
     Yaml.Decode.map7 Tag.UserTag
         (Yaml.Decode.field "currency" Yaml.Decode.string)
         (Yaml.Decode.field "address" Yaml.Decode.string)
         (Yaml.Decode.field "label" Yaml.Decode.string)
-        (Yaml.Decode.oneOf [ Yaml.Decode.field "source" Yaml.Decode.string, Yaml.Decode.succeed "" ])
-        (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
-        (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))
-        (Yaml.Decode.field "is_cluster_definer" (Yaml.Decode.oneOf [ Yaml.Decode.bool, Yaml.Decode.succeed False ]))
+        (optionalFieldWithDefault "" "source" Yaml.Decode.string)
+        (optionalField "category" Yaml.Decode.string)
+        (optionalField "abuse" Yaml.Decode.string)
+        (optionalFieldWithDefault False "is_cluster_definer" Yaml.Decode.bool)
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
