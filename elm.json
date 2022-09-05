@@ -7,8 +7,8 @@
         "config",
         "plugins/casemgm/generated",
         "plugins/casemgm/src",
-        "elm-hovercard/src",
-        "elm-css-sortable-table/src"
+        "lib/elm-hovercard/src",
+        "lib/elm-css-sortable-table/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

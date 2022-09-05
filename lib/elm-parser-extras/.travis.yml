@@ -1,0 +1,37 @@
+sudo: false
+
+language: node_js # elm is installed from npm (see install below)
+node_js: node     # use "latest" version of Node.js
+
+notifications:
+  email: false
+
+env:
+  - ELM_VERSION=0.19.0-bugfix2 ELM_TEST=0.19.0-beta8 ELM_FORMAT=0.8.0
+
+cache:
+  directories:
+    - sysconfcpus
+    - $HOME/.npm # https://stackoverflow.com/a/42523517/1148249
+
+before_install:
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+install:
+  - node --version
+  - npm --version
+  - npm install -g elm@$ELM_VERSION elm-test@$ELM_TEST elm-format@$ELM_FORMAT
+  # Faster compile on Travis.
+  - | # courtesy of @rtfeldman - see https://github.com/rtfeldman/node-test-runner#travis-ci
+    if [ ! -d sysconfcpus/bin ];
+    then
+      git clone https://github.com/obmarg/libsysconfcpus.git;
+      cd libsysconfcpus;
+      ./configure --prefix=$TRAVIS_BUILD_DIR/sysconfcpus;
+      make && make install;
+      cd ..;
+    fi
+
+script:
+  - elm-format --validate src tests
+  - $TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 1 elm-test tests/Tests.elm --verbose

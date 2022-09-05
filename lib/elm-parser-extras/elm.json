@@ -1,0 +1,19 @@
+{
+    "type": "package",
+    "name": "Punie/elm-parser-extras",
+    "summary": "Convenience functions for building parser with elm/parser",
+    "license": "BSD-3-Clause",
+    "version": "1.0.0",
+    "exposed-modules": [
+        "Parser.Extras",
+        "Parser.Expression"
+    ],
+    "elm-version": "0.19.0 <= v < 0.20.0",
+    "dependencies": {
+        "elm/core": "1.0.0 <= v < 2.0.0",
+        "elm/parser": "1.0.0 <= v < 2.0.0"
+    },
+    "test-dependencies": {
+        "elm-explorations/test": "1.1.0 <= v < 2.0.0"
+    }
+}

@@ -16,8 +16,7 @@ RUN chmod +x /docker-entrypoint.sh && npm install
 COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
-COPY ./elm-hovercard $WORKDIR/elm-hovercard
-COPY ./elm-css-sortable-table $WORKDIR/elm-css-sortable-table
+COPY ./lib $WORKDIR/lib
 COPY ./public $WORKDIR/public
 COPY ./plugins $WORKDIR/plugins
 COPY ./themes $WORKDIR/themes
