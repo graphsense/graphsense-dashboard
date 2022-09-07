@@ -359,6 +359,13 @@ theme =
                             ]
                         ]
                     )
+                |> s_lightmodeLabel
+                    [ whiteSpace noWrap
+                    ]
+                |> s_lightmodeRoot
+                    [ displayFlex
+                    , alignItems center
+                    ]
             )
         |> s_dialog
             (Dialog.default

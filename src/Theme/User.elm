@@ -10,6 +10,8 @@ type alias User =
     , requestLimit : List Style
     , requestReset : List Style
     , logoutButton : Bool -> List Style
+    , lightmodeLabel : List Style
+    , lightmodeRoot : List Style
     }
 
 
@@ -21,4 +23,6 @@ default =
     , requestLimit = []
     , requestReset = []
     , logoutButton = \_ -> []
+    , lightmodeLabel = []
+    , lightmodeRoot = []
     }

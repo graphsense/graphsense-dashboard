@@ -2019,6 +2019,11 @@ s_index value__ record__ =
     { record__ | index = value__ }
 
 
+s_infinite : a -> { b | infinite : a } -> { b | infinite : a }
+s_infinite value__ record__ =
+    { record__ | infinite = value__ }
+
+
 s_init : a -> { b | init : a } -> { b | init : a }
 s_init value__ record__ =
     { record__ | init = value__ }
@@ -2229,6 +2234,11 @@ s_larger value__ record__ =
     { record__ | larger = value__ }
 
 
+s_lassoc : a -> { b | lassoc : a } -> { b | lassoc : a }
+s_lassoc value__ record__ =
+    { record__ | lassoc = value__ }
+
+
 s_lastEffect : a -> { b | lastEffect : a } -> { b | lastEffect : a }
 s_lastEffect value__ record__ =
     { record__ | lastEffect = value__ }
@@ -2407,6 +2417,16 @@ s_light value__ record__ =
 s_lightmode : a -> { b | lightmode : a } -> { b | lightmode : a }
 s_lightmode value__ record__ =
     { record__ | lightmode = value__ }
+
+
+s_lightmodeLabel : a -> { b | lightmodeLabel : a } -> { b | lightmodeLabel : a }
+s_lightmodeLabel value__ record__ =
+    { record__ | lightmodeLabel = value__ }
+
+
+s_lightmodeRoot : a -> { b | lightmodeRoot : a } -> { b | lightmodeRoot : a }
+s_lightmodeRoot value__ record__ =
+    { record__ | lightmodeRoot = value__ }
 
 
 s_lightness : a -> { b | lightness : a } -> { b | lightness : a }
@@ -2762,6 +2782,11 @@ s_namespace value__ record__ =
 s_namespaces : a -> { b | namespaces : a } -> { b | namespaces : a }
 s_namespaces value__ record__ =
     { record__ | namespaces = value__ }
+
+
+s_nassoc : a -> { b | nassoc : a } -> { b | nassoc : a }
+s_nassoc value__ record__ =
+    { record__ | nassoc = value__ }
 
 
 s_navbar : a -> { b | navbar : a } -> { b | navbar : a }
@@ -3149,11 +3174,6 @@ s_onRightClick value__ record__ =
     { record__ | onRightClick = value__ }
 
 
-s_onRouteChange : a -> { b | onRouteChange : a } -> { b | onRouteChange : a }
-s_onRouteChange value__ record__ =
-    { record__ | onRouteChange = value__ }
-
-
 s_onSuccess : a -> { b | onSuccess : a } -> { b | onSuccess : a }
 s_onSuccess value__ record__ =
     { record__ | onSuccess = value__ }
@@ -3524,6 +3544,11 @@ s_postdocComments value__ record__ =
     { record__ | postdocComments = value__ }
 
 
+s_postfix : a -> { b | postfix : a } -> { b | postfix : a }
+s_postfix value__ record__ =
+    { record__ | postfix = value__ }
+
+
 s_preambleComments : a -> { b | preambleComments : a } -> { b | preambleComments : a }
 s_preambleComments value__ record__ =
     { record__ | preambleComments = value__ }
@@ -3707,6 +3732,11 @@ s_radius value__ record__ =
 s_range : a -> { b | range : a } -> { b | range : a }
 s_range value__ record__ =
     { record__ | range = value__ }
+
+
+s_rassoc : a -> { b | rassoc : a } -> { b | rassoc : a }
+s_rassoc value__ record__ =
+    { record__ | rassoc = value__ }
 
 
 s_rates : a -> { b | rates : a } -> { b | rates : a }

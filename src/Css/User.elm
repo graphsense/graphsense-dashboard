@@ -32,3 +32,13 @@ requestReset vc =
 logoutButton : Config -> List Style
 logoutButton vc =
     vc.theme.user.logoutButton vc.lightmode
+
+
+lightmodeLabel : Config -> List Style
+lightmodeLabel vc =
+    vc.theme.user.lightmodeLabel
+
+
+lightmodeRoot : Config -> List Style
+lightmodeRoot vc =
+    vc.theme.user.lightmodeRoot

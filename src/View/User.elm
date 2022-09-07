@@ -52,14 +52,20 @@ hovercard vc model =
                 [ localeSwitch vc ]
            , Dialog.part vc
                 "Display"
-                [ input
-                    [ type_ "checkbox"
-                    , checked vc.lightmode
-                    , onClick UserClickedLightmode
+                [ div
+                    [ Css.lightmodeRoot vc |> css
                     ]
-                    []
-                , Locale.string vc.locale "Light mode"
-                    |> text
+                    [ input
+                        [ type_ "checkbox"
+                        , checked vc.lightmode
+                        , onClick UserClickedLightmode
+                        ]
+                        []
+                    , Locale.string vc.locale "Light mode"
+                        |> text
+                        |> List.singleton
+                        |> span [ Css.lightmodeLabel vc |> css ]
+                    ]
                 ]
            ]
         ++ (case model.auth of
