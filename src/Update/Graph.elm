@@ -2805,6 +2805,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo, [] )
+
+                    PluginInterface.SendToPort _ ->
+                        ( mo, [] )
             )
             ( model, [] )
 

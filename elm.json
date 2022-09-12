@@ -22,6 +22,7 @@
             "avh4/elm-color": "1.0.0",
             "avh4/elm-fifo": "1.0.4",
             "avh4/elm-program-test": "3.7.0",
+            "billstclair/elm-sha256": "1.0.9",
             "cuducos/elm-format-number": "9.0.1",
             "danyx23/elm-uuid": "2.1.2",
             "dillonkearns/elm-graphql": "5.0.10",

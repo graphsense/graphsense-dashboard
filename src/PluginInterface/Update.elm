@@ -13,7 +13,8 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , updateGraphByUrl : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     , addressesAdded : Maybe (Set Id.AddressId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     , entitiesAdded : Maybe (Set Id.EntityId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
-    , init : Maybe modelState
+    , updateApiKeyHash : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , init : Maybe ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg )
     , initAddress : Maybe addressState
     , initEntity : Maybe entityState
     , clearSearch : Maybe (modelState -> modelState)
@@ -29,6 +30,7 @@ init =
     , updateGraphByUrl = Nothing
     , addressesAdded = Nothing
     , entitiesAdded = Nothing
+    , updateApiKeyHash = Nothing
     , init = Nothing
     , initAddress = Nothing
     , initEntity = Nothing

@@ -117,6 +117,7 @@ theme =
             , letterSpacingWide
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
+            , scaled 1 |> rem |> paddingTop
             ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo

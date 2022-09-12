@@ -3,6 +3,8 @@ module Sub exposing (subscriptions)
 import Browser.Events
 import Browser.Navigation as Nav
 import Model exposing (Model, Msg(..))
+import Plugin.Sub as Plugin
+import Ports
 import Sub.Graph as Graph
 import Sub.Locale as Locale
 import Time
@@ -31,5 +33,7 @@ subscriptions model =
 
         _ ->
             Sub.none
+    , Plugin.subscriptions Ports.pluginsIn model.plugins
+        |> Sub.map PluginMsg
     ]
         |> Sub.batch

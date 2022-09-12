@@ -9,6 +9,7 @@ import Init.Statusbar as Statusbar
 import Model exposing (..)
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
+import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
 
 
@@ -19,6 +20,9 @@ init plugins flags url key =
             Locale.init
                 { locale = flags.locale
                 }
+
+        ( pluginStates, outMsgs, cmd ) =
+            Plugin.init plugins
     in
     ( { url = url
       , key = key
@@ -42,14 +46,16 @@ init plugins flags url key =
       , error = ""
       , statusbar = Statusbar.init
       , dialog = Nothing
-      , plugins = Plugin.init plugins
+      , plugins = pluginStates
       }
     , List.map LocaleEffect localeEffect
         ++ [ GetConceptsEffect "entity" BrowserGotEntityTaxonomy
            , GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
+           , PluginEffect cmd
            ]
     )
         |> getStatistics
+        |> updateByPluginOutMsg plugins outMsgs
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )

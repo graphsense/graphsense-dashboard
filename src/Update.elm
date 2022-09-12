@@ -1,4 +1,4 @@
-module Update exposing (update, updateByUrl)
+module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
 --import Plugin.Update.Graph
 
@@ -35,6 +35,7 @@ import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
+import Sha256
 import Task
 import Time
 import Tuple exposing (..)
@@ -188,6 +189,10 @@ update plugins uc msg model =
 
                             _ ->
                                 []
+
+                    ( new, outMsg, cmd ) =
+                        Sha256.sha256 model.user.apiKey
+                            |> Plugin.updateApiKeyHash plugins model.plugins
                 in
                 ( { model
                     | user =
@@ -206,9 +211,11 @@ update plugins uc msg model =
                                  else
                                     model.user.hovercardElement
                                 )
+                    , plugins = new
                   }
-                , effs
+                , PluginEffect cmd :: effs
                 )
+                    |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotElement result ->
             { model
@@ -679,6 +686,15 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.Deserialize filename data ->
                         deserialize filename data model
                             |> mapSecond ((++) eff)
+
+                    PluginInterface.SendToPort value ->
+                        ( model
+                        , value
+                            |> Ports.pluginsOut
+                            |> CmdEffect
+                            |> List.singleton
+                            |> (++) eff
+                        )
             )
             ( mo, effects )
 
