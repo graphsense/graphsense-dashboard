@@ -1,0 +1,29 @@
+module Plugin.Sub exposing (subscriptions)
+
+{{#plugins}}
+import {{package}}.Sub
+{{/plugins}}
+import Json.Decode
+import Plugin.Model
+import Plugin.Msg
+
+
+subscriptions : ((( String, Json.Decode.Value ) -> Plugin.Msg.Msg) -> Sub Plugin.Msg.Msg) -> Plugin.Model.ModelState -> Sub Plugin.Msg.Msg
+subscriptions inPort state =
+    [ {{#plugins}}Maybe.map {{package}}.Sub.subscriptions state.{{name}}
+        |> Maybe.withDefault Sub.none
+        |> Sub.map Plugin.Msg.{{package}}Msg
+    {{^last}}, {{/last}}{{/plugins}}
+    , inPort
+        (\( namespace, value ) ->
+            case namespace of{{#plugins}} 
+                "{{name}}" ->
+                    {{package}}.Sub.inPort value
+                        |> Plugin.Msg.{{package}}Msg
+{{/plugins}}
+
+                _ ->
+                    Plugin.Msg.NoOp
+        )
+    ]
+        |> Sub.batch

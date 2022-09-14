@@ -1,0 +1,28 @@
+module Plugin.Msg exposing (..)
+
+
+{{#plugins}}
+import {{package}}.Msg
+{{/plugins}}
+import Plugin.Model
+import PluginInterface.Msg as PluginInterface
+
+
+type Msg
+    = NoOp {{#plugins}}
+    | {{package}}Msg {{package}}.Msg.Msg
+{{/plugins}}
+
+
+type AddressMsg
+    = {{#plugins}}{{package}}AddressMsg {{package}}.Msg.AddressMsg
+    {{^last}}| {{/last}}{{/plugins}}
+
+
+type EntityMsg
+    = {{#plugins}}{{package}}EntityMsg {{package}}.Msg.EntityMsg
+    {{^last}}| {{/last}}{{/plugins}}
+
+
+type alias OutMsg =
+    PluginInterface.OutMsg Msg AddressMsg EntityMsg

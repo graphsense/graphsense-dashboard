@@ -1,0 +1,51 @@
+module Plugin exposing (..)
+
+{{#plugins}}
+import {{package}}
+{{/plugins}}
+import Plugin.Effects
+import Plugin.Update
+import Plugin.View
+
+
+type alias Plugins =
+    { {{#plugins}}{{name}} : Maybe {{package}}.Plugin
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+empty : Plugins
+empty =
+    { {{#plugins}}{{name}} = Nothing
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+{{#plugins}}
+{{name}} : {{package}}.Plugin -> Plugins -> Plugins
+{{name}} plugin plugins =
+    { plugins
+        | {{name}} = Just plugin
+    }
+
+{{/plugins}}
+
+
+effectsPlugins : Plugins -> Plugin.Effects.Plugins
+effectsPlugins plugins =
+    { {{#plugins}}{{name}} = Maybe.map .effects plugins.{{name}}
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+updatePlugins : Plugins -> Plugin.Update.Plugins
+updatePlugins plugins =
+    { {{#plugins}}{{name}} = Maybe.map .update plugins.{{name}}
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+viewPlugins : Plugins -> Plugin.View.Plugins
+viewPlugins plugins =
+    { {{#plugins}}{{name}} = Maybe.map .view plugins.{{name}}
+    {{^last}}, {{/last}}{{/plugins}}
+    }

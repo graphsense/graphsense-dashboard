@@ -3,7 +3,7 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
-import plugins from '../plugins/casemgm/generated/index.js'
+import plugins from '../plugin_generated/index.js'
 
 
 const getNavigatorLanguage = () => {

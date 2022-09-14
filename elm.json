@@ -5,8 +5,7 @@
         "openapi/src",
         "themes",
         "config",
-        "plugins/casemgm/generated",
-        "plugins/casemgm/src"
+        "plugin_generated"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

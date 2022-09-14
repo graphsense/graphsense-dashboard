@@ -1,0 +1,30 @@
+module Plugin.Effects exposing (..)
+
+{{#plugins}}
+import {{package}}.Msg
+{{/plugins}}
+import Plugin.Msg
+import PluginInterface.Effects
+
+
+type alias Plugins =
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.Effects.Effects {{package}}.Msg.Msg)
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+search : Plugins -> String -> List (Cmd Plugin.Msg.Msg)
+search plugins query =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                plugin.search
+                    |> Maybe.map
+                        (\fun ->
+                            fun query
+                                |> Cmd.map Plugin.Msg.{{package}}Msg
+                        )
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity

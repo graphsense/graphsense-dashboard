@@ -1,0 +1,48 @@
+module Plugin.Model exposing (..)
+
+{{#plugins}}
+import {{package}}.Model
+{{/plugins}}
+
+type alias ModelState =
+    { {{#plugins}}{{name}} : Maybe {{package}}.Model.Model
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+type alias AddressState =
+    { {{#plugins}}{{name}} : Maybe {{package}}.Model.AddressState
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+type alias EntityState =
+    { {{#plugins}}{{name}} : Maybe {{package}}.Model.EntityState
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+
+
+type PluginType
+    = {{#plugins}}{{package}}
+    {{^last}}| {{/last}}{{/plugins}}
+
+
+pluginTypeToNamespace : PluginType -> String
+pluginTypeToNamespace type_ =
+    case type_ of
+{{#plugins}}
+        {{package}} ->
+            "{{name}}"
+{{/plugins}}
+
+
+namespaceToPluginType : String -> Maybe PluginType
+namespaceToPluginType str =
+    case str of
+{{#plugins}}
+        "{{name}}" ->
+            Just {{package}}
+{{/plugins}}
+
+        _ ->
+            Nothing

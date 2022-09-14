@@ -1,10 +1,7 @@
 *.sw?
 node_modules
 dist
-official
 .vimrc
-testdata
-connect_cassandra.sh
 tags
 ctags_exclude
 .env
@@ -13,4 +10,11 @@ elm-stuff
 .parcel-cache
 .venv
 plugins/*
+!plugins/EMPTY
+plugin_generated/*
+!plugin_generated/index.js
 config/Config.elm
+testdata
+elm.js
+conv
+src/sw.mjs
