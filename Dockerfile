@@ -18,6 +18,7 @@ COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
 COPY ./plugins $WORKDIR/plugins
+COPY ./plugin_generated $WORKDIR/plugin_generated
 COPY ./themes $WORKDIR/themes
 COPY ./docker/site.conf /etc/nginx/http.d/
 
