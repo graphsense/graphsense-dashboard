@@ -4,7 +4,21 @@ A web dashboard for interactive cryptocurrency analysis.
 
 ## Configuration
 
-Install plugins and define custom theme in `config/Config.elm`. Use `config/Config.elm.tmp` as a template.
+Configure plugins and custom themes in `config/Config.elm`. Use `config/Config.elm.tmp` as a template: `cp config/Config.elm.tmp config/Config.elm`
+
+## Install plugins
+
+1. Place plugins in the `plugins` folder.
+2. Run `node generate.js` ([NodeJS][nodejs] needs to be installed)
+3. Configure the plugin in `config/Config.elm`, eg:
+
+```elm
+
+plugins : Plugin.Plugins
+plugins =
+    Plugin.empty
+    > Plugin.myplugin (Myplugin.plugin {- plugin specific arguments here -})
+```
 
 ## Development setup
 
@@ -21,6 +35,14 @@ Then start the [vite](https://vitejs.dev) development server:
     npm run dev
 
 Point your browser to `localhost:3000`.
+
+## Develop plugins
+
+Use `plugin_stub` as a starting point: `cp -r plugin_stub plugins/myplugin`
+
+The name of the plugin is case insensitive. Elm package name of the plugin is the plugin name with the first letter capitalized, eg. `Myplugin`.
+
+Adapt the stub accordingly. 
 
 ## Testing
 
