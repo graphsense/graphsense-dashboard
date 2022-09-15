@@ -11,8 +11,6 @@ elm-stuff
 .venv
 plugins/*
 !plugins/EMPTY
-plugin_generated/*
-!plugin_generated/index.js
 config/Config.elm
 testdata
 elm.js
