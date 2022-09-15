@@ -14,7 +14,7 @@ subscriptions inPort state =
         |> Maybe.withDefault Sub.none
         |> Sub.map Plugin.Msg.{{package}}Msg
     {{^last}}, {{/last}}{{/plugins}}
-    , inPort
+    {{#plugins?}}, {{/plugins?}}inPort
         (\( namespace, value ) ->
             case namespace of{{#plugins}} 
                 "{{name}}" ->

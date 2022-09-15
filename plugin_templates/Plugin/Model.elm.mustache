@@ -23,13 +23,13 @@ type alias EntityState =
 
 
 type PluginType
-    = {{#plugins}}{{package}}
+    = {{^plugins}}PluginType{{/plugins}}{{#plugins}}{{package}}
     {{^last}}| {{/last}}{{/plugins}}
 
 
 pluginTypeToNamespace : PluginType -> String
 pluginTypeToNamespace type_ =
-    case type_ of
+    {{#plugins?}}case type_ of{{/plugins?}}{{^plugins}}""{{/plugins}}
 {{#plugins}}
         {{package}} ->
             "{{name}}"
@@ -38,7 +38,7 @@ pluginTypeToNamespace type_ =
 
 namespaceToPluginType : String -> Maybe PluginType
 namespaceToPluginType str =
-    case str of
+    {{#plugins?}}case str of{{/plugins?}}{{^plugins}}case "" of{{/plugins}}
 {{#plugins}}
         "{{name}}" ->
             Just {{package}}

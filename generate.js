@@ -28,9 +28,14 @@ const plugins = fs.readdirSync(pluginsFolder)
     }
   })
 
+if(plugins.length === 0) {
+  console.log('No plugins found')
+} else {
+  plugins[plugins.length - 1].last = true
+}
+
 console.log("")
 
-plugins[plugins.length - 1].last = true
 
 const transform = (folder) => {
   fs.readdirSync(path.join(templatesFolder, folder))
@@ -41,13 +46,13 @@ const transform = (folder) => {
       }
       if (path.extname(fileName) !== '.mustache') return
       const file = fs.readFileSync(path.join(templatesFolder, folder, fileName), 'utf8')
+      const newFileName = path.join(generatedFolder, folder, fileName.replace('.mustache', ''))
+      console.log('Generating ', newFileName)
       const gen = mustache.render(file, {plugins})
       const pf = path.join(generatedFolder, folder)
       if(!isDir(pf)) {
         fs.mkdirSync(pf)
       }
-      const newFileName = path.join(generatedFolder, folder, fileName.replace('.mustache', ''))
-      console.log('Generating ', newFileName)
       fs.writeFileSync(newFileName, gen)
     })
 }

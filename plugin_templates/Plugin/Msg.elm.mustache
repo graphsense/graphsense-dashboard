@@ -15,12 +15,12 @@ type Msg
 
 
 type AddressMsg
-    = {{#plugins}}{{package}}AddressMsg {{package}}.Msg.AddressMsg
+    = {{^plugins}}AddressMsg{{/plugins}}{{#plugins}}{{package}}AddressMsg {{package}}.Msg.AddressMsg
     {{^last}}| {{/last}}{{/plugins}}
 
 
 type EntityMsg
-    = {{#plugins}}{{package}}EntityMsg {{package}}.Msg.EntityMsg
+    = {{^plugins}}EntityMsg{{/plugins}}{{#plugins}}{{package}}EntityMsg {{package}}.Msg.EntityMsg
     {{^last}}| {{/last}}{{/plugins}}
 
 
