@@ -228,7 +228,7 @@ sidebar plugins states page vc =
 
 main_ : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (Html Model.Msg)
 main_ plugins states type_ vc =
-    {{^plugins}}Nothing{{/plugins}}{{#plugins?}}case type_ of{{#plugins}} 
+    {{^plugins}}Nothing{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
         Plugin.Model.{{package}} ->
             plugins.{{name}}
                 |> Maybe.andThen
@@ -243,7 +243,7 @@ main_ plugins states type_ vc =
                     )
                 |> Maybe.map (Html.map Model.PluginMsg)
 {{/plugins}}
-{{/plugins?}}
+{{/plugins.length}}
 
 
 hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)

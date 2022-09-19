@@ -29,7 +29,7 @@ type PluginType
 
 pluginTypeToNamespace : PluginType -> String
 pluginTypeToNamespace type_ =
-    {{#plugins?}}case type_ of{{/plugins?}}{{^plugins}}""{{/plugins}}
+    {{#plugins.length}}case type_ of{{/plugins.length}}{{^plugins}}""{{/plugins}}
 {{#plugins}}
         {{package}} ->
             "{{name}}"
@@ -38,7 +38,7 @@ pluginTypeToNamespace type_ =
 
 namespaceToPluginType : String -> Maybe PluginType
 namespaceToPluginType str =
-    {{#plugins?}}case str of{{/plugins?}}{{^plugins}}case "" of{{/plugins}}
+    {{#plugins.length}}case str of{{/plugins.length}}{{^plugins}}case "" of{{/plugins}}
 {{#plugins}}
         "{{name}}" ->
             Just {{package}}

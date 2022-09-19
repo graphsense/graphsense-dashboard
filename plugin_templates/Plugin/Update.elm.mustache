@@ -49,7 +49,7 @@ update plugins msg state =
 
 updateAddress : Plugins -> Plugin.Msg.AddressMsg -> Address.Address -> Address.Address
 updateAddress plugins msg address =
-    {{^plugins}}address{{/plugins}}{{#plugins?}}case msg of{{#plugins}} 
+    {{^plugins}}address{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 
         Plugin.Msg.{{package}}AddressMsg m ->
             plugins.{{name}}
                 |> Maybe.andThen
@@ -69,12 +69,12 @@ updateAddress plugins msg address =
                             plugin.updateAddress
                             address.plugins.{{name}}
                     )
-                |> Maybe.withDefault address{{/plugins}}{{/plugins?}}
+                |> Maybe.withDefault address{{/plugins}}{{/plugins.length}}
 
 
 updateEntity : Plugins -> Plugin.Msg.EntityMsg -> Entity.Entity -> Entity.Entity
 updateEntity plugins msg entity =
-    {{^plugins}}entity{{/plugins}}{{#plugins?}}case msg of{{#plugins}} 
+    {{^plugins}}entity{{/plugins}}{{#plugins.length}}case msg of{{#plugins}} 
         Plugin.Msg.{{package}}EntityMsg m ->
             plugins.{{name}}
                 |> Maybe.andThen
@@ -94,12 +94,12 @@ updateEntity plugins msg entity =
                             plugin.updateEntity
                             entity.plugins.{{name}}
                     )
-                |> Maybe.withDefault entity{{/plugins}}{{/plugins?}}
+                |> Maybe.withDefault entity{{/plugins}}{{/plugins.length}}
 
 
 addressesAdded : Plugins -> Plugin.Model.ModelState -> Set Id.AddressId -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 addressesAdded plugins state ids =
-    {{^plugins}}n state{{/plugins}}{{#plugins?}}let
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
@@ -130,12 +130,12 @@ addressesAdded plugins state ids =
       ]
         |> Cmd.batch
     )
-{{/plugins?}}
+{{/plugins.length}}
 
 
 entitiesAdded : Plugins -> Plugin.Model.ModelState -> Set Id.EntityId -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 entitiesAdded plugins state ids =
-    {{^plugins}}n state{{/plugins}}{{#plugins?}}let
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
@@ -166,12 +166,12 @@ entitiesAdded plugins state ids =
       ]
         |> Cmd.batch
     )
-{{/plugins?}}
+{{/plugins.length}}
 
 
 updateByUrl : Plugin.Model.PluginType -> Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateByUrl ns plugins url state =
-    {{^plugins}}n state{{/plugins}}{{#plugins?}}case ns of{{#plugins}} 
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
         Plugin.Model.{{package}} ->
             plugins.{{name}}
                 |> Maybe.andThen
@@ -188,12 +188,12 @@ updateByUrl ns plugins url state =
                     )
                 |> Maybe.withDefault ( state, [], Cmd.none )
 {{/plugins}} 
-{{/plugins?}} 
+{{/plugins.length}} 
 
 
 updateGraphByUrl : Plugin.Model.PluginType -> Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateGraphByUrl ns plugins url state =
-    {{^plugins}}n state{{/plugins}}{{#plugins?}}case ns of{{#plugins}} 
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
         Plugin.Model.{{package}} ->
             plugins.{{name}}
                 |> Maybe.andThen
@@ -210,12 +210,12 @@ updateGraphByUrl ns plugins url state =
                     )
                 |> Maybe.withDefault ( state, [], Cmd.none )
 {{/plugins}} 
-{{/plugins?}} 
+{{/plugins.length}} 
 
 
 init : Plugins -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 init plugins =
-    {{^plugins}}n {}{{/plugins}}{{#plugins?}}let
+    {{^plugins}}n {}{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
@@ -238,7 +238,7 @@ init plugins =
       ]
         |> Cmd.batch
     )
-{{/plugins?}} 
+{{/plugins.length}} 
 
 
 initAddress : Plugins -> Plugin.Model.AddressState
@@ -261,7 +261,7 @@ initEntity plugins =
 
 clearSearch : Plugins -> Plugin.Model.ModelState -> Plugin.Model.ModelState
 clearSearch plugins states =
-    {{^plugins}}states{{/plugins}}{{#plugins?}}let
+    {{^plugins}}states{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
@@ -278,12 +278,12 @@ clearSearch plugins states =
         | {{#plugins}}{{name}} = {{name}}
         {{^last}}, {{/last}}{{/plugins}}
     }
-{{/plugins?}} 
+{{/plugins.length}} 
 
 
 updateApiKeyHash : Plugins -> Plugin.Model.ModelState -> String -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateApiKeyHash plugins state apiKeyHash =
-    {{^plugins}}n state{{/plugins}}{{#plugins?}}let
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
@@ -313,4 +313,4 @@ updateApiKeyHash plugins state apiKeyHash =
       ]
         |> Cmd.batch
     )
-{{/plugins?}} 
+{{/plugins.length}} 
