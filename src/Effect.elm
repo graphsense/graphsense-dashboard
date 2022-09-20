@@ -318,7 +318,11 @@ handleSearchEffect apiKey plugins tag tagEffect effect =
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =
-    Api.withHeader "Authorization" apiKey request
+    if String.isEmpty apiKey then
+        request
+
+    else
+        Api.withHeader "Authorization" apiKey request
 
 
 send : Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
