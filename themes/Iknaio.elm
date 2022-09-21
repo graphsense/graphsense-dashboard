@@ -857,9 +857,11 @@ theme =
                     , flexDirection row
                     ]
                 |> s_tableRoot
-                    [ scaled 2 |> rem |> paddingLeft
+                    [ scaled 3 |> rem |> paddingX
                     , displayFlex
                     , flexDirection column
+
+                    --, overflowX hidden
                     ]
                 |> s_sidebar
                     (\lightmode ->
