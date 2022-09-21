@@ -795,9 +795,9 @@ theme =
                             [ Css.Transitions.transform 200
                             ]
                         , displayFlex
-                        , translateY (pct p) |> transform
                         , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
+                        , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
 
@@ -888,6 +888,7 @@ theme =
                     ]
                 |> s_headCell
                     [ tableCell
+                    , rowHeight |> px |> height
                     ]
                 |> s_headRow
                     [ textAlign left
@@ -898,12 +899,13 @@ theme =
                     ]
                 |> s_maxHeight 250
                 |> s_rowHeight
-                    (scaled 100)
+                    rowHeight
                 |> s_row
                     (\lightmode ->
                         [ nthChild "2n"
                             [ backgroundColorWithLightmode lightmode colors.brandLightest
                             ]
+                        , rowHeight |> px |> height
                         ]
                     )
                 |> s_cell
@@ -1174,6 +1176,7 @@ tableCell : Style
 tableCell =
     [ scaled 1 |> rem |> padding
     , whiteSpace noWrap
+    , verticalAlign middle
     ]
         |> batch
 
@@ -1226,3 +1229,8 @@ iconHovered =
 backgroundHoverColor : Theme.SwitchableColor
 backgroundHoverColor =
     colors.brandLighter
+
+
+rowHeight : Float
+rowHeight =
+    scaled 90
