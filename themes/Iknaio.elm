@@ -6,6 +6,7 @@ import Css.Transitions
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
+import Theme.Autocomplete as Autocomplete
 import Theme.Browser as Browser
 import Theme.Button as Button
 import Theme.ContextMenu as ContextMenu
@@ -226,13 +227,13 @@ theme =
             )
         |> s_search
             (Search.default
-                |> s_form
-                    [ scaled 3 |> rem |> fontSize
-                    , scaled 8 |> rem |> height
-                    ]
                 |> s_frame
                     [ scaled 1 |> rem |> marginRight
                     , fontFamily monospace
+                    ]
+                |> s_form
+                    [ scaled 3 |> rem |> fontSize
+                    , scaled 8 |> rem |> height
                     ]
                 |> s_textarea
                     (\lightmode input ->
@@ -252,27 +253,6 @@ theme =
                                     []
                                )
                     )
-                |> s_result
-                    (\lightmode ->
-                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
-                        , scaled 2 |> rem |> padding
-                        , borderRadius4
-                            zero
-                            zero
-                            (scaled 1 |> rem)
-                            (scaled 1 |> rem)
-                        , backgroundColorWithLightmode lightmode colors.brandWhite
-                        , spinnerHeight |> scaled |> rem |> minHeight
-                        , scaled 3.5 |> rem |> fontSize
-                        , shadowMd
-                        ]
-                    )
-                |> s_loadingSpinner
-                    [ position absolute
-                    , top zero
-                    , right zero
-                    , loadingSpinner
-                    ]
                 |> s_resultGroupTitle
                     [ fontWeight bold
                     , paddingY (scaled 1 |> rem)
@@ -294,6 +274,30 @@ theme =
                     ]
                 |> s_button
                     []
+            )
+        |> s_autocomplete
+            (Autocomplete.default
+                |> s_result
+                    (\lightmode ->
+                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
+                        , scaled 2 |> rem |> padding
+                        , borderRadius4
+                            zero
+                            zero
+                            (scaled 1 |> rem)
+                            (scaled 1 |> rem)
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        , spinnerHeight |> scaled |> rem |> minHeight
+                        , scaled 3.5 |> rem |> fontSize
+                        , shadowMd
+                        ]
+                    )
+                |> s_loadingSpinner
+                    [ position absolute
+                    , top zero
+                    , right zero
+                    , loadingSpinner
+                    ]
             )
         |> s_button
             (Button.default

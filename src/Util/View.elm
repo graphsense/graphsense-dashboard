@@ -76,6 +76,7 @@ hovercard vc element =
         , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
         , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
         , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+        , overflow = "visible"
         }
         element
         (Css.hovercard vc

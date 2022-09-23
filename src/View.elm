@@ -193,6 +193,7 @@ overlay vc model =
                             , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
                             , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
                             , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+                            , overflow = "visible"
                             }
                             element
                             (Css.View.hovercard vc
