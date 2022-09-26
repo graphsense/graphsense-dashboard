@@ -135,3 +135,12 @@ title plugins states vc =
     ]
         |> List.filterMap identity
         |> List.concat
+
+
+profile : Plugins -> Plugin.Model.ModelState -> View.Config -> List (String, Html Model.Msg)
+profile plugins states vc =
+    [ 
+    ]
+        |> List.filterMap identity
+        |> List.concat
+        |> List.map (mapSecond (Html.map Model.PluginMsg))

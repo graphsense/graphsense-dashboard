@@ -8,10 +8,11 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events as Events exposing (onClick, onInput, stopPropagationOn)
 import Json.Decode
-import Model exposing (Auth(..), Msg(..), RequestLimit(..), UserModel)
+import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
+import Plugin.View as Plugin exposing (Plugins)
 import Time
-import Util.View exposing (loadingSpinner, nona, none)
+import Util.View exposing (loadingSpinner, nona, none, switch)
 import View.Button as Button
 import View.Dialog as Dialog
 import View.Locale as Locale
@@ -32,8 +33,8 @@ user vc model =
         ]
 
 
-hovercard : Config -> UserModel -> List (Html Msg)
-hovercard vc model =
+hovercard : Plugins -> Config -> Model key -> UserModel -> List (Html Msg)
+hovercard plugins vc appModel model =
     (case model.auth of
         Authorized auth ->
             [ auth.requestLimit |> requestLimit vc
@@ -52,22 +53,20 @@ hovercard vc model =
                 [ localeSwitch vc ]
            , Dialog.part vc
                 "Display"
-                [ div
-                    [ Css.lightmodeRoot vc |> css
+                [ switch vc
+                    [ checked vc.lightmode
+                    , onClick UserClickedLightmode
                     ]
-                    [ input
-                        [ type_ "checkbox"
-                        , checked vc.lightmode
-                        , onClick UserClickedLightmode
-                        ]
-                        []
-                    , Locale.string vc.locale "Light mode"
-                        |> text
-                        |> List.singleton
-                        |> span [ Css.lightmodeLabel vc |> css ]
-                    ]
+                  <|
+                    Locale.string vc.locale "Light mode"
                 ]
            ]
+        ++ (Plugin.profile plugins appModel.plugins vc
+                |> List.map
+                    (\( title, part ) ->
+                        Dialog.part vc title [ part ]
+                    )
+           )
         ++ (case model.auth of
                 Authorized auth ->
                     [ if auth.loggingOut then

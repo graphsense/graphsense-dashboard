@@ -20,6 +20,7 @@ type alias View modelState addressState entityState msg =
     , main : Maybe (View.Config -> modelState -> Html msg)
     , hovercards : Maybe (View.Config -> modelState -> List (Html msg))
     , title : Maybe (View.Config -> modelState -> List String)
+    , profile : Maybe (View.Config -> modelState -> List ( String, Html msg ))
     }
 
 
@@ -38,4 +39,5 @@ init =
     , main = Nothing
     , hovercards = Nothing
     , title = Nothing
+    , profile = Nothing
     }

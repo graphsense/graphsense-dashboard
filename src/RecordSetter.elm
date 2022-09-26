@@ -564,11 +564,6 @@ s_caseInsensitive value__ record__ =
     { record__ | caseInsensitive = value__ }
 
 
-s_casemgm : a -> { b | casemgm : a } -> { b | casemgm : a }
-s_casemgm value__ record__ =
-    { record__ | casemgm = value__ }
-
-
 s_categories : a -> { b | categories : a } -> { b | categories : a }
 s_categories value__ record__ =
     { record__ | categories = value__ }
@@ -1584,6 +1579,11 @@ s_g value__ record__ =
     { record__ | g = value__ }
 
 
+s_get : a -> { b | get : a } -> { b | get : a }
+s_get value__ record__ =
+    { record__ | get = value__ }
+
+
 s_getOption : a -> { b | getOption : a } -> { b | getOption : a }
 s_getOption value__ record__ =
     { record__ | getOption = value__ }
@@ -1617,6 +1617,11 @@ s_graph value__ record__ =
 s_graphRoot : a -> { b | graphRoot : a } -> { b | graphRoot : a }
 s_graphRoot value__ record__ =
     { record__ | graphRoot = value__ }
+
+
+s_graphqlUrl : a -> { b | graphqlUrl : a } -> { b | graphqlUrl : a }
+s_graphqlUrl value__ record__ =
+    { record__ | graphqlUrl = value__ }
 
 
 s_green : a -> { b | green : a } -> { b | green : a }
@@ -2134,6 +2139,11 @@ s_kind value__ record__ =
     { record__ | kind = value__ }
 
 
+s_knobStyle : a -> { b | knobStyle : a } -> { b | knobStyle : a }
+s_knobStyle value__ record__ =
+    { record__ | knobStyle = value__ }
+
+
 s_l : a -> { b | l : a } -> { b | l : a }
 s_l value__ record__ =
     { record__ | l = value__ }
@@ -2347,16 +2357,6 @@ s_light value__ record__ =
 s_lightmode : a -> { b | lightmode : a } -> { b | lightmode : a }
 s_lightmode value__ record__ =
     { record__ | lightmode = value__ }
-
-
-s_lightmodeLabel : a -> { b | lightmodeLabel : a } -> { b | lightmodeLabel : a }
-s_lightmodeLabel value__ record__ =
-    { record__ | lightmodeLabel = value__ }
-
-
-s_lightmodeRoot : a -> { b | lightmodeRoot : a } -> { b | lightmodeRoot : a }
-s_lightmodeRoot value__ record__ =
-    { record__ | lightmodeRoot = value__ }
 
 
 s_lightness : a -> { b | lightness : a } -> { b | lightness : a }
@@ -2784,6 +2784,11 @@ s_newEntityIds value__ record__ =
     { record__ | newEntityIds = value__ }
 
 
+s_newGraph : a -> { b | newGraph : a } -> { b | newGraph : a }
+s_newGraph value__ record__ =
+    { record__ | newGraph = value__ }
+
+
 s_newLines : a -> { b | newLines : a } -> { b | newLines : a }
 s_newLines value__ record__ =
     { record__ | newLines = value__ }
@@ -3014,6 +3019,11 @@ s_octal value__ record__ =
     { record__ | octal = value__ }
 
 
+s_offStyle : a -> { b | offStyle : a } -> { b | offStyle : a }
+s_offStyle value__ record__ =
+    { record__ | offStyle = value__ }
+
+
 s_offset : a -> { b | offset : a } -> { b | offset : a }
 s_offset value__ record__ =
     { record__ | offset = value__ }
@@ -3077,6 +3087,11 @@ s_onRequestComplete value__ record__ =
 s_onRightClick : a -> { b | onRightClick : a } -> { b | onRightClick : a }
 s_onRightClick value__ record__ =
     { record__ | onRightClick = value__ }
+
+
+s_onStyle : a -> { b | onStyle : a } -> { b | onStyle : a }
+s_onStyle value__ record__ =
+    { record__ | onStyle = value__ }
 
 
 s_onSuccess : a -> { b | onSuccess : a } -> { b | onSuccess : a }
@@ -4009,6 +4024,11 @@ s_separator value__ record__ =
     { record__ | separator = value__ }
 
 
+s_serviceProvidersUrl : a -> { b | serviceProvidersUrl : a } -> { b | serviceProvidersUrl : a }
+s_serviceProvidersUrl value__ record__ =
+    { record__ | serviceProvidersUrl = value__ }
+
+
 s_set : a -> { b | set : a } -> { b | set : a }
 s_set value__ record__ =
     { record__ | set = value__ }
@@ -4292,6 +4312,16 @@ s_svgRoot value__ record__ =
 s_sweptAngle : a -> { b | sweptAngle : a } -> { b | sweptAngle : a }
 s_sweptAngle value__ record__ =
     { record__ | sweptAngle = value__ }
+
+
+s_switchLabel : a -> { b | switchLabel : a } -> { b | switchLabel : a }
+s_switchLabel value__ record__ =
+    { record__ | switchLabel = value__ }
+
+
+s_switchRoot : a -> { b | switchRoot : a } -> { b | switchRoot : a }
+s_switchRoot value__ record__ =
+    { record__ | switchRoot = value__ }
 
 
 s_sx : a -> { b | sx : a } -> { b | sx : a }
@@ -4787,6 +4817,11 @@ s_underlyingSpline value__ record__ =
 s_unions : a -> { b | unions : a } -> { b | unions : a }
 s_unions value__ record__ =
     { record__ | unions = value__ }
+
+
+s_unit : a -> { b | unit : a } -> { b | unit : a }
+s_unit value__ record__ =
+    { record__ | unit = value__ }
 
 
 s_unitLabel : a -> { b | unitLabel : a } -> { b | unitLabel : a }

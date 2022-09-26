@@ -282,3 +282,23 @@ title plugins states vc =
     ]
         |> List.filterMap identity
         |> List.concat
+
+
+profile : Plugins -> Plugin.Model.ModelState -> View.Config -> List (String, Html Model.Msg)
+profile plugins states vc =
+    [ {{#plugins}}plugins.{{name}}
+        |> Maybe.andThen
+            (\plugin ->
+                Maybe.map2
+                    (\fun ->
+                        fun vc
+                    )
+                    plugin.profile
+                    states.{{name}}
+                    |> Maybe.map (List.map (mapSecond (Html.map Plugin.Msg.{{package}}Msg)))
+            )
+    {{^last}}, {{/last}}{{/plugins}}
+    ]
+        |> List.filterMap identity
+        |> List.concat
+        |> List.map (mapSecond (Html.map Model.PluginMsg))

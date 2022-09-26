@@ -88,7 +88,7 @@ body plugins vc model =
             ]
          ]
             ++ hovercards plugins vc model
-            ++ overlay vc model
+            ++ overlay plugins vc model
         )
 
 
@@ -126,7 +126,7 @@ hovercards plugins vc model =
     (model.user.hovercardElement
         |> Maybe.map
             (\element ->
-                User.hovercard vc model.user
+                User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
                     |> hovercard vc element
             )
@@ -175,8 +175,8 @@ hovercards plugins vc model =
         ++ Plugin.hovercards plugins model.plugins vc
 
 
-overlay : Config -> Model key -> List (Html Msg)
-overlay vc model =
+overlay : Plugins -> Config -> Model key -> List (Html Msg)
+overlay plugins vc model =
     let
         ov =
             List.singleton
@@ -203,7 +203,7 @@ overlay vc model =
                             (Css.View.hovercard vc
                                 |> List.map (\( k, v ) -> Html.Attributes.style k v)
                             )
-                            (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
+                            (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
                             |> Html.Styled.fromUnstyled
                     )
                 |> Maybe.map ov

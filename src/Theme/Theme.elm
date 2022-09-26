@@ -53,6 +53,8 @@ type alias Theme =
     , hovercard : Bool -> Hovercard
     , buttonsRow : List Style
     , custom : String
+    , switchLabel : List Style
+    , switchRoot : List Style
     }
 
 
@@ -94,6 +96,8 @@ default =
     , table = Table.default
     , buttonsRow = []
     , custom = ""
+    , switchLabel = []
+    , switchRoot = []
     }
 
 

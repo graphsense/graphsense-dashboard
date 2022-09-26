@@ -176,6 +176,13 @@ theme =
         |> s_overlay
             [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
             ]
+        |> s_switchLabel
+            [ whiteSpace noWrap
+            ]
+        |> s_switchRoot
+            [ displayFlex
+            , alignItems center
+            ]
         |> s_stats
             (Stats.default
                 |> s_root
@@ -364,13 +371,6 @@ theme =
                             ]
                         ]
                     )
-                |> s_lightmodeLabel
-                    [ whiteSpace noWrap
-                    ]
-                |> s_lightmodeRoot
-                    [ displayFlex
-                    , alignItems center
-                    ]
             )
         |> s_dialog
             (Dialog.default
