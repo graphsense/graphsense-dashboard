@@ -2989,10 +2989,16 @@ decodeYamlTag =
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
 deserialize =
-    Json.Decode.decodeValue
-        (Json.Decode.index 0 Json.Decode.string
+    Json.Decode.oneOf
+        [ Json.Decode.index 0 Json.Decode.string
             |> Json.Decode.andThen deserializeByVersion
-        )
+        , Json.Decode.null
+            { addresses = []
+            , entities = []
+            , highlights = []
+            }
+        ]
+        |> Json.Decode.decodeValue
 
 
 deserializeByVersion : String -> Json.Decode.Decoder Deserialized
