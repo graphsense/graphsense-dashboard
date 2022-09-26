@@ -18,6 +18,7 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , initAddress : Maybe addressState
     , initEntity : Maybe entityState
     , clearSearch : Maybe (modelState -> modelState)
+    , newGraph : Maybe (modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     }
 
 
@@ -35,4 +36,5 @@ init =
     , initAddress = Nothing
     , initEntity = Nothing
     , clearSearch = Nothing
+    , newGraph = Nothing
     }

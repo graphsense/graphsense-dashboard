@@ -314,3 +314,38 @@ updateApiKeyHash plugins state apiKeyHash =
         |> Cmd.batch
     )
 {{/plugins.length}} 
+
+
+newGraph : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+newGraph plugins state =
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
+{{#plugins}}
+        {{name}} =
+            plugins.{{name}}
+                |> Maybe.andThen
+                    (\plugin ->
+                        Maybe.map2
+                            (\fun model ->
+                                fun model
+                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
+                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
+                            )
+                            plugin.newGraph
+                            state.{{name}}
+                    )
+{{/plugins}} 
+    in
+    ( { state
+        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
+        {{^last}}, {{/last}}{{/plugins}}
+      }
+    , [ {{#plugins}}Maybe.map T3.second {{name}} |> Maybe.withDefault [] 
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> List.concat
+    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> Cmd.batch
+    )
+{{/plugins.length}} 

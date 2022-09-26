@@ -553,18 +553,24 @@ update plugins uc msg model =
                     let
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
+
+                        ( new, outMsg, cmd ) =
+                            Plugin.newGraph plugins model.plugins
                     in
                     ( { model
                         | dialog = Nothing
                         , graph = graph
+                        , plugins = new
                       }
                     , (Route.Graph.Root
                         |> Route.graphRoute
                         |> Route.toUrl
                         |> NavPushUrlEffect
                       )
+                        :: PluginEffect cmd
                         :: List.map GraphEffect graphEffects
                     )
+                        |> updateByPluginOutMsg plugins outMsg
 
                 _ ->
                     let

@@ -75,3 +75,7 @@ clearSearch plugins states =
 updateApiKeyHash : Plugins -> Plugin.Model.ModelState -> String -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 updateApiKeyHash plugins state apiKeyHash =
     n state
+
+newGraph : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+newGraph plugins state =
+    n state
