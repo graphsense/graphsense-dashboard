@@ -127,3 +127,11 @@ hovercards plugins states vc =
         |> List.filterMap identity
         |> List.concat
         |> List.map (Html.map Model.PluginMsg)
+
+
+title : Plugins -> Plugin.Model.ModelState -> View.Config -> List String
+title plugins states vc =
+    [ 
+    ]
+        |> List.filterMap identity
+        |> List.concat

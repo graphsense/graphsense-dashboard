@@ -36,7 +36,11 @@ view :
     -> Model key
     -> Document Msg
 view plugins vc model =
-    { title = Locale.string vc.locale "Iknaio Dashboard"
+    { title =
+        Locale.string vc.locale "Iknaio Dashboard"
+            :: Plugin.title plugins model.plugins vc
+            |> List.reverse
+            |> String.join " | "
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
