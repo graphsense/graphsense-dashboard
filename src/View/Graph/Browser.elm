@@ -549,7 +549,7 @@ rowsAddress vc now address =
 
                         Api.Data.AddressStatusDirty ->
                             [ Rule
-                            , Locale.string vc.locale "Address data might by out of date"
+                            , Locale.string vc.locale "Address data might be out of date"
                                 |> Note
                             ]
 

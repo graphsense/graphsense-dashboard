@@ -259,3 +259,5 @@ proprietary tag: Proprietäres Tag
 "Please try again with a lower depth/breadth setting.": "Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite."
 defines entity: definiert Entität
 delete: löschen
+address data not yet calculated: Adressdaten noch nicht berechnet
+address data might be out of date: Adressdaten sind eventuell nicht mehr aktuell
