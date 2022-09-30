@@ -36,9 +36,7 @@ translate { x, y } address =
 updateTags : List Api.Data.AddressTag -> Address -> Address
 updateTags tags address =
     { address
-        | address =
-            address.address
-                |> s_tags (Just tags)
+        | tags = Just tags
         , category =
             tagsToCategory (Just tags)
     }

@@ -31,7 +31,8 @@ init plugins entity address =
             }
     , entityId = entity.id
     , address = address
-    , category = tagsToCategory address.tags
+    , tags = Nothing
+    , category = Nothing
     , x =
         entity.x
             + entity.dx

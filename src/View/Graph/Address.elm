@@ -174,7 +174,7 @@ getLabel vc gc addr =
                 |> Maybe.map .label
                 |> Maybe.Extra.orElseLazy
                     (\_ ->
-                        Address.bestTag addr.address.tags
+                        Address.bestTag addr.tags
                             |> Maybe.map
                                 (\tag ->
                                     if not tag.tagpackIsPublic && String.isEmpty tag.label then
@@ -225,7 +225,7 @@ abuseFlag vc addr =
         |> Maybe.andThen hasAbuse
         |> Maybe.Extra.orElseLazy
             (\_ ->
-                case addr.address.tags |> Maybe.map (List.any (hasAbuse >> Maybe.withDefault False)) of
+                case addr.tags |> Maybe.map (List.any (hasAbuse >> Maybe.withDefault False)) of
                     Just True ->
                         Just True
 

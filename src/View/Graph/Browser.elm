@@ -430,7 +430,7 @@ rowsAddress vc now address =
         , address
             |> ifLoaded
                 (\a ->
-                    (Maybe.map List.length a.address.tags |> Maybe.withDefault 0)
+                    (Maybe.map List.length a.tags |> Maybe.withDefault 0)
                         + (Maybe.map (\_ -> 1) a.userTag |> Maybe.withDefault 0)
                         |> String.fromInt
                         |> String
