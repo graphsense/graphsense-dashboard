@@ -719,7 +719,17 @@ updateByUrl plugins uc url model =
             (\oldRoute route ->
                 case Log.log "route" route of
                     Route.Stats ->
-                        n { model | page = Stats }
+                        ( { model
+                            | page = Stats
+                            , url = url
+                          }
+                        , case oldRoute of
+                            Route.Stats ->
+                                []
+
+                            _ ->
+                                [ GetStatisticsEffect ]
+                        )
 
                     Route.Graph graphRoute ->
                         case graphRoute |> Log.log "graphRoute" of
