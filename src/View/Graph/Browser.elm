@@ -217,6 +217,27 @@ browseRow vc map row =
         Rule ->
             rule vc
 
+        Note note ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    []
+                , span
+                    []
+                    [ FontAwesome.exclamationTriangle
+                        |> FontAwesome.icon
+                        |> Html.fromUnstyled
+                    , span
+                        [ Css.propertyBoxNote vc |> css
+                        ]
+                        [ text note
+                        ]
+                    ]
+                ]
+
         Row ( key, value, table ) ->
             div
                 [ Css.propertyBoxRow vc |> css
@@ -410,6 +431,133 @@ rowsAddress vc now address =
                         , active = False
                         }
                     )
+
+        rowsPart1 =
+            [ Row
+                ( "Tags"
+                , address
+                    |> ifLoaded
+                        (\a ->
+                            (Maybe.map List.length a.tags |> Maybe.withDefault 0)
+                                + (Maybe.map (\_ -> 1) a.userTag |> Maybe.withDefault 0)
+                                |> String.fromInt
+                                |> String
+                        )
+                    |> elseLoading
+                , mkTableLink "List address tags" Route.AddressTagsTable
+                )
+            , Rule
+            , Row
+                ( "Transactions"
+                , address
+                    |> ifLoaded
+                        (\a ->
+                            Transactions
+                                { noIncomingTxs = a.address.noIncomingTxs
+                                , noOutgoingTxs = a.address.noOutgoingTxs
+                                }
+                        )
+                    |> elseLoading
+                , mkTableLink "List address transactions" Route.AddressTxsTable
+                )
+            , Row
+                ( "Receiving addresses"
+                , address
+                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+                    |> elseLoading
+                , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
+                )
+            , Row
+                ( "Sending addresses"
+                , address
+                    |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
+                    |> elseLoading
+                , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
+                )
+            ]
+
+        rowsPart2 =
+            [ Row
+                ( "Last usage"
+                , address
+                    |> ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
+                    |> elseLoading
+                , Nothing
+                )
+            , Row
+                ( "Activity period"
+                , address
+                    |> ifLoaded
+                        (\a ->
+                            a.address.firstTx.timestamp
+                                - a.address.lastTx.timestamp
+                                |> Duration
+                        )
+                    |> elseLoading
+                , Nothing
+                )
+            , Rule
+            , Row
+                ( "Total received"
+                , address
+                    |> ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
+                    |> elseLoading
+                , Nothing
+                )
+            , Row
+                ( "Final balance"
+                , address
+                    |> ifLoaded (\a -> Value a.address.currency a.address.balance)
+                    |> elseLoading
+                , Nothing
+                )
+            ]
+
+        dataPart1 =
+            case address of
+                Loaded a ->
+                    if a.address.status == Api.Data.AddressStatusNew then
+                        []
+
+                    else
+                        rowsPart1
+
+                Loading _ _ ->
+                    rowsPart1
+
+        dataPart2 =
+            case address of
+                Loaded a ->
+                    if a.address.status == Api.Data.AddressStatusNew then
+                        []
+
+                    else
+                        rowsPart2
+
+                Loading _ _ ->
+                    rowsPart2
+
+        statusNote =
+            case address of
+                Loaded a ->
+                    case a.address.status of
+                        Api.Data.AddressStatusNew ->
+                            [ Rule
+                            , Locale.string vc.locale "Address data not yet calculated"
+                                |> Note
+                            ]
+
+                        Api.Data.AddressStatusDirty ->
+                            [ Rule
+                            , Locale.string vc.locale "Address data might by out of date"
+                                |> Note
+                            ]
+
+                        Api.Data.AddressStatusClean ->
+                            []
+
+                Loading _ _ ->
+                    []
     in
     [ Row
         ( "Address"
@@ -425,90 +573,19 @@ rowsAddress vc now address =
             |> elseShowCurrency
         , Nothing
         )
-    , Row
-        ( "Tags"
-        , address
-            |> ifLoaded
-                (\a ->
-                    (Maybe.map List.length a.tags |> Maybe.withDefault 0)
-                        + (Maybe.map (\_ -> 1) a.userTag |> Maybe.withDefault 0)
-                        |> String.fromInt
-                        |> String
-                )
-            |> elseLoading
-        , mkTableLink "List address tags" Route.AddressTagsTable
-        )
-    , Rule
-    , Row
-        ( "Transactions"
-        , address
-            |> ifLoaded
-                (\a ->
-                    Transactions
-                        { noIncomingTxs = a.address.noIncomingTxs
-                        , noOutgoingTxs = a.address.noOutgoingTxs
-                        }
-                )
-            |> elseLoading
-        , mkTableLink "List address transactions" Route.AddressTxsTable
-        )
-    , Row
-        ( "Receiving addresses"
-        , address
-            |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
-            |> elseLoading
-        , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
-        )
-    , Row
-        ( "Sending addresses"
-        , address
-            |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
-            |> elseLoading
-        , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
-        )
-    , Rule
-    , Row
-        ( "First usage"
-        , address
-            |> ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
-            |> elseLoading
-        , Nothing
-        )
-    , Row
-        ( "Last usage"
-        , address
-            |> ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
-            |> elseLoading
-        , Nothing
-        )
-    , Row
-        ( "Activity period"
-        , address
-            |> ifLoaded
-                (\a ->
-                    a.address.firstTx.timestamp
-                        - a.address.lastTx.timestamp
-                        |> Duration
-                )
-            |> elseLoading
-        , Nothing
-        )
-    , Rule
-    , Row
-        ( "Total received"
-        , address
-            |> ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
-            |> elseLoading
-        , Nothing
-        )
-    , Row
-        ( "Final balance"
-        , address
-            |> ifLoaded (\a -> Value a.address.currency a.address.balance)
-            |> elseLoading
-        , Nothing
-        )
     ]
+        ++ dataPart1
+        ++ [ Rule
+           , Row
+                ( "First usage"
+                , address
+                    |> ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
+                    |> elseLoading
+                , Nothing
+                )
+           ]
+        ++ dataPart2
+        ++ statusNote
 
 
 makeTableLink : (a -> String) -> (a -> id) -> (String -> id -> TableLink) -> Loadable id a -> Maybe TableLink

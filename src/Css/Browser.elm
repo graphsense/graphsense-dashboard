@@ -37,6 +37,11 @@ propertyBoxTable vc =
         ++ vc.theme.browser.propertyBoxTable
 
 
+propertyBoxNote : Config -> List Style
+propertyBoxNote vc =
+    vc.theme.browser.propertyBoxNote vc.lightmode
+
+
 propertyBoxRow : Config -> List Style
 propertyBoxRow vc =
     display tableRow

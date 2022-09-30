@@ -765,6 +765,11 @@ theme =
                 |> s_propertyBoxTable
                     [ letterSpacingWide
                     ]
+                |> s_propertyBoxNote
+                    (\lightmode ->
+                        [ scaled 1 |> rem |> paddingLeft
+                        ]
+                    )
                 |> s_propertyBoxRow
                     (\lightmode ->
                         [ hover

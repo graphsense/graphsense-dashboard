@@ -66,6 +66,7 @@ type alias TableLink =
 
 type Row r
     = Row ( String, r, Maybe TableLink )
+    | Note String
     | Rule
 
 

@@ -9,6 +9,7 @@ type alias Browser =
     , frame : Bool -> Bool -> List Style
     , propertyBoxRoot : Bool -> List Style
     , propertyBoxTable : List Style
+    , propertyBoxNote : Bool -> List Style
     , propertyBoxRow : Bool -> List Style
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
@@ -31,6 +32,7 @@ default =
     , frame = \_ _ -> []
     , propertyBoxRoot = \_ -> []
     , propertyBoxTable = []
+    , propertyBoxNote = \_ -> []
     , propertyBoxRow = \_ -> []
     , propertyBoxKey = []
     , propertyBoxValue = []
