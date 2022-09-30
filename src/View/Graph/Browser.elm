@@ -543,13 +543,13 @@ rowsAddress vc now address =
                     case a.address.status of
                         Api.Data.AddressStatusNew ->
                             [ Rule
-                            , Locale.string vc.locale "Address data not yet calculated"
+                            , Locale.string vc.locale "Address statistics not yet computed"
                                 |> Note
                             ]
 
                         Api.Data.AddressStatusDirty ->
                             [ Rule
-                            , Locale.string vc.locale "Address data might be out of date"
+                            , Locale.string vc.locale "Address statistics might be out of date"
                                 |> Note
                             ]
 
