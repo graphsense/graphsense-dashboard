@@ -313,6 +313,7 @@ theme =
                         [ fontWeight bold
                         , scaled 1 |> rem |> paddingY
                         , scaled 2 |> rem |> paddingX
+                        , scaled 1 |> rem |> marginX
                         , borderRadiusSm
                         , border zero
                         , hover

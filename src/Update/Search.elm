@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, getFirstResultUrl, update)
+module Update.Search exposing (batch, clear, getFirstResultUrl, popInput, update)
 
 import Api.Data
 import Bounce
@@ -32,6 +32,10 @@ update msg model =
                 n model
 
         UserClicksResult ->
+            -- handled upstream
+            n model
+
+        UserPicksCurrency _ ->
             -- handled upstream
             n model
 
@@ -174,3 +178,23 @@ clear model =
         , input = ""
         , loading = False
     }
+
+
+batch : String -> Model -> Model
+batch currency model =
+    { model | batch = Just ( currency, getMulti model ) }
+
+
+popInput : Model -> ( Maybe ( String, String ), Model )
+popInput model =
+    model.batch
+        |> Maybe.map
+            (\( currency, terms ) ->
+                case terms of
+                    [] ->
+                        ( Nothing, { model | batch = Nothing } )
+
+                    term :: rest ->
+                        ( Just ( currency, term ), { model | batch = Just ( currency, rest ) } )
+            )
+        |> Maybe.withDefault ( Nothing, model )

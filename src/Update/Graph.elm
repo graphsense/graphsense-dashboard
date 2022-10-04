@@ -703,9 +703,9 @@ updateByMsg plugins uc msg model =
                         |> addEntity plugins uc added
 
         BrowserGotAddressEgonet anchor isOutgoing neighbors ->
-            Layer.getAddress anchor model.layers
-                |> Maybe.map
-                    (\anch ->
+            Layer.getAddresses (A.fromId anchor) model.layers
+                |> List.foldl
+                    (\anch mo ->
                         neighbors.neighbors
                             |> List.filterMap
                                 (\n ->
@@ -713,7 +713,7 @@ updateByMsg plugins uc msg model =
                                         id =
                                             Id.initAddressId
                                                 { layer =
-                                                    Id.layer anchor
+                                                    Id.layer anch.id
                                                         + (if isOutgoing then
                                                             1
 
@@ -729,10 +729,10 @@ updateByMsg plugins uc msg model =
                                 )
                             |> List.foldl
                                 (addAddressLink anch isOutgoing)
-                                model
-                            |> n
+                                mo
                     )
-                |> Maybe.withDefault (n model)
+                    model
+                |> n
 
         BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
             let
@@ -1140,7 +1140,6 @@ updateByMsg plugins uc msg model =
                 { address = address
                 , currency = Id.currency entityId
                 , toMsg = BrowserGotAddressForEntity entityId
-                , suppressErrors = False
                 }
                 |> List.singleton
             )
@@ -1153,7 +1152,6 @@ updateByMsg plugins uc msg model =
                     , address = address
                     , table = Nothing
                     , layer = Nothing
-                    , suppressErrors = False
                     }
 
         BrowserGotAddressForEntity entityId address ->
@@ -2114,7 +2112,6 @@ updateByRoute plugins route model =
                     , address = a
                     , table = table
                     , layer = layer
-                    , suppressErrors = False
                     }
 
         Route.Currency currency (Route.Entity e table layer) ->
@@ -3243,11 +3240,10 @@ loadAddress :
         , address : String
         , table : Maybe Route.AddressTable
         , layer : Maybe Int
-        , suppressErrors : Bool
         }
     -> Model
     -> ( Model, List Effect )
-loadAddress plugins { currency, address, table, layer, suppressErrors } model =
+loadAddress plugins { currency, address, table, layer } model =
     layer
         |> Maybe.andThen
             (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = l }) model.layers)
@@ -3287,13 +3283,11 @@ loadAddress plugins { currency, address, table, layer, suppressErrors } model =
                         { address = address
                         , currency = currency
                         , toMsg = BrowserGotEntityForAddress address
-                        , suppressErrors = suppressErrors
                         }
                   , GetAddressEffect
                         { address = address
                         , currency = currency
                         , toMsg = BrowserGotAddress
-                        , suppressErrors = suppressErrors
                         }
                   ]
                     ++ effects

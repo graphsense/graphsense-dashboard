@@ -100,12 +100,12 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotResponseWithHeaders statusbarToken suppressErrors result ->
+        BrowserGotResponseWithHeaders statusbarToken result ->
             { model
                 | statusbar =
                     case statusbarToken of
                         Just t ->
-                            Statusbar.update suppressErrors
+                            Statusbar.update
                                 t
                                 (case result of
                                     Err ( Http.BadStatus 401, _ ) ->
@@ -354,48 +354,46 @@ update plugins uc msg model =
 
                 Search.UserHitsEnter ->
                     let
-                        newModel =
-                            { model
-                                | search = Search.clear model.search
-                            }
+                        multi =
+                            Search.getMulti model.search
                     in
-                    Search.getMulti model.search
-                        |> (\multi ->
-                                if List.length multi == 1 then
-                                    Search.getFirstResultUrl model.search
-                                        |> Maybe.map
-                                            (NavPushUrlEffect >> List.singleton)
-                                        |> Maybe.withDefault []
-                                        |> pair newModel
+                    if model.search.found /= Nothing && List.length multi == 1 then
+                        Search.getFirstResultUrl model.search
+                            |> Maybe.map
+                                (NavPushUrlEffect >> List.singleton)
+                            |> Maybe.withDefault []
+                            |> pair { model | search = Search.clear model.search }
 
-                                else
-                                    model.stats
-                                        |> RD.map
-                                            (.currencies
-                                                >> List.map .name
-                                                >> List.foldl
-                                                    (\currency ( mod, effects ) ->
-                                                        List.foldl
-                                                            (\a ( mo, effs ) ->
-                                                                Graph.loadAddress plugins
-                                                                    { currency = currency
-                                                                    , address = a
-                                                                    , table = Nothing
-                                                                    , layer = Nothing
-                                                                    , suppressErrors = True
-                                                                    }
-                                                                    mo
-                                                                    |> mapSecond ((++) effs)
+                    else
+                        model.stats
+                            |> RD.map
+                                (\stats ->
+                                    { model
+                                        | dialog =
+                                            { message = Locale.string model.locale "Please choose a crypto ledger"
+                                            , options =
+                                                stats.currencies
+                                                    |> List.map .name
+                                                    |> List.map
+                                                        (\name ->
+                                                            ( String.toUpper name
+                                                            , Search.UserPicksCurrency name |> SearchMsg
                                                             )
-                                                            ( mod, effects )
-                                                            multi
-                                                    )
-                                                    ( newModel.graph, [] )
-                                                >> mapSecond (List.map GraphEffect)
-                                                >> mapFirst (\graph -> { newModel | graph = graph })
-                                            )
-                                        |> RD.withDefault (n newModel)
-                           )
+                                                        )
+                                            }
+                                                |> Dialog.options
+                                                |> Just
+                                    }
+                                )
+                            |> RD.withDefault model
+                            |> n
+
+                Search.UserPicksCurrency currency ->
+                    { model
+                        | search = Search.batch currency model.search
+                    }
+                        |> n
+                        |> batchSearch plugins
 
                 _ ->
                     let
@@ -427,6 +425,7 @@ update plugins uc msg model =
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
+                        |> batchSearch plugins
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
@@ -953,3 +952,32 @@ pluginNewGraph plugins ( model, eff ) =
     , PluginEffect cmd
         :: eff
     )
+
+
+batchSearch : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
+batchSearch plugins ( model, eff ) =
+    let
+        ( term, search ) =
+            Search.popInput model.search
+
+        newModel =
+            { model
+                | search = search
+                , dialog = Nothing
+            }
+    in
+    term
+        |> Maybe.map
+            (\( currency, t ) ->
+                Graph.loadAddress plugins
+                    { currency = currency
+                    , address = t
+                    , table = Nothing
+                    , layer = Nothing
+                    }
+                    newModel.graph
+                    |> mapSecond (List.map GraphEffect)
+            )
+        |> Maybe.withDefault ( newModel.graph, [] )
+        |> mapSecond ((++) eff)
+        |> mapFirst (\graph -> { newModel | graph = graph })
