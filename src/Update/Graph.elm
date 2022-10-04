@@ -10,7 +10,7 @@ import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..), getEntityEgonet)
+import Effect.Graph exposing (Effect(..), getAddressEgonet, getEntityEgonet)
 import Encode.Graph as Encode
 import File
 import File.Select
@@ -132,6 +132,8 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
         |> Maybe.map
             (\a ->
                 selectAddress a Nothing newModel_
+                    |> mapSecond
+                        ((++) (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers))
             )
         |> Maybe.withDefault (n newModel_)
         |> mapSecond ((++) eff)
@@ -700,6 +702,38 @@ updateByMsg plugins uc msg model =
                     { model | adding = Adding.removeEntity e model.adding }
                         |> addEntity plugins uc added
 
+        BrowserGotAddressEgonet anchor isOutgoing neighbors ->
+            Layer.getAddress anchor model.layers
+                |> Maybe.map
+                    (\anch ->
+                        neighbors.neighbors
+                            |> List.filterMap
+                                (\n ->
+                                    let
+                                        id =
+                                            Id.initAddressId
+                                                { layer =
+                                                    Id.layer anchor
+                                                        + (if isOutgoing then
+                                                            1
+
+                                                           else
+                                                            -1
+                                                          )
+                                                , id = n.address.address
+                                                , currency = n.address.currency
+                                                }
+                                    in
+                                    Layer.getAddress id model.layers
+                                        |> Maybe.map (pair n)
+                                )
+                            |> List.foldl
+                                (addAddressLink anch isOutgoing)
+                                model
+                            |> n
+                    )
+                |> Maybe.withDefault (n model)
+
         BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
             let
                 e =
@@ -836,6 +870,7 @@ updateByMsg plugins uc msg model =
                           , isOutgoing = isOutgoing
                           , pagesize = 20
                           , includeLabels = False
+                          , onlyIds = Nothing
                           , nextpage = Nothing
                           , toMsg = BrowserGotAddressNeighbors id isOutgoing
                           }
@@ -2514,6 +2549,12 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                             }
                     }
             )
+        |> (++)
+            (added.newAddresses
+                |> List.map .id
+                |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.model.layers)
+                |> List.concat
+            )
         |> (::)
             (added.newAddresses
                 |> List.map .id
@@ -3178,6 +3219,14 @@ addAddressesAtEntity plugins uc entityId addresses model =
                     }
             )
     )
+        |> mapSecond
+            ((++)
+                (added.new
+                    |> Set.toList
+                    |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.layers)
+                    |> List.concat
+                )
+            )
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 

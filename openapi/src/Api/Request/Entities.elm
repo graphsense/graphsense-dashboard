@@ -193,13 +193,13 @@ listEntityNeighbors currency_path entity_path direction_query onlyIds_query incl
         Api.Data.neighborEntitiesDecoder
 
 
-listEntityTxs : String -> Int -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTxs
-listEntityTxs currency_path entity_path page_query pagesize_query =
+listEntityTxs : String -> Int -> Maybe Direction -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTxs
+listEntityTxs currency_path entity_path direction_query page_query pagesize_query =
     Api.request
         "GET"
         "/{currency}/entities/{entity}/txs"
         [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        [ ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
+        [ ( "direction", Maybe.map stringFromDirection direction_query ), ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
         []
         Nothing
         Api.Data.addressTxsDecoder

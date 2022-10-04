@@ -53,6 +53,7 @@ type Msg
     | BrowserGotEntityNeighbors EntityId Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonet String Int Bool Api.Data.NeighborEntities
     | BrowserGotEntityEgonetForAddress String String Int Bool Api.Data.NeighborEntities
+    | BrowserGotAddressEgonet AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotAddressNeighbors AddressId Bool Api.Data.NeighborAddresses
     | BrowserGotAddressNeighborsTable A.Address Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix

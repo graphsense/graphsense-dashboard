@@ -85,7 +85,7 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, includeLabels, nextpage, toMsg } ->
+                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage, toMsg } ->
                     let
                         direction =
                             case isOutgoing of
@@ -95,7 +95,7 @@ perform plugins key statusbarToken apiKey effect =
                                 False ->
                                     Api.Request.Addresses.DirectionIn
                     in
-                    Api.Request.Addresses.listAddressNeighbors currency address direction (Just includeLabels) nextpage (Just pagesize)
+                    Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressEffect { currency, address, toMsg, suppressErrors } ->
@@ -115,7 +115,7 @@ perform plugins key statusbarToken apiKey effect =
                         |> sendWithSuppressErrors suppressErrors statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
-                    Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
+                    Api.Request.Addresses.listAddressTxs currency address Nothing nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage, toMsg } ->
@@ -139,7 +139,7 @@ perform plugins key statusbarToken apiKey effect =
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
-                    Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
+                    Api.Request.Entities.listEntityTxs currency entity Nothing nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetBlockTxsEffect { currency, block, toMsg } ->
