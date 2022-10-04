@@ -321,14 +321,14 @@ links vc gc selected mn mx ent =
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
-                        if linkHasAddressLinks ent.addresses link.node.addresses then
-                            svg
-
-                        else
+                        if link.forceShow || not (linkHasAddressLinks ent.addresses link.node.addresses) then
                             ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
                             , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
                             )
                                 :: svg
+
+                        else
+                            svg
                     )
                     []
                 |> Keyed.node "g" []

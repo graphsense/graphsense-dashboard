@@ -15,6 +15,7 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import List.Extra
 import Log
+import Maybe.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Address as Address
 import Model.Graph.ContextMenu as ContextMenu
@@ -393,9 +394,44 @@ contextMenu plugins states vc model cm =
             ]
 
         ContextMenu.AddressLink id ->
+            let
+                srcLink =
+                    Maybe.Extra.andThen2
+                        (\source target ->
+                            case source.links of
+                                Entity.Links lnks ->
+                                    Dict.get target.id lnks
+                                        |> Maybe.map (pair source)
+                        )
+                        (Layer.getAddress (Id.getSourceId id) model.layers
+                            |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
+                        )
+                        (Layer.getAddress (Id.getTargetId id) model.layers
+                            |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
+                        )
+            in
             [ UserClickedRemoveAddressLink id
                 |> option "Remove"
             ]
+                ++ (srcLink
+                        |> Maybe.map
+                            (\( src, li ) ->
+                                let
+                                    lbl =
+                                        if li.forceShow then
+                                            "Hide entity link"
+
+                                        else
+                                            "Show entity link"
+                                in
+                                not li.forceShow
+                                    |> UserClickedForceShowEntityLink
+                                        ( src.id, li.node.id )
+                                    |> option lbl
+                                    |> List.singleton
+                            )
+                        |> Maybe.withDefault []
+                   )
 
         ContextMenu.EntityLink id ->
             [ UserClickedRemoveEntityLink id

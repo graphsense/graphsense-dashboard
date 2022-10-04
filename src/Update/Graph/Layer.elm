@@ -7,6 +7,7 @@ module Update.Graph.Layer exposing
     , addEntityNeighbors
     , anchorsToPositions
     , deserialize
+    , forceShowEntityLink
     , insertShadowLinks
     , moveEntity
     , releaseEntity
@@ -514,6 +515,7 @@ insertAddressLink ( link, address ) (Address.Links links) =
     Dict.update address.id
         (Maybe.withDefault
             { link = link
+            , forceShow = False
             , node = address
             }
             >> Just
@@ -537,6 +539,7 @@ insertEntityLinks neighbors (Entity.Links links) =
                         )
                         >> Maybe.withDefault
                             { link = link
+                            , forceShow = False
                             , node = entity
                             }
                         >> Just
@@ -1314,6 +1317,21 @@ removeEntityLink ( src, tgt ) layers =
                     case a.links of
                         Entity.Links links ->
                             Dict.remove tgt links
+                                |> Entity.Links
+            }
+        )
+        layers
+
+
+forceShowEntityLink : Id.LinkId Id.EntityId -> Bool -> IntDict Layer -> IntDict Layer
+forceShowEntityLink ( src, tgt ) forceShow layers =
+    updateEntity src
+        (\a ->
+            { a
+                | links =
+                    case a.links of
+                        Entity.Links links ->
+                            Dict.update tgt (Maybe.map (\l -> { l | forceShow = forceShow })) links
                                 |> Entity.Links
             }
         )

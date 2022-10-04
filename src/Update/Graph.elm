@@ -1128,6 +1128,12 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedForceShowEntityLink id forceShow ->
+            { model
+                | layers = Layer.forceShowEntityLink id forceShow model.layers
+            }
+                |> n
+
         UserClickedAddressInEntityTagsTable entityId address ->
             ( model
             , GetAddressEffect

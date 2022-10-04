@@ -289,6 +289,7 @@ insertShadowLink target source =
                 | shadowLinks =
                     Dict.insert target.id
                         { node = target
+                        , forceShow = False
                         , link = Link.PlaceholderLinkData
                         }
                         links

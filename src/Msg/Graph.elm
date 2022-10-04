@@ -161,4 +161,5 @@ type Msg
     | UserClickedFitGraph
     | UserPressesEscape
     | UserClicksDeleteTag
+    | UserClickedForceShowEntityLink (LinkId EntityId) Bool
     | NoOp
