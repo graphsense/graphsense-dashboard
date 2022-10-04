@@ -1211,6 +1211,7 @@ updateByMsg plugins uc msg model =
                                                 , config = model.config |> s_colors added.colors
                                               }
                                                 |> addAddressLink address isOutgoing ( neighbor, addedAddress )
+                                                |> syncLinks added.repositioned
                                             , [ GetAddressTagsEffect
                                                     { currency = Id.currency addressId
                                                     , address = Id.addressId addressId

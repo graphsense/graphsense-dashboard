@@ -5,13 +5,14 @@ import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeigh
 import Config.View exposing (Config)
 import Css exposing (fill)
 import Css.Graph as Css
-import Dict
+import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
 import Model.Graph exposing (NodeType(..))
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
@@ -320,13 +321,49 @@ links vc gc selected mn mx ent =
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
-                        ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
-                        , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
-                        )
-                            :: svg
+                        if linkHasAddressLinks ent.addresses link.node.addresses then
+                            svg
+
+                        else
+                            ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
+                            , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
+                            )
+                                :: svg
                     )
                     []
                 |> Keyed.node "g" []
+
+
+linkHasAddressLinks : Dict Id.AddressId Address -> Dict Id.AddressId Address -> Bool
+linkHasAddressLinks sourceAddresses targetAddresses =
+    let
+        checkAddressLinks lnks =
+            case lnks of
+                [] ->
+                    False
+
+                link :: rest ->
+                    if Dict.member link targetAddresses then
+                        True
+
+                    else
+                        checkAddressLinks rest
+
+        checkAddresses addrs =
+            case addrs of
+                [] ->
+                    False
+
+                address :: rest ->
+                    case address.links of
+                        Address.Links lnks ->
+                            if Dict.keys lnks |> checkAddressLinks then
+                                True
+
+                            else
+                                checkAddresses rest
+    in
+    Dict.values sourceAddresses |> checkAddresses
 
 
 shadowLink : Config -> Entity -> Svg Msg
