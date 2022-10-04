@@ -839,13 +839,23 @@ handleResponse plugins uc result model =
         Err ( BadBody err, _ ) ->
             ( { model
                 | statusbar =
-                    Http.BadBody err
-                        |> Just
-                        |> Statusbar.add model.statusbar "error" []
+                    if err == Api.noExternalTransactions then
+                        model.statusbar
+
+                    else
+                        Http.BadBody err
+                            |> Just
+                            |> Statusbar.add model.statusbar "error" []
               }
             , PortsConsoleEffect err
                 |> List.singleton
             )
+
+        Err ( BadStatus 404, _ ) ->
+            { model
+                | graph = Graph.handleNotFound model.graph
+            }
+                |> n
 
         Err _ ->
             n model

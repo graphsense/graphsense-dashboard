@@ -3320,3 +3320,12 @@ tagInputToUserTag model input =
                 , isClusterDefiner = isClusterDefiner
                 }
             )
+
+
+handleNotFound : Model -> Model
+handleNotFound model =
+    { model
+        | browser =
+            model.browser
+                |> s_visible False
+    }

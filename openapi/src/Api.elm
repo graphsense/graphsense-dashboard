@@ -1,19 +1,20 @@
 module Api exposing
     ( Request
+    , baseUrl
+    , effect
+    , map
+    , noExternalTransactions
     , request
     , send
-    , effect
-    , sendWithCustomError
     , sendAndAlsoReceiveHeaders
+    , sendWithCustomError
     , task
-    , map
-    , baseUrl
     , withBasePath
-    , withTimeout
-    , withTracker
     , withBearerToken
     , withHeader
     , withHeaders
+    , withTimeout
+    , withTracker
     )
 
 import Dict exposing (Dict)
@@ -26,8 +27,8 @@ import Task
 import Url.Builder
 
 
-type Request a =
-    Request
+type Request a
+    = Request
         { method : String
         , headers : List ( String, Maybe String )
         , basePath : String
@@ -45,7 +46,12 @@ baseUrl =
     "http://localhost:9000"
 
 
-request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
+noExternalTransactions : String
+noExternalTransactions =
+    "no external transactions"
+
+
+request : String -> String -> List ( String, String ) -> List ( String, Maybe String ) -> List ( String, Maybe String ) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
 request method path pathParams queryParams headerParams body decoder =
     Request
         { method = method
@@ -119,7 +125,11 @@ expectJsonWithHeaders toMsg eff wrapMsg decoder =
                     Err ( Http.NetworkError, eff )
 
                 Http.BadStatus_ metadata body ->
-                    Err ( Http.BadStatus metadata.statusCode, eff )
+                    if metadata.statusCode == 404 && String.contains "no external transactions" body then
+                        Err ( Http.BadBody noExternalTransactions, eff )
+
+                    else
+                        Err ( Http.BadStatus metadata.statusCode, eff )
 
                 Http.GoodStatus_ metadata body ->
                     case Json.Decode.decodeString decoder body of
@@ -191,9 +201,9 @@ withHeaders headers_ (Request req) =
 -- HELPER
 
 
-headers : List (String, Maybe String) -> List Http.Header
+headers : List ( String, Maybe String ) -> List Http.Header
 headers =
-    List.filterMap (\(key, value) -> Maybe.map (Http.header key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Http.header key) value)
 
 
 effectHeaders : List ( String, Maybe String ) -> List SimulatedEffect.Http.Header
@@ -205,16 +215,16 @@ interpolatePath : String -> List ( String, String ) -> List String
 interpolatePath rawPath pathParams =
     let
         interpolate =
-            (\(name, value) path -> String.replace ("{" ++ name ++ "}") value path)
+            \( name, value ) path -> String.replace ("{" ++ name ++ "}") value path
     in
     List.foldl interpolate rawPath pathParams
         |> String.split "/"
         |> List.drop 1
 
 
-queries : List (String, Maybe String) -> List Url.Builder.QueryParameter
+queries : List ( String, Maybe String ) -> List Url.Builder.QueryParameter
 queries =
-    List.filterMap (\(key, value) -> Maybe.map (Url.Builder.string key) value)
+    List.filterMap (\( key, value ) -> Maybe.map (Url.Builder.string key) value)
 
 
 expectJson : (Http.Error -> e) -> (Result e a -> msg) -> Json.Decode.Decoder a -> Http.Expect msg
@@ -234,7 +244,7 @@ jsonResolver decoder =
 
 decodeResponse : Json.Decode.Decoder a -> Http.Response String -> Result Http.Error a
 decodeResponse decoder response =
-    case response of
+    case response |> Debug.log "repsonsen" of
         Http.BadUrl_ url ->
             Err (Http.BadUrl url)
 
@@ -244,7 +254,7 @@ decodeResponse decoder response =
         Http.NetworkError_ ->
             Err Http.NetworkError
 
-        Http.BadStatus_ metadata _ ->
+        Http.BadStatus_ metadata body ->
             Err (Http.BadStatus metadata.statusCode)
 
         Http.GoodStatus_ _ body ->

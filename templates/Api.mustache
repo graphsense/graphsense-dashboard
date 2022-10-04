@@ -1,19 +1,20 @@
 module Api exposing
     ( Request
+    , baseUrl
+    , effect
+    , map
+    , noExternalTransactions
     , request
     , send
-    , effect
-    , sendWithCustomError
     , sendAndAlsoReceiveHeaders
+    , sendWithCustomError
     , task
-    , map
-    , baseUrl
     , withBasePath
-    , withTimeout
-    , withTracker
     , withBearerToken
     , withHeader
     , withHeaders
+    , withTimeout
+    , withTracker
     )
 
 import Dict exposing (Dict)
@@ -43,6 +44,11 @@ type Request a =
 baseUrl : String
 baseUrl =
     "{{basePath}}"
+
+
+noExternalTransactions : String
+noExternalTransactions =
+    "no external transactions"
 
 
 request : String -> String -> List ( String, String ) -> List (String, Maybe String) -> List (String, Maybe String) -> Maybe Json.Encode.Value -> Json.Decode.Decoder a -> Request a
@@ -119,7 +125,12 @@ expectJsonWithHeaders toMsg eff wrapMsg decoder =
                     Err ( Http.NetworkError, eff )
 
                 Http.BadStatus_ metadata body ->
-                    Err ( Http.BadStatus metadata.statusCode, eff )
+                    if metadata.statusCode == 404 && String.contains "no external transactions" body then
+                        Err ( Http.BadBody "no external transactions", eff )
+
+                    else
+                        Err ( Http.BadStatus metadata.statusCode, eff )
+
 
                 Http.GoodStatus_ metadata body ->
                     case Json.Decode.decodeString decoder body of

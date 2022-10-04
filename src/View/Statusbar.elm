@@ -1,5 +1,6 @@
 module View.Statusbar exposing (..)
 
+import Api
 import Config.View as View
 import Css.Statusbar as Css
 import Dict
@@ -120,7 +121,11 @@ log vc ( key, values, error ) =
                                     Locale.string vc.locale "bad status" ++ ": " ++ String.fromInt s
 
                                 Http.BadBody str ->
-                                    Locale.string vc.locale "data error" ++ " " ++ str
+                                    if str == Api.noExternalTransactions then
+                                        Locale.string vc.locale str
+
+                                    else
+                                        Locale.string vc.locale "data error" ++ " " ++ str
                            )
 
                 Nothing ->
