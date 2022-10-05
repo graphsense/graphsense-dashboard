@@ -25,6 +25,7 @@ type alias Address =
     , dx : Float
     , dy : Float
     , links : Links
+    , shadowLinks : Links
     , userTag : Maybe Tag.UserTag
     , color : Maybe Color
     , plugins : Plugin.AddressState

@@ -2,8 +2,10 @@ module Update.Graph.Address exposing (..)
 
 import Api.Data
 import Color exposing (Color)
+import Dict
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Link as Link
 import RecordSetter exposing (..)
 
 
@@ -52,3 +54,19 @@ updateColor color address =
             else
                 Just color
     }
+
+
+insertAddressShadowLink : Address -> Address -> Address
+insertAddressShadowLink target source =
+    case source.shadowLinks of
+        Links links ->
+            { source
+                | shadowLinks =
+                    Dict.insert target.id
+                        { node = target
+                        , forceShow = False
+                        , link = Link.PlaceholderLinkData
+                        }
+                        links
+                        |> Links
+            }

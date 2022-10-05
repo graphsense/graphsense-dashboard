@@ -151,14 +151,21 @@ graphSvg plugins states vc gc model bbox =
          [ Svg.lazy2 arrowMarkers vc gc
          ]
             ++ (if gc.showEntityShadowLinks then
-                    [ Svg.lazy2 shadowLinks vc model.layers ]
+                    [ Svg.lazy2 entityShadowLinks vc model.layers ]
 
                 else
                     []
                )
             ++ [ Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
                , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
-               , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
+               ]
+            ++ (if gc.showEntityShadowLinks then
+                    [ Svg.lazy2 addressShadowLinks vc model.layers ]
+
+                else
+                    []
+               )
+            ++ [ Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
                , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
                , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
                ]
@@ -201,17 +208,35 @@ entities plugins vc gc selected layers =
         |> Keyed.node "g" []
 
 
-shadowLinks : Config -> IntDict Layer -> Svg Msg
-shadowLinks vc layers =
+entityShadowLinks : Config -> IntDict Layer -> Svg Msg
+entityShadowLinks vc layers =
     let
         _ =
-            Log.log "Graph.shadowLinks" ""
+            Log.log "Graph.entityShadowLinks" ""
     in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "shadowLinks" ++ String.fromInt layerId
-                , Svg.lazy2 ViewLayer.shadowLinks vc layer
+                ( "Graph.entityShadowLinks" ++ String.fromInt layerId
+                , Svg.lazy2 ViewLayer.entityShadowLinks vc layer
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+addressShadowLinks : Config -> IntDict Layer -> Svg Msg
+addressShadowLinks vc layers =
+    let
+        _ =
+            Log.log "Graph.addressShadowLinks" ""
+    in
+    layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                ( "Graph.addressShadowLinks" ++ String.fromInt layerId
+                , Svg.lazy2 ViewLayer.addressShadowLinks vc layer
                 )
                     :: svg
             )
@@ -228,7 +253,7 @@ entityLinks vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "entityLinks" ++ String.fromInt layerId
+                ( "Graph.entityLinks" ++ String.fromInt layerId
                 , Svg.lazy4 ViewLayer.entityLinks vc gc selected layer
                 )
                     :: svg
@@ -246,7 +271,7 @@ addressLinks vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "addressLinks" ++ String.fromInt layerId
+                ( "Graph.addressLinks" ++ String.fromInt layerId
                 , Svg.lazy4 ViewLayer.addressLinks vc gc selected layer
                 )
                     :: svg

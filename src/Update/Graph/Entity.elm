@@ -1,7 +1,7 @@
 module Update.Graph.Entity exposing
     ( BoundingBox
     , addAddress
-    , insertShadowLink
+    , insertEntityShadowLink
     , move
     , release
     , repositionAddresses
@@ -20,7 +20,7 @@ import Init.Graph.Address as Address
 import Init.Graph.Id as Id
 import List.Extra
 import Log
-import Model.Graph.Address exposing (..)
+import Model.Graph.Address as Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
@@ -281,8 +281,8 @@ repositionAround pivot entities =
     )
 
 
-insertShadowLink : Entity -> Entity -> Entity
-insertShadowLink target source =
+insertEntityShadowLink : Entity -> Entity -> Entity
+insertEntityShadowLink target source =
     case source.shadowLinks of
         Entity.Links links ->
             { source
@@ -294,7 +294,54 @@ insertShadowLink target source =
                         }
                         links
                         |> Entity.Links
+                , addresses = insertAddressesShadowLinks target source
             }
+
+
+insertAddressesShadowLinks : Entity -> Entity -> Dict AddressId Address
+insertAddressesShadowLinks target source =
+    let
+        ( updatedAddresses, updated ) =
+            source.addresses
+                |> Dict.foldl
+                    (\sourceId sourceAddress ( updatedAddresses_, updated_ ) ->
+                        let
+                            id =
+                                Id.initAddressId
+                                    { currency = Id.currency sourceId
+                                    , layer = Id.layer target.id
+                                    , id = Id.addressId sourceId
+                                    }
+                        in
+                        Dict.get id target.addresses
+                            |> Maybe.map
+                                (\targetAddress ->
+                                    ( Dict.insert sourceId
+                                        { sourceAddress
+                                            | shadowLinks =
+                                                case sourceAddress.shadowLinks of
+                                                    Address.Links links ->
+                                                        Dict.insert targetAddress.id
+                                                            { node = targetAddress
+                                                            , forceShow = False
+                                                            , link = Link.PlaceholderLinkData
+                                                            }
+                                                            links
+                                                            |> Address.Links
+                                        }
+                                        updatedAddresses_
+                                    , True
+                                    )
+                                )
+                            |> Maybe.withDefault ( updatedAddresses_, updated_ )
+                    )
+                    ( source.addresses, False )
+    in
+    if updated then
+        updatedAddresses
+
+    else
+        source.addresses
 
 
 updateColor : Color -> Entity -> Entity

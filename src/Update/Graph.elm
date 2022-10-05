@@ -34,7 +34,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
-import Model.Graph.Id as Id exposing (EntityId)
+import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
 import Model.Graph.Search as Search
@@ -1750,7 +1750,8 @@ updateByMsg plugins uc msg model =
                             model.config
                                 |> s_colors acc.colors
                     }
-                |> insertShadowLinks acc.newEntityIds
+                |> insertEntityShadowLinks acc.newEntityIds
+                |> insertAddressShadowLinks acc.newAddressIds
             , [ BulkGetEntityNeighborsEffect
                     { currency = currency
                     , isOutgoing = True
@@ -2500,7 +2501,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     in
     ( addEntityLinks anchor isOutgoing new newModel
         |> syncLinks repositioned
-        |> insertShadowLinks (List.map (second >> .id) new |> Set.fromList)
+        |> insertEntityShadowLinks (List.map (second >> .id) new |> Set.fromList)
     , neighbors
         |> List.map
             (\{ entity } ->
@@ -2545,6 +2546,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
             )
             added.model
         |> syncLinks added.repositioned
+        |> insertAddressShadowLinks (List.map .id added.newAddresses |> Set.fromList)
     , first neighbors
         |> List.map
             (\neighbor ->
@@ -2589,18 +2591,29 @@ syncLinks repositioned model =
     { model
         | layers =
             Layer.syncLinks ids model.layers
-                |> Layer.insertShadowLinks ids
+                |> Layer.insertEntityShadowLinks ids
     }
 
 
-insertShadowLinks : Set EntityId -> Model -> Model
-insertShadowLinks new model =
+insertEntityShadowLinks : Set EntityId -> Model -> Model
+insertEntityShadowLinks new model =
     let
         ids =
             Set.toList new
     in
     { model
-        | layers = Layer.insertShadowLinks ids model.layers
+        | layers = Layer.insertEntityShadowLinks ids model.layers
+    }
+
+
+insertAddressShadowLinks : Set AddressId -> Model -> Model
+insertAddressShadowLinks new model =
+    let
+        ids =
+            Set.toList new
+    in
+    { model
+        | layers = Layer.insertAddressShadowLinks ids model.layers
     }
 
 

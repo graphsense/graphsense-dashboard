@@ -78,17 +78,35 @@ entityLinks vc gc selected layer =
         |> Keyed.node "g" []
 
 
-shadowLinks : View.Config -> Layer -> Svg Msg
-shadowLinks vc layer =
+entityShadowLinks : View.Config -> Layer -> Svg Msg
+entityShadowLinks vc layer =
     let
         _ =
-            Log.log "Layer.shadowLinks" layer.id
+            Log.log "Layer.entityShadowLinks" layer.id
     in
     layer.entities
         |> Dict.foldl
             (\_ entity svg ->
-                ( "shadowLinks" ++ Id.entityIdToString entity.id
-                , Svg.lazy2 Entity.shadowLink vc entity
+                ( "entityShadowLinks" ++ Id.entityIdToString entity.id
+                , Svg.lazy2 Entity.shadowLinks vc entity
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+addressShadowLinks : View.Config -> Layer -> Svg Msg
+addressShadowLinks vc layer =
+    let
+        _ =
+            Log.log "Layer.addressShadowLinks" layer.id
+    in
+    layer.entities
+        |> Dict.foldl
+            (\_ entity svg ->
+                ( "addressesShadowLinks" ++ Id.entityIdToString entity.id
+                , Svg.lazy2 Entity.addressShadowLinks vc entity
                 )
                     :: svg
             )

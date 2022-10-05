@@ -8,7 +8,8 @@ module Update.Graph.Layer exposing
     , anchorsToPositions
     , deserialize
     , forceShowEntityLink
-    , insertShadowLinks
+    , insertAddressShadowLinks
+    , insertEntityShadowLinks
     , moveEntity
     , releaseEntity
     , removeAddress
@@ -62,6 +63,7 @@ import Plugin.Update as Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Tuple3
+import Update.Graph.Address as Address
 import Update.Graph.Color as Color
 import Update.Graph.Entity as Entity
 
@@ -657,6 +659,11 @@ syncLinksOnAddresses sources targets =
                             Address.Links links ->
                                 links
 
+                    oldShadowLinks =
+                        case source.shadowLinks of
+                            Address.Links links ->
+                                links
+
                     newLinks =
                         oldLinks
                             |> Dict.foldl
@@ -672,10 +679,26 @@ syncLinksOnAddresses sources targets =
                                 )
                                 oldLinks
 
+                    newShadowLinks =
+                        oldShadowLinks
+                            |> Dict.foldl
+                                (\tgt link links_ ->
+                                    case Dict.get tgt targets of
+                                        Nothing ->
+                                            links_
+
+                                        Just found ->
+                                            links_
+                                                |> Dict.insert tgt
+                                                    { link | node = found }
+                                )
+                                oldShadowLinks
+
                     newSource =
-                        if oldLinks /= newLinks then
+                        if oldLinks /= newLinks || oldShadowLinks /= newShadowLinks then
                             { source
                                 | links = Address.Links newLinks
+                                , shadowLinks = Address.Links newShadowLinks
                             }
 
                         else
@@ -914,6 +937,26 @@ removeAddressLinksTo id layers =
         layers
 
 
+removeAddressShadowLinksTo : AddressId -> IntDict Layer -> IntDict Layer
+removeAddressShadowLinksTo id layers =
+    updateAddressesIf
+        (\a ->
+            case a.shadowLinks of
+                Address.Links links ->
+                    Dict.member id links
+        )
+        (\a ->
+            { a
+                | shadowLinks =
+                    case a.shadowLinks of
+                        Address.Links links ->
+                            Dict.remove id links
+                                |> Address.Links
+            }
+        )
+        layers
+
+
 updateAddressesIf : (Address -> Bool) -> (Address -> Address) -> IntDict Layer -> IntDict Layer
 updateAddressesIf predicate update layers =
     layers
@@ -988,6 +1031,7 @@ removeAddress id layers =
                     |> syncLinks [ address.entityId ]
             )
         |> Maybe.map (removeAddressLinksTo id)
+        |> Maybe.map (removeAddressShadowLinksTo id)
         |> Maybe.withDefault layers
 
 
@@ -1197,20 +1241,32 @@ deserialize plugins uc { deserialized, addresses, entities } =
            )
 
 
-insertShadowLinks : List EntityId -> IntDict Layer -> IntDict Layer
-insertShadowLinks ids layers =
+insertEntityShadowLinks : List EntityId -> IntDict Layer -> IntDict Layer
+insertEntityShadowLinks ids layers =
     ids
         |> List.filterMap (\id -> Layer.getEntity id layers)
         |> List.foldl
             (\entity layers_ ->
-                insertShadowLinksAncestors (Id.layer entity.id) entity layers_
-                    |> insertShadowLinksDescendants (Id.layer entity.id) entity
+                insertEntityShadowLinksAncestors (Id.layer entity.id) entity layers_
+                    |> insertEntityShadowLinksDescendants (Id.layer entity.id) entity
             )
             layers
 
 
-insertShadowLinksAncestors : Int -> Entity -> IntDict Layer -> IntDict Layer
-insertShadowLinksAncestors layerId entity layers =
+insertAddressShadowLinks : List AddressId -> IntDict Layer -> IntDict Layer
+insertAddressShadowLinks ids layers =
+    ids
+        |> List.filterMap (\id -> Layer.getAddress id layers)
+        |> List.foldl
+            (\address layers_ ->
+                insertAddressShadowLinksAncestors (Id.layer address.id) address layers_
+                    |> insertAddressShadowLinksDescendants (Id.layer address.id) address
+            )
+            layers
+
+
+insertEntityShadowLinksAncestors : Int -> Entity -> IntDict Layer -> IntDict Layer
+insertEntityShadowLinksAncestors layerId entity layers =
     IntDict.before layerId layers
         |> Maybe.andThen
             (\( beforeLayerId, layer ) ->
@@ -1226,18 +1282,45 @@ insertShadowLinksAncestors layerId entity layers =
                     |> Maybe.map
                         (\ancestor ->
                             updateEntity ancestorId
-                                (Entity.insertShadowLink entity)
+                                (Entity.insertEntityShadowLink entity)
                                 layers
                         )
                     |> Maybe.withDefault
-                        (insertShadowLinksAncestors beforeLayerId entity layers)
+                        (insertEntityShadowLinksAncestors beforeLayerId entity layers)
                     |> Just
             )
         |> Maybe.withDefault layers
 
 
-insertShadowLinksDescendants : Int -> Entity -> IntDict Layer -> IntDict Layer
-insertShadowLinksDescendants layerId entity layers =
+insertAddressShadowLinksAncestors : Int -> Address -> IntDict Layer -> IntDict Layer
+insertAddressShadowLinksAncestors layerId address layers =
+    IntDict.before layerId layers
+        |> Maybe.andThen
+            (\( beforeLayerId, layer ) ->
+                let
+                    ancestorId =
+                        Id.initAddressId
+                            { currency = Id.currency address.id
+                            , layer = beforeLayerId
+                            , id = Id.addressId address.id
+                            }
+                in
+                Layer.getAddressOfLayer ancestorId layer
+                    |> Maybe.map
+                        (\ancestor ->
+                            updateAddress ancestorId
+                                (Address.insertAddressShadowLink address)
+                                layers
+                        )
+                    |> Maybe.withDefault
+                        (insertAddressShadowLinksAncestors beforeLayerId address layers)
+                    |> Just
+            )
+        |> Maybe.withDefault layers
+
+
+insertEntityShadowLinksDescendants : Int -> Entity -> IntDict Layer -> IntDict Layer
+insertEntityShadowLinksDescendants layerId entity layers =
     IntDict.after layerId layers
         |> Maybe.andThen
             (\( afterLayerId, layer ) ->
@@ -1253,11 +1336,38 @@ insertShadowLinksDescendants layerId entity layers =
                     |> Maybe.map
                         (\descendant ->
                             updateEntity entity.id
-                                (Entity.insertShadowLink descendant)
+                                (Entity.insertEntityShadowLink descendant)
                                 layers
                         )
                     |> Maybe.withDefault
-                        (insertShadowLinksDescendants afterLayerId entity layers)
+                        (insertEntityShadowLinksDescendants afterLayerId entity layers)
+                    |> Just
+            )
+        |> Maybe.withDefault layers
+
+
+insertAddressShadowLinksDescendants : Int -> Address -> IntDict Layer -> IntDict Layer
+insertAddressShadowLinksDescendants layerId address layers =
+    IntDict.after layerId layers
+        |> Maybe.andThen
+            (\( afterLayerId, layer ) ->
+                let
+                    descendantId =
+                        Id.initAddressId
+                            { currency = Id.currency address.id
+                            , layer = afterLayerId
+                            , id = Id.addressId address.id
+                            }
+                in
+                Layer.getAddressOfLayer descendantId layer
+                    |> Maybe.map
+                        (\descendant ->
+                            updateAddress address.id
+                                (Address.insertAddressShadowLink descendant)
+                                layers
+                        )
+                    |> Maybe.withDefault
+                        (insertAddressShadowLinksDescendants afterLayerId address layers)
                     |> Just
             )
         |> Maybe.withDefault layers

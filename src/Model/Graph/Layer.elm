@@ -99,19 +99,22 @@ getEntityForAddressHelp2 { currency, address } =
 getAddress : AddressId -> IntDict Layer -> Maybe Address
 getAddress id =
     IntDict.get (Id.layer id)
-        >> Maybe.andThen
-            (.entities
-                >> Dict.foldl
-                    (\_ entity found ->
-                        case found of
-                            Nothing ->
-                                Dict.get id entity.addresses
+        >> Maybe.andThen (getAddressOfLayer id)
 
-                            Just f ->
-                                Just f
-                    )
-                    Nothing
+
+getAddressOfLayer : AddressId -> Layer -> Maybe Address
+getAddressOfLayer id =
+    .entities
+        >> Dict.foldl
+            (\_ entity found ->
+                case found of
+                    Nothing ->
+                        Dict.get id entity.addresses
+
+                    Just f ->
+                        Just f
             )
+            Nothing
 
 
 getEntities : String -> Int -> IntDict Layer -> List Entity

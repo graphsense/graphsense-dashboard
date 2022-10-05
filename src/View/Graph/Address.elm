@@ -1,4 +1,4 @@
-module View.Graph.Address exposing (address, links)
+module View.Graph.Address exposing (address, links, shadowLinks)
 
 --import Plugin.View.Graph.Address
 
@@ -256,6 +256,22 @@ links vc gc selected mn mx addr =
                     (\_ link svg ->
                         ( "addressLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
                         , Svg.lazy7 Link.addressLink vc gc selected mn mx addr link
+                        )
+                            :: svg
+                    )
+                    []
+                |> Keyed.node "g" []
+
+
+shadowLinks : Config -> Address -> Svg Msg
+shadowLinks vc addr =
+    case addr.shadowLinks of
+        Address.Links lnks ->
+            lnks
+                |> Dict.foldr
+                    (\_ link svg ->
+                        ( "addressShadowLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
+                        , Svg.lazy3 Link.addressShadowLink vc addr link
                         )
                             :: svg
                     )
