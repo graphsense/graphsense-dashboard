@@ -100,6 +100,11 @@ configuration vc config =
                     [ checked config.showEntityShadowLinks
                     , onClick UserClickedShowEntityShadowLinks
                     ]
+            , Locale.string vc.locale "between addresses"
+                |> onOffSwitch vc
+                    [ checked config.showAddressShadowLinks
+                    , onClick UserClickedShowAddressShadowLinks
+                    ]
             ]
         ]
     ]

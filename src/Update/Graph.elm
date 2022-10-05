@@ -1927,6 +1927,14 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedShowAddressShadowLinks ->
+            { model
+                | config =
+                    model.config
+                        |> s_showAddressShadowLinks (not model.config.showAddressShadowLinks)
+            }
+                |> n
+
         NoOp ->
             n model
 

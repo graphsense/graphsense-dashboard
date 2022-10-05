@@ -163,4 +163,5 @@ type Msg
     | UserClicksDeleteTag
     | UserClickedForceShowEntityLink (LinkId EntityId) Bool
     | UserClickedShowEntityShadowLinks
+    | UserClickedShowAddressShadowLinks
     | NoOp

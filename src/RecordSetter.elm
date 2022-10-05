@@ -1599,9 +1599,29 @@ s_get value__ record__ =
     { record__ | get = value__ }
 
 
+s_getHeight : a -> { b | getHeight : a } -> { b | getHeight : a }
+s_getHeight value__ record__ =
+    { record__ | getHeight = value__ }
+
+
 s_getOption : a -> { b | getOption : a } -> { b | getOption : a }
 s_getOption value__ record__ =
     { record__ | getOption = value__ }
+
+
+s_getWidth : a -> { b | getWidth : a } -> { b | getWidth : a }
+s_getWidth value__ record__ =
+    { record__ | getWidth = value__ }
+
+
+s_getX : a -> { b | getX : a } -> { b | getX : a }
+s_getX value__ record__ =
+    { record__ | getX = value__ }
+
+
+s_getY : a -> { b | getY : a } -> { b | getY : a }
+s_getY value__ record__ =
+    { record__ | getY = value__ }
 
 
 s_githubFlavored : a -> { b | githubFlavored : a } -> { b | githubFlavored : a }
@@ -4072,6 +4092,11 @@ s_shift value__ record__ =
 s_shiftKey : a -> { b | shiftKey : a } -> { b | shiftKey : a }
 s_shiftKey value__ record__ =
     { record__ | shiftKey = value__ }
+
+
+s_showAddressShadowLinks : a -> { b | showAddressShadowLinks : a } -> { b | showAddressShadowLinks : a }
+s_showAddressShadowLinks value__ record__ =
+    { record__ | showAddressShadowLinks = value__ }
 
 
 s_showEntityShadowLinks : a -> { b | showEntityShadowLinks : a } -> { b | showEntityShadowLinks : a }

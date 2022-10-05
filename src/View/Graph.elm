@@ -159,7 +159,7 @@ graphSvg plugins states vc gc model bbox =
             ++ [ Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
                , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
                ]
-            ++ (if gc.showEntityShadowLinks then
+            ++ (if gc.showAddressShadowLinks then
                     [ Svg.lazy2 addressShadowLinks vc model.layers ]
 
                 else
