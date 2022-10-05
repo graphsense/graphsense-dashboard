@@ -183,6 +183,14 @@ theme =
             [ displayFlex
             , alignItems center
             ]
+        |> s_switchOnColor
+            (\lightmode ->
+                if lightmode then
+                    colors.brandLight.light
+
+                else
+                    colors.brandLight.dark
+            )
         |> s_stats
             (Stats.default
                 |> s_root

@@ -91,7 +91,7 @@ toolbox vc model =
                     Legend.legend vc data
 
                 Tool.Configuration config ->
-                    Configuration.configuration vc config
+                    Configuration.configuration vc model.config
 
                 Tool.Export ->
                     Export.export vc

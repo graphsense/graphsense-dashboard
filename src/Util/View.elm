@@ -88,12 +88,32 @@ hovercard vc element =
 
 
 switch : View.Config -> List (Attribute msg) -> String -> Html msg
-switch vc attrs title =
+switch =
+    switchInternal False
+
+
+onOffSwitch : View.Config -> List (Attribute msg) -> String -> Html msg
+onOffSwitch =
+    switchInternal True
+
+
+switchInternal : Bool -> View.Config -> List (Attribute msg) -> String -> Html msg
+switchInternal showOnColor vc attrs title =
     div
         [ Css.switchRoot vc |> css
         ]
         [ Switch.switch 2 1 Css.rem
             |> Switch.duration 200
+            |> Switch.onStyle
+                (if showOnColor then
+                    [ vc.theme.switchOnColor vc.lightmode
+                        |> toCssColor
+                        |> Css.backgroundColor
+                    ]
+
+                 else
+                    []
+                )
             |> Switch.offStyle
                 [ (if vc.lightmode then
                     Css.rgba 0 0 0 0.2

@@ -1918,6 +1918,14 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedShowEntityShadowLinks ->
+            { model
+                | config =
+                    model.config
+                        |> s_showEntityShadowLinks (not model.config.showEntityShadowLinks)
+            }
+                |> n
+
         NoOp ->
             n model
 

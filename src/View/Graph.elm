@@ -149,13 +149,19 @@ graphSvg plugins states vc gc model bbox =
                         def
          in
          [ Svg.lazy2 arrowMarkers vc gc
-         , Svg.lazy2 shadowLinks vc model.layers
-         , Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
-         , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
-         , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
-         , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
-         , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
          ]
+            ++ (if gc.showEntityShadowLinks then
+                    [ Svg.lazy2 shadowLinks vc model.layers ]
+
+                else
+                    []
+               )
+            ++ [ Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
+               , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
+               , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
+               , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
+               , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
+               ]
         )
 
 

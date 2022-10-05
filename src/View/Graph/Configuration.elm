@@ -8,6 +8,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Msg.Graph exposing (Msg(..))
+import Util.View exposing (onOffSwitch)
 import View.Dialog as Dialog
 import View.Locale as Locale
 
@@ -91,6 +92,14 @@ configuration vc config =
                         |> text
                     ]
                 ]
+            ]
+        , Dialog.part vc
+            "Show shadow links"
+            [ Locale.string vc.locale "between entities"
+                |> onOffSwitch vc
+                    [ checked config.showEntityShadowLinks
+                    , onClick UserClickedShowEntityShadowLinks
+                    ]
             ]
         ]
     ]

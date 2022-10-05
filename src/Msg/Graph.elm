@@ -162,4 +162,5 @@ type Msg
     | UserPressesEscape
     | UserClicksDeleteTag
     | UserClickedForceShowEntityLink (LinkId EntityId) Bool
+    | UserClickedShowEntityShadowLinks
     | NoOp

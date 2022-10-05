@@ -55,6 +55,7 @@ type alias Theme =
     , custom : String
     , switchLabel : List Style
     , switchRoot : List Style
+    , switchOnColor : Bool -> Color.Color
     }
 
 
@@ -98,6 +99,7 @@ default =
     , custom = ""
     , switchLabel = []
     , switchRoot = []
+    , switchOnColor = \_ -> Color.rgba 0 0 0 0
     }
 
 
