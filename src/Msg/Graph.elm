@@ -164,4 +164,5 @@ type Msg
     | UserClickedForceShowEntityLink (LinkId EntityId) Bool
     | UserClickedShowEntityShadowLinks
     | UserClickedShowAddressShadowLinks
+    | UserPressesDelete
     | NoOp

@@ -1935,6 +1935,27 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserPressesDelete ->
+            { model
+                | layers =
+                    case model.selected of
+                        SelectedAddress id ->
+                            Layer.removeAddress id model.layers
+
+                        SelectedEntity id ->
+                            Layer.removeEntity id model.layers
+
+                        SelectedAddresslink id ->
+                            Layer.removeAddressLink id model.layers
+
+                        SelectedEntitylink id ->
+                            Layer.removeEntityLink id model.layers
+
+                        SelectedNone ->
+                            model.layers
+            }
+                |> n
+
         NoOp ->
             n model
 
@@ -3144,6 +3165,15 @@ shallPushHistory msg model =
             True
 
         UserClickedNewYes ->
+            True
+
+        UserPressesDelete ->
+            True
+
+        UserClickedRemoveAddressLink _ ->
+            True
+
+        UserClickedRemoveEntityLink _ ->
             True
 
         _ ->
