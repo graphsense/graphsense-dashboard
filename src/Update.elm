@@ -959,25 +959,24 @@ batchSearch plugins ( model, eff ) =
     let
         ( term, search ) =
             Search.popInput model.search
-
-        newModel =
-            { model
-                | search = search
-                , dialog = Nothing
-            }
     in
-    term
+    ( { model
+        | search = search
+        , dialog = Nothing
+      }
+    , term
         |> Maybe.map
             (\( currency, t ) ->
-                Graph.loadAddress plugins
+                Route.Graph.addressRoute
                     { currency = currency
                     , address = t
                     , table = Nothing
                     , layer = Nothing
                     }
-                    newModel.graph
-                    |> mapSecond (List.map GraphEffect)
+                    |> Route.graphRoute
+                    |> Route.toUrl
+                    |> NavPushUrlEffect
+                    |> List.singleton
             )
-        |> Maybe.withDefault ( newModel.graph, [] )
-        |> mapSecond ((++) eff)
-        |> mapFirst (\graph -> { newModel | graph = graph })
+        |> Maybe.withDefault []
+    )
