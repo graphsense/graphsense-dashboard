@@ -165,4 +165,5 @@ type Msg
     | UserClickedShowEntityShadowLinks
     | UserClickedShowAddressShadowLinks
     | UserPressesDelete
+    | UserClickedTagsFlag EntityId
     | NoOp

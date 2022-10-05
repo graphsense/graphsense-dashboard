@@ -1956,6 +1956,18 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedTagsFlag id ->
+            ( model
+            , Route.entityRoute
+                { currency = Id.currency id
+                , entity = Id.entityId id
+                , table = Just Route.EntityTagsTable
+                , layer = Id.layer id |> Just
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
+
         NoOp ->
             n model
 
