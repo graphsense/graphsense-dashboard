@@ -265,3 +265,5 @@ no external transactions: Keine externen Transaktionen
 show shadow links: Schatten anzeigen
 between entities: zwischen Entitäten
 between addresses: zwischen Adressen
+show entity link: Zeige Verbindung der Entitäten
+hide entity link: Verberge Verbindung der Entitäten

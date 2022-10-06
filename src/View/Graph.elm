@@ -23,6 +23,7 @@ import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Graph.Link as Link
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -359,9 +360,14 @@ hoveredLinks vc gc hovered layers =
                             ViewLayer.calcRange vc gc layer
                                 |> (\( mn, mx ) ->
                                         Layer.getEntityLinksByTarget id layer
-                                            |> List.map
+                                            |> List.filterMap
                                                 (\( source, target ) ->
-                                                    Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                    if Entity.showLink source target then
+                                                        Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                            |> Just
+
+                                                    else
+                                                        Nothing
                                                 )
                                    )
                         )
@@ -375,8 +381,15 @@ hoveredLinks vc gc hovered layers =
                                                 Entity.Links links ->
                                                     links
                                                         |> Dict.values
-                                                        |> List.map
-                                                            (Svg.lazy6 Link.entityLinkHovered vc gc mn mx source)
+                                                        |> List.filterMap
+                                                            (\target ->
+                                                                if Entity.showLink source target then
+                                                                    Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                                        |> Just
+
+                                                                else
+                                                                    Nothing
+                                                            )
                                        )
                             )
                             (IntDict.get (Id.layer id) layers)

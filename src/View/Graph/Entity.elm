@@ -1,4 +1,4 @@
-module View.Graph.Entity exposing (addressLinks, addressShadowLinks, addresses, entity, links, shadowLinks)
+module View.Graph.Entity exposing (addressLinks, addressShadowLinks, addresses, entity, links, shadowLinks, showLink)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
@@ -16,6 +16,7 @@ import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Graph.Link exposing (Link)
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
@@ -340,7 +341,7 @@ links vc gc selected mn mx ent =
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
-                        if link.forceShow || not (linkHasAddressLinks ent.addresses link.node.addresses) then
+                        if showLink ent link then
                             ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
                             , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
                             )
@@ -399,3 +400,8 @@ shadowLinks vc ent =
                     )
                     []
                 |> Keyed.node "g" []
+
+
+showLink : Entity -> Link Entity -> Bool
+showLink source target =
+    target.forceShow || not (linkHasAddressLinks source.addresses target.node.addresses)
