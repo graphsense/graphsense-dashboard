@@ -3081,8 +3081,10 @@ decodeYamlTag =
                 ]
 
         optionalField name decoder =
-            Yaml.Decode.field name decoder
-                |> Yaml.Decode.maybe
+            Yaml.Decode.oneOf
+                [ Yaml.Decode.field name (Yaml.Decode.nullable decoder)
+                , Yaml.Decode.succeed Nothing
+                ]
     in
     Yaml.Decode.map7 Tag.UserTag
         (Yaml.Decode.field "currency" Yaml.Decode.string)
