@@ -1871,7 +1871,10 @@ updateByMsg plugins uc msg model =
             Time.posixToMillis model.browser.now
                 |> Init.Graph.init
                 |> s_history model.history
-                |> s_config model.config
+                |> s_config
+                    (model.config
+                        |> s_highlighter False
+                    )
                 |> n
 
         UserInputsFilterTable input ->
@@ -3231,6 +3234,9 @@ fromDeserialized deserialized model =
                         |> s_highlights deserialized.highlights
                 , history = History [] []
                 , layers = IntDict.empty
+                , config =
+                    model.config
+                        |> s_highlighter False
             }
 
 
