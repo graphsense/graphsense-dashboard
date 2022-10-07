@@ -59,13 +59,13 @@ viewHighlight : View.Config -> Maybe Int -> Int -> ( String, Color ) -> Html Msg
 viewHighlight vc selected i ( title, color ) =
     div
         [ Css.highlightRoot vc |> css
-        , UserClicksHighlight i |> onClick
         ]
         [ span
             [ (Css.color (Util.View.toCssColor color)
                 :: Css.highlightColor vc (Just i == selected)
               )
                 |> css
+            , UserClicksHighlight i |> onClick
             ]
             [ text "◼" ]
         , input

@@ -739,7 +739,6 @@ theme =
                         , Css.Transitions.transition
                             [ Css.Transitions.transform 200 ]
                         , property "transform" "scale(1)"
-                        , cursor pointer
                         ]
                             ++ (if selected then
                                     [ property "transform" "scale(1.3)"
