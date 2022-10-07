@@ -700,6 +700,7 @@ theme =
                     [ displayFlex
                     , alignItems center
                     , scaled 1 |> rem |> marginTop
+                    , whiteSpace noWrap
                     ]
                 |> s_legendItemColor
                     [ before
