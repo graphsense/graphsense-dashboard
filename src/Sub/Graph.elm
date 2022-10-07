@@ -24,7 +24,7 @@ subscriptions model =
                     if str == "Escape" then
                         UserPressesEscape
 
-                    else if str == "Delete" || str == "Backspace" then
+                    else if str == "Delete" then
                         UserPressesDelete
 
                     else
