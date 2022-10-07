@@ -74,7 +74,6 @@ search plugins vc sc model =
                             SearchTagsOnly ->
                                 [ Locale.string vc.locale "Label"
                                     |> placeholder
-                                , onBlur UserLeavesSearch
                                 ]
                        )
                 )
