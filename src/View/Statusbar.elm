@@ -14,7 +14,8 @@ import Model exposing (Msg(..))
 import Model.Graph.Id as Id
 import Model.Graph.Search as Search
 import Model.Statusbar exposing (..)
-import Util.View exposing (firstToUpper, loadingSpinner)
+import Util.View exposing (firstToUpper, loadingSpinner, none)
+import Version exposing (version)
 import View.Locale as Locale
 
 
@@ -32,11 +33,17 @@ view vc model =
                )
         )
         (if not model.visible then
-            model.messages
+            [ model.messages
                 |> Dict.values
                 |> List.head
-                |> Maybe.map (message vc >> List.singleton)
-                |> Maybe.withDefault []
+                |> Maybe.map (message vc)
+                |> Maybe.withDefault none
+            , "v"
+                ++ version
+                |> text
+                |> List.singleton
+                |> span []
+            ]
 
          else
             button

@@ -990,6 +990,9 @@ theme =
 
                          else
                             [ cursor pointer
+                            , displayFlex
+                            , justifyContent spaceBetween
+                            , alignItems center
                             ]
                         )
                             ++ [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
