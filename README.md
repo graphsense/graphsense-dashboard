@@ -44,17 +44,6 @@ The name of the plugin is case insensitive. Elm package name of the plugin is th
 
 Adapt the stub accordingly. 
 
-## Testing
-
-Run
-    
-    make watch
-
-to watch for changes in elm files and openapi templates. Also regenerates the openapi client (see `./openapi`).
-
-* TODO: explain directories
-* TODO: explain testing
-
 ## Production setup
 
 ### Prerequisites
