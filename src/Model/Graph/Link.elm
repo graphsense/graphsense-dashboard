@@ -5,6 +5,7 @@ import Api.Data
 
 type alias Link a =
     { node : a
+    , forceShow : Bool
     , link : LinkData
     }
 

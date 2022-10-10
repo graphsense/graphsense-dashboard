@@ -1,5 +1,6 @@
 module View.Statusbar exposing (..)
 
+import Api
 import Config.View as View
 import Css.Statusbar as Css
 import Dict
@@ -13,7 +14,8 @@ import Model exposing (Msg(..))
 import Model.Graph.Id as Id
 import Model.Graph.Search as Search
 import Model.Statusbar exposing (..)
-import Util.View exposing (firstToUpper, loadingSpinner)
+import Util.View exposing (firstToUpper, loadingSpinner, none)
+import Version exposing (version)
 import View.Locale as Locale
 
 
@@ -31,11 +33,17 @@ view vc model =
                )
         )
         (if not model.visible then
-            model.messages
+            [ model.messages
                 |> Dict.values
                 |> List.head
-                |> Maybe.map (message vc >> List.singleton)
-                |> Maybe.withDefault []
+                |> Maybe.map (message vc)
+                |> Maybe.withDefault none
+            , "v"
+                ++ version
+                |> text
+                |> List.singleton
+                |> span []
+            ]
 
          else
             button
@@ -120,7 +128,11 @@ log vc ( key, values, error ) =
                                     Locale.string vc.locale "bad status" ++ ": " ++ String.fromInt s
 
                                 Http.BadBody str ->
-                                    Locale.string vc.locale "data error" ++ " " ++ str
+                                    if str == Api.noExternalTransactions then
+                                        Locale.string vc.locale str
+
+                                    else
+                                        Locale.string vc.locale "data error" ++ " " ++ str
                            )
 
                 Nothing ->

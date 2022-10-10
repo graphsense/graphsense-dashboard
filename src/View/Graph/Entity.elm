@@ -1,20 +1,22 @@
-module View.Graph.Entity exposing (addressLinks, addresses, entity, links, shadowLink)
+module View.Graph.Entity exposing (addressLinks, addressShadowLinks, addresses, entity, links, shadowLinks, showLink)
 
 import Color
 import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
 import Config.View exposing (Config)
 import Css exposing (fill)
 import Css.Graph as Css
-import Dict
+import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode
 import List.Extra
 import Log
 import Maybe.Extra
 import Model.Graph exposing (NodeType(..))
+import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Model.Graph.Link exposing (Link)
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
@@ -231,6 +233,7 @@ tagsFlag vc ent =
                 |> transform
             , Css.tagsFlag vc |> css
             , d "M48 32H197.5C214.5 32 230.7 38.74 242.7 50.75L418.7 226.7C443.7 251.7 443.7 292.3 418.7 317.3L285.3 450.7C260.3 475.7 219.7 475.7 194.7 450.7L18.75 274.7C6.743 262.7 0 246.5 0 229.5V80C0 53.49 21.49 32 48 32L48 32zM112 176C129.7 176 144 161.7 144 144C144 126.3 129.7 112 112 112C94.33 112 80 126.3 80 144C80 161.7 94.33 176 112 176z"
+            , onClick <| UserClickedTagsFlag ent.id
             ]
             []
         ]
@@ -313,6 +316,24 @@ addressLinks vc gc selected mn mx ent =
         |> Keyed.node "g" []
 
 
+addressShadowLinks : Config -> Entity -> Svg Msg
+addressShadowLinks vc ent =
+    let
+        _ =
+            Log.log "Entity.addressShadowLinks" ent.id
+    in
+    ent.addresses
+        |> Dict.foldl
+            (\_ address svg ->
+                ( "addressShadowLinks" ++ Id.addressIdToString address.id
+                , Svg.lazy2 Address.shadowLinks vc address
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
 links : Config -> Graph.Config -> String -> Float -> Float -> Entity -> Svg Msg
 links vc gc selected mn mx ent =
     case ent.links of
@@ -320,26 +341,67 @@ links vc gc selected mn mx ent =
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
-                        ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
-                        , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
-                        )
-                            :: svg
+                        if showLink ent link then
+                            ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
+                            , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
+                            )
+                                :: svg
+
+                        else
+                            svg
                     )
                     []
                 |> Keyed.node "g" []
 
 
-shadowLink : Config -> Entity -> Svg Msg
-shadowLink vc ent =
+linkHasAddressLinks : Dict Id.AddressId Address -> Dict Id.AddressId Address -> Bool
+linkHasAddressLinks sourceAddresses targetAddresses =
+    let
+        checkAddressLinks lnks =
+            case lnks of
+                [] ->
+                    False
+
+                link :: rest ->
+                    if Dict.member link targetAddresses then
+                        True
+
+                    else
+                        checkAddressLinks rest
+
+        checkAddresses addrs =
+            case addrs of
+                [] ->
+                    False
+
+                address :: rest ->
+                    case address.links of
+                        Address.Links lnks ->
+                            if Dict.keys lnks |> checkAddressLinks then
+                                True
+
+                            else
+                                checkAddresses rest
+    in
+    Dict.values sourceAddresses |> checkAddresses
+
+
+shadowLinks : Config -> Entity -> Svg Msg
+shadowLinks vc ent =
     case ent.shadowLinks of
         Entity.Links lnks ->
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
-                        ( "shadowLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
-                        , Svg.lazy3 Link.shadowLink vc ent link
+                        ( "entityShadowLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
+                        , Svg.lazy3 Link.entityShadowLink vc ent link
                         )
                             :: svg
                     )
                     []
                 |> Keyed.node "g" []
+
+
+showLink : Entity -> Link Entity -> Bool
+showLink source target =
+    target.forceShow || not (linkHasAddressLinks source.addresses target.node.addresses)

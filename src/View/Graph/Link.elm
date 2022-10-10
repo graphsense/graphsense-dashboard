@@ -150,35 +150,55 @@ bezierInv inv sx sy tx ty =
         |> String.Interpolate.interpolate templ
 
 
-shadowLink : View.Config -> Entity -> Link Entity -> Svg Msg
-shadowLink vc entity link =
+entityShadowLink : View.Config -> Entity -> Link Entity -> Svg Msg
+entityShadowLink =
+    shadowLink
+        { getX = Entity.getX
+        , getY = Entity.getY
+        , getWidth = Entity.getWidth
+        , getHeight = Entity.getHeight
+        }
+
+
+addressShadowLink : View.Config -> Address -> Link Address -> Svg Msg
+addressShadowLink =
+    shadowLink
+        { getX = Address.getX
+        , getY = Address.getY
+        , getWidth = Address.getWidth
+        , getHeight = Address.getHeight
+        }
+
+
+shadowLink : { getX : node -> Float, getY : node -> Float, getWidth : node -> Float, getHeight : node -> Float } -> View.Config -> node -> Link node -> Svg Msg
+shadowLink access vc node link =
     let
         sx1 =
-            Entity.getX entity + Entity.getWidth entity
+            access.getX node + access.getWidth node
 
         sy1 =
-            Entity.getY entity
+            access.getY node
 
         tx1 =
-            Entity.getX link.node
+            access.getX link.node
 
         ty1 =
-            Entity.getY link.node
+            access.getY link.node
 
         sx2 =
-            Entity.getX entity + Entity.getWidth entity
+            access.getX node + access.getWidth node
 
         sy2 =
-            Entity.getY entity + Entity.getHeight entity
+            access.getY node + access.getHeight node
 
         tx2 =
-            Entity.getX link.node
+            access.getX link.node
 
         ty2 =
-            Entity.getY link.node + Entity.getHeight link.node
+            access.getY link.node + access.getHeight link.node
 
         th =
-            Entity.getHeight link.node
+            access.getHeight link.node
 
         dd =
             [ sx1 -- 0

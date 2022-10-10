@@ -85,7 +85,7 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, pagesize, includeLabels, nextpage, toMsg } ->
+                Graph.GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage, toMsg } ->
                     let
                         direction =
                             case isOutgoing of
@@ -95,12 +95,12 @@ perform plugins key statusbarToken apiKey effect =
                                 False ->
                                     Api.Request.Addresses.DirectionIn
                     in
-                    Api.Request.Addresses.listAddressNeighbors currency address direction (Just includeLabels) nextpage (Just pagesize)
+                    Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetAddressEffect { currency, address, toMsg, suppressErrors } ->
+                Graph.GetAddressEffect { currency, address, toMsg } ->
                     Api.Request.Addresses.getAddress currency address
-                        |> sendWithSuppressErrors suppressErrors statusbarToken apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityEffect { currency, entity, toMsg } ->
                     Api.Request.Entities.getEntity currency entity
@@ -110,12 +110,12 @@ perform plugins key statusbarToken apiKey effect =
                     Api.Request.Blocks.getBlock currency height
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
-                Graph.GetEntityForAddressEffect { currency, address, toMsg, suppressErrors } ->
+                Graph.GetEntityForAddressEffect { currency, address, toMsg } ->
                     Api.Request.Addresses.getAddressEntity currency address
-                        |> sendWithSuppressErrors suppressErrors statusbarToken apiKey effect (toMsg >> GraphMsg)
+                        |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddressTxsEffect { currency, address, pagesize, nextpage, toMsg } ->
-                    Api.Request.Addresses.listAddressTxs currency address nextpage (Just pagesize)
+                    Api.Request.Addresses.listAddressTxs currency address Nothing nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage, toMsg } ->
@@ -139,7 +139,7 @@ perform plugins key statusbarToken apiKey effect =
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetEntityTxsEffect { currency, entity, pagesize, nextpage, toMsg } ->
-                    Api.Request.Entities.listEntityTxs currency entity nextpage (Just pagesize)
+                    Api.Request.Entities.listEntityTxs currency entity Nothing nextpage (Just pagesize)
                         |> send statusbarToken apiKey effect (toMsg >> GraphMsg)
 
                 Graph.GetBlockTxsEffect { currency, block, toMsg } ->
@@ -318,18 +318,17 @@ handleSearchEffect apiKey plugins tag tagEffect effect =
 
 withAuthorization : String -> Api.Request a -> Api.Request a
 withAuthorization apiKey request =
-    Api.withHeader "Authorization" apiKey request
+    if String.isEmpty apiKey then
+        request
+
+    else
+        Api.withHeader "Authorization" apiKey request
 
 
 send : Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
-send =
-    sendWithSuppressErrors False
-
-
-sendWithSuppressErrors : Bool -> Maybe String -> String -> Effect -> (a -> Msg) -> Api.Request a -> Cmd Msg
-sendWithSuppressErrors suppressErrors statusbarToken apiKey effect toMsg =
+send statusbarToken apiKey effect toMsg =
     withAuthorization apiKey
-        >> Api.sendAndAlsoReceiveHeaders (BrowserGotResponseWithHeaders statusbarToken suppressErrors) effect toMsg
+        >> Api.sendAndAlsoReceiveHeaders (BrowserGotResponseWithHeaders statusbarToken) effect toMsg
 
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction

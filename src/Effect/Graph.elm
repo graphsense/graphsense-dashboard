@@ -8,7 +8,7 @@ import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
 import Model.Entity as E
-import Model.Graph.Id exposing (AddressId, EntityId)
+import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Search exposing (Criterion)
 import Msg.Graph exposing (Msg(..))
@@ -26,7 +26,6 @@ type Effect
         { currency : String
         , address : String
         , toMsg : Api.Data.Address -> Msg
-        , suppressErrors : Bool
         }
     | GetEntityEffect
         { currency : String
@@ -42,15 +41,14 @@ type Effect
         { currency : String
         , address : String
         , toMsg : Api.Data.Entity -> Msg
-        , suppressErrors : Bool
         }
     | GetEntityNeighborsEffect
         { currency : String
         , entity : Int
         , isOutgoing : Bool
-        , pagesize : Int
         , onlyIds : Maybe (List Int)
         , includeLabels : Bool
+        , pagesize : Int
         , nextpage : Maybe String
         , toMsg : Api.Data.NeighborEntities -> Msg
         }
@@ -58,8 +56,9 @@ type Effect
         { currency : String
         , address : String
         , isOutgoing : Bool
-        , pagesize : Int
+        , onlyIds : Maybe (List String)
         , includeLabels : Bool
+        , pagesize : Int
         , nextpage : Maybe String
         , toMsg : Api.Data.NeighborAddresses -> Msg
         }
@@ -332,6 +331,36 @@ getEntityEgonet { currency, entity } msg layers =
                 , nextpage = Nothing
                 , includeLabels = False
                 , toMsg = msg currency entity isOut
+                }
+    in
+    [ effect True
+    , effect False
+    ]
+
+
+getAddressEgonet :
+    AddressId
+    -> (AddressId -> Bool -> Api.Data.NeighborAddresses -> Msg)
+    -> IntDict Layer
+    -> List Effect
+getAddressEgonet id msg layers =
+    let
+        -- TODO optimize which only_ids to get for which direction
+        onlyIds =
+            layers
+                |> Layer.addresses
+                |> List.map (.address >> .address)
+
+        effect isOut =
+            GetAddressNeighborsEffect
+                { currency = Id.currency id
+                , address = Id.addressId id
+                , isOutgoing = isOut
+                , onlyIds = Just onlyIds
+                , pagesize = max 1 <| List.length onlyIds
+                , nextpage = Nothing
+                , includeLabels = False
+                , toMsg = msg id isOut
                 }
     in
     [ effect True

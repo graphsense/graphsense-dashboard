@@ -1,15 +1,16 @@
 module Config exposing (config, plugins)
 
-import Plugin as Plugin exposing (PID, Plugin, Plugins)
-import Theme.Theme exposing (Theme)
+import Iknaio
+import Plugin
+import Theme.Theme as Theme exposing (Theme)
 
 
 config : { theme : Theme }
 config =
-    { theme = Theme.default
+    { theme = Iknaio.theme
     }
 
 
-plugins : List ( PID, Plugin )
+plugins : Plugin.Plugins
 plugins =
-    [ ]
+    Plugin.empty

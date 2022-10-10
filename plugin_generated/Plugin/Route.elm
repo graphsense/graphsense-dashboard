@@ -1,0 +1,36 @@
+module Plugin.Route exposing (..)
+
+import Plugin.Model
+import Regex
+import Tuple exposing (..)
+
+
+parseUrl : String -> Maybe ( Plugin.Model.PluginType, String )
+parseUrl url =
+    [ 
+    ]
+        |> parseUrlHelp url
+
+
+parseUrlHelp : String -> List ( String, Plugin.Model.PluginType ) -> Maybe ( Plugin.Model.PluginType, String )
+parseUrlHelp url namespaces =
+    case namespaces of
+        [] ->
+            Nothing
+
+        ( ns, type_ ) :: rest ->
+            let
+                regex =
+                    "^"
+                        ++ ns
+                        ++ "[/?#]"
+                        |> Regex.fromString
+                        |> Maybe.withDefault Regex.never
+            in
+            if Regex.contains regex url || url == ns then
+                String.dropLeft (String.length ns) url
+                    |> pair type_
+                    |> Just
+
+            else
+                parseUrlHelp url rest

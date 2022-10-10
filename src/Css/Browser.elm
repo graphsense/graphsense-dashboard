@@ -25,7 +25,7 @@ frame vc visible =
 
 propertyBoxRoot : Config -> List Style
 propertyBoxRoot vc =
-    vc.theme.browser.propertyBoxRoot
+    vc.theme.browser.propertyBoxRoot vc.lightmode
 
 
 propertyBoxTable : Config -> List Style
@@ -35,6 +35,11 @@ propertyBoxTable vc =
     , position relative
     ]
         ++ vc.theme.browser.propertyBoxTable
+
+
+propertyBoxNote : Config -> List Style
+propertyBoxNote vc =
+    vc.theme.browser.propertyBoxNote vc.lightmode
 
 
 propertyBoxRow : Config -> List Style

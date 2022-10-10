@@ -8,8 +8,9 @@ import Css.View as Css
 import Hovercard
 import Html
 import Html.Attributes
-import Html.Styled exposing (Attribute, Html, img, span)
+import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src)
+import Switch
 
 
 none : Html msg
@@ -76,6 +77,7 @@ hovercard vc element =
         , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
         , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
         , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+        , overflow = "visible"
         }
         element
         (Css.hovercard vc
@@ -83,3 +85,57 @@ hovercard vc element =
         )
         >> Html.Styled.fromUnstyled
         >> List.singleton
+
+
+switch : View.Config -> List (Attribute msg) -> String -> Html msg
+switch =
+    switchInternal False
+
+
+onOffSwitch : View.Config -> List (Attribute msg) -> String -> Html msg
+onOffSwitch =
+    switchInternal True
+
+
+switchInternal : Bool -> View.Config -> List (Attribute msg) -> String -> Html msg
+switchInternal showOnColor vc attrs title =
+    div
+        [ Css.switchRoot vc |> css
+        ]
+        [ Switch.switch 2 1 Css.rem
+            |> Switch.duration 200
+            |> Switch.onStyle
+                (if showOnColor then
+                    [ vc.theme.switchOnColor vc.lightmode
+                        |> toCssColor
+                        |> Css.backgroundColor
+                    ]
+
+                 else
+                    []
+                )
+            |> Switch.offStyle
+                [ (if vc.lightmode then
+                    Css.rgba 0 0 0 0.2
+
+                   else
+                    Css.rgba 255 255 255 0.2
+                  )
+                    |> Css.backgroundColor
+                ]
+            |> Switch.knobStyle
+                [ (if vc.lightmode then
+                    Css.rgb 0 0 0
+
+                   else
+                    Css.rgb 255 255 255
+                  )
+                    |> Css.backgroundColor
+                ]
+            |> Switch.attributes attrs
+            |> Switch.render
+        , title
+            |> text
+            |> List.singleton
+            |> span [ Css.switchLabel vc |> css ]
+        ]

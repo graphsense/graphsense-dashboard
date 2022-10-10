@@ -18,12 +18,14 @@ type alias Address =
     { id : AddressId
     , entityId : EntityId
     , address : Api.Data.Address
+    , tags : Maybe (List Api.Data.AddressTag)
     , category : Maybe String
     , x : Float
     , y : Float
     , dx : Float
     , dy : Float
     , links : Links
+    , shadowLinks : Links
     , userTag : Maybe Tag.UserTag
     , color : Maybe Color
     , plugins : Plugin.AddressState

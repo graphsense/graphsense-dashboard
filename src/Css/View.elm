@@ -138,3 +138,13 @@ buttonsRow vc =
     displayFlex
         :: justifyContent spaceBetween
         :: vc.theme.buttonsRow
+
+
+switchLabel : Config -> List Style
+switchLabel vc =
+    vc.theme.switchLabel
+
+
+switchRoot : Config -> List Style
+switchRoot vc =
+    vc.theme.switchRoot

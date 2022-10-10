@@ -31,7 +31,8 @@ init plugins entity address =
             }
     , entityId = entity.id
     , address = address
-    , category = tagsToCategory address.tags
+    , tags = Nothing
+    , category = Nothing
     , x =
         entity.x
             + entity.dx
@@ -40,6 +41,7 @@ init plugins entity address =
     , dx = 0
     , dy = 0
     , links = Model.Graph.Address.Links Dict.empty
+    , shadowLinks = Model.Graph.Address.Links Dict.empty
     , userTag = Nothing
     , color = Nothing
     , plugins = Plugin.initAddress plugins

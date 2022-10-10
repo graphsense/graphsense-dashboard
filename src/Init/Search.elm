@@ -12,4 +12,5 @@ init =
     , found = Nothing
     , input = ""
     , bounce = Bounce.init
+    , batch = Nothing
     }

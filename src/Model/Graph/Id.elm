@@ -82,3 +82,8 @@ noAddressLinkId =
 getSourceId : LinkId a -> a
 getSourceId =
     first
+
+
+getTargetId : LinkId a -> a
+getTargetId =
+    second

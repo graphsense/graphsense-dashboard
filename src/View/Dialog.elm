@@ -20,6 +20,9 @@ view vc model =
         [ case model of
             Confirm conf ->
                 confirm vc conf
+
+            Options conf ->
+                options_ vc conf
         ]
 
 
@@ -43,6 +46,25 @@ confirm vc { message, onYes, onNo } =
                 [ Locale.string vc.locale "No" |> text
                 ]
             ]
+        ]
+
+
+options_ : Config -> OptionsConfig msg -> Html msg
+options_ vc { message, options } =
+    part vc
+        message
+        [ options
+            |> List.map
+                (\( title, msg ) ->
+                    button
+                        [ Css.View.primary vc |> css
+                        , onClick msg
+                        ]
+                        [ Locale.string vc.locale title |> text
+                        ]
+                )
+            |> div
+                []
         ]
 
 

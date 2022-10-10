@@ -15,6 +15,7 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import List.Extra
 import Log
+import Maybe.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Address as Address
 import Model.Graph.ContextMenu as ContextMenu
@@ -22,6 +23,7 @@ import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
+import Model.Graph.Link as Link
 import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -148,13 +150,26 @@ graphSvg plugins states vc gc model bbox =
                         def
          in
          [ Svg.lazy2 arrowMarkers vc gc
-         , Svg.lazy2 shadowLinks vc model.layers
-         , Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
-         , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
-         , Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
-         , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
-         , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
          ]
+            ++ (if gc.showEntityShadowLinks then
+                    [ Svg.lazy2 entityShadowLinks vc model.layers ]
+
+                else
+                    []
+               )
+            ++ [ Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
+               , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
+               ]
+            ++ (if gc.showAddressShadowLinks then
+                    [ Svg.lazy2 addressShadowLinks vc model.layers ]
+
+                else
+                    []
+               )
+            ++ [ Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
+               , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
+               , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
+               ]
         )
 
 
@@ -194,17 +209,35 @@ entities plugins vc gc selected layers =
         |> Keyed.node "g" []
 
 
-shadowLinks : Config -> IntDict Layer -> Svg Msg
-shadowLinks vc layers =
+entityShadowLinks : Config -> IntDict Layer -> Svg Msg
+entityShadowLinks vc layers =
     let
         _ =
-            Log.log "Graph.shadowLinks" ""
+            Log.log "Graph.entityShadowLinks" ""
     in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "shadowLinks" ++ String.fromInt layerId
-                , Svg.lazy2 ViewLayer.shadowLinks vc layer
+                ( "Graph.entityShadowLinks" ++ String.fromInt layerId
+                , Svg.lazy2 ViewLayer.entityShadowLinks vc layer
+                )
+                    :: svg
+            )
+            []
+        |> Keyed.node "g" []
+
+
+addressShadowLinks : Config -> IntDict Layer -> Svg Msg
+addressShadowLinks vc layers =
+    let
+        _ =
+            Log.log "Graph.addressShadowLinks" ""
+    in
+    layers
+        |> IntDict.foldl
+            (\layerId layer svg ->
+                ( "Graph.addressShadowLinks" ++ String.fromInt layerId
+                , Svg.lazy2 ViewLayer.addressShadowLinks vc layer
                 )
                     :: svg
             )
@@ -221,7 +254,7 @@ entityLinks vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "entityLinks" ++ String.fromInt layerId
+                ( "Graph.entityLinks" ++ String.fromInt layerId
                 , Svg.lazy4 ViewLayer.entityLinks vc gc selected layer
                 )
                     :: svg
@@ -239,7 +272,7 @@ addressLinks vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "addressLinks" ++ String.fromInt layerId
+                ( "Graph.addressLinks" ++ String.fromInt layerId
                 , Svg.lazy4 ViewLayer.addressLinks vc gc selected layer
                 )
                     :: svg
@@ -327,9 +360,14 @@ hoveredLinks vc gc hovered layers =
                             ViewLayer.calcRange vc gc layer
                                 |> (\( mn, mx ) ->
                                         Layer.getEntityLinksByTarget id layer
-                                            |> List.map
+                                            |> List.filterMap
                                                 (\( source, target ) ->
-                                                    Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                    if Entity.showLink source target then
+                                                        Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                            |> Just
+
+                                                    else
+                                                        Nothing
                                                 )
                                    )
                         )
@@ -343,8 +381,15 @@ hoveredLinks vc gc hovered layers =
                                                 Entity.Links links ->
                                                     links
                                                         |> Dict.values
-                                                        |> List.map
-                                                            (Svg.lazy6 Link.entityLinkHovered vc gc mn mx source)
+                                                        |> List.filterMap
+                                                            (\target ->
+                                                                if Entity.showLink source target then
+                                                                    Svg.lazy6 Link.entityLinkHovered vc gc mn mx source target
+                                                                        |> Just
+
+                                                                else
+                                                                    Nothing
+                                                            )
                                        )
                             )
                             (IntDict.get (Id.layer id) layers)
@@ -393,9 +438,44 @@ contextMenu plugins states vc model cm =
             ]
 
         ContextMenu.AddressLink id ->
+            let
+                srcLink =
+                    Maybe.Extra.andThen2
+                        (\source target ->
+                            case source.links of
+                                Entity.Links lnks ->
+                                    Dict.get target.id lnks
+                                        |> Maybe.map (pair source)
+                        )
+                        (Layer.getAddress (Id.getSourceId id) model.layers
+                            |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
+                        )
+                        (Layer.getAddress (Id.getTargetId id) model.layers
+                            |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
+                        )
+            in
             [ UserClickedRemoveAddressLink id
                 |> option "Remove"
             ]
+                ++ (srcLink
+                        |> Maybe.map
+                            (\( src, li ) ->
+                                let
+                                    lbl =
+                                        if li.forceShow then
+                                            "Hide entity link"
+
+                                        else
+                                            "Show entity link"
+                                in
+                                not li.forceShow
+                                    |> UserClickedForceShowEntityLink
+                                        ( src.id, li.node.id )
+                                    |> option lbl
+                                    |> List.singleton
+                            )
+                        |> Maybe.withDefault []
+                   )
 
         ContextMenu.EntityLink id ->
             [ UserClickedRemoveEntityLink id

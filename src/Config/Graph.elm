@@ -129,6 +129,8 @@ type alias Config =
     , entityConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , highlighter : Bool
+    , showEntityShadowLinks : Bool
+    , showAddressShadowLinks : Bool
     }
 
 
@@ -141,4 +143,6 @@ default =
     , entityConcepts = []
     , abuseConcepts = []
     , highlighter = False
+    , showEntityShadowLinks = True
+    , showAddressShadowLinks = False
     }

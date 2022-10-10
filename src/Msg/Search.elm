@@ -15,6 +15,7 @@ type Msg
     | UserHitsEnter
     | UserClicksResult
     | UserClicksResultLine ResultLine
+    | UserPicksCurrency String
     | RuntimeBounced
     | PluginMsg Plugin.Msg.Msg
     | NoOp

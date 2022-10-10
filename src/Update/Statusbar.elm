@@ -339,8 +339,8 @@ isOutputToString isOutgoing =
         "input"
 
 
-update : Bool -> String -> Maybe Http.Error -> Model -> Model
-update hide key error model =
+update : String -> Maybe Http.Error -> Model -> Model
+update key error model =
     Dict.get key model.messages
         |> Maybe.map
             (\msg ->
@@ -349,7 +349,7 @@ update hide key error model =
                     , log = ( first msg, second msg, error ) :: model.log
                     , visible =
                         error
-                            |> Maybe.map (\_ -> not hide)
+                            |> Maybe.map (\_ -> True)
                             |> Maybe.withDefault model.visible
                 }
             )

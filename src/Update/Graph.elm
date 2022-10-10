@@ -10,7 +10,7 @@ import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..), getEntityEgonet)
+import Effect.Graph exposing (Effect(..), getAddressEgonet, getEntityEgonet)
 import Encode.Graph as Encode
 import File
 import File.Select
@@ -34,7 +34,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
-import Model.Graph.Id as Id exposing (EntityId)
+import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link
 import Model.Graph.Search as Search
@@ -132,6 +132,8 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
         |> Maybe.map
             (\a ->
                 selectAddress a Nothing newModel_
+                    |> mapSecond
+                        ((++) (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers))
             )
         |> Maybe.withDefault (n newModel_)
         |> mapSecond ((++) eff)
@@ -700,6 +702,38 @@ updateByMsg plugins uc msg model =
                     { model | adding = Adding.removeEntity e model.adding }
                         |> addEntity plugins uc added
 
+        BrowserGotAddressEgonet anchor isOutgoing neighbors ->
+            Layer.getAddresses (A.fromId anchor) model.layers
+                |> List.foldl
+                    (\anch mo ->
+                        neighbors.neighbors
+                            |> List.filterMap
+                                (\n ->
+                                    let
+                                        id =
+                                            Id.initAddressId
+                                                { layer =
+                                                    Id.layer anch.id
+                                                        + (if isOutgoing then
+                                                            1
+
+                                                           else
+                                                            -1
+                                                          )
+                                                , id = n.address.address
+                                                , currency = n.address.currency
+                                                }
+                                    in
+                                    Layer.getAddress id model.layers
+                                        |> Maybe.map (pair n)
+                                )
+                            |> List.foldl
+                                (addAddressLink anch isOutgoing)
+                                mo
+                    )
+                    model
+                |> n
+
         BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
             let
                 e =
@@ -836,6 +870,7 @@ updateByMsg plugins uc msg model =
                           , isOutgoing = isOutgoing
                           , pagesize = 20
                           , includeLabels = False
+                          , onlyIds = Nothing
                           , nextpage = Nothing
                           , toMsg = BrowserGotAddressNeighbors id isOutgoing
                           }
@@ -1093,13 +1128,18 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedForceShowEntityLink id forceShow ->
+            { model
+                | layers = Layer.forceShowEntityLink id forceShow model.layers
+            }
+                |> n
+
         UserClickedAddressInEntityTagsTable entityId address ->
             ( model
             , GetAddressEffect
                 { address = address
                 , currency = Id.currency entityId
                 , toMsg = BrowserGotAddressForEntity entityId
-                , suppressErrors = False
                 }
                 |> List.singleton
             )
@@ -1112,7 +1152,6 @@ updateByMsg plugins uc msg model =
                     , address = address
                     , table = Nothing
                     , layer = Nothing
-                    , suppressErrors = False
                     }
 
         BrowserGotAddressForEntity entityId address ->
@@ -1211,6 +1250,7 @@ updateByMsg plugins uc msg model =
                                                 , config = model.config |> s_colors added.colors
                                               }
                                                 |> addAddressLink address isOutgoing ( neighbor, addedAddress )
+                                                |> syncLinks added.repositioned
                                             , [ GetAddressTagsEffect
                                                     { currency = Id.currency addressId
                                                     , address = Id.addressId addressId
@@ -1710,7 +1750,8 @@ updateByMsg plugins uc msg model =
                             model.config
                                 |> s_colors acc.colors
                     }
-                |> insertShadowLinks acc.newEntityIds
+                |> insertEntityShadowLinks acc.newEntityIds
+                |> insertAddressShadowLinks acc.newAddressIds
             , [ BulkGetEntityNeighborsEffect
                     { currency = currency
                     , isOutgoing = True
@@ -1830,7 +1871,10 @@ updateByMsg plugins uc msg model =
             Time.posixToMillis model.browser.now
                 |> Init.Graph.init
                 |> s_history model.history
-                |> s_config model.config
+                |> s_config
+                    (model.config
+                        |> s_highlighter False
+                    )
                 |> n
 
         UserInputsFilterTable input ->
@@ -1877,6 +1921,55 @@ updateByMsg plugins uc msg model =
                         |> Maybe.withDefault model.transform
             }
                 |> n
+
+        UserClickedShowEntityShadowLinks ->
+            { model
+                | config =
+                    model.config
+                        |> s_showEntityShadowLinks (not model.config.showEntityShadowLinks)
+            }
+                |> n
+
+        UserClickedShowAddressShadowLinks ->
+            { model
+                | config =
+                    model.config
+                        |> s_showAddressShadowLinks (not model.config.showAddressShadowLinks)
+            }
+                |> n
+
+        UserPressesDelete ->
+            { model
+                | layers =
+                    case model.selected of
+                        SelectedAddress id ->
+                            Layer.removeAddress id model.layers
+
+                        SelectedEntity id ->
+                            Layer.removeEntity id model.layers
+
+                        SelectedAddresslink id ->
+                            Layer.removeAddressLink id model.layers
+
+                        SelectedEntitylink id ->
+                            Layer.removeEntityLink id model.layers
+
+                        SelectedNone ->
+                            model.layers
+            }
+                |> n
+
+        UserClickedTagsFlag id ->
+            ( model
+            , Route.entityRoute
+                { currency = Id.currency id
+                , entity = Id.entityId id
+                , table = Just Route.EntityTagsTable
+                , layer = Id.layer id |> Just
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
         NoOp ->
             n model
@@ -2072,7 +2165,6 @@ updateByRoute plugins route model =
                     , address = a
                     , table = table
                     , layer = layer
-                    , suppressErrors = False
                     }
 
         Route.Currency currency (Route.Entity e table layer) ->
@@ -2453,7 +2545,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     in
     ( addEntityLinks anchor isOutgoing new newModel
         |> syncLinks repositioned
-        |> insertShadowLinks (List.map (second >> .id) new |> Set.fromList)
+        |> insertEntityShadowLinks (List.map (second >> .id) new |> Set.fromList)
     , neighbors
         |> List.map
             (\{ entity } ->
@@ -2498,6 +2590,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
             )
             added.model
         |> syncLinks added.repositioned
+        |> insertAddressShadowLinks (List.map .id added.newAddresses |> Set.fromList)
     , first neighbors
         |> List.map
             (\neighbor ->
@@ -2512,6 +2605,12 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                             , address = neighbor.address.address
                             }
                     }
+            )
+        |> (++)
+            (added.newAddresses
+                |> List.map .id
+                |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.model.layers)
+                |> List.concat
             )
         |> (::)
             (added.newAddresses
@@ -2536,18 +2635,29 @@ syncLinks repositioned model =
     { model
         | layers =
             Layer.syncLinks ids model.layers
-                |> Layer.insertShadowLinks ids
+                |> Layer.insertEntityShadowLinks ids
     }
 
 
-insertShadowLinks : Set EntityId -> Model -> Model
-insertShadowLinks new model =
+insertEntityShadowLinks : Set EntityId -> Model -> Model
+insertEntityShadowLinks new model =
     let
         ids =
             Set.toList new
     in
     { model
-        | layers = Layer.insertShadowLinks ids model.layers
+        | layers = Layer.insertEntityShadowLinks ids model.layers
+    }
+
+
+insertAddressShadowLinks : Set AddressId -> Model -> Model
+insertAddressShadowLinks new model =
+    let
+        ids =
+            Set.toList new
+    in
+    { model
+        | layers = Layer.insertAddressShadowLinks ids model.layers
     }
 
 
@@ -2805,6 +2915,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo, [] )
+
+                    PluginInterface.SendToPort _ ->
+                        ( mo, [] )
             )
             ( model, [] )
 
@@ -2902,7 +3015,11 @@ makeTagPack model time =
                             [ ( "currency", Yaml.Encode.string currency )
                             , ( "address", Yaml.Encode.string address )
                             , ( "is_cluster_definer", Yaml.Encode.bool isClusterDefiner )
-                            , ( "label", Yaml.Encode.string label )
+                            , ( "label"
+                              , Json.Encode.string label
+                                    |> Json.Encode.encode 0
+                                    |> Yaml.Encode.string
+                              )
                             , ( "category"
                               , category
                                     |> Maybe.map Yaml.Encode.string
@@ -2929,6 +3046,7 @@ makeTagPack model time =
                                     ]
                                     Time.utc
                                     time
+                                    |> (\s -> "\"" ++ s ++ "\"")
                                     |> Yaml.Encode.string
                               )
                             ]
@@ -2958,22 +3076,41 @@ importTagPack uc tags model =
 
 decodeYamlTag : Yaml.Decode.Decoder Tag.UserTag
 decodeYamlTag =
+    let
+        optionalFieldWithDefault default name decoder =
+            Yaml.Decode.oneOf
+                [ Yaml.Decode.field name decoder
+                , Yaml.Decode.succeed default
+                ]
+
+        optionalField name decoder =
+            Yaml.Decode.oneOf
+                [ Yaml.Decode.field name (Yaml.Decode.nullable decoder)
+                , Yaml.Decode.succeed Nothing
+                ]
+    in
     Yaml.Decode.map7 Tag.UserTag
         (Yaml.Decode.field "currency" Yaml.Decode.string)
         (Yaml.Decode.field "address" Yaml.Decode.string)
         (Yaml.Decode.field "label" Yaml.Decode.string)
-        (Yaml.Decode.oneOf [ Yaml.Decode.field "source" Yaml.Decode.string, Yaml.Decode.succeed "" ])
-        (Yaml.Decode.field "category" (Yaml.Decode.maybe Yaml.Decode.string))
-        (Yaml.Decode.field "abuse" (Yaml.Decode.maybe Yaml.Decode.string))
-        (Yaml.Decode.field "is_cluster_definer" (Yaml.Decode.oneOf [ Yaml.Decode.bool, Yaml.Decode.succeed False ]))
+        (optionalFieldWithDefault "" "source" Yaml.Decode.string)
+        (optionalField "category" Yaml.Decode.string)
+        (optionalField "abuse" Yaml.Decode.string)
+        (optionalFieldWithDefault False "is_cluster_definer" Yaml.Decode.bool)
 
 
 deserialize : Json.Decode.Value -> Result Json.Decode.Error Deserialized
 deserialize =
-    Json.Decode.decodeValue
-        (Json.Decode.index 0 Json.Decode.string
+    Json.Decode.oneOf
+        [ Json.Decode.index 0 Json.Decode.string
             |> Json.Decode.andThen deserializeByVersion
-        )
+        , Json.Decode.null
+            { addresses = []
+            , entities = []
+            , highlights = []
+            }
+        ]
+        |> Json.Decode.decodeValue
 
 
 deserializeByVersion : String -> Json.Decode.Decoder Deserialized
@@ -3047,6 +3184,15 @@ shallPushHistory msg model =
         UserClickedNewYes ->
             True
 
+        UserPressesDelete ->
+            True
+
+        UserClickedRemoveAddressLink _ ->
+            True
+
+        UserClickedRemoveEntityLink _ ->
+            True
+
         _ ->
             False
 
@@ -3088,10 +3234,13 @@ fromDeserialized deserialized model =
                         |> s_highlights deserialized.highlights
                 , history = History [] []
                 , layers = IntDict.empty
+                , config =
+                    model.config
+                        |> s_highlighter False
             }
 
 
-serialize : String -> Model -> Value
+serialize : Model -> Value
 serialize =
     Encode.encode
 
@@ -3152,6 +3301,14 @@ addAddressesAtEntity plugins uc entityId addresses model =
                     }
             )
     )
+        |> mapSecond
+            ((++)
+                (added.new
+                    |> Set.toList
+                    |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.layers)
+                    |> List.concat
+                )
+            )
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
@@ -3162,11 +3319,10 @@ loadAddress :
         , address : String
         , table : Maybe Route.AddressTable
         , layer : Maybe Int
-        , suppressErrors : Bool
         }
     -> Model
     -> ( Model, List Effect )
-loadAddress plugins { currency, address, table, layer, suppressErrors } model =
+loadAddress plugins { currency, address, table, layer } model =
     layer
         |> Maybe.andThen
             (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = l }) model.layers)
@@ -3206,13 +3362,11 @@ loadAddress plugins { currency, address, table, layer, suppressErrors } model =
                         { address = address
                         , currency = currency
                         , toMsg = BrowserGotEntityForAddress address
-                        , suppressErrors = suppressErrors
                         }
                   , GetAddressEffect
                         { address = address
                         , currency = currency
                         , toMsg = BrowserGotAddress
-                        , suppressErrors = suppressErrors
                         }
                   ]
                     ++ effects
@@ -3295,3 +3449,12 @@ tagInputToUserTag model input =
                 , isClusterDefiner = isClusterDefiner
                 }
             )
+
+
+handleNotFound : Model -> Model
+handleNotFound model =
+    { model
+        | browser =
+            model.browser
+                |> s_visible False
+    }

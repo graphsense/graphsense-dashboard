@@ -12,10 +12,7 @@ form vc =
 
 frame : Config -> List Style
 frame vc =
-    [ overflow visible
-    , position relative
-    ]
-        ++ vc.theme.search.frame
+    vc.theme.search.frame
 
 
 textarea : Config -> String -> List Style
@@ -25,21 +22,6 @@ textarea vc input =
     , rem 25 |> width
     ]
         ++ vc.theme.search.textarea vc.lightmode input
-
-
-result : Config -> List Style
-result vc =
-    [ position absolute
-    , zIndex <| int 200
-    ]
-        ++ vc.theme.search.result vc.lightmode
-
-
-loadingSpinner : Config -> List Style
-loadingSpinner vc =
-    [ position absolute
-    ]
-        ++ vc.theme.search.loadingSpinner
 
 
 resultGroup : Config -> List Style

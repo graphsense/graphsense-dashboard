@@ -6,6 +6,7 @@ import Css.Transitions
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
+import Theme.Autocomplete as Autocomplete
 import Theme.Browser as Browser
 import Theme.Button as Button
 import Theme.ContextMenu as ContextMenu
@@ -117,6 +118,7 @@ theme =
             , letterSpacingWide
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
+            , scaled 1 |> rem |> paddingTop
             ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
@@ -174,6 +176,21 @@ theme =
         |> s_overlay
             [ Color.rgba 0 0 0 0.6 |> toCssColor |> backgroundColor
             ]
+        |> s_switchLabel
+            [ whiteSpace noWrap
+            ]
+        |> s_switchRoot
+            [ displayFlex
+            , alignItems center
+            ]
+        |> s_switchOnColor
+            (\lightmode ->
+                if lightmode then
+                    colors.brandLight.light
+
+                else
+                    colors.brandLight.dark
+            )
         |> s_stats
             (Stats.default
                 |> s_root
@@ -225,13 +242,13 @@ theme =
             )
         |> s_search
             (Search.default
-                |> s_form
-                    [ scaled 3 |> rem |> fontSize
-                    , scaled 8 |> rem |> height
-                    ]
                 |> s_frame
                     [ scaled 1 |> rem |> marginRight
                     , fontFamily monospace
+                    ]
+                |> s_form
+                    [ scaled 3 |> rem |> fontSize
+                    , scaled 8 |> rem |> height
                     ]
                 |> s_textarea
                     (\lightmode input ->
@@ -251,27 +268,6 @@ theme =
                                     []
                                )
                     )
-                |> s_result
-                    (\lightmode ->
-                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
-                        , scaled 2 |> rem |> padding
-                        , borderRadius4
-                            zero
-                            zero
-                            (scaled 1 |> rem)
-                            (scaled 1 |> rem)
-                        , backgroundColorWithLightmode lightmode colors.brandWhite
-                        , spinnerHeight |> scaled |> rem |> minHeight
-                        , scaled 3.5 |> rem |> fontSize
-                        , shadowMd
-                        ]
-                    )
-                |> s_loadingSpinner
-                    [ position absolute
-                    , top zero
-                    , right zero
-                    , loadingSpinner
-                    ]
                 |> s_resultGroupTitle
                     [ fontWeight bold
                     , paddingY (scaled 1 |> rem)
@@ -294,6 +290,30 @@ theme =
                 |> s_button
                     []
             )
+        |> s_autocomplete
+            (Autocomplete.default
+                |> s_result
+                    (\lightmode ->
+                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
+                        , scaled 2 |> rem |> padding
+                        , borderRadius4
+                            zero
+                            zero
+                            (scaled 1 |> rem)
+                            (scaled 1 |> rem)
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        , spinnerHeight |> scaled |> rem |> minHeight
+                        , scaled 3.5 |> rem |> fontSize
+                        , shadowMd
+                        ]
+                    )
+                |> s_loadingSpinner
+                    [ position absolute
+                    , top zero
+                    , right zero
+                    , loadingSpinner
+                    ]
+            )
         |> s_button
             (Button.default
                 |> s_button
@@ -301,6 +321,7 @@ theme =
                         [ fontWeight bold
                         , scaled 1 |> rem |> paddingY
                         , scaled 2 |> rem |> paddingX
+                        , scaled 1 |> rem |> marginX
                         , borderRadiusSm
                         , border zero
                         , hover
@@ -679,6 +700,7 @@ theme =
                     [ displayFlex
                     , alignItems center
                     , scaled 1 |> rem |> marginTop
+                    , whiteSpace noWrap
                     ]
                 |> s_legendItemColor
                     [ before
@@ -718,7 +740,6 @@ theme =
                         , Css.Transitions.transition
                             [ Css.Transitions.transform 200 ]
                         , property "transform" "scale(1)"
-                        , cursor pointer
                         ]
                             ++ (if selected then
                                     [ property "transform" "scale(1.3)"
@@ -753,6 +774,11 @@ theme =
                 |> s_propertyBoxTable
                     [ letterSpacingWide
                     ]
+                |> s_propertyBoxNote
+                    (\lightmode ->
+                        [ scaled 1 |> rem |> paddingLeft
+                        ]
+                    )
                 |> s_propertyBoxRow
                     (\lightmode ->
                         [ hover
@@ -787,9 +813,9 @@ theme =
                             [ Css.Transitions.transform 200
                             ]
                         , displayFlex
-                        , translateY (pct p) |> transform
                         , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
+                        , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
 
@@ -849,9 +875,11 @@ theme =
                     , flexDirection row
                     ]
                 |> s_tableRoot
-                    [ scaled 2 |> rem |> paddingLeft
+                    [ scaled 3 |> rem |> paddingX
                     , displayFlex
                     , flexDirection column
+
+                    --, overflowX hidden
                     ]
                 |> s_sidebar
                     (\lightmode ->
@@ -880,6 +908,7 @@ theme =
                     ]
                 |> s_headCell
                     [ tableCell
+                    , rowHeight |> px |> height
                     ]
                 |> s_headRow
                     [ textAlign left
@@ -890,12 +919,13 @@ theme =
                     ]
                 |> s_maxHeight 250
                 |> s_rowHeight
-                    (scaled 100)
+                    rowHeight
                 |> s_row
                     (\lightmode ->
                         [ nthChild "2n"
                             [ backgroundColorWithLightmode lightmode colors.brandLightest
                             ]
+                        , rowHeight |> px |> height
                         ]
                     )
                 |> s_cell
@@ -960,6 +990,9 @@ theme =
 
                          else
                             [ cursor pointer
+                            , displayFlex
+                            , justifyContent spaceBetween
+                            , alignItems center
                             ]
                         )
                             ++ [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
@@ -1166,6 +1199,7 @@ tableCell : Style
 tableCell =
     [ scaled 1 |> rem |> padding
     , whiteSpace noWrap
+    , verticalAlign middle
     ]
         |> batch
 
@@ -1218,3 +1252,8 @@ iconHovered =
 backgroundHoverColor : Theme.SwitchableColor
 backgroundHoverColor =
     colors.brandLighter
+
+
+rowHeight : Float
+rowHeight =
+    scaled 90

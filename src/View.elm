@@ -36,7 +36,11 @@ view :
     -> Model key
     -> Document Msg
 view plugins vc model =
-    { title = Locale.string vc.locale "Iknaio Dashboard"
+    { title =
+        Locale.string vc.locale "Iknaio Dashboard"
+            :: Plugin.title plugins model.plugins vc
+            |> List.reverse
+            |> String.join " | "
     , body =
         [ Css.Reset.meyerV2 |> toUnstyled
         , node "style" [] [ text vc.theme.custom ] |> toUnstyled
@@ -84,7 +88,7 @@ body plugins vc model =
             ]
          ]
             ++ hovercards plugins vc model
-            ++ overlay vc model
+            ++ overlay plugins vc model
         )
 
 
@@ -122,7 +126,7 @@ hovercards plugins vc model =
     (model.user.hovercardElement
         |> Maybe.map
             (\element ->
-                User.hovercard vc model.user
+                User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
                     |> hovercard vc element
             )
@@ -171,8 +175,8 @@ hovercards plugins vc model =
         ++ Plugin.hovercards plugins model.plugins vc
 
 
-overlay : Config -> Model key -> List (Html Msg)
-overlay vc model =
+overlay : Plugins -> Config -> Model key -> List (Html Msg)
+overlay plugins vc model =
     let
         ov =
             List.singleton
@@ -193,12 +197,13 @@ overlay vc model =
                             , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
                             , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
                             , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+                            , overflow = "visible"
                             }
                             element
                             (Css.View.hovercard vc
                                 |> List.map (\( k, v ) -> Html.Attributes.style k v)
                             )
-                            (User.hovercard vc model.user |> List.map Html.Styled.toUnstyled)
+                            (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
                             |> Html.Styled.fromUnstyled
                     )
                 |> Maybe.map ov

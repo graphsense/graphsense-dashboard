@@ -21,6 +21,7 @@ import Route exposing (toUrl)
 import Route.Graph as Route exposing (Route)
 import Util.RemoteData exposing (webdata)
 import Util.View exposing (loadingSpinner, truncate)
+import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
 
@@ -73,7 +74,6 @@ search plugins vc sc model =
                             SearchTagsOnly ->
                                 [ Locale.string vc.locale "Label"
                                     |> placeholder
-                                , onBlur UserLeavesSearch
                                 ]
                        )
                 )
@@ -100,27 +100,12 @@ search plugins vc sc model =
 
 searchResult : Plugins -> Config -> SearchConfig -> Model -> Html Msg
 searchResult plugins vc sc model =
-    let
-        rl =
-            resultList plugins vc sc model
-    in
-    if not model.visible || not model.loading && List.isEmpty rl then
-        span [] []
-
-    else
-        div
-            [ id "search-result"
-            , css (Css.result vc)
-            , onClick UserClicksResult
-            ]
-            ((if model.loading then
-                [ loadingSpinner vc Css.loadingSpinner ]
-
-              else
-                []
-             )
-                ++ rl
-            )
+    resultList plugins vc sc model
+        |> Autocomplete.dropdown vc
+            { loading = model.loading
+            , visible = model.visible
+            , onClick = UserClicksResult
+            }
 
 
 filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult

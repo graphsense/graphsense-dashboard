@@ -1,4 +1,4 @@
-module View.Graph.Address exposing (address, links)
+module View.Graph.Address exposing (address, links, shadowLinks)
 
 --import Plugin.View.Graph.Address
 
@@ -174,7 +174,7 @@ getLabel vc gc addr =
                 |> Maybe.map .label
                 |> Maybe.Extra.orElseLazy
                     (\_ ->
-                        Address.bestTag addr.address.tags
+                        Address.bestTag addr.tags
                             |> Maybe.map
                                 (\tag ->
                                     if not tag.tagpackIsPublic && String.isEmpty tag.label then
@@ -225,7 +225,7 @@ abuseFlag vc addr =
         |> Maybe.andThen hasAbuse
         |> Maybe.Extra.orElseLazy
             (\_ ->
-                case addr.address.tags |> Maybe.map (List.any (hasAbuse >> Maybe.withDefault False)) of
+                case addr.tags |> Maybe.map (List.any (hasAbuse >> Maybe.withDefault False)) of
                     Just True ->
                         Just True
 
@@ -256,6 +256,22 @@ links vc gc selected mn mx addr =
                     (\_ link svg ->
                         ( "addressLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
                         , Svg.lazy7 Link.addressLink vc gc selected mn mx addr link
+                        )
+                            :: svg
+                    )
+                    []
+                |> Keyed.node "g" []
+
+
+shadowLinks : Config -> Address -> Svg Msg
+shadowLinks vc addr =
+    case addr.shadowLinks of
+        Address.Links lnks ->
+            lnks
+                |> Dict.foldr
+                    (\_ link svg ->
+                        ( "addressShadowLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
+                        , Svg.lazy3 Link.addressShadowLink vc addr link
                         )
                             :: svg
                     )

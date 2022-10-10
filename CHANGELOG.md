@@ -3,6 +3,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [22.10] - 2022-10-07
+### Added
+- delete address, entities, links with DEL key #330
+- show entity tags table on click on tags flag #334
+- address shadow links
+- option to show/hide address/entity shadow links #350
+- automatically connect addresses #339
+- display whether address is new and has no statistics yet calculated, #347
+- plugin title hook
+- plugin hooks for port in and out msgs
+
+### Changed
+- fix highlighter selecton on new/deserialize
+- fix pick label from tag label search on annotation
+- fix decoding null values in tagpack file
+- hide entity links if there are address links, optionally show them  #352, #335
+- load addresses one by one if entered in bulk in search #339
+- show specific error message if eth address has no ext. txs #344
+- reload statistics on navigating to stats page
+- fix svg export
+- switch instead of checkboxes
+- trigger plugin newgraph hook before loading external file
+- fix decoding empty deserialized graph
+- plugin hook for new graph
+- fix vertical table scrollbar
+- table row styling improved
+- fix missing optional tag pack fields, #343
+- fix quotes in tag labels an yaml import/export
+
 ## [1.0.1] - 2022-08-26
 
 ### Added

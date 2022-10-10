@@ -1,4 +1,4 @@
-module Update exposing (update, updateByUrl)
+module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 
 --import Plugin.Update.Graph
 
@@ -35,6 +35,7 @@ import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
+import Sha256
 import Task
 import Time
 import Tuple exposing (..)
@@ -48,7 +49,6 @@ import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Version exposing (version)
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -99,12 +99,12 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotResponseWithHeaders statusbarToken suppressErrors result ->
+        BrowserGotResponseWithHeaders statusbarToken result ->
             { model
                 | statusbar =
                     case statusbarToken of
                         Just t ->
-                            Statusbar.update suppressErrors
+                            Statusbar.update
                                 t
                                 (case result of
                                     Err ( Http.BadStatus 401, _ ) ->
@@ -188,6 +188,10 @@ update plugins uc msg model =
 
                             _ ->
                                 []
+
+                    ( new, outMsg, cmd ) =
+                        Sha256.sha256 model.user.apiKey
+                            |> Plugin.updateApiKeyHash plugins model.plugins
                 in
                 ( { model
                     | user =
@@ -206,9 +210,11 @@ update plugins uc msg model =
                                  else
                                     model.user.hovercardElement
                                 )
+                    , plugins = new
                   }
-                , effs
+                , PluginEffect cmd :: effs
                 )
+                    |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotElement result ->
             { model
@@ -347,48 +353,46 @@ update plugins uc msg model =
 
                 Search.UserHitsEnter ->
                     let
-                        newModel =
-                            { model
-                                | search = Search.clear model.search
-                            }
+                        multi =
+                            Search.getMulti model.search
                     in
-                    Search.getMulti model.search
-                        |> (\multi ->
-                                if List.length multi == 1 then
-                                    Search.getFirstResultUrl model.search
-                                        |> Maybe.map
-                                            (NavPushUrlEffect >> List.singleton)
-                                        |> Maybe.withDefault []
-                                        |> pair newModel
+                    if model.search.found /= Nothing && List.length multi == 1 then
+                        Search.getFirstResultUrl model.search
+                            |> Maybe.map
+                                (NavPushUrlEffect >> List.singleton)
+                            |> Maybe.withDefault []
+                            |> pair { model | search = Search.clear model.search }
 
-                                else
-                                    model.stats
-                                        |> RD.map
-                                            (.currencies
-                                                >> List.map .name
-                                                >> List.foldl
-                                                    (\currency ( mod, effects ) ->
-                                                        List.foldl
-                                                            (\a ( mo, effs ) ->
-                                                                Graph.loadAddress plugins
-                                                                    { currency = currency
-                                                                    , address = a
-                                                                    , table = Nothing
-                                                                    , layer = Nothing
-                                                                    , suppressErrors = True
-                                                                    }
-                                                                    mo
-                                                                    |> mapSecond ((++) effs)
+                    else
+                        model.stats
+                            |> RD.map
+                                (\stats ->
+                                    { model
+                                        | dialog =
+                                            { message = Locale.string model.locale "Please choose a crypto ledger"
+                                            , options =
+                                                stats.currencies
+                                                    |> List.map .name
+                                                    |> List.map
+                                                        (\name ->
+                                                            ( String.toUpper name
+                                                            , Search.UserPicksCurrency name |> SearchMsg
                                                             )
-                                                            ( mod, effects )
-                                                            multi
-                                                    )
-                                                    ( newModel.graph, [] )
-                                                >> mapSecond (List.map GraphEffect)
-                                                >> mapFirst (\graph -> { newModel | graph = graph })
-                                            )
-                                        |> RD.withDefault (n newModel)
-                           )
+                                                        )
+                                            }
+                                                |> Dialog.options
+                                                |> Just
+                                    }
+                                )
+                            |> RD.withDefault model
+                            |> n
+
+                Search.UserPicksCurrency currency ->
+                    { model
+                        | search = Search.batch currency model.search
+                    }
+                        |> n
+                        |> batchSearch plugins
 
                 _ ->
                     let
@@ -420,6 +424,7 @@ update plugins uc msg model =
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
+                        |> batchSearch plugins
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
@@ -459,7 +464,7 @@ update plugins uc msg model =
                                 |> Task.perform (Just >> Graph.UserClickedExportGS)
 
                         Just t ->
-                            Graph.serialize version model.graph
+                            Graph.serialize model.graph
                                 |> pair
                                     (makeTimestampFilename model.locale t
                                         |> (\tt -> tt ++ ".gs")
@@ -528,7 +533,11 @@ update plugins uc msg model =
                                 |> n
 
                 Graph.PortDeserializedGS ( filename, data ) ->
-                    deserialize filename data model
+                    pluginNewGraph plugins ( model, [] )
+                        |> (\( mdl, eff ) ->
+                                deserialize filename data mdl
+                                    |> mapSecond ((++) eff)
+                           )
 
                 Graph.UserClickedNew ->
                     { model
@@ -558,6 +567,7 @@ update plugins uc msg model =
                       )
                         :: List.map GraphEffect graphEffects
                     )
+                        |> pluginNewGraph plugins
 
                 _ ->
                     let
@@ -664,7 +674,7 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.GetSerialized toMsg ->
                         let
                             serialized =
-                                Graph.serialize version model.graph
+                                Graph.serialize model.graph
 
                             ( new, outMsg, cmd ) =
                                 Plugin.update plugins (toMsg serialized) model.plugins
@@ -679,6 +689,15 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.Deserialize filename data ->
                         deserialize filename data model
                             |> mapSecond ((++) eff)
+
+                    PluginInterface.SendToPort value ->
+                        ( model
+                        , value
+                            |> Ports.pluginsOut
+                            |> CmdEffect
+                            |> List.singleton
+                            |> (++) eff
+                        )
             )
             ( mo, effects )
 
@@ -698,7 +717,17 @@ updateByUrl plugins uc url model =
             (\oldRoute route ->
                 case Log.log "route" route of
                     Route.Stats ->
-                        n { model | page = Stats }
+                        ( { model
+                            | page = Stats
+                            , url = url
+                          }
+                        , case oldRoute of
+                            Route.Stats ->
+                                []
+
+                            _ ->
+                                [ GetStatisticsEffect ]
+                        )
 
                     Route.Graph graphRoute ->
                         case graphRoute |> Log.log "graphRoute" of
@@ -808,13 +837,23 @@ handleResponse plugins uc result model =
         Err ( BadBody err, _ ) ->
             ( { model
                 | statusbar =
-                    Http.BadBody err
-                        |> Just
-                        |> Statusbar.add model.statusbar "error" []
+                    if err == Api.noExternalTransactions then
+                        model.statusbar
+
+                    else
+                        Http.BadBody err
+                            |> Just
+                            |> Statusbar.add model.statusbar "error" []
               }
             , PortsConsoleEffect err
                 |> List.singleton
             )
+
+        Err ( BadStatus 404, _ ) ->
+            { model
+                | graph = Graph.handleNotFound model.graph
+            }
+                |> n
 
         Err _ ->
             n model
@@ -898,3 +937,45 @@ updatePlugins plugins msg model =
     , [ PluginEffect cmd ]
     )
         |> updateByPluginOutMsg plugins outMsg
+
+
+pluginNewGraph : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
+pluginNewGraph plugins ( model, eff ) =
+    let
+        ( new, outMsg, cmd ) =
+            Plugin.newGraph plugins model.plugins
+    in
+    ( { model
+        | plugins = new
+      }
+    , PluginEffect cmd
+        :: eff
+    )
+
+
+batchSearch : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
+batchSearch plugins ( model, eff ) =
+    let
+        ( term, search ) =
+            Search.popInput model.search
+    in
+    ( { model
+        | search = search
+        , dialog = Nothing
+      }
+    , term
+        |> Maybe.map
+            (\( currency, t ) ->
+                Route.Graph.addressRoute
+                    { currency = currency
+                    , address = t
+                    , table = Nothing
+                    , layer = Nothing
+                    }
+                    |> Route.graphRoute
+                    |> Route.toUrl
+                    |> NavPushUrlEffect
+                    |> List.singleton
+            )
+        |> Maybe.withDefault []
+    )

@@ -3,6 +3,7 @@ import FileSaver from 'file-saver'
 import { pack, unpack } from 'lzwcompress'
 import { Base64 } from 'js-base64'
 import { fileDialog } from 'file-select-dialog'
+import plugins from '../plugin_generated/index.js'
 
 
 const getNavigatorLanguage = () => {
@@ -66,6 +67,7 @@ app.ports.exportGraphics.subscribe((filename) => {
   svg = svg.replace(new RegExp('style="(.+?)"', 'g'), (_, style) => 'style="' + style.replace(/&quot;/g, '\'') + '"')
   // merge double style definitions
   svg = svg.replace(new RegExp('style="([^"]+?)"([^>]+?)style="([^"]+?)"', 'g'), 'style="$1$3" $2')
+  svg = svg.replace('<svg', '<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg"')
   download(filename, svg)
 })
 
@@ -105,7 +107,7 @@ app.ports.deserialize.subscribe(() => {
           data = decompress(data)
           data[0] = data[0].split(' ')[0]
           data[0] = data[0].split('-')[0]
-          console.log(data)
+          //console.log(data)
           app.ports.deserialized.send([file.name, data])
         }
         reader.readAsArrayBuffer(file)
@@ -118,4 +120,18 @@ app.ports.serialize.subscribe(([filename, body]) => {
   download(filename, compress(body))
 })
 
-
+app.ports.pluginsOut.subscribe(packetWithKey => {
+  if (!packetWithKey.length || packetWithKey.length !== 2) {
+    console.error('invalid plugin packet', packetWithKey)
+    return
+  }
+  const key = packetWithKey[0]
+  const packet = packetWithKey[1]
+  if(!plugins[key]) {
+    console.error(`plugin ${key} not found`)
+    return
+  }
+  plugins[key](packet, value => {
+    app.ports.pluginsIn.send([key, value])
+  })
+})

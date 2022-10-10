@@ -19,10 +19,11 @@ type OutMsg msg addressMsg entityMsg
     | GetSerialized (Json.Encode.Value -> msg)
     | Deserialize String Json.Encode.Value
     | GetAddressDomElement Id.AddressId (Result Browser.Dom.Error Browser.Dom.Element -> msg)
+    | SendToPort Json.Encode.Value
 
 
-mapOutMsg : (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
-mapOutMsg mapMsg mapAddressMsg mapEntityMsg outMsg =
+mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
+mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
     case outMsg of
         ShowBrowser ->
             ShowBrowser
@@ -58,3 +59,10 @@ mapOutMsg mapMsg mapAddressMsg mapEntityMsg outMsg =
 
         GetAddressDomElement element msg ->
             (msg >> mapMsg) |> GetAddressDomElement element
+
+        SendToPort value ->
+            [ Json.Encode.string namespace
+            , value
+            ]
+                |> Json.Encode.list identity
+                |> SendToPort

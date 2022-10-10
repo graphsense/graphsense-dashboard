@@ -1,0 +1,8 @@
+{{#plugins}}
+import {{name}} from '../plugins/{{name}}/src/{{name}}.js' 
+{{/plugins}}
+
+
+export default {
+{{#plugins}}{{name}}{{^last}},{{/last}}{{/plugins}}
+}

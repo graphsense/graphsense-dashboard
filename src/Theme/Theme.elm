@@ -2,6 +2,7 @@ module Theme.Theme exposing (..)
 
 import Color
 import Css exposing (Style)
+import Theme.Autocomplete as Autocomplete exposing (Autocomplete)
 import Theme.Browser as Browser exposing (Browser)
 import Theme.Button as Button exposing (Button)
 import Theme.ContextMenu as ContextMenu exposing (ContextMenu)
@@ -38,6 +39,7 @@ type alias Theme =
     , popup : Bool -> List Style
     , stats : Stats
     , search : Search
+    , autocomplete : Autocomplete
     , button : Button
     , graph : Graph
     , browser : Browser
@@ -51,6 +53,9 @@ type alias Theme =
     , hovercard : Bool -> Hovercard
     , buttonsRow : List Style
     , custom : String
+    , switchLabel : List Style
+    , switchRoot : List Style
+    , switchOnColor : Bool -> Color.Color
     }
 
 
@@ -78,6 +83,7 @@ default =
     , popup = \_ -> []
     , stats = Stats.default
     , search = Search.default
+    , autocomplete = Autocomplete.default
     , button = Button.default
     , tool = []
     , hovercard = \_ -> Hovercard.default
@@ -91,6 +97,9 @@ default =
     , table = Table.default
     , buttonsRow = []
     , custom = ""
+    , switchLabel = []
+    , switchRoot = []
+    , switchOnColor = \_ -> Color.rgba 0 0 0 0
     }
 
 

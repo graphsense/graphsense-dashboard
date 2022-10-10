@@ -16,3 +16,9 @@ port deserialized : (( String, Value ) -> msg) -> Sub msg
 
 
 port serialize : ( String, Value ) -> Cmd msg
+
+
+port pluginsOut : Value -> Cmd msg
+
+
+port pluginsIn : (( String, Value ) -> msg) -> Sub msg
