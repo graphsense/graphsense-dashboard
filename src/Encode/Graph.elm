@@ -12,9 +12,9 @@ import Model.Graph.Tag as Tag
 import Tuple exposing (..)
 
 
-encode : String -> Model -> Value
-encode version model =
-    [ string version
+encode : Model -> Value
+encode model =
+    [ string "1.0.0"
     , Layer.addresses model.layers
         |> list encodeAddress
     , Layer.entities model.layers

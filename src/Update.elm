@@ -49,7 +49,6 @@ import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
-import Version exposing (version)
 import View.Locale as Locale
 import Yaml.Decode
 
@@ -465,7 +464,7 @@ update plugins uc msg model =
                                 |> Task.perform (Just >> Graph.UserClickedExportGS)
 
                         Just t ->
-                            Graph.serialize version model.graph
+                            Graph.serialize model.graph
                                 |> pair
                                     (makeTimestampFilename model.locale t
                                         |> (\tt -> tt ++ ".gs")
@@ -675,7 +674,7 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.GetSerialized toMsg ->
                         let
                             serialized =
-                                Graph.serialize version model.graph
+                                Graph.serialize model.graph
 
                             ( new, outMsg, cmd ) =
                                 Plugin.update plugins (toMsg serialized) model.plugins

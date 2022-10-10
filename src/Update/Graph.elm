@@ -3240,7 +3240,7 @@ fromDeserialized deserialized model =
             }
 
 
-serialize : String -> Model -> Value
+serialize : Model -> Value
 serialize =
     Encode.encode
 
