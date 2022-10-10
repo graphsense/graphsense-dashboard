@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [22.10] - 2022-10-07
+## [22.10] - 2022-10-10
 ### Added
 - delete address, entities, links with DEL key #330
 - show entity tags table on click on tags flag #334
@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - display whether address is new and has no statistics yet calculated, #347
 - plugin title hook
 - plugin hooks for port in and out msgs
+- show version number in statusbar
 
 ### Changed
 - fix highlighter selecton on new/deserialize
