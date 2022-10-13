@@ -349,6 +349,7 @@ getAddressEgonet id msg layers =
         onlyIds =
             layers
                 |> Layer.addresses
+                |> List.filter (.address >> .currency >> (==) (Id.currency id))
                 |> List.map (.address >> .address)
 
         effect isOut =
