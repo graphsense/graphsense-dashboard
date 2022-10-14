@@ -82,7 +82,7 @@ maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
 maybeTriggerSearch ( model, cmd ) =
     let
         limit =
-            100
+            10
 
         multi =
             getMulti model
