@@ -76,6 +76,9 @@ messageFromEffect model effect =
         Model.SearchEffect (Search.BounceEffect _ _) ->
             Nothing
 
+        Model.SearchEffect Search.BlurBounceEffect ->
+            Nothing
+
         Model.PluginEffect _ ->
             Nothing
 

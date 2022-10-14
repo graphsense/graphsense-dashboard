@@ -60,11 +60,16 @@ update msg model =
             -- handled upstream
             n model
 
-        UserLeavesSearch ->
-            n { model | visible = False }
-
         UserFocusSearch ->
             n { model | visible = True }
+
+        UserLeavesSearch ->
+            ( model
+            , [ BlurBounceEffect ]
+            )
+
+        BouncedBlur ->
+            n { model | visible = False }
 
         RuntimeBounced ->
             { model

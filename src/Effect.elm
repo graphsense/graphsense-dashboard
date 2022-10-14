@@ -25,6 +25,7 @@ import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
+import Process
 import Route
 import Task
 
@@ -313,6 +314,11 @@ handleSearchEffect apiKey plugins tag tagEffect effect =
 
         Search.BounceEffect delay msg ->
             Bounce.delay delay msg
+                |> Cmd.map tag
+
+        Search.BlurBounceEffect ->
+            Process.sleep 100
+                |> Task.perform (\_ -> Search.BouncedBlur)
                 |> Cmd.map tag
 
 
