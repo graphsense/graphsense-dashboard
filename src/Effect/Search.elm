@@ -17,5 +17,6 @@ type Effect
         , limit : Maybe Int
         , toMsg : Api.Data.SearchResult -> Msg
         }
+    | BlurBounceEffect
     | CancelEffect
     | BounceEffect Float Msg

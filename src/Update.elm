@@ -239,7 +239,7 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
-            clearSearch plugins
+            n
                 { model
                     | user =
                         model.user

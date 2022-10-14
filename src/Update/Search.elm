@@ -60,11 +60,16 @@ update msg model =
             -- handled upstream
             n model
 
-        UserLeavesSearch ->
-            n { model | visible = False }
-
         UserFocusSearch ->
             n { model | visible = True }
+
+        UserLeavesSearch ->
+            ( model
+            , [ BlurBounceEffect ]
+            )
+
+        BouncedBlur ->
+            n { model | visible = False }
 
         RuntimeBounced ->
             { model
@@ -82,7 +87,7 @@ maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
 maybeTriggerSearch ( model, cmd ) =
     let
         limit =
-            100
+            10
 
         multi =
             getMulti model

@@ -60,6 +60,7 @@ search plugins vc sc model =
                  , onInput UserInputsSearch
                  , onEnter UserHitsEnter
                  , onFocus UserFocusSearch
+                 , onBlur UserLeavesSearch
                  , value model.input
                  ]
                     ++ (case sc.searchable of

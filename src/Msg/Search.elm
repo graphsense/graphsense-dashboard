@@ -12,6 +12,7 @@ type Msg
     | UserInputsSearch String
     | UserLeavesSearch
     | UserFocusSearch
+    | BouncedBlur
     | UserHitsEnter
     | UserClicksResult
     | UserClicksResultLine ResultLine
