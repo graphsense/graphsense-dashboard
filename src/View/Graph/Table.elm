@@ -258,3 +258,25 @@ tickIf vc has a =
 
     else
         none
+
+
+tickColumn : View.Config -> String -> (data -> Bool) -> Table.Column data msg
+tickColumn vc title accessor =
+    htmlColumn vc
+        title
+        (\data ->
+            if accessor data then
+                "Y"
+
+            else
+                "N"
+        )
+        (\data ->
+            if accessor data then
+                FontAwesome.icon FontAwesome.check
+                    |> Html.Styled.fromUnstyled
+                    |> List.singleton
+
+            else
+                []
+        )

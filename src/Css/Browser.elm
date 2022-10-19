@@ -8,6 +8,7 @@ root : Config -> List Style
 root vc =
     position absolute
         :: height (px 0)
+        :: (zIndex <| int 50)
         :: vc.theme.browser.root
 
 

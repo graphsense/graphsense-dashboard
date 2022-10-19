@@ -42,24 +42,7 @@ config vc gc =
             [ T.stringColumn vc "Address" .address
             , T.stringColumn vc "Currency" (.currency >> String.toUpper)
             , T.stringColumn vc "Label" .label
-            , T.htmlColumn vc
-                "Defines entity"
-                (\tag ->
-                    if tag.isClusterDefiner then
-                        "Y"
-
-                    else
-                        "N"
-                )
-                (\tag ->
-                    if tag.isClusterDefiner then
-                        FontAwesome.icon FontAwesome.check
-                            |> Html.Styled.fromUnstyled
-                            |> List.singleton
-
-                    else
-                        []
-                )
+            , T.tickColumn vc "Defines entity" .isClusterDefiner
             , T.htmlColumn vc
                 "Source"
                 .source
