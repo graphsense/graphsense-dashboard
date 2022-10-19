@@ -22,6 +22,8 @@ COPY ./plugin_generated $WORKDIR/plugin_generated
 COPY ./themes $WORKDIR/themes
 COPY ./docker/site.conf /etc/nginx/http.d/
 
+RUN for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do cd $WORKDIR/$plugin && npm install; done
+
 RUN npm run build && \
     mkdir -p /usr/share/nginx/html /run/nginx && \
     mv $WORKDIR/dist/* /usr/share/nginx/html/ && \
