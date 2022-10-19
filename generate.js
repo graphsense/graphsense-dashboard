@@ -51,7 +51,7 @@ const transform = (folder) => {
       const gen = mustache.render(file, {plugins})
       const pf = path.join(generatedFolder, folder)
       if(!isDir(pf)) {
-        fs.mkdirSync(pf)
+        fs.mkdirSync(pf, {recursive: true})
       }
       fs.writeFileSync(newFileName, gen)
     })
