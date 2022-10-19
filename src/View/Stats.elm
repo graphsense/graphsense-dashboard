@@ -9,9 +9,11 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
 import Model.Locale as Locale
+import RecordSetter exposing (..)
 import RemoteData as RD exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
+import Time
 import Util.RemoteData exposing (webdata)
 import Util.View
 import View.CurrencyMeta exposing (currencies)
@@ -77,7 +79,7 @@ currency vc cs =
                 [ div
                     [ Css.statsTable vc |> css
                     ]
-                    [ Locale.timestamp vc.locale cs.timestamp
+                    [ Locale.timestamp (s_zone Time.utc vc.locale) cs.timestamp
                         |> statsRow vc "Last update"
                     , Locale.int vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
