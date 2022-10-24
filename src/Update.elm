@@ -395,6 +395,9 @@ update plugins uc msg model =
                         |> n
                         |> batchSearch plugins
 
+                Search.BouncedBlur ->
+                    clearSearch plugins model
+
                 _ ->
                     let
                         ( search, searchEffects ) =
