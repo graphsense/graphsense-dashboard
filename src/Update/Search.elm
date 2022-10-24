@@ -40,7 +40,7 @@ update msg model =
             n model
 
         UserClicksResultLine _ ->
-            n <| clear model
+            n model
 
         UserInputsSearch input ->
             ( { model

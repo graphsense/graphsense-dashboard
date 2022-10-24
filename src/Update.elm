@@ -349,7 +349,7 @@ update plugins uc msg model =
                     updatePlugins plugins ms model
 
                 Search.UserClicksResult ->
-                    clearSearch plugins model
+                    n model
 
                 Search.UserHitsEnter ->
                     let
