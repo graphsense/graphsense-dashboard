@@ -2,6 +2,7 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Effect exposing (n)
+import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
@@ -72,8 +73,9 @@ loadingTxAccount id model =
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
-                    , toMsg = BrowserGotTx
                     }
+                    BrowserGotTx
+                    |> ApiEffect
               ]
             )
     in
@@ -93,8 +95,9 @@ loadingTxUtxo id model =
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
-                    , toMsg = BrowserGotTx
                     }
+                    BrowserGotTx
+                    |> ApiEffect
               ]
             )
     in
@@ -564,8 +567,9 @@ createTxUtxoTable route t currency txHash tx =
                             { currency = currency
                             , txHash = txHash
                             , isOutgoing = False
-                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } False
                             }
+                            (BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } False)
+                            |> ApiEffect
                       ]
                     )
 
@@ -590,8 +594,9 @@ createTxUtxoTable route t currency txHash tx =
                             { currency = currency
                             , txHash = txHash
                             , isOutgoing = True
-                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } True
                             }
+                            (BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } True)
+                            |> ApiEffect
                       ]
                     )
 
@@ -1783,8 +1788,9 @@ getAddressTxsEffect { currency, address } nextpage =
         , address = address
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
         }
+        (BrowserGotAddressTxs { currency = currency, address = address })
+        |> ApiEffect
 
 
 getAddresslinkTxsEffect : A.Addresslink -> Maybe String -> Effect
@@ -1795,8 +1801,9 @@ getAddresslinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotAddresslinkTxs id
         }
+        (BrowserGotAddresslinkTxs id)
+        |> ApiEffect
 
 
 getEntitylinkTxsEffect : E.Entitylink -> Maybe String -> Effect
@@ -1807,8 +1814,9 @@ getEntitylinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntitylinkTxs id
         }
+        (BrowserGotEntitylinkTxs id)
+        |> ApiEffect
 
 
 getAddressTagsEffect : A.Address -> Maybe String -> Effect
@@ -1818,12 +1826,13 @@ getAddressTagsEffect { currency, address } nextpage =
         , address = address
         , pagesize = 100
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotAddressTagsTable
-                { currency = currency
-                , address = address
-                }
         }
+        (BrowserGotAddressTagsTable
+            { currency = currency
+            , address = address
+            }
+        )
+        |> ApiEffect
 
 
 getAddressNeighborsEffect : Bool -> A.Address -> Maybe String -> Effect
@@ -1836,13 +1845,14 @@ getAddressNeighborsEffect isOutgoing { currency, address } nextpage =
         , includeLabels = True
         , onlyIds = Nothing
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotAddressNeighborsTable
-                { currency = currency
-                , address = address
-                }
-                isOutgoing
         }
+        (BrowserGotAddressNeighborsTable
+            { currency = currency
+            , address = address
+            }
+            isOutgoing
+        )
+        |> ApiEffect
 
 
 getEntityAddressTagsEffect : E.Entity -> Maybe String -> Effect
@@ -1852,12 +1862,13 @@ getEntityAddressTagsEffect { currency, entity } nextpage =
         , entity = entity
         , pagesize = 100
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotEntityAddressTagsTable
-                { currency = currency
-                , entity = entity
-                }
         }
+        (BrowserGotEntityAddressTagsTable
+            { currency = currency
+            , entity = entity
+            }
+        )
+        |> ApiEffect
 
 
 getEntityTxsEffect : E.Entity -> Maybe String -> Effect
@@ -1867,8 +1878,9 @@ getEntityTxsEffect { currency, entity } nextpage =
         , entity = entity
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntityTxs { currency = currency, entity = entity }
         }
+        (BrowserGotEntityTxs { currency = currency, entity = entity })
+        |> ApiEffect
 
 
 getEntityNeighborsEffect : Bool -> E.Entity -> Maybe String -> Effect
@@ -1881,13 +1893,14 @@ getEntityNeighborsEffect isOutgoing { currency, entity } nextpage =
         , pagesize = 100
         , includeLabels = True
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotEntityNeighborsTable
-                { currency = currency
-                , entity = entity
-                }
-                isOutgoing
         }
+        (BrowserGotEntityNeighborsTable
+            { currency = currency
+            , entity = entity
+            }
+            isOutgoing
+        )
+        |> ApiEffect
 
 
 getEntityAddressesEffect : E.Entity -> Maybe String -> Effect
@@ -1897,8 +1910,9 @@ getEntityAddressesEffect { currency, entity } nextpage =
         , entity = entity
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
         }
+        (BrowserGotEntityAddressesForTable { currency = currency, entity = entity })
+        |> ApiEffect
 
 
 showTxUtxoAddresses : { currency : String, txHash : String } -> Bool -> List Api.Data.TxValue -> Model -> Model
@@ -1950,8 +1964,9 @@ listAddressTagsEffect label nextpage =
         { label = label
         , pagesize = Nothing
         , nextpage = nextpage
-        , toMsg = BrowserGotLabelAddressTags label
         }
+        (BrowserGotLabelAddressTags label)
+        |> ApiEffect
 
 
 getBlockTxsEffect : B.Block -> Maybe String -> Effect
@@ -1961,8 +1976,9 @@ getBlockTxsEffect { currency, block } nextpage =
         , block = block
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotBlockTxs { currency = currency, block = block }
         }
+        (BrowserGotBlockTxs { currency = currency, block = block })
+        |> ApiEffect
 
 
 filterTable : Maybe String -> Model -> Model

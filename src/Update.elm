@@ -10,6 +10,7 @@ import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
 import Effect exposing (n)
+import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
@@ -184,7 +185,7 @@ update plugins uc msg model =
                     effs =
                         case model.user.auth of
                             Unauthorized _ effects ->
-                                effects
+                                List.map ApiEffect effects
 
                             _ ->
                                 []
@@ -698,6 +699,11 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                             |> List.singleton
                             |> (++) eff
                         )
+
+                    PluginInterface.ApiRequest effect ->
+                        ( model
+                        , (Effect.Api.map PluginMsg effect |> ApiEffect) :: eff
+                        )
             )
             ( mo, effects )
 
@@ -801,7 +807,7 @@ updateRequestLimit headers model =
     }
 
 
-handleResponse : Plugins -> Config -> Result ( Http.Error, Effect ) ( Dict String String, Msg ) -> Model key -> ( Model key, List Effect )
+handleResponse : Plugins -> Config -> Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ) -> Model key -> ( Model key, List Effect )
 handleResponse plugins uc result model =
     case result of
         Ok ( headers, message ) ->

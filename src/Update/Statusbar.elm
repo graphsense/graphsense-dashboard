@@ -2,6 +2,7 @@ module Update.Statusbar exposing (..)
 
 import Api.Request.Entities
 import Dict
+import Effect.Api as Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
@@ -52,12 +53,6 @@ messageFromEffect model effect =
         Model.GetStatisticsEffect ->
             Nothing
 
-        Model.GetConceptsEffect taxonomy _ ->
-            ( "loading concepts for taxonomy {0}"
-            , [ taxonomy ]
-            )
-                |> Just
-
         Model.GetElementEffect _ ->
             Nothing
 
@@ -91,181 +86,11 @@ messageFromEffect model effect =
         Model.LogoutEffect ->
             Nothing
 
-        Model.GraphEffect (Graph.SearchEntityNeighborsEffect e) ->
-            ( searchNeighborsKey
-            , [ case e.isOutgoing of
-                    False ->
-                        "for incoming neighbors"
+        Model.ApiEffect eff ->
+            messageFromApiEffect model eff
 
-                    True ->
-                        "for outgoing neighbors"
-              , e.entity |> String.fromInt
-              , case e.key of
-                    Api.Request.Entities.KeyCategory ->
-                        e.value
-                            |> List.head
-                            |> Maybe.map
-                                (\cat ->
-                                    List.Extra.find (.id >> (==) cat) model.graph.config.entityConcepts
-                                        |> Maybe.map .label
-                                        |> Maybe.withDefault cat
-                                )
-                            |> Maybe.withDefault ""
-                            |> (\s -> Locale.string model.locale "category" ++ " " ++ s)
-
-                    _ ->
-                        ""
-              , String.fromInt e.depth
-              , String.fromInt e.breadth
-              , String.fromInt e.maxAddresses
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetAddressEffect e) ->
-            ( "{1}: loading address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityForAddressEffect e) ->
-            ( "{1}: loading entity for address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityEffect e) ->
-            ( "{1}: loading entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetBlockEffect e) ->
-            ( "{1}: loading block {0}"
-            , [ String.fromInt e.height
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetTxEffect e) ->
-            ( "{1}: loading transactions {0}"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetTxUtxoAddressesEffect e) ->
-            ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
-            , [ e.txHash
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetAddressNeighborsEffect e) ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityNeighborsEffect e) ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
-            , [ e.entity |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetAddressTagsEffect e) ->
-            ( "{1}: loading tags of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityAddressTagsEffect e) ->
-            ( "{1}: loading address tags of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetAddressTxsEffect e) ->
-            ( "{1}: loading transactions of address {0}"
-            , [ e.address
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityTxsEffect e) ->
-            ( "{1}: loading transactions of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetBlockTxsEffect e) ->
-            ( "{1}: loading transactions of block {0}"
-            , [ String.fromInt e.block
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntityAddressesEffect e) ->
-            ( "{1}: loading addresses of entity {0}"
-            , [ String.fromInt e.entity
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.BulkGetAddressEffect e) ->
-            ( "{1}: loading {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.BulkGetEntityEffect e) ->
-            ( "{1}: loading {0} entities"
-            , [ List.length e.entities |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.BulkGetAddressEntityEffect e) ->
-            ( "{1}: loading entities of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.BulkGetEntityNeighborsEffect e) ->
-            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
-            , [ List.length e.entities |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
+        Model.GraphEffect (Graph.ApiEffect eff) ->
+            messageFromApiEffect model eff
 
         Model.GraphEffect (Graph.NavPushRouteEffect _) ->
             Nothing
@@ -275,38 +100,6 @@ messageFromEffect model effect =
 
         Model.GraphEffect Graph.GetBrowserElementEffect ->
             Nothing
-
-        Model.GraphEffect (Graph.ListAddressTagsEffect e) ->
-            ( "{1}: loading tags with label {0}"
-            , [ e.label ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetAddresslinkTxsEffect e) ->
-            ( "{2}: loading address link transactions between {0} and {1}"
-            , [ e.source
-              , e.target
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.GetEntitylinkTxsEffect e) ->
-            ( "{2}: loading entity link transactions between {0} and {1}"
-            , [ String.fromInt e.source
-              , String.fromInt e.target
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
-
-        Model.GraphEffect (Graph.BulkGetAddressTagsEffect e) ->
-            ( "{1}: loading tags of {0} addresses"
-            , [ List.length e.addresses |> String.fromInt
-              , e.currency |> String.toUpper
-              ]
-            )
-                |> Just
 
         Model.GraphEffect (Graph.PluginEffect _) ->
             Nothing
@@ -373,3 +166,224 @@ add model key values error =
                 |> Maybe.map (\_ -> True)
                 |> Maybe.withDefault model.visible
     }
+
+
+messageFromApiEffect : Model.Model key -> Api.Effect msg -> Maybe ( String, List String )
+messageFromApiEffect model effect =
+    case effect of
+        Api.GetConceptsEffect taxonomy _ ->
+            ( "loading concepts for taxonomy {0}"
+            , [ taxonomy ]
+            )
+                |> Just
+
+        Api.SearchEffect _ _ ->
+            Nothing
+
+        Api.SearchEntityNeighborsEffect e _ ->
+            ( searchNeighborsKey
+            , [ case e.isOutgoing of
+                    False ->
+                        "for incoming neighbors"
+
+                    True ->
+                        "for outgoing neighbors"
+              , e.entity |> String.fromInt
+              , case e.key of
+                    Api.Request.Entities.KeyCategory ->
+                        e.value
+                            |> List.head
+                            |> Maybe.map
+                                (\cat ->
+                                    List.Extra.find (.id >> (==) cat) model.graph.config.entityConcepts
+                                        |> Maybe.map .label
+                                        |> Maybe.withDefault cat
+                                )
+                            |> Maybe.withDefault ""
+                            |> (\s -> Locale.string model.locale "category" ++ " " ++ s)
+
+                    _ ->
+                        ""
+              , String.fromInt e.depth
+              , String.fromInt e.breadth
+              , String.fromInt e.maxAddresses
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetAddressEffect e _ ->
+            ( "{1}: loading address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityForAddressEffect e _ ->
+            ( "{1}: loading entity for address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityEffect e _ ->
+            ( "{1}: loading entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetBlockEffect e _ ->
+            ( "{1}: loading block {0}"
+            , [ String.fromInt e.height
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetTxEffect e _ ->
+            ( "{1}: loading transactions {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetTxUtxoAddressesEffect e _ ->
+            ( "{1}: loading " ++ isOutputToString e.isOutgoing ++ " addresses of transaction {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetAddressNeighborsEffect e _ ->
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityNeighborsEffect e _ ->
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of entity {0}"
+            , [ e.entity |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetAddressTagsEffect e _ ->
+            ( "{1}: loading tags of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityAddressTagsEffect e _ ->
+            ( "{1}: loading address tags of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetAddressTxsEffect e _ ->
+            ( "{1}: loading transactions of address {0}"
+            , [ e.address
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityTxsEffect e _ ->
+            ( "{1}: loading transactions of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetBlockTxsEffect e _ ->
+            ( "{1}: loading transactions of block {0}"
+            , [ String.fromInt e.block
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntityAddressesEffect e _ ->
+            ( "{1}: loading addresses of entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetAddressEffect e _ ->
+            ( "{1}: loading {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetEntityEffect e _ ->
+            ( "{1}: loading {0} entities"
+            , [ List.length e.entities |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetAddressEntityEffect e _ ->
+            ( "{1}: loading entities of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetEntityNeighborsEffect e _ ->
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} entities"
+            , [ List.length e.entities |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.ListAddressTagsEffect e _ ->
+            ( "{1}: loading tags with label {0}"
+            , [ e.label ]
+            )
+                |> Just
+
+        Api.GetAddresslinkTxsEffect e _ ->
+            ( "{2}: loading address link transactions between {0} and {1}"
+            , [ e.source
+              , e.target
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetEntitylinkTxsEffect e _ ->
+            ( "{2}: loading entity link transactions between {0} and {1}"
+            , [ String.fromInt e.source
+              , String.fromInt e.target
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.BulkGetAddressTagsEffect e _ ->
+            ( "{1}: loading tags of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just

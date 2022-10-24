@@ -10,7 +10,8 @@ import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
 import Effect exposing (n)
-import Effect.Graph exposing (Effect(..), getAddressEgonet, getEntityEgonet)
+import Effect.Api exposing (Effect(..), getAddressEgonet, getEntityEgonet)
+import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
 import File
 import File.Select
@@ -116,24 +117,28 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
                 |> Maybe.andThen (\a -> Layer.getAddress a newModel_.layers)
 
         getTagsEffect =
-            GetAddressTagsEffect
-                { address = address.address
-                , currency = address.currency
-                , nextpage = Nothing
-                , pagesize = 10
-                , toMsg =
-                    BrowserGotAddressTags
-                        { currency = address.currency
-                        , address = address.address
-                        }
+            BrowserGotAddressTags
+                { currency = address.currency
+                , address = address.address
                 }
+                |> GetAddressTagsEffect
+                    { address = address.address
+                    , currency = address.currency
+                    , nextpage = Nothing
+                    , pagesize = 10
+                    }
+                |> ApiEffect
     in
     addedAddress
         |> Maybe.map
             (\a ->
                 selectAddress a Nothing newModel_
                     |> mapSecond
-                        ((++) (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers))
+                        ((++)
+                            (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers
+                                |> List.map ApiEffect
+                            )
+                        )
             )
         |> Maybe.withDefault (n newModel_)
         |> mapSecond ((++) eff)
@@ -541,13 +546,14 @@ updateByMsg plugins uc msg model =
 
                             else
                                 ( model
-                                , [ GetEntityAddressesEffect
-                                        { currency = Id.currency id
-                                        , entity = Id.entityId id
-                                        , pagesize = maxExpandableAddresses
-                                        , nextpage = Nothing
-                                        , toMsg = BrowserGotEntityAddresses id
-                                        }
+                                , [ BrowserGotEntityAddresses id
+                                        |> GetEntityAddressesEffect
+                                            { currency = Id.currency id
+                                            , entity = Id.entityId id
+                                            , pagesize = maxExpandableAddresses
+                                            , nextpage = Nothing
+                                            }
+                                        |> ApiEffect
                                   ]
                                 )
 
@@ -576,16 +582,17 @@ updateByMsg plugins uc msg model =
                             || (not isOutgoing && entity.entity.inDegree <= maxExpandableNeighbors)
                     then
                         ( model
-                        , { currency = Id.currency id
-                          , entity = Id.entityId id
-                          , isOutgoing = isOutgoing
-                          , onlyIds = Nothing
-                          , pagesize = 20
-                          , includeLabels = False
-                          , nextpage = Nothing
-                          , toMsg = BrowserGotEntityNeighbors id isOutgoing
-                          }
+                        , BrowserGotEntityNeighbors id isOutgoing
                             |> GetEntityNeighborsEffect
+                                { currency = Id.currency id
+                                , entity = Id.entityId id
+                                , isOutgoing = isOutgoing
+                                , onlyIds = Nothing
+                                , pagesize = 20
+                                , includeLabels = False
+                                , nextpage = Nothing
+                                }
+                            |> ApiEffect
                             |> List.singleton
                         )
 
@@ -641,6 +648,7 @@ updateByMsg plugins uc msg model =
                         }
                         (BrowserGotEntityEgonetForAddress address)
                         model.layers
+                        |> List.map ApiEffect
                     )
 
                 Just added ->
@@ -774,16 +782,16 @@ updateByMsg plugins uc msg model =
                 |> Dict.toList
                 |> List.map
                     (\( ( currency, entity ), neighbors_ ) ->
-                        GetEntityEffect
-                            { entity = entity
-                            , currency = currency
-                            , toMsg =
-                                BrowserGotEntityForAddressNeighbor
-                                    { anchor = id
-                                    , isOutgoing = isOutgoing
-                                    , neighbors = neighbors_
-                                    }
+                        BrowserGotEntityForAddressNeighbor
+                            { anchor = id
+                            , isOutgoing = isOutgoing
+                            , neighbors = neighbors_
                             }
+                            |> GetEntityEffect
+                                { entity = entity
+                                , currency = currency
+                                }
+                            |> ApiEffect
                     )
             )
 
@@ -813,6 +821,7 @@ updateByMsg plugins uc msg model =
                             }
                             BrowserGotEntityEgonet
                             model.layers
+                            |> List.map ApiEffect
                         )
                     )
 
@@ -865,16 +874,17 @@ updateByMsg plugins uc msg model =
                             || (not isOutgoing && address.address.inDegree <= maxExpandableNeighbors)
                     then
                         ( model
-                        , { currency = Id.currency id
-                          , address = Id.addressId id
-                          , isOutgoing = isOutgoing
-                          , pagesize = 20
-                          , includeLabels = False
-                          , onlyIds = Nothing
-                          , nextpage = Nothing
-                          , toMsg = BrowserGotAddressNeighbors id isOutgoing
-                          }
+                        , BrowserGotAddressNeighbors id isOutgoing
                             |> GetAddressNeighborsEffect
+                                { currency = Id.currency id
+                                , address = Id.addressId id
+                                , isOutgoing = isOutgoing
+                                , pagesize = 20
+                                , includeLabels = False
+                                , onlyIds = Nothing
+                                , nextpage = Nothing
+                                }
+                            |> ApiEffect
                             |> List.singleton
                         )
 
@@ -1136,11 +1146,12 @@ updateByMsg plugins uc msg model =
 
         UserClickedAddressInEntityTagsTable entityId address ->
             ( model
-            , GetAddressEffect
-                { address = address
-                , currency = Id.currency entityId
-                , toMsg = BrowserGotAddressForEntity entityId
-                }
+            , BrowserGotAddressForEntity entityId
+                |> GetAddressEffect
+                    { address = address
+                    , currency = Id.currency entityId
+                    }
+                |> ApiEffect
                 |> List.singleton
             )
 
@@ -1178,17 +1189,17 @@ updateByMsg plugins uc msg model =
                 , config = model.config |> s_colors added.colors
               }
                 |> syncLinks added.repositioned
-            , GetAddressTagsEffect
+            , BrowserGotAddressTags
                 { currency = address.currency
                 , address = address.address
-                , pagesize = 10
-                , nextpage = Nothing
-                , toMsg =
-                    BrowserGotAddressTags
-                        { currency = address.currency
-                        , address = address.address
-                        }
                 }
+                |> GetAddressTagsEffect
+                    { currency = address.currency
+                    , address = address.address
+                    , pagesize = 10
+                    , nextpage = Nothing
+                    }
+                |> ApiEffect
                 |> List.singleton
             )
                 |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
@@ -1226,16 +1237,16 @@ updateByMsg plugins uc msg model =
                         case Set.toList added.new of
                             [] ->
                                 ( model
-                                , [ GetEntityEffect
-                                        { entity = neighbor.address.entity
-                                        , currency = Id.currency addressId
-                                        , toMsg =
-                                            BrowserGotEntityForAddressNeighbor
-                                                { anchor = addressId
-                                                , isOutgoing = isOutgoing
-                                                , neighbors = [ neighbor ]
-                                                }
+                                , [ BrowserGotEntityForAddressNeighbor
+                                        { anchor = addressId
+                                        , isOutgoing = isOutgoing
+                                        , neighbors = [ neighbor ]
                                         }
+                                        |> GetEntityEffect
+                                            { entity = neighbor.address.entity
+                                            , currency = Id.currency addressId
+                                            }
+                                        |> ApiEffect
                                   ]
                                 )
 
@@ -1251,17 +1262,17 @@ updateByMsg plugins uc msg model =
                                               }
                                                 |> addAddressLink address isOutgoing ( neighbor, addedAddress )
                                                 |> syncLinks added.repositioned
-                                            , [ GetAddressTagsEffect
+                                            , [ BrowserGotAddressTags
                                                     { currency = Id.currency addressId
                                                     , address = Id.addressId addressId
-                                                    , pagesize = 10
-                                                    , nextpage = Nothing
-                                                    , toMsg =
-                                                        BrowserGotAddressTags
-                                                            { currency = Id.currency addressId
-                                                            , address = Id.addressId addressId
-                                                            }
                                                     }
+                                                    |> GetAddressTagsEffect
+                                                        { currency = Id.currency addressId
+                                                        , address = Id.addressId addressId
+                                                        , pagesize = 10
+                                                        , nextpage = Nothing
+                                                        }
+                                                    |> ApiEffect
                                               ]
                                             )
                                                 |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
@@ -1653,11 +1664,12 @@ updateByMsg plugins uc msg model =
                         |> CmdEffect
 
                 else
-                    BulkGetEntityEffect
-                        { currency = currency
-                        , entities = entities
-                        , toMsg = toMsg BrowserGotBulkEntities
-                        }
+                    toMsg BrowserGotBulkEntities
+                        |> BulkGetEntityEffect
+                            { currency = currency
+                            , entities = entities
+                            }
+                        |> ApiEffect
               ]
             )
 
@@ -1679,11 +1691,12 @@ updateByMsg plugins uc msg model =
                         |> CmdEffect
 
                 else
-                    BulkGetAddressEntityEffect
-                        { currency = currency
-                        , addresses = rootAddresses
-                        , toMsg = toMsg BrowserGotBulkAddressEntities
-                        }
+                    toMsg BrowserGotBulkAddressEntities
+                        |> BulkGetAddressEntityEffect
+                            { currency = currency
+                            , addresses = rootAddresses
+                            }
+                        |> ApiEffect
               ]
             )
 
@@ -1752,29 +1765,31 @@ updateByMsg plugins uc msg model =
                     }
                 |> insertEntityShadowLinks acc.newEntityIds
                 |> insertAddressShadowLinks acc.newAddressIds
-            , [ BulkGetEntityNeighborsEffect
-                    { currency = currency
-                    , isOutgoing = True
-                    , entities = List.map .entity deser.entities
-                    , toMsg = BrowserGotBulkEntityNeighbors currency True
-                    }
+            , [ BrowserGotBulkEntityNeighbors currency True
+                    |> BulkGetEntityNeighborsEffect
+                        { currency = currency
+                        , isOutgoing = True
+                        , entities = List.map .entity deser.entities
+                        , onlyIds = True
+                        }
+                    |> ApiEffect
               , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
                 ++ (deserializing.addresses
                         |> List.map
                             (\address ->
-                                GetAddressTagsEffect
+                                BrowserGotAddressTags
                                     { currency = address.currency
                                     , address = address.address
-                                    , pagesize = 10
-                                    , nextpage = Nothing
-                                    , toMsg =
-                                        BrowserGotAddressTags
-                                            { currency = address.currency
-                                            , address = address.address
-                                            }
                                     }
+                                    |> GetAddressTagsEffect
+                                        { currency = address.currency
+                                        , address = address.address
+                                        , pagesize = 10
+                                        , nextpage = Nothing
+                                        }
+                                    |> ApiEffect
                             )
                    )
             )
@@ -2195,18 +2210,21 @@ updateByRoute plugins route model =
                             , adding = Adding.loadEntity { currency = currency, entity = e } model.adding
                             , selectIfLoaded = Just (SelectEntity { currency = currency, entity = e })
                           }
-                        , [ GetEntityEffect
-                                { entity = e
-                                , currency = currency
-                                , toMsg = BrowserGotEntity
-                                }
+                        , [ BrowserGotEntity
+                                |> GetEntityEffect
+                                    { entity = e
+                                    , currency = currency
+                                    }
+                                |> ApiEffect
                           ]
-                            ++ getEntityEgonet
-                                { currency = currency
-                                , entity = e
-                                }
-                                BrowserGotEntityEgonet
-                                model.layers
+                            ++ (getEntityEgonet
+                                    { currency = currency
+                                    , entity = e
+                                    }
+                                    BrowserGotEntityEgonet
+                                    model.layers
+                                    |> List.map ApiEffect
+                               )
                             ++ effects
                         )
                     )
@@ -2248,11 +2266,12 @@ updateByRoute plugins route model =
             ( { model
                 | browser = browser2
               }
-            , [ GetBlockEffect
-                    { height = b
-                    , currency = currency
-                    , toMsg = BrowserGotBlock
-                    }
+            , [ BrowserGotBlock
+                    |> GetBlockEffect
+                        { height = b
+                        , currency = currency
+                        }
+                    |> ApiEffect
               ]
                 ++ effects
             )
@@ -2555,6 +2574,7 @@ handleEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                     }
                     BrowserGotEntityEgonet
                     newModel.layers
+                    |> List.map ApiEffect
             )
         |> List.concat
         |> (::)
@@ -2594,22 +2614,26 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     , first neighbors
         |> List.map
             (\neighbor ->
-                GetAddressTagsEffect
+                BrowserGotAddressTags
                     { currency = neighbor.address.currency
                     , address = neighbor.address.address
-                    , pagesize = 10
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotAddressTags
-                            { currency = neighbor.address.currency
-                            , address = neighbor.address.address
-                            }
                     }
+                    |> GetAddressTagsEffect
+                        { currency = neighbor.address.currency
+                        , address = neighbor.address.address
+                        , pagesize = 10
+                        , nextpage = Nothing
+                        }
+                    |> ApiEffect
             )
         |> (++)
             (added.newAddresses
                 |> List.map .id
-                |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.model.layers)
+                |> List.map
+                    (\a ->
+                        getAddressEgonet a BrowserGotAddressEgonet added.model.layers
+                            |> List.map ApiEffect
+                    )
                 |> List.concat
             )
         |> (::)
@@ -2918,6 +2942,9 @@ updateByPluginOutMsg plugins outMsgs model =
 
                     PluginInterface.SendToPort _ ->
                         ( mo, [] )
+
+                    PluginInterface.ApiRequest _ ->
+                        ( mo, [] )
             )
             ( model, [] )
 
@@ -3212,16 +3239,16 @@ fromDeserialized deserialized model =
     unique
         |> List.map
             (\( currency, addrs ) ->
-                BulkGetAddressEffect
-                    { currency = currency
-                    , addresses = addrs
-                    , toMsg =
-                        { deserialized = deserialized
-                        , addresses = []
-                        , entities = []
+                { deserialized = deserialized
+                , addresses = []
+                , entities = []
+                }
+                    |> BrowserGotBulkAddresses currency
+                    |> BulkGetAddressEffect
+                        { currency = currency
+                        , addresses = addrs
                         }
-                            |> BrowserGotBulkAddresses currency
-                    }
+                    |> ApiEffect
             )
         |> (::)
             (Route.rootRoute
@@ -3288,24 +3315,28 @@ addAddressesAtEntity plugins uc entityId addresses model =
     , addresses
         |> List.map
             (\address ->
-                GetAddressTagsEffect
+                BrowserGotAddressTags
                     { currency = address.currency
                     , address = address.address
-                    , pagesize = 10
-                    , nextpage = Nothing
-                    , toMsg =
-                        BrowserGotAddressTags
-                            { currency = address.currency
-                            , address = address.address
-                            }
                     }
+                    |> GetAddressTagsEffect
+                        { currency = address.currency
+                        , address = address.address
+                        , pagesize = 10
+                        , nextpage = Nothing
+                        }
+                    |> ApiEffect
             )
     )
         |> mapSecond
             ((++)
                 (added.new
                     |> Set.toList
-                    |> List.map (\a -> getAddressEgonet a BrowserGotAddressEgonet added.layers)
+                    |> List.map
+                        (\a ->
+                            getAddressEgonet a BrowserGotAddressEgonet added.layers
+                                |> List.map ApiEffect
+                        )
                     |> List.concat
                 )
             )
@@ -3358,16 +3389,18 @@ loadAddress plugins { currency, address, table, layer } model =
                     | adding = Adding.loadAddress { currency = currency, address = address } model.adding
                     , browser = browser2
                   }
-                , [ GetEntityForAddressEffect
-                        { address = address
-                        , currency = currency
-                        , toMsg = BrowserGotEntityForAddress address
-                        }
-                  , GetAddressEffect
-                        { address = address
-                        , currency = currency
-                        , toMsg = BrowserGotAddress
-                        }
+                , [ BrowserGotEntityForAddress address
+                        |> GetEntityForAddressEffect
+                            { address = address
+                            , currency = currency
+                            }
+                        |> ApiEffect
+                  , BrowserGotAddress
+                        |> GetAddressEffect
+                            { address = address
+                            , currency = currency
+                            }
+                        |> ApiEffect
                   ]
                     ++ effects
                 )
