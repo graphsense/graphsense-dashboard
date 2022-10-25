@@ -219,7 +219,10 @@ flags plugins vc gc ent =
         ]
         (tf
             ++ [ Plugin.entityFlags plugins ent.plugins vc
-                    |> g [ translate -offset 0 |> transform ]
+                    |> (\( pluginOffset, pluginFlags ) ->
+                            g [ translate (-offset - pluginOffset) 0 |> transform ]
+                                pluginFlags
+                       )
                ]
         )
 

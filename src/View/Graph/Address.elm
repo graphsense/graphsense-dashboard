@@ -202,7 +202,10 @@ flags plugins vc gc addr =
     in
     af
         ++ [ Plugin.addressFlags plugins addr.plugins vc
-                |> g [ translate -offset 0 |> transform ]
+                |> (\( pluginOffset, pluginFlags ) ->
+                        g [ translate (-offset - pluginOffset) 0 |> transform ]
+                            pluginFlags
+                   )
                 |> Log.log "View.Graph.Address flags result"
            ]
         |> g
