@@ -7,6 +7,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Model.Currency as Currency
 import Msg.Graph exposing (Msg(..))
 import Util.View exposing (onOffSwitch)
 import View.Dialog as Dialog
@@ -26,17 +27,20 @@ configuration vc config =
                 ]
                 [ option
                     [ value "coin"
+                    , vc.locale.currency == Currency.Coin |> selected
                     ]
                     [ Locale.string vc.locale "Coin"
                         |> text
                     ]
                 , option
                     [ value "eur"
+                    , vc.locale.currency == Currency.Fiat "eur" |> selected
                     ]
                     [ text "EUR"
                     ]
                 , option
                     [ value "usd"
+                    , vc.locale.currency == Currency.Fiat "usd" |> selected
                     ]
                     [ text "USD"
                     ]
