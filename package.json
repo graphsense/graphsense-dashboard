@@ -25,6 +25,7 @@
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",
     "js-base64": "^3.7.2",
-    "lzwcompress": "^1.1.0"
+    "lzwcompress": "^1.1.0",
+    "yaml": "^2.1.3"
   }
 }

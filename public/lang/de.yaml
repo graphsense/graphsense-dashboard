@@ -1,8 +1,7 @@
-# attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: Adresse
 addresses: Adressen
-'{0} address': '{0} Adresse'
-'{0} addresses': '{0} Adressen'
+"{0} address": "{0} Adresse"
+"{0} addresses": "{0} Adressen"
 entity: Entität
 entities: Entitäten
 transaction: Transaktion
@@ -19,9 +18,7 @@ supported currencies: unterstützte Währungen
 ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
-addresses, transaction, label, block: Adressen, Transaktion, Schlagwort, Block
-loading_type_id: lade %0 %1  # results in eg. loading address xyz
-loading_thing: lade %0 
+"addresses, transaction, label, block": Adressen, Transaktion, Schlagwort, Block
 currency: Währung
 transfers: Transaktionen
 withdrawals: Abbuchungen
@@ -45,8 +42,8 @@ outgoing neighbors: ausgehende Nachbarn
 height: Höhe
 block hash: Block Hash
 created: erstellt
-no. inputs: Anz. Eingehende # number inputs
-no. outputs: Anz. Ausgehende # number outputs
+no. inputs: Anz. Eingehende
+no. outputs: Anz. Ausgehende
 total input: Gesamt Eingang
 total output: Gesamt Ausgang
 year: Jahr
@@ -66,7 +63,7 @@ source: Quelle
 target: Ziel
 value: Wert
 timestamp: Zeitstempel
-outgoing address: ausgehende Adresse 
+outgoing address: ausgehende Adresse
 incoming address: eingehende Adresse
 outgoing entity: ausgehende Entität
 incoming entity: eingehende Entität
@@ -76,7 +73,7 @@ outgoing entities: ausgehende Entitäten
 incoming entities: eingehende Entitäten
 output address: ausgehende Adresse
 input address: eingehende Adresse
-no. transactions: Anz. Transaktionen # number transactions
+no. transactions: Anz. Transaktionen
 filter table contents: Tabelle filtern
 sort/filter disabled: Sortieren/Filtern nicht möglich
 download table as csv: Tabelle als CSV herunterladen
@@ -86,7 +83,7 @@ last modified: geändert
 active: aktiv
 download tags as json: Schlagwörter als JSON herunterladen
 included in block: enthalten in Block
-export: exportieren # as an imperative
+export: exportieren
 graphics (.svg): Grafik (.svg)
 full data: alle Daten
 notes only: nur Notizen
@@ -108,7 +105,7 @@ for final balance: nach Bilanz
 for total received: nach Eingänge
 breadth: Breite
 max. addresses: max. Adressen
-search: suche # as an imperative
+search: suche
 save: speichern
 title: Titel
 investigator: Untersucher
@@ -136,11 +133,7 @@ sort addresses by: Adressen sortieren
 no. neighbors: Anz. Nachbarn
 incoming: eingehend
 outgoing: ausgehend
-num_address: %0 Adresse
-num_addresses: %0 Adressen
-num_of_address: %1/%0 Adresse
-num_of_addresses: %1/%0 Adressen
-the search: Suche # as a noun
+the search: Suche
 user-defined labels: benutzerdefinierte Schlagwörter
 hide logs: Logs verstecken
 show logs: Logs anzeigen
@@ -151,44 +144,21 @@ search outgoing neighbors: suche ausgehende Nachbarn
 nothing to display yet: noch nichts anzuzeigen!
 entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
-link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
+link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen
+  zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
 shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Entitäten.
 "category {0}": Kategorie {0}
-searching criterion addresses_ids: Adressen %0
-searching between: zwischen %0 und %1
-searching min: ab %0
-searching max: bis %1
-searching criterion final_balance: Bilanz %0 # one of searching between, min, max
-searching criterion total_received: Eingänge %0 # one of searching between, min, max
 searching outgoing: ausgehenden
 searching incoming: eingehenden
 for outgoing neighbors: nach ausgehenden Nachbarn
 for incoming neighbors: nach eingehenden Nachbarn
-"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, Entitäten mit mehr als {5} Adressen auslassen)" # %0 = searching outgoing/incoming, %1 = an id, %2 = searching criterion, %3-%5 = numbers
 errors only: nur Fehler
 show more: zeige mehr
-error requesting: "Fehler beim Aufruf von %0: %1"
-loading transactions between: lade Transaktionen zwischen %0 und %1
-loaded: %0 %1 geladen # eg. loaded address xy
 loading msg outgoing: ausgehende
 loading msg incoming: eingehende
-loaded neighbors for: %0 Nachbarn von %1 %2 geladen
 saving to file: speichern in Datei
-saved to file: in Datei %0 gespeichert
-loading file: lade Datei %0
-loaded file: Datei %0 geladen
-loading entity for: lade Entität von %0
-loaded entity for: Entiät von %0 geladen
-no entity for: keine Entität von %0 gefunden
-loading tags for: lade Schlagwörter für %0 %1
-loaded tags for: Schlagwörter für %0 %1 geladen
-trying to load addresses for entity: versuche %1 Adressen für Entität %0 zu laden # %0 = id, %1 = number
-loaded addresses for entity: %1 Adressen für Entität %0 geladen
-removed node of: Knoten %1 von Typ %0 entfernt
-found paths to nodes: %0 Pfade gefunden
 go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
-show at most in links table: maximal %0 Transaktionen gelistet
 estimated value: geschätzter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
@@ -200,22 +170,13 @@ to: bis
 pick a color: Farbe wählen
 start highlighting addresses and entities: Adressen/Entitäten durch Klicken einfärben
 api request limit: Abfragelimit
-reset in %0s: Reset in %0 Sek.
 from address: Sendende Adresse
 to address: Empfangende Adresse
-transactions file: Transaktionen der %0 %1 # $0 = type, %1 = id
-neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
-tags file: %0-Tags der %1 %2 # %0 = type, %1 = id
-links file: Transaktionen zwischen %0 %1 und %2 # %0 = type, %1 = source, %2 = target
-addresses file: Adressen der Entität %0
-address/entity balance: %0 Bilanz
-address/entity received: %0 Eingänge
 tagged addresses: Adressen mit Tags
 please provide an API key: Bitte einen API-Schlüssel eingeben
 invalid key: ungültiger Schlüssel
 unlimited: unlimitiert
 root address: Wurzeladresse
-key expires: Key ist gültig bis %0
 direction: Richtung
 both: beide
 search neighbors: Suche Nachbarn
@@ -227,7 +188,7 @@ server error: Serverfehler
 not found: Nicht gefunden
 data error: Datenfehler
 this table is empty: Diese Tabelle ist leer
-"Do you want to start from scratch?": "Wirklich neu loslegen?"
+Do you want to start from scratch?: Wirklich neu loslegen?
 proprietary tag: Proprietäres Tag
 "{1}: loading concepts for taxonomy {0}": "{1}: lade Konzepte zur Taxonomie {0}"
 "{1}: searching for {0}": "{1}: suche nach {0}"
@@ -256,7 +217,7 @@ proprietary tag: Proprietäres Tag
 "{1}: loading tags with label {0}": "{1}: lade Tags mit Schlagwort {0}"
 "{2}: loading address link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
 "{2}: loading entity link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
-"Please try again with a lower depth/breadth setting.": "Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite."
+Please try again with a lower depth/breadth setting.: Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite.
 defines entity: definiert Entität
 delete: löschen
 address statistics not yet computed: Adress-Statistik noch nicht berechnet
