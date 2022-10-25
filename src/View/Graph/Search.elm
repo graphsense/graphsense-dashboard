@@ -53,7 +53,7 @@ inputHovercard plugins vc model =
                 [ Input.Number.input
                     { onInput = UserInputsSearchDepth
                     , hasFocus = Nothing
-                    , maxValue = Just 7
+                    , maxValue = Just 4
                     , minValue = Just 1
                     , maxLength = Just 1
                     }
