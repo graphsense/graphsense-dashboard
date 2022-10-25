@@ -27,7 +27,7 @@ table vc attributes filterMsg height config tbl =
             tbl.data
                 |> List.length
                 |> toFloat
-                |> (+) 2
+                |> (+) 3
                 |> (*) vc.theme.table.rowHeight
                 |> Basics.min vc.theme.table.maxHeight
     in
