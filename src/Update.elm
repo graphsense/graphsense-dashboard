@@ -764,7 +764,14 @@ updateByUrl plugins uc url model =
                                     , graph = graph
                                     , url = url
                                   }
-                                , List.map GraphEffect (Graph.GetSvgElementEffect :: graphEffect)
+                                , graphEffect
+                                    ++ (if model.graph.size == Nothing then
+                                            [ Graph.GetSvgElementEffect ]
+
+                                        else
+                                            []
+                                       )
+                                    |> List.map GraphEffect
                                 )
 
                     Route.Plugin ( pluginType, urlValue ) ->
