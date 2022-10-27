@@ -35,6 +35,7 @@ type alias Entity =
     , shadowLinks : Links
     , color : Maybe Color
     , userTag : Maybe Tag.UserTag
+    , selected : Bool
     , plugins : EntityState
     }
 

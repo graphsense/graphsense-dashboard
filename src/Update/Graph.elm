@@ -37,7 +37,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
-import Model.Graph.Link as Link
+import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
@@ -2291,28 +2291,7 @@ updateByRoute plugins route model =
                             Address.Links links ->
                                 Dict.get t links
                         )
-                            |> Maybe.map
-                                (\link ->
-                                    let
-                                        browser =
-                                            Browser.showAddresslink
-                                                { source = source
-                                                , link = link
-                                                }
-                                                model.browser
-
-                                        ( browser2, effects ) =
-                                            table
-                                                |> Maybe.map (\tb -> Browser.showAddresslinkTable tb browser)
-                                                |> Maybe.withDefault (n browser)
-                                    in
-                                    ( { model
-                                        | browser = browser2
-                                        , selected = SelectedAddresslink ( source.id, link.node.id )
-                                      }
-                                    , effects
-                                    )
-                                )
+                            |> Maybe.map (\link -> selectAddressLink table source link model)
                     )
                 |> Maybe.withDefault (n model)
 
@@ -2332,27 +2311,7 @@ updateByRoute plugins route model =
                                 Dict.get t links
                         )
                             |> Maybe.map
-                                (\link ->
-                                    let
-                                        browser =
-                                            Browser.showEntitylink
-                                                { source = source
-                                                , link = link
-                                                }
-                                                model.browser
-
-                                        ( browser2, effects ) =
-                                            table
-                                                |> Maybe.map (\tb -> Browser.showEntitylinkTable tb browser)
-                                                |> Maybe.withDefault (n browser)
-                                    in
-                                    ( { model
-                                        | browser = browser2
-                                        , selected = SelectedEntitylink ( source.id, link.node.id )
-                                      }
-                                    , effects
-                                    )
-                                )
+                                (\link -> selectEntityLink table source link model)
                     )
                 |> Maybe.withDefault (n model)
 
@@ -2520,10 +2479,10 @@ addAddressLink anchor isOutgoing ( neighbor, target ) model =
 
         layers =
             if isOutgoing then
-                Layer.updateAddressLink { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( linkData, target ) model.layers
+                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( linkData, target ) model.layers
 
             else
-                Layer.updateAddressLink
+                Layer.updateAddressLinks
                     { currency = Id.currency target.id, address = Id.addressId target.id }
                     ( linkData, anchor )
                     model.layers
@@ -2699,11 +2658,15 @@ selectAddress address table model =
                 table
                     |> Maybe.map (\t -> Browser.showAddressTable t browser)
                     |> Maybe.withDefault (n browser)
+
+            newmodel =
+                deselect model
         in
-        ( { model
+        ( { newmodel
             | browser = browser2
             , selected = SelectedAddress address.id
             , selectIfLoaded = Nothing
+            , layers = Layer.updateAddress address.id (\a -> { a | selected = True }) newmodel.layers
           }
         , effects
         )
@@ -2723,11 +2686,16 @@ selectEntity entity table model =
                 table
                     |> Maybe.map (\t -> Browser.showEntityTable t browser)
                     |> Maybe.withDefault (n browser)
+
+            newmodel =
+                deselect model
         in
-        ( { model
+        ( { newmodel
             | browser = browser2
             , selected = SelectedEntity entity.id
             , selectIfLoaded = Nothing
+            , layers =
+                Layer.updateEntity entity.id (\e -> { e | selected = True }) newmodel.layers
           }
         , effects
         )
@@ -2740,6 +2708,26 @@ deselect model =
         , browser =
             model.browser
                 |> s_visible False
+        , layers =
+            case model.selected of
+                SelectedEntity id ->
+                    Layer.updateEntity id
+                        (\e -> { e | selected = False })
+                        model.layers
+
+                SelectedAddress id ->
+                    Layer.updateAddress id
+                        (\e -> { e | selected = False })
+                        model.layers
+
+                SelectedAddresslink id ->
+                    Layer.updateAddressLink id (\e -> { e | selected = False }) model.layers
+
+                SelectedEntitylink id ->
+                    Layer.updateEntityLink id (\e -> { e | selected = False }) model.layers
+
+                SelectedNone ->
+                    model.layers
     }
 
 
@@ -3491,3 +3479,63 @@ handleNotFound model =
             model.browser
                 |> s_visible False
     }
+
+
+selectAddressLink : Maybe Route.AddresslinkTable -> Address -> Link Address -> Model -> ( Model, List Effect )
+selectAddressLink table source link model =
+    let
+        browser =
+            Browser.showAddresslink
+                { source = source
+                , link = link
+                }
+                model.browser
+
+        ( browser2, effects ) =
+            table
+                |> Maybe.map (\tb -> Browser.showAddresslinkTable tb browser)
+                |> Maybe.withDefault (n browser)
+
+        linkId =
+            ( source.id, link.node.id )
+
+        newmodel =
+            deselect model
+    in
+    ( { newmodel
+        | browser = browser2
+        , selected = SelectedAddresslink linkId
+        , layers = Layer.updateAddressLink linkId (\l -> { l | selected = True }) newmodel.layers
+      }
+    , effects
+    )
+
+
+selectEntityLink : Maybe Route.AddresslinkTable -> Entity -> Link Entity -> Model -> ( Model, List Effect )
+selectEntityLink table source link model =
+    let
+        browser =
+            Browser.showEntitylink
+                { source = source
+                , link = link
+                }
+                model.browser
+
+        ( browser2, effects ) =
+            table
+                |> Maybe.map (\tb -> Browser.showEntitylinkTable tb browser)
+                |> Maybe.withDefault (n browser)
+
+        linkId =
+            ( source.id, link.node.id )
+
+        newmodel =
+            deselect model
+    in
+    ( { newmodel
+        | browser = browser2
+        , selected = SelectedEntitylink ( source.id, link.node.id )
+        , layers = Layer.updateEntityLink linkId (\l -> { l | selected = True }) newmodel.layers
+      }
+    , effects
+    )

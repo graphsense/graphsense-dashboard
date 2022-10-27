@@ -7,6 +7,7 @@ type alias Link a =
     { node : a
     , forceShow : Bool
     , link : LinkData
+    , selected : Bool
     }
 
 

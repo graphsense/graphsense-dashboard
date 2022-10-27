@@ -21,8 +21,8 @@ import View.Graph.Entity as Entity
 import View.Graph.Link as Link
 
 
-addresses : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
-addresses plugins vc gc selected layer =
+addresses : Plugins -> View.Config -> Graph.Config -> Layer -> Svg Msg
+addresses plugins vc gc layer =
     let
         _ =
             Log.log "Layer.addresses" layer.id
@@ -31,7 +31,7 @@ addresses plugins vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( Id.entityIdToString entity.id
-                , Svg.lazy5 Entity.addresses plugins vc gc selected entity
+                , Svg.lazy4 Entity.addresses plugins vc gc entity
                 )
                     :: svg
             )
@@ -39,8 +39,8 @@ addresses plugins vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entities : Plugins -> View.Config -> Graph.Config -> String -> Layer -> Svg Msg
-entities plugins vc gc selected layer =
+entities : Plugins -> View.Config -> Graph.Config -> Layer -> Svg Msg
+entities plugins vc gc layer =
     let
         _ =
             Log.log "Layer.entities" layer.id
@@ -49,7 +49,7 @@ entities plugins vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( Id.entityIdToString entity.id
-                , Svg.lazy5 Entity.entity plugins vc gc selected entity
+                , Svg.lazy4 Entity.entity plugins vc gc entity
                 )
                     :: svg
             )
@@ -57,8 +57,8 @@ entities plugins vc gc selected layer =
         |> Keyed.node "g" []
 
 
-entityLinks : View.Config -> Graph.Config -> String -> Layer -> Svg Msg
-entityLinks vc gc selected layer =
+entityLinks : View.Config -> Graph.Config -> Layer -> Svg Msg
+entityLinks vc gc layer =
     let
         ( mn, mx ) =
             calcRange vc gc layer
@@ -70,7 +70,7 @@ entityLinks vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( "entityLinks" ++ Id.entityIdToString entity.id
-                , Svg.lazy6 Entity.links vc gc selected mn mx entity
+                , Svg.lazy5 Entity.links vc gc mn mx entity
                 )
                     :: svg
             )
@@ -114,8 +114,8 @@ addressShadowLinks vc layer =
         |> Keyed.node "g" []
 
 
-addressLinks : View.Config -> Graph.Config -> String -> Layer -> Svg Msg
-addressLinks vc gc selected layer =
+addressLinks : View.Config -> Graph.Config -> Layer -> Svg Msg
+addressLinks vc gc layer =
     let
         ( mn, mx ) =
             calcAddressRange vc gc layer
@@ -127,7 +127,7 @@ addressLinks vc gc selected layer =
         |> Dict.foldl
             (\_ entity svg ->
                 ( "addressLinks" ++ Id.entityIdToString entity.id
-                , Svg.lazy6 Entity.addressLinks vc gc selected mn mx entity
+                , Svg.lazy5 Entity.addressLinks vc gc mn mx entity
                 )
                     :: svg
             )

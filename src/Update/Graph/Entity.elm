@@ -291,6 +291,7 @@ insertEntityShadowLink target source =
                         { node = target
                         , forceShow = False
                         , link = Link.PlaceholderLinkData
+                        , selected = False
                         }
                         links
                         |> Entity.Links
@@ -325,6 +326,7 @@ insertAddressesShadowLinks target source =
                                                             { node = targetAddress
                                                             , forceShow = False
                                                             , link = Link.PlaceholderLinkData
+                                                            , selected = False
                                                             }
                                                             links
                                                             |> Address.Links

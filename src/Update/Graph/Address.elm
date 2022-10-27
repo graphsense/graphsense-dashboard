@@ -66,6 +66,7 @@ insertAddressShadowLink target source =
                         { node = target
                         , forceShow = False
                         , link = Link.PlaceholderLinkData
+                        , selected = False
                         }
                         links
                         |> Links

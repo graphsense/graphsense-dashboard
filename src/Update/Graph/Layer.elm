@@ -21,11 +21,13 @@ module Update.Graph.Layer exposing
     , updateAddress
     , updateAddressColor
     , updateAddressLink
+    , updateAddressLinks
     , updateAddresses
     , updateEntities
     , updateEntitiesIf
     , updateEntity
     , updateEntityColor
+    , updateEntityLink
     , updateEntityLinks
     )
 
@@ -408,8 +410,8 @@ addAddressHelp plugins uc address acc =
             acc
 
 
-updateAddressLink : { currency : String, address : String } -> ( LinkData, Address ) -> IntDict Layer -> IntDict Layer
-updateAddressLink { currency, address } ( neighbor, target ) layers =
+updateAddressLinks : { currency : String, address : String } -> ( LinkData, Address ) -> IntDict Layer -> IntDict Layer
+updateAddressLinks { currency, address } ( neighbor, target ) layers =
     layers
         |> IntDict.foldl
             (\_ layer layers_ ->
@@ -519,6 +521,7 @@ insertAddressLink ( link, address ) (Address.Links links) =
             { link = link
             , forceShow = False
             , node = address
+            , selected = False
             }
             >> Just
         )
@@ -543,6 +546,7 @@ insertEntityLinks neighbors (Entity.Links links) =
                             { link = link
                             , forceShow = False
                             , node = entity
+                            , selected = False
                             }
                         >> Just
                     )
@@ -730,7 +734,8 @@ updateAddressOnLayer id update layer =
                             Dict.insert
                                 entity.id
                                 { entity
-                                    | addresses = Dict.update id (Maybe.map update) entity.addresses
+                                    | addresses =
+                                        Dict.update id (Maybe.map update) entity.addresses
                                 }
                                 entities
 
@@ -1446,3 +1451,41 @@ forceShowEntityLink ( src, tgt ) forceShow layers =
             }
         )
         layers
+
+
+updateAddressLink : Id.LinkId Id.AddressId -> (Link Address -> Link Address) -> IntDict Layer -> IntDict Layer
+updateAddressLink ( src, tgt ) update layers =
+    let
+        updateLink address =
+            case address.links of
+                Address.Links links ->
+                    if Dict.member tgt links then
+                        { address
+                            | links =
+                                Dict.update tgt (Maybe.map update) links
+                                    |> Address.Links
+                        }
+
+                    else
+                        address
+    in
+    updateAddress src updateLink layers
+
+
+updateEntityLink : Id.LinkId Id.EntityId -> (Link Entity -> Link Entity) -> IntDict Layer -> IntDict Layer
+updateEntityLink ( src, tgt ) update layers =
+    let
+        updateLink address =
+            case address.links of
+                Entity.Links links ->
+                    if Dict.member tgt links then
+                        { address
+                            | links =
+                                Dict.update tgt (Maybe.map update) links
+                                    |> Entity.Links
+                        }
+
+                    else
+                        address
+    in
+    updateEntity src updateLink layers

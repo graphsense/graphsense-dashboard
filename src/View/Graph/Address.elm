@@ -33,8 +33,8 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-address : Plugins -> Config -> Graph.Config -> String -> Address -> Svg Msg
-address plugins vc gc selected addr =
+address : Plugins -> Config -> Graph.Config -> Address -> Svg Msg
+address plugins vc gc addr =
     let
         _ =
             Log.log "rednerAddress" addr.id
@@ -61,7 +61,7 @@ address plugins vc gc selected addr =
                 |> Util.toCssColor
 
         isSelected =
-            selected == Id.addressIdToString addr.id
+            addr.selected
 
         rectX =
             String.fromFloat expandHandleWidth
@@ -250,15 +250,15 @@ abuseFlag vc addr =
         |> Maybe.withDefault []
 
 
-links : Config -> Graph.Config -> String -> Float -> Float -> Address -> Svg Msg
-links vc gc selected mn mx addr =
+links : Config -> Graph.Config -> Float -> Float -> Address -> Svg Msg
+links vc gc mn mx addr =
     case addr.links of
         Address.Links lnks ->
             lnks
                 |> Dict.foldr
                     (\_ link svg ->
                         ( "addressLink" ++ (Id.addressLinkIdToString <| Id.initLinkId addr.id link.node.id)
-                        , Svg.lazy7 Link.addressLink vc gc selected mn mx addr link
+                        , Svg.lazy6 Link.addressLink vc gc mn mx addr link
                         )
                             :: svg
                     )

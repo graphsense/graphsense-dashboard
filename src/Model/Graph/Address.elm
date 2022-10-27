@@ -28,6 +28,7 @@ type alias Address =
     , shadowLinks : Links
     , userTag : Maybe Tag.UserTag
     , color : Maybe Color
+    , selected : Bool
     , plugins : Plugin.AddressState
     }
 
