@@ -6,6 +6,7 @@ import Config exposing (config)
 import Dict
 import Effect exposing (perform)
 import Init exposing (init)
+import Init.Locale as Locale
 import Model exposing (Flags, Model, Msg(..))
 import Model.Locale as Locale
 import Plugin
@@ -38,6 +39,7 @@ main =
             { defaultColor = config.theme.graph.defaultColor
             , colorScheme = config.theme.graph.colorScheme
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
+            , locale = Locale.init { locale = "" } |> first
             }
 
         updPlug =
@@ -58,7 +60,7 @@ main =
                     |> performEffect
         , update =
             \msg model ->
-                update updPlug uc msg model
+                update updPlug { uc | locale = model.config.locale } msg model
                     |> performEffect
         , view =
             \model ->

@@ -86,3 +86,8 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.NeighborEntity -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

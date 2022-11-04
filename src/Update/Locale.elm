@@ -65,10 +65,11 @@ update msg model =
                         now =
                             curr
                                 + delta
+                                / duration
                     in
                     { model
                         | mapping =
-                            if now > duration then
+                            if now > 1 then
                                 Settled end
 
                             else

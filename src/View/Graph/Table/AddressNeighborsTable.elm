@@ -124,3 +124,8 @@ reduceLabels labels =
             , output = ""
             }
         |> .output
+
+
+prepareCSV : Api.Data.NeighborAddress -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

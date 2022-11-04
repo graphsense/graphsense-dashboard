@@ -71,3 +71,8 @@ config vc isOutgoing coinCode =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.TxValue -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

@@ -113,6 +113,10 @@ perform plugins key statusbarToken apiKey effect =
                     cmd
                         |> Cmd.map GraphMsg
 
+                Graph.DownloadCSVEffect _ ->
+                    Graph.perform eff
+                        |> Cmd.map GraphMsg
+
         SearchEffect e ->
             handleSearchEffect apiKey (Just plugins) SearchMsg SearchEffect e
 

@@ -5,8 +5,10 @@ import Config.View as View
 import Css
 import Css.Table
 import FontAwesome
+import FontAwesome.Layers
 import Html
 import Html.Attributes as Html
+import Html.Events
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -20,8 +22,21 @@ import Util.View exposing (loadingSpinner, none)
 import View.Locale as Locale
 
 
-table : View.Config -> List (Attribute msg) -> Maybe (Maybe String -> msg) -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
-table vc attributes filterMsg height config tbl =
+type alias Tools msg =
+    { filter : Maybe (Maybe String -> msg)
+    , csv : Maybe msg
+    }
+
+
+noTools : Tools msg
+noTools =
+    { filter = Nothing
+    , csv = Nothing
+    }
+
+
+table : View.Config -> List (Attribute msg) -> Tools msg -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
+table vc attributes tools height config tbl =
     let
         minHeight =
             tbl.data
@@ -67,7 +82,7 @@ table vc attributes filterMsg height config tbl =
                         ]
                 )
                 tbl.filter
-                filterMsg
+                tools.filter
                 |> Maybe.withDefault Util.View.none
              )
                 :: Table.view config tbl.state tbl.filtered
@@ -87,27 +102,50 @@ table vc attributes filterMsg height config tbl =
                         []
                    )
             )
-        , Maybe.map
-            (\fm ->
-                div
-                    [ Css.Table.sidebar vc |> css
-                    , onClick
-                        (fm
-                            (if tbl.filter == Nothing then
-                                Just ""
-
-                             else
-                                Nothing
-                            )
-                        )
-                    ]
-                    [ FontAwesome.icon FontAwesome.search
-                        |> Html.Styled.fromUnstyled
-                    ]
-            )
-            filterMsg
-            |> Maybe.withDefault Util.View.none
+        , [ Maybe.map (filterTool vc tbl) tools.filter
+          , Maybe.map (csvTool vc) tools.csv
+          ]
+            |> List.filterMap identity
+            |> div
+                [ Css.Table.sidebar vc |> css
+                ]
         ]
+
+
+filterTool : View.Config -> T.Table data -> (Maybe String -> msg) -> Html msg
+filterTool vc tbl filterMsg =
+    let
+        isInactive =
+            tbl.filter == Nothing
+    in
+    FontAwesome.icon FontAwesome.search
+        |> Html.Styled.fromUnstyled
+        |> List.singleton
+        |> div
+            [ onClick
+                (filterMsg
+                    (if isInactive then
+                        Just ""
+
+                     else
+                        Nothing
+                    )
+                )
+            , not isInactive |> Css.Table.sidebarIcon vc |> css
+            , Locale.string vc.locale "Filter table" |> title
+            ]
+
+
+csvTool : View.Config -> msg -> Html msg
+csvTool vc msg =
+    FontAwesome.icon FontAwesome.download
+        |> Html.Styled.fromUnstyled
+        |> List.singleton
+        |> div
+            [ onClick msg
+            , Css.Table.sidebarIcon vc False |> css
+            , Locale.string vc.locale "Download table as CSV" |> title
+            ]
 
 
 customizations : View.Config -> Table.Customizations data msg

@@ -166,4 +166,5 @@ type Msg
     | UserClickedShowAddressShadowLinks
     | UserPressesDelete
     | UserClickedTagsFlag EntityId
+    | UserClicksDownloadCSVInTable
     | NoOp

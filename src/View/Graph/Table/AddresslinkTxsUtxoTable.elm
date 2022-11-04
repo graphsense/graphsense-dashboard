@@ -62,3 +62,8 @@ config vc coinCode =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.LinkUtxo -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

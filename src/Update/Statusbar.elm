@@ -116,6 +116,9 @@ messageFromEffect model effect =
         Model.GraphEffect (Graph.CmdEffect _) ->
             Nothing
 
+        Model.GraphEffect (Graph.DownloadCSVEffect _) ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

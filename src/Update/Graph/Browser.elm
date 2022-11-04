@@ -19,6 +19,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Locale as Locale
 import Model.Search as Search
 import Msg.Graph exposing (Msg(..))
 import Msg.Search as Search
@@ -39,6 +40,7 @@ import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
+import View.Locale as Locale
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -2134,3 +2136,119 @@ filterTable filter model =
                 Plugin ->
                     model.type_
     }
+
+
+tableAsCSV : Locale.Model -> Model -> Maybe ( String, String )
+tableAsCSV locale { type_ } =
+    let
+        asCsv prep t title =
+            Update.Graph.Table.asCsv prep t |> pair title |> Just
+
+        loadableAddressToList l =
+            loadableAddress l
+                |> (\{ address, currency } -> [ address, String.toUpper currency ])
+    in
+    case type_ of
+        Address loadable table ->
+            case table of
+                Just (AddressTxsUtxoTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> asCsv AddressTxsUtxoTable.prepareCSV t
+
+                Just (AddressTxsAccountTable t) ->
+                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+
+                Just (AddressTagsTable t) ->
+                    Nothing
+
+                Just (AddressIncomingNeighborsTable t) ->
+                    Debug.todo "" |> asCsv AddressNeighborsTable.prepareCSV t
+
+                Just (AddressOutgoingNeighborsTable t) ->
+                    Debug.todo "" |> asCsv AddressNeighborsTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        Entity loadable table ->
+            case table of
+                Just (EntityAddressesTable t) ->
+                    Debug.todo "" |> asCsv EntityAddressesTable.prepareCSV t
+
+                Just (EntityTxsUtxoTable t) ->
+                    Debug.todo "" |> asCsv AddressTxsUtxoTable.prepareCSV t
+
+                Just (EntityTxsAccountTable t) ->
+                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+
+                Just (EntityTagsTable t) ->
+                    Nothing
+
+                Just (EntityIncomingNeighborsTable t) ->
+                    Debug.todo "" |> asCsv EntityNeighborsTable.prepareCSV t
+
+                Just (EntityOutgoingNeighborsTable t) ->
+                    Debug.todo "" |> asCsv EntityNeighborsTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        TxUtxo loadable table ->
+            case table of
+                Just (TxUtxoInputsTable t) ->
+                    Debug.todo "" |> asCsv TxUtxoTable.prepareCSV t
+
+                Just (TxUtxoOutputsTable t) ->
+                    Debug.todo "" |> asCsv TxUtxoTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        TxAccount _ ->
+            Nothing
+
+        None ->
+            Nothing
+
+        Label label t ->
+            Nothing
+
+        Block loadable table ->
+            case table of
+                Just (BlockTxsUtxoTable t) ->
+                    Debug.todo "" |> asCsv TxsUtxoTable.prepareCSV t
+
+                Just (BlockTxsAccountTable t) ->
+                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        Addresslink src lnk table ->
+            case table of
+                Just (AddresslinkTxsUtxoTable t) ->
+                    Debug.todo "" |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+
+                Just (AddresslinkTxsAccountTable t) ->
+                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        Entitylink src lnk table ->
+            case table of
+                Just (AddresslinkTxsUtxoTable t) ->
+                    Debug.todo "" |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+
+                Just (AddresslinkTxsAccountTable t) ->
+                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        UserTags t ->
+            Debug.todo "" |> asCsv UserAddressTagsTable.prepareCSV t
+
+        Plugin ->
+            Nothing

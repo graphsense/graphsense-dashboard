@@ -54,6 +54,11 @@ import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
 
 
+cm : Maybe Msg
+cm =
+    Just UserClicksDownloadCSVInTable
+
+
 frame : View.Config -> Bool -> List (Html msg) -> Html msg
 frame vc visible =
     div
@@ -187,12 +192,12 @@ browser plugins states vc gc model =
 
             Browser.Label label table ->
                 table
-                    |> table_ vc model.height (LabelAddressTagsTable.config vc)
+                    |> table_ vc Nothing model.height (LabelAddressTagsTable.config vc)
                     |> List.singleton
 
             Browser.UserTags table ->
                 table
-                    |> table_ vc model.height (UserAddressTagsTable.config vc gc)
+                    |> table_ vc cm model.height (UserAddressTagsTable.config vc gc)
                     |> List.singleton
 
             Browser.Plugin ->
@@ -863,30 +868,35 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
 
                 Loading curr _ ->
                     ( curr, Nothing )
+
+        tt =
+            table_ vc cm height
     in
     case table of
         AddressTxsUtxoTable t ->
-            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+            tt (AddressTxsUtxoTable.config vc coinCode) t
 
         AddressTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
+            table_ vc Nothing height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
+            tt (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
 
         AddressOutgoingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
+            tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
 
-table_ : View.Config -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
-table_ vc =
+table_ : View.Config -> Maybe Msg -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
+table_ vc csvMsg =
     Table.table vc
         [ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
         ]
-        (Just UserInputsFilterTable)
+        { filter = Just UserInputsFilterTable
+        , csv = csvMsg
+        }
 
 
 decodeScrollPos : JD.Decoder ScrollPos
@@ -917,25 +927,28 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
 
                 Loading curr _ ->
                     ( curr, Nothing, Nothing )
+
+        tt =
+            table_ vc cm height
     in
     case table of
         EntityAddressesTable t ->
-            table_ vc height (EntityAddressesTable.config vc coinCode entityId entityHasAddress) t
+            tt (EntityAddressesTable.config vc coinCode entityId entityHasAddress) t
 
         EntityTxsUtxoTable t ->
-            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+            tt (AddressTxsUtxoTable.config vc coinCode) t
 
         EntityTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
+            table_ vc Nothing height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
+            tt (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
 
         EntityOutgoingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+            tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
 
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
@@ -951,10 +964,10 @@ browseBlockTable vc gc height block table =
     in
     case table of
         BlockTxsUtxoTable t ->
-            table_ vc height (TxsUtxoTable.config vc coinCode) t
+            table_ vc cm height (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
@@ -970,10 +983,10 @@ browseTxUtxoTable vc gc height tx table =
     in
     case table of
         TxUtxoInputsTable t ->
-            table_ vc height (TxUtxoTable.config vc False coinCode) t
+            table_ vc cm height (TxUtxoTable.config vc False coinCode) t
 
         TxUtxoOutputsTable t ->
-            table_ vc height (TxUtxoTable.config vc True coinCode) t
+            table_ vc cm height (TxUtxoTable.config vc True coinCode) t
 
 
 browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
@@ -1255,7 +1268,7 @@ browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String ->
 browseAddresslinkTable vc gc height coinCode table =
     case table of
         AddresslinkTxsUtxoTable t ->
-            table_ vc height (AddresslinkTxsUtxoTable.config vc coinCode) t
+            table_ vc cm height (AddresslinkTxsUtxoTable.config vc coinCode) t
 
         AddresslinkTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t

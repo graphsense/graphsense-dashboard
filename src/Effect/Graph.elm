@@ -3,6 +3,7 @@ module Effect.Graph exposing (..)
 import Browser.Dom
 import Effect.Api as Api
 import Effect.Search as Search
+import File.Download
 import IntDict exposing (IntDict)
 import Json.Encode
 import Model.Address as A
@@ -27,6 +28,7 @@ type Effect
     | TagSearchEffect Search.Effect
     | ApiEffect (Api.Effect Msg)
     | CmdEffect (Cmd Msg)
+    | DownloadCSVEffect ( String, String )
 
 
 perform : Effect -> Cmd Msg
@@ -65,3 +67,6 @@ perform eff =
 
         ApiEffect _ ->
             Cmd.none
+
+        DownloadCSVEffect ( name, data ) ->
+            File.Download.string (name ++ ".csv") "text/csv" data

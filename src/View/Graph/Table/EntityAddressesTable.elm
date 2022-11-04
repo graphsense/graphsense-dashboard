@@ -66,3 +66,8 @@ config vc coinCode entityId entityHasAddress =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.Address -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

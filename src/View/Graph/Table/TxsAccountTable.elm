@@ -65,3 +65,8 @@ config vc coinCode =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.TxAccount -> List ( String, String )
+prepareCSV row =
+    Debug.todo "prepareCSV"

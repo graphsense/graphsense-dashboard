@@ -3,6 +3,7 @@ module View.Graph.Table.AddressTxsUtxoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css.View
+import Csv.Encode
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -13,6 +14,7 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -61,3 +63,15 @@ config vc coinCode =
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.AddressTxUtxo -> List ( String, String )
+prepareCSV row =
+    [ ( "coinbase", Util.Csv.bool row.coinbase )
+    , ( "currency", Util.Csv.string row.currency )
+    , ( "height", Util.Csv.int row.height )
+    , ( "timestamp", Util.Csv.int row.timestamp )
+    , ( "txHash", Util.Csv.string row.txHash )
+    , ( "txType", Util.Csv.string row.txType )
+    ]
+        ++ Util.Csv.values "value" row.value
