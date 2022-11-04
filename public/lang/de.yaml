@@ -26,13 +26,27 @@ deposits: Einzahlungen
 neighbors: Nachbarn
 receiving entities: abbuchende Entitäten
 sending entities: einzahlende Entitäten
+receiving entity: abbuchende Entität
+sending entity: einzahlende Entität
 receiving addresses: abbuchende Adressen
+receiving address: abbuchende Adresse
 sending addresses: einzahlende Adressen
+sending address: einzahlende Adresse
 first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
+"total received {0}": "Eingänge {0}" # used in csv columsn
 final balance: Bilanz
+"final balance {0}": "Bilanz {0}" # used in csv columsn
+entity balance: Bilanz Entität
+"entity balance {0}": "Bilanz Entität {0}" # used in csv columsn
+address balance: Bilanz Adresse
+"address balance {0}": "Bilanz Adresse {0}" # used in csv columsn
+entity received: Eingänge Entität
+"entity received {0}": "Eingänge Entität {0}" # used in csv columsn
+address received: Eingänge Adresse
+"address received {0}": "Eingänge Adresse {0}" # used in csv columsn
 category: Kategorie
 categories: Kategorien
 abuse: Missbrauch
@@ -46,6 +60,8 @@ no. inputs: Anz. Eingehende
 no. outputs: Anz. Ausgehende
 total input: Gesamt Eingang
 total output: Gesamt Ausgang
+"total input {0}": "Gesamt Eingang {0}"
+"total output {0}": "Gesamt Ausgang {0}"
 year: Jahr
 years: Jahre
 month: Monat
@@ -62,6 +78,7 @@ addresses tagged: beschlagwortete Adressen
 source: Quelle
 target: Ziel
 value: Wert
+"value {0}": "Wert {0}" # used in csv columns
 timestamp: Zeitstempel
 outgoing address: ausgehende Adresse
 incoming address: eingehende Adresse
@@ -160,6 +177,7 @@ saving to file: speichern in Datei
 go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
+"estimated value {0}": "geschätzter Wert {0}" # used in csv columns
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
@@ -228,6 +246,17 @@ between entities: zwischen Entitäten
 between addresses: zwischen Adressen
 show entity link: Zeige Verbindung der Entitäten
 hide entity link: Verberge Verbindung der Entitäten
-"address transactions of {0} {1}": "Transaktionen der Adresse {0} ({1})" # {1} -> currency
 filter table: Tabelle filtern
 download table as CSV: Tabelle als CSV herunterladen
+"address transactions of {0} ({1})": "Transaktionen der Adresse {0} ({1})" # {1} -> currency
+"incoming neighbors of address {0} ({1})": "Eingehende Nachbarn der Adresse {0} ({1})"
+"outgoing neighbors of address {0} ({1})": "Ausgehende Nachbarn der Adresse {0} ({1})"
+"incoming neighbors of entity {0} ({1})": "Eingehende Nachbarn der Entität {0} ({1})"
+"outgoing neighbors of entity {0} ({1})": "Ausgehende Nachbarn der Entität {0} ({1})"
+"addresses of entity {0} ({1})": "Adressen der Entität {0} ({1})"
+"user address tags": "Benutzerdefinierte Address-Schlagwörter"
+"transactions of block {0} ({1})": "Transaktionen des Blocks {0} ({1})"
+"transactions between entities {0} and {1} ({2})": "Transaktionen zwischen Entitäten {0} und {1} ({2})"
+"transactions between addresses {0} and {1} ({2})": "Transaktionen zwischen Adressen {0} und {1} ({2})"
+"Incoming values of transaction {0} ({1})": "Eingangswerte der Transaktion {0} ({1})"
+"Outgoing values of transaction {0} ({1})": "Ausgangswerte der Transaktion {0} ({1})"

@@ -31,6 +31,26 @@ filter f a =
         || String.contains f a.txHash
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleValue : String
+titleValue =
+    "Value"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
 config vc coinCode =
     Table.customConfig
@@ -38,7 +58,7 @@ config vc coinCode =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Transaction"
+                titleTx
                 .txHash
                 (\data ->
                     Util.View.truncate vc.theme.table.urlMaxLength data.txHash
@@ -57,21 +77,19 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode "Value" .value
-            , T.intColumn vc "Height" .height
-            , T.timestampColumn vc "Timestamp" .timestamp
+            , T.valueColumn vc coinCode titleValue .value
+            , T.intColumn vc titleHeight .height
+            , T.timestampColumn vc titleTimestamp .timestamp
             ]
         , customizations = customizations vc
         }
 
 
-prepareCSV : Api.Data.AddressTxUtxo -> List ( String, String )
+prepareCSV : Api.Data.AddressTxUtxo -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( "coinbase", Util.Csv.bool row.coinbase )
-    , ( "currency", Util.Csv.string row.currency )
-    , ( "height", Util.Csv.int row.height )
-    , ( "timestamp", Util.Csv.int row.timestamp )
-    , ( "txHash", Util.Csv.string row.txHash )
-    , ( "txType", Util.Csv.string row.txType )
+    [ ( ( titleTx, [] ), Util.Csv.string row.txHash )
     ]
-        ++ Util.Csv.values "value" row.value
+        ++ Util.Csv.values (Util.Csv.a0 titleValue) row.value
+        ++ [ ( ( titleHeight, [] ), Util.Csv.int row.height )
+           , ( ( titleTimestamp, [] ), Util.Csv.int row.timestamp )
+           ]

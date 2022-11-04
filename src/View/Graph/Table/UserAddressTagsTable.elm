@@ -16,6 +16,8 @@ import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
+import Util.Csv
+import Util.Graph
 import Util.View exposing (truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -33,18 +35,53 @@ filter f a =
         || String.contains f a.label
 
 
+titleAddress : String
+titleAddress =
+    "Address"
+
+
+titleCurrency : String
+titleCurrency =
+    "Currency"
+
+
+titleLabel : String
+titleLabel =
+    "Label"
+
+
+titleDefinesEntity : String
+titleDefinesEntity =
+    "Defines entity"
+
+
+titleSource : String
+titleSource =
+    "Source"
+
+
+titleCategory : String
+titleCategory =
+    "Category"
+
+
+titleAbuse : String
+titleAbuse =
+    "Abuse"
+
+
 config : View.Config -> Graph.Config -> Table.Config Tag.UserTag Msg
 config vc gc =
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.stringColumn vc "Address" .address
-            , T.stringColumn vc "Currency" (.currency >> String.toUpper)
-            , T.stringColumn vc "Label" .label
-            , T.tickColumn vc "Defines entity" .isClusterDefiner
+            [ T.stringColumn vc titleAddress .address
+            , T.stringColumn vc titleCurrency (.currency >> String.toUpper)
+            , T.stringColumn vc titleLabel .label
+            , T.tickColumn vc titleDefinesEntity .isClusterDefiner
             , T.htmlColumn vc
-                "Source"
+                titleSource
                 .source
                 (\data ->
                     let
@@ -71,8 +108,8 @@ config vc gc =
                         text truncated
                     ]
                 )
-            , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
-            , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
+            , T.stringColumn vc titleCategory (.category >> Util.Graph.getCategory gc >> Maybe.withDefault "")
+            , T.stringColumn vc titleAbuse (.abuse >> Util.Graph.getAbuse gc >> Maybe.withDefault "")
             ]
         , customizations =
             customizations vc
@@ -103,6 +140,17 @@ config vc gc =
         }
 
 
-prepareCSV : Tag.UserTag -> List ( String, String )
-prepareCSV row =
-    Debug.todo "prepareCSV"
+n s =
+    ( s, [] )
+
+
+prepareCSV : Graph.Config -> Tag.UserTag -> List ( ( String, List String ), String )
+prepareCSV gc row =
+    [ ( n titleAddress, Util.Csv.string row.address )
+    , ( n titleCurrency, Util.Csv.string <| String.toUpper row.currency )
+    , ( n titleLabel, Util.Csv.string row.label )
+    , ( n titleDefinesEntity, Util.Csv.bool row.isClusterDefiner )
+    , ( n titleSource, Util.Csv.string row.source )
+    , ( n titleCategory, row.category |> Util.Graph.getCategory gc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n titleAbuse, row.abuse |> Util.Graph.getAbuse gc |> Maybe.withDefault "" |> Util.Csv.string )
+    ]

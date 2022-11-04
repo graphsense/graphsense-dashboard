@@ -18,6 +18,7 @@ import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
+import Util.Graph
 import Util.View exposing (none, truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -101,15 +102,13 @@ config vc gc bestAddressTag entityId entityHasAddress =
             , T.stringColumn vc
                 "Category"
                 (.category
-                    >> Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.entityConcepts)
-                    >> Maybe.map .label
+                    >> Util.Graph.getCategory gc
                     >> Maybe.withDefault ""
                 )
             , T.stringColumn vc
                 "Abuse"
                 (.abuse
-                    >> Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
-                    >> Maybe.map .label
+                    >> Util.Graph.getAbuse gc
                     >> Maybe.withDefault ""
                 )
             , T.intColumn vc

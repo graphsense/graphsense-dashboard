@@ -13,6 +13,7 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -31,6 +32,31 @@ filter f a =
         || String.contains f a.toAddress
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
+titleSendingAddress : String
+titleSendingAddress =
+    "Sending address"
+
+
+titleReceivingAddress : String
+titleReceivingAddress =
+    "Receiving address"
+
+
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
 config vc coinCode =
     Table.customConfig
@@ -38,7 +64,7 @@ config vc coinCode =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Transaction"
+                titleTx
                 .txHash
                 (\data ->
                     Util.View.truncate vc.theme.table.urlMaxLength data.txHash
@@ -58,15 +84,26 @@ config vc coinCode =
                         |> List.singleton
                 )
             , T.valueColumn vc coinCode "Value" .value
-            , T.intColumn vc "Height" .height
-            , T.timestampColumn vc "Timestamp" .timestamp
-            , T.stringColumn vc "Sending address" (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
-            , T.stringColumn vc "Receiving address" (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+            , T.intColumn vc titleHeight .height
+            , T.timestampColumn vc titleTimestamp .timestamp
+            , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+            , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
             ]
         , customizations = customizations vc
         }
 
 
-prepareCSV : Api.Data.TxAccount -> List ( String, String )
+n s =
+    ( s, [] )
+
+
+prepareCSV : Api.Data.TxAccount -> List ( ( String, List String ), String )
 prepareCSV row =
-    Debug.todo "prepareCSV"
+    [ ( n titleTx, Util.Csv.string row.txHash )
+    ]
+        ++ Util.Csv.values "Value {0}" row.value
+        ++ [ ( n titleHeight, Util.Csv.int row.height )
+           , ( n titleTimestamp, Util.Csv.int row.timestamp )
+           , ( n titleSendingAddress, Util.Csv.string row.fromAddress )
+           , ( n titleReceivingAddress, Util.Csv.string row.toAddress )
+           ]

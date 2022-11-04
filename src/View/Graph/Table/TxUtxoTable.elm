@@ -13,6 +13,7 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.Csv
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
@@ -39,6 +40,16 @@ filter f a =
     List.any (String.contains f) a.address
 
 
+titleValue : String
+titleValue =
+    "Value"
+
+
+joinAddresses : Api.Data.TxValue -> String
+joinAddresses =
+    .address >> String.join ","
+
+
 config : View.Config -> Bool -> String -> Table.Config Api.Data.TxValue Msg
 config vc isOutgoing coinCode =
     Table.customConfig
@@ -47,7 +58,7 @@ config vc isOutgoing coinCode =
         , columns =
             [ T.htmlColumn vc
                 (columnTitleFromDirection isOutgoing)
-                (.address >> String.join ",")
+                joinAddresses
                 (\data ->
                     [ case data.address of
                         one :: [] ->
@@ -63,16 +74,18 @@ config vc isOutgoing coinCode =
                                 ]
 
                         _ ->
-                            String.join "," data.address
+                            joinAddresses data
                                 |> text
                     ]
                 )
-            , T.valueColumn vc coinCode "Value" .value
+            , T.valueColumn vc coinCode titleValue .value
             ]
         , customizations = customizations vc
         }
 
 
-prepareCSV : Api.Data.TxValue -> List ( String, String )
-prepareCSV row =
-    Debug.todo "prepareCSV"
+prepareCSV : Bool -> Api.Data.TxValue -> List ( ( String, List String ), String )
+prepareCSV isOutgoing row =
+    [ ( ( columnTitleFromDirection isOutgoing, [] ), Util.Csv.string <| joinAddresses row )
+    ]
+        ++ Util.Csv.values (Util.Csv.a0 titleValue) row.value

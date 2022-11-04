@@ -14,6 +14,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Tx as T
 import Time
 
 
@@ -116,6 +117,20 @@ loadableBlock l =
         Loaded a ->
             { currency = a.currency
             , block = a.height
+            }
+
+
+loadableTx : Loadable String Api.Data.TxUtxo -> T.Tx
+loadableTx l =
+    case l of
+        Loading curr id ->
+            { currency = curr
+            , txHash = id
+            }
+
+        Loaded a ->
+            { currency = a.currency
+            , txHash = a.txHash
             }
 
 

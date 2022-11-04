@@ -1988,7 +1988,7 @@ updateByMsg plugins uc msg model =
 
         UserClicksDownloadCSVInTable ->
             ( model
-            , Browser.tableAsCSV uc.locale model.browser
+            , Browser.tableAsCSV uc.locale model.config model.browser
                 |> Maybe.map (DownloadCSVEffect >> List.singleton)
                 |> Maybe.withDefault []
             )

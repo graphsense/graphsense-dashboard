@@ -38,6 +38,7 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
+import Util.Graph
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -319,12 +320,7 @@ browseValue vc value =
                                 ]
                                 [ text
                                     (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                        tag.category
-                                            |> Maybe.andThen
-                                                (\cat ->
-                                                    List.Extra.find (.id >> (==) cat) gc.entityConcepts
-                                                )
-                                            |> Maybe.map .label
+                                        Util.Graph.getCategory gc tag.category
                                             |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
                                      else

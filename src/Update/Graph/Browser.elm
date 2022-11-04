@@ -1,6 +1,7 @@
 module Update.Graph.Browser exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Effect exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
@@ -2138,15 +2139,30 @@ filterTable filter model =
     }
 
 
-tableAsCSV : Locale.Model -> Model -> Maybe ( String, String )
-tableAsCSV locale { type_ } =
+tableAsCSV : Locale.Model -> Graph.Config -> Model -> Maybe ( String, String )
+tableAsCSV locale gc { type_ } =
     let
+        translate =
+            List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
+
         asCsv prep t title =
-            Update.Graph.Table.asCsv prep t |> pair title |> Just
+            Update.Graph.Table.asCsv (prep >> translate) t |> pair title |> Just
 
         loadableAddressToList l =
             loadableAddress l
                 |> (\{ address, currency } -> [ address, String.toUpper currency ])
+
+        loadableEntityToList l =
+            loadableEntity l
+                |> (\{ entity, currency } -> [ String.fromInt entity, String.toUpper currency ])
+
+        loadableBlockToList l =
+            loadableBlock l
+                |> (\{ block, currency } -> [ String.fromInt block, String.toUpper currency ])
+
+        loadableTxToList t =
+            loadableTx t
+                |> (\{ txHash, currency } -> [ txHash, String.toUpper currency ])
     in
     case type_ of
         Address loadable table ->
@@ -2157,16 +2173,22 @@ tableAsCSV locale { type_ } =
                         |> asCsv AddressTxsUtxoTable.prepareCSV t
 
                 Just (AddressTxsAccountTable t) ->
-                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
 
                 Just (AddressTagsTable t) ->
                     Nothing
 
                 Just (AddressIncomingNeighborsTable t) ->
-                    Debug.todo "" |> asCsv AddressNeighborsTable.prepareCSV t
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Incoming neighbors of address {0} ({1})"
+                        |> asCsv (AddressNeighborsTable.prepareCSV False) t
 
                 Just (AddressOutgoingNeighborsTable t) ->
-                    Debug.todo "" |> asCsv AddressNeighborsTable.prepareCSV t
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
+                        |> asCsv (AddressNeighborsTable.prepareCSV True) t
 
                 Nothing ->
                     Nothing
@@ -2174,22 +2196,32 @@ tableAsCSV locale { type_ } =
         Entity loadable table ->
             case table of
                 Just (EntityAddressesTable t) ->
-                    Debug.todo "" |> asCsv EntityAddressesTable.prepareCSV t
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "addresses of entity {0} ({1})"
+                        |> asCsv EntityAddressesTable.prepareCSV t
 
                 Just (EntityTxsUtxoTable t) ->
-                    Debug.todo "" |> asCsv AddressTxsUtxoTable.prepareCSV t
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
+                        |> asCsv AddressTxsUtxoTable.prepareCSV t
 
                 Just (EntityTxsAccountTable t) ->
-                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
 
                 Just (EntityTagsTable t) ->
                     Nothing
 
                 Just (EntityIncomingNeighborsTable t) ->
-                    Debug.todo "" |> asCsv EntityNeighborsTable.prepareCSV t
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Incoming neighbors of entity {0} ({1})"
+                        |> asCsv (EntityNeighborsTable.prepareCSV False) t
 
                 Just (EntityOutgoingNeighborsTable t) ->
-                    Debug.todo "" |> asCsv EntityNeighborsTable.prepareCSV t
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
+                        |> asCsv (EntityNeighborsTable.prepareCSV True) t
 
                 Nothing ->
                     Nothing
@@ -2197,10 +2229,14 @@ tableAsCSV locale { type_ } =
         TxUtxo loadable table ->
             case table of
                 Just (TxUtxoInputsTable t) ->
-                    Debug.todo "" |> asCsv TxUtxoTable.prepareCSV t
+                    loadableTxToList loadable
+                        |> Locale.interpolated locale "Incoming values of transaction {0} ({1})"
+                        |> asCsv (TxUtxoTable.prepareCSV False) t
 
                 Just (TxUtxoOutputsTable t) ->
-                    Debug.todo "" |> asCsv TxUtxoTable.prepareCSV t
+                    loadableTxToList loadable
+                        |> Locale.interpolated locale "Outgoing values of transaction {0} ({1})"
+                        |> asCsv (TxUtxoTable.prepareCSV True) t
 
                 Nothing ->
                     Nothing
@@ -2217,38 +2253,62 @@ tableAsCSV locale { type_ } =
         Block loadable table ->
             case table of
                 Just (BlockTxsUtxoTable t) ->
-                    Debug.todo "" |> asCsv TxsUtxoTable.prepareCSV t
+                    loadableBlockToList loadable
+                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> asCsv TxsUtxoTable.prepareCSV t
 
                 Just (BlockTxsAccountTable t) ->
-                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+                    loadableBlockToList loadable
+                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
 
                 Nothing ->
                     Nothing
 
         Addresslink src lnk table ->
+            let
+                title =
+                    [ src.address.address
+                    , lnk.node.address.address
+                    , String.toUpper src.address.currency
+                    ]
+                        |> Locale.interpolated locale "Transactions between addresses {0} and {1} ({2})"
+            in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    Debug.todo "" |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+                    title
+                        |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
 
                 Just (AddresslinkTxsAccountTable t) ->
-                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+                    title
+                        |> asCsv TxsAccountTable.prepareCSV t
 
                 Nothing ->
                     Nothing
 
         Entitylink src lnk table ->
+            let
+                title =
+                    [ String.fromInt src.entity.entity
+                    , String.fromInt lnk.node.entity.entity
+                    , String.toUpper src.entity.currency
+                    ]
+                        |> Locale.interpolated locale "Transactions between entities {0} and {1} ({2})"
+            in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    Debug.todo "" |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+                    title |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
 
                 Just (AddresslinkTxsAccountTable t) ->
-                    Debug.todo "" |> asCsv TxsAccountTable.prepareCSV t
+                    title
+                        |> asCsv TxsAccountTable.prepareCSV t
 
                 Nothing ->
                     Nothing
 
         UserTags t ->
-            Debug.todo "" |> asCsv UserAddressTagsTable.prepareCSV t
+            Locale.string locale "user address tags"
+                |> asCsv (UserAddressTagsTable.prepareCSV gc) t
 
         Plugin ->
             Nothing
