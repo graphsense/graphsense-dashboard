@@ -86,6 +86,6 @@ config vc isOutgoing coinCode =
 
 prepareCSV : Bool -> Api.Data.TxValue -> List ( ( String, List String ), String )
 prepareCSV isOutgoing row =
-    [ ( ( columnTitleFromDirection isOutgoing, [] ), Util.Csv.string <| joinAddresses row )
+    [ ( ( "addresses", [] ), Util.Csv.string <| joinAddresses row )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleValue) row.value
+        ++ Util.Csv.values "value" row.value

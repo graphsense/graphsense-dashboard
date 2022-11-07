@@ -99,11 +99,11 @@ n s =
 
 prepareCSV : Api.Data.TxAccount -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( n titleTx, Util.Csv.string row.txHash )
+    [ ( n "tx_hash", Util.Csv.string row.txHash )
     ]
-        ++ Util.Csv.values "Value {0}" row.value
-        ++ [ ( n titleHeight, Util.Csv.int row.height )
-           , ( n titleTimestamp, Util.Csv.int row.timestamp )
-           , ( n titleSendingAddress, Util.Csv.string row.fromAddress )
-           , ( n titleReceivingAddress, Util.Csv.string row.toAddress )
+        ++ Util.Csv.values "value" row.value
+        ++ [ ( n "height", Util.Csv.int row.height )
+           , ( n "timestamp", Util.Csv.int row.timestamp )
+           , ( n "sending_address", Util.Csv.string row.fromAddress )
+           , ( n "receiving_address", Util.Csv.string row.toAddress )
            ]
