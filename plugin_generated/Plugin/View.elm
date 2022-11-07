@@ -18,7 +18,7 @@ type alias Plugins =
     }
 
 
-addressFlags : Plugins -> Plugin.Model.AddressState -> View.Config -> List (Svg Graph.Msg)
+addressFlags : Plugins -> Plugin.Model.AddressState -> View.Config -> (Float, List (Svg Graph.Msg))
 addressFlags plugins addressState vc =
     [ 
     ]
@@ -28,11 +28,10 @@ addressFlags plugins addressState vc =
                 ( accWidth + width, accFlags ++ flags )
             )
             ( 0, [] )
-        |> second
-        |> List.map (Svg.map Graph.PluginMsg)
+        |> mapSecond (List.map (Svg.map Graph.PluginMsg))
 
 
-entityFlags : Plugins -> Plugin.Model.EntityState -> View.Config -> List (Svg Graph.Msg)
+entityFlags : Plugins -> Plugin.Model.EntityState -> View.Config -> (Float, List (Svg Graph.Msg))
 entityFlags plugins entityState vc =
     [ 
     ]
@@ -42,8 +41,7 @@ entityFlags plugins entityState vc =
                 ( accWidth + width, accFlags ++ flags )
             )
             ( 0, [] )
-        |> second
-        |> List.map (Svg.map Graph.PluginMsg)
+        |> mapSecond (List.map (Svg.map Graph.PluginMsg))
 
 
 addressContextMenu : Plugins -> Plugin.Model.ModelState -> View.Config -> Address -> List (Html Graph.Msg)
