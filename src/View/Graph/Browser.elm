@@ -1,4 +1,4 @@
-module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, ifLoaded, propertyBox, rule)
+module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, propertyBox, rule)
 
 --import Plugin.View.Graph.Address
 --import Plugin.View.Graph.Browser
@@ -38,6 +38,7 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
+import Util.Graph
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -54,146 +55,155 @@ import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
 
 
+cm : Maybe Msg
+cm =
+    Just UserClicksDownloadCSVInTable
+
+
+frame : View.Config -> Bool -> List (Html msg) -> Html msg
+frame vc visible =
+    div
+        [ Css.frame vc visible |> css
+        ]
+        >> List.singleton
+        >> div [ Css.root vc |> css ]
+
+
 browser : Plugins -> ModelState -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
 browser plugins states vc gc model =
-    div
-        [ Css.root vc |> css
-        ]
-        [ div
-            [ Css.frame vc model.visible |> css
-            ]
-            (case model.type_ of
-                Browser.None ->
-                    []
+    frame vc
+        model.visible
+        (case model.type_ of
+            Browser.None ->
+                []
 
-                Browser.Address loadable table ->
-                    browseAddress plugins states vc model.now loadable
-                        :: (table
-                                |> Maybe.map
-                                    (\t ->
-                                        let
-                                            neighborLayerHasAddress aid isOutgoing address =
-                                                Layer.getAddress
-                                                    (Id.initAddressId
-                                                        { currency = address.currency
-                                                        , id = address.address
-                                                        , layer =
-                                                            Id.layer aid
-                                                                + (if isOutgoing then
-                                                                    1
+            Browser.Address loadable table ->
+                browseAddress plugins states vc model.now loadable
+                    :: (table
+                            |> Maybe.map
+                                (\t ->
+                                    let
+                                        neighborLayerHasAddress aid isOutgoing address =
+                                            Layer.getAddress
+                                                (Id.initAddressId
+                                                    { currency = address.currency
+                                                    , id = address.address
+                                                    , layer =
+                                                        Id.layer aid
+                                                            + (if isOutgoing then
+                                                                1
 
-                                                                   else
-                                                                    -1
-                                                                  )
-                                                        }
-                                                    )
-                                                    model.layers
-                                                    |> Maybe.Extra.isJust
-                                        in
-                                        browseAddressTable vc gc model.height neighborLayerHasAddress loadable t
-                                    )
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+                                                               else
+                                                                -1
+                                                              )
+                                                    }
+                                                )
+                                                model.layers
+                                                |> Maybe.Extra.isJust
+                                    in
+                                    browseAddressTable vc gc model.height neighborLayerHasAddress loadable t
+                                )
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.Entity loadable table ->
-                    browseEntity plugins states vc gc model.now loadable
-                        :: (table
-                                |> Maybe.map
-                                    (\t ->
-                                        let
-                                            entityHasAddress entityId address =
-                                                Layer.getAddress
-                                                    (Id.initAddressId
-                                                        { currency = address.currency
-                                                        , id = address.address
-                                                        , layer = Id.layer entityId
-                                                        }
-                                                    )
-                                                    model.layers
-                                                    |> Maybe.Extra.isJust
+            Browser.Entity loadable table ->
+                browseEntity plugins states vc gc model.now loadable
+                    :: (table
+                            |> Maybe.map
+                                (\t ->
+                                    let
+                                        entityHasAddress entityId address =
+                                            Layer.getAddress
+                                                (Id.initAddressId
+                                                    { currency = address.currency
+                                                    , id = address.address
+                                                    , layer = Id.layer entityId
+                                                    }
+                                                )
+                                                model.layers
+                                                |> Maybe.Extra.isJust
 
-                                            neighborLayerHasEntity eid isOutgoing entity =
-                                                Layer.getEntity
-                                                    (Id.initEntityId
-                                                        { currency = entity.currency
-                                                        , id = entity.entity
-                                                        , layer =
-                                                            Id.layer eid
-                                                                + (if isOutgoing then
-                                                                    1
+                                        neighborLayerHasEntity eid isOutgoing entity =
+                                            Layer.getEntity
+                                                (Id.initEntityId
+                                                    { currency = entity.currency
+                                                    , id = entity.entity
+                                                    , layer =
+                                                        Id.layer eid
+                                                            + (if isOutgoing then
+                                                                1
 
-                                                                   else
-                                                                    -1
-                                                                  )
-                                                        }
-                                                    )
-                                                    model.layers
-                                                    |> Maybe.Extra.isJust
-                                        in
-                                        browseEntityTable vc gc model.height entityHasAddress neighborLayerHasEntity loadable t
-                                    )
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+                                                               else
+                                                                -1
+                                                              )
+                                                    }
+                                                )
+                                                model.layers
+                                                |> Maybe.Extra.isJust
+                                    in
+                                    browseEntityTable vc gc model.height entityHasAddress neighborLayerHasEntity loadable t
+                                )
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.Block loadable table ->
-                    browseBlock plugins states vc gc model.now loadable
-                        :: (table
-                                |> Maybe.map (browseBlockTable vc gc model.height loadable)
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+            Browser.Block loadable table ->
+                browseBlock plugins states vc gc model.now loadable
+                    :: (table
+                            |> Maybe.map (browseBlockTable vc gc model.height loadable)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.TxUtxo loadable table ->
-                    browseTxUtxo plugins states vc gc model.now loadable
-                        :: (table
-                                |> Maybe.map (browseTxUtxoTable vc gc model.height loadable)
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+            Browser.TxUtxo loadable table ->
+                browseTxUtxo plugins states vc gc model.now loadable
+                    :: (table
+                            |> Maybe.map (browseTxUtxoTable vc gc model.height loadable)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.TxAccount loadable ->
-                    [ browseTxAccount plugins states vc gc model.now loadable ]
+            Browser.TxAccount loadable ->
+                [ browseTxAccount plugins states vc gc model.now loadable ]
 
-                Browser.Addresslink source link table ->
-                    let
-                        currency =
-                            Id.currency source.id
-                    in
-                    browseAddresslink plugins states vc source link
-                        :: (table
-                                |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+            Browser.Addresslink source link table ->
+                let
+                    currency =
+                        Id.currency source.id
+                in
+                browseAddresslink plugins states vc source link
+                    :: (table
+                            |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.Entitylink source link table ->
-                    let
-                        currency =
-                            Id.currency source.id
-                    in
-                    browseEntitylink plugins states vc source link
-                        :: (table
-                                |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
+            Browser.Entitylink source link table ->
+                let
+                    currency =
+                        Id.currency source.id
+                in
+                browseEntitylink plugins states vc source link
+                    :: (table
+                            |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
-                Browser.Label label table ->
-                    table
-                        |> table_ vc model.height (LabelAddressTagsTable.config vc)
-                        |> List.singleton
+            Browser.Label label table ->
+                table
+                    |> table_ vc Nothing model.height (LabelAddressTagsTable.config vc)
+                    |> List.singleton
 
-                Browser.UserTags table ->
-                    table
-                        |> table_ vc model.height (UserAddressTagsTable.config vc gc)
-                        |> List.singleton
+            Browser.UserTags table ->
+                table
+                    |> table_ vc cm model.height (UserAddressTagsTable.config vc gc)
+                    |> List.singleton
 
-                Browser.Plugin ->
-                    browsePlugin plugins vc states
-            )
-        ]
+            Browser.Plugin ->
+                browsePlugin plugins vc states
+        )
 
 
 propertyBox : View.Config -> List (Html msg) -> Html msg
@@ -310,12 +320,7 @@ browseValue vc value =
                                 ]
                                 [ text
                                     (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                        tag.category
-                                            |> Maybe.andThen
-                                                (\cat ->
-                                                    List.Extra.find (.id >> (==) cat) gc.entityConcepts
-                                                )
-                                            |> Maybe.map .label
+                                        Util.Graph.getCategory gc tag.category
                                             |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
                                      else
@@ -859,30 +864,35 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
 
                 Loading curr _ ->
                     ( curr, Nothing )
+
+        tt =
+            table_ vc cm height
     in
     case table of
         AddressTxsUtxoTable t ->
-            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+            tt (AddressTxsUtxoTable.config vc coinCode) t
 
         AddressTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
+            table_ vc Nothing height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
+            tt (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
 
         AddressOutgoingNeighborsTable t ->
-            table_ vc height (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
+            tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
 
-table_ : View.Config -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
-table_ vc =
+table_ : View.Config -> Maybe Msg -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
+table_ vc csvMsg =
     Table.table vc
         [ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
         ]
-        (Just UserInputsFilterTable)
+        { filter = Just UserInputsFilterTable
+        , csv = csvMsg
+        }
 
 
 decodeScrollPos : JD.Decoder ScrollPos
@@ -913,25 +923,28 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
 
                 Loading curr _ ->
                     ( curr, Nothing, Nothing )
+
+        tt =
+            table_ vc cm height
     in
     case table of
         EntityAddressesTable t ->
-            table_ vc height (EntityAddressesTable.config vc coinCode entityId entityHasAddress) t
+            tt (EntityAddressesTable.config vc coinCode entityId entityHasAddress) t
 
         EntityTxsUtxoTable t ->
-            table_ vc height (AddressTxsUtxoTable.config vc coinCode) t
+            tt (AddressTxsUtxoTable.config vc coinCode) t
 
         EntityTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
+            table_ vc Nothing height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
+            tt (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
 
         EntityOutgoingNeighborsTable t ->
-            table_ vc height (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+            tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
 
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
@@ -947,10 +960,10 @@ browseBlockTable vc gc height block table =
     in
     case table of
         BlockTxsUtxoTable t ->
-            table_ vc height (TxsUtxoTable.config vc coinCode) t
+            table_ vc cm height (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
@@ -966,10 +979,10 @@ browseTxUtxoTable vc gc height tx table =
     in
     case table of
         TxUtxoInputsTable t ->
-            table_ vc height (TxUtxoTable.config vc False coinCode) t
+            table_ vc cm height (TxUtxoTable.config vc False coinCode) t
 
         TxUtxoOutputsTable t ->
-            table_ vc height (TxUtxoTable.config vc True coinCode) t
+            table_ vc cm height (TxUtxoTable.config vc True coinCode) t
 
 
 browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
@@ -1251,7 +1264,7 @@ browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String ->
 browseAddresslinkTable vc gc height coinCode table =
     case table of
         AddresslinkTxsUtxoTable t ->
-            table_ vc height (AddresslinkTxsUtxoTable.config vc coinCode) t
+            table_ vc cm height (AddresslinkTxsUtxoTable.config vc coinCode) t
 
         AddresslinkTxsAccountTable t ->
-            table_ vc height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t

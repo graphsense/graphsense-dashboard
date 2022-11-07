@@ -5,6 +5,7 @@ import Browser exposing (UrlRequest)
 import Browser.Dom
 import Config.View
 import Dict exposing (Dict)
+import Effect.Api
 import Effect.Graph
 import Effect.Locale
 import Effect.Search
@@ -67,7 +68,7 @@ type Msg
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
     | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
-    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect ) ( Dict String String, Msg ))
+    | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
@@ -114,7 +115,7 @@ type Auth
         , expiration : Maybe Time.Posix
         , loggingOut : Bool
         }
-    | Unauthorized Bool (List Effect)
+    | Unauthorized Bool (List (Effect.Api.Effect Msg))
     | Unknown
 
 
@@ -122,11 +123,11 @@ type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
     | GetStatisticsEffect
-    | GetConceptsEffect String (List Api.Data.Concept -> Msg)
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | ApiEffect (Effect.Api.Effect Msg)
     | PluginEffect (Cmd Plugin.Msg)
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)

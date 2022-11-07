@@ -114,42 +114,7 @@ graphSvg plugins states vc gc model bbox =
                     []
                )
         )
-        (let
-            def =
-                { selectedAddresslink = Id.noAddressLinkId |> Id.addressLinkIdToString
-                , selectedEntitylink = Id.noEntityLinkId |> Id.entityLinkIdToString
-                , selectedAddress = Id.noAddressId |> Id.addressIdToString
-                , selectedEntity = Id.noEntityId |> Id.entityIdToString
-                }
-
-            -- avoid Maybe EntityId/AddressId to make the selected
-            -- value work with lazy
-            { selectedEntity, selectedAddress, selectedAddresslink, selectedEntitylink } =
-                case model.selected of
-                    SelectedEntity id ->
-                        { def
-                            | selectedEntity = Id.entityIdToString id
-                        }
-
-                    SelectedAddress id ->
-                        { def
-                            | selectedAddress = Id.addressIdToString id
-                        }
-
-                    SelectedAddresslink id ->
-                        { def
-                            | selectedAddresslink = Id.addressLinkIdToString id
-                        }
-
-                    SelectedEntitylink id ->
-                        { def
-                            | selectedEntitylink = Id.entityLinkIdToString id
-                        }
-
-                    SelectedNone ->
-                        def
-         in
-         [ Svg.lazy2 arrowMarkers vc gc
+        ([ Svg.lazy2 arrowMarkers vc gc
          ]
             ++ (if gc.showEntityShadowLinks then
                     [ Svg.lazy2 entityShadowLinks vc model.layers ]
@@ -157,8 +122,8 @@ graphSvg plugins states vc gc model bbox =
                 else
                     []
                )
-            ++ [ Svg.lazy4 entityLinks vc gc selectedEntitylink model.layers
-               , Svg.lazy5 entities plugins vc gc selectedEntity model.layers
+            ++ [ Svg.lazy3 entityLinks vc gc model.layers
+               , Svg.lazy4 entities plugins vc gc model.layers
                ]
             ++ (if gc.showAddressShadowLinks then
                     [ Svg.lazy2 addressShadowLinks vc model.layers ]
@@ -166,15 +131,15 @@ graphSvg plugins states vc gc model bbox =
                 else
                     []
                )
-            ++ [ Svg.lazy4 addressLinks vc gc selectedAddresslink model.layers
-               , Svg.lazy5 addresses plugins vc gc selectedAddress model.layers
+            ++ [ Svg.lazy3 addressLinks vc gc model.layers
+               , Svg.lazy4 addresses plugins vc gc model.layers
                , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
                ]
         )
 
 
-addresses : Plugins -> Config -> Graph.Config -> String -> IntDict Layer -> Svg Msg
-addresses plugins vc gc selected layers =
+addresses : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+addresses plugins vc gc layers =
     let
         _ =
             Log.log "Graph.addresses" ""
@@ -182,8 +147,8 @@ addresses plugins vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "layer" ++ String.fromInt layerId
-                , Svg.lazy5 ViewLayer.addresses plugins vc gc selected layer
+                ( "Graph.layer" ++ String.fromInt layerId
+                , Svg.lazy4 ViewLayer.addresses plugins vc gc layer
                 )
                     :: svg
             )
@@ -191,8 +156,8 @@ addresses plugins vc gc selected layers =
         |> Keyed.node "g" []
 
 
-entities : Plugins -> Config -> Graph.Config -> String -> IntDict Layer -> Svg Msg
-entities plugins vc gc selected layers =
+entities : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+entities plugins vc gc layers =
     let
         _ =
             Log.log "Graph.entities" ""
@@ -200,8 +165,8 @@ entities plugins vc gc selected layers =
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
-                ( "layer" ++ String.fromInt layerId
-                , Svg.lazy5 ViewLayer.entities plugins vc gc selected layer
+                ( "Graph.layer" ++ String.fromInt layerId
+                , Svg.lazy4 ViewLayer.entities plugins vc gc layer
                 )
                     :: svg
             )
@@ -245,8 +210,8 @@ addressShadowLinks vc layers =
         |> Keyed.node "g" []
 
 
-entityLinks : Config -> Graph.Config -> String -> IntDict Layer -> Svg Msg
-entityLinks vc gc selected layers =
+entityLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
+entityLinks vc gc layers =
     let
         _ =
             Log.log "Graph.entityLinks" ""
@@ -255,7 +220,7 @@ entityLinks vc gc selected layers =
         |> IntDict.foldl
             (\layerId layer svg ->
                 ( "Graph.entityLinks" ++ String.fromInt layerId
-                , Svg.lazy4 ViewLayer.entityLinks vc gc selected layer
+                , Svg.lazy3 ViewLayer.entityLinks vc gc layer
                 )
                     :: svg
             )
@@ -263,8 +228,8 @@ entityLinks vc gc selected layers =
         |> Keyed.node "g" []
 
 
-addressLinks : Config -> Graph.Config -> String -> IntDict Layer -> Svg Msg
-addressLinks vc gc selected layers =
+addressLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
+addressLinks vc gc layers =
     let
         _ =
             Log.log "Graph.addressLinks" ""
@@ -273,7 +238,7 @@ addressLinks vc gc selected layers =
         |> IntDict.foldl
             (\layerId layer svg ->
                 ( "Graph.addressLinks" ++ String.fromInt layerId
-                , Svg.lazy4 ViewLayer.addressLinks vc gc selected layer
+                , Svg.lazy3 ViewLayer.addressLinks vc gc layer
                 )
                     :: svg
             )

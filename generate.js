@@ -1,6 +1,7 @@
 var fs = require('fs')
 var mustache = require('mustache')
 var path = require('path')
+var yaml = require('yaml')
 const { spawn } = require("child_process");
 
 const isDir = fileName => {
@@ -16,6 +17,8 @@ const isDir = fileName => {
 const pluginsFolder = './plugins'
 const templatesFolder = './plugin_templates'
 const generatedFolder = './plugin_generated'
+const langFolder = 'lang'
+const publicFolder = './public'
 
 console.log('Installing plugins:')
 const plugins = fs.readdirSync(pluginsFolder)
@@ -51,13 +54,39 @@ const transform = (folder) => {
       const gen = mustache.render(file, {plugins})
       const pf = path.join(generatedFolder, folder)
       if(!isDir(pf)) {
-        fs.mkdirSync(pf)
+        fs.mkdirSync(pf, {recursive: true})
       }
       fs.writeFileSync(newFileName, gen)
     })
 }
 
+const appendLang = (plugin) => {
+  console.log('Merge translation files for',  plugin)
+  const pluginLangFolder = path.join(pluginsFolder, plugin, langFolder)
+  fs.readdirSync(pluginLangFolder)
+    .map(fileName => {
+      let publicLangFilename = path.join(publicFolder, langFolder, fileName)
+      let pluginLangFilename = path.join(pluginLangFolder, fileName)
+      if(!fs.existsSync(publicLangFilename)) {
+        console.err(`Ignoring ${pluginLangFilename}.`)
+        return
+      }
+      let file = fs.readFileSync(pluginLangFilename, 'utf8')
+      let pluginStrings = yaml.parse(file)
+      file = fs.readFileSync(publicLangFilename, 'utf8')
+      let strings = yaml.parse(file)
+      strings = {...strings, ...pluginStrings}
+      strings = yaml.stringify(strings)
+      fs.writeFileSync(publicLangFilename, strings, {flag: 'w+'})
+      console.log('Merged', fileName)
+    })
+}
+
 transform('./')
+
+for(const plugin in plugins) {
+  appendLang(plugins[plugin].name)
+}
 
 
 const elmJson = JSON.parse(fs.readFileSync('./elm.json'))

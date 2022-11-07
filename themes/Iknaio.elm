@@ -890,6 +890,24 @@ theme =
                         , scaled 1 |> rem |> paddingTop
                         ]
                     )
+                |> s_sidebarIcon
+                    (\lightmode active ->
+                        [ cursor pointer
+                        , scaled 2 |> rem |> paddingBottom
+                        , (if active then
+                            iconActive
+
+                           else
+                            iconInactive
+                          )
+                            |> switchColor lightmode
+                            |> toCssColor
+                            |> color
+                        , hover
+                            [ switchColor lightmode iconHovered |> toCssColor |> color
+                            ]
+                        ]
+                    )
                 |> s_filter
                     [ displayFlex
                     , justifyContent flexEnd

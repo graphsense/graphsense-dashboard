@@ -12,6 +12,7 @@ import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table as T exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.Csv
 import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 
@@ -26,6 +27,31 @@ filter f a =
     String.contains f a.address
 
 
+titleAddress : String
+titleAddress =
+    "Address"
+
+
+titleFirstUsage : String
+titleFirstUsage =
+    "First usage"
+
+
+titleLastUsage : String
+titleLastUsage =
+    "Last usage"
+
+
+titleFinalBalance : String
+titleFinalBalance =
+    "Final balance"
+
+
+titleTotalReceived : String
+titleTotalReceived =
+    "Total received"
+
+
 config : View.Config -> String -> Maybe EntityId -> (EntityId -> A.Address -> Bool) -> Table.Config Api.Data.Address Msg
 config vc coinCode entityId entityHasAddress =
     Table.customConfig
@@ -33,7 +59,7 @@ config vc coinCode entityId entityHasAddress =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Address"
+                titleAddress
                 .address
                 (\data ->
                     [ entityId
@@ -59,10 +85,24 @@ config vc coinCode entityId entityHasAddress =
                         ]
                     ]
                 )
-            , T.timestampColumn vc "First usage" (.firstTx >> .timestamp)
-            , T.timestampColumn vc "Last usage" (.lastTx >> .timestamp)
-            , T.valueColumn vc coinCode "Final balance" .balance
-            , T.valueColumn vc coinCode "Total received" .totalReceived
+            , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
+            , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
+            , T.valueColumn vc coinCode titleFirstUsage .balance
+            , T.valueColumn vc coinCode titleTotalReceived .totalReceived
             ]
         , customizations = customizations vc
         }
+
+
+n s =
+    ( s, [] )
+
+
+prepareCSV : Api.Data.Address -> List ( ( String, List String ), String )
+prepareCSV row =
+    [ ( n "address", Util.Csv.string row.address )
+    , ( n "first_usage", Util.Csv.int row.firstTx.timestamp )
+    , ( n "last_usage", Util.Csv.int row.lastTx.timestamp )
+    ]
+        ++ Util.Csv.values "final_balance" row.totalReceived
+        ++ Util.Csv.values "total_received" row.balance

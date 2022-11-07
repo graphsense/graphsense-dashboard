@@ -32,7 +32,6 @@ import Model.Locale exposing (..)
 import RecordSetter exposing (..)
 import String.Interpolate
 import Time
-import Update.Locale exposing (duration)
 
 
 string : Model -> String -> String
@@ -68,7 +67,6 @@ string model key =
 
         Transition start end delta ->
             delta
-                / duration
                 |> Ease.inOutQuad
                 |> mix (fix start) (fix end)
 

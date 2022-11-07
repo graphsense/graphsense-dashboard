@@ -3,6 +3,7 @@ module Update.Graph.Search exposing (..)
 import Api.Data
 import Api.Request.Entities
 import Effect exposing (n)
+import Effect.Api
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Search exposing (initCriterion)
 import Model.Graph.Id as Id
@@ -70,17 +71,18 @@ submit model =
                     )
 
         makeEffect isOutgoing =
-            SearchEntityNeighborsEffect
-                { currency = Id.currency model.id
-                , entity = Id.entityId model.id
-                , isOutgoing = isOutgoing
-                , key = key
-                , value = value
-                , depth = model.depth
-                , breadth = model.breadth
-                , maxAddresses = model.maxAddresses
-                , toMsg = BrowserGotEntitySearchResult model.id isOutgoing
-                }
+            BrowserGotEntitySearchResult model.id isOutgoing
+                |> Effect.Api.SearchEntityNeighborsEffect
+                    { currency = Id.currency model.id
+                    , entity = Id.entityId model.id
+                    , isOutgoing = isOutgoing
+                    , key = key
+                    , value = value
+                    , depth = model.depth
+                    , breadth = model.breadth
+                    , maxAddresses = model.maxAddresses
+                    }
+                |> ApiEffect
     in
     ( model
     , case model.direction of

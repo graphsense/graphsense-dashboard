@@ -3,6 +3,7 @@ module View.Graph.Table.AddressTxsUtxoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css.View
+import Csv.Encode
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -13,6 +14,7 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -29,6 +31,26 @@ filter f a =
         || String.contains f a.txHash
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleValue : String
+titleValue =
+    "Value"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
 config vc coinCode =
     Table.customConfig
@@ -36,7 +58,7 @@ config vc coinCode =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Transaction"
+                titleTx
                 .txHash
                 (\data ->
                     Util.View.truncate vc.theme.table.urlMaxLength data.txHash
@@ -55,9 +77,19 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode "Value" .value
-            , T.intColumn vc "Height" .height
-            , T.timestampColumn vc "Timestamp" .timestamp
+            , T.valueColumn vc coinCode titleValue .value
+            , T.intColumn vc titleHeight .height
+            , T.timestampColumn vc titleTimestamp .timestamp
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.AddressTxUtxo -> List ( ( String, List String ), String )
+prepareCSV row =
+    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+    ]
+        ++ Util.Csv.values "value" row.value
+        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
+           , ( ( "timestamp", [] ), Util.Csv.int row.timestamp )
+           ]

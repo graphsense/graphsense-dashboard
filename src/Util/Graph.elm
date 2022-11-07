@@ -1,6 +1,8 @@
 module Util.Graph exposing (..)
 
+import Config.Graph as Graph
 import Json.Decode
+import List.Extra
 import Model.Graph.Coords exposing (BBox, Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg
@@ -40,3 +42,15 @@ mousedown msg =
                     }
                 )
         )
+
+
+getCategory : Graph.Config -> Maybe String -> Maybe String
+getCategory gc =
+    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.entityConcepts)
+        >> Maybe.map .label
+
+
+getAbuse : Graph.Config -> Maybe String -> Maybe String
+getAbuse gc =
+    Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
+        >> Maybe.map .label

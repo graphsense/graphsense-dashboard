@@ -51,10 +51,10 @@ type alias Options =
     }
 
 
-entityLinkOptions : View.Config -> Graph.Config -> String -> Entity -> Link Entity -> Options
-entityLinkOptions vc gc selected entity link =
+entityLinkOptions : View.Config -> Graph.Config -> Entity -> Link Entity -> Options
+entityLinkOptions vc gc entity link =
     { hovered = False
-    , selected = selected == Id.entityLinkIdToString ( entity.id, link.node.id )
+    , selected = link.selected
     , sx = Entity.getX entity + Entity.getWidth entity
     , sy =
         Entity.getY entity + Entity.getHeight entity / 2
@@ -78,10 +78,10 @@ entityLinkOptions vc gc selected entity link =
     }
 
 
-addressLinkOptions : View.Config -> Graph.Config -> String -> Address -> Link Address -> Options
-addressLinkOptions vc gc selected address link =
+addressLinkOptions : View.Config -> Graph.Config -> Address -> Link Address -> Options
+addressLinkOptions vc gc address link =
     { hovered = False
-    , selected = selected == Id.addressLinkIdToString ( address.id, link.node.id )
+    , selected = link.selected
     , sx = Address.getX address + Address.getWidth address
     , sy =
         Address.getY address + Address.getHeight address / 2
@@ -105,10 +105,10 @@ addressLinkOptions vc gc selected address link =
     }
 
 
-entityLink : View.Config -> Graph.Config -> String -> Float -> Float -> Entity -> Link Entity -> Svg Msg
-entityLink vc gc selected mn mx entity link =
+entityLink : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
+entityLink vc gc mn mx entity link =
     drawLink
-        (entityLinkOptions vc gc selected entity link)
+        (entityLinkOptions vc gc entity link)
         vc
         gc
         mn
@@ -118,7 +118,7 @@ entityLink vc gc selected mn mx entity link =
 entityLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Entity -> Link Entity -> Svg Msg
 entityLinkHovered vc gc mn mx entity link =
     drawLink
-        (entityLinkOptions vc gc "" entity link
+        (entityLinkOptions vc gc entity link
             |> s_hovered True
         )
         vc
@@ -227,10 +227,10 @@ shadowLink access vc node link =
         []
 
 
-addressLink : View.Config -> Graph.Config -> String -> Float -> Float -> Address -> Link Address -> Svg Msg
-addressLink vc gc selected mn mx address link =
+addressLink : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
+addressLink vc gc mn mx address link =
     drawLink
-        (addressLinkOptions vc gc selected address link)
+        (addressLinkOptions vc gc address link)
         vc
         gc
         mn
@@ -240,7 +240,7 @@ addressLink vc gc selected mn mx address link =
 addressLinkHovered : View.Config -> Graph.Config -> Float -> Float -> Address -> Link Address -> Svg Msg
 addressLinkHovered vc gc mn mx address link =
     drawLink
-        (addressLinkOptions vc gc "" address link
+        (addressLinkOptions vc gc address link
             |> s_hovered True
         )
         vc

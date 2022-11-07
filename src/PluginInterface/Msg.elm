@@ -2,6 +2,7 @@ module PluginInterface.Msg exposing (..)
 
 import Api.Data
 import Browser.Dom
+import Effect.Api as Api exposing (..)
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Entity exposing (Entity)
@@ -20,6 +21,7 @@ type OutMsg msg addressMsg entityMsg
     | Deserialize String Json.Encode.Value
     | GetAddressDomElement Id.AddressId (Result Browser.Dom.Error Browser.Dom.Element -> msg)
     | SendToPort Json.Encode.Value
+    | ApiRequest (Api.Effect msg)
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -66,3 +68,7 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
             ]
                 |> Json.Encode.list identity
                 |> SendToPort
+
+        ApiRequest effect ->
+            Api.map mapMsg effect
+                |> ApiRequest

@@ -13,6 +13,7 @@ import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
+import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -29,6 +30,31 @@ filter f a =
         || String.contains f (String.fromInt a.height)
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleInputValue : String
+titleInputValue =
+    "Input value"
+
+
+titleOutputValue : String
+titleOutputValue =
+    "Output value"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg
 config vc coinCode =
     Table.customConfig
@@ -36,7 +62,7 @@ config vc coinCode =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Transaction"
+                titleTx
                 .txHash
                 (\data ->
                     Util.View.truncate vc.theme.table.urlMaxLength data.txHash
@@ -55,10 +81,21 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode "Input value" .inputValue
-            , T.valueColumn vc coinCode "Output value" .outputValue
-            , T.intColumn vc "Height" .height
-            , T.timestampColumn vc "Timestamp" .timestamp
+            , T.valueColumn vc coinCode titleInputValue .inputValue
+            , T.valueColumn vc coinCode titleOutputValue .outputValue
+            , T.intColumn vc titleHeight .height
+            , T.timestampColumn vc titleTimestamp .timestamp
             ]
         , customizations = customizations vc
         }
+
+
+prepareCSV : Api.Data.LinkUtxo -> List ( ( String, List String ), String )
+prepareCSV row =
+    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+    ]
+        ++ Util.Csv.values "input_value" row.inputValue
+        ++ Util.Csv.values "output_value" row.outputValue
+        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
+           , ( ( "timestamp", [] ), Util.Csv.int row.timestamp )
+           ]

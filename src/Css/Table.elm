@@ -21,6 +21,11 @@ sidebar vc =
     vc.theme.table.sidebar vc.lightmode
 
 
+sidebarIcon : Config -> Bool -> List Style
+sidebarIcon vc =
+    vc.theme.table.sidebarIcon vc.lightmode
+
+
 filter : Config -> List Style
 filter vc =
     vc.theme.table.filter

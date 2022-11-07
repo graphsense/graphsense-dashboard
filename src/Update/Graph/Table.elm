@@ -1,5 +1,6 @@
 module Update.Graph.Table exposing (..)
 
+import Csv.Encode
 import Model.Graph.Table exposing (..)
 
 
@@ -36,3 +37,12 @@ filterData fl l fun =
     fl
         |> Maybe.map (\f -> List.filter (fun f) l)
         |> Maybe.withDefault l
+
+
+asCsv : (a -> List ( String, String )) -> Table a -> String
+asCsv prepare { filtered } =
+    filtered
+        |> Csv.Encode.encode
+            { encoder = Csv.Encode.withFieldNames prepare
+            , fieldSeparator = ','
+            }

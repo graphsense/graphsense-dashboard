@@ -8,6 +8,7 @@ type alias Table =
     { root : List Style
     , tableRoot : List Style
     , sidebar : Bool -> List Style
+    , sidebarIcon : Bool -> Bool -> List Style
     , filter : List Style
     , filterInput : Bool -> List Style
     , table : List Style
@@ -32,6 +33,7 @@ default =
     { root = []
     , tableRoot = []
     , sidebar = \_ -> []
+    , sidebarIcon = \_ _ -> []
     , filter = []
     , filterInput = \_ -> []
     , table = []

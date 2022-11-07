@@ -24,5 +24,6 @@ init plugins { x, y, layer } entity =
     , shadowLinks = Links Dict.empty
     , color = Nothing
     , userTag = Nothing
+    , selected = False
     , plugins = Plugin.initEntity plugins
     }

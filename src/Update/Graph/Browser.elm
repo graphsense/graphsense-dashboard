@@ -1,7 +1,9 @@
 module Update.Graph.Browser exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Effect exposing (n)
+import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
@@ -18,6 +20,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Locale as Locale
 import Model.Search as Search
 import Msg.Graph exposing (Msg(..))
 import Msg.Search as Search
@@ -38,6 +41,7 @@ import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
+import View.Locale as Locale
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -72,8 +76,9 @@ loadingTxAccount id model =
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
-                    , toMsg = BrowserGotTx
                     }
+                    BrowserGotTx
+                    |> ApiEffect
               ]
             )
     in
@@ -93,8 +98,9 @@ loadingTxUtxo id model =
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
-                    , toMsg = BrowserGotTx
                     }
+                    BrowserGotTx
+                    |> ApiEffect
               ]
             )
     in
@@ -564,8 +570,9 @@ createTxUtxoTable route t currency txHash tx =
                             { currency = currency
                             , txHash = txHash
                             , isOutgoing = False
-                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } False
                             }
+                            (BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } False)
+                            |> ApiEffect
                       ]
                     )
 
@@ -590,8 +597,9 @@ createTxUtxoTable route t currency txHash tx =
                             { currency = currency
                             , txHash = txHash
                             , isOutgoing = True
-                            , toMsg = BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } True
                             }
+                            (BrowserGotTxUtxoAddresses { currency = currency, txHash = txHash } True)
+                            |> ApiEffect
                       ]
                     )
 
@@ -1783,8 +1791,9 @@ getAddressTxsEffect { currency, address } nextpage =
         , address = address
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotAddressTxs { currency = currency, address = address }
         }
+        (BrowserGotAddressTxs { currency = currency, address = address })
+        |> ApiEffect
 
 
 getAddresslinkTxsEffect : A.Addresslink -> Maybe String -> Effect
@@ -1795,8 +1804,9 @@ getAddresslinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotAddresslinkTxs id
         }
+        (BrowserGotAddresslinkTxs id)
+        |> ApiEffect
 
 
 getEntitylinkTxsEffect : E.Entitylink -> Maybe String -> Effect
@@ -1807,8 +1817,9 @@ getEntitylinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntitylinkTxs id
         }
+        (BrowserGotEntitylinkTxs id)
+        |> ApiEffect
 
 
 getAddressTagsEffect : A.Address -> Maybe String -> Effect
@@ -1818,12 +1829,13 @@ getAddressTagsEffect { currency, address } nextpage =
         , address = address
         , pagesize = 100
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotAddressTagsTable
-                { currency = currency
-                , address = address
-                }
         }
+        (BrowserGotAddressTagsTable
+            { currency = currency
+            , address = address
+            }
+        )
+        |> ApiEffect
 
 
 getAddressNeighborsEffect : Bool -> A.Address -> Maybe String -> Effect
@@ -1836,13 +1848,14 @@ getAddressNeighborsEffect isOutgoing { currency, address } nextpage =
         , includeLabels = True
         , onlyIds = Nothing
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotAddressNeighborsTable
-                { currency = currency
-                , address = address
-                }
-                isOutgoing
         }
+        (BrowserGotAddressNeighborsTable
+            { currency = currency
+            , address = address
+            }
+            isOutgoing
+        )
+        |> ApiEffect
 
 
 getEntityAddressTagsEffect : E.Entity -> Maybe String -> Effect
@@ -1852,12 +1865,13 @@ getEntityAddressTagsEffect { currency, entity } nextpage =
         , entity = entity
         , pagesize = 100
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotEntityAddressTagsTable
-                { currency = currency
-                , entity = entity
-                }
         }
+        (BrowserGotEntityAddressTagsTable
+            { currency = currency
+            , entity = entity
+            }
+        )
+        |> ApiEffect
 
 
 getEntityTxsEffect : E.Entity -> Maybe String -> Effect
@@ -1867,8 +1881,9 @@ getEntityTxsEffect { currency, entity } nextpage =
         , entity = entity
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntityTxs { currency = currency, entity = entity }
         }
+        (BrowserGotEntityTxs { currency = currency, entity = entity })
+        |> ApiEffect
 
 
 getEntityNeighborsEffect : Bool -> E.Entity -> Maybe String -> Effect
@@ -1881,13 +1896,14 @@ getEntityNeighborsEffect isOutgoing { currency, entity } nextpage =
         , pagesize = 100
         , includeLabels = True
         , nextpage = nextpage
-        , toMsg =
-            BrowserGotEntityNeighborsTable
-                { currency = currency
-                , entity = entity
-                }
-                isOutgoing
         }
+        (BrowserGotEntityNeighborsTable
+            { currency = currency
+            , entity = entity
+            }
+            isOutgoing
+        )
+        |> ApiEffect
 
 
 getEntityAddressesEffect : E.Entity -> Maybe String -> Effect
@@ -1897,8 +1913,9 @@ getEntityAddressesEffect { currency, entity } nextpage =
         , entity = entity
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotEntityAddressesForTable { currency = currency, entity = entity }
         }
+        (BrowserGotEntityAddressesForTable { currency = currency, entity = entity })
+        |> ApiEffect
 
 
 showTxUtxoAddresses : { currency : String, txHash : String } -> Bool -> List Api.Data.TxValue -> Model -> Model
@@ -1950,8 +1967,9 @@ listAddressTagsEffect label nextpage =
         { label = label
         , pagesize = Nothing
         , nextpage = nextpage
-        , toMsg = BrowserGotLabelAddressTags label
         }
+        (BrowserGotLabelAddressTags label)
+        |> ApiEffect
 
 
 getBlockTxsEffect : B.Block -> Maybe String -> Effect
@@ -1961,8 +1979,9 @@ getBlockTxsEffect { currency, block } nextpage =
         , block = block
         , nextpage = nextpage
         , pagesize = 100
-        , toMsg = BrowserGotBlockTxs { currency = currency, block = block }
         }
+        (BrowserGotBlockTxs { currency = currency, block = block })
+        |> ApiEffect
 
 
 filterTable : Maybe String -> Model -> Model
@@ -2118,3 +2137,179 @@ filterTable filter model =
                 Plugin ->
                     model.type_
     }
+
+
+tableAsCSV : Locale.Model -> Graph.Config -> Model -> Maybe ( String, String )
+tableAsCSV locale gc { type_ } =
+    let
+        translate =
+            --List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
+            List.map (mapFirst first)
+
+        asCsv prep t title =
+            Update.Graph.Table.asCsv (prep >> translate) t |> pair title |> Just
+
+        loadableAddressToList l =
+            loadableAddress l
+                |> (\{ address, currency } -> [ address, String.toUpper currency ])
+
+        loadableEntityToList l =
+            loadableEntity l
+                |> (\{ entity, currency } -> [ String.fromInt entity, String.toUpper currency ])
+
+        loadableBlockToList l =
+            loadableBlock l
+                |> (\{ block, currency } -> [ String.fromInt block, String.toUpper currency ])
+
+        loadableTxToList t =
+            loadableTx t
+                |> (\{ txHash, currency } -> [ txHash, String.toUpper currency ])
+    in
+    case type_ of
+        Address loadable table ->
+            case table of
+                Just (AddressTxsUtxoTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> asCsv AddressTxsUtxoTable.prepareCSV t
+
+                Just (AddressTxsAccountTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Address transactions of {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Just (AddressTagsTable t) ->
+                    Nothing
+
+                Just (AddressIncomingNeighborsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Incoming neighbors of address {0} ({1})"
+                        |> asCsv (AddressNeighborsTable.prepareCSV False) t
+
+                Just (AddressOutgoingNeighborsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
+                        |> asCsv (AddressNeighborsTable.prepareCSV True) t
+
+                Nothing ->
+                    Nothing
+
+        Entity loadable table ->
+            case table of
+                Just (EntityAddressesTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "addresses of entity {0} ({1})"
+                        |> asCsv EntityAddressesTable.prepareCSV t
+
+                Just (EntityTxsUtxoTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
+                        |> asCsv AddressTxsUtxoTable.prepareCSV t
+
+                Just (EntityTxsAccountTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Just (EntityTagsTable t) ->
+                    Nothing
+
+                Just (EntityIncomingNeighborsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Incoming neighbors of entity {0} ({1})"
+                        |> asCsv (EntityNeighborsTable.prepareCSV False) t
+
+                Just (EntityOutgoingNeighborsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
+                        |> asCsv (EntityNeighborsTable.prepareCSV True) t
+
+                Nothing ->
+                    Nothing
+
+        TxUtxo loadable table ->
+            case table of
+                Just (TxUtxoInputsTable t) ->
+                    loadableTxToList loadable
+                        |> Locale.interpolated locale "Incoming values of transaction {0} ({1})"
+                        |> asCsv (TxUtxoTable.prepareCSV False) t
+
+                Just (TxUtxoOutputsTable t) ->
+                    loadableTxToList loadable
+                        |> Locale.interpolated locale "Outgoing values of transaction {0} ({1})"
+                        |> asCsv (TxUtxoTable.prepareCSV True) t
+
+                Nothing ->
+                    Nothing
+
+        TxAccount _ ->
+            Nothing
+
+        None ->
+            Nothing
+
+        Label label t ->
+            Nothing
+
+        Block loadable table ->
+            case table of
+                Just (BlockTxsUtxoTable t) ->
+                    loadableBlockToList loadable
+                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> asCsv TxsUtxoTable.prepareCSV t
+
+                Just (BlockTxsAccountTable t) ->
+                    loadableBlockToList loadable
+                        |> Locale.interpolated locale "Transactions of block {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        Addresslink src lnk table ->
+            let
+                title =
+                    [ src.address.address
+                    , lnk.node.address.address
+                    , String.toUpper src.address.currency
+                    ]
+                        |> Locale.interpolated locale "Transactions between addresses {0} and {1} ({2})"
+            in
+            case table of
+                Just (AddresslinkTxsUtxoTable t) ->
+                    title
+                        |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+
+                Just (AddresslinkTxsAccountTable t) ->
+                    title
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        Entitylink src lnk table ->
+            let
+                title =
+                    [ String.fromInt src.entity.entity
+                    , String.fromInt lnk.node.entity.entity
+                    , String.toUpper src.entity.currency
+                    ]
+                        |> Locale.interpolated locale "Transactions between entities {0} and {1} ({2})"
+            in
+            case table of
+                Just (AddresslinkTxsUtxoTable t) ->
+                    title |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+
+                Just (AddresslinkTxsAccountTable t) ->
+                    title
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
+
+        UserTags t ->
+            Locale.string locale "user address tags"
+                |> asCsv (UserAddressTagsTable.prepareCSV gc) t
+
+        Plugin ->
+            Nothing

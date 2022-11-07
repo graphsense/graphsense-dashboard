@@ -12,6 +12,7 @@ import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.Csv
 import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
@@ -38,6 +39,31 @@ filter : String -> Api.Data.NeighborAddress -> Bool
 filter f a =
     String.contains f a.address.address
         || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
+
+
+titleLabels : String
+titleLabels =
+    "Labels"
+
+
+titleAddressBalance : String
+titleAddressBalance =
+    "Address balance"
+
+
+titleAddressReceived : String
+titleAddressReceived =
+    "Address received"
+
+
+titleNoTxs : String
+titleNoTxs =
+    "No. transactions"
+
+
+titleEstimatedValue : String
+titleEstimatedValue =
+    "Estimated value"
 
 
 config : View.Config -> Bool -> String -> Maybe AddressId -> (AddressId -> Bool -> A.Address -> Bool) -> Table.Config Api.Data.NeighborAddress Msg
@@ -75,11 +101,11 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                         ]
                     ]
                 )
-            , T.stringColumn vc "Labels" (.labels >> Maybe.withDefault [] >> reduceLabels)
-            , T.valueColumn vc coinCode "Address balance" (.address >> .balance)
-            , T.valueColumn vc coinCode "Address received" (.address >> .totalReceived)
-            , T.intColumn vc "No. transactions" .noTxs
-            , T.valueColumn vc coinCode "Estimated value" .value
+            , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
+            , T.valueColumn vc coinCode titleAddressBalance (.address >> .balance)
+            , T.valueColumn vc coinCode titleAddressReceived (.address >> .totalReceived)
+            , T.intColumn vc titleNoTxs .noTxs
+            , T.valueColumn vc coinCode titleEstimatedValue .value
             ]
         , customizations = customizations vc
         }
@@ -124,3 +150,18 @@ reduceLabels labels =
             , output = ""
             }
         |> .output
+
+
+n s =
+    ( s, [] )
+
+
+prepareCSV : Bool -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCSV isOutgoing row =
+    [ ( n <| "address", Util.Csv.string row.address.address )
+    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( n "no_txs", Util.Csv.int row.noTxs )
+    ]
+        ++ Util.Csv.values "address_balance" row.address.totalReceived
+        ++ Util.Csv.values "address_received" row.address.balance
+        ++ Util.Csv.values "estimated_value" row.value

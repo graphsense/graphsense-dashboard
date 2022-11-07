@@ -12,6 +12,7 @@ import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
+import Util.Csv
 import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Graph.Table.AddressNeighborsTable exposing (reduceLabels)
@@ -38,6 +39,36 @@ filter : String -> Api.Data.NeighborEntity -> Bool
 filter f a =
     String.contains f (String.fromInt a.entity.entity)
         || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
+
+
+titleLabels : String
+titleLabels =
+    "Labels"
+
+
+titleEntityBalance : String
+titleEntityBalance =
+    "Entity balance"
+
+
+titleEntityReceived : String
+titleEntityReceived =
+    "Entity received"
+
+
+titleNoAddresses : String
+titleNoAddresses =
+    "No. addresses"
+
+
+titleNoTxs : String
+titleNoTxs =
+    "No. transactions"
+
+
+titleEstimatedValue : String
+titleEstimatedValue =
+    "Estimated value"
 
 
 config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborEntity Msg
@@ -77,12 +108,28 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                         ]
                     ]
                 )
-            , T.stringColumn vc "Labels" (.labels >> Maybe.withDefault [] >> reduceLabels)
-            , T.valueColumn vc coinCode "Entity balance" (.entity >> .balance)
-            , T.valueColumn vc coinCode "Entity received" (.entity >> .totalReceived)
-            , T.intColumn vc "No. addresses" (.entity >> .noAddresses)
-            , T.intColumn vc "No. transactions" .noTxs
-            , T.valueColumn vc coinCode "Estimated value" .value
+            , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
+            , T.valueColumn vc coinCode titleEntityBalance (.entity >> .balance)
+            , T.valueColumn vc coinCode titleEntityReceived (.entity >> .totalReceived)
+            , T.intColumn vc titleNoAddresses (.entity >> .noAddresses)
+            , T.intColumn vc titleNoTxs .noTxs
+            , T.valueColumn vc coinCode titleEstimatedValue .value
             ]
         , customizations = customizations vc
         }
+
+
+n s =
+    ( s, [] )
+
+
+prepareCSV : Bool -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCSV isOutgoing row =
+    [ ( n <| "entity", Util.Csv.int row.entity.entity )
+    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( n "no_txs", Util.Csv.int row.noTxs )
+    , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
+    ]
+        ++ Util.Csv.values "entity_received" row.entity.totalReceived
+        ++ Util.Csv.values "entity_balance" row.entity.balance
+        ++ Util.Csv.values "estimated_value" row.value

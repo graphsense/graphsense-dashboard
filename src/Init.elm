@@ -2,6 +2,7 @@ module Init exposing (init)
 
 import Config exposing (config)
 import Dict
+import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
@@ -49,13 +50,23 @@ init plugins flags url key =
       , plugins = pluginStates
       }
     , List.map LocaleEffect localeEffect
-        ++ [ GetConceptsEffect "entity" BrowserGotEntityTaxonomy
-           , GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
+        ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy
+                |> ApiEffect
+           , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
+                |> ApiEffect
            , PluginEffect cmd
            ]
     )
         |> getStatistics
         |> updateByPluginOutMsg plugins outMsgs
+
+
+devAuth =
+    Authorized
+        { requestLimit = Unlimited
+        , expiration = Nothing
+        , loggingOut = False
+        }
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )

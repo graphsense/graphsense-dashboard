@@ -36,13 +36,13 @@ import View.Graph.Node as Node
 import View.Locale as Locale
 
 
-addresses : Plugins -> Config -> Graph.Config -> String -> Entity -> Svg Msg
-addresses plugins vc gc selected ent =
+addresses : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
+addresses plugins vc gc ent =
     ent.addresses
         |> Dict.foldl
             (\_ address svg ->
                 ( Id.addressIdToString address.id
-                , Svg.lazy5 Address.address plugins vc gc selected address
+                , Svg.lazy4 Address.address plugins vc gc address
                 )
                     :: svg
             )
@@ -50,11 +50,11 @@ addresses plugins vc gc selected ent =
         |> Keyed.node "g" []
 
 
-entity : Plugins -> Config -> Graph.Config -> String -> Entity -> Svg Msg
-entity plugins vc gc selected ent =
+entity : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
+entity plugins vc gc ent =
     let
         _ =
-            Log.log "rednerEntity" ent.id
+            Log.log "Entity.entity" ent.id
 
         color =
             ent.color
@@ -76,9 +76,6 @@ entity plugins vc gc selected ent =
                             |> Color.fromHsla
                     )
                 |> Util.toCssColor
-
-        isSelected =
-            selected == Id.entityIdToString ent.id
 
         rectX =
             String.fromFloat expandHandleWidth
@@ -109,7 +106,7 @@ entity plugins vc gc selected ent =
             ]
             []
         , Svg.path
-            [ isSelected
+            [ ent.selected
                 |> Css.nodeFrame vc Model.Graph.EntityType
                 |> css
             , String.Interpolate.interpolate
@@ -145,7 +142,7 @@ entity plugins vc gc selected ent =
             , width = Entity.getInnerWidth ent
             , height = Entity.getHeight ent
             , color = color
-            , isSelected = isSelected
+            , isSelected = ent.selected
             }
         , Node.expand vc
             gc
@@ -156,7 +153,7 @@ entity plugins vc gc selected ent =
             , width = Entity.getInnerWidth ent
             , height = Entity.getHeight ent
             , color = color
-            , isSelected = isSelected
+            , isSelected = ent.selected
             }
         ]
 
@@ -219,7 +216,10 @@ flags plugins vc gc ent =
         ]
         (tf
             ++ [ Plugin.entityFlags plugins ent.plugins vc
-                    |> g [ translate -offset 0 |> transform ]
+                    |> (\( pluginOffset, pluginFlags ) ->
+                            g [ translate (-offset - pluginOffset) 0 |> transform ]
+                                pluginFlags
+                       )
                ]
         )
 
@@ -298,8 +298,8 @@ addressesCount vc gc ent =
         ]
 
 
-addressLinks : Config -> Graph.Config -> String -> Float -> Float -> Entity -> Svg Msg
-addressLinks vc gc selected mn mx ent =
+addressLinks : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
+addressLinks vc gc mn mx ent =
     let
         _ =
             Log.log "Entity.addressLinks" ent.id
@@ -308,7 +308,7 @@ addressLinks vc gc selected mn mx ent =
         |> Dict.foldl
             (\_ address svg ->
                 ( "addressLinks" ++ Id.addressIdToString address.id
-                , Svg.lazy6 Address.links vc gc selected mn mx address
+                , Svg.lazy5 Address.links vc gc mn mx address
                 )
                     :: svg
             )
@@ -334,8 +334,8 @@ addressShadowLinks vc ent =
         |> Keyed.node "g" []
 
 
-links : Config -> Graph.Config -> String -> Float -> Float -> Entity -> Svg Msg
-links vc gc selected mn mx ent =
+links : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
+links vc gc mn mx ent =
     case ent.links of
         Entity.Links lnks ->
             lnks
@@ -343,7 +343,7 @@ links vc gc selected mn mx ent =
                     (\_ link svg ->
                         if showLink ent link then
                             ( "entityLink" ++ (Id.entityLinkIdToString <| Id.initLinkId ent.id link.node.id)
-                            , Svg.lazy7 Link.entityLink vc gc selected mn mx ent link
+                            , Svg.lazy6 Link.entityLink vc gc mn mx ent link
                             )
                                 :: svg
 
