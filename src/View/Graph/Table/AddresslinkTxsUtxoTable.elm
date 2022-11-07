@@ -92,10 +92,10 @@ config vc coinCode =
 
 prepareCSV : Api.Data.LinkUtxo -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( ( titleTx, [] ), Util.Csv.string row.txHash )
+    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleInputValue) row.inputValue
-        ++ Util.Csv.values (Util.Csv.a0 titleOutputValue) row.outputValue
-        ++ [ ( ( titleHeight, [] ), Util.Csv.int row.height )
-           , ( ( titleTimestamp, [] ), Util.Csv.int row.timestamp )
+        ++ Util.Csv.values "input_value" row.inputValue
+        ++ Util.Csv.values "output_value" row.outputValue
+        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
+           , ( ( "timestamp", [] ), Util.Csv.int row.timestamp )
            ]

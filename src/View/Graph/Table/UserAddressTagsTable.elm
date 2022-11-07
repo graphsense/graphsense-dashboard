@@ -146,11 +146,11 @@ n s =
 
 prepareCSV : Graph.Config -> Tag.UserTag -> List ( ( String, List String ), String )
 prepareCSV gc row =
-    [ ( n titleAddress, Util.Csv.string row.address )
-    , ( n titleCurrency, Util.Csv.string <| String.toUpper row.currency )
-    , ( n titleLabel, Util.Csv.string row.label )
-    , ( n titleDefinesEntity, Util.Csv.bool row.isClusterDefiner )
-    , ( n titleSource, Util.Csv.string row.source )
-    , ( n titleCategory, row.category |> Util.Graph.getCategory gc |> Maybe.withDefault "" |> Util.Csv.string )
-    , ( n titleAbuse, row.abuse |> Util.Graph.getAbuse gc |> Maybe.withDefault "" |> Util.Csv.string )
+    [ ( n "address", Util.Csv.string row.address )
+    , ( n "currency", Util.Csv.string <| String.toUpper row.currency )
+    , ( n "label", Util.Csv.string row.label )
+    , ( n "is_cluster_definer", Util.Csv.bool row.isClusterDefiner )
+    , ( n "source", Util.Csv.string row.source )
+    , ( n "category", row.category |> Util.Graph.getCategory gc |> Maybe.withDefault "" |> Util.Csv.string )
+    , ( n "abuse", row.abuse |> Util.Graph.getAbuse gc |> Maybe.withDefault "" |> Util.Csv.string )
     ]

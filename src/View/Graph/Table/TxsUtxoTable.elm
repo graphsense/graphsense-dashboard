@@ -91,9 +91,9 @@ config vc coinCode =
 
 prepareCSV : Api.Data.TxUtxo -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( ( titleTx, [] ), Util.Csv.string row.txHash )
-    , ( ( titleNoInputs, [] ), Util.Csv.int row.noInputs )
-    , ( ( titleNoOutputs, [] ), Util.Csv.int row.noOutputs )
+    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
+    , ( ( "no_inputs", [] ), Util.Csv.int row.noInputs )
+    , ( ( "no_outputs", [] ), Util.Csv.int row.noOutputs )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleTotalInput) row.totalInput
-        ++ Util.Csv.values (Util.Csv.a0 titleTotalOutput) row.totalOutput
+        ++ Util.Csv.values "total_input" row.totalInput
+        ++ Util.Csv.values "total_output" row.totalOutput

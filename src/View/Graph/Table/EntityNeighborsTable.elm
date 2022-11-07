@@ -125,11 +125,11 @@ n s =
 
 prepareCSV : Bool -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
 prepareCSV isOutgoing row =
-    [ ( n <| columnTitleFromDirection isOutgoing, Util.Csv.int row.entity.entity )
-    , ( n titleLabels, row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
-    , ( n titleNoTxs, Util.Csv.int row.noTxs )
-    , ( n titleNoAddresses, Util.Csv.int row.entity.noAddresses )
+    [ ( n <| "entity", Util.Csv.int row.entity.entity )
+    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( n "no_txs", Util.Csv.int row.noTxs )
+    , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleEntityBalance) row.entity.totalReceived
-        ++ Util.Csv.values (Util.Csv.a0 titleEntityReceived) row.entity.balance
-        ++ Util.Csv.values (Util.Csv.a0 titleEstimatedValue) row.value
+        ++ Util.Csv.values "entity_received" row.entity.totalReceived
+        ++ Util.Csv.values "entity_balance" row.entity.balance
+        ++ Util.Csv.values "estimated_value" row.value

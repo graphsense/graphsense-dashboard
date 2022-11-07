@@ -30,13 +30,13 @@ float =
 
 prefix : String -> String -> ( String, List String )
 prefix key key2 =
-    ( key, [ key2 ] )
+    ( key ++ "_" ++ key2, [] )
 
 
 values : String -> Api.Data.Values -> List ( ( String, List String ), String )
 values key v =
-    ( prefix key "", int v.value )
-        :: List.map (\f -> ( prefix key <| String.toUpper f.code, float f.value )) v.fiatValues
+    ( ( key, [] ), int v.value )
+        :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
 
 
 a0 : String -> String

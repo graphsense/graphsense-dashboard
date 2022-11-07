@@ -2143,7 +2143,8 @@ tableAsCSV : Locale.Model -> Graph.Config -> Model -> Maybe ( String, String )
 tableAsCSV locale gc { type_ } =
     let
         translate =
-            List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
+            --List.map (mapFirst (\( str, params ) -> Locale.interpolated locale str params))
+            List.map (mapFirst first)
 
         asCsv prep t title =
             Update.Graph.Table.asCsv (prep >> translate) t |> pair title |> Just

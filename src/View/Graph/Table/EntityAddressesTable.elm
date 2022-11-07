@@ -100,9 +100,9 @@ n s =
 
 prepareCSV : Api.Data.Address -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( n titleAddress, Util.Csv.string row.address )
-    , ( n titleFirstUsage, Util.Csv.int row.firstTx.timestamp )
-    , ( n titleLastUsage, Util.Csv.int row.lastTx.timestamp )
+    [ ( n "address", Util.Csv.string row.address )
+    , ( n "first_usage", Util.Csv.int row.firstTx.timestamp )
+    , ( n "last_usage", Util.Csv.int row.lastTx.timestamp )
     ]
-        ++ Util.Csv.values titleFinalBalance row.totalReceived
-        ++ Util.Csv.values titleTotalReceived row.balance
+        ++ Util.Csv.values "final_balance" row.totalReceived
+        ++ Util.Csv.values "total_received" row.balance

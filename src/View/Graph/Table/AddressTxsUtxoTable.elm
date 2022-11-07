@@ -87,9 +87,9 @@ config vc coinCode =
 
 prepareCSV : Api.Data.AddressTxUtxo -> List ( ( String, List String ), String )
 prepareCSV row =
-    [ ( ( titleTx, [] ), Util.Csv.string row.txHash )
+    [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleValue) row.value
-        ++ [ ( ( titleHeight, [] ), Util.Csv.int row.height )
-           , ( ( titleTimestamp, [] ), Util.Csv.int row.timestamp )
+        ++ Util.Csv.values "value" row.value
+        ++ [ ( ( "height", [] ), Util.Csv.int row.height )
+           , ( ( "timestamp", [] ), Util.Csv.int row.timestamp )
            ]

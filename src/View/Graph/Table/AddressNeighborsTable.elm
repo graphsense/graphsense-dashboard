@@ -158,10 +158,10 @@ n s =
 
 prepareCSV : Bool -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
 prepareCSV isOutgoing row =
-    [ ( n <| columnTitleFromDirection isOutgoing, Util.Csv.string row.address.address )
-    , ( n titleLabels, row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
-    , ( n titleNoTxs, Util.Csv.int row.noTxs )
+    [ ( n <| "address", Util.Csv.string row.address.address )
+    , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
+    , ( n "no_txs", Util.Csv.int row.noTxs )
     ]
-        ++ Util.Csv.values (Util.Csv.a0 titleAddressBalance) row.address.totalReceived
-        ++ Util.Csv.values (Util.Csv.a0 titleAddressReceived) row.address.balance
-        ++ Util.Csv.values (Util.Csv.a0 titleEstimatedValue) row.value
+        ++ Util.Csv.values "address_balance" row.address.totalReceived
+        ++ Util.Csv.values "address_received" row.address.balance
+        ++ Util.Csv.values "estimated_value" row.value
