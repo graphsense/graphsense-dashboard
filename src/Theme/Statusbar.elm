@@ -8,6 +8,7 @@ type alias Statusbar =
     { root : Bool -> Bool -> List Style
     , loadingSpinner : List Style
     , log : Bool -> Bool -> List Style
+    , logIcon : Bool -> Bool -> List Style
     , close : Bool -> List Style
     }
 
@@ -17,5 +18,6 @@ default =
     { root = \_ _ -> []
     , loadingSpinner = []
     , log = \_ _ -> []
+    , logIcon = \_ _ -> []
     , close = \_ -> []
     }

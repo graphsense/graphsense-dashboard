@@ -92,7 +92,17 @@ log vc lastBlocks ( key, values, error ) =
     div
         [ Css.log vc (error == Nothing) |> css
         ]
-        [ text <|
+        [ (if error == Nothing then
+            FontAwesome.check
+
+           else
+            FontAwesome.times
+          )
+            |> FontAwesome.icon
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> span [ Css.logIcon vc (error == Nothing) |> css ]
+        , text <|
             messageString vc key values
                 ++ (case error of
                         Just e ->
@@ -124,7 +134,7 @@ log vc lastBlocks ( key, values, error ) =
                                                         )
                                                     |> Maybe.map
                                                         (List.singleton
-                                                            >> Locale.interpolated vc.locale "Cannot find this address. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain."
+                                                            >> Locale.interpolated vc.locale "Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain."
                                                         )
                                                     |> Maybe.withDefault (Locale.string vc.locale "not found")
 

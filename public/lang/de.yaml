@@ -261,3 +261,4 @@ download table as CSV: Tabelle als CSV herunterladen
 "Incoming values of transaction {0} ({1})": "Eingangswerte der Transaktion {0} ({1})"
 "Outgoing values of transaction {0} ({1})": "Ausgangswerte der Transaktion {0} ({1})"
 "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr als {5} Adressen)"
+"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.": "Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert."
