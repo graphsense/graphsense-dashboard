@@ -81,7 +81,13 @@ update plugins uc msg model =
         BrowserGotStatistics result ->
             case result of
                 Ok stats ->
-                    updateByUrl plugins uc model.url { model | stats = RD.Success stats }
+                    updateByUrl plugins
+                        uc
+                        model.url
+                        { model
+                            | stats = RD.Success stats
+                            , statusbar = Statusbar.updateLastBlocks stats model.statusbar
+                        }
 
                 Err error ->
                     n { model | stats = RD.Failure error }

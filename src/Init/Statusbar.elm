@@ -9,4 +9,5 @@ init =
     { messages = Dict.empty
     , log = []
     , visible = False
+    , lastBlocks = []
     }

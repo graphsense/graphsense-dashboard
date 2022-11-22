@@ -1,5 +1,6 @@
 module Update.Statusbar exposing (..)
 
+import Api.Data
 import Api.Request.Entities
 import Dict
 import Effect.Api as Api
@@ -153,6 +154,15 @@ update key error model =
                 }
             )
         |> Maybe.withDefault model
+
+
+updateLastBlocks : Api.Data.Stats -> Model -> Model
+updateLastBlocks stats model =
+    { model
+        | lastBlocks =
+            stats.currencies
+                |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
+    }
 
 
 toggle : Model -> Model
