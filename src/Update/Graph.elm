@@ -841,7 +841,18 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotAddressTags id tags ->
-            model
+            let
+                colors =
+                    tags.addressTags
+                        |> List.map .category
+                        |> List.foldl
+                            (\category config -> Color.update uc config category)
+                            model.config.colors
+            in
+            { model
+                | config =
+                    model.config |> s_colors colors
+            }
                 |> updateAddresses id (Address.updateTags tags.addressTags)
                 |> n
 
