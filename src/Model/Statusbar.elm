@@ -19,6 +19,11 @@ loadingAddressKey =
     "{1}: loading address {0}"
 
 
+loadingAddressEntityKey : String
+loadingAddressEntityKey =
+    "{1}: loading entity for address {0}"
+
+
 type alias Model =
     { messages : Dict String ( String, List String )
     , log : List ( String, List String, Maybe Http.Error )
