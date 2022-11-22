@@ -260,3 +260,4 @@ download table as CSV: Tabelle als CSV herunterladen
 "transactions between addresses {0} and {1} ({2})": "Transaktionen zwischen Adressen {0} und {1} ({2})"
 "Incoming values of transaction {0} ({1})": "Eingangswerte der Transaktion {0} ({1})"
 "Outgoing values of transaction {0} ({1})": "Ausgangswerte der Transaktion {0} ({1})"
+"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr als {5} Adressen)"
