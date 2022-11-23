@@ -227,19 +227,23 @@ currencyToResult : Config -> String -> Maybe Api.Data.SearchResult -> ( String, 
 currencyToResult vc input found ( currency, latestBlock ) =
     { title = String.toUpper currency
     , badge =
-        (Maybe.map
-            (\{ currencies } ->
-                List.filter (.currency >> (==) currency) currencies
-                    |> List.head
-                    |> Maybe.map
-                        (\{ addresses, txs } ->
-                            List.map Address addresses
-                                ++ List.map Tx txs
-                        )
-                    |> Maybe.withDefault []
-            )
-            found
-            |> Maybe.withDefault []
+        (if String.length input < minSearchInputLength then
+            []
+
+         else
+            Maybe.map
+                (\{ currencies } ->
+                    List.filter (.currency >> (==) currency) currencies
+                        |> List.head
+                        |> Maybe.map
+                            (\{ addresses, txs } ->
+                                List.map Address addresses
+                                    ++ List.map Tx txs
+                            )
+                        |> Maybe.withDefault []
+                )
+                found
+                |> Maybe.withDefault []
         )
             ++ blocksToResult input latestBlock
     }

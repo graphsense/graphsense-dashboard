@@ -5,6 +5,11 @@ import Bounce exposing (Bounce)
 import RemoteData exposing (WebData)
 
 
+minSearchInputLength : Int
+minSearchInputLength =
+    4
+
+
 type alias Model =
     { loading : Bool
     , visible : Bool

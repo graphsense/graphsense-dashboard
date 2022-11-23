@@ -94,7 +94,7 @@ maybeTriggerSearch ( model, cmd ) =
     in
     if
         Bounce.steady model.bounce
-            && (String.length model.input > 3)
+            && (String.length model.input >= minSearchInputLength)
             && (List.length multi == 1)
     then
         ( { model
