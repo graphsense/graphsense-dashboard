@@ -25,7 +25,6 @@ init now =
     , contextMenu = Nothing
     , tag = Nothing
     , userAddressTags = Dict.empty
-    , hovercardTBD = Nothing
     , activeTool =
         { element = Nothing
         , toolbox = Legend []

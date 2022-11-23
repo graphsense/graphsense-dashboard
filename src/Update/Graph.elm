@@ -1324,33 +1324,6 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        ToBeDone id ->
-            ( model
-            , id
-                |> Dom.getElement
-                |> Task.attempt BrowserGotElementForTBD
-                |> CmdEffect
-                |> List.singleton
-            )
-
-        BrowserGotElementForTBD element ->
-            element
-                |> Result.map
-                    (\el ->
-                        ( { model
-                            | hovercardTBD = Just el
-                          }
-                        , [ Process.sleep 2000
-                                |> Task.perform (\_ -> RuntimeHideTBD)
-                                |> CmdEffect
-                          ]
-                        )
-                    )
-                |> Result.withDefault (n model)
-
-        RuntimeHideTBD ->
-            n { model | hovercardTBD = Nothing }
-
         UserClicksLegend id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Legend _, Just ( el, vis ) ) ->
