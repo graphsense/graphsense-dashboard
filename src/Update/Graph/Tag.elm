@@ -14,9 +14,6 @@ searchMsg msg model =
     let
         ( search, eff ) =
             case msg of
-                Search.UserClicksResult ->
-                    ( model.input.label, [] )
-
                 Search.UserClicksResultLine (Search.Label lb) ->
                     Search.update msg model.input.label
                         -- add back the input string

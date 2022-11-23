@@ -246,7 +246,7 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLayout ->
-            n
+            clearSearch plugins
                 { model
                     | user =
                         model.user
@@ -354,9 +354,6 @@ update plugins uc msg model =
             case m of
                 Search.PluginMsg ms ->
                     updatePlugins plugins ms model
-
-                Search.UserClicksResult ->
-                    n model
 
                 Search.UserHitsEnter ->
                     let
@@ -578,6 +575,19 @@ update plugins uc msg model =
                         :: List.map GraphEffect graphEffects
                     )
                         |> pluginNewGraph plugins
+
+                Graph.UserClickedGraph _ ->
+                    if model.search.visible then
+                        n model
+
+                    else
+                        let
+                            ( graph, graphEffects ) =
+                                Graph.update plugins uc m model.graph
+                        in
+                        ( { model | graph = graph }
+                        , List.map GraphEffect graphEffects
+                        )
 
                 _ ->
                     let

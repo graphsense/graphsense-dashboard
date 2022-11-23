@@ -43,6 +43,7 @@ import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Node as Node
 import Msg.Graph as Msg exposing (Msg(..))
+import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -283,11 +284,18 @@ updateByMsg plugins uc msg model =
                             draggingToClick start current
             in
             if click then
-                ( model
-                , Route.rootRoute
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
+                model.tag
+                    |> Maybe.map
+                        (\tag ->
+                            Tag.searchMsg Search.UserLeavesSearch tag
+                                |> mapFirst (\t -> { model | tag = Just t })
+                        )
+                    |> Maybe.withDefault
+                        ( model
+                        , Route.rootRoute
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                        )
 
             else
                 n model

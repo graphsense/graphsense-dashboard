@@ -60,7 +60,6 @@ search plugins vc sc model =
                  , onInput UserInputsSearch
                  , onEnter UserHitsEnter
                  , onFocus UserFocusSearch
-                 , onBlur UserLeavesSearch
                  , value model.input
                  ]
                     ++ (case sc.searchable of
@@ -209,7 +208,7 @@ resultLineToHtml vc title asLink resultLine =
                 a ((Route.graphRoute route |> toUrl |> href) :: attr)
 
             else
-                div attr
+                a (href "#" :: attr)
     in
     el
         [ Css.resultLine vc |> css
