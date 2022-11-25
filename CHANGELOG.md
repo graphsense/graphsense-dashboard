@@ -3,6 +3,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [22.11] - 2022-11-25
+### Changes
+- have address tags table initially unsorted, so server side sorting is effective
+- improve search/autocomplete ux, [#362](https://github.com/graphsense/graphsense-dashboard/issues/362)
+- fix concept loading message translation
+- improve "not found" error message, [#336](https://github.com/graphsense/graphsense-dashboard/issues/336)
+- remove "entity for address not found" message, if there is a "address not found" message already
+- fix submit forms with enter
+- fix translation of "search neighbors" statusbar message
+- fix tag color assignment
+- allow csv download of all tables, [#349](https://github.com/graphsense/graphsense-dashboard/349)
+- performance improvements
+- improve placing of plugin flags
+- pre-select currency in graph config, [#355](https://github.com/graphsense/graphsense-dashboard/355)
+- limit neighbor search depth, change default depth to 2, [#357](https://github.com/graphsense/graphsense-dashboard/357)
+- fix min table height
+- run npm install for plugins
+- display stats timestamp in utc
+### Added
+- add icon to log messages
+- merge plugin translations, remove unused strings with %, [#300](https://github.com/graphsense/graphsense-dashboard/300)
+
 ## [22.10] - 2022-10-10
 ### Added
 - delete address, entities, links with DEL key #330

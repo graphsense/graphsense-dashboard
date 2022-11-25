@@ -49,6 +49,11 @@ s_active value__ record__ =
     { record__ | active = value__ }
 
 
+s_activeCase : a -> { b | activeCase : a } -> { b | activeCase : a }
+s_activeCase value__ record__ =
+    { record__ | activeCase = value__ }
+
+
 s_activeTool : a -> { b | activeTool : a } -> { b | activeTool : a }
 s_activeTool value__ record__ =
     { record__ | activeTool = value__ }
@@ -184,6 +189,11 @@ s_anchor value__ record__ =
     { record__ | anchor = value__ }
 
 
+s_and : a -> { b | and : a } -> { b | and : a }
+s_and value__ record__ =
+    { record__ | and = value__ }
+
+
 s_angle : a -> { b | angle : a } -> { b | angle : a }
 s_angle value__ record__ =
     { record__ | angle = value__ }
@@ -202,6 +212,11 @@ s_animation value__ record__ =
 s_apiKey : a -> { b | apiKey : a } -> { b | apiKey : a }
 s_apiKey value__ record__ =
     { record__ | apiKey = value__ }
+
+
+s_apiKeyHash : a -> { b | apiKeyHash : a } -> { b | apiKeyHash : a }
+s_apiKeyHash value__ record__ =
+    { record__ | apiKeyHash = value__ }
 
 
 s_args : a -> { b | args : a } -> { b | args : a }
@@ -564,14 +579,44 @@ s_caption value__ record__ =
     { record__ | caption = value__ }
 
 
+s_caseConnections : a -> { b | caseConnections : a } -> { b | caseConnections : a }
+s_caseConnections value__ record__ =
+    { record__ | caseConnections = value__ }
+
+
+s_caseId : a -> { b | caseId : a } -> { b | caseId : a }
+s_caseId value__ record__ =
+    { record__ | caseId = value__ }
+
+
+s_caseIdJur : a -> { b | caseIdJur : a } -> { b | caseIdJur : a }
+s_caseIdJur value__ record__ =
+    { record__ | caseIdJur = value__ }
+
+
+s_caseIdPol : a -> { b | caseIdPol : a } -> { b | caseIdPol : a }
+s_caseIdPol value__ record__ =
+    { record__ | caseIdPol = value__ }
+
+
 s_caseInsensitive : a -> { b | caseInsensitive : a } -> { b | caseInsensitive : a }
 s_caseInsensitive value__ record__ =
     { record__ | caseInsensitive = value__ }
 
 
+s_case_ : a -> { b | case_ : a } -> { b | case_ : a }
+s_case_ value__ record__ =
+    { record__ | case_ = value__ }
+
+
 s_casemgm : a -> { b | casemgm : a } -> { b | casemgm : a }
 s_casemgm value__ record__ =
     { record__ | casemgm = value__ }
+
+
+s_cases : a -> { b | cases : a } -> { b | cases : a }
+s_cases value__ record__ =
+    { record__ | cases = value__ }
 
 
 s_categories : a -> { b | categories : a } -> { b | categories : a }
@@ -639,6 +684,11 @@ s_children value__ record__ =
     { record__ | children = value__ }
 
 
+s_chosenCase : a -> { b | chosenCase : a } -> { b | chosenCase : a }
+s_chosenCase value__ record__ =
+    { record__ | chosenCase = value__ }
+
+
 s_circumcircle : a -> { b | circumcircle : a } -> { b | circumcircle : a }
 s_circumcircle value__ record__ =
     { record__ | circumcircle = value__ }
@@ -662,6 +712,16 @@ s_close value__ record__ =
 s_code : a -> { b | code : a } -> { b | code : a }
 s_code value__ record__ =
     { record__ | code = value__ }
+
+
+s_codecId : a -> { b | codecId : a } -> { b | codecId : a }
+s_codecId value__ record__ =
+    { record__ | codecId = value__ }
+
+
+s_codecJson : a -> { b | codecJson : a } -> { b | codecJson : a }
+s_codecJson value__ record__ =
+    { record__ | codecJson = value__ }
 
 
 s_coinbase : a -> { b | coinbase : a } -> { b | coinbase : a }
@@ -729,9 +789,19 @@ s_configValue value__ record__ =
     { record__ | configValue = value__ }
 
 
+s_connect : a -> { b | connect : a } -> { b | connect : a }
+s_connect value__ record__ =
+    { record__ | connect = value__ }
+
+
 s_containerHeight : a -> { b | containerHeight : a } -> { b | containerHeight : a }
 s_containerHeight value__ record__ =
     { record__ | containerHeight = value__ }
+
+
+s_contains : a -> { b | contains : a } -> { b | contains : a }
+s_contains value__ record__ =
+    { record__ | contains = value__ }
 
 
 s_content : a -> { b | content : a } -> { b | content : a }
@@ -769,6 +839,11 @@ s_coords value__ record__ =
     { record__ | coords = value__ }
 
 
+s_create : a -> { b | create : a } -> { b | create : a }
+s_create value__ record__ =
+    { record__ | create = value__ }
+
+
 s_criterion : a -> { b | criterion : a } -> { b | criterion : a }
 s_criterion value__ record__ =
     { record__ | criterion = value__ }
@@ -777,6 +852,11 @@ s_criterion value__ record__ =
 s_css : a -> { b | css : a } -> { b | css : a }
 s_css value__ record__ =
     { record__ | css = value__ }
+
+
+s_csv : a -> { b | csv : a } -> { b | csv : a }
+s_csv value__ record__ =
+    { record__ | csv = value__ }
 
 
 s_ctrlKey : a -> { b | ctrlKey : a } -> { b | ctrlKey : a }
@@ -1019,6 +1099,11 @@ s_dimensions value__ record__ =
     { record__ | dimensions = value__ }
 
 
+s_direct : a -> { b | direct : a } -> { b | direct : a }
+s_direct value__ record__ =
+    { record__ | direct = value__ }
+
+
 s_direction : a -> { b | direction : a } -> { b | direction : a }
 s_direction value__ record__ =
     { record__ | direction = value__ }
@@ -1032,6 +1117,11 @@ s_dirtyFields value__ record__ =
 s_disabled : a -> { b | disabled : a } -> { b | disabled : a }
 s_disabled value__ record__ =
     { record__ | disabled = value__ }
+
+
+s_disconnect : a -> { b | disconnect : a } -> { b | disconnect : a }
+s_disconnect value__ record__ =
+    { record__ | disconnect = value__ }
 
 
 s_display : a -> { b | display : a } -> { b | display : a }
@@ -1107,6 +1197,11 @@ s_edgeSet value__ record__ =
 s_edges : a -> { b | edges : a } -> { b | edges : a }
 s_edges value__ record__ =
     { record__ | edges = value__ }
+
+
+s_editable : a -> { b | editable : a } -> { b | editable : a }
+s_editable value__ record__ =
+    { record__ | editable = value__ }
 
 
 s_effectSimulation : a -> { b | effectSimulation : a } -> { b | effectSimulation : a }
@@ -1194,6 +1289,11 @@ s_ending value__ record__ =
     { record__ | ending = value__ }
 
 
+s_endsWith : a -> { b | endsWith : a } -> { b | endsWith : a }
+s_endsWith value__ record__ =
+    { record__ | endsWith = value__ }
+
+
 s_entities : a -> { b | entities : a } -> { b | entities : a }
 s_entities value__ record__ =
     { record__ | entities = value__ }
@@ -1254,6 +1354,11 @@ s_entityRoot value__ record__ =
     { record__ | entityRoot = value__ }
 
 
+s_equals : a -> { b | equals : a } -> { b | equals : a }
+s_equals value__ record__ =
+    { record__ | equals = value__ }
+
+
 s_error : a -> { b | error : a } -> { b | error : a }
 s_error value__ record__ =
     { record__ | error = value__ }
@@ -1272,6 +1377,11 @@ s_event value__ record__ =
 s_events : a -> { b | events : a } -> { b | events : a }
 s_events value__ record__ =
     { record__ | events = value__ }
+
+
+s_every : a -> { b | every : a } -> { b | every : a }
+s_every value__ record__ =
+    { record__ | every = value__ }
 
 
 s_exactly : a -> { b | exactly : a } -> { b | exactly : a }
@@ -1704,6 +1814,16 @@ s_greyLightest value__ record__ =
     { record__ | greyLightest = value__ }
 
 
+s_gt : a -> { b | gt : a } -> { b | gt : a }
+s_gt value__ record__ =
+    { record__ | gt = value__ }
+
+
+s_gte : a -> { b | gte : a } -> { b | gte : a }
+s_gte value__ record__ =
+    { record__ | gte = value__ }
+
+
 s_h : a -> { b | h : a } -> { b | h : a }
 s_h value__ record__ =
     { record__ | h = value__ }
@@ -1974,6 +2094,11 @@ s_inSomeYears value__ record__ =
     { record__ | inSomeYears = value__ }
 
 
+s_in_ : a -> { b | in_ : a } -> { b | in_ : a }
+s_in_ value__ record__ =
+    { record__ | in_ = value__ }
+
+
 s_includeLabels : a -> { b | includeLabels : a } -> { b | includeLabels : a }
 s_includeLabels value__ record__ =
     { record__ | includeLabels = value__ }
@@ -1992,6 +2117,11 @@ s_indent value__ record__ =
 s_index : a -> { b | index : a } -> { b | index : a }
 s_index value__ record__ =
     { record__ | index = value__ }
+
+
+s_indirect : a -> { b | indirect : a } -> { b | indirect : a }
+s_indirect value__ record__ =
+    { record__ | indirect = value__ }
 
 
 s_infinite : a -> { b | infinite : a } -> { b | infinite : a }
@@ -2054,6 +2184,11 @@ s_inputs value__ record__ =
     { record__ | inputs = value__ }
 
 
+s_inquired : a -> { b | inquired : a } -> { b | inquired : a }
+s_inquired value__ record__ =
+    { record__ | inquired = value__ }
+
+
 s_int : a -> { b | int : a } -> { b | int : a }
 s_int value__ record__ =
     { record__ | int = value__ }
@@ -2072,6 +2207,11 @@ s_integers value__ record__ =
 s_invalid : a -> { b | invalid : a } -> { b | invalid : a }
 s_invalid value__ record__ =
     { record__ | invalid = value__ }
+
+
+s_isAdmin : a -> { b | isAdmin : a } -> { b | isAdmin : a }
+s_isAdmin value__ record__ =
+    { record__ | isAdmin = value__ }
 
 
 s_isChanged : a -> { b | isChanged : a } -> { b | isChanged : a }
@@ -2094,6 +2234,11 @@ s_isMerge value__ record__ =
     { record__ | isMerge = value__ }
 
 
+s_isMine : a -> { b | isMine : a } -> { b | isMine : a }
+s_isMine value__ record__ =
+    { record__ | isMine = value__ }
+
+
 s_isOutgoing : a -> { b | isOutgoing : a } -> { b | isOutgoing : a }
 s_isOutgoing value__ record__ =
     { record__ | isOutgoing = value__ }
@@ -2102,6 +2247,11 @@ s_isOutgoing value__ record__ =
 s_isSelected : a -> { b | isSelected : a } -> { b | isSelected : a }
 s_isSelected value__ record__ =
     { record__ | isSelected = value__ }
+
+
+s_isSet : a -> { b | isSet : a } -> { b | isSet : a }
+s_isSet value__ record__ =
+    { record__ | isSet = value__ }
 
 
 s_isSubmitted : a -> { b | isSubmitted : a } -> { b | isSubmitted : a }
@@ -2212,6 +2362,11 @@ s_larger value__ record__ =
 s_lassoc : a -> { b | lassoc : a } -> { b | lassoc : a }
 s_lassoc value__ record__ =
     { record__ | lassoc = value__ }
+
+
+s_lastBlocks : a -> { b | lastBlocks : a } -> { b | lastBlocks : a }
+s_lastBlocks value__ record__ =
+    { record__ | lastBlocks = value__ }
 
 
 s_lastEffect : a -> { b | lastEffect : a } -> { b | lastEffect : a }
@@ -2489,6 +2644,16 @@ s_loading value__ record__ =
     { record__ | loading = value__ }
 
 
+s_loadingCases : a -> { b | loadingCases : a } -> { b | loadingCases : a }
+s_loadingCases value__ record__ =
+    { record__ | loadingCases = value__ }
+
+
+s_loadingNeighbors : a -> { b | loadingNeighbors : a } -> { b | loadingNeighbors : a }
+s_loadingNeighbors value__ record__ =
+    { record__ | loadingNeighbors = value__ }
+
+
 s_loadingSpinner : a -> { b | loadingSpinner : a } -> { b | loadingSpinner : a }
 s_loadingSpinner value__ record__ =
     { record__ | loadingSpinner = value__ }
@@ -2514,6 +2679,11 @@ s_log value__ record__ =
     { record__ | log = value__ }
 
 
+s_logIcon : a -> { b | logIcon : a } -> { b | logIcon : a }
+s_logIcon value__ record__ =
+    { record__ | logIcon = value__ }
+
+
 s_loggingOut : a -> { b | loggingOut : a } -> { b | loggingOut : a }
 s_loggingOut value__ record__ =
     { record__ | loggingOut = value__ }
@@ -2537,6 +2707,16 @@ s_logoutButton value__ record__ =
 s_lower : a -> { b | lower : a } -> { b | lower : a }
 s_lower value__ record__ =
     { record__ | lower = value__ }
+
+
+s_lt : a -> { b | lt : a } -> { b | lt : a }
+s_lt value__ record__ =
+    { record__ | lt = value__ }
+
+
+s_lte : a -> { b | lte : a } -> { b | lte : a }
+s_lte value__ record__ =
+    { record__ | lte = value__ }
 
 
 s_main : a -> { b | main : a } -> { b | main : a }
@@ -2974,6 +3154,11 @@ s_nodeTypeThunk value__ record__ =
     { record__ | nodeTypeThunk = value__ }
 
 
+s_nodes : a -> { b | nodes : a } -> { b | nodes : a }
+s_nodes value__ record__ =
+    { record__ | nodes = value__ }
+
+
 s_nondegenerateArc : a -> { b | nondegenerateArc : a } -> { b | nondegenerateArc : a }
 s_nondegenerateArc value__ record__ =
     { record__ | nondegenerateArc = value__ }
@@ -2992,6 +3177,16 @@ s_none value__ record__ =
 s_normalDirection : a -> { b | normalDirection : a } -> { b | normalDirection : a }
 s_normalDirection value__ record__ =
     { record__ | normalDirection = value__ }
+
+
+s_not : a -> { b | not : a } -> { b | not : a }
+s_not value__ record__ =
+    { record__ | not = value__ }
+
+
+s_notIn : a -> { b | notIn : a } -> { b | notIn : a }
+s_notIn value__ record__ =
+    { record__ | notIn = value__ }
 
 
 s_now : a -> { b | now : a } -> { b | now : a }
@@ -3129,6 +3324,11 @@ s_onStyle value__ record__ =
     { record__ | onStyle = value__ }
 
 
+s_onSubmit : a -> { b | onSubmit : a } -> { b | onSubmit : a }
+s_onSubmit value__ record__ =
+    { record__ | onSubmit = value__ }
+
+
 s_onSuccess : a -> { b | onSuccess : a } -> { b | onSuccess : a }
 s_onSuccess value__ record__ =
     { record__ | onSuccess = value__ }
@@ -3142,6 +3342,21 @@ s_onUrlChange value__ record__ =
 s_onUrlRequest : a -> { b | onUrlRequest : a } -> { b | onUrlRequest : a }
 s_onUrlRequest value__ record__ =
     { record__ | onUrlRequest = value__ }
+
+
+s_onUser : a -> { b | onUser : a } -> { b | onUser : a }
+s_onUser value__ record__ =
+    { record__ | onUser = value__ }
+
+
+s_onUserAuthenticationWithPasswordFailure : a -> { b | onUserAuthenticationWithPasswordFailure : a } -> { b | onUserAuthenticationWithPasswordFailure : a }
+s_onUserAuthenticationWithPasswordFailure value__ record__ =
+    { record__ | onUserAuthenticationWithPasswordFailure = value__ }
+
+
+s_onUserAuthenticationWithPasswordSuccess : a -> { b | onUserAuthenticationWithPasswordSuccess : a } -> { b | onUserAuthenticationWithPasswordSuccess : a }
+s_onUserAuthenticationWithPasswordSuccess value__ record__ =
+    { record__ | onUserAuthenticationWithPasswordSuccess = value__ }
 
 
 s_onYes : a -> { b | onYes : a } -> { b | onYes : a }
@@ -3184,9 +3399,19 @@ s_options value__ record__ =
     { record__ | options = value__ }
 
 
+s_or : a -> { b | or : a } -> { b | or : a }
+s_or value__ record__ =
+    { record__ | or = value__ }
+
+
 s_order : a -> { b | order : a } -> { b | order : a }
 s_order value__ record__ =
     { record__ | order = value__ }
+
+
+s_orderBy : a -> { b | orderBy : a } -> { b | orderBy : a }
+s_orderBy value__ record__ =
+    { record__ | orderBy = value__ }
 
 
 s_ordinal : a -> { b | ordinal : a } -> { b | ordinal : a }
@@ -3384,6 +3609,11 @@ s_part value__ record__ =
     { record__ | part = value__ }
 
 
+s_password : a -> { b | password : a } -> { b | password : a }
+s_password value__ record__ =
+    { record__ | password = value__ }
+
+
 s_path : a -> { b | path : a } -> { b | path : a }
 s_path value__ record__ =
     { record__ | path = value__ }
@@ -3507,6 +3737,11 @@ s_precision value__ record__ =
 s_predocComments : a -> { b | predocComments : a } -> { b | predocComments : a }
 s_predocComments value__ record__ =
     { record__ | predocComments = value__ }
+
+
+s_preferJurId : a -> { b | preferJurId : a } -> { b | preferJurId : a }
+s_preferJurId value__ record__ =
+    { record__ | preferJurId = value__ }
 
 
 s_prefix : a -> { b | prefix : a } -> { b | prefix : a }
@@ -3889,6 +4124,16 @@ s_rootAddress value__ record__ =
     { record__ | rootAddress = value__ }
 
 
+s_root_address : a -> { b | root_address : a } -> { b | root_address : a }
+s_root_address value__ record__ =
+    { record__ | root_address = value__ }
+
+
+s_route : a -> { b | route : a } -> { b | route : a }
+s_route value__ record__ =
+    { record__ | route = value__ }
+
+
 s_row : a -> { b | row : a } -> { b | row : a }
 s_row value__ record__ =
     { record__ | row = value__ }
@@ -4034,26 +4279,6 @@ s_selected value__ record__ =
     { record__ | selected = value__ }
 
 
-s_selectedAddress : a -> { b | selectedAddress : a } -> { b | selectedAddress : a }
-s_selectedAddress value__ record__ =
-    { record__ | selectedAddress = value__ }
-
-
-s_selectedAddresslink : a -> { b | selectedAddresslink : a } -> { b | selectedAddresslink : a }
-s_selectedAddresslink value__ record__ =
-    { record__ | selectedAddresslink = value__ }
-
-
-s_selectedEntity : a -> { b | selectedEntity : a } -> { b | selectedEntity : a }
-s_selectedEntity value__ record__ =
-    { record__ | selectedEntity = value__ }
-
-
-s_selectedEntitylink : a -> { b | selectedEntitylink : a } -> { b | selectedEntitylink : a }
-s_selectedEntitylink value__ record__ =
-    { record__ | selectedEntitylink = value__ }
-
-
 s_sent : a -> { b | sent : a } -> { b | sent : a }
 s_sent value__ record__ =
     { record__ | sent = value__ }
@@ -4062,6 +4287,16 @@ s_sent value__ record__ =
 s_separator : a -> { b | separator : a } -> { b | separator : a }
 s_separator value__ record__ =
     { record__ | separator = value__ }
+
+
+s_serviceProvider : a -> { b | serviceProvider : a } -> { b | serviceProvider : a }
+s_serviceProvider value__ record__ =
+    { record__ | serviceProvider = value__ }
+
+
+s_serviceProviders : a -> { b | serviceProviders : a } -> { b | serviceProviders : a }
+s_serviceProviders value__ record__ =
+    { record__ | serviceProviders = value__ }
 
 
 s_serviceProvidersUrl : a -> { b | serviceProvidersUrl : a } -> { b | serviceProvidersUrl : a }
@@ -4099,6 +4334,16 @@ s_showAddressShadowLinks value__ record__ =
     { record__ | showAddressShadowLinks = value__ }
 
 
+s_showCase : a -> { b | showCase : a } -> { b | showCase : a }
+s_showCase value__ record__ =
+    { record__ | showCase = value__ }
+
+
+s_showDirect : a -> { b | showDirect : a } -> { b | showDirect : a }
+s_showDirect value__ record__ =
+    { record__ | showDirect = value__ }
+
+
 s_showEntityShadowLinks : a -> { b | showEntityShadowLinks : a } -> { b | showEntityShadowLinks : a }
 s_showEntityShadowLinks value__ record__ =
     { record__ | showEntityShadowLinks = value__ }
@@ -4107,6 +4352,11 @@ s_showEntityShadowLinks value__ record__ =
 s_showIcon : a -> { b | showIcon : a } -> { b | showIcon : a }
 s_showIcon value__ record__ =
     { record__ | showIcon = value__ }
+
+
+s_showTable : a -> { b | showTable : a } -> { b | showTable : a }
+s_showTable value__ record__ =
+    { record__ | showTable = value__ }
 
 
 s_sidebar : a -> { b | sidebar : a } -> { b | sidebar : a }
@@ -4144,6 +4394,11 @@ s_sketchPlane value__ record__ =
     { record__ | sketchPlane = value__ }
 
 
+s_skip : a -> { b | skip : a } -> { b | skip : a }
+s_skip value__ record__ =
+    { record__ | skip = value__ }
+
+
 s_skipCount : a -> { b | skipCount : a } -> { b | skipCount : a }
 s_skipCount value__ record__ =
     { record__ | skipCount = value__ }
@@ -4172,6 +4427,11 @@ s_snapshots value__ record__ =
 s_snippets : a -> { b | snippets : a } -> { b | snippets : a }
 s_snippets value__ record__ =
     { record__ | snippets = value__ }
+
+
+s_some : a -> { b | some : a } -> { b | some : a }
+s_some value__ record__ =
+    { record__ | some = value__ }
 
 
 s_someDaysAgo : a -> { b | someDaysAgo : a } -> { b | someDaysAgo : a }
@@ -4252,6 +4512,11 @@ s_startPoint value__ record__ =
 s_startVertexIndex : a -> { b | startVertexIndex : a } -> { b | startVertexIndex : a }
 s_startVertexIndex value__ record__ =
     { record__ | startVertexIndex = value__ }
+
+
+s_startsWith : a -> { b | startsWith : a } -> { b | startsWith : a }
+s_startsWith value__ record__ =
+    { record__ | startsWith = value__ }
 
 
 s_state : a -> { b | state : a } -> { b | state : a }
@@ -4429,6 +4694,11 @@ s_tableRow value__ record__ =
     { record__ | tableRow = value__ }
 
 
+s_tableVisible : a -> { b | tableVisible : a } -> { b | tableVisible : a }
+s_tableVisible value__ record__ =
+    { record__ | tableVisible = value__ }
+
+
 s_tableWrapper : a -> { b | tableWrapper : a } -> { b | tableWrapper : a }
 s_tableWrapper value__ record__ =
     { record__ | tableWrapper = value__ }
@@ -4447,6 +4717,11 @@ s_tables value__ record__ =
 s_tag : a -> { b | tag : a } -> { b | tag : a }
 s_tag value__ record__ =
     { record__ | tag = value__ }
+
+
+s_tagInput : a -> { b | tagInput : a } -> { b | tagInput : a }
+s_tagInput value__ record__ =
+    { record__ | tagInput = value__ }
 
 
 s_tagLockedIcon : a -> { b | tagLockedIcon : a } -> { b | tagLockedIcon : a }
@@ -4502,6 +4777,11 @@ s_tagsFlag value__ record__ =
 s_tail : a -> { b | tail : a } -> { b | tail : a }
 s_tail value__ record__ =
     { record__ | tail = value__ }
+
+
+s_take : a -> { b | take : a } -> { b | take : a }
+s_take value__ record__ =
+    { record__ | take = value__ }
 
 
 s_target : a -> { b | target : a } -> { b | target : a }
@@ -4587,6 +4867,11 @@ s_thead value__ record__ =
 s_theme : a -> { b | theme : a } -> { b | theme : a }
 s_theme value__ record__ =
     { record__ | theme = value__ }
+
+
+s_things : a -> { b | things : a } -> { b | things : a }
+s_things value__ record__ =
+    { record__ | things = value__ }
 
 
 s_thirdControlPoint : a -> { b | thirdControlPoint : a } -> { b | thirdControlPoint : a }
@@ -5042,6 +5327,11 @@ s_visible value__ record__ =
 s_visited : a -> { b | visited : a } -> { b | visited : a }
 s_visited value__ record__ =
     { record__ | visited = value__ }
+
+
+s_where_ : a -> { b | where_ : a } -> { b | where_ : a }
+s_where_ value__ record__ =
+    { record__ | where_ = value__ }
 
 
 s_white : a -> { b | white : a } -> { b | white : a }

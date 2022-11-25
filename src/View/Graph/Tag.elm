@@ -27,6 +27,7 @@ inputHovercard plugins vc tc model =
     [ Just UserClicksCloseTagHovercard
         |> Dialog.headRow vc "Add tag"
     , Dialog.body vc
+        { onSubmit = UserSubmitsTagInput }
         [ Dialog.part vc
             "Label"
             [ Search.search plugins
@@ -112,6 +113,5 @@ inputHovercard plugins vc tc model =
             ]
         ]
     ]
-        |> Html.form
-            [ onSubmit UserSubmitsTagInput
-            ]
+        |> div
+            []

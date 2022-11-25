@@ -26,7 +26,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.AddressTag
 init =
-    Init.Graph.Table.initSorted True filter "Confidence"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.AddressTag -> Bool

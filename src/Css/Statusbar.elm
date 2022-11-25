@@ -19,6 +19,11 @@ log vc noerror =
     vc.theme.statusbar.log vc.lightmode noerror
 
 
+logIcon : Config -> Bool -> List Style
+logIcon vc noerror =
+    vc.theme.statusbar.logIcon vc.lightmode noerror
+
+
 close : Config -> List Style
 close vc =
     vc.theme.statusbar.close vc.lightmode

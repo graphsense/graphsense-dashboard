@@ -33,7 +33,7 @@ update msg model =
 
         UserClicksResult ->
             -- handled upstream
-            n model
+            hide model |> n
 
         UserPicksCurrency _ ->
             -- handled upstream
@@ -64,12 +64,10 @@ update msg model =
             n { model | visible = True }
 
         UserLeavesSearch ->
-            ( model
-            , [ BlurBounceEffect ]
-            )
+            hide model |> n
 
         BouncedBlur ->
-            n { model | visible = False }
+            hide model |> n
 
         RuntimeBounced ->
             { model
@@ -94,7 +92,7 @@ maybeTriggerSearch ( model, cmd ) =
     in
     if
         Bounce.steady model.bounce
-            && (String.length model.input > 3)
+            && (String.length model.input >= minSearchInputLength)
             && (List.length multi == 1)
     then
         ( { model
@@ -182,6 +180,7 @@ clear model =
         | found = Nothing
         , input = ""
         , loading = False
+        , visible = False
     }
 
 
@@ -203,3 +202,8 @@ popInput model =
                         ( Just ( currency, term ), { model | batch = Just ( currency, rest ) } )
             )
         |> Maybe.withDefault ( Nothing, model )
+
+
+hide : Model -> Model
+hide model =
+    { model | visible = False }

@@ -37,7 +37,6 @@ type alias Model =
     , tag : Maybe Tag.Model
     , search : Maybe Search.Model
     , userAddressTags : Dict ( String, String, String ) Tag.UserTag
-    , hovercardTBD : Maybe Dom.Element
     , activeTool : ActiveTool
     , history : History
     , highlights : Highlighter.Model

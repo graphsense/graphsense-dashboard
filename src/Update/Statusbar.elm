@@ -1,5 +1,6 @@
 module Update.Statusbar exposing (..)
 
+import Api.Data
 import Api.Request.Entities
 import Dict
 import Effect.Api as Api
@@ -145,7 +146,7 @@ update key error model =
             (\msg ->
                 { model
                     | messages = Dict.remove key model.messages
-                    , log = ( first msg, second msg, error ) :: model.log
+                    , log = addLog ( first msg, second msg, error ) model.log
                     , visible =
                         error
                             |> Maybe.map (\_ -> True)
@@ -153,6 +154,15 @@ update key error model =
                 }
             )
         |> Maybe.withDefault model
+
+
+updateLastBlocks : Api.Data.Stats -> Model -> Model
+updateLastBlocks stats model =
+    { model
+        | lastBlocks =
+            stats.currencies
+                |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
+    }
 
 
 toggle : Model -> Model
@@ -216,7 +226,7 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.GetAddressEffect e _ ->
-            ( "{1}: loading address {0}"
+            ( loadingAddressKey
             , [ e.address
               , e.currency |> String.toUpper
               ]
@@ -224,7 +234,7 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.GetEntityForAddressEffect e _ ->
-            ( "{1}: loading entity for address {0}"
+            ( loadingAddressEntityKey
             , [ e.address
               , e.currency |> String.toUpper
               ]
@@ -390,3 +400,23 @@ messageFromApiEffect model effect =
               ]
             )
                 |> Just
+
+
+addLog : ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error )
+addLog ( key, values, error ) logs =
+    ( key, values, error )
+        :: logs
+        |> (if error == Just (Http.BadStatus 404) && (key == loadingAddressKey || key == loadingAddressEntityKey) then
+                removeEntityNotFoundErrors values
+
+            else
+                identity
+           )
+
+
+removeEntityNotFoundErrors : List String -> List ( String, List String, Maybe Http.Error ) -> List ( String, List String, Maybe Http.Error )
+removeEntityNotFoundErrors values messages =
+    (List.take 10 messages
+        |> List.filter ((/=) ( loadingAddressEntityKey, values, Just (Http.BadStatus 404) ))
+    )
+        ++ List.drop 10 messages

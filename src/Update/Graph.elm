@@ -43,6 +43,7 @@ import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Node as Node
 import Msg.Graph as Msg exposing (Msg(..))
+import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -283,11 +284,18 @@ updateByMsg plugins uc msg model =
                             draggingToClick start current
             in
             if click then
-                ( model
-                , Route.rootRoute
-                    |> NavPushRouteEffect
-                    |> List.singleton
-                )
+                model.tag
+                    |> Maybe.map
+                        (\tag ->
+                            Tag.searchMsg Search.UserLeavesSearch tag
+                                |> mapFirst (\t -> { model | tag = Just t })
+                        )
+                    |> Maybe.withDefault
+                        ( model
+                        , Route.rootRoute
+                            |> NavPushRouteEffect
+                            |> List.singleton
+                        )
 
             else
                 n model
@@ -841,7 +849,18 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotAddressTags id tags ->
-            model
+            let
+                colors =
+                    tags.addressTags
+                        |> List.map .category
+                        |> List.foldl
+                            (\category config -> Color.update uc config category)
+                            model.config.colors
+            in
+            { model
+                | config =
+                    model.config |> s_colors colors
+            }
                 |> updateAddresses id (Address.updateTags tags.addressTags)
                 |> n
 
@@ -1304,33 +1323,6 @@ updateByMsg plugins uc msg model =
                         )
                     )
                 |> Maybe.withDefault (n model)
-
-        ToBeDone id ->
-            ( model
-            , id
-                |> Dom.getElement
-                |> Task.attempt BrowserGotElementForTBD
-                |> CmdEffect
-                |> List.singleton
-            )
-
-        BrowserGotElementForTBD element ->
-            element
-                |> Result.map
-                    (\el ->
-                        ( { model
-                            | hovercardTBD = Just el
-                          }
-                        , [ Process.sleep 2000
-                                |> Task.perform (\_ -> RuntimeHideTBD)
-                                |> CmdEffect
-                          ]
-                        )
-                    )
-                |> Result.withDefault (n model)
-
-        RuntimeHideTBD ->
-            n { model | hovercardTBD = Nothing }
 
         UserClicksLegend id ->
             case ( model.activeTool.toolbox, model.activeTool.element ) of

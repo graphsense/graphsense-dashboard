@@ -29,6 +29,8 @@ inputHovercard plugins vc model =
     [ Just UserClicksCloseSearchHovercard
         |> Dialog.headRow vc "Search neighbors"
     , Dialog.body vc
+        { onSubmit = UserSubmitsSearchInput
+        }
         [ Dialog.part vc
             "Direction"
             [ direction vc "outgoing" dir
@@ -102,9 +104,7 @@ inputHovercard plugins vc model =
             []
         ]
     ]
-        |> Html.form
-            [ onSubmit UserSubmitsSearchInput
-            ]
+        |> div []
 
 
 radio : View.Config -> { name : String, msg : String -> Msg, title : String, current : String } -> Html Msg

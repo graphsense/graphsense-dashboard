@@ -60,7 +60,6 @@ search plugins vc sc model =
                  , onInput UserInputsSearch
                  , onEnter UserHitsEnter
                  , onFocus UserFocusSearch
-                 , onBlur UserLeavesSearch
                  , value model.input
                  ]
                     ++ (case sc.searchable of
@@ -209,7 +208,7 @@ resultLineToHtml vc title asLink resultLine =
                 a ((Route.graphRoute route |> toUrl |> href) :: attr)
 
             else
-                div attr
+                a (href "#" :: attr)
     in
     el
         [ Css.resultLine vc |> css
@@ -227,19 +226,23 @@ currencyToResult : Config -> String -> Maybe Api.Data.SearchResult -> ( String, 
 currencyToResult vc input found ( currency, latestBlock ) =
     { title = String.toUpper currency
     , badge =
-        (Maybe.map
-            (\{ currencies } ->
-                List.filter (.currency >> (==) currency) currencies
-                    |> List.head
-                    |> Maybe.map
-                        (\{ addresses, txs } ->
-                            List.map Address addresses
-                                ++ List.map Tx txs
-                        )
-                    |> Maybe.withDefault []
-            )
-            found
-            |> Maybe.withDefault []
+        (if String.length input < minSearchInputLength then
+            []
+
+         else
+            Maybe.map
+                (\{ currencies } ->
+                    List.filter (.currency >> (==) currency) currencies
+                        |> List.head
+                        |> Maybe.map
+                            (\{ addresses, txs } ->
+                                List.map Address addresses
+                                    ++ List.map Tx txs
+                            )
+                        |> Maybe.withDefault []
+                )
+                found
+                |> Maybe.withDefault []
         )
             ++ blocksToResult input latestBlock
     }

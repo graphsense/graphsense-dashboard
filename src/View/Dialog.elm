@@ -110,8 +110,9 @@ headRow vc title onClose =
         ]
 
 
-body : Config -> List (Html msg) -> Html msg
-body vc =
-    div
+body : Config -> { onSubmit : msg } -> List (Html msg) -> Html msg
+body vc { onSubmit } =
+    Html.Styled.form
         [ Css.body vc |> css
+        , Html.Styled.Events.onSubmit onSubmit
         ]

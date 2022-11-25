@@ -21,8 +21,6 @@ import Route
 import Route.Graph
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
-import View.Graph.Search as Search
-import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
@@ -123,7 +121,7 @@ sidebar plugins vc model =
 
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
 hovercards plugins vc model =
-    (model.user.hovercardElement
+    model.user.hovercardElement
         |> Maybe.map
             (\element ->
                 User.hovercard plugins vc model model.user
@@ -131,48 +129,6 @@ hovercards plugins vc model =
                     |> hovercard vc element
             )
         |> Maybe.withDefault []
-    )
-        ++ (model.graph.tag
-                |> Maybe.map
-                    (\tag ->
-                        (Tag.inputHovercard plugins
-                            vc
-                            { entityConcepts = model.graph.config.entityConcepts
-                            , abuseConcepts = model.graph.config.abuseConcepts
-                            }
-                            tag
-                            |> Html.Styled.toUnstyled
-                            |> List.singleton
-                        )
-                            |> List.map (Html.map GraphMsg)
-                            |> hovercard vc tag.hovercardElement
-                    )
-                |> Maybe.withDefault []
-           )
-        ++ (model.graph.search
-                |> Maybe.map
-                    (\search ->
-                        (Search.inputHovercard plugins vc search
-                            |> Html.Styled.toUnstyled
-                            |> List.singleton
-                        )
-                            |> List.map (Html.map GraphMsg)
-                            |> hovercard vc search.element
-                    )
-                |> Maybe.withDefault []
-           )
-        ++ (model.graph.hovercardTBD
-                |> Maybe.map
-                    (\element ->
-                        Html.text "To be done"
-                            |> List.singleton
-                            |> Html.div [ Html.Attributes.style "white-space" "nowrap", Html.Attributes.style "padding" "10px" ]
-                            |> List.singleton
-                            |> hovercard vc element
-                    )
-                |> Maybe.withDefault []
-           )
-        ++ Plugin.hovercards plugins model.plugins vc
 
 
 overlay : Plugins -> Config -> Model key -> List (Html Msg)

@@ -1048,6 +1048,8 @@ theme =
                                     ]
                                )
                     )
+                |> s_logIcon
+                    (\_ _ -> [ scaled 1 |> rem |> paddingRight ])
                 |> s_close
                     (\lightmode ->
                         [ colors.brandText |> colorWithLightmode lightmode

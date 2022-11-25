@@ -8,9 +8,9 @@ import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css.Graph as Css
 import Dict
-import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as Html exposing (..)
-import Html.Styled.Lazy as Html exposing (..)
+import Html.Styled exposing (..)
+import Html.Styled.Attributes as HA exposing (..)
+import Html.Styled.Lazy exposing (..)
 import IntDict exposing (IntDict)
 import Json.Decode
 import List.Extra
@@ -36,7 +36,7 @@ import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
 import Util.Graph as Util
-import Util.View exposing (none)
+import Util.View exposing (hovercard, none)
 import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
 import View.Graph.ContextMenu as ContextMenu
@@ -44,6 +44,8 @@ import View.Graph.Entity as Entity
 import View.Graph.Layer as ViewLayer
 import View.Graph.Link as Link
 import View.Graph.Navbar as Navbar
+import View.Graph.Search as Search
+import View.Graph.Tag as Tag
 import View.Graph.Tool as Tool
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -52,20 +54,22 @@ import View.Locale as Locale
 view : Plugins -> ModelState -> Config -> Model -> Html Msg
 view plugins states vc model =
     section
-        [ Css.root vc |> Html.css
+        [ Css.root vc |> HA.css
         ]
-        [ Navbar.navbar plugins states vc model
-        , graph plugins states vc model.config model
-        ]
+        ([ Navbar.navbar plugins states vc model
+         , graph plugins states vc model.config model
+         ]
+            ++ hovercards plugins states vc model
+        )
 
 
 graph : Plugins -> ModelState -> Config -> Graph.Config -> Model -> Html Msg
 graph plugins states vc gc model =
-    Html.section
-        [ Css.graphRoot vc |> Html.css
-        , Html.id "graph"
+    section
+        [ Css.graphRoot vc |> HA.css
+        , HA.id "graph"
         ]
-        [ Html.lazy5 browser plugins states vc gc model.browser
+        [ lazy5 browser plugins states vc gc model.browser
         , Tool.toolbox vc model
         , model.size
             |> Maybe.map (graphSvg plugins states vc gc model)
@@ -448,3 +452,35 @@ contextMenu plugins states vc model cm =
             ]
     )
         |> ContextMenu.view vc cm.coords
+
+
+hovercards : Plugins -> ModelState -> Config -> Model -> List (Html Msg)
+hovercards plugins states vc model =
+    (model.tag
+        |> Maybe.map
+            (\tag ->
+                (Tag.inputHovercard plugins
+                    vc
+                    { entityConcepts = model.config.entityConcepts
+                    , abuseConcepts = model.config.abuseConcepts
+                    }
+                    tag
+                    |> Html.Styled.toUnstyled
+                    |> List.singleton
+                )
+                    |> hovercard vc tag.hovercardElement
+            )
+        |> Maybe.withDefault []
+    )
+        ++ (model.search
+                |> Maybe.map
+                    (\search ->
+                        (Search.inputHovercard plugins vc search
+                            |> Html.Styled.toUnstyled
+                            |> List.singleton
+                        )
+                            |> hovercard vc search.element
+                    )
+                |> Maybe.withDefault []
+           )
+        ++ Plugin.hovercards plugins states vc

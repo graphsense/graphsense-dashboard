@@ -19,3 +19,15 @@ initSorted desc filterFunction col =
     , filter = Nothing
     , filterFunction = filterFunction
     }
+
+
+initUnsorted : (String -> a -> Bool) -> Table a
+initUnsorted filterFunction =
+    { data = []
+    , filtered = []
+    , loading = True
+    , state = Table.initialSort ""
+    , nextpage = Nothing
+    , filter = Nothing
+    , filterFunction = filterFunction
+    }
