@@ -69,7 +69,24 @@ config vc gc bestAddressTag entityId entityHasAddress =
                     ]
                 )
             , T.stringColumn vc "Entity" (.entity >> String.fromInt)
-            , T.stringColumn vc "Label" .label
+            , T.htmlColumn vc
+                "Label"
+                .label
+                (\{ label, tagpackIsPublic } ->
+                    if not tagpackIsPublic && String.isEmpty label then
+                        span
+                            [ Css.fontStyle Css.italic
+                                |> List.singleton
+                                |> css
+                            ]
+                            [ Locale.string vc.locale "proprietary tag"
+                                |> text
+                            ]
+                            |> List.singleton
+
+                    else
+                        [ text label ]
+                )
             , T.htmlColumn vc
                 "Source"
                 (.source >> Maybe.withDefault "")
