@@ -5,6 +5,7 @@ import Browser.Dom
 import Effect.Api as Api exposing (..)
 import Json.Encode
 import Model.Address exposing (Address)
+import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
 
@@ -14,6 +15,7 @@ type OutMsg msg addressMsg entityMsg
     | UpdateAddresses Address addressMsg
     | UpdateAddressEntities Address entityMsg
     | UpdateEntities Entity entityMsg
+    | UpdateEntitiesByRootAddress Address entityMsg
     | PushUrl String
     | GetEntitiesForAddresses (List Address) (List ( Address, Api.Data.Entity ) -> msg)
     | GetEntities (List Entity) (List Api.Data.Entity -> msg)
@@ -22,6 +24,7 @@ type OutMsg msg addressMsg entityMsg
     | GetAddressDomElement Id.AddressId (Result Browser.Dom.Error Browser.Dom.Element -> msg)
     | SendToPort Json.Encode.Value
     | ApiRequest (Api.Effect msg)
+    | ShowConfirmDialog (Model.Dialog.ConfirmConfig msg)
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -37,6 +40,10 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         UpdateEntities e entityMsg ->
             mapEntityMsg entityMsg
                 |> UpdateEntities e
+
+        UpdateEntitiesByRootAddress a entityMsg ->
+            mapEntityMsg entityMsg
+                |> UpdateEntitiesByRootAddress a
 
         UpdateAddressEntities a entityMsg ->
             mapEntityMsg entityMsg
@@ -72,3 +79,10 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         ApiRequest effect ->
             Api.map mapMsg effect
                 |> ApiRequest
+
+        ShowConfirmDialog { message, onYes, onNo } ->
+            { message = message
+            , onYes = mapMsg onYes
+            , onNo = mapMsg onNo
+            }
+                |> ShowConfirmDialog

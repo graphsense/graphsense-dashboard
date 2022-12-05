@@ -2909,6 +2909,26 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateEntitiesByRootAddress id pmsg ->
+                        let
+                            predicate =
+                                \{ entity } ->
+                                    entity.rootAddress
+                                        == id.address
+                                        && entity.currency
+                                        == id.currency
+                        in
+                        ( { mo
+                            | layers =
+                                Layer.updateEntitiesIf
+                                    predicate
+                                    (Plugin.updateEntity plugins pmsg)
+                                    mo.layers
+                          }
+                            |> refreshBrowserEntityIf predicate
+                        , eff
+                        )
+
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, [] )
 
@@ -2931,6 +2951,9 @@ updateByPluginOutMsg plugins outMsgs model =
                         ( mo, [] )
 
                     PluginInterface.ApiRequest _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowConfirmDialog _ ->
                         ( mo, [] )
             )
             ( model, [] )
@@ -2960,11 +2983,18 @@ refreshBrowserAddress id model =
 
 refreshBrowserEntity : E.Entity -> Model -> Model
 refreshBrowserEntity id model =
+    refreshBrowserEntityIf
+        (\en -> en.entity.currency == id.currency && en.entity.entity == id.entity)
+        model
+
+
+refreshBrowserEntityIf : (Entity -> Bool) -> Model -> Model
+refreshBrowserEntityIf predicate model =
     { model
         | browser =
             case model.browser.type_ of
                 Browser.Entity (Browser.Loaded en) table ->
-                    if en.entity.currency == id.currency && en.entity.entity == id.entity then
+                    if predicate en then
                         model.browser
                             |> s_type_
                                 (Layer.getEntity en.id model.layers
