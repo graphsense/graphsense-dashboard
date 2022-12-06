@@ -649,6 +649,7 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                             |> Task.attempt (BrowserGotElementForPlugin pmsg)
                             |> CmdEffect
                             |> List.singleton
+                            |> (++) eff
                         )
 
                     PluginInterface.PushUrl url ->
@@ -1030,4 +1031,5 @@ batchSearch plugins ( model, eff ) =
                     |> List.singleton
             )
         |> Maybe.withDefault []
+        |> (++) eff
     )
