@@ -3267,10 +3267,6 @@ fromDeserialized deserialized model =
                         }
                     |> ApiEffect
             )
-        |> (::)
-            (Route.rootRoute
-                |> NavPushRouteEffect
-            )
         |> pair
             { model
                 | highlights =
