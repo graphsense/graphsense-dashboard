@@ -776,40 +776,44 @@ updateByUrl plugins uc url model =
                         )
 
                     Route.Graph graphRoute ->
-                        case graphRoute |> Log.log "graphRoute" of
-                            Route.Graph.Plugin ( pid, value ) ->
-                                let
-                                    ( new, outMsg, cmd ) =
-                                        Plugin.updateGraphByUrl pid plugins value model.plugins
-                                in
-                                ( { model
-                                    | plugins = new
-                                    , page = Graph
-                                    , url = url
-                                  }
-                                , [ PluginEffect cmd ]
-                                )
-                                    |> updateByPluginOutMsg plugins outMsg
+                        mapSecond
+                            ((++)
+                                (if model.graph.size == Nothing then
+                                    [ GraphEffect Graph.GetSvgElementEffect ]
 
-                            _ ->
-                                let
-                                    ( graph, graphEffect ) =
-                                        Graph.updateByRoute plugins graphRoute model.graph
-                                in
-                                ( { model
-                                    | page = Graph
-                                    , graph = graph
-                                    , url = url
-                                  }
-                                , graphEffect
-                                    ++ (if model.graph.size == Nothing then
-                                            [ Graph.GetSvgElementEffect ]
-
-                                        else
-                                            []
-                                       )
-                                    |> List.map GraphEffect
+                                 else
+                                    []
                                 )
+                            )
+                        <|
+                            case graphRoute |> Log.log "graphRoute" of
+                                Route.Graph.Plugin ( pid, value ) ->
+                                    let
+                                        ( new, outMsg, cmd ) =
+                                            Plugin.updateGraphByUrl pid plugins value model.plugins
+                                    in
+                                    ( { model
+                                        | plugins = new
+                                        , page = Graph
+                                        , url = url
+                                      }
+                                    , [ PluginEffect cmd ]
+                                    )
+                                        |> updateByPluginOutMsg plugins outMsg
+
+                                _ ->
+                                    let
+                                        ( graph, graphEffect ) =
+                                            Graph.updateByRoute plugins graphRoute model.graph
+                                    in
+                                    ( { model
+                                        | page = Graph
+                                        , graph = graph
+                                        , url = url
+                                      }
+                                    , graphEffect
+                                        |> List.map GraphEffect
+                                    )
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
