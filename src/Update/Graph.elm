@@ -6,6 +6,8 @@ import Color
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
+import Decode.Graph044 as Graph044
+import Decode.Graph045 as Graph045
 import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
@@ -3159,7 +3161,13 @@ deserialize =
 
 deserializeByVersion : String -> Json.Decode.Decoder Deserialized
 deserializeByVersion version =
-    if String.startsWith "0.5." version then
+    if String.startsWith "0.4.4" version then
+        Graph044.decoder
+
+    else if String.startsWith "0.4.5" version then
+        Graph045.decoder
+
+    else if String.startsWith "0.5." version then
         Graph050.decoder
 
     else if String.startsWith "1.0." version then
