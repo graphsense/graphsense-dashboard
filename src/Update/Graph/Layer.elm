@@ -410,31 +410,44 @@ addAddressHelp plugins uc address acc =
             acc
 
 
-updateAddressLinks : { currency : String, address : String } -> ( LinkData, Address ) -> IntDict Layer -> IntDict Layer
-updateAddressLinks { currency, address } ( neighbor, target ) layers =
+updateAddressLinks : { currency : String, address : String } -> List ( LinkData, Address ) -> IntDict Layer -> IntDict Layer
+updateAddressLinks { currency, address } neighbors layers =
     layers
         |> IntDict.foldl
-            (\_ layer layers_ ->
-                if layer.id /= Id.layer target.id - 1 then
-                    layers_
+            (\_ layer ( neighbors_, layers_ ) ->
+                let
+                    neighbors__ =
+                        neighbors_
+                            |> List.filter (second >> .id >> Id.layer >> (<) layer.id)
 
-                else
-                    let
-                        addressId =
-                            Id.initAddressId { currency = currency, id = address, layer = layer.id }
+                    relevant =
+                        neighbors__
+                            |> List.filter (second >> .id >> Id.layer >> (==) (layer.id + 1))
 
-                        ( entities, updated ) =
-                            updateAddressLinkForEntities addressId ( neighbor, target ) layer.entities
-                    in
-                    if updated then
-                        IntDict.insert layer.id
-                            { layer | entities = entities }
-                            layers_
+                    addressId =
+                        Id.initAddressId { currency = currency, id = address, layer = layer.id }
+                in
+                ( neighbors__
+                , relevant
+                    |> List.foldl
+                        (\neighbor layers__ ->
+                            let
+                                ( entities, updated ) =
+                                    updateAddressLinkForEntities addressId neighbor layer.entities
+                            in
+                            if updated then
+                                IntDict.insert layer.id
+                                    { layer | entities = entities }
+                                    layers__
 
-                    else
+                            else
+                                layers__
+                        )
                         layers_
+                )
             )
-            layers
+            ( neighbors, layers )
+        |> second
 
 
 updateAddressLinkForEntities : AddressId -> ( LinkData, Address ) -> Dict EntityId Entity -> ( Dict EntityId Entity, Bool )

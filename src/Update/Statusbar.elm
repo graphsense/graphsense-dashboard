@@ -369,6 +369,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.BulkGetAddressNeighborsEffect e _ ->
+            ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of {0} addresses"
+            , [ List.length e.addresses |> String.fromInt
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.ListAddressTagsEffect e _ ->
             ( "{1}: loading tags with label {0}"
             , [ e.label ]

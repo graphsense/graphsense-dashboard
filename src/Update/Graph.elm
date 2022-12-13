@@ -745,9 +745,7 @@ updateByMsg plugins uc msg model =
                                     Layer.getAddress id model.layers
                                         |> Maybe.map (pair n)
                                 )
-                            |> List.foldl
-                                (addAddressLink anch isOutgoing)
-                                mo
+                            |> (\neighs -> addAddressLinks anch isOutgoing neighs mo)
                     )
                     model
                 |> n
@@ -1281,7 +1279,7 @@ updateByMsg plugins uc msg model =
                                                         |> addUserTag added.new model.userAddressTags
                                                 , config = model.config |> s_colors added.colors
                                               }
-                                                |> addAddressLink address isOutgoing ( neighbor, addedAddress )
+                                                |> addAddressLinks address isOutgoing [ ( neighbor, addedAddress ) ]
                                                 |> syncLinks added.repositioned
                                             , [ BrowserGotAddressTags
                                                     { currency = Id.currency addressId
@@ -1767,6 +1765,14 @@ updateByMsg plugins uc msg model =
                         , onlyIds = True
                         }
                     |> ApiEffect
+              , BrowserGotBulkAddressNeighbors currency True
+                    |> BulkGetAddressNeighborsEffect
+                        { currency = currency
+                        , isOutgoing = True
+                        , addresses = List.map .address deser.addresses
+                        , onlyIds = True
+                        }
+                    |> ApiEffect
               , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
@@ -1822,6 +1828,46 @@ updateByMsg plugins uc msg model =
                                                     )
                                     in
                                     addEntityLinks anchor isOutgoing neighborsWithEntity model__
+                                )
+                                model_
+                    )
+                    model
+                |> n
+
+        BrowserGotBulkAddressNeighbors currency isOutgoing addressNeighbors ->
+            addressNeighbors
+                |> List.Extra.gatherEqualsBy first
+                |> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+                |> List.foldl
+                    (\( requestAddress, neighbors ) model_ ->
+                        Layer.getAddresses { currency = currency, address = requestAddress } model_.layers
+                            |> List.foldl
+                                (\anchor model__ ->
+                                    let
+                                        neighborsWithAddress =
+                                            neighbors
+                                                |> List.filterMap
+                                                    (\neighbor ->
+                                                        let
+                                                            addressId =
+                                                                Id.initAddressId
+                                                                    { currency = currency
+                                                                    , id = neighbor.address.address
+                                                                    , layer =
+                                                                        Id.layer anchor.id
+                                                                            + (if isOutgoing then
+                                                                                1
+
+                                                                               else
+                                                                                -1
+                                                                              )
+                                                                    }
+                                                        in
+                                                        Layer.getAddress addressId model__.layers
+                                                            |> Maybe.map (pair neighbor)
+                                                    )
+                                    in
+                                    addAddressLinks anchor isOutgoing neighborsWithAddress model__
                                 )
                                 model_
                     )
@@ -2472,21 +2518,26 @@ addEntityLinks anchor isOutgoing neighbors model =
     }
 
 
-addAddressLink : Address -> Bool -> ( Api.Data.NeighborAddress, Address ) -> Model -> Model
-addAddressLink anchor isOutgoing ( neighbor, target ) model =
+addAddressLinks : Address -> Bool -> List ( Api.Data.NeighborAddress, Address ) -> Model -> Model
+addAddressLinks anchor isOutgoing neighbors model =
     let
         linkData =
-            Link.fromNeighbor neighbor
+            neighbors
+                |> List.map (mapFirst Link.fromNeighbor)
 
         layers =
             if isOutgoing then
-                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( linkData, target ) model.layers
+                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } linkData model.layers
 
             else
-                Layer.updateAddressLinks
-                    { currency = Id.currency target.id, address = Id.addressId target.id }
-                    ( linkData, anchor )
-                    model.layers
+                linkData
+                    |> List.foldl
+                        (\( linkDatum, neighbor ) ->
+                            Layer.updateAddressLinks
+                                { currency = Id.currency neighbor.id, address = Id.addressId neighbor.id }
+                                [ ( linkDatum, anchor ) ]
+                        )
+                        model.layers
     in
     { model
         | layers = layers
@@ -2564,7 +2615,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                     |> List.Extra.find (\n -> n.address.currency == address.address.currency && n.address.address == address.address.address)
                     |> Maybe.map
                         (\neighbor ->
-                            addAddressLink (first anchor) isOutgoing ( neighbor, address ) model_
+                            addAddressLinks (first anchor) isOutgoing [ ( neighbor, address ) ] model_
                         )
                     |> Maybe.withDefault model_
             )

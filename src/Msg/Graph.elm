@@ -148,6 +148,7 @@ type Msg
     | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
     | BrowserGotBulkAddressEntities String Deserializing (List Api.Data.Entity)
     | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
+    | BrowserGotBulkAddressNeighbors String Bool (List ( String, Api.Data.NeighborAddress ))
     | UserClickedNew
     | UserClickedNewYes
     | UserClickedHighlightColor Color.Color

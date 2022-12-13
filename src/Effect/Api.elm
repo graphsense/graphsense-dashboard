@@ -179,6 +179,13 @@ type Effect msg
         , onlyIds : Bool
         }
         (List ( Int, Api.Data.NeighborEntity ) -> msg)
+    | BulkGetAddressNeighborsEffect
+        { currency : String
+        , isOutgoing : Bool
+        , addresses : List String
+        , onlyIds : Bool
+        }
+        (List ( String, Api.Data.NeighborAddress ) -> msg)
 
 
 getEntityEgonet :
@@ -370,6 +377,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> BulkGetEntityNeighborsEffect eff
 
+        BulkGetAddressNeighborsEffect eff m ->
+            m
+                >> mapMsg
+                |> BulkGetAddressNeighborsEffect eff
+
 
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
@@ -551,6 +563,41 @@ perform apiKey wrapMsg effect =
                         ]
                             ++ (if e.onlyIds then
                                     [ ( "only_ids", Json.Encode.list Json.Encode.int e.entities )
+                                    ]
+
+                                else
+                                    []
+                               )
+                    )
+                |> send apiKey wrapMsg effect toMsg
+
+        BulkGetAddressNeighborsEffect e toMsg ->
+            listWithMaybes
+                (Json.Decode.field "_request_address" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestAddress ->
+                            Json.Decode.map
+                                (\address -> ( requestAddress, address ))
+                                Api.Data.neighborAddressDecoder
+                        )
+                )
+                |> Api.Request.MyBulk.bulkJson
+                    e.currency
+                    Api.Request.MyBulk.OperationListAddressNeighbors
+                    (Json.Encode.object <|
+                        [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                        , ( "direction"
+                          , Json.Encode.string <|
+                                Api.Request.Entities.stringFromDirection <|
+                                    if e.isOutgoing then
+                                        Api.Request.Entities.DirectionOut
+
+                                    else
+                                        Api.Request.Entities.DirectionIn
+                          )
+                        ]
+                            ++ (if e.onlyIds then
+                                    [ ( "only_ids", Json.Encode.list Json.Encode.string e.addresses )
                                     ]
 
                                 else
