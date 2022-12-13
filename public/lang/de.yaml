@@ -226,6 +226,8 @@ proprietary tag: Proprietäres Tag
 "{1}: loading entities of {0} addresses": "{1}: lade Entitäten zu {0} Adressen"
 "{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Entitäten"
 "{1}: loading incoming neighbors of {0} entities": "{1}: lade eingehende Nachbarn von {0} Entitäten"
+"{1}: loading outgoing neighbors of {0} addresses": "{1}: lade ausgehende Nachbarn von {0} Adressen"
+"{1}: loading incoming neighbors of {0} addresses": "{1}: lade eingehende Nachbarn von {0} Adressen"
 "{1}: loading tags of address {0}": "{1}: lade Tags der Adresse {0}"
 "{1}: loading tags {0} addresses": "{1}: lade Tags zu {0} Adressen"
 "{1}: loading address tags of entity {0}": "{1}: lade Adress-Tags der Entität {0}"

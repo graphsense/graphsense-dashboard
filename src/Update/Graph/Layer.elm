@@ -426,24 +426,29 @@ updateAddressLinks { currency, address } neighbors layers =
 
                     addressId =
                         Id.initAddressId { currency = currency, id = address, layer = layer.id }
+
+                    newLayer =
+                        relevant
+                            |> List.foldl
+                                (\neighbor layer_ ->
+                                    let
+                                        ( entities, updated_ ) =
+                                            updateAddressLinkForEntities addressId neighbor layer_.entities
+                                    in
+                                    if updated_ then
+                                        { layer_ | entities = entities }
+
+                                    else
+                                        layer_
+                                )
+                                layer
                 in
                 ( neighbors__
-                , relevant
-                    |> List.foldl
-                        (\neighbor layers__ ->
-                            let
-                                ( entities, updated ) =
-                                    updateAddressLinkForEntities addressId neighbor layer.entities
-                            in
-                            if updated then
-                                IntDict.insert layer.id
-                                    { layer | entities = entities }
-                                    layers__
+                , if newLayer /= layer then
+                    IntDict.insert layer.id newLayer layers_
 
-                            else
-                                layers__
-                        )
-                        layers_
+                  else
+                    layers_
                 )
             )
             ( neighbors, layers )
