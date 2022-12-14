@@ -191,6 +191,24 @@ theme =
                 else
                     colors.brandLight.dark
             )
+        |> s_disabled
+            (\lightmode ->
+                let
+                    c =
+                        (if lightmode then
+                            iconDisabled.light
+
+                         else
+                            iconDisabled.dark
+                        )
+                            |> toCssColor
+                            |> color
+                in
+                [ c
+                , hover
+                    [ c ]
+                ]
+            )
         |> s_stats
             (Stats.default
                 |> s_root

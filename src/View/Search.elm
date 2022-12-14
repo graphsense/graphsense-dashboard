@@ -3,6 +3,7 @@ module View.Search exposing (Searchable(..), search)
 import Api.Data
 import Config.View exposing (Config)
 import Css exposing (Style, block, display, none)
+import Css.Button
 import Css.Search as Css
 import Css.View
 import FontAwesome
@@ -82,8 +83,8 @@ search plugins vc sc model =
             ]
         , if sc.showIcon then
             button
-                [ [ Css.View.button vc |> Css.batch
-                  , Css.View.primary vc |> Css.batch
+                [ [ Css.Button.button vc |> Css.batch
+                  , Css.Button.primary vc |> Css.batch
                   , Css.button vc |> Css.batch
                   ]
                     |> css

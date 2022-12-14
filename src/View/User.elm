@@ -1,6 +1,7 @@
 module View.User exposing (apiKeyForm, hovercard, user)
 
 import Config.View exposing (Config)
+import Css.Button
 import Css.User as Css
 import Css.View as Css
 import FontAwesome
@@ -185,7 +186,7 @@ apiKeyForm vc loading model =
 
               else
                 input
-                    [ Css.primary vc |> css
+                    [ Css.Button.primary vc |> css
                     , type_ "submit"
                     , Locale.string vc.locale "OK" |> value
                     , disabled loading

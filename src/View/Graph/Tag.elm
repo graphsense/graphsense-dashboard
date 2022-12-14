@@ -2,6 +2,7 @@ module View.Graph.Tag exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css.Button
 import Css.Graph as Css
 import Css.View
 import Html.Styled as Html exposing (..)
@@ -94,7 +95,7 @@ inputHovercard plugins vc tc model =
             ]
             [ input
                 [ type_ "submit"
-                , Css.View.primary vc |> css
+                , Css.Button.primary vc |> css
                 , Locale.string vc.locale "Save" |> value
                 ]
                 []
@@ -103,7 +104,7 @@ inputHovercard plugins vc tc model =
                     (\_ ->
                         input
                             [ type_ "button"
-                            , Css.View.danger vc |> css
+                            , Css.Button.danger vc |> css
                             , Locale.string vc.locale "Delete" |> value
                             , onClick UserClicksDeleteTag
                             ]

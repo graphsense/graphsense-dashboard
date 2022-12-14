@@ -1,6 +1,7 @@
 module View.Dialog exposing (..)
 
 import Config.View exposing (Config)
+import Css.Button
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
@@ -35,13 +36,13 @@ confirm vc { message, onYes, onNo } =
             [ Css.buttons vc |> css
             ]
             [ button
-                [ Css.View.primary vc |> css
+                [ Css.Button.primary vc |> css
                 , UserClickedConfirm onYes |> onClick
                 ]
                 [ Locale.string vc.locale "Yes" |> text
                 ]
             , button
-                [ Css.View.primary vc |> css
+                [ Css.Button.primary vc |> css
                 , UserClickedConfirm onNo |> onClick
                 ]
                 [ Locale.string vc.locale "No" |> text
@@ -58,7 +59,7 @@ options_ vc { message, options } =
             |> List.map
                 (\( title, msg ) ->
                     button
-                        [ Css.View.primary vc |> css
+                        [ Css.Button.primary vc |> css
                         , onClick <| UserClickedOption msg
                         ]
                         [ Locale.string vc.locale title |> text
