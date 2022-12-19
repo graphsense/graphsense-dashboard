@@ -10,6 +10,7 @@ Configure plugins and custom themes in `config/Config.elm`. Use `config/Config.e
 
 1. Place plugins in the `plugins` folder.
 2. Run `node generate.js` ([NodeJS][nodejs] needs to be installed)
+3. Run `elm install` for each package named in the plugin's `dependencies.txt`.
 3. Configure the plugin in `config/Config.elm`, eg:
 
 ```elm
@@ -17,7 +18,7 @@ Configure plugins and custom themes in `config/Config.elm`. Use `config/Config.e
 plugins : Plugin.Plugins
 plugins =
     Plugin.empty
-    > Plugin.myplugin (Myplugin.plugin {- plugin specific arguments here -})
+    |> Plugin.myplugin (Myplugin.plugin {- plugin specific arguments here -})
 ```
 
 ## Development setup
@@ -38,11 +39,24 @@ Point your browser to `localhost:3000`.
 
 ## Develop plugins
 
+### Bootstrapping
+
 Use `plugin_stub` as a starting point: `cp -r plugin_stub plugins/myplugin`
 
 The name of the plugin is case insensitive. Elm package name of the plugin is the plugin name with the first letter capitalized, eg. `Myplugin`.
 
-Adapt the stub accordingly. 
+Adapt the stub accordingly:
+* rename `./Stub`, `./Stub.elm` and `stub.js` to your plugin's name. Keep the respective capitalization. 
+* replace `Stub` in the stub Elm files with your plugin's Elm package.
+
+Place plugin specific dependencies in plugin's `./dependencies.txt`.
+
+### Development
+
+Plugins can hook into the dashboard functionality in order to extend it.
+
+Plugin's hook implementations need to be set in your plugin's root module which was derived from `./Stub.elm`.
+Please see the comments in the respective files of `./src/PluginInterface` for detailed documentation.
 
 ## Production setup
 
