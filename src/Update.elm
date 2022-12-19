@@ -17,8 +17,10 @@ import File.Download
 import Http exposing (Error(..))
 import Json.Decode
 import Json.Encode exposing (Value)
+import Lense
 import Log
 import Model exposing (..)
+import Model.Dialog as Dialog
 import Model.Graph.Browser as Browser
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
@@ -551,7 +553,7 @@ update plugins uc msg model =
                         | dialog =
                             { message = Locale.string model.locale "Do you want to start from scratch?"
                             , onYes = GraphMsg Graph.UserClickedNewYes
-                            , onNo = UserClickedNo
+                            , onNo = NoOp
                             }
                                 |> Dialog.confirm
                                 |> Just
@@ -564,8 +566,7 @@ update plugins uc msg model =
                             Graph.update plugins uc m model.graph
                     in
                     ( { model
-                        | dialog = Nothing
-                        , graph = graph
+                        | graph = graph
                       }
                     , (Route.Graph.Root
                         |> Route.graphRoute
@@ -598,8 +599,11 @@ update plugins uc msg model =
                     , List.map GraphEffect graphEffects
                     )
 
-        UserClickedNo ->
-            n { model | dialog = Nothing }
+        UserClickedConfirm ms ->
+            update plugins uc ms { model | dialog = Nothing }
+
+        UserClickedOption ms ->
+            update plugins uc ms { model | dialog = Nothing }
 
         PluginMsg msgValue ->
             updatePlugins plugins msgValue model
@@ -635,6 +639,9 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.UpdateEntities _ _ ->
                         updateGraphByPluginOutMsg model eff
 
+                    PluginInterface.UpdateEntitiesByRootAddress _ _ ->
+                        updateGraphByPluginOutMsg model eff
+
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo
                         , Id.addressIdToString id
@@ -642,6 +649,7 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                             |> Task.attempt (BrowserGotElementForPlugin pmsg)
                             |> CmdEffect
                             |> List.singleton
+                            |> (++) eff
                         )
 
                     PluginInterface.PushUrl url ->
@@ -723,6 +731,19 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                         ( model
                         , (Effect.Api.map PluginMsg effect |> ApiEffect) :: eff
                         )
+
+                    PluginInterface.ShowConfirmDialog conf ->
+                        ( { model
+                            | dialog =
+                                Dialog.confirm
+                                    { message = conf.message
+                                    , onYes = PluginMsg conf.onYes
+                                    , onNo = PluginMsg conf.onNo
+                                    }
+                                    |> Just
+                          }
+                        , eff
+                        )
             )
             ( mo, effects )
 
@@ -755,40 +776,44 @@ updateByUrl plugins uc url model =
                         )
 
                     Route.Graph graphRoute ->
-                        case graphRoute |> Log.log "graphRoute" of
-                            Route.Graph.Plugin ( pid, value ) ->
-                                let
-                                    ( new, outMsg, cmd ) =
-                                        Plugin.updateGraphByUrl pid plugins value model.plugins
-                                in
-                                ( { model
-                                    | plugins = new
-                                    , page = Graph
-                                    , url = url
-                                  }
-                                , [ PluginEffect cmd ]
-                                )
-                                    |> updateByPluginOutMsg plugins outMsg
+                        mapSecond
+                            ((++)
+                                (if model.graph.size == Nothing then
+                                    [ GraphEffect Graph.GetSvgElementEffect ]
 
-                            _ ->
-                                let
-                                    ( graph, graphEffect ) =
-                                        Graph.updateByRoute plugins graphRoute model.graph
-                                in
-                                ( { model
-                                    | page = Graph
-                                    , graph = graph
-                                    , url = url
-                                  }
-                                , graphEffect
-                                    ++ (if model.graph.size == Nothing then
-                                            [ Graph.GetSvgElementEffect ]
-
-                                        else
-                                            []
-                                       )
-                                    |> List.map GraphEffect
+                                 else
+                                    []
                                 )
+                            )
+                        <|
+                            case graphRoute |> Log.log "graphRoute" of
+                                Route.Graph.Plugin ( pid, value ) ->
+                                    let
+                                        ( new, outMsg, cmd ) =
+                                            Plugin.updateGraphByUrl pid plugins value model.plugins
+                                    in
+                                    ( { model
+                                        | plugins = new
+                                        , page = Graph
+                                        , url = url
+                                      }
+                                    , [ PluginEffect cmd ]
+                                    )
+                                        |> updateByPluginOutMsg plugins outMsg
+
+                                _ ->
+                                    let
+                                        ( graph, graphEffect ) =
+                                            Graph.updateByRoute plugins graphRoute model.graph
+                                    in
+                                    ( { model
+                                        | page = Graph
+                                        , graph = graph
+                                        , url = url
+                                      }
+                                    , graphEffect
+                                        |> List.map GraphEffect
+                                    )
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
@@ -1010,4 +1035,5 @@ batchSearch plugins ( model, eff ) =
                     |> List.singleton
             )
         |> Maybe.withDefault []
+        |> (++) eff
     )

@@ -1,18 +1,20 @@
 module View.Dialog exposing (..)
 
 import Config.View exposing (Config)
+import Css.Button
 import Css.Dialog as Css
 import Css.View
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
 import Util.View
 import View.Locale as Locale
 
 
-view : Config -> Model msg -> Html msg
+view : Config -> Model Msg -> Html Msg
 view vc model =
     div
         [ Css.dialog vc |> css
@@ -26,7 +28,7 @@ view vc model =
         ]
 
 
-confirm : Config -> ConfirmConfig msg -> Html msg
+confirm : Config -> ConfirmConfig Msg -> Html Msg
 confirm vc { message, onYes, onNo } =
     part vc
         message
@@ -34,14 +36,14 @@ confirm vc { message, onYes, onNo } =
             [ Css.buttons vc |> css
             ]
             [ button
-                [ Css.View.primary vc |> css
-                , onClick onYes
+                [ Css.Button.primary vc |> css
+                , UserClickedConfirm onYes |> onClick
                 ]
                 [ Locale.string vc.locale "Yes" |> text
                 ]
             , button
-                [ Css.View.primary vc |> css
-                , onClick onNo
+                [ Css.Button.primary vc |> css
+                , UserClickedConfirm onNo |> onClick
                 ]
                 [ Locale.string vc.locale "No" |> text
                 ]
@@ -49,7 +51,7 @@ confirm vc { message, onYes, onNo } =
         ]
 
 
-options_ : Config -> OptionsConfig msg -> Html msg
+options_ : Config -> OptionsConfig Msg -> Html Msg
 options_ vc { message, options } =
     part vc
         message
@@ -57,8 +59,8 @@ options_ vc { message, options } =
             |> List.map
                 (\( title, msg ) ->
                     button
-                        [ Css.View.primary vc |> css
-                        , onClick msg
+                        [ Css.Button.primary vc |> css
+                        , onClick <| UserClickedOption msg
                         ]
                         [ Locale.string vc.locale title |> text
                         ]

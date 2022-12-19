@@ -49,26 +49,6 @@ main_ vc =
         ++ vc.theme.main vc.lightmode
 
 
-button : Config -> List Style
-button vc =
-    cursor pointer :: vc.theme.button.button vc.lightmode
-
-
-primary : Config -> List Style
-primary vc =
-    button vc ++ vc.theme.button.primary vc.lightmode
-
-
-danger : Config -> List Style
-danger vc =
-    button vc ++ vc.theme.button.danger vc.lightmode
-
-
-disabled : Config -> List Style
-disabled vc =
-    cursor notAllowed :: vc.theme.button.disabled vc.lightmode
-
-
 tool : Config -> List Style
 tool vc =
     vc.theme.tool
@@ -148,3 +128,8 @@ switchLabel vc =
 switchRoot : Config -> List Style
 switchRoot vc =
     vc.theme.switchRoot
+
+
+disabled : Config -> List Style
+disabled vc =
+    vc.theme.disabled vc.lightmode

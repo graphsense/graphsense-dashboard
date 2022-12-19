@@ -2,7 +2,8 @@ module PluginInterface.Effects exposing (..)
 
 
 type alias Effects msg =
-    { search : Maybe (String -> Cmd msg)
+    { -- this command is triggered when user types into the search bar
+      search : Maybe (String -> Cmd msg)
     }
 
 

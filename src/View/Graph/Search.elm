@@ -2,6 +2,7 @@ module View.Graph.Search exposing (..)
 
 import Config.View as View
 import Css
+import Css.Button
 import Css.Graph as Css
 import Css.View
 import Html.Attributes as HA
@@ -98,7 +99,7 @@ inputHovercard plugins vc model =
             ]
         , input
             [ type_ "submit"
-            , Css.View.primary vc |> css
+            , Css.Button.primary vc |> css
             , Locale.string vc.locale "Search" |> value
             ]
             []

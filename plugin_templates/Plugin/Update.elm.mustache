@@ -4,6 +4,7 @@ module Plugin.Update exposing (..)
 import {{package}}.Model
 import {{package}}.Msg
 {{/plugins}}
+import Maybe.Extra
 import Model.Graph.Address as Address
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
@@ -20,7 +21,6 @@ type alias Plugins =
     {{^last}}, {{/last}}{{/plugins}}
     }
 
-n : Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 n m =
   (m, [], Cmd.none)
 
@@ -114,6 +114,7 @@ addressesAdded plugins state ids =
                             plugin.addressesAdded
                             state.{{name}}
                     )
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
 {{/plugins}} 
     in
     ( { state
@@ -150,6 +151,7 @@ entitiesAdded plugins state ids =
                             plugin.entitiesAdded
                             state.{{name}}
                     )
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
 {{/plugins}} 
     in
     ( { state
@@ -272,6 +274,7 @@ clearSearch plugins states =
                             plugin.clearSearch
                             states.{{name}}
                     )
+                |> Maybe.Extra.orElse states.{{name}}
 {{/plugins}} 
     in
     { states
@@ -298,6 +301,7 @@ updateApiKeyHash plugins state apiKeyHash =
                             plugin.updateApiKeyHash
                             state.{{name}}
                     )
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
 {{/plugins}} 
     in
     ( { state
@@ -333,6 +337,7 @@ newGraph plugins state =
                             plugin.newGraph
                             state.{{name}}
                     )
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
 {{/plugins}} 
     in
     ( { state

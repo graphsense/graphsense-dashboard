@@ -46,3 +46,11 @@ asCsv prepare { filtered } =
             { encoder = Csv.Encode.withFieldNames prepare
             , fieldSeparator = ','
             }
+
+
+filterTable : (a -> Bool) -> Table a -> Table a
+filterTable filter table =
+    { table
+        | data = List.filter filter table.data
+        , filtered = List.filter filter table.data
+    }

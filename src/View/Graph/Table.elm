@@ -221,10 +221,15 @@ simpleTheadHelp vc ( name, status, click ) =
 
 htmlColumn : View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
 htmlColumn vc name accessor html =
+    htmlColumnWithSorter (Table.increasingOrDecreasingBy accessor) vc name accessor html
+
+
+htmlColumnWithSorter : Table.Sorter data -> View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
+htmlColumnWithSorter sorter vc name accessor html =
     Table.veryCustomColumn
         { name = name
         , viewData = html >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
-        , sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = sorter
         }
 
 

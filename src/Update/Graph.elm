@@ -6,6 +6,8 @@ import Color
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
+import Decode.Graph044 as Graph044
+import Decode.Graph045 as Graph045
 import Decode.Graph050 as Graph050
 import Decode.Graph100 as Graph100
 import Dict exposing (Dict)
@@ -743,9 +745,7 @@ updateByMsg plugins uc msg model =
                                     Layer.getAddress id model.layers
                                         |> Maybe.map (pair n)
                                 )
-                            |> List.foldl
-                                (addAddressLink anch isOutgoing)
-                                mo
+                            |> (\neighs -> addAddressLinks anch isOutgoing neighs mo)
                     )
                     model
                 |> n
@@ -1279,7 +1279,7 @@ updateByMsg plugins uc msg model =
                                                         |> addUserTag added.new model.userAddressTags
                                                 , config = model.config |> s_colors added.colors
                                               }
-                                                |> addAddressLink address isOutgoing ( neighbor, addedAddress )
+                                                |> addAddressLinks address isOutgoing [ ( neighbor, addedAddress ) ]
                                                 |> syncLinks added.repositioned
                                             , [ BrowserGotAddressTags
                                                     { currency = Id.currency addressId
@@ -1765,6 +1765,14 @@ updateByMsg plugins uc msg model =
                         , onlyIds = True
                         }
                     |> ApiEffect
+              , BrowserGotBulkAddressNeighbors currency True
+                    |> BulkGetAddressNeighborsEffect
+                        { currency = currency
+                        , isOutgoing = True
+                        , addresses = List.map .address deser.addresses
+                        , onlyIds = True
+                        }
+                    |> ApiEffect
               , InternalGraphAddedAddressesEffect acc.newAddressIds
               , InternalGraphAddedEntitiesEffect acc.newEntityIds
               ]
@@ -1820,6 +1828,46 @@ updateByMsg plugins uc msg model =
                                                     )
                                     in
                                     addEntityLinks anchor isOutgoing neighborsWithEntity model__
+                                )
+                                model_
+                    )
+                    model
+                |> n
+
+        BrowserGotBulkAddressNeighbors currency isOutgoing addressNeighbors ->
+            addressNeighbors
+                |> List.Extra.gatherEqualsBy first
+                |> List.map (\( fst, more ) -> ( first fst, second fst :: List.map second more ))
+                |> List.foldl
+                    (\( requestAddress, neighbors ) model_ ->
+                        Layer.getAddresses { currency = currency, address = requestAddress } model_.layers
+                            |> List.foldl
+                                (\anchor model__ ->
+                                    let
+                                        neighborsWithAddress =
+                                            neighbors
+                                                |> List.filterMap
+                                                    (\neighbor ->
+                                                        let
+                                                            addressId =
+                                                                Id.initAddressId
+                                                                    { currency = currency
+                                                                    , id = neighbor.address.address
+                                                                    , layer =
+                                                                        Id.layer anchor.id
+                                                                            + (if isOutgoing then
+                                                                                1
+
+                                                                               else
+                                                                                -1
+                                                                              )
+                                                                    }
+                                                        in
+                                                        Layer.getAddress addressId model__.layers
+                                                            |> Maybe.map (pair neighbor)
+                                                    )
+                                    in
+                                    addAddressLinks anchor isOutgoing neighborsWithAddress model__
                                 )
                                 model_
                     )
@@ -2470,21 +2518,26 @@ addEntityLinks anchor isOutgoing neighbors model =
     }
 
 
-addAddressLink : Address -> Bool -> ( Api.Data.NeighborAddress, Address ) -> Model -> Model
-addAddressLink anchor isOutgoing ( neighbor, target ) model =
+addAddressLinks : Address -> Bool -> List ( Api.Data.NeighborAddress, Address ) -> Model -> Model
+addAddressLinks anchor isOutgoing neighbors model =
     let
         linkData =
-            Link.fromNeighbor neighbor
+            neighbors
+                |> List.map (mapFirst Link.fromNeighbor)
 
         layers =
             if isOutgoing then
-                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } ( linkData, target ) model.layers
+                Layer.updateAddressLinks { currency = Id.currency anchor.id, address = Id.addressId anchor.id } linkData model.layers
 
             else
-                Layer.updateAddressLinks
-                    { currency = Id.currency target.id, address = Id.addressId target.id }
-                    ( linkData, anchor )
-                    model.layers
+                linkData
+                    |> List.foldl
+                        (\( linkDatum, neighbor ) ->
+                            Layer.updateAddressLinks
+                                { currency = Id.currency neighbor.id, address = Id.addressId neighbor.id }
+                                [ ( linkDatum, anchor ) ]
+                        )
+                        model.layers
     in
     { model
         | layers = layers
@@ -2562,7 +2615,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
                     |> List.Extra.find (\n -> n.address.currency == address.address.currency && n.address.address == address.address.address)
                     |> Maybe.map
                         (\neighbor ->
-                            addAddressLink (first anchor) isOutgoing ( neighbor, address ) model_
+                            addAddressLinks (first anchor) isOutgoing [ ( neighbor, address ) ] model_
                         )
                     |> Maybe.withDefault model_
             )
@@ -2909,6 +2962,26 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.UpdateEntitiesByRootAddress id pmsg ->
+                        let
+                            predicate =
+                                \{ entity } ->
+                                    entity.rootAddress
+                                        == id.address
+                                        && entity.currency
+                                        == id.currency
+                        in
+                        ( { mo
+                            | layers =
+                                Layer.updateEntitiesIf
+                                    predicate
+                                    (Plugin.updateEntity plugins pmsg)
+                                    mo.layers
+                          }
+                            |> refreshBrowserEntityIf predicate
+                        , eff
+                        )
+
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, [] )
 
@@ -2931,6 +3004,9 @@ updateByPluginOutMsg plugins outMsgs model =
                         ( mo, [] )
 
                     PluginInterface.ApiRequest _ ->
+                        ( mo, [] )
+
+                    PluginInterface.ShowConfirmDialog _ ->
                         ( mo, [] )
             )
             ( model, [] )
@@ -2960,11 +3036,18 @@ refreshBrowserAddress id model =
 
 refreshBrowserEntity : E.Entity -> Model -> Model
 refreshBrowserEntity id model =
+    refreshBrowserEntityIf
+        (\en -> en.entity.currency == id.currency && en.entity.entity == id.entity)
+        model
+
+
+refreshBrowserEntityIf : (Entity -> Bool) -> Model -> Model
+refreshBrowserEntityIf predicate model =
     { model
         | browser =
             case model.browser.type_ of
                 Browser.Entity (Browser.Loaded en) table ->
-                    if en.entity.currency == id.currency && en.entity.entity == id.entity then
+                    if predicate en then
                         model.browser
                             |> s_type_
                                 (Layer.getEntity en.id model.layers
@@ -3129,7 +3212,13 @@ deserialize =
 
 deserializeByVersion : String -> Json.Decode.Decoder Deserialized
 deserializeByVersion version =
-    if String.startsWith "0.5." version then
+    if String.startsWith "0.4.4" version then
+        Graph044.decoder
+
+    else if String.startsWith "0.4.5" version then
+        Graph045.decoder
+
+    else if String.startsWith "0.5." version then
         Graph050.decoder
 
     else if String.startsWith "1.0." version then
@@ -3236,10 +3325,6 @@ fromDeserialized deserialized model =
                         , addresses = addrs
                         }
                     |> ApiEffect
-            )
-        |> (::)
-            (Route.rootRoute
-                |> NavPushRouteEffect
             )
         |> pair
             { model

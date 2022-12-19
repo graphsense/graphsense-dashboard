@@ -75,7 +75,8 @@ type Msg
     | UserHoversUserIcon String
     | UserLeftUserHovercard
     | UserClickedLayout
-    | UserClickedNo
+    | UserClickedConfirm Msg
+    | UserClickedOption Msg
     | UserClickedLogout
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix

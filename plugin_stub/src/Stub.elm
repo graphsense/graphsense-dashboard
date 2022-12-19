@@ -24,6 +24,8 @@ plugin url =
         , sidebar = Nothing
         , main = Nothing
         , hovercards = Nothing
+        , title = Nothing
+        , profile = Nothing
         }
     , update =
         { update = Nothing
@@ -34,10 +36,11 @@ plugin url =
         , addressesAdded = Nothing
         , entitiesAdded = Nothing
         , updateApiKeyHash = Nothing
-        , init = Nothing
+        , init = ( (), [], Cmd.none )
         , initAddress = Nothing
         , initEntity = Nothing
         , clearSearch = Nothing
+        , newGraph = Nothing
         }
     , effects =
         { search = Nothing
