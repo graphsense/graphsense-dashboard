@@ -4,8 +4,8 @@ LABEL maintainer="contact@iknaio.com"
 ENV WORKDIR=/app
 
 RUN mkdir $WORKDIR && \
-    apk --no-cache --update add bash nginx && \
-    apk --no-cache --update --virtual build-dependendencies add npm nodejs python3 make g++
+    apk --no-cache --update add bash nginx nodejs npm && \
+    apk --no-cache --update --virtual build-dependendencies add python3 make g++
 
 WORKDIR $WORKDIR
 COPY ./docker/docker-entrypoint.sh /
