@@ -465,7 +465,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxEffect { currency, txHash } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just False)
+            Api.Request.Txs.getTx currency txHash (Just False) Nothing
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
