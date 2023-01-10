@@ -16,7 +16,7 @@ else
 fi
 temp2=`mktemp`
 echo "Generating"
-python $dir/mangle-openapi.py $temp $resturl > $temp2
+python3 $dir/mangle-openapi.py $temp $resturl > $temp2
 docker run --rm \
     -v "${dir}/../openapi:/build"  \
     -v "${temp2}:/spec.yaml" \
