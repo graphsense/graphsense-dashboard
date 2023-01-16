@@ -928,7 +928,7 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
             tt (AddressTxsUtxoTable.config vc coinCode) t
 
         AddressTxsAccountTable t ->
-            tt (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc) t
 
         AddressTagsTable t ->
             table_ vc Nothing height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
@@ -990,7 +990,7 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
             tt (AddressTxsUtxoTable.config vc coinCode) t
 
         EntityTxsAccountTable t ->
-            tt (TxsAccountTable.config vc coinCode) t
+            tt (TxsAccountTable.config vc) t
 
         EntityTagsTable t ->
             table_ vc Nothing height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
@@ -1018,7 +1018,7 @@ browseBlockTable vc gc height block table =
             table_ vc cm height (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
@@ -1150,6 +1150,14 @@ rowsTxAccount vc gc now tx =
         , tx
             |> ifLoaded (.txHash >> String)
             |> elseShowAddress
+        , Nothing
+        )
+    , Row
+        ( "Value"
+        , tx
+            |> ifLoaded
+                (\t -> Value t.currency t.value)
+            |> elseLoading
         , Nothing
         )
     , Row
@@ -1322,4 +1330,4 @@ browseAddresslinkTable vc gc height coinCode table =
             table_ vc cm height (AddresslinkTxsUtxoTable.config vc coinCode) t
 
         AddresslinkTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm height (TxsAccountTable.config vc) t

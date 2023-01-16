@@ -57,8 +57,8 @@ titleReceivingAddress =
     "Receiving address"
 
 
-config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
-config vc coinCode =
+config : View.Config -> Table.Config Api.Data.TxAccount Msg
+config vc =
     Table.customConfig
         { toId = .txHash
         , toMsg = TableNewState
@@ -73,7 +73,7 @@ config vc coinCode =
                         |> a
                             [ Css.View.link vc |> css
                             , Route.txRoute
-                                { currency = coinCode
+                                { currency = data.currency
                                 , txHash = data.txHash
                                 , table = Nothing
                                 }
@@ -83,7 +83,8 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode "Value" .value
+            , T.valueColumnWithoutCode vc .currency "Value" .value
+            , T.stringColumn vc "Currency" (.currency >> String.toUpper)
             , T.intColumn vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)

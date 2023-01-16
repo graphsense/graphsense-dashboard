@@ -102,10 +102,10 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                     ]
                 )
             , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
-            , T.valueColumn vc coinCode titleAddressBalance (.address >> .balance)
-            , T.valueColumn vc coinCode titleAddressReceived (.address >> .totalReceived)
+            , T.valueColumn vc (\_ -> coinCode) titleAddressBalance (.address >> .balance)
+            , T.valueColumn vc (\_ -> coinCode) titleAddressReceived (.address >> .totalReceived)
             , T.intColumn vc titleNoTxs .noTxs
-            , T.valueColumn vc coinCode titleEstimatedValue .value
+            , T.valueColumn vc (\_ -> coinCode) titleEstimatedValue .value
             ]
         , customizations = customizations vc
         }

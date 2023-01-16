@@ -260,27 +260,49 @@ intColumn vc name accessor =
         }
 
 
-valueColumn : View.Config -> String -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumn vc coinCode name getValues =
+valueColumn : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumn =
+    valueColumnWithOptions False
+
+
+valueColumnWithoutCode : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithoutCode =
+    valueColumnWithOptions True
+
+
+valueColumnWithOptions : Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions hideCode vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = getValues >> valuesCell vc coinCode
+        , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
         , sorter = Table.decreasingOrIncreasingBy (getValues >> valuesSorter vc)
         }
 
 
-valuesCell : View.Config -> String -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell vc coinCode values =
-    Locale.currency vc.locale coinCode values
+valuesCell : View.Config -> Bool -> String -> Api.Data.Values -> Table.HtmlDetails msg
+valuesCell vc hideCode coinCode values =
+    (if hideCode then
+        Locale.currencyWithoutCode
+
+     else
+        Locale.currency
+    )
+        vc.locale
+        coinCode
+        values
         |> text
         |> List.singleton
         |> Table.HtmlDetails
-            [ Currency.valuesToFloat vc.locale.currency values
-                |> Maybe.withDefault 0
-                |> (>) 0
-                |> Css.Table.valuesCell vc
-                |> css
+            [ valuesCss vc values |> css
             ]
+
+
+valuesCss : View.Config -> Api.Data.Values -> List Css.Style
+valuesCss vc values =
+    Currency.valuesToFloat vc.locale.currency values
+        |> Maybe.withDefault 0
+        |> (>) 0
+        |> Css.Table.valuesCell vc
 
 
 valuesSorter : View.Config -> Api.Data.Values -> Float

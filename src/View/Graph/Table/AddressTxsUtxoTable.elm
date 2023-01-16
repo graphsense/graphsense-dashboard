@@ -77,7 +77,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode titleValue .value
+            , T.valueColumn vc (\_ -> coinCode) titleValue .value
             , T.intColumn vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]

@@ -243,13 +243,22 @@ fiat model hideCode { code, value } =
 coin : Model -> Bool -> String -> Int -> String
 coin model hideCode code v =
     Dict.get code fixpointFactor
-        |> Maybe.map (mapFirst ((/) (toFloat v)))
+        |> Maybe.map
+            (mapFirst
+                (\f ->
+                    if v == 0 then
+                        0
+
+                    else
+                        toFloat v / f
+                )
+            )
         |> Maybe.map
             (\( value, sc ) ->
                 let
                     fmt =
                         if abs value < 0.0001 then
-                            "1,000.00000000"
+                            "1,000.0000[00000000000000]"
 
                         else
                             "1,000.0000"
