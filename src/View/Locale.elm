@@ -20,7 +20,7 @@ import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
 import DateFormat.Relative
-import Dict
+import Dict exposing (Dict)
 import Ease
 import FormatNumber
 import FormatNumber.Locales
@@ -32,6 +32,21 @@ import Model.Locale exposing (..)
 import RecordSetter exposing (..)
 import String.Interpolate
 import Time
+import Tuple exposing (..)
+
+
+fixpointFactor : Dict String ( Float, String )
+fixpointFactor =
+    [ ( "eth", ( 1.0e18, "wei" ) )
+    , ( "weth", ( 1.0e18, "wei" ) )
+    , ( "usdc", ( 1.0e6, "wei" ) )
+    , ( "usdt", ( 1.0e6, "wei" ) )
+    , ( "btc", ( 1.0e8, "s" ) )
+    , ( "bch", ( 1.0e8, "s" ) )
+    , ( "ltc", ( 1.0e8, "s" ) )
+    , ( "zec", ( 1.0e8, "s" ) )
+    ]
+        |> Dict.fromList
 
 
 string : Model -> String -> String
@@ -227,26 +242,27 @@ fiat model hideCode { code, value } =
 
 coin : Model -> Bool -> String -> Int -> String
 coin model hideCode code v =
-    let
-        ( value, sc ) =
-            if code == "eth" then
-                ( toFloat v / 1.0e18, "wei" )
+    Dict.get code fixpointFactor
+        |> Maybe.map (mapFirst ((/) (toFloat v)))
+        |> Maybe.map
+            (\( value, sc ) ->
+                let
+                    fmt =
+                        if abs value < 0.0001 then
+                            "1,000.00000000"
 
-            else
-                ( toFloat v / 1.0e8, "s" )
-    in
-    if abs value < 0.0001 then
-        -- always show small currency
-        int model v ++ sc
+                        else
+                            "1,000.0000"
+                in
+                floatWithFormat model fmt value
+                    ++ (if hideCode then
+                            ""
 
-    else
-        floatWithFormat model "1,000.0000" value
-            ++ (if hideCode then
-                    ""
-
-                else
-                    " " ++ String.toUpper code
-               )
+                        else
+                            " " ++ String.toUpper code
+                       )
+            )
+        |> Maybe.withDefault ("unknown currency " ++ code)
 
 
 durationToString : Model -> Int -> String

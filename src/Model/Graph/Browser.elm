@@ -53,6 +53,7 @@ type Value msg
     | Usage Time.Posix Int
     | Duration Int
     | Value String Api.Data.Values
+    | MultiValue (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Html (Html msg)
     | LoadingValue

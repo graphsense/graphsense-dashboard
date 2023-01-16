@@ -396,6 +396,24 @@ browseValue vc value =
                     |> text
                 ]
 
+        MultiValue values ->
+            values
+                |> List.map
+                    (\( coinCode, v ) ->
+                        tr []
+                            [ String.toUpper coinCode
+                                |> text
+                                |> List.singleton
+                                |> td [ Css.currencyCell vc |> css ]
+                            , Locale.currencyWithoutCode vc.locale coinCode v
+                                |> text
+                                |> List.singleton
+                                |> td [ Css.valueCell vc |> css ]
+                            ]
+                    )
+                |> table
+                    []
+
         LoadingValue ->
             Util.View.loadingSpinner vc Css.loadingSpinner
 
@@ -505,14 +523,30 @@ rowsAddress vc now address =
             , Row
                 ( "Total received"
                 , address
-                    |> ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
+                    |> ifLoaded
+                        (\a ->
+                            ( a.address.currency, a.address.totalReceived )
+                                :: (a.address.totalTokensReceived
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+                                |> MultiValue
+                        )
                     |> elseLoading
                 , Nothing
                 )
             , Row
                 ( "Final balance"
                 , address
-                    |> ifLoaded (\a -> Value a.address.currency a.address.balance)
+                    |> ifLoaded
+                        (\a ->
+                            ( a.address.currency, a.address.balance )
+                                :: (a.address.tokenBalances
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+                                |> MultiValue
+                        )
                     |> elseLoading
                 , Nothing
                 )
@@ -576,6 +610,27 @@ rowsAddress vc now address =
         , Nothing
         )
     ]
+        ++ (if loadableAddress address |> .currency |> (==) "eth" then
+                [ Row
+                    ( "Smart contract"
+                    , address
+                        |> ifLoaded
+                            (\a ->
+                                String <|
+                                    if a.address.isContract == Just True then
+                                        Locale.string vc.locale "yes"
+
+                                    else
+                                        Locale.string vc.locale "no"
+                            )
+                        |> elseLoading
+                    , Nothing
+                    )
+                ]
+
+            else
+                []
+           )
         ++ dataPart1
         ++ [ Rule
            , Row

@@ -112,3 +112,13 @@ propertyBoxTableLink vc active =
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.browser.loadingSpinner
+
+
+valueCell : Config -> List Style
+valueCell vc =
+    vc.theme.browser.valueCell
+
+
+currencyCell : Config -> List Style
+currencyCell vc =
+    vc.theme.browser.currencyCell

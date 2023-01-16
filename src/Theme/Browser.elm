@@ -23,6 +23,8 @@ type alias Browser =
     , propertyBoxActivityPeriod : List Style
     , propertyBoxTableLink : Bool -> Bool -> List Style
     , loadingSpinner : List Style
+    , valueCell : List Style
+    , currencyCell : List Style
     }
 
 
@@ -46,4 +48,6 @@ default =
     , propertyBoxActivityPeriod = []
     , propertyBoxTableLink = \_ _ -> []
     , loadingSpinner = []
+    , valueCell = []
+    , currencyCell = []
     }

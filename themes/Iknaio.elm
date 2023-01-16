@@ -558,7 +558,7 @@ theme =
                         , property "stroke-width" "10px"
                         ]
                     )
-                |> s_tagsFlag
+                |> s_flag
                     (\lightmode ->
                         [ colors.white
                             |> switchColor lightmode
@@ -884,6 +884,12 @@ theme =
                 |> s_loadingSpinner
                     [ scaled 3.5 |> rem |> height
                     , scaled 3.5 |> rem |> width
+                    ]
+                |> s_valueCell
+                    [ scaled 1 |> rem |> paddingLeft
+                    , scaled 1 |> rem |> paddingBottom
+                    , textAlign right
+                    , ex 30 |> width
                     ]
             )
         |> s_table

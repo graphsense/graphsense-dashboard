@@ -106,9 +106,9 @@ abuseFlag vc =
     vc.theme.graph.abuseFlag vc.lightmode
 
 
-tagsFlag : Config -> List Style
-tagsFlag vc =
-    vc.theme.graph.tagsFlag vc.lightmode
+flag : Config -> List Style
+flag vc =
+    vc.theme.graph.flag vc.lightmode
 
 
 addressLabel : Config -> List Style
