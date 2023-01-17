@@ -21,7 +21,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.TxAccount
 init =
-    Init.Graph.Table.init filter "Transaction"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.TxAccount -> Bool
@@ -30,6 +30,7 @@ filter f a =
         || String.contains f (String.fromInt a.height)
         || String.contains f a.fromAddress
         || String.contains f a.toAddress
+        || String.contains (String.toLower f) (String.toLower a.currency)
 
 
 titleTx : String
