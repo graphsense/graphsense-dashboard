@@ -22,8 +22,6 @@ import DateFormat exposing (..)
 import DateFormat.Relative
 import Dict exposing (Dict)
 import Ease
-import FormatNumber
-import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
 import Locale.Durations
