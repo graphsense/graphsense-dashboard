@@ -396,7 +396,7 @@ browseValue vc value =
                     |> text
                 ]
 
-        MultiValue values ->
+        MultiValue len values ->
             values
                 |> List.map
                     (\( coinCode, v ) ->
@@ -405,10 +405,14 @@ browseValue vc value =
                                 |> text
                                 |> List.singleton
                                 |> td [ Css.currencyCell vc |> css ]
-                            , Locale.currencyWithoutCode vc.locale coinCode v
+                            , multiValue vc coinCode v
                                 |> text
                                 |> List.singleton
-                                |> td [ Css.valueCell vc |> css ]
+                                |> td
+                                    [ Css.valueCell vc
+                                        ++ [ CssStyled.ex (toFloat len) |> CssStyled.width ]
+                                        |> css
+                                    ]
                             ]
                     )
                 |> table
@@ -499,6 +503,33 @@ rowsAddress vc now address =
                 )
             ]
 
+        len =
+            case address of
+                Loading _ _ ->
+                    0
+
+                Loaded a ->
+                    totalReceivedValues a
+                        ++ balanceValues a
+                        |> List.map (\( currency, v ) -> multiValue vc currency v |> String.length)
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+                        |> (+) 1
+
+        totalReceivedValues a =
+            ( a.address.currency, a.address.totalReceived )
+                :: (a.address.totalTokensReceived
+                        |> Maybe.map Dict.toList
+                        |> Maybe.withDefault []
+                   )
+
+        balanceValues a =
+            ( a.address.currency, a.address.balance )
+                :: (a.address.tokenBalances
+                        |> Maybe.map Dict.toList
+                        |> Maybe.withDefault []
+                   )
+
         rowsPart2 =
             [ Row
                 ( "Last usage"
@@ -524,13 +555,8 @@ rowsAddress vc now address =
                 ( "Total received"
                 , address
                     |> ifLoaded
-                        (\a ->
-                            ( a.address.currency, a.address.totalReceived )
-                                :: (a.address.totalTokensReceived
-                                        |> Maybe.map Dict.toList
-                                        |> Maybe.withDefault []
-                                   )
-                                |> MultiValue
+                        (totalReceivedValues
+                            >> MultiValue len
                         )
                     |> elseLoading
                 , Nothing
@@ -539,13 +565,8 @@ rowsAddress vc now address =
                 ( "Final balance"
                 , address
                     |> ifLoaded
-                        (\a ->
-                            ( a.address.currency, a.address.balance )
-                                :: (a.address.tokenBalances
-                                        |> Maybe.map Dict.toList
-                                        |> Maybe.withDefault []
-                                   )
-                                |> MultiValue
+                        (balanceValues
+                            >> MultiValue len
                         )
                     |> elseLoading
                 , Nothing
@@ -1331,3 +1352,8 @@ browseAddresslinkTable vc gc height coinCode table =
 
         AddresslinkTxsAccountTable t ->
             table_ vc cm height (TxsAccountTable.config vc) t
+
+
+multiValue : View.Config -> String -> Api.Data.Values -> String
+multiValue vc coinCode v =
+    Locale.currencyWithoutCode vc.locale coinCode v
