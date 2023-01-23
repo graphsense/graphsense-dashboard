@@ -818,7 +818,7 @@ theme =
                     , justifyContent spaceBetween
                     ]
                 |> s_frame
-                    (\lightmode visible ->
+                    (\lightmode width visible ->
                         let
                             p =
                                 if visible then
@@ -833,6 +833,7 @@ theme =
                         , displayFlex
                         , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
+                        , maxWidth <| calc (px width) minus (scaled 4 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
@@ -897,6 +898,7 @@ theme =
                 |> s_root
                     [ displayFlex
                     , flexDirection row
+                    , overflowX auto
                     ]
                 |> s_tableRoot
                     [ scaled 3 |> rem |> paddingX

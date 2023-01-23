@@ -24,6 +24,7 @@ type alias Model =
     , now : Time.Posix
     , height : Maybe Float
     , layers : IntDict Layer.Layer
+    , width : Float
     }
 
 

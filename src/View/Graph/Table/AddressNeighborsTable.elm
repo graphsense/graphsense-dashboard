@@ -3,6 +3,7 @@ module View.Graph.Table.AddressNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -102,13 +103,75 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                     ]
                 )
             , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
-            , T.valueColumn vc (\_ -> coinCode) titleAddressBalance (.address >> .balance)
-            , T.valueColumn vc (\_ -> coinCode) titleAddressReceived (.address >> .totalReceived)
             , T.intColumn vc titleNoTxs .noTxs
-            , T.valueColumn vc (\_ -> coinCode) titleEstimatedValue .value
             ]
+                ++ valueColumns vc
+                    "eth"
+                    [ "usdt", "usdc", "weth" ]
+                    { balance = .address >> .balance
+                    , totalReceived = .address >> .totalReceived
+                    , value = .value
+                    }
         , customizations = customizations vc
         }
+
+
+zero : Api.Data.Values
+zero =
+    { fiatValues = []
+    , value = 0
+    }
+
+
+valueColumns :
+    View.Config
+    -> String
+    -> List String
+    ->
+        { balance : Api.Data.NeighborAddress -> Api.Data.Values
+        , totalReceived : Api.Data.NeighborAddress -> Api.Data.Values
+        , value : Api.Data.NeighborAddress -> Api.Data.Values
+        }
+    -> List (Table.Column Api.Data.NeighborAddress Msg)
+valueColumns vc coinCode tokens getValues =
+    let
+        getCurr c =
+            Maybe.andThen (Dict.get c)
+                >> Maybe.withDefault zero
+    in
+    (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleAddressBalance ++ " " ++ String.toUpper coinCode) getValues.balance
+        :: (tokens
+                |> List.map
+                    (\currency ->
+                        T.valueColumnWithoutCode vc
+                            (\_ -> currency)
+                            (String.toUpper currency)
+                            (.address >> .tokenBalances >> getCurr currency)
+                    )
+           )
+    )
+        ++ (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleAddressReceived ++ " " ++ String.toUpper coinCode) getValues.totalReceived
+                :: (tokens
+                        |> List.map
+                            (\currency ->
+                                T.valueColumnWithoutCode vc
+                                    (\_ -> currency)
+                                    (String.toUpper currency)
+                                    (.address >> .totalTokensReceived >> getCurr currency)
+                            )
+                   )
+           )
+        ++ (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleEstimatedValue ++ " " ++ String.toUpper coinCode) getValues.value
+                :: (tokens
+                        |> List.map
+                            (\currency ->
+                                T.valueColumnWithoutCode vc
+                                    (\_ -> currency)
+                                    (String.toUpper currency)
+                                    (.tokenValues >> getCurr currency)
+                            )
+                   )
+           )
 
 
 reduceLabels : List String -> String

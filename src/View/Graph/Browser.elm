@@ -60,10 +60,12 @@ cm =
     Just UserClicksDownloadCSVInTable
 
 
-frame : View.Config -> Bool -> List (Html msg) -> Html msg
-frame vc visible =
+frame : View.Config -> Bool -> Float -> List (Html msg) -> Html msg
+frame vc visible width =
     div
-        [ Css.frame vc visible |> css
+        [ CssStyled.maxWidth (CssStyled.px width)
+            :: Css.frame vc width visible
+            |> css
         ]
         >> List.singleton
         >> div [ Css.root vc |> css ]
@@ -73,6 +75,7 @@ browser : Plugins -> ModelState -> View.Config -> Graph.Config -> Browser.Model 
 browser plugins states vc gc model =
     frame vc
         model.visible
+        model.width
         (case model.type_ of
             Browser.None ->
                 []

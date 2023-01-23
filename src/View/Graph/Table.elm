@@ -56,11 +56,11 @@ table vc attributes tools height config tbl =
                     |> Css.px
                     |> Css.maxHeight
                )
-                :: (minHeight
-                        |> Css.px
-                        |> Css.height
+                :: (height
+                        |> Maybe.map (Css.px >> Css.height >> List.singleton)
+                        |> Maybe.withDefault []
                    )
-                :: Css.Table.tableRoot vc
+                ++ Css.Table.tableRoot vc
                 |> css
              ]
                 ++ attributes

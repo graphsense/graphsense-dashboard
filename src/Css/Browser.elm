@@ -12,8 +12,8 @@ root vc =
         :: vc.theme.browser.root
 
 
-frame : Config -> Bool -> List Style
-frame vc visible =
+frame : Config -> Float -> Bool -> List Style
+frame vc width visible =
     backgroundColor (rgb 255 255 255)
         :: (if visible then
                 displayFlex
@@ -21,7 +21,7 @@ frame vc visible =
             else
                 display none
            )
-        :: vc.theme.browser.frame vc.lightmode visible
+        :: vc.theme.browser.frame vc.lightmode width visible
 
 
 propertyBoxRoot : Config -> List Style

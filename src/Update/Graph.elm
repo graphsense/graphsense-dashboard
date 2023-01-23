@@ -256,6 +256,9 @@ updateByMsg plugins uc msg model =
                                 , y = element.y
                                 }
                                     |> Just
+                            , browser =
+                                model.browser
+                                    |> s_width element.width
                         }
                     )
                 |> Result.withDefault model
@@ -2401,6 +2404,9 @@ updateSize w h model =
                             , height = size.height + toFloat h
                         }
                     )
+        , browser =
+            model.browser
+                |> s_width (model.browser.width + toFloat w)
     }
 
 
