@@ -301,15 +301,20 @@ valueColumnWithOptions hideCode vc getCoinCode name getValues =
 
 valuesCell : View.Config -> Bool -> String -> Api.Data.Values -> Table.HtmlDetails msg
 valuesCell vc hideCode coinCode values =
-    (if hideCode then
-        Locale.currencyWithoutCode
+    (if values.value == 0 then
+        ""
 
      else
-        Locale.currency
+        (if hideCode then
+            Locale.currencyWithoutCode
+
+         else
+            Locale.currency
+        )
+            vc.locale
+            coinCode
+            values
     )
-        vc.locale
-        coinCode
-        values
         |> text
         |> List.singleton
         |> Table.HtmlDetails

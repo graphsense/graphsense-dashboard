@@ -19,6 +19,11 @@ import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
 
 
+tokenCurrencies : List String
+tokenCurrencies =
+    [ "usdt", "usdc", "weth" ]
+
+
 columnTitleFromDirection : Bool -> String
 columnTitleFromDirection isOutgoing =
     (if isOutgoing then
@@ -106,8 +111,13 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
             , T.intColumn vc titleNoTxs .noTxs
             ]
                 ++ valueColumns vc
-                    "eth"
-                    [ "usdt", "usdc", "weth" ]
+                    coinCode
+                    (if coinCode == "eth" then
+                        tokenCurrencies
+
+                     else
+                        []
+                    )
                     { balance = .address >> .balance
                     , totalReceived = .address >> .totalReceived
                     , value = .value
@@ -156,7 +166,7 @@ valueColumns vc coinCode tokens getValues =
                             (\currency ->
                                 T.valueColumnWithoutCode vc
                                     (\_ -> currency)
-                                    (String.toUpper currency)
+                                    (String.toUpper currency ++ " ")
                                     (.address >> .totalTokensReceived >> getCurr currency)
                             )
                    )
@@ -167,7 +177,7 @@ valueColumns vc coinCode tokens getValues =
                             (\currency ->
                                 T.valueColumnWithoutCode vc
                                     (\_ -> currency)
-                                    (String.toUpper currency)
+                                    (String.toUpper currency ++ "  ")
                                     (.tokenValues >> getCurr currency)
                             )
                    )
@@ -219,12 +229,50 @@ n s =
     ( s, [] )
 
 
-prepareCSV : Bool -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
-prepareCSV isOutgoing row =
+prepareCSV : Bool -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCSV isOutgoing coinCode row =
+    let
+        suffix =
+            if coinCode == "eth" then
+                "_eth"
+
+            else
+                ""
+    in
     [ ( n <| "address", Util.Csv.string row.address.address )
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( n "no_txs", Util.Csv.int row.noTxs )
     ]
-        ++ Util.Csv.values "address_balance" row.address.totalReceived
-        ++ Util.Csv.values "address_received" row.address.balance
-        ++ Util.Csv.values "estimated_value" row.value
+        ++ Util.Csv.values ("address_balance" ++ suffix) row.address.totalReceived
+        ++ Util.Csv.values ("address_received" ++ suffix) row.address.balance
+        ++ Util.Csv.values ("estimated_value" ++ suffix) row.value
+        ++ (if coinCode == "eth" then
+                prepareCsvTokens row
+
+            else
+                []
+           )
+
+
+prepareCsvTokens : Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCsvTokens row =
+    tokenCurrencies
+        |> List.map
+            (\token ->
+                Util.Csv.values ("address_balance_" ++ token)
+                    (row.address.totalTokensReceived
+                        |> Maybe.andThen (Dict.get token)
+                        |> Maybe.withDefault zero
+                    )
+                    ++ Util.Csv.values ("address_received_" ++ token)
+                        (row.address.tokenBalances
+                            |> Maybe.andThen (Dict.get token)
+                            |> Maybe.withDefault zero
+                        )
+                    ++ Util.Csv.values ("estimated_value_" ++ token)
+                        (row.tokenValues
+                            |> Maybe.andThen (Dict.get token)
+                            |> Maybe.withDefault zero
+                        )
+            )
+        |> List.concat
