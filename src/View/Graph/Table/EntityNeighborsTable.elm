@@ -149,8 +149,15 @@ valueColumns vc coinCode tokens getValues =
         getCurr c =
             Maybe.andThen (Dict.get c)
                 >> Maybe.withDefault zero
+
+        ( suffix, valCol ) =
+            if coinCode == "eth" then
+                ( " " ++ String.toUpper coinCode, T.valueColumnWithoutCode )
+
+            else
+                ( "", T.valueColumn )
     in
-    (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleEntityBalance ++ " " ++ String.toUpper coinCode) getValues.balance
+    (valCol vc (\_ -> coinCode) (titleEntityBalance ++ suffix) getValues.balance
         :: (tokens
                 |> List.map
                     (\currency ->
@@ -161,7 +168,7 @@ valueColumns vc coinCode tokens getValues =
                     )
            )
     )
-        ++ (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleEntityReceived ++ " " ++ String.toUpper coinCode) getValues.totalReceived
+        ++ (valCol vc (\_ -> coinCode) (titleEntityReceived ++ suffix) getValues.totalReceived
                 :: (tokens
                         |> List.map
                             (\currency ->
@@ -172,7 +179,7 @@ valueColumns vc coinCode tokens getValues =
                             )
                    )
            )
-        ++ (T.valueColumnWithoutCode vc (\_ -> coinCode) (titleEstimatedValue ++ " " ++ String.toUpper coinCode) getValues.value
+        ++ (valCol vc (\_ -> coinCode) (titleEstimatedValue ++ suffix) getValues.value
                 :: (tokens
                         |> List.map
                             (\currency ->
