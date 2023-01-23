@@ -951,9 +951,15 @@ theme =
                     [ scaled 1 |> rem |> padding
                     ]
                 |> s_headCell
-                    [ tableCell
-                    , rowHeight |> px |> height
-                    ]
+                    (\lightmode ->
+                        [ tableCell
+                        , rowHeight |> px |> height
+                        , position sticky
+                        , top <| px 0
+                        , zIndex <| int 2
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        ]
+                    )
                 |> s_headRow
                     [ textAlign left
                     , fontWeight bold
