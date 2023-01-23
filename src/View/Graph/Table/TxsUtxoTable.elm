@@ -73,6 +73,7 @@ config vc coinCode =
                                 { currency = coinCode
                                 , txHash = data.txHash
                                 , table = Nothing
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl

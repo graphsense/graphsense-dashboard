@@ -978,9 +978,9 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        BrowserGotTx data ->
+        BrowserGotTx accountCurrency data ->
             { model
-                | browser = Browser.showTx data model.browser
+                | browser = Browser.showTx data accountCurrency model.browser
             }
                 |> n
 
@@ -1004,6 +1004,13 @@ updateByMsg plugins uc msg model =
 
                     else
                         Browser.showBlockTxsUtxo id data model.browser
+            }
+                |> n
+
+        BrowserGotTokenTxs id data ->
+            { model
+                | browser =
+                    Browser.showTokenTxs id data model.browser
             }
                 |> n
 
@@ -2276,23 +2283,28 @@ updateByRoute plugins route model =
                         )
                     )
 
-        Route.Currency currency (Route.Tx t table) ->
+        Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if String.toLower currency == "eth" then
-                        Browser.loadingTxAccount { currency = currency, txHash = t } model.browser
+                    if String.toLower currency == "eth" || tokenTxId /= Nothing then
+                        Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
 
                 ( browser2, effects ) =
                     if String.toLower currency == "eth" then
-                        n browser
+                        table
+                            |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
+                            |> Maybe.withDefault (n browser)
 
-                    else
+                    else if tokenTxId == Nothing then
                         table
                             |> Maybe.map (\tb -> Browser.showTxUtxoTable tb browser)
                             |> Maybe.withDefault (n browser)
+
+                    else
+                        n browser
             in
             ( { model
                 | browser = browser2

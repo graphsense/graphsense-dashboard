@@ -122,6 +122,7 @@ type Effect msg
     | GetTxEffect
         { currency : String
         , txHash : String
+        , tokenTxId : Maybe Int
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -152,6 +153,11 @@ type Effect msg
         , pagesize : Int
         }
         (Api.Data.Links -> msg)
+    | GetTokenTxsEffect
+        { currency : String
+        , txHash : String
+        }
+        (List Api.Data.TxAccount -> msg)
     | BulkGetAddressEffect
         { currency : String
         , addresses : List String
@@ -352,6 +358,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetEntitylinkTxsEffect eff
 
+        GetTokenTxsEffect eff m ->
+            m
+                >> mapMsg
+                |> GetTokenTxsEffect eff
+
         BulkGetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -464,8 +475,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Blocks.listBlockTxs currency block
                 |> send apiKey wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just False) Nothing
+        GetTxEffect { currency, txHash, tokenTxId } toMsg ->
+            Api.Request.Txs.getTx currency txHash (Just False) tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -490,6 +501,10 @@ perform apiKey wrapMsg effect =
 
         ListAddressTagsEffect { label, nextpage, pagesize } toMsg ->
             Api.Request.Tags.listAddressTags label nextpage pagesize
+                |> send apiKey wrapMsg effect toMsg
+
+        GetTokenTxsEffect { currency, txHash } toMsg ->
+            Api.Request.Txs.listTokenTxs currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEffect e toMsg ->

@@ -63,19 +63,6 @@ makeIoFromString str =
 
 
 
-getTokenTxs : (String) -> (String) -> Api.Request (List Api.Data.TxAccount)
-getTokenTxs currency_path txHash_path =
-    Api.request
-        "GET"
-        "/{currency}/token_txs/{txHash}"
-        [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        []
-        []
-        Nothing
-        (Json.Decode.list Api.Data.txAccountDecoder)
-
-
-
 getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Int) -> Api.Request Api.Data.Tx
 getTx currency_path txHash_path includeIo_query tokenTxId_query =
     Api.request
@@ -99,4 +86,17 @@ getTxIo currency_path txHash_path io_path =
         []
         Nothing
         (Json.Decode.list Api.Data.txValueDecoder)
+
+
+
+listTokenTxs : (String) -> (String) -> Api.Request (List Api.Data.TxAccount)
+listTokenTxs currency_path txHash_path =
+    Api.request
+        "GET"
+        "/{currency}/token_txs/{txHash}"
+        [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
+        []
+        []
+        Nothing
+        (Json.Decode.list Api.Data.txAccountDecoder)
 

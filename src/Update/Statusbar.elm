@@ -329,6 +329,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetTokenTxsEffect e _ ->
+            ( "{1}: loading token transactions of transaction {0}"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.GetEntityAddressesEffect e _ ->
             ( "{1}: loading addresses of entity {0}"
             , [ String.fromInt e.entity

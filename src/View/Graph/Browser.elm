@@ -164,8 +164,13 @@ browser plugins states vc gc model =
                             |> Maybe.withDefault []
                        )
 
-            Browser.TxAccount loadable ->
-                [ browseTxAccount plugins states vc gc model.now loadable ]
+            Browser.TxAccount loadable accountCurrency table ->
+                browseTxAccount plugins states vc gc model.now loadable table accountCurrency
+                    :: (table
+                            |> Maybe.map (browseTxAccountTable vc gc model.height loadable)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
             Browser.Addresslink source link table ->
                 let
@@ -287,7 +292,8 @@ browseValue : View.Config -> Value msg -> Html msg
 browseValue vc value =
     case value of
         String str ->
-            text str
+            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
+                [ text str ]
 
         Html html ->
             html
@@ -708,6 +714,16 @@ elseShowAddress l =
             v
 
 
+elseShowTxAccount : Loadable ( String, Maybe Int ) (Value msg) -> Value msg
+elseShowTxAccount l =
+    case l of
+        Loading _ ( id, _ ) ->
+            String id
+
+        Loaded v ->
+            v
+
+
 elseShowCurrency : Loadable id (Value msg) -> Value msg
 elseShowCurrency l =
     case l of
@@ -744,9 +760,9 @@ browseTxUtxo plugins states vc gc now tx =
         |> propertyBox vc
 
 
-browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> Html Msg
-browseTxAccount plugins states vc gc now tx =
-    (rowsTxAccount vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> Html Msg
+browseTxAccount plugins states vc gc now tx table coinCode =
+    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
@@ -949,7 +965,7 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
             tt (AddressTxsUtxoTable.config vc coinCode) t
 
         AddressTxsAccountTable t ->
-            tt (TxsAccountTable.config vc) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
             table_ vc Nothing height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
@@ -1011,7 +1027,7 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
             tt (AddressTxsUtxoTable.config vc coinCode) t
 
         EntityTxsAccountTable t ->
-            tt (TxsAccountTable.config vc) t
+            tt (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
             table_ vc Nothing height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
@@ -1039,7 +1055,7 @@ browseBlockTable vc gc height block table =
             table_ vc cm height (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
@@ -1059,6 +1075,20 @@ browseTxUtxoTable vc gc height tx table =
 
         TxUtxoOutputsTable t ->
             table_ vc cm height (TxUtxoTable.config vc True coinCode) t
+
+
+browseTxAccountTable : View.Config -> Graph.Config -> Maybe Float -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> TxAccountTable -> Html Msg
+browseTxAccountTable vc gc height tx (TokenTxsTable table) =
+    let
+        ( coinCode, txHash ) =
+            case tx of
+                Loaded e ->
+                    ( e.currency, e.txHash |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
+    table_ vc cm height (TxsAccountTable.config vc coinCode) table
 
 
 browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
@@ -1081,6 +1111,7 @@ rowsTxUtxo vc gc now tx =
                                 { currency = currency
                                 , txHash = id
                                 , table = Just tableTag
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -1146,13 +1177,13 @@ rowsTxUtxo vc gc now tx =
     ]
 
 
-rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> List (Row (Value Msg))
-rowsTxAccount vc gc now tx =
+rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg))
+rowsTxAccount vc gc now tx table coinCode =
     let
         txLink getAddress tx_ =
             a
                 [ Route.addressRoute
-                    { currency = tx_.currency
+                    { currency = coinCode
                     , address = getAddress tx_
                     , layer = Nothing
                     , table = Nothing
@@ -1165,12 +1196,32 @@ rowsTxAccount vc gc now tx =
                 [ getAddress tx_ |> text
                 ]
                 |> Html
+
+        mkTableLink title tableTag =
+            tx
+                |> makeTableLink
+                    (\_ -> "eth")
+                    (\d -> ( d.txHash, d.tokenTxId ))
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.txRoute
+                                { currency = currency
+                                , txHash = first id
+                                , table = Just tableTag
+                                , tokenTxId = Nothing
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
     in
     [ Row
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> String)
-            |> elseShowAddress
+            |> elseShowTxAccount
         , Nothing
         )
     , Row
@@ -1206,6 +1257,24 @@ rowsTxAccount vc gc now tx =
         , Nothing
         )
     ]
+        ++ (if loadableCurrency tx == "eth" then
+                [ Row
+                    ( "Token transactions"
+                    , String <|
+                        case table of
+                            Just (TokenTxsTable t) ->
+                                List.length t.data
+                                    |> String.fromInt
+
+                            _ ->
+                                ""
+                    , mkTableLink "Show token transactions" Route.TokenTxsTable
+                    )
+                ]
+
+            else
+                []
+           )
 
 
 browseAddresslink : Plugins -> ModelState -> View.Config -> Address -> Link Address -> Html Msg
@@ -1351,7 +1420,7 @@ browseAddresslinkTable vc gc height coinCode table =
             table_ vc cm height (AddresslinkTxsUtxoTable.config vc coinCode) t
 
         AddresslinkTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc) t
+            table_ vc cm height (TxsAccountTable.config vc coinCode) t
 
 
 multiValue : View.Config -> String -> Api.Data.Values -> String

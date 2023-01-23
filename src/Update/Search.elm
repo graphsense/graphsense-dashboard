@@ -148,6 +148,7 @@ getFirstResultUrl { input, found } =
                                                     { currency = currency
                                                     , txHash = tx
                                                     , table = Nothing
+                                                    , tokenTxId = Nothing
                                                     }
                                             )
                                     )

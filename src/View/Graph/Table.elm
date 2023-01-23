@@ -255,8 +255,28 @@ intColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
 intColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> Locale.int vc.locale >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , viewData =
+            accessor
+                >> Locale.int vc.locale
+                >> text
+                >> List.singleton
+                >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
+        }
+
+
+maybeIntColumn : View.Config -> String -> (data -> Maybe Int) -> Table.Column data msg
+maybeIntColumn vc name accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            accessor
+                >> Maybe.map (Locale.int vc.locale)
+                >> Maybe.withDefault ""
+                >> text
+                >> List.singleton
+                >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy (accessor >> Maybe.withDefault 0)
         }
 
 

@@ -32,7 +32,7 @@ type Type
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
-    | TxAccount (Loadable String Api.Data.TxAccount)
+    | TxAccount (Loadable ( String, Maybe Int ) Api.Data.TxAccount) String (Maybe TxAccountTable)
     | Label String (Table Api.Data.AddressTag)
     | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
     | Addresslink Address (Link Address) (Maybe AddresslinkTable)
@@ -132,6 +132,22 @@ loadableTx l =
         Loaded a ->
             { currency = a.currency
             , txHash = a.txHash
+            }
+
+
+loadableTxAccount : Loadable ( String, Maybe Int ) Api.Data.TxAccount -> T.TxAccount
+loadableTxAccount l =
+    case l of
+        Loading curr ( id, tokenTxId ) ->
+            { currency = curr
+            , txHash = id
+            , tokenTxId = tokenTxId
+            }
+
+        Loaded a ->
+            { currency = a.currency
+            , txHash = a.txHash
+            , tokenTxId = a.tokenTxId
             }
 
 

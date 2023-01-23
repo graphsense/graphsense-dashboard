@@ -959,7 +959,7 @@ theme =
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
                     ]
-                |> s_maxHeight 250
+                |> s_maxHeight 300
                 |> s_rowHeight
                     rowHeight
                 |> s_row

@@ -79,9 +79,10 @@ type Msg
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
-    | BrowserGotTx Api.Data.Tx
+    | BrowserGotTx String Api.Data.Tx
     | BrowserGotTxUtxoAddresses T.Tx Bool (List Api.Data.TxValue)
     | BrowserGotLabelAddressTags String Api.Data.AddressTags
+    | BrowserGotTokenTxs T.Tx (List Api.Data.TxAccount)
     | PluginMsg Plugin.Msg
     | TableNewState Table.State
     | UserClickedContextMenu
