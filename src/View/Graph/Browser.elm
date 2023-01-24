@@ -62,9 +62,18 @@ cm =
 
 frame : View.Config -> Bool -> Float -> List (Html msg) -> Html msg
 frame vc visible width =
+    let
+        cssMaxWidth =
+            if width > 0 then
+                [ CssStyled.maxWidth (CssStyled.px width)
+                ]
+
+            else
+                []
+    in
     div
-        [ CssStyled.maxWidth (CssStyled.px width)
-            :: Css.frame vc width visible
+        [ cssMaxWidth
+            ++ Css.frame vc width visible
             |> css
         ]
         >> List.singleton
