@@ -4,7 +4,7 @@ A web dashboard for interactive cryptocurrency analysis.
 
 ## Configuration
 
-Configure plugins and custom themes in `config/Config.elm`. Use `config/Config.elm.tmp` as a template: `cp config/Config.elm.tmp config/Config.elm`
+Run `cp config/Config.elm.tmp config/Config.elm` and optionally configure plugins and your custom theme here.
 
 ## Install plugins
 
