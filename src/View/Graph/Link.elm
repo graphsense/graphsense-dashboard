@@ -406,7 +406,7 @@ getLabel vc gc currency link =
                                )
                             |> List.map
                                 (\( coinCode, v ) ->
-                                    Locale.currency vc.locale coinCode v
+                                    Locale.tokenCurrency vc.locale coinCode v
                                 )
 
                     else

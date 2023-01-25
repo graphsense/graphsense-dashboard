@@ -21,6 +21,7 @@ import Json.Encode
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
+import Model.Currency as Currency
 import Model.Entity as E
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
@@ -30,6 +31,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
@@ -409,7 +411,7 @@ browseValue vc value =
                     |> text
                 ]
 
-        MultiValue len values ->
+        MultiValue parentCoin len values ->
             values
                 |> List.map
                     (\( coinCode, v ) ->
@@ -418,7 +420,7 @@ browseValue vc value =
                                 |> text
                                 |> List.singleton
                                 |> td [ Css.currencyCell vc |> css ]
-                            , multiValue vc coinCode v
+                            , multiValue vc parentCoin coinCode v
                                 |> text
                                 |> List.singleton
                                 |> td
@@ -524,7 +526,7 @@ rowsAddress vc now address =
                 Loaded a ->
                     totalReceivedValues a
                         ++ balanceValues a
-                        |> List.map (\( currency, v ) -> multiValue vc currency v |> String.length)
+                        |> List.map (\( currency, v ) -> multiValue vc a.address.currency currency v |> String.length)
                         |> List.maximum
                         |> Maybe.withDefault 0
                         |> (+) 1
@@ -569,7 +571,7 @@ rowsAddress vc now address =
                 , address
                     |> ifLoaded
                         (totalReceivedValues
-                            >> MultiValue len
+                            >> MultiValue (loadableAddressCurrency address) len
                         )
                     |> elseLoading
                 , Nothing
@@ -579,7 +581,7 @@ rowsAddress vc now address =
                 , address
                     |> ifLoaded
                         (balanceValues
-                            >> MultiValue len
+                            >> MultiValue (loadableAddressCurrency address) len
                         )
                     |> elseLoading
                 , Nothing
@@ -1430,6 +1432,10 @@ browseAddresslinkTable vc gc height coinCode table =
             table_ vc cm height (TxsAccountTable.config vc coinCode) t
 
 
-multiValue : View.Config -> String -> Api.Data.Values -> String
-multiValue vc coinCode v =
-    Locale.currencyWithoutCode vc.locale coinCode v
+multiValue : View.Config -> String -> String -> Api.Data.Values -> String
+multiValue vc parentCoin coinCode v =
+    if parentCoin == "eth" && vc.locale.currency /= Currency.Coin then
+        Locale.currency vc.locale coinCode v
+
+    else
+        Locale.currencyWithoutCode vc.locale coinCode v

@@ -13,6 +13,7 @@ module View.Locale exposing
     , text
     , timestamp
     , timestampWithFormat
+    , tokenCurrency
     )
 
 import Api.Data
@@ -205,36 +206,51 @@ percentage model =
 
 currency : Model -> String -> Api.Data.Values -> String
 currency =
-    currencyWithOptions False
+    currencyWithOptions One
+
+
+tokenCurrency : Model -> String -> Api.Data.Values -> String
+tokenCurrency =
+    currencyWithOptions Both
 
 
 currencyWithoutCode : Model -> String -> Api.Data.Values -> String
 currencyWithoutCode =
-    currencyWithOptions True
+    currencyWithOptions Hidden
 
 
-currencyWithOptions : Bool -> Model -> String -> Api.Data.Values -> String
-currencyWithOptions hideCode model coinCode values =
+type CodeVisibility
+    = Hidden
+    | One
+    | Both
+
+
+currencyWithOptions : CodeVisibility -> Model -> String -> Api.Data.Values -> String
+currencyWithOptions vis model coinCode values =
     case model.currency of
         Coin ->
-            coin model hideCode coinCode values.value
+            coin model (vis == Hidden) coinCode values.value
 
         Fiat code ->
             values.fiatValues
                 |> List.filter (.code >> String.toLower >> (==) code)
                 |> List.head
-                |> Maybe.map (fiat model hideCode)
+                |> Maybe.map (fiat model coinCode vis)
                 |> Maybe.withDefault ""
 
 
-fiat : Model -> Bool -> Api.Data.Rate -> String
-fiat model hideCode { code, value } =
+fiat : Model -> String -> CodeVisibility -> Api.Data.Rate -> String
+fiat model coinCode vis { code, value } =
     float model value
-        ++ (if hideCode then
-                ""
+        ++ (case vis of
+                Hidden ->
+                    ""
 
-            else
-                " " ++ String.toUpper code
+                One ->
+                    " " ++ String.toUpper code
+
+                Both ->
+                    " " ++ String.toUpper code ++ " (" ++ String.toUpper coinCode ++ ")"
            )
 
 
