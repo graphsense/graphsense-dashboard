@@ -529,7 +529,7 @@ rowsAddress vc now address =
                         |> List.map (\( currency, v ) -> multiValue vc a.address.currency currency v |> String.length)
                         |> List.maximum
                         |> Maybe.withDefault 0
-                        |> (+) 1
+                        |> (+) 2
 
         totalReceivedValues a =
             ( a.address.currency, a.address.totalReceived )
