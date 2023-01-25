@@ -4,16 +4,17 @@ import Config.View exposing (Config)
 import Css exposing (..)
 
 
-root : Config -> List Style
-root vc =
+root : Config -> Float -> List Style
+root vc width =
     position absolute
         :: height (px 0)
         :: (zIndex <| int 50)
+        :: (maxWidth <| px width)
         :: vc.theme.browser.root
 
 
-frame : Config -> Float -> Bool -> List Style
-frame vc width visible =
+frame : Config -> Bool -> List Style
+frame vc visible =
     backgroundColor (rgb 255 255 255)
         :: (if visible then
                 displayFlex
@@ -21,7 +22,7 @@ frame vc width visible =
             else
                 display none
            )
-        :: vc.theme.browser.frame vc.lightmode width visible
+        :: vc.theme.browser.frame vc.lightmode visible
 
 
 propertyBoxRoot : Config -> List Style

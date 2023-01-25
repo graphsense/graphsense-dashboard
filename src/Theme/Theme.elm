@@ -32,6 +32,8 @@ type alias Theme =
     , sidebar : Bool -> List Style
     , sidebarIcon : Bool -> Bool -> List Style
     , main : Bool -> List Style
+    , navbar : Bool -> List Style
+    , contents : Bool -> List Style
     , link : Bool -> List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
@@ -77,6 +79,8 @@ default =
     , sidebar = \_ -> []
     , sidebarIcon = \_ _ -> []
     , main = \_ -> []
+    , navbar = \_ -> []
+    , contents = \_ -> []
     , link = \_ -> []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""

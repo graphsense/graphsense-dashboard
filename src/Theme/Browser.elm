@@ -6,7 +6,7 @@ import Css exposing (Style)
 
 type alias Browser =
     { root : List Style
-    , frame : Bool -> Float -> Bool -> List Style
+    , frame : Bool -> Bool -> List Style
     , propertyBoxRoot : Bool -> List Style
     , propertyBoxTable : List Style
     , propertyBoxNote : Bool -> List Style
@@ -31,7 +31,7 @@ type alias Browser =
 default : Browser
 default =
     { root = []
-    , frame = \_ _ _ -> []
+    , frame = \_ _ -> []
     , propertyBoxRoot = \_ -> []
     , propertyBoxTable = []
     , propertyBoxNote = \_ -> []

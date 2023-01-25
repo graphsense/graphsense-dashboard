@@ -46,7 +46,6 @@ type Msg
     | UserPushesLeftMouseButtonOnGraph Coords
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
-    | BrowserGotSvgElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotBrowserElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnEntity EntityId Coords

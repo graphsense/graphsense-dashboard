@@ -154,6 +154,12 @@ theme =
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
                 ]
             )
+        |> s_navbar
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandWhite
+                , shadowSm
+                ]
+            )
         |> s_link
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText
@@ -682,12 +688,6 @@ theme =
                         , property "fill-opacity" "0.5"
                         ]
                     )
-                |> s_navbar
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.brandWhite
-                        , shadowSm
-                        ]
-                    )
                 |> s_searchTextarea
                     (\lightmode ->
                         [ inputStyle lightmode
@@ -818,7 +818,7 @@ theme =
                     , justifyContent spaceBetween
                     ]
                 |> s_frame
-                    (\lightmode width visible ->
+                    (\lightmode visible ->
                         let
                             p =
                                 if visible then
@@ -833,7 +833,7 @@ theme =
                         , displayFlex
                         , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
-                        , maxWidth <| calc (px width) minus (scaled 4 |> rem)
+                        , width <| calc (pct 100) minus (scaled 4 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30

@@ -31,6 +31,7 @@ init plugins flags url key =
             { locale = locale
             , theme = config.theme
             , lightmode = False
+            , size = Nothing
             }
       , locale = locale
       , page = Stats

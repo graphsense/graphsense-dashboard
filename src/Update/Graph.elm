@@ -244,26 +244,7 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedEntities ids ->
             n model
 
-        BrowserGotSvgElement result ->
-            result
-                |> Result.map
-                    (\{ element } ->
-                        { model
-                            | size =
-                                { width = element.width
-                                , height = element.height
-                                , x = element.x
-                                , y = element.y
-                                }
-                                    |> Just
-                            , browser =
-                                model.browser
-                                    |> s_width element.width
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
-
+        -- handled upstream
         BrowserGotBrowserElement result ->
             result
                 |> Result.map
@@ -306,7 +287,7 @@ updateByMsg plugins uc msg model =
                 n model
 
         UserWheeledOnGraph x y z ->
-            model.size
+            uc.size
                 |> Maybe.map
                     (\size ->
                         { model
@@ -426,7 +407,7 @@ updateByMsg plugins uc msg model =
                     (\address ->
                         { model
                             | contextMenu =
-                                ContextMenu.initAddress (Coords.relativeToGraph model.size coords) address
+                                ContextMenu.initAddress (Coords.relativeToGraph uc.size coords) address
                                     |> Just
                         }
                     )
@@ -468,7 +449,7 @@ updateByMsg plugins uc msg model =
                     (\entity ->
                         { model
                             | contextMenu =
-                                ContextMenu.initEntity (Coords.relativeToGraph model.size coords) entity
+                                ContextMenu.initEntity (Coords.relativeToGraph uc.size coords) entity
                                     |> Just
                         }
                     )
@@ -501,7 +482,7 @@ updateByMsg plugins uc msg model =
         UserRightClicksEntityLink id coords ->
             { model
                 | contextMenu =
-                    ContextMenu.initEntityLink (Coords.relativeToGraph model.size coords) id
+                    ContextMenu.initEntityLink (Coords.relativeToGraph uc.size coords) id
                         |> Just
             }
                 |> n
@@ -529,7 +510,7 @@ updateByMsg plugins uc msg model =
         UserRightClicksAddressLink id coords ->
             { model
                 | contextMenu =
-                    ContextMenu.initAddressLink (Coords.relativeToGraph model.size coords) id
+                    ContextMenu.initAddressLink (Coords.relativeToGraph uc.size coords) id
                         |> Just
             }
                 |> n
@@ -1975,7 +1956,7 @@ updateByMsg plugins uc msg model =
                             (Transform.updateByBoundingBox
                                 model.transform
                             )
-                            (model.size
+                            (uc.size
                                 |> Maybe.map
                                     (\{ width, height } ->
                                         { width = width
@@ -2390,24 +2371,6 @@ updateByRoute plugins route model =
 
         Route.Plugin ( pid, value ) ->
             n model
-
-
-updateSize : Int -> Int -> Model -> Model
-updateSize w h model =
-    { model
-        | size =
-            model.size
-                |> Maybe.map
-                    (\size ->
-                        { size
-                            | width = size.width + toFloat w
-                            , height = size.height + toFloat h
-                        }
-                    )
-        , browser =
-            model.browser
-                |> s_width (model.browser.width + toFloat w)
-    }
 
 
 addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> { model : Model, newAddresses : List Address, newEntities : List EntityId, repositioned : Set EntityId }

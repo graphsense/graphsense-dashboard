@@ -57,6 +57,9 @@ messageFromEffect model effect =
         Model.GetElementEffect _ ->
             Nothing
 
+        Model.GetContentsElementEffect ->
+            Nothing
+
         Model.LocaleEffect (Locale.GetTranslationEffect _) ->
             Nothing
 
@@ -94,9 +97,6 @@ messageFromEffect model effect =
             messageFromApiEffect model eff
 
         Model.GraphEffect (Graph.NavPushRouteEffect _) ->
-            Nothing
-
-        Model.GraphEffect Graph.GetSvgElementEffect ->
             Nothing
 
         Model.GraphEffect Graph.GetBrowserElementEffect ->
