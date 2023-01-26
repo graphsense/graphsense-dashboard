@@ -1,5 +1,6 @@
 module Plugin.Update exposing (..)
 
+import Maybe.Extra
 import Model.Graph.Address as Address
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
@@ -15,7 +16,6 @@ type alias Plugins =
     { 
     }
 
-n : Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 n m =
   (m, [], Cmd.none)
 

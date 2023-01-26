@@ -80,8 +80,8 @@ browser plugins vc states =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-navbarLeft : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
-navbarLeft plugins states vc =
+graphNavbarLeft : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
+graphNavbarLeft plugins states vc =
     [ 
     ]
         |> List.filterMap identity
@@ -114,17 +114,21 @@ sidebar plugins states page vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-main_ : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (Html Model.Msg)
-main_ plugins states type_ vc =
+contents : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+contents plugins states type_ vc =
     Nothing
 
-hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
+navbar : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+navbar plugins states type_ vc =
+    Nothing
+
+hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
 hovercards plugins states vc =
     [ 
     ]
         |> List.filterMap identity
         |> List.concat
-        |> List.map (Html.map Model.PluginMsg)
+        |> List.map (Html.map Graph.PluginMsg)
 
 
 title : Plugins -> Plugin.Model.ModelState -> View.Config -> List String
