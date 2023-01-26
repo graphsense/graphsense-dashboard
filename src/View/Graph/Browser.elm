@@ -518,33 +518,6 @@ rowsAddress vc now address =
                 )
             ]
 
-        len =
-            case address of
-                Loading _ _ ->
-                    0
-
-                Loaded a ->
-                    totalReceivedValues a
-                        ++ balanceValues a
-                        |> List.map (\( currency, v ) -> multiValue vc a.address.currency currency v |> String.length)
-                        |> List.maximum
-                        |> Maybe.withDefault 0
-                        |> (+) 2
-
-        totalReceivedValues a =
-            ( a.address.currency, a.address.totalReceived )
-                :: (a.address.totalTokensReceived
-                        |> Maybe.map Dict.toList
-                        |> Maybe.withDefault []
-                   )
-
-        balanceValues a =
-            ( a.address.currency, a.address.balance )
-                :: (a.address.tokenBalances
-                        |> Maybe.map Dict.toList
-                        |> Maybe.withDefault []
-                   )
-
         rowsPart2 =
             [ Row
                 ( "Last usage"
@@ -570,7 +543,7 @@ rowsAddress vc now address =
                 ( "Total received"
                 , address
                     |> ifLoaded
-                        (totalReceivedValues
+                        (totalReceivedValues .address
                             >> MultiValue (loadableAddressCurrency address) len
                         )
                     |> elseLoading
@@ -580,7 +553,7 @@ rowsAddress vc now address =
                 ( "Final balance"
                 , address
                     |> ifLoaded
-                        (balanceValues
+                        (balanceValues .address
                             >> MultiValue (loadableAddressCurrency address) len
                         )
                     |> elseLoading
@@ -630,6 +603,9 @@ rowsAddress vc now address =
 
                 Loading _ _ ->
                     []
+
+        len =
+            multiValueMaxLen .address address
     in
     [ Row
         ( "Address"
@@ -1439,3 +1415,45 @@ multiValue vc parentCoin coinCode v =
 
     else
         Locale.currencyWithoutCode vc.locale coinCode v
+
+
+type alias AddressOrEntity a =
+    { a
+        | balance : Values
+        , totalReceived : Values
+        , tokenBalances : Maybe (Dict.Dict String Values)
+        , totalTokensReceived : Maybe (Dict.Dict String Values)
+        , totalTokensSpent : Maybe (Dict.Dict String Values)
+        , currency : String
+    }
+
+
+multiValueMaxLen : (Loadable comparable thing -> AddressOrEntity) -> thing -> Int
+multiValueMaxLen accessor thing =
+    case thing of
+        Loading _ _ ->
+            0
+
+        Loaded a ->
+            totalReceivedValues accessor a
+                ++ balanceValues accessor a
+                |> List.map (\( currency, v ) -> multiValue vc (accessor a).currency currency v |> String.length)
+                |> List.maximum
+                |> Maybe.withDefault 0
+                |> (+) 2
+
+
+totalReceivedValues accessor a =
+    ( (accessor a).currency, (accessor a).totalReceived )
+        :: (a.address.totalTokensReceived
+                |> Maybe.map Dict.toList
+                |> Maybe.withDefault []
+           )
+
+
+balanceValues accessor a =
+    ( (accessor a).currency, (accessor a).balance )
+        :: (a.address.tokenBalances
+                |> Maybe.map Dict.toList
+                |> Maybe.withDefault []
+           )
