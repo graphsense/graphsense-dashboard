@@ -72,6 +72,15 @@ titleEstimatedValue =
     "Estimated value"
 
 
+titleValue : String -> String
+titleValue coinCode =
+    if coinCode == "eth" then
+        "Value"
+
+    else
+        titleEstimatedValue
+
+
 config : View.Config -> Bool -> String -> Maybe AddressId -> (AddressId -> Bool -> A.Address -> Bool) -> Table.Config Api.Data.NeighborAddress Msg
 config vc isOutgoing coinCode id neighborLayerHasAddress =
     Table.customConfig
@@ -178,7 +187,7 @@ valueColumns vc coinCode tokens getValues =
                             )
                    )
            )
-        ++ (valCol vc (\_ -> coinCode) (titleEstimatedValue ++ suffix) getValues.value
+        ++ (valCol vc (\_ -> coinCode) (titleValue coinCode ++ suffix) getValues.value
                 :: (tokens
                         |> List.map
                             (\currency ->
@@ -245,6 +254,13 @@ prepareCSV isOutgoing coinCode row =
 
             else
                 ""
+
+        estimatedValueTitle =
+            if coinCode == "eth" then
+                "value"
+
+            else
+                "estimated_value"
     in
     [ ( n <| "address", Util.Csv.string row.address.address )
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
@@ -252,7 +268,7 @@ prepareCSV isOutgoing coinCode row =
     ]
         ++ Util.Csv.values ("address_balance" ++ suffix) row.address.totalReceived
         ++ Util.Csv.values ("address_received" ++ suffix) row.address.balance
-        ++ Util.Csv.values ("estimated_value" ++ suffix) row.value
+        ++ Util.Csv.values (estimatedValueTitle ++ suffix) row.value
         ++ (if coinCode == "eth" then
                 prepareCsvTokens row
 
@@ -276,7 +292,7 @@ prepareCsvTokens row =
                             |> Maybe.andThen (Dict.get token)
                             |> Maybe.withDefault zero
                         )
-                    ++ Util.Csv.values ("estimated_value_" ++ token)
+                    ++ Util.Csv.values ("value_" ++ token)
                         (row.tokenValues
                             |> Maybe.andThen (Dict.get token)
                             |> Maybe.withDefault zero
