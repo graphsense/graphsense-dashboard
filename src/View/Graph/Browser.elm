@@ -605,7 +605,7 @@ rowsAddress vc now address =
                     []
 
         len =
-            multiValueMaxLen .address address
+            multiValueMaxLen vc .address address
     in
     [ Row
         ( "Address"
@@ -773,6 +773,9 @@ rowsEntity vc gc now ent =
                         , active = False
                         }
                     )
+
+        len =
+            multiValueMaxLen vc .entity ent
     in
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
@@ -865,14 +868,20 @@ rowsEntity vc gc now ent =
     , Row
         ( "Total received"
         , ent
-            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.totalReceived)
+            |> ifLoaded
+                (totalReceivedValues .entity
+                    >> MultiValue (loadableEntityCurrency ent) len
+                )
             |> elseLoading
         , Nothing
         )
     , Row
         ( "Final balance"
         , ent
-            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.balance)
+            |> ifLoaded
+                (balanceValues .entity
+                    >> MultiValue (loadableEntityCurrency ent) len
+                )
             |> elseLoading
         , Nothing
         )
@@ -1419,17 +1428,17 @@ multiValue vc parentCoin coinCode v =
 
 type alias AddressOrEntity a =
     { a
-        | balance : Values
-        , totalReceived : Values
-        , tokenBalances : Maybe (Dict.Dict String Values)
-        , totalTokensReceived : Maybe (Dict.Dict String Values)
-        , totalTokensSpent : Maybe (Dict.Dict String Values)
+        | balance : Api.Data.Values
+        , totalReceived : Api.Data.Values
+        , tokenBalances : Maybe (Dict.Dict String Api.Data.Values)
+        , totalTokensReceived : Maybe (Dict.Dict String Api.Data.Values)
+        , totalTokensSpent : Maybe (Dict.Dict String Api.Data.Values)
         , currency : String
     }
 
 
-multiValueMaxLen : (Loadable comparable thing -> AddressOrEntity) -> thing -> Int
-multiValueMaxLen accessor thing =
+multiValueMaxLen : View.Config -> (thing -> AddressOrEntity a) -> Loadable comparable thing -> Int
+multiValueMaxLen vc accessor thing =
     case thing of
         Loading _ _ ->
             0
@@ -1443,17 +1452,19 @@ multiValueMaxLen accessor thing =
                 |> (+) 2
 
 
+totalReceivedValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
 totalReceivedValues accessor a =
     ( (accessor a).currency, (accessor a).totalReceived )
-        :: (a.address.totalTokensReceived
+        :: ((accessor a).totalTokensReceived
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
            )
 
 
+balanceValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
 balanceValues accessor a =
     ( (accessor a).currency, (accessor a).balance )
-        :: (a.address.tokenBalances
+        :: ((accessor a).tokenBalances
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
            )
