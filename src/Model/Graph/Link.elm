@@ -13,13 +13,16 @@ type alias Link a =
 
 
 type LinkData
-    = LinkData
-        { labels : Maybe (List String)
-        , noTxs : Int
-        , value : Api.Data.Values
-        , tokenValues : Maybe (Dict String Api.Data.Values)
-        }
+    = LinkData LinkActualData
     | PlaceholderLinkData
+
+
+type alias LinkActualData =
+    { labels : Maybe (List String)
+    , noTxs : Int
+    , value : Api.Data.Values
+    , tokenValues : Maybe (Dict String Api.Data.Values)
+    }
 
 
 fromNeighbor : { a | labels : Maybe (List String), noTxs : Int, value : Api.Data.Values, tokenValues : Maybe (Dict String Api.Data.Values) } -> LinkData

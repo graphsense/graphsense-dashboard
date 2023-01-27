@@ -1286,7 +1286,7 @@ rowsAddresslink vc source link =
         linkData =
             case link.link of
                 Link.LinkData ld ->
-                    Just ( ld.value, ld.noTxs )
+                    Just ld
 
                 Link.PlaceholderLinkData ->
                     Nothing
@@ -1309,7 +1309,7 @@ rowsAddresslink vc source link =
         ( "Transactions"
         , linkData
             |> Maybe.map
-                (second >> Locale.int vc.locale)
+                (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
         , Just
@@ -1328,13 +1328,7 @@ rowsAddresslink vc source link =
             , active = False
             }
         )
-    , Row
-        ( "Value"
-        , linkData
-            |> Maybe.map (first >> Value currency)
-            |> Maybe.withDefault (String "")
-        , Nothing
-        )
+    , linkValueRow vc currency linkData
     ]
 
 
@@ -1353,7 +1347,7 @@ rowsEntitylink vc source link =
         linkData =
             case link.link of
                 Link.LinkData ld ->
-                    Just ( ld.value, ld.noTxs )
+                    Just ld
 
                 Link.PlaceholderLinkData ->
                     Nothing
@@ -1378,7 +1372,7 @@ rowsEntitylink vc source link =
         ( "Transactions"
         , linkData
             |> Maybe.map
-                (second >> Locale.int vc.locale)
+                (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
         , Just
@@ -1397,14 +1391,47 @@ rowsEntitylink vc source link =
             , active = False
             }
         )
-    , Row
-        ( "Value"
-        , linkData
-            |> Maybe.map (first >> Value currency)
-            |> Maybe.withDefault (String "")
-        , Nothing
-        )
+    , linkValueRow vc currency linkData
     ]
+
+
+linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg)
+linkValueRow vc parentCurrency linkData =
+    if parentCurrency /= "eth" then
+        Row
+            ( "Estimated value"
+            , linkData
+                |> Maybe.map (.value >> Value parentCurrency)
+                |> Maybe.withDefault (String "")
+            , Nothing
+            )
+
+    else
+        Row
+            ( "Value"
+            , linkData
+                |> Maybe.map
+                    (\v ->
+                        let
+                            vals =
+                                ( parentCurrency, v.value )
+                                    :: (v.tokenValues
+                                            |> Maybe.map Dict.toList
+                                            |> Maybe.withDefault []
+                                       )
+
+                            len =
+                                vals
+                                    |> List.map (\( currency, val ) -> multiValue vc parentCurrency currency val |> String.length)
+                                    |> List.maximum
+                                    |> Maybe.withDefault 0
+                                    |> (+) 2
+                        in
+                        MultiValue parentCurrency len vals
+                    )
+                |> Maybe.withDefault (String "")
+            , Nothing
+            )
 
 
 browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddresslinkTable -> Html Msg
