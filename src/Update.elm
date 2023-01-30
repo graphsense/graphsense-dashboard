@@ -877,7 +877,10 @@ updateByUrl plugins uc url model =
                         )
                             |> updateByPluginOutMsg plugins outMsg
             )
-            (Route.parse routeConfig model.url)
+            (Route.parse routeConfig model.url
+                -- in case url is invalid, assume root url
+                |> Maybe.Extra.orElse (Just Route.Stats)
+            )
         |> Maybe.map
             (mapSecond
                 ((++)
