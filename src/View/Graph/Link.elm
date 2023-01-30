@@ -336,8 +336,14 @@ drawLabel vc gc x y hovered selected color lbl =
         width =
             toFloat len * linkLabelHeight / 1.5
 
+        lineHeight =
+            linkLabelHeight * 1.2
+
         height =
-            linkLabelHeight * 1.2 * (toFloat <| List.length lbl)
+            lineHeight * (toFloat <| List.length lbl)
+
+        rectY =
+            y - height / 2
     in
     g
         []
@@ -345,7 +351,7 @@ drawLabel vc gc x y hovered selected color lbl =
             [ String.fromFloat (linkLabelHeight / 2) |> rx
             , String.fromFloat (linkLabelHeight / 2) |> ry
             , x - width / 2 |> String.fromFloat |> Svg.x
-            , y - height / 2 |> String.fromFloat |> Svg.y
+            , rectY |> String.fromFloat |> Svg.y
             , String.fromFloat width |> Svg.width
             , String.fromFloat height |> Svg.height
             , Css.Graph.linkLabelBox vc hovered selected |> css
@@ -360,7 +366,9 @@ drawLabel vc gc x y hovered selected color lbl =
                                     |> css
                                 , textAnchor "middle"
                                 , String.fromFloat x |> Svg.x
-                                , String.fromFloat (y + (toFloat i * linkLabelHeight * 1.2)) |> Svg.y
+                                , (rectY + (toFloat (i + 1) * lineHeight) - 2)
+                                    |> String.fromFloat
+                                    |> Svg.y
                                 ]
                                 [ text lb ]
                         )
