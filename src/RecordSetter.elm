@@ -1654,11 +1654,6 @@ s_graphRoot value__ record__ =
     { record__ | graphRoot = value__ }
 
 
-s_graphqlUrl : a -> { b | graphqlUrl : a } -> { b | graphqlUrl : a }
-s_graphqlUrl value__ record__ =
-    { record__ | graphqlUrl = value__ }
-
-
 s_green : a -> { b | green : a } -> { b | green : a }
 s_green value__ record__ =
     { record__ | green = value__ }
@@ -2464,6 +2459,11 @@ s_listHtmlId value__ record__ =
     { record__ | listHtmlId = value__ }
 
 
+s_listItem : a -> { b | listItem : a } -> { b | listItem : a }
+s_listItem value__ record__ =
+    { record__ | listItem = value__ }
+
+
 s_listStylePosition : a -> { b | listStylePosition : a } -> { b | listStylePosition : a }
 s_listStylePosition value__ record__ =
     { record__ | listStylePosition = value__ }
@@ -3119,6 +3119,11 @@ s_onNotAsked value__ record__ =
     { record__ | onNotAsked = value__ }
 
 
+s_onOk : a -> { b | onOk : a } -> { b | onOk : a }
+s_onOk value__ record__ =
+    { record__ | onOk = value__ }
+
+
 s_onRequestComplete : a -> { b | onRequestComplete : a } -> { b | onRequestComplete : a }
 s_onRequestComplete value__ record__ =
     { record__ | onRequestComplete = value__ }
@@ -3322,6 +3327,11 @@ s_pagesize value__ record__ =
 s_palette : a -> { b | palette : a } -> { b | palette : a }
 s_palette value__ record__ =
     { record__ | palette = value__ }
+
+
+s_paragraph : a -> { b | paragraph : a } -> { b | paragraph : a }
+s_paragraph value__ record__ =
+    { record__ | paragraph = value__ }
 
 
 s_param0 : a -> { b | param0 : a } -> { b | param0 : a }
@@ -4052,11 +4062,6 @@ s_sent value__ record__ =
 s_separator : a -> { b | separator : a } -> { b | separator : a }
 s_separator value__ record__ =
     { record__ | separator = value__ }
-
-
-s_serviceProvidersUrl : a -> { b | serviceProvidersUrl : a } -> { b | serviceProvidersUrl : a }
-s_serviceProvidersUrl value__ record__ =
-    { record__ | serviceProvidersUrl = value__ }
 
 
 s_set : a -> { b | set : a } -> { b | set : a }

@@ -21,6 +21,8 @@ type alias Theme =
     , logo : String
     , logo_lightmode : String
     , body : Bool -> List Style
+    , paragraph : List Style
+    , listItem : List Style
     , sectionBelowHeader : List Style
     , header : Bool -> List Style
     , headerLogo : List Style
@@ -66,6 +68,8 @@ default =
     , logo = ""
     , logo_lightmode = ""
     , body = \_ -> []
+    , paragraph = []
+    , listItem = []
     , sectionBelowHeader = []
     , header = \_ -> []
     , heading2 = []

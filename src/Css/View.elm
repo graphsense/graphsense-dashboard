@@ -20,6 +20,16 @@ body vc =
         ++ vc.theme.body vc.lightmode
 
 
+paragraph : Config -> List Style
+paragraph vc =
+    vc.theme.paragraph
+
+
+listItem : Config -> List Style
+listItem vc =
+    vc.theme.listItem
+
+
 sectionBelowHeader : Config -> List Style
 sectionBelowHeader vc =
     [ displayFlex

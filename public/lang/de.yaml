@@ -266,3 +266,12 @@ download table as CSV: Tabelle als CSV herunterladen
 "Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.": "Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert."
 yes: ja
 no: nein
+"address not found": "Adresse nicht gefunden"
+"addresses not found": "Adressen nicht gefunden"
+"... and {0} more": "... und {0} weitere"
+"there could be various reasons": "Dies kann mehrere Ursachen haben"
+"they are possibly not yet in our database": "Sie sind möglicherweise noch nicht in unsere Datenbank eingespielt"
+"it is possibly not yet in our database": "Sie ist möglicherweise noch nicht in unsere Datenbank eingespielt"
+"they have not received any transactions and are therefore not stored in the blockchain": "Sie haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in der Blockchain gespeichert"
+"it has not received any transactions and is therefore not stored in the blockchain": "Sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert"
+"there are typos": "Es gibt Tippfehler"

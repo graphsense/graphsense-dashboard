@@ -148,9 +148,16 @@ update key error model =
                     | messages = Dict.remove key model.messages
                     , log = addLog ( first msg, second msg, error ) model.log
                     , visible =
-                        error
-                            |> Maybe.map (\_ -> True)
-                            |> Maybe.withDefault model.visible
+                        if first msg == loadingAddressKey then
+                            model.visible
+
+                        else if first msg == loadingAddressEntityKey then
+                            model.visible
+
+                        else
+                            error
+                                |> Maybe.map (\_ -> True)
+                                |> Maybe.withDefault model.visible
                 }
             )
         |> Maybe.withDefault model

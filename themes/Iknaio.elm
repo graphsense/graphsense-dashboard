@@ -120,6 +120,13 @@ theme =
             , fontWeight bold
             , scaled 1 |> rem |> paddingTop
             ]
+        |> s_paragraph
+            [ scaled 2 |> rem |> marginBottom
+            ]
+        |> s_listItem
+            [ listStyleType disc
+            , scaled 6 |> rem |> marginLeft
+            ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
             [ maxWidth <| px 190
@@ -422,7 +429,7 @@ theme =
                     , scaled 2 |> rem |> paddingRight
                     ]
                 |> s_heading
-                    [ fontNormal
+                    [ fontBold
                     , scaled 0.1 |> rem |> letterSpacing
                     , scaled 2 |> rem |> paddingBottom
                     , scaled 0.5 |> rem |> paddingTop

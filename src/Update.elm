@@ -18,7 +18,9 @@ import Http exposing (Error(..))
 import Json.Decode
 import Json.Encode exposing (Value)
 import Lense
+import List.Extra
 import Log
+import Maybe.Extra
 import Model exposing (..)
 import Model.Dialog as Dialog
 import Model.Graph.Browser as Browser
@@ -26,6 +28,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Search as Search
+import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin.Model as Plugin
@@ -135,10 +138,44 @@ update plugins uc msg model =
 
                                 _ ->
                                     model.statusbar
+                , dialog =
+                    statusbarToken
+                        |> Maybe.andThen
+                            (\token ->
+                                case result of
+                                    Err ( Http.BadStatus 404, _ ) ->
+                                        Statusbar.getMessage token model.statusbar
+                                            |> Maybe.andThen
+                                                (\( key, v ) ->
+                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey then
+                                                        Just ( key, v )
+
+                                                    else
+                                                        Nothing
+                                                )
+                                            |> Maybe.andThen (second >> List.Extra.getAt 0)
+                                            |> Maybe.map
+                                                (\address ->
+                                                    UserClosesDialog
+                                                        |> Dialog.addressNotFound address model.dialog
+                                                )
+
+                                    _ ->
+                                        model.dialog
+                            )
+                        |> Maybe.Extra.orElse model.dialog
             }
                 |> handleResponse plugins
                     uc
                     result
+
+        UserClosesDialog ->
+            case model.dialog of
+                Just (Dialog.Error _) ->
+                    n { model | dialog = Nothing }
+
+                _ ->
+                    n model
 
         UserHoversUserIcon id ->
             ( model
