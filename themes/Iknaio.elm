@@ -762,6 +762,7 @@ theme =
                     [ fontStyle italic ]
                 |> s_highlightsColors
                     [ scaled 2 |> rem |> marginBottom
+                    , displayFlex
                     ]
                 |> s_highlightsColor
                     [ scaled 5 |> rem |> fontSize
