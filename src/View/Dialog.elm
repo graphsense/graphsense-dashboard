@@ -171,24 +171,24 @@ error vc err =
                             |> Util.View.p vc []
                         , ul
                             []
-                            [ li
+                            [ li [ Css.View.listItem vc |> css ]
+                                [ (if List.length addrs > 1 then
+                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain."
+
+                                   else
+                                    "There are no transactions associated with this address and it is therefore not found on the blockchain."
+                                  )
+                                    |> Locale.string vc.locale
+                                    |> addDot
+                                    |> text
+                                ]
+                            , li
                                 [ Css.View.listItem vc |> css ]
                                 [ (if List.length addrs > 1 then
                                     "They are possibly not yet in our database"
 
                                    else
                                     "It is possibly not yet in our database"
-                                  )
-                                    |> Locale.string vc.locale
-                                    |> addDot
-                                    |> text
-                                ]
-                            , li [ Css.View.listItem vc |> css ]
-                                [ (if List.length addrs > 1 then
-                                    "They have not received any transactions and are therefore not stored in the blockchain"
-
-                                   else
-                                    "It has not received any transactions and is therefore not stored in the blockchain"
                                   )
                                     |> Locale.string vc.locale
                                     |> addDot
