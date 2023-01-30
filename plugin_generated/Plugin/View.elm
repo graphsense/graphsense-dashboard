@@ -118,13 +118,13 @@ main_ : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Co
 main_ plugins states type_ vc =
     Nothing
 
-hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
+hovercards : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
 hovercards plugins states vc =
     [ 
     ]
         |> List.filterMap identity
         |> List.concat
-        |> List.map (Html.map Model.PluginMsg)
+        |> List.map (Html.map Graph.PluginMsg)
 
 
 title : Plugins -> Plugin.Model.ModelState -> View.Config -> List String
