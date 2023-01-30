@@ -272,3 +272,4 @@ user address tags: Benutzerdefinierte Address-Schlagwörter
 yes: ja
 no: nein
 smart contract: Smart contract
+"token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})
