@@ -99,12 +99,12 @@ configuration vc config =
             ]
         , Dialog.part vc
             "Show shadow links"
-            [ Locale.string vc.locale "between entities"
+            [ Locale.string vc.locale "for entities"
                 |> onOffSwitch vc
                     [ checked config.showEntityShadowLinks
                     , onClick UserClickedShowEntityShadowLinks
                     ]
-            , Locale.string vc.locale "between addresses"
+            , Locale.string vc.locale "for addresses"
                 |> onOffSwitch vc
                     [ checked config.showAddressShadowLinks
                     , onClick UserClickedShowAddressShadowLinks
