@@ -546,18 +546,6 @@ theme =
                     (\lightmode -> fillBlack lightmode)
                 |> s_entityLabel
                     (\lightmode -> fillBlack lightmode)
-                |> s_labelText
-                    (\nodeType ->
-                        [ property "dominant-baseline"
-                            (case nodeType of
-                                AddressType ->
-                                    "middle"
-
-                                EntityType ->
-                                    "hanging"
-                            )
-                        ]
-                    )
                 |> s_abuseFlag
                     (\lightmode ->
                         [ colors.red

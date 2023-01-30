@@ -73,15 +73,20 @@ label vc gc nodeType title =
             spl =
                 split gc.maxLettersPerLabelRow lbl
 
-            dy =
-                toFloat (List.length spl) * height / 5 |> negate
+            dyOffset =
+                case nodeType of
+                    Model.Graph.AddressType ->
+                        0.26
+
+                    Model.Graph.EntityType ->
+                        0.75
         in
         spl
             |> List.indexedMap
                 (\i row ->
                     tspan
                         [ x "0"
-                        , (toFloat i * 1.2 |> String.fromFloat) ++ "em" |> Svg.dy
+                        , (toFloat i * 1.2 + dyOffset |> String.fromFloat) ++ "em" |> Svg.dy
                         ]
                         [ text row
                         ]
