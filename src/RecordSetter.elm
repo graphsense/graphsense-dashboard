@@ -569,6 +569,11 @@ s_caseInsensitive value__ record__ =
     { record__ | caseInsensitive = value__ }
 
 
+s_casemgm_preview : a -> { b | casemgm_preview : a } -> { b | casemgm_preview : a }
+s_casemgm_preview value__ record__ =
+    { record__ | casemgm_preview = value__ }
+
+
 s_categories : a -> { b | categories : a } -> { b | categories : a }
 s_categories value__ record__ =
     { record__ | categories = value__ }
@@ -802,6 +807,11 @@ s_currencyBackground value__ record__ =
 s_currencyBackgroundPath : a -> { b | currencyBackgroundPath : a } -> { b | currencyBackgroundPath : a }
 s_currencyBackgroundPath value__ record__ =
     { record__ | currencyBackgroundPath = value__ }
+
+
+s_currencyCell : a -> { b | currencyCell : a } -> { b | currencyCell : a }
+s_currencyCell value__ record__ =
+    { record__ | currencyCell = value__ }
 
 
 s_currencyHeading : a -> { b | currencyHeading : a } -> { b | currencyHeading : a }
@@ -1432,6 +1442,11 @@ s_firstTx value__ record__ =
 s_firstWeight : a -> { b | firstWeight : a } -> { b | firstWeight : a }
 s_firstWeight value__ record__ =
     { record__ | firstWeight = value__ }
+
+
+s_flag : a -> { b | flag : a } -> { b | flag : a }
+s_flag value__ record__ =
+    { record__ | flag = value__ }
 
 
 s_flagsGap : a -> { b | flagsGap : a } -> { b | flagsGap : a }
@@ -2072,6 +2087,11 @@ s_isChanged value__ record__ =
 s_isClusterDefiner : a -> { b | isClusterDefiner : a } -> { b | isClusterDefiner : a }
 s_isClusterDefiner value__ record__ =
     { record__ | isClusterDefiner = value__ }
+
+
+s_isContract : a -> { b | isContract : a } -> { b | isContract : a }
+s_isContract value__ record__ =
+    { record__ | isContract = value__ }
 
 
 s_isDirty : a -> { b | isDirty : a } -> { b | isDirty : a }
@@ -4489,11 +4509,6 @@ s_tags value__ record__ =
     { record__ | tags = value__ }
 
 
-s_tagsFlag : a -> { b | tagsFlag : a } -> { b | tagsFlag : a }
-s_tagsFlag value__ record__ =
-    { record__ | tagsFlag = value__ }
-
-
 s_tail : a -> { b | tail : a } -> { b | tail : a }
 s_tail value__ record__ =
     { record__ | tail = value__ }
@@ -4704,6 +4719,21 @@ s_toWeekdayName value__ record__ =
     { record__ | toWeekdayName = value__ }
 
 
+s_tokenBalances : a -> { b | tokenBalances : a } -> { b | tokenBalances : a }
+s_tokenBalances value__ record__ =
+    { record__ | tokenBalances = value__ }
+
+
+s_tokenTxId : a -> { b | tokenTxId : a } -> { b | tokenTxId : a }
+s_tokenTxId value__ record__ =
+    { record__ | tokenTxId = value__ }
+
+
+s_tokenValues : a -> { b | tokenValues : a } -> { b | tokenValues : a }
+s_tokenValues value__ record__ =
+    { record__ | tokenValues = value__ }
+
+
 s_tool : a -> { b | tool : a } -> { b | tool : a }
 s_tool value__ record__ =
     { record__ | tool = value__ }
@@ -4762,6 +4792,16 @@ s_totalReceived value__ record__ =
 s_totalSpent : a -> { b | totalSpent : a } -> { b | totalSpent : a }
 s_totalSpent value__ record__ =
     { record__ | totalSpent = value__ }
+
+
+s_totalTokensReceived : a -> { b | totalTokensReceived : a } -> { b | totalTokensReceived : a }
+s_totalTokensReceived value__ record__ =
+    { record__ | totalTokensReceived = value__ }
+
+
+s_totalTokensSpent : a -> { b | totalTokensSpent : a } -> { b | totalTokensSpent : a }
+s_totalTokensSpent value__ record__ =
+    { record__ | totalTokensSpent = value__ }
 
 
 s_touchAction : a -> { b | touchAction : a } -> { b | touchAction : a }
@@ -4967,6 +5007,11 @@ s_userTag value__ record__ =
 s_value : a -> { b | value : a } -> { b | value : a }
 s_value value__ record__ =
     { record__ | value = value__ }
+
+
+s_valueCell : a -> { b | valueCell : a } -> { b | valueCell : a }
+s_valueCell value__ record__ =
+    { record__ | valueCell = value__ }
 
 
 s_valuesCell : a -> { b | valuesCell : a } -> { b | valuesCell : a }

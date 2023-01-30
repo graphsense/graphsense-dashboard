@@ -43,7 +43,7 @@ table vc =
 
 headCell : Config -> List Style
 headCell vc =
-    vc.theme.table.headCell
+    vc.theme.table.headCell vc.lightmode
 
 
 headRow : Config -> List Style

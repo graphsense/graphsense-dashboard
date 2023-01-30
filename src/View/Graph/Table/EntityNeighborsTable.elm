@@ -3,6 +3,7 @@ module View.Graph.Table.EntityNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -17,6 +18,11 @@ import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Graph.Table.AddressNeighborsTable exposing (reduceLabels)
 import View.Locale as Locale
+
+
+tokenCurrencies : List String
+tokenCurrencies =
+    [ "usdt", "usdc", "weth" ]
 
 
 columnTitleFromDirection : Bool -> String
@@ -71,6 +77,15 @@ titleEstimatedValue =
     "Estimated value"
 
 
+titleValue : String -> String
+titleValue coinCode =
+    if coinCode == "eth" then
+        "Value"
+
+    else
+        titleEstimatedValue
+
+
 config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborEntity Msg
 config vc isOutgoing coinCode id neighborLayerHasEntity =
     Table.customConfig
@@ -109,27 +124,146 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                     ]
                 )
             , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
-            , T.valueColumn vc coinCode titleEntityBalance (.entity >> .balance)
-            , T.valueColumn vc coinCode titleEntityReceived (.entity >> .totalReceived)
             , T.intColumn vc titleNoAddresses (.entity >> .noAddresses)
             , T.intColumn vc titleNoTxs .noTxs
-            , T.valueColumn vc coinCode titleEstimatedValue .value
             ]
+                ++ valueColumns vc
+                    coinCode
+                    (if coinCode == "eth" then
+                        [ "usdt", "usdc", "weth" ]
+
+                     else
+                        []
+                    )
+                    { balance = .entity >> .balance
+                    , totalReceived = .entity >> .totalReceived
+                    , value = .value
+                    }
         , customizations = customizations vc
         }
+
+
+valueColumns :
+    View.Config
+    -> String
+    -> List String
+    ->
+        { balance : Api.Data.NeighborEntity -> Api.Data.Values
+        , totalReceived : Api.Data.NeighborEntity -> Api.Data.Values
+        , value : Api.Data.NeighborEntity -> Api.Data.Values
+        }
+    -> List (Table.Column Api.Data.NeighborEntity Msg)
+valueColumns vc coinCode tokens getValues =
+    let
+        getCurr c =
+            Maybe.andThen (Dict.get c)
+                >> Maybe.withDefault zero
+
+        ( suffix, valCol ) =
+            if coinCode == "eth" then
+                ( " " ++ String.toUpper coinCode, T.valueColumnWithoutCode )
+
+            else
+                ( "", T.valueColumn )
+    in
+    (valCol vc (\_ -> coinCode) (titleEntityBalance ++ suffix) getValues.balance
+        :: (tokens
+                |> List.map
+                    (\currency ->
+                        T.valueColumnWithoutCode vc
+                            (\_ -> currency)
+                            (String.toUpper currency)
+                            (.entity >> .tokenBalances >> getCurr currency)
+                    )
+           )
+    )
+        ++ (valCol vc (\_ -> coinCode) (titleEntityReceived ++ suffix) getValues.totalReceived
+                :: (tokens
+                        |> List.map
+                            (\currency ->
+                                T.valueColumnWithoutCode vc
+                                    (\_ -> currency)
+                                    (String.toUpper currency ++ " ")
+                                    (.entity >> .totalTokensReceived >> getCurr currency)
+                            )
+                   )
+           )
+        ++ (valCol vc (\_ -> coinCode) (titleValue coinCode ++ suffix) getValues.value
+                :: (tokens
+                        |> List.map
+                            (\currency ->
+                                T.valueColumnWithoutCode vc
+                                    (\_ -> currency)
+                                    (String.toUpper currency ++ "  ")
+                                    (.tokenValues >> getCurr currency)
+                            )
+                   )
+           )
+
+
+zero : Api.Data.Values
+zero =
+    { fiatValues = []
+    , value = 0
+    }
 
 
 n s =
     ( s, [] )
 
 
-prepareCSV : Bool -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCSV isOutgoing row =
+prepareCSV : Bool -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCSV isOutgoing coinCode row =
+    let
+        suffix =
+            if coinCode == "eth" then
+                "_eth"
+
+            else
+                ""
+
+        estimatedValueTitle =
+            if coinCode == "eth" then
+                "value"
+
+            else
+                "estimated_value"
+    in
     [ ( n <| "entity", Util.Csv.int row.entity.entity )
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( n "no_txs", Util.Csv.int row.noTxs )
     , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
-        ++ Util.Csv.values "entity_received" row.entity.totalReceived
-        ++ Util.Csv.values "entity_balance" row.entity.balance
-        ++ Util.Csv.values "estimated_value" row.value
+        ++ Util.Csv.values ("entity_received" ++ suffix) row.entity.totalReceived
+        ++ Util.Csv.values ("entity_balance" ++ suffix) row.entity.balance
+        ++ Util.Csv.values (estimatedValueTitle ++ suffix) row.value
+        ++ (if coinCode == "eth" then
+                prepareCsvTokens row
+
+            else
+                []
+           )
+
+
+prepareCsvTokens : Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCsvTokens row =
+    tokenCurrencies
+        |> List.map
+            (\token ->
+                Util.Csv.values ("entity_balance_" ++ token)
+                    (row.entity.totalTokensReceived
+                        |> Maybe.andThen (Dict.get token)
+                        |> Maybe.withDefault zero
+                    )
+                    ++ Util.Csv.values ("entity_received_" ++ token)
+                        (row.entity.tokenBalances
+                            |> Maybe.andThen (Dict.get token)
+                            |> Maybe.withDefault zero
+                        )
+                    ++ Util.Csv.values ("value_" ++ token)
+                        (row.tokenValues
+                            |> Maybe.andThen (Dict.get token)
+                            |> Maybe.withDefault zero
+                        )
+            )
+        |> List.concat

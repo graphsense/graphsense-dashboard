@@ -51,31 +51,27 @@ import View.Graph.Transform as Transform
 import View.Locale as Locale
 
 
-view : Plugins -> ModelState -> Config -> Model -> Html Msg
+view : Plugins -> ModelState -> Config -> Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
 view plugins states vc model =
-    section
-        [ Css.root vc |> HA.css
-        ]
-        ([ Navbar.navbar plugins states vc model
-         , graph plugins states vc model.config model
-         ]
-            ++ hovercards plugins states vc model
-        )
+    { navbar = [ Navbar.navbar plugins states vc model ]
+    , contents = [ graph plugins states vc model.config model ]
+    }
 
 
 graph : Plugins -> ModelState -> Config -> Graph.Config -> Model -> Html Msg
 graph plugins states vc gc model =
     section
         [ Css.graphRoot vc |> HA.css
-        , HA.id "graph"
         ]
-        [ lazy5 browser plugins states vc gc model.browser
-        , Tool.toolbox vc model
-        , model.size
+        ([ lazy5 browser plugins states vc gc model.browser
+         , Tool.toolbox vc model
+         , vc.size
             |> Maybe.map (graphSvg plugins states vc gc model)
             |> Maybe.withDefault none
-        , model.contextMenu |> Maybe.map (contextMenu plugins states vc model) |> Maybe.withDefault none
-        ]
+         , model.contextMenu |> Maybe.map (contextMenu plugins states vc model) |> Maybe.withDefault none
+         ]
+            ++ hovercards plugins states vc model
+        )
 
 
 graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> BBox -> Svg Msg

@@ -12,7 +12,7 @@ type alias Table =
     , filter : List Style
     , filterInput : Bool -> List Style
     , table : List Style
-    , headCell : List Style
+    , headCell : Bool -> List Style
     , headRow : List Style
     , row : Bool -> List Style
     , maxHeight : Float
@@ -38,7 +38,7 @@ default =
     , filterInput = \_ -> []
     , table = []
     , row = \_ -> []
-    , headCell = []
+    , headCell = \_ -> []
     , headRow = []
     , headCellSortable = []
     , maxHeight = 250

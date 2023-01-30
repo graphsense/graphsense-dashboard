@@ -161,6 +161,12 @@ theme =
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
                 ]
             )
+        |> s_navbar
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandWhite
+                , shadowSm
+                ]
+            )
         |> s_link
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText
@@ -565,7 +571,7 @@ theme =
                         , property "stroke-width" "10px"
                         ]
                     )
-                |> s_tagsFlag
+                |> s_flag
                     (\lightmode ->
                         [ colors.white
                             |> switchColor lightmode
@@ -687,12 +693,6 @@ theme =
                             |> Color.toCssString
                             |> property "fill"
                         , property "fill-opacity" "0.5"
-                        ]
-                    )
-                |> s_navbar
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.brandWhite
-                        , shadowSm
                         ]
                     )
                 |> s_searchTextarea
@@ -840,6 +840,7 @@ theme =
                         , displayFlex
                         , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
+                        , width <| calc (pct 100) minus (scaled 4 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
@@ -892,12 +893,19 @@ theme =
                     [ scaled 3.5 |> rem |> height
                     , scaled 3.5 |> rem |> width
                     ]
+                |> s_valueCell
+                    [ scaled 1 |> rem |> paddingLeft
+                    , scaled 1 |> rem |> paddingBottom
+                    , textAlign right
+                    , ex 30 |> width
+                    ]
             )
         |> s_table
             (Table.default
                 |> s_root
                     [ displayFlex
                     , flexDirection row
+                    , overflowX auto
                     ]
                 |> s_tableRoot
                     [ scaled 3 |> rem |> paddingX
@@ -950,9 +958,15 @@ theme =
                     [ scaled 1 |> rem |> padding
                     ]
                 |> s_headCell
-                    [ tableCell
-                    , rowHeight |> px |> height
-                    ]
+                    (\lightmode ->
+                        [ tableCell
+                        , rowHeight |> px |> height
+                        , position sticky
+                        , top <| px 0
+                        , zIndex <| int 2
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        ]
+                    )
                 |> s_headRow
                     [ textAlign left
                     , fontWeight bold
@@ -960,7 +974,7 @@ theme =
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
                     ]
-                |> s_maxHeight 250
+                |> s_maxHeight 300
                 |> s_rowHeight
                     rowHeight
                 |> s_row

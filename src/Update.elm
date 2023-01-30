@@ -24,6 +24,7 @@ import Maybe.Extra
 import Model exposing (..)
 import Model.Dialog as Dialog
 import Model.Graph.Browser as Browser
+import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
@@ -270,11 +271,31 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotContentsElement result ->
+            result
+                |> Result.map
+                    (\{ element } ->
+                        { model
+                            | config =
+                                model.config
+                                    |> s_size
+                                        (Just
+                                            { width = element.width
+                                            , height = element.height
+                                            , x = element.x
+                                            , y = element.y
+                                            }
+                                        )
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
         BrowserChangedWindowSize w h ->
             { model
-                | graph = Graph.updateSize (w - model.width) (h - model.height) model.graph
-                , width = w
+                | width = w
                 , height = h
+                , config = updateSize (w - model.width) (h - model.height) model.config
             }
                 |> n
 
@@ -813,44 +834,34 @@ updateByUrl plugins uc url model =
                         )
 
                     Route.Graph graphRoute ->
-                        mapSecond
-                            ((++)
-                                (if model.graph.size == Nothing then
-                                    [ GraphEffect Graph.GetSvgElementEffect ]
-
-                                 else
-                                    []
+                        case graphRoute |> Log.log "graphRoute" of
+                            Route.Graph.Plugin ( pid, value ) ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.updateGraphByUrl pid plugins value model.plugins
+                                in
+                                ( { model
+                                    | plugins = new
+                                    , page = Graph
+                                    , url = url
+                                  }
+                                , [ PluginEffect cmd ]
                                 )
-                            )
-                        <|
-                            case graphRoute |> Log.log "graphRoute" of
-                                Route.Graph.Plugin ( pid, value ) ->
-                                    let
-                                        ( new, outMsg, cmd ) =
-                                            Plugin.updateGraphByUrl pid plugins value model.plugins
-                                    in
-                                    ( { model
-                                        | plugins = new
-                                        , page = Graph
-                                        , url = url
-                                      }
-                                    , [ PluginEffect cmd ]
-                                    )
-                                        |> updateByPluginOutMsg plugins outMsg
+                                    |> updateByPluginOutMsg plugins outMsg
 
-                                _ ->
-                                    let
-                                        ( graph, graphEffect ) =
-                                            Graph.updateByRoute plugins graphRoute model.graph
-                                    in
-                                    ( { model
-                                        | page = Graph
-                                        , graph = graph
-                                        , url = url
-                                      }
-                                    , graphEffect
-                                        |> List.map GraphEffect
-                                    )
+                            _ ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.updateByRoute plugins graphRoute model.graph
+                                in
+                                ( { model
+                                    | page = Graph
+                                    , graph = graph
+                                    , url = url
+                                  }
+                                , graphEffect
+                                    |> List.map GraphEffect
+                                )
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
@@ -867,6 +878,17 @@ updateByUrl plugins uc url model =
                             |> updateByPluginOutMsg plugins outMsg
             )
             (Route.parse routeConfig model.url)
+        |> Maybe.map
+            (mapSecond
+                ((++)
+                    (if uc.size == Nothing then
+                        [ GetContentsElementEffect ]
+
+                     else
+                        []
+                    )
+                )
+            )
         |> Maybe.withDefault (n model)
 
 
@@ -1074,3 +1096,18 @@ batchSearch plugins ( model, eff ) =
         |> Maybe.withDefault []
         |> (++) eff
     )
+
+
+updateSize : Int -> Int -> { a | size : Maybe BBox } -> { a | size : Maybe BBox }
+updateSize w h model =
+    { model
+        | size =
+            model.size
+                |> Maybe.map
+                    (\size ->
+                        { size
+                            | width = size.width + toFloat w
+                            , height = size.height + toFloat h
+                        }
+                    )
+    }

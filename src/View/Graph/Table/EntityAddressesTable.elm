@@ -87,8 +87,8 @@ config vc coinCode entityId entityHasAddress =
                 )
             , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
             , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
-            , T.valueColumn vc coinCode titleFirstUsage .balance
-            , T.valueColumn vc coinCode titleTotalReceived .totalReceived
+            , T.valueColumn vc (\_ -> coinCode) titleFirstUsage .balance
+            , T.valueColumn vc (\_ -> coinCode) titleTotalReceived .totalReceived
             ]
         , customizations = customizations vc
         }

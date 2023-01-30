@@ -16,7 +16,8 @@ else
 fi
 temp2=`mktemp`
 echo "Generating"
-python $dir/mangle-openapi.py $temp $resturl > $temp2
+python3 $dir/mangle-openapi.py $temp $resturl > $temp2
+
 docker run --rm \
     -v "${dir}/../openapi:/build"  \
     -v "${temp2}:/spec.yaml" \
@@ -31,3 +32,4 @@ rm $temp $temp2
 
 sed -i 's/"txType"/"tx_type"/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"
+printf "\n\nvaluesDecodervaluesDecoder = valuesDecoder" >> "${dir}/../openapi/src/Api/Data.elm"

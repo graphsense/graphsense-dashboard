@@ -15,4 +15,5 @@ init now =
     , now = Time.millisToPosix now
     , height = Nothing
     , layers = IntDict.empty
+    , width = 0
     }

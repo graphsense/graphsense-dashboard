@@ -56,11 +56,11 @@ table vc attributes tools height config tbl =
                     |> Css.px
                     |> Css.maxHeight
                )
-                :: (minHeight
-                        |> Css.px
-                        |> Css.height
+                :: (height
+                        |> Maybe.map (Css.px >> Css.height >> List.singleton)
+                        |> Maybe.withDefault []
                    )
-                :: Css.Table.tableRoot vc
+                ++ Css.Table.tableRoot vc
                 |> css
              ]
                 ++ attributes
@@ -255,32 +255,74 @@ intColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
 intColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> Locale.int vc.locale >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , viewData =
+            accessor
+                >> Locale.int vc.locale
+                >> text
+                >> List.singleton
+                >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 
 
-valueColumn : View.Config -> String -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumn vc coinCode name getValues =
+maybeIntColumn : View.Config -> String -> (data -> Maybe Int) -> Table.Column data msg
+maybeIntColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = getValues >> valuesCell vc coinCode
+        , viewData =
+            accessor
+                >> Maybe.map (Locale.int vc.locale)
+                >> Maybe.withDefault ""
+                >> text
+                >> List.singleton
+                >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy (accessor >> Maybe.withDefault 0)
+        }
+
+
+valueColumn : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumn =
+    valueColumnWithOptions False
+
+
+valueColumnWithoutCode : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithoutCode =
+    valueColumnWithOptions True
+
+
+valueColumnWithOptions : Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions hideCode vc getCoinCode name getValues =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
         , sorter = Table.decreasingOrIncreasingBy (getValues >> valuesSorter vc)
         }
 
 
-valuesCell : View.Config -> String -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell vc coinCode values =
-    Locale.currency vc.locale coinCode values
+valuesCell : View.Config -> Bool -> String -> Api.Data.Values -> Table.HtmlDetails msg
+valuesCell vc hideCode coinCode values =
+    (if hideCode then
+        Locale.currencyWithoutCode
+
+     else
+        Locale.currency
+    )
+        vc.locale
+        coinCode
+        values
         |> text
         |> List.singleton
         |> Table.HtmlDetails
-            [ Currency.valuesToFloat vc.locale.currency values
-                |> Maybe.withDefault 0
-                |> (>) 0
-                |> Css.Table.valuesCell vc
-                |> css
+            [ valuesCss vc values |> css
             ]
+
+
+valuesCss : View.Config -> Api.Data.Values -> List Css.Style
+valuesCss vc values =
+    Currency.valuesToFloat vc.locale.currency values
+        |> Maybe.withDefault 0
+        |> (>) 0
+        |> Css.Table.valuesCell vc
 
 
 valuesSorter : View.Config -> Api.Data.Values -> Float

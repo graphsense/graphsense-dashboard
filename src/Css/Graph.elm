@@ -9,19 +9,9 @@ import Model.Graph.Tool as Tool
 import Util.Css
 
 
-root : Config -> List Style
-root vc =
-    [ displayFlex
-    , flexDirection column
-    , pct 100 |> height
-    ]
-        ++ vc.theme.graph.root
-
-
 navbar : Config -> List Style
 navbar vc =
-    [ Util.Css.zIndexMain
-    , displayFlex
+    [ displayFlex
     , flexDirection row
     ]
         ++ vc.theme.graph.navbar vc.lightmode
@@ -106,9 +96,9 @@ abuseFlag vc =
     vc.theme.graph.abuseFlag vc.lightmode
 
 
-tagsFlag : Config -> List Style
-tagsFlag vc =
-    vc.theme.graph.tagsFlag vc.lightmode
+flag : Config -> List Style
+flag vc =
+    vc.theme.graph.flag vc.lightmode
 
 
 addressLabel : Config -> List Style

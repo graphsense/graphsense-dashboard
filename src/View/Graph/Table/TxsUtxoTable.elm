@@ -73,6 +73,7 @@ config vc coinCode =
                                 { currency = coinCode
                                 , txHash = data.txHash
                                 , table = Nothing
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -82,8 +83,8 @@ config vc coinCode =
                 )
             , T.intColumn vc titleNoInputs .noInputs
             , T.intColumn vc titleNoOutputs .noOutputs
-            , T.valueColumn vc coinCode titleTotalInput .totalInput
-            , T.valueColumn vc coinCode titleTotalOutput .totalOutput
+            , T.valueColumn vc (\_ -> coinCode) titleTotalInput .totalInput
+            , T.valueColumn vc (\_ -> coinCode) titleTotalOutput .totalOutput
             ]
         , customizations = customizations vc
         }

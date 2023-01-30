@@ -70,6 +70,7 @@ config vc coinCode =
                                 { currency = coinCode
                                 , txHash = data.txHash
                                 , table = Nothing
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -77,7 +78,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode titleValue .value
+            , T.valueColumn vc (\_ -> coinCode) titleValue .value
             , T.intColumn vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]

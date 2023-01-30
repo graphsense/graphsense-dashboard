@@ -49,7 +49,7 @@ type Thing
     = Address String (Maybe AddressTable) (Maybe Int)
     | Entity Int (Maybe EntityTable) (Maybe Int)
     | Block Int (Maybe BlockTable)
-    | Tx String (Maybe TxTable)
+    | Tx String (Maybe TxTable) (Maybe Int)
     | Addresslink String Int String Int (Maybe AddresslinkTable)
     | Entitylink Int Int Int Int (Maybe AddresslinkTable)
 
@@ -94,6 +94,11 @@ tableQuery =
     "table"
 
 
+tokenTxIdQuery : String
+tokenTxIdQuery =
+    "token_tx_id"
+
+
 type AddressTable
     = AddressTagsTable
     | AddressTxsTable
@@ -112,6 +117,7 @@ type EntityTable
 type TxTable
     = TxInputsTable
     | TxOutputsTable
+    | TokenTxsTable
 
 
 type BlockTable
@@ -207,6 +213,9 @@ txTableToString t =
         TxOutputsTable ->
             "outputs"
 
+        TokenTxsTable ->
+            "token_txs"
+
 
 stringToTxTable : String -> Maybe TxTable
 stringToTxTable t =
@@ -216,6 +225,9 @@ stringToTxTable t =
 
         "outputs" ->
             Just TxOutputsTable
+
+        "token_txs" ->
+            Just TokenTxsTable
 
         _ ->
             Nothing
@@ -290,12 +302,17 @@ toUrl route =
             in
             absolute [ curr, blockSegment, String.fromInt block ] query
 
-        Currency curr (Tx tx table) ->
+        Currency curr (Tx tx table tokenTxId) ->
             let
                 query =
-                    table
+                    (table
                         |> Maybe.map (txTableToString >> B.string tableQuery >> List.singleton)
                         |> Maybe.withDefault []
+                    )
+                        ++ (tokenTxId
+                                |> Maybe.map (String.fromInt >> B.string tokenTxIdQuery >> List.singleton)
+                                |> Maybe.withDefault []
+                           )
             in
             absolute [ curr, txSegment, tx ] query
 
@@ -363,9 +380,9 @@ entitylinkRoute { currency, src, srcLayer, dst, dstLayer, table } =
         |> Currency (String.toLower currency)
 
 
-txRoute : { currency : String, txHash : String, table : Maybe TxTable } -> Route
-txRoute { currency, txHash, table } =
-    Tx txHash table
+txRoute : { currency : String, txHash : String, table : Maybe TxTable, tokenTxId : Maybe Int } -> Route
+txRoute { currency, txHash, table, tokenTxId } =
+    Tx txHash table tokenTxId
         |> Currency (String.toLower currency)
 
 
@@ -442,6 +459,7 @@ thing =
         , s txSegment
             |> P.slash P.string
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToTxTable))
+            |> P.questionMark (Q.int tokenTxIdQuery)
             |> map Tx
         , s blockSegment
             |> P.slash P.int

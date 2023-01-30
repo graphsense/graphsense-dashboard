@@ -19,7 +19,6 @@ init now =
     , adding = Adding.init
     , dragging = NoDragging
     , transform = Transform.init
-    , size = Nothing
     , selected = SelectedNone
     , hovered = HoveredNone
     , contextMenu = Nothing

@@ -40,6 +40,7 @@ main =
             , colorScheme = config.theme.graph.colorScheme
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             , locale = Locale.init { locale = "" } |> first
+            , size = Nothing
             }
 
         updPlug =
@@ -60,7 +61,13 @@ main =
                     |> performEffect
         , update =
             \msg model ->
-                update updPlug { uc | locale = model.config.locale } msg model
+                update updPlug
+                    { uc
+                        | locale = model.config.locale
+                        , size = model.config.size
+                    }
+                    msg
+                    model
                     |> performEffect
         , view =
             \model ->

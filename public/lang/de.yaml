@@ -36,17 +36,17 @@ first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
-"total received {0}": "Eingänge {0}" # used in csv columsn
+"total received {0}": Eingänge {0}
 final balance: Bilanz
-"final balance {0}": "Bilanz {0}" # used in csv columsn
+"final balance {0}": Bilanz {0}
 entity balance: Bilanz Entität
-"entity balance {0}": "Bilanz Entität {0}" # used in csv columsn
+"entity balance {0}": Bilanz Entität {0}
 address balance: Bilanz Adresse
-"address balance {0}": "Bilanz Adresse {0}" # used in csv columsn
+"address balance {0}": Bilanz Adresse {0}
 entity received: Eingänge Entität
-"entity received {0}": "Eingänge Entität {0}" # used in csv columsn
+"entity received {0}": Eingänge Entität {0}
 address received: Eingänge Adresse
-"address received {0}": "Eingänge Adresse {0}" # used in csv columsn
+"address received {0}": Eingänge Adresse {0}
 category: Kategorie
 categories: Kategorien
 abuse: Missbrauch
@@ -60,8 +60,8 @@ no. inputs: Anz. Eingehende
 no. outputs: Anz. Ausgehende
 total input: Gesamt Eingang
 total output: Gesamt Ausgang
-"total input {0}": "Gesamt Eingang {0}"
-"total output {0}": "Gesamt Ausgang {0}"
+"total input {0}": Gesamt Eingang {0}
+"total output {0}": Gesamt Ausgang {0}
 year: Jahr
 years: Jahre
 month: Monat
@@ -78,7 +78,7 @@ addresses tagged: beschlagwortete Adressen
 source: Quelle
 target: Ziel
 value: Wert
-"value {0}": "Wert {0}" # used in csv columns
+"value {0}": Wert {0}
 timestamp: Zeitstempel
 outgoing address: ausgehende Adresse
 incoming address: eingehende Adresse
@@ -177,7 +177,7 @@ saving to file: speichern in Datei
 go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
-"estimated value {0}": "geschätzter Wert {0}" # used in csv columns
+"estimated value {0}": geschätzter Wert {0}
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
@@ -208,7 +208,7 @@ data error: Datenfehler
 this table is empty: Diese Tabelle ist leer
 Do you want to start from scratch?: Wirklich neu loslegen?
 proprietary tag: Proprietäres Tag
-"loading concepts for taxonomy {0}": "lade Konzepte zur Taxonomie {0}"
+"loading concepts for taxonomy {0}": lade Konzepte zur Taxonomie {0}
 "{1}: searching for {0}": "{1}: suche nach {0}"
 "{1}: loading address {0}": "{1}: lade Adresse {0}"
 "{1}: loading block {0}": "{1}: lade Block {0}"
@@ -250,20 +250,25 @@ show entity link: Zeige Verbindung der Entitäten
 hide entity link: Verberge Verbindung der Entitäten
 filter table: Tabelle filtern
 download table as CSV: Tabelle als CSV herunterladen
-"address transactions of {0} ({1})": "Transaktionen der Adresse {0} ({1})" # {1} -> currency
-"incoming neighbors of address {0} ({1})": "Eingehende Nachbarn der Adresse {0} ({1})"
-"outgoing neighbors of address {0} ({1})": "Ausgehende Nachbarn der Adresse {0} ({1})"
-"incoming neighbors of entity {0} ({1})": "Eingehende Nachbarn der Entität {0} ({1})"
-"outgoing neighbors of entity {0} ({1})": "Ausgehende Nachbarn der Entität {0} ({1})"
-"addresses of entity {0} ({1})": "Adressen der Entität {0} ({1})"
-"user address tags": "Benutzerdefinierte Address-Schlagwörter"
-"transactions of block {0} ({1})": "Transaktionen des Blocks {0} ({1})"
-"transactions between entities {0} and {1} ({2})": "Transaktionen zwischen Entitäten {0} und {1} ({2})"
-"transactions between addresses {0} and {1} ({2})": "Transaktionen zwischen Adressen {0} und {1} ({2})"
-"Incoming values of transaction {0} ({1})": "Eingangswerte der Transaktion {0} ({1})"
-"Outgoing values of transaction {0} ({1})": "Ausgangswerte der Transaktion {0} ({1})"
-"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)": "{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr als {5} Adressen)"
-"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.": "Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert."
+"address transactions of {0} ({1})": Transaktionen der Adresse {0} ({1})
+"incoming neighbors of address {0} ({1})": Eingehende Nachbarn der Adresse {0} ({1})
+"outgoing neighbors of address {0} ({1})": Ausgehende Nachbarn der Adresse {0} ({1})
+"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn der Entität {0} ({1})
+"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn der Entität {0} ({1})
+"addresses of entity {0} ({1})": Adressen der Entität {0} ({1})
+user address tags: Benutzerdefinierte Address-Schlagwörter
+"transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
+"transactions between entities {0} and {1} ({2})": Transaktionen zwischen Entitäten {0} und {1} ({2})
+"transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
+"Incoming values of transaction {0} ({1})": Eingangswerte der Transaktion {0} ({1})
+"Outgoing values of transaction {0} ({1})": Ausgangswerte der Transaktion {0} ({1})
+"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)":
+  "{6}: Suche {0} von {1} mit {2} (Tiefe: {3}, Breite: {4}, auslassen wenn mehr
+  als {5} Adressen)"
+"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.":
+  Adresse nicht gefunden. Entweder ist sie noch nicht in unserer Datenbank
+  eingespielt (aktuell bis Block {0}) oder sie hat bis jetzt noch keine
+  Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
 yes: ja
 no: nein
 "address not found": "Adresse nicht gefunden"
@@ -275,3 +280,5 @@ no: nein
 "they have not received any transactions and are therefore not stored in the blockchain": "Sie haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in der Blockchain gespeichert"
 "it has not received any transactions and is therefore not stored in the blockchain": "Sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert"
 "there are typos": "Es gibt Tippfehler"
+smart contract: Smart contract
+"token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})

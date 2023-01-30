@@ -26,6 +26,10 @@ type TxUtxoTable
     | TxUtxoOutputsTable (Table Api.Data.TxValue)
 
 
+type TxAccountTable
+    = TokenTxsTable (Table Api.Data.TxAccount)
+
+
 type BlockTable
     = BlockTxsUtxoTable (Table Api.Data.TxUtxo)
     | BlockTxsAccountTable (Table Api.Data.TxAccount)

@@ -63,7 +63,7 @@ toolbox vc model =
 
                         else
                             el.element.x
-                                - (Maybe.map .x model.size |> Maybe.withDefault 80)
+                                - (Maybe.map .x vc.size |> Maybe.withDefault 80)
                                 |> Css.px
                                 |> Css.left
                     )

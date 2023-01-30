@@ -26,7 +26,7 @@ type alias View modelState addressState entityState msg =
     , browser : Maybe (View.Config -> modelState -> List (Html msg))
 
     -- additional stuff for the left part of the graph's navbar
-    , navbarLeft : Maybe (View.Config -> modelState -> List (Html msg))
+    , graphNavbarLeft : Maybe (View.Config -> modelState -> List (Html msg))
 
     -- additional strings for the search bar placeholder
     , searchPlaceholder : Maybe (View.Config -> String)
@@ -37,8 +37,11 @@ type alias View modelState addressState entityState msg =
     -- additional stuff of the global sidebar
     , sidebar : Maybe (View.Config -> Bool -> modelState -> List (Html msg))
 
-    -- contents of the main pane (when user navigates to /{plugin's_namespace}
-    , main : Maybe (View.Config -> modelState -> Html msg)
+    -- navbar of the main pane
+    , navbar : Maybe (View.Config -> modelState -> List (Html msg))
+
+    -- contents of the main pane
+    , contents : Maybe (View.Config -> modelState -> List (Html msg))
 
     -- show hovercards
     , hovercards : Maybe (View.Config -> modelState -> List (Html msg))
@@ -59,11 +62,12 @@ init =
     , addressProperties = Nothing
     , entityProperties = Nothing
     , browser = Nothing
-    , navbarLeft = Nothing
+    , graphNavbarLeft = Nothing
     , searchPlaceholder = Nothing
     , searchResultList = Nothing
     , sidebar = Nothing
-    , main = Nothing
+    , navbar = Nothing
+    , contents = Nothing
     , hovercards = Nothing
     , title = Nothing
     , profile = Nothing

@@ -12,7 +12,7 @@ import Model.Entity as E
 import Model.Graph.Adding as Adding
 import Model.Graph.Browser as Browser
 import Model.Graph.ContextMenu as ContextMenu
-import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
@@ -30,7 +30,6 @@ type alias Model =
     , adding : Adding.Model
     , dragging : Dragging
     , transform : Transform.Model
-    , size : Maybe BBox
     , selected : Selected
     , hovered : Hovered
     , contextMenu : Maybe ContextMenu.Model
