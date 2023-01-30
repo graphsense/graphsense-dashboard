@@ -415,8 +415,21 @@ browseValue vc value =
             values
                 |> List.map
                     (\( coinCode, v ) ->
+                        let
+                            cc =
+                                if parentCoin == "eth" then
+                                    coinCode
+
+                                else
+                                    case vc.locale.currency of
+                                        Currency.Coin ->
+                                            parentCoin
+
+                                        Currency.Fiat fiat ->
+                                            fiat
+                        in
                         tr []
-                            [ String.toUpper coinCode
+                            [ String.toUpper cc
                                 |> text
                                 |> List.singleton
                                 |> td [ Css.currencyCell vc |> css ]
