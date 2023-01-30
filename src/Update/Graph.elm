@@ -277,7 +277,20 @@ updateByMsg plugins uc msg model =
                                 |> mapFirst (\t -> { model | tag = Just t })
                         )
                     |> Maybe.withDefault
-                        ( model
+                        ( case ( model.activeTool.toolbox, model.activeTool.element ) of
+                            ( Tool.Highlighter, Just ( el, vis ) ) ->
+                                toolVisible
+                                    (if vis then
+                                        deselectHighlighter model
+
+                                     else
+                                        model
+                                    )
+                                    el
+                                    vis
+
+                            _ ->
+                                model
                         , Route.rootRoute
                             |> NavPushRouteEffect
                             |> List.singleton
@@ -1319,6 +1332,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Legend _, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotLegendElement
@@ -1331,6 +1345,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Configuration _, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotConfigurationElement
@@ -1344,6 +1359,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Export, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotExportElement
@@ -1355,6 +1371,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Import, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotImportElement
@@ -1374,6 +1391,7 @@ updateByMsg plugins uc msg model =
                         )
                         el
                         vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotHighlighterElement
@@ -2161,14 +2179,13 @@ updateSearch upd model =
         |> Maybe.withDefault (n model)
 
 
-toolVisible : Model -> Dom.Element -> Bool -> ( Model, List Effect )
+toolVisible : Model -> Dom.Element -> Bool -> Model
 toolVisible model element visible =
-    n
-        { model
-            | activeTool =
-                model.activeTool
-                    |> s_element (Just ( element, not visible ))
-        }
+    { model
+        | activeTool =
+            model.activeTool
+                |> s_element (Just ( element, not visible ))
+    }
 
 
 getToolElement : Model -> String -> (Result Dom.Error Dom.Element -> Msg) -> ( Model, List Effect )
