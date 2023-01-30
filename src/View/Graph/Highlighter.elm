@@ -42,7 +42,8 @@ tool vc model =
                                 |> UserClickedHighlightColor
                                 |> onClick
                             ]
-                            [ text "◼" ]
+                            [ square
+                            ]
                     )
             )
         , div
@@ -67,7 +68,7 @@ viewHighlight vc selected i ( title, color ) =
                 |> css
             , UserClicksHighlight i |> onClick
             ]
-            [ text "◼" ]
+            [ square ]
         , input
             [ Css.highlightTitle vc |> css
             , type_ "text"
@@ -85,3 +86,9 @@ viewHighlight vc selected i ( title, color ) =
                 |> Html.Styled.fromUnstyled
             ]
         ]
+
+
+square : Html Msg
+square =
+    FontAwesome.icon FontAwesome.square
+        |> Html.Styled.fromUnstyled

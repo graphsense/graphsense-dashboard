@@ -23,6 +23,7 @@ import Tuple exposing (..)
 import Util.Theme
     exposing
         ( backgroundColorWithLightmode
+        , borderColorWithLightmode
         , borderColor_backgroundColorWithLightmode
         , colorWithLightmode
         , color_backgroundColorWithLightmode
@@ -745,21 +746,22 @@ theme =
                     ]
                 |> s_highlightRoot
                     [ displayFlex
+                    , alignItems center
                     ]
                 |> s_highlightColor
-                    (\selected ->
+                    (\lightmode selected ->
                         [ scaled 5 |> rem |> fontSize
                         , scaled 1 |> rem |> marginRight
-                        , Css.Transitions.transition
-                            [ Css.Transitions.transform 200 ]
-                        , property "transform" "scale(1)"
+                        , borderBottomWidth <| px 2
+                        , borderStyle solid
                         ]
                             ++ (if selected then
-                                    [ property "transform" "scale(1.3)"
+                                    [ borderColorWithLightmode lightmode colors.brandDark
                                     ]
 
                                 else
-                                    []
+                                    [ borderColorWithLightmode lightmode colors.brandWhite
+                                    ]
                                )
                     )
                 |> s_highlightTitle
@@ -778,7 +780,6 @@ theme =
                             ]
                         , scaled 1 |> rem |> paddingLeft
                         , cursor pointer
-                        , scaled 1 |> rem |> marginTop
                         ]
                     )
             )

@@ -296,7 +296,7 @@ highlightRoot vc =
 highlightColor : Config -> Bool -> List Style
 highlightColor vc selected =
     cursor pointer
-        :: vc.theme.graph.highlightColor selected
+        :: vc.theme.graph.highlightColor vc.lightmode selected
 
 
 highlightTitle : Config -> List Style

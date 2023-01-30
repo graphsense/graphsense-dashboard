@@ -68,7 +68,7 @@ type alias Graph =
     , highlightsColors : List Style
     , highlightsColor : List Style
     , highlightRoot : List Style
-    , highlightColor : Bool -> List Style
+    , highlightColor : Bool -> Bool -> List Style
     , highlightTitle : Bool -> List Style
     , highlightTrash : Bool -> List Style
     }
@@ -138,6 +138,6 @@ default =
     , highlightsColor = []
     , highlightRoot = []
     , highlightTitle = \_ -> []
-    , highlightColor = \_ -> []
+    , highlightColor = \_ _ -> []
     , highlightTrash = \_ -> []
     }

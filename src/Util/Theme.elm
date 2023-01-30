@@ -37,6 +37,11 @@ backgroundColorWithLightmode lm c =
     withLightmode [ ( backgroundColor, c ) ] lm
 
 
+borderColorWithLightmode : Bool -> Theme.SwitchableColor -> Css.Style
+borderColorWithLightmode lm c =
+    withLightmode [ ( borderColor, c ) ] lm
+
+
 color_backgroundColorWithLightmode : Bool -> Theme.SwitchableColor -> Theme.SwitchableColor -> Css.Style
 color_backgroundColorWithLightmode lm c bg =
     withLightmode [ ( color, c ), ( backgroundColor, bg ) ] lm
