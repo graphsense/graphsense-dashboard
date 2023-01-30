@@ -496,13 +496,37 @@ theme =
                             graph
                    )
                 |> s_lightnessFactor
-                    { entity = 1
-                    , address = 0.9
-                    }
+                    (\lightmode ->
+                        { entity =
+                            if lightmode then
+                                1.2
+
+                            else
+                                1
+                        , address =
+                            if lightmode then
+                                1.1
+
+                            else
+                                0.9
+                        }
+                    )
                 |> s_saturationFactor
-                    { entity = 1
-                    , address = 0.9
-                    }
+                    (\lightmode ->
+                        { entity =
+                            if lightmode then
+                                1.2
+
+                            else
+                                1
+                        , address =
+                            if lightmode then
+                                1.1
+
+                            else
+                                0.9
+                        }
+                    )
                 |> s_defaultColor
                     (rgb255 128 128 128)
                 |> s_tool

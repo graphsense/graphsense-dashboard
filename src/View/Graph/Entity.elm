@@ -69,8 +69,8 @@ entity plugins vc gc ent =
                             |> Color.toHsla
                             |> (\hsl ->
                                     { hsl
-                                        | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.entity
-                                        , saturation = hsl.saturation * vc.theme.graph.saturationFactor.entity
+                                        | lightness = hsl.lightness * (vc.theme.graph.lightnessFactor vc.lightmode).entity
+                                        , saturation = hsl.saturation * (vc.theme.graph.saturationFactor vc.lightmode).entity
                                     }
                                )
                             |> Color.fromHsla

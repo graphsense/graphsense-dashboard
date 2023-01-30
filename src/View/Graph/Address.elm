@@ -52,8 +52,8 @@ address plugins vc gc addr =
                             |> Color.toHsla
                             |> (\hsl ->
                                     { hsl
-                                        | lightness = hsl.lightness * vc.theme.graph.lightnessFactor.address
-                                        , saturation = hsl.saturation * vc.theme.graph.saturationFactor.address
+                                        | lightness = hsl.lightness * (vc.theme.graph.lightnessFactor vc.lightmode).address
+                                        , saturation = hsl.saturation * (vc.theme.graph.saturationFactor vc.lightmode).address
                                     }
                                )
                             |> Color.fromHsla

@@ -44,13 +44,17 @@ type alias Graph =
     , colorScheme : List Color
     , highlightsColorScheme : List Color
     , lightnessFactor :
-        { entity : Float
-        , address : Float
-        }
+        Bool
+        ->
+            { entity : Float
+            , address : Float
+            }
     , saturationFactor :
-        { entity : Float
-        , address : Float
-        }
+        Bool
+        ->
+            { entity : Float
+            , address : Float
+            }
     , defaultColor : Color
     , searchTextarea : Bool -> List Style
     , toolbox : Bool -> Bool -> List Style
@@ -113,13 +117,15 @@ default =
     , colorScheme = []
     , highlightsColorScheme = []
     , lightnessFactor =
-        { entity = 1
-        , address = 1
-        }
+        \_ ->
+            { entity = 1
+            , address = 1
+            }
     , saturationFactor =
-        { entity = 1
-        , address = 1
-        }
+        \_ ->
+            { entity = 1
+            , address = 1
+            }
     , defaultColor = Color.rgb 255 255 255
     , searchTextarea = \_ -> []
     , toolbox = \_ _ -> []
