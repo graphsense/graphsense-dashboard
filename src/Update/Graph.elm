@@ -194,6 +194,7 @@ addEntity plugins uc { entity, incoming, outgoing } model =
                     model.config
                         |> s_colors added.colors
             }
+                |> syncLinks added.repositioned
                 |> addEntityEgonet entity.currency entity.entity True outgoing
                 |> addEntityEgonet entity.currency entity.entity False incoming
     in
