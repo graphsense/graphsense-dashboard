@@ -117,7 +117,8 @@ loadingSpinner vc =
 
 valueCell : Config -> List Style
 valueCell vc =
-    vc.theme.browser.valueCell
+    whiteSpace noWrap
+        :: vc.theme.browser.valueCell
 
 
 currencyCell : Config -> List Style
