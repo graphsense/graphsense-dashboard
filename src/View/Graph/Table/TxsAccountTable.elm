@@ -86,7 +86,6 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
             ]
                 ++ [ (if vc.locale.currency /= Model.Currency.Coin then
                         T.valueColumn
@@ -100,10 +99,11 @@ config vc coinCode =
                         .value
                    ]
                 ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
-                   , T.intColumn vc titleHeight .height
                    , T.timestampColumn vc titleTimestamp .timestamp
                    , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
                    , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   , T.intColumn vc titleHeight .height
+                   , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]
         , customizations = customizations vc
         }
