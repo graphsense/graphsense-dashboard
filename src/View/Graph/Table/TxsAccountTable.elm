@@ -7,6 +7,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Model.Currency
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
@@ -86,13 +87,24 @@ config vc coinCode =
                         |> List.singleton
                 )
             , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
-            , T.valueColumnWithoutCode vc .currency "Value" .value
-            , T.stringColumn vc "Currency" (.currency >> String.toUpper)
-            , T.intColumn vc titleHeight .height
-            , T.timestampColumn vc titleTimestamp .timestamp
-            , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
-            , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
             ]
+                ++ [ (if vc.locale.currency /= Model.Currency.Coin then
+                        T.valueColumn
+
+                      else
+                        T.valueColumnWithoutCode
+                     )
+                        vc
+                        .currency
+                        "Value"
+                        .value
+                   ]
+                ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
+                   , T.intColumn vc titleHeight .height
+                   , T.timestampColumn vc titleTimestamp .timestamp
+                   , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   ]
         , customizations = customizations vc
         }
 
