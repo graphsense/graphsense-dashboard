@@ -682,7 +682,7 @@ show model =
     }
 
 
-showEntity : Entity.Entity -> Model -> Model
+showEntity : Entity.Entity -> Model -> ( Model, List Effect )
 showEntity entity model =
     show model
         |> s_type_
@@ -703,9 +703,10 @@ showEntity entity model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
-showAddress : Address.Address -> Model -> Model
+showAddress : Address.Address -> Model -> ( Model, List Effect )
 showAddress address model =
     show model
         |> s_type_
@@ -726,9 +727,10 @@ showAddress address model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
-showTx : Api.Data.Tx -> String -> Model -> Model
+showTx : Api.Data.Tx -> String -> Model -> ( Model, List Effect )
 showTx data accountCurrency model =
     show model
         |> s_type_
@@ -772,9 +774,10 @@ showTx data accountCurrency model =
                             _ ->
                                 Nothing
             )
+        |> getBrowserElement
 
 
-showBlock : Api.Data.Block -> Model -> Model
+showBlock : Api.Data.Block -> Model -> ( Model, List Effect )
 showBlock block model =
     show model
         |> s_type_
@@ -795,6 +798,7 @@ showBlock block model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
 showBlockTxsUtxo : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
@@ -2470,3 +2474,10 @@ tableAsCSV locale gc { type_ } =
 
         Plugin ->
             Nothing
+
+
+getBrowserElement : Model -> ( Model, List Effect )
+getBrowserElement model =
+    ( model
+    , [ GetBrowserElementEffect ]
+    )

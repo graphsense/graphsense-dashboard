@@ -976,10 +976,15 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotTx accountCurrency data ->
-            { model
-                | browser = Browser.showTx data accountCurrency model.browser
-            }
-                |> n
+            let
+                ( browser, cmd ) =
+                    Browser.showTx data accountCurrency model.browser
+            in
+            ( { model
+                | browser = browser
+              }
+            , cmd
+            )
 
         BrowserGotTxUtxoAddresses id isOutgoing data ->
             { model
@@ -988,10 +993,13 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotBlock data ->
-            { model
-                | browser = Browser.showBlock data model.browser
-            }
-                |> n
+            Browser.showBlock data model.browser
+                |> mapFirst
+                    (\browser ->
+                        { model
+                            | browser = browser
+                        }
+                    )
 
         BrowserGotBlockTxs id data ->
             { model
@@ -2701,13 +2709,13 @@ selectAddress address table model =
 
     else
         let
-            browser =
+            ( browser1, effects1 ) =
                 Browser.showAddress address model.browser
 
-            ( browser2, effects ) =
+            ( browser2, effects2 ) =
                 table
-                    |> Maybe.map (\t -> Browser.showAddressTable t browser)
-                    |> Maybe.withDefault (n browser)
+                    |> Maybe.map (\t -> Browser.showAddressTable t browser1)
+                    |> Maybe.withDefault (n browser1)
 
             newmodel =
                 deselect model
@@ -2718,7 +2726,7 @@ selectAddress address table model =
             , selectIfLoaded = Nothing
             , layers = Layer.updateAddress address.id (\a -> { a | selected = True }) newmodel.layers
           }
-        , effects
+        , effects1 ++ effects2
         )
 
 
@@ -2729,13 +2737,13 @@ selectEntity entity table model =
 
     else
         let
-            browser =
+            ( browser1, effects1 ) =
                 Browser.showEntity entity model.browser
 
-            ( browser2, effects ) =
+            ( browser2, effects2 ) =
                 table
-                    |> Maybe.map (\t -> Browser.showEntityTable t browser)
-                    |> Maybe.withDefault (n browser)
+                    |> Maybe.map (\t -> Browser.showEntityTable t browser1)
+                    |> Maybe.withDefault (n browser1)
 
             newmodel =
                 deselect model
@@ -2747,7 +2755,7 @@ selectEntity entity table model =
             , layers =
                 Layer.updateEntity entity.id (\e -> { e | selected = True }) newmodel.layers
           }
-        , effects
+        , effects1 ++ effects2
         )
 
 
