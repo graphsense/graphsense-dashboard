@@ -848,11 +848,11 @@ theme =
                                 else
                                     -120
                         in
-                        [ Css.Transitions.transition
+                        [ backgroundColorWithLightmode lightmode colors.brandWhite
+                        , Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
                         , displayFlex
-                        , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
                         , width <| calc (pct 100) minus (scaled 4 |> rem)
                         , translateY (pct p) |> transform
@@ -1050,36 +1050,36 @@ theme =
             (Statusbar.default
                 |> s_root
                     (\lightmode visible ->
-                        (if visible then
-                            [ scaled 2 |> rem |> padding
-                            , scaled 1 |> rem |> paddingLeft
-                            , Css.Transitions.transition
-                                [ Css.Transitions.minHeight 200
-                                ]
-                            , overflowY auto
-                            ]
+                        [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
+                        , (if visible then
+                            50
 
-                         else
-                            [ cursor pointer
-                            , displayFlex
-                            , justifyContent spaceBetween
-                            , alignItems center
-                            ]
-                        )
-                            ++ [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
-                               , (if visible then
-                                    50
+                           else
+                            4
+                          )
+                            |> scaled
+                            |> rem
+                            |> minHeight
+                        , scaled 50 |> rem |> maxHeight
+                        , colors.greyDark |> colorWithLightmode lightmode
+                        , scaled 3 |> rem |> fontSize
+                        ]
+                            ++ (if visible then
+                                    [ scaled 2 |> rem |> padding
+                                    , scaled 1 |> rem |> paddingLeft
+                                    , Css.Transitions.transition
+                                        [ Css.Transitions.minHeight 200
+                                        ]
+                                    , overflowY auto
+                                    ]
 
-                                  else
-                                    4
-                                 )
-                                    |> scaled
-                                    |> rem
-                                    |> minHeight
-                               , scaled 50 |> rem |> maxHeight
-                               , colors.greyDark |> colorWithLightmode lightmode
-                               , scaled 3 |> rem |> fontSize
-                               ]
+                                else
+                                    [ cursor pointer
+                                    , displayFlex
+                                    , justifyContent spaceBetween
+                                    , alignItems center
+                                    ]
+                               )
                     )
                 |> s_loadingSpinner
                     [ loadingSpinner
