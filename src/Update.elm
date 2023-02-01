@@ -351,8 +351,14 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLogout ->
+            let
+                ( new, outMsg, cmd ) =
+                    Plugin.logout plugins model.plugins 
+
+            in
             ( { model
-                | user =
+                | plugins = new
+                , user =
                     model.user
                         |> s_auth
                             (case model.user.auth of
@@ -364,9 +370,11 @@ update plugins uc msg model =
                                     model.user.auth
                             )
               }
-            , LogoutEffect
-                |> List.singleton
+            , [ PluginEffect cmd
+                , LogoutEffect
+                ]
             )
+                        |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotLoggedOut result ->
             { model
