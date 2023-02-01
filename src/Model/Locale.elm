@@ -1,5 +1,6 @@
 module Model.Locale exposing (..)
 
+import Api.Data
 import DateFormat.Language
 import DateFormat.Relative
 import Dict exposing (Dict)
@@ -41,4 +42,5 @@ type alias Model =
     , currency : Currency
     , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
     , unitToString : Int -> Locale.Durations.Unit -> String
+    , supportedTokens : Maybe Api.Data.TokenConfigs
     }

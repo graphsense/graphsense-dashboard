@@ -11,6 +11,7 @@ import Init.Graph.Table
 import Model.Entity as E
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
+import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
@@ -18,11 +19,6 @@ import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Graph.Table.AddressNeighborsTable exposing (reduceLabels)
 import View.Locale as Locale
-
-
-tokenCurrencies : List String
-tokenCurrencies =
-    [ "usdt", "usdc", "weth" ]
 
 
 columnTitleFromDirection : Bool -> String
@@ -130,7 +126,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                 ++ valueColumns vc
                     coinCode
                     (if coinCode == "eth" then
-                        [ "usdt", "usdc", "weth" ]
+                        Locale.tokenCurrencies vc.locale
 
                      else
                         []
@@ -212,8 +208,8 @@ n s =
     ( s, [] )
 
 
-prepareCSV : Bool -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCSV isOutgoing coinCode row =
+prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCSV locale isOutgoing coinCode row =
     let
         suffix =
             if coinCode == "eth" then
@@ -238,16 +234,16 @@ prepareCSV isOutgoing coinCode row =
         ++ Util.Csv.values ("entity_balance" ++ suffix) row.entity.balance
         ++ Util.Csv.values (estimatedValueTitle ++ suffix) row.value
         ++ (if coinCode == "eth" then
-                prepareCsvTokens row
+                prepareCsvTokens locale row
 
             else
                 []
            )
 
 
-prepareCsvTokens : Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCsvTokens row =
-    tokenCurrencies
+prepareCsvTokens : Locale.Model -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCsvTokens locale row =
+    Locale.tokenCurrencies locale
         |> List.map
             (\token ->
                 Util.Csv.values ("entity_balance_" ++ token)

@@ -47,6 +47,8 @@ module Api.Data exposing
     , Stats
     , Tag
     , Taxonomy
+    , TokenConfig
+    , TokenConfigs
     , Tx(..)
     , TxAccount
     , TxSummary
@@ -85,6 +87,8 @@ module Api.Data exposing
     , encodeStats
     , encodeTag
     , encodeTaxonomy
+    , encodeTokenConfig
+    , encodeTokenConfigs
     , encodeTx
     , encodeTxAccount
     , encodeTxSummary
@@ -123,6 +127,8 @@ module Api.Data exposing
     , statsDecoder
     , tagDecoder
     , taxonomyDecoder
+    , tokenConfigDecoder
+    , tokenConfigsDecoder
     , txDecoder
     , txAccountDecoder
     , txSummaryDecoder
@@ -438,6 +444,18 @@ type alias Taxonomy =
     }
 
 
+type alias TokenConfig =
+    { decimals : Int
+    , pegCurrency : Maybe String
+    , ticker : String
+    }
+
+
+type alias TokenConfigs =
+    { tokenConfigs : List (TokenConfig)
+    }
+
+
 type Tx
     = TxTxAccount TxAccount
     | TxTxUtxo TxUtxo
@@ -445,7 +463,8 @@ type Tx
 
 
 type alias TxAccount =
-    { currency : String
+    { contractCreation : Maybe Bool
+    , currency : String
     , fromAddress : String
     , height : Int
     , timestamp : Int
@@ -1276,6 +1295,48 @@ encodeTaxonomyPairs model =
     pairs
 
 
+encodeTokenConfig : TokenConfig -> Json.Encode.Value
+encodeTokenConfig =
+    encodeObject << encodeTokenConfigPairs
+
+
+encodeTokenConfigWithTag : ( String, String ) -> TokenConfig -> Json.Encode.Value
+encodeTokenConfigWithTag (tagField, tag) model =
+    encodeObject (encodeTokenConfigPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeTokenConfigPairs : TokenConfig -> List EncodedField
+encodeTokenConfigPairs model =
+    let
+        pairs =
+            [ encode "decimals" Json.Encode.int model.decimals
+            , maybeEncode "peg_currency" Json.Encode.string model.pegCurrency
+            , encode "ticker" Json.Encode.string model.ticker
+            ]
+    in
+    pairs
+
+
+encodeTokenConfigs : TokenConfigs -> Json.Encode.Value
+encodeTokenConfigs =
+    encodeObject << encodeTokenConfigsPairs
+
+
+encodeTokenConfigsWithTag : ( String, String ) -> TokenConfigs -> Json.Encode.Value
+encodeTokenConfigsWithTag (tagField, tag) model =
+    encodeObject (encodeTokenConfigsPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeTokenConfigsPairs : TokenConfigs -> List EncodedField
+encodeTokenConfigsPairs model =
+    let
+        pairs =
+            [ encode "token_configs" (Json.Encode.list encodeTokenConfig) model.tokenConfigs
+            ]
+    in
+    pairs
+
+
 encodeTx : Tx -> Json.Encode.Value
 encodeTx model =
     case model of
@@ -1302,7 +1363,8 @@ encodeTxAccountPairs : TxAccount -> List EncodedField
 encodeTxAccountPairs model =
     let
         pairs =
-            [ encode "currency" Json.Encode.string model.currency
+            [ maybeEncode "contract_creation" Json.Encode.bool model.contractCreation
+            , encode "currency" Json.Encode.string model.currency
             , encode "from_address" Json.Encode.string model.fromAddress
             , encode "height" Json.Encode.int model.height
             , encode "timestamp" Json.Encode.int model.timestamp
@@ -1777,6 +1839,20 @@ taxonomyDecoder =
         |> decode "uri" Json.Decode.string 
 
 
+tokenConfigDecoder : Json.Decode.Decoder TokenConfig
+tokenConfigDecoder =
+    Json.Decode.succeed TokenConfig
+        |> decode "decimals" Json.Decode.int 
+        |> maybeDecode "peg_currency" Json.Decode.string Nothing
+        |> decode "ticker" Json.Decode.string 
+
+
+tokenConfigsDecoder : Json.Decode.Decoder TokenConfigs
+tokenConfigsDecoder =
+    Json.Decode.succeed TokenConfigs
+        |> decode "token_configs" (Json.Decode.list tokenConfigDecoder) 
+
+
 txDecoder : Json.Decode.Decoder Tx
 txDecoder =
     Json.Decode.field "tx_type" Json.Decode.string
@@ -1800,6 +1876,7 @@ txTagDecoder tag =
 txAccountDecoder : Json.Decode.Decoder TxAccount
 txAccountDecoder =
     Json.Decode.succeed TxAccount
+        |> maybeDecode "contract_creation" Json.Decode.bool Nothing
         |> decode "currency" Json.Decode.string 
         |> decode "from_address" Json.Decode.string 
         |> decode "height" Json.Decode.int 

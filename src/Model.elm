@@ -53,6 +53,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
+    , supportedTokens : Maybe Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     }
 
@@ -87,6 +88,7 @@ type Msg
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotSupportedTokens Api.Data.TokenConfigs
     | UserClickedStatusbar
     | UserClosesDialog
     | LocaleMsg Msg.Locale.Msg

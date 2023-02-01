@@ -13,6 +13,7 @@ module View.Locale exposing
     , text
     , timestamp
     , timestampWithFormat
+    , tokenCurrencies
     , tokenCurrency
     )
 
@@ -34,17 +35,24 @@ import Time
 import Tuple exposing (..)
 
 
-fixpointFactor : Dict String ( Float, String )
-fixpointFactor =
+fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
+fixpointFactor configs =
     [ ( "eth", ( 1.0e18, "wei" ) )
-    , ( "weth", ( 1.0e18, "wei" ) )
-    , ( "usdc", ( 1.0e6, "wei" ) )
-    , ( "usdt", ( 1.0e6, "wei" ) )
     , ( "btc", ( 1.0e8, "s" ) )
     , ( "bch", ( 1.0e8, "s" ) )
     , ( "ltc", ( 1.0e8, "s" ) )
     , ( "zec", ( 1.0e8, "s" ) )
     ]
+        ++ (configs
+                |> Maybe.map
+                    (.tokenConfigs
+                        >> List.map
+                            (\{ decimals, ticker } ->
+                                ( ticker, ( 10 ^ toFloat decimals, "wei" ) )
+                            )
+                    )
+                |> Maybe.withDefault []
+           )
         |> Dict.fromList
 
 
@@ -256,7 +264,8 @@ fiat model coinCode vis { code, value } =
 
 coin : Model -> Bool -> String -> Int -> String
 coin model hideCode code v =
-    Dict.get code fixpointFactor
+    fixpointFactor model.supportedTokens
+        |> Dict.get code
         |> Maybe.map
             (mapFirst
                 (\f ->
@@ -296,3 +305,10 @@ durationToString { unitToString } dur =
         , separator = " "
         }
         dur
+
+
+tokenCurrencies : Model -> List String
+tokenCurrencies model =
+    model.supportedTokens
+        |> Maybe.map (.tokenConfigs >> List.map .ticker)
+        |> Maybe.withDefault []

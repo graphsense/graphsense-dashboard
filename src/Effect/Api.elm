@@ -8,6 +8,7 @@ import Api.Request.Entities
 import Api.Request.General
 import Api.Request.MyBulk
 import Api.Request.Tags
+import Api.Request.Tokens
 import Api.Request.Txs
 import Dict exposing (Dict)
 import Http
@@ -26,6 +27,7 @@ type Effect msg
         }
         (Api.Data.SearchResult -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
+    | ListSupportedTokensEffect (Api.Data.TokenConfigs -> msg)
     | GetAddressEffect
         { currency : String
         , address : String
@@ -268,6 +270,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetConceptsEffect eff
 
+        ListSupportedTokensEffect m ->
+            m
+                >> mapMsg
+                |> ListSupportedTokensEffect
+
         GetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -404,6 +411,10 @@ perform apiKey wrapMsg effect =
 
         GetConceptsEffect taxonomy toMsg ->
             Api.Request.Tags.listConcepts taxonomy
+                |> send apiKey wrapMsg effect toMsg
+
+        ListSupportedTokensEffect toMsg ->
+            Api.Request.Tokens.listSupportedTokens "eth"
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage } toMsg ->

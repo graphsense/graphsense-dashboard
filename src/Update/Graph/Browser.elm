@@ -2338,12 +2338,12 @@ tableAsCSV locale gc { type_ } =
                 Just (AddressIncomingNeighborsTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Incoming neighbors of address {0} ({1})"
-                        |> asCsv (AddressNeighborsTable.prepareCSV False (loadableAddressCurrency loadable)) t
+                        |> asCsv (AddressNeighborsTable.prepareCSV locale False (loadableAddressCurrency loadable)) t
 
                 Just (AddressOutgoingNeighborsTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
-                        |> asCsv (AddressNeighborsTable.prepareCSV True (loadableAddressCurrency loadable)) t
+                        |> asCsv (AddressNeighborsTable.prepareCSV locale True (loadableAddressCurrency loadable)) t
 
                 Nothing ->
                     Nothing
@@ -2371,12 +2371,12 @@ tableAsCSV locale gc { type_ } =
                 Just (EntityIncomingNeighborsTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Incoming neighbors of entity {0} ({1})"
-                        |> asCsv (EntityNeighborsTable.prepareCSV False (loadableEntityCurrency loadable)) t
+                        |> asCsv (EntityNeighborsTable.prepareCSV locale False (loadableEntityCurrency loadable)) t
 
                 Just (EntityOutgoingNeighborsTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
-                        |> asCsv (EntityNeighborsTable.prepareCSV True (loadableEntityCurrency loadable)) t
+                        |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
 
                 Nothing ->
                     Nothing

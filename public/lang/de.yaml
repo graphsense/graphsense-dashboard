@@ -282,3 +282,4 @@ no: nein
 "there are typos": "Es gibt Tippfehler"
 smart contract: Smart contract
 "token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})
+"loading supported token currencies": lade unterstützte Token-Währungen

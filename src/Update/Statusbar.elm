@@ -197,6 +197,12 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.ListSupportedTokensEffect _ ->
+            ( "loading supported token currencies"
+            , []
+            )
+                |> Just
+
         Api.SearchEffect _ _ ->
             Nothing
 

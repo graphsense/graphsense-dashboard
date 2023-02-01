@@ -112,6 +112,20 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotSupportedTokens configs ->
+            let
+                locale =
+                    Locale.supportedTokens configs model.locale
+            in
+            { model
+                | supportedTokens = Just configs
+                , locale = locale
+                , config =
+                    model.config
+                        |> s_locale locale
+            }
+                |> n
+
         BrowserGotResponseWithHeaders statusbarToken result ->
             { model
                 | statusbar =
@@ -199,9 +213,18 @@ update plugins uc msg model =
             }
                 |> n
 
-        UserSwitchesLocale locale ->
-            ( { model | locale = Locale.switch locale model.locale }
-            , Locale.getTranslationEffect locale
+        UserSwitchesLocale loc ->
+            let
+                locale =
+                    Locale.switch loc model.locale
+            in
+            ( { model
+                | locale = locale
+                , config =
+                    model.config
+                        |> s_locale locale
+              }
+            , Locale.getTranslationEffect loc
                 |> LocaleEffect
                 |> List.singleton
             )
@@ -353,8 +376,7 @@ update plugins uc msg model =
         UserClickedLogout ->
             let
                 ( new, outMsg, cmd ) =
-                    Plugin.logout plugins model.plugins 
-
+                    Plugin.logout plugins model.plugins
             in
             ( { model
                 | plugins = new
@@ -371,10 +393,10 @@ update plugins uc msg model =
                             )
               }
             , [ PluginEffect cmd
-                , LogoutEffect
-                ]
+              , LogoutEffect
+              ]
             )
-                        |> updateByPluginOutMsg plugins outMsg
+                |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotLoggedOut result ->
             { model
