@@ -162,7 +162,7 @@ valueColumns vc coinCode tokens getValues =
             else
                 ( "", T.valueColumn )
     in
-    (valCol vc (\_ -> coinCode) (titleEntityBalance ++ suffix) getValues.balance
+    (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleEntityBalance ++ suffix) getValues.balance
         :: (tokens
                 |> List.map
                     (\currency ->
@@ -173,7 +173,7 @@ valueColumns vc coinCode tokens getValues =
                     )
            )
     )
-        ++ (valCol vc (\_ -> coinCode) (titleEntityReceived ++ suffix) getValues.totalReceived
+        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleEntityReceived ++ suffix) getValues.totalReceived
                 :: (tokens
                         |> List.map
                             (\currency ->
@@ -184,7 +184,7 @@ valueColumns vc coinCode tokens getValues =
                             )
                    )
            )
-        ++ (valCol vc (\_ -> coinCode) (titleValue coinCode ++ suffix) getValues.value
+        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale (titleValue coinCode) ++ suffix) getValues.value
                 :: (tokens
                         |> List.map
                             (\currency ->
