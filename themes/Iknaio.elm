@@ -528,7 +528,7 @@ theme =
                         }
                     )
                 |> s_defaultColor
-                    (rgb255 128 128 128)
+                    (rgb255 138 138 138)
                 |> s_tool
                     (\lightmode status ->
                         [ scaled 2 |> rem |> padding
