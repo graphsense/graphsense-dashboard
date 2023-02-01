@@ -102,13 +102,17 @@ table vc attributes tools height config tbl =
                         []
                    )
             )
-        , [ Maybe.map (filterTool vc tbl) tools.filter
-          , Maybe.map (csvTool vc) tools.csv
-          ]
-            |> List.filterMap identity
-            |> div
-                [ Css.Table.sidebar vc |> css
-                ]
+        , if tools == noTools then
+            none
+
+          else
+            [ Maybe.map (filterTool vc tbl) tools.filter
+            , Maybe.map (csvTool vc) tools.csv
+            ]
+                |> List.filterMap identity
+                |> div
+                    [ Css.Table.sidebar vc |> css
+                    ]
         ]
 
 
