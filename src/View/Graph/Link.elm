@@ -270,7 +270,7 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
             (sx + tx) / 2
 
         ly =
-            (sy + ty) / 2 + Graph.linkLabelHeight / 3
+            (sy + ty) / 2 
     in
     g
         [ Svg.onMouseOver onMouseOver
