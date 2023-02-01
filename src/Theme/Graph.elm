@@ -35,7 +35,6 @@ type alias Graph =
     , expandHandlePath : Bool -> NodeType -> Bool -> List Style
     , expandHandleText : Bool -> NodeType -> List Style
     , nodeSeparatorToExpandHandle : Bool -> NodeType -> List Style
-    , graphRoot : List Style
     , svgRoot : Bool -> List Style
     , navbar : Bool -> List Style
     , navbarLeft : List Style
@@ -108,7 +107,6 @@ default =
     , expandHandlePath = \_ _ _ -> []
     , expandHandleText = \_ _ -> []
     , nodeSeparatorToExpandHandle = \_ _ -> []
-    , graphRoot = []
     , svgRoot = \_ -> []
     , navbar = \_ -> []
     , navbarLeft = []

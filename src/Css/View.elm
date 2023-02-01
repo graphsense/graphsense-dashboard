@@ -71,6 +71,8 @@ navbar vc =
 contents : Config -> List Style
 contents vc =
     [ flexGrow (num 1)
+    , overflow hidden
+    , position relative
     ]
         ++ vc.theme.contents vc.lightmode
 

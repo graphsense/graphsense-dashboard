@@ -44,15 +44,6 @@ tool vc status =
         :: vc.theme.graph.tool vc.lightmode status
 
 
-graphRoot : Config -> List Style
-graphRoot vc =
-    [ overflow hidden
-    , position relative
-    , pct 100 |> height
-    ]
-        ++ vc.theme.graph.graphRoot
-
-
 svgRoot : Config -> List Style
 svgRoot vc =
     [ pct 100 |> width
