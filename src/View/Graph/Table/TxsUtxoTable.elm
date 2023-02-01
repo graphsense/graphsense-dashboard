@@ -21,7 +21,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.TxUtxo
 init =
-    Init.Graph.Table.init filter "Transaction"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.TxUtxo -> Bool

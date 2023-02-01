@@ -36,9 +36,9 @@ columnTitleFromDirection isOutgoing =
         ++ " entity"
 
 
-init : Bool -> Table Api.Data.NeighborEntity
+init : Table Api.Data.NeighborEntity
 init =
-    columnTitleFromDirection >> Init.Graph.Table.init filter
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.NeighborEntity -> Bool

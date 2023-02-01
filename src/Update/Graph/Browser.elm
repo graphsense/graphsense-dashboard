@@ -251,7 +251,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init False |> AddressIncomingNeighborsTable |> Just
+            ( AddressNeighborsTable.init |> AddressIncomingNeighborsTable |> Just
             , [ getAddressNeighborsEffect
                     False
                     { currency = currency
@@ -265,7 +265,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init True |> AddressOutgoingNeighborsTable |> Just
+            ( AddressNeighborsTable.init |> AddressOutgoingNeighborsTable |> Just
             , [ getAddressNeighborsEffect
                     True
                     { currency = currency
@@ -449,7 +449,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
-            ( EntityNeighborsTable.init False |> EntityIncomingNeighborsTable |> Just
+            ( EntityNeighborsTable.init |> EntityIncomingNeighborsTable |> Just
             , [ getEntityNeighborsEffect
                     False
                     { currency = currency
@@ -463,7 +463,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
-            ( EntityNeighborsTable.init False |> EntityOutgoingNeighborsTable |> Just
+            ( EntityNeighborsTable.init |> EntityOutgoingNeighborsTable |> Just
             , [ getEntityNeighborsEffect
                     True
                     { currency = currency
@@ -1276,7 +1276,7 @@ showAddressNeighbors id isOutgoing data model =
                                         |> Just
 
                                 _ ->
-                                    AddressNeighborsTable.init isOutgoing
+                                    AddressNeighborsTable.init
                                         |> s_data data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
@@ -1315,7 +1315,7 @@ showEntityNeighbors id isOutgoing data model =
                                         |> Just
 
                                 _ ->
-                                    EntityNeighborsTable.init isOutgoing
+                                    EntityNeighborsTable.init
                                         |> s_data data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then

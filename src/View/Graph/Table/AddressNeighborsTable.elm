@@ -35,10 +35,9 @@ columnTitleFromDirection isOutgoing =
         ++ " address"
 
 
-init : Bool -> Table Api.Data.NeighborAddress
+init : Table Api.Data.NeighborAddress
 init =
-    columnTitleFromDirection
-        >> Init.Graph.Table.init filter
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.NeighborAddress -> Bool
