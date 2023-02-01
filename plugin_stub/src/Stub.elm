@@ -42,6 +42,7 @@ plugin url =
         , initEntity = Nothing
         , clearSearch = Nothing
         , newGraph = Nothing
+        , logout = Nothing
         }
     , effects =
         { search = Nothing

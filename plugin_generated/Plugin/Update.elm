@@ -79,3 +79,7 @@ updateApiKeyHash plugins state apiKeyHash =
 newGraph : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
 newGraph plugins state =
     n state
+
+logout : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+logout plugins state =
+    n state
