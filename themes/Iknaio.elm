@@ -23,6 +23,7 @@ import Tuple exposing (..)
 import Util.Theme
     exposing
         ( backgroundColorWithLightmode
+        , borderColorWithLightmode
         , borderColor_backgroundColorWithLightmode
         , colorWithLightmode
         , color_backgroundColorWithLightmode
@@ -120,6 +121,13 @@ theme =
             , fontWeight bold
             , scaled 1 |> rem |> paddingTop
             ]
+        |> s_paragraph
+            [ scaled 2 |> rem |> marginBottom
+            ]
+        |> s_listItem
+            [ listStyleType disc
+            , scaled 6 |> rem |> marginLeft
+            ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
             [ maxWidth <| px 190
@@ -152,6 +160,12 @@ theme =
         |> s_main
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
+                ]
+            )
+        |> s_navbar
+            (\lightmode ->
+                [ backgroundColorWithLightmode lightmode colors.brandWhite
+                , shadowSm
                 ]
             )
         |> s_link
@@ -422,7 +436,7 @@ theme =
                     , scaled 2 |> rem |> paddingRight
                     ]
                 |> s_heading
-                    [ fontNormal
+                    [ fontBold
                     , scaled 0.1 |> rem |> letterSpacing
                     , scaled 2 |> rem |> paddingBottom
                     , scaled 0.5 |> rem |> paddingTop
@@ -482,15 +496,39 @@ theme =
                             graph
                    )
                 |> s_lightnessFactor
-                    { entity = 1
-                    , address = 0.9
-                    }
+                    (\lightmode ->
+                        { entity =
+                            if lightmode then
+                                1.2
+
+                            else
+                                1
+                        , address =
+                            if lightmode then
+                                1.1
+
+                            else
+                                0.9
+                        }
+                    )
                 |> s_saturationFactor
-                    { entity = 1
-                    , address = 0.9
-                    }
+                    (\lightmode ->
+                        { entity =
+                            if lightmode then
+                                1.2
+
+                            else
+                                1
+                        , address =
+                            if lightmode then
+                                1.1
+
+                            else
+                                0.9
+                        }
+                    )
                 |> s_defaultColor
-                    (rgb255 128 128 128)
+                    (rgb255 138 138 138)
                 |> s_tool
                     (\lightmode status ->
                         [ scaled 2 |> rem |> padding
@@ -533,18 +571,6 @@ theme =
                     (\lightmode -> fillBlack lightmode)
                 |> s_entityLabel
                     (\lightmode -> fillBlack lightmode)
-                |> s_labelText
-                    (\nodeType ->
-                        [ property "dominant-baseline"
-                            (case nodeType of
-                                AddressType ->
-                                    "middle"
-
-                                EntityType ->
-                                    "hanging"
-                            )
-                        ]
-                    )
                 |> s_abuseFlag
                     (\lightmode ->
                         [ colors.red
@@ -558,7 +584,7 @@ theme =
                         , property "stroke-width" "10px"
                         ]
                     )
-                |> s_tagsFlag
+                |> s_flag
                     (\lightmode ->
                         [ colors.white
                             |> switchColor lightmode
@@ -682,12 +708,6 @@ theme =
                         , property "fill-opacity" "0.5"
                         ]
                     )
-                |> s_navbar
-                    (\lightmode ->
-                        [ backgroundColorWithLightmode lightmode colors.brandWhite
-                        , shadowSm
-                        ]
-                    )
                 |> s_searchTextarea
                     (\lightmode ->
                         [ inputStyle lightmode
@@ -742,6 +762,7 @@ theme =
                     [ fontStyle italic ]
                 |> s_highlightsColors
                     [ scaled 2 |> rem |> marginBottom
+                    , displayFlex
                     ]
                 |> s_highlightsColor
                     [ scaled 5 |> rem |> fontSize
@@ -750,21 +771,22 @@ theme =
                     ]
                 |> s_highlightRoot
                     [ displayFlex
+                    , alignItems center
                     ]
                 |> s_highlightColor
-                    (\selected ->
+                    (\lightmode selected ->
                         [ scaled 5 |> rem |> fontSize
                         , scaled 1 |> rem |> marginRight
-                        , Css.Transitions.transition
-                            [ Css.Transitions.transform 200 ]
-                        , property "transform" "scale(1)"
+                        , borderBottomWidth <| px 2
+                        , borderStyle solid
                         ]
                             ++ (if selected then
-                                    [ property "transform" "scale(1.3)"
+                                    [ borderColorWithLightmode lightmode colors.brandDark
                                     ]
 
                                 else
-                                    []
+                                    [ borderColorWithLightmode lightmode colors.brandWhite
+                                    ]
                                )
                     )
                 |> s_highlightTitle
@@ -783,7 +805,6 @@ theme =
                             ]
                         , scaled 1 |> rem |> paddingLeft
                         , cursor pointer
-                        , scaled 1 |> rem |> marginTop
                         ]
                     )
             )
@@ -827,12 +848,13 @@ theme =
                                 else
                                     -120
                         in
-                        [ Css.Transitions.transition
+                        [ backgroundColorWithLightmode lightmode colors.brandWhite
+                        , Css.Transitions.transition
                             [ Css.Transitions.transform 200
                             ]
                         , displayFlex
-                        , backgroundColorWithLightmode lightmode colors.brandWhite
                         , scaled 2 |> rem |> padding
+                        , width <| calc (pct 100) minus (scaled 4 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
@@ -885,12 +907,19 @@ theme =
                     [ scaled 3.5 |> rem |> height
                     , scaled 3.5 |> rem |> width
                     ]
+                |> s_valueCell
+                    [ scaled 1 |> rem |> paddingLeft
+                    , scaled 1 |> rem |> paddingBottom
+                    , textAlign right
+                    , ex 30 |> width
+                    ]
             )
         |> s_table
             (Table.default
                 |> s_root
                     [ displayFlex
                     , flexDirection row
+                    , overflowX auto
                     ]
                 |> s_tableRoot
                     [ scaled 3 |> rem |> paddingX
@@ -943,9 +972,15 @@ theme =
                     [ scaled 1 |> rem |> padding
                     ]
                 |> s_headCell
-                    [ tableCell
-                    , rowHeight |> px |> height
-                    ]
+                    (\lightmode ->
+                        [ tableCell
+                        , rowHeight |> px |> height
+                        , position sticky
+                        , top <| px 0
+                        , zIndex <| int 2
+                        , backgroundColorWithLightmode lightmode colors.brandWhite
+                        ]
+                    )
                 |> s_headRow
                     [ textAlign left
                     , fontWeight bold
@@ -953,7 +988,7 @@ theme =
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
                     ]
-                |> s_maxHeight 250
+                |> s_maxHeight 300
                 |> s_rowHeight
                     rowHeight
                 |> s_row
@@ -1015,36 +1050,36 @@ theme =
             (Statusbar.default
                 |> s_root
                     (\lightmode visible ->
-                        (if visible then
-                            [ scaled 2 |> rem |> padding
-                            , scaled 1 |> rem |> paddingLeft
-                            , Css.Transitions.transition
-                                [ Css.Transitions.minHeight 200
-                                ]
-                            , overflowY auto
-                            ]
+                        [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
+                        , (if visible then
+                            50
 
-                         else
-                            [ cursor pointer
-                            , displayFlex
-                            , justifyContent spaceBetween
-                            , alignItems center
-                            ]
-                        )
-                            ++ [ switchColor lightmode colors.brandWhite |> toCssColor |> backgroundColor
-                               , (if visible then
-                                    50
+                           else
+                            4
+                          )
+                            |> scaled
+                            |> rem
+                            |> minHeight
+                        , scaled 50 |> rem |> maxHeight
+                        , colors.greyDark |> colorWithLightmode lightmode
+                        , scaled 3 |> rem |> fontSize
+                        ]
+                            ++ (if visible then
+                                    [ scaled 2 |> rem |> padding
+                                    , scaled 1 |> rem |> paddingLeft
+                                    , Css.Transitions.transition
+                                        [ Css.Transitions.minHeight 200
+                                        ]
+                                    , overflowY auto
+                                    ]
 
-                                  else
-                                    4
-                                 )
-                                    |> scaled
-                                    |> rem
-                                    |> minHeight
-                               , scaled 50 |> rem |> maxHeight
-                               , colors.greyDark |> colorWithLightmode lightmode
-                               , scaled 3 |> rem |> fontSize
-                               ]
+                                else
+                                    [ cursor pointer
+                                    , displayFlex
+                                    , justifyContent spaceBetween
+                                    , alignItems center
+                                    ]
+                               )
                     )
                 |> s_loadingSpinner
                     [ loadingSpinner

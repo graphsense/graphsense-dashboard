@@ -10,5 +10,6 @@ src/Api/Request/Entities.elm
 src/Api/Request/General.elm
 src/Api/Request/Rates.elm
 src/Api/Request/Tags.elm
+src/Api/Request/Tokens.elm
 src/Api/Request/Txs.elm
 src/Api/Time.elm

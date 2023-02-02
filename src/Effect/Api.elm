@@ -8,6 +8,7 @@ import Api.Request.Entities
 import Api.Request.General
 import Api.Request.MyBulk
 import Api.Request.Tags
+import Api.Request.Tokens
 import Api.Request.Txs
 import Dict exposing (Dict)
 import Http
@@ -26,6 +27,7 @@ type Effect msg
         }
         (Api.Data.SearchResult -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
+    | ListSupportedTokensEffect (Api.Data.TokenConfigs -> msg)
     | GetAddressEffect
         { currency : String
         , address : String
@@ -122,6 +124,7 @@ type Effect msg
     | GetTxEffect
         { currency : String
         , txHash : String
+        , tokenTxId : Maybe Int
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -152,6 +155,11 @@ type Effect msg
         , pagesize : Int
         }
         (Api.Data.Links -> msg)
+    | GetTokenTxsEffect
+        { currency : String
+        , txHash : String
+        }
+        (List Api.Data.TxAccount -> msg)
     | BulkGetAddressEffect
         { currency : String
         , addresses : List String
@@ -262,6 +270,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetConceptsEffect eff
 
+        ListSupportedTokensEffect m ->
+            m
+                >> mapMsg
+                |> ListSupportedTokensEffect
+
         GetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -352,6 +365,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetEntitylinkTxsEffect eff
 
+        GetTokenTxsEffect eff m ->
+            m
+                >> mapMsg
+                |> GetTokenTxsEffect eff
+
         BulkGetAddressEffect eff m ->
             m
                 >> mapMsg
@@ -393,6 +411,10 @@ perform apiKey wrapMsg effect =
 
         GetConceptsEffect taxonomy toMsg ->
             Api.Request.Tags.listConcepts taxonomy
+                |> send apiKey wrapMsg effect toMsg
+
+        ListSupportedTokensEffect toMsg ->
+            Api.Request.Tokens.listSupportedTokens "eth"
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage } toMsg ->
@@ -464,8 +486,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Blocks.listBlockTxs currency block
                 |> send apiKey wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just False)
+        GetTxEffect { currency, txHash, tokenTxId } toMsg ->
+            Api.Request.Txs.getTx currency txHash (Just False) tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -490,6 +512,10 @@ perform apiKey wrapMsg effect =
 
         ListAddressTagsEffect { label, nextpage, pagesize } toMsg ->
             Api.Request.Tags.listAddressTags label nextpage pagesize
+                |> send apiKey wrapMsg effect toMsg
+
+        GetTokenTxsEffect { currency, txHash } toMsg ->
+            Api.Request.Txs.listTokenTxs currency txHash
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEffect e toMsg ->

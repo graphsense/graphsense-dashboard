@@ -194,6 +194,7 @@ addEntity plugins uc { entity, incoming, outgoing } model =
                     model.config
                         |> s_colors added.colors
             }
+                |> syncLinks added.repositioned
                 |> addEntityEgonet entity.currency entity.entity True outgoing
                 |> addEntityEgonet entity.currency entity.entity False incoming
     in
@@ -244,23 +245,7 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedEntities ids ->
             n model
 
-        BrowserGotSvgElement result ->
-            result
-                |> Result.map
-                    (\{ element } ->
-                        { model
-                            | size =
-                                { width = element.width
-                                , height = element.height
-                                , x = element.x
-                                , y = element.y
-                                }
-                                    |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
-
+        -- handled upstream
         BrowserGotBrowserElement result ->
             result
                 |> Result.map
@@ -293,7 +278,20 @@ updateByMsg plugins uc msg model =
                                 |> mapFirst (\t -> { model | tag = Just t })
                         )
                     |> Maybe.withDefault
-                        ( model
+                        ( case ( model.activeTool.toolbox, model.activeTool.element ) of
+                            ( Tool.Highlighter, Just ( el, vis ) ) ->
+                                toolVisible
+                                    (if vis then
+                                        deselectHighlighter model
+
+                                     else
+                                        model
+                                    )
+                                    el
+                                    vis
+
+                            _ ->
+                                model
                         , Route.rootRoute
                             |> NavPushRouteEffect
                             |> List.singleton
@@ -303,7 +301,7 @@ updateByMsg plugins uc msg model =
                 n model
 
         UserWheeledOnGraph x y z ->
-            model.size
+            uc.size
                 |> Maybe.map
                     (\size ->
                         { model
@@ -423,7 +421,7 @@ updateByMsg plugins uc msg model =
                     (\address ->
                         { model
                             | contextMenu =
-                                ContextMenu.initAddress (Coords.relativeToGraph model.size coords) address
+                                ContextMenu.initAddress (Coords.relativeToGraph uc.size coords) address
                                     |> Just
                         }
                     )
@@ -465,7 +463,7 @@ updateByMsg plugins uc msg model =
                     (\entity ->
                         { model
                             | contextMenu =
-                                ContextMenu.initEntity (Coords.relativeToGraph model.size coords) entity
+                                ContextMenu.initEntity (Coords.relativeToGraph uc.size coords) entity
                                     |> Just
                         }
                     )
@@ -498,7 +496,7 @@ updateByMsg plugins uc msg model =
         UserRightClicksEntityLink id coords ->
             { model
                 | contextMenu =
-                    ContextMenu.initEntityLink (Coords.relativeToGraph model.size coords) id
+                    ContextMenu.initEntityLink (Coords.relativeToGraph uc.size coords) id
                         |> Just
             }
                 |> n
@@ -526,7 +524,7 @@ updateByMsg plugins uc msg model =
         UserRightClicksAddressLink id coords ->
             { model
                 | contextMenu =
-                    ContextMenu.initAddressLink (Coords.relativeToGraph model.size coords) id
+                    ContextMenu.initAddressLink (Coords.relativeToGraph uc.size coords) id
                         |> Just
             }
                 |> n
@@ -978,11 +976,16 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        BrowserGotTx data ->
-            { model
-                | browser = Browser.showTx data model.browser
-            }
-                |> n
+        BrowserGotTx accountCurrency data ->
+            let
+                ( browser, cmd ) =
+                    Browser.showTx data accountCurrency model.browser
+            in
+            ( { model
+                | browser = browser
+              }
+            , cmd
+            )
 
         BrowserGotTxUtxoAddresses id isOutgoing data ->
             { model
@@ -991,10 +994,13 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotBlock data ->
-            { model
-                | browser = Browser.showBlock data model.browser
-            }
-                |> n
+            Browser.showBlock data model.browser
+                |> mapFirst
+                    (\browser ->
+                        { model
+                            | browser = browser
+                        }
+                    )
 
         BrowserGotBlockTxs id data ->
             { model
@@ -1004,6 +1010,13 @@ updateByMsg plugins uc msg model =
 
                     else
                         Browser.showBlockTxsUtxo id data model.browser
+            }
+                |> n
+
+        BrowserGotTokenTxs id data ->
+            { model
+                | browser =
+                    Browser.showTokenTxs id data model.browser
             }
                 |> n
 
@@ -1328,6 +1341,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Legend _, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotLegendElement
@@ -1340,6 +1354,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Configuration _, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotConfigurationElement
@@ -1353,6 +1368,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Export, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotExportElement
@@ -1364,6 +1380,7 @@ updateByMsg plugins uc msg model =
             case ( model.activeTool.toolbox, model.activeTool.element ) of
                 ( Tool.Import, Just ( el, vis ) ) ->
                     toolVisible model el vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotImportElement
@@ -1383,6 +1400,7 @@ updateByMsg plugins uc msg model =
                         )
                         el
                         vis
+                        |> n
 
                 _ ->
                     getToolElement model id BrowserGotHighlighterElement
@@ -1965,7 +1983,7 @@ updateByMsg plugins uc msg model =
                             (Transform.updateByBoundingBox
                                 model.transform
                             )
-                            (model.size
+                            (uc.size
                                 |> Maybe.map
                                     (\{ width, height } ->
                                         { width = width
@@ -2170,14 +2188,13 @@ updateSearch upd model =
         |> Maybe.withDefault (n model)
 
 
-toolVisible : Model -> Dom.Element -> Bool -> ( Model, List Effect )
+toolVisible : Model -> Dom.Element -> Bool -> Model
 toolVisible model element visible =
-    n
-        { model
-            | activeTool =
-                model.activeTool
-                    |> s_element (Just ( element, not visible ))
-        }
+    { model
+        | activeTool =
+            model.activeTool
+                |> s_element (Just ( element, not visible ))
+    }
 
 
 getToolElement : Model -> String -> (Result Dom.Error Dom.Element -> Msg) -> ( Model, List Effect )
@@ -2276,23 +2293,28 @@ updateByRoute plugins route model =
                         )
                     )
 
-        Route.Currency currency (Route.Tx t table) ->
+        Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if String.toLower currency == "eth" then
-                        Browser.loadingTxAccount { currency = currency, txHash = t } model.browser
+                    if String.toLower currency == "eth" || tokenTxId /= Nothing then
+                        Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
 
                 ( browser2, effects ) =
                     if String.toLower currency == "eth" then
-                        n browser
+                        table
+                            |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
+                            |> Maybe.withDefault (n browser)
 
-                    else
+                    else if tokenTxId == Nothing then
                         table
                             |> Maybe.map (\tb -> Browser.showTxUtxoTable tb browser)
                             |> Maybe.withDefault (n browser)
+
+                    else
+                        n browser
             in
             ( { model
                 | browser = browser2
@@ -2375,21 +2397,6 @@ updateByRoute plugins route model =
 
         Route.Plugin ( pid, value ) ->
             n model
-
-
-updateSize : Int -> Int -> Model -> Model
-updateSize w h model =
-    { model
-        | size =
-            model.size
-                |> Maybe.map
-                    (\size ->
-                        { size
-                            | width = size.width + toFloat w
-                            , height = size.height + toFloat h
-                        }
-                    )
-    }
 
 
 addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) -> Bool -> ( List Api.Data.NeighborAddress, Api.Data.Entity ) -> Model -> { model : Model, newAddresses : List Address, newEntities : List EntityId, repositioned : Set EntityId }
@@ -2703,13 +2710,13 @@ selectAddress address table model =
 
     else
         let
-            browser =
+            ( browser1, effects1 ) =
                 Browser.showAddress address model.browser
 
-            ( browser2, effects ) =
+            ( browser2, effects2 ) =
                 table
-                    |> Maybe.map (\t -> Browser.showAddressTable t browser)
-                    |> Maybe.withDefault (n browser)
+                    |> Maybe.map (\t -> Browser.showAddressTable t browser1)
+                    |> Maybe.withDefault (n browser1)
 
             newmodel =
                 deselect model
@@ -2720,7 +2727,7 @@ selectAddress address table model =
             , selectIfLoaded = Nothing
             , layers = Layer.updateAddress address.id (\a -> { a | selected = True }) newmodel.layers
           }
-        , effects
+        , effects1 ++ effects2
         )
 
 
@@ -2731,13 +2738,13 @@ selectEntity entity table model =
 
     else
         let
-            browser =
+            ( browser1, effects1 ) =
                 Browser.showEntity entity model.browser
 
-            ( browser2, effects ) =
+            ( browser2, effects2 ) =
                 table
-                    |> Maybe.map (\t -> Browser.showEntityTable t browser)
-                    |> Maybe.withDefault (n browser)
+                    |> Maybe.map (\t -> Browser.showEntityTable t browser1)
+                    |> Maybe.withDefault (n browser1)
 
             newmodel =
                 deselect model
@@ -2749,7 +2756,7 @@ selectEntity entity table model =
             , layers =
                 Layer.updateEntity entity.id (\e -> { e | selected = True }) newmodel.layers
           }
-        , effects
+        , effects1 ++ effects2
         )
 
 

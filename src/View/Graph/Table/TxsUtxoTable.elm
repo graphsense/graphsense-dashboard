@@ -21,7 +21,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.TxUtxo
 init =
-    Init.Graph.Table.init filter "Transaction"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.TxUtxo -> Bool
@@ -73,6 +73,7 @@ config vc coinCode =
                                 { currency = coinCode
                                 , txHash = data.txHash
                                 , table = Nothing
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -82,8 +83,8 @@ config vc coinCode =
                 )
             , T.intColumn vc titleNoInputs .noInputs
             , T.intColumn vc titleNoOutputs .noOutputs
-            , T.valueColumn vc coinCode titleTotalInput .totalInput
-            , T.valueColumn vc coinCode titleTotalOutput .totalOutput
+            , T.valueColumn vc (\_ -> coinCode) titleTotalInput .totalInput
+            , T.valueColumn vc (\_ -> coinCode) titleTotalOutput .totalOutput
             ]
         , customizations = customizations vc
         }

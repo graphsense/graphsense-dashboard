@@ -193,7 +193,7 @@ resultLineToHtml vc title asLink resultLine =
                     )
 
                 Tx a ->
-                    ( Route.txRoute { currency = currency, txHash = a, table = Nothing }
+                    ( Route.txRoute { currency = currency, txHash = a, table = Nothing, tokenTxId = Nothing }
                     , FontAwesome.exchangeAlt
                     , Util.View.truncate 50 a
                     )

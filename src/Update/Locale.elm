@@ -1,5 +1,6 @@
 module Update.Locale exposing (..)
 
+import Api.Data
 import DateFormat.Language
 import DateFormat.Relative
 import Dict
@@ -127,3 +128,8 @@ changeCurrency curr model =
                 fiat ->
                     Fiat fiat
     }
+
+
+supportedTokens : Api.Data.TokenConfigs -> Model -> Model
+supportedTokens configs model =
+    { model | supportedTokens = Just configs }

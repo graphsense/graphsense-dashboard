@@ -744,6 +744,11 @@ s_contentType value__ record__ =
     { record__ | contentType = value__ }
 
 
+s_contents : a -> { b | contents : a } -> { b | contents : a }
+s_contents value__ record__ =
+    { record__ | contents = value__ }
+
+
 s_context : a -> { b | context : a } -> { b | context : a }
 s_context value__ record__ =
     { record__ | context = value__ }
@@ -757,6 +762,11 @@ s_contextMenu value__ record__ =
 s_contextStack : a -> { b | contextStack : a } -> { b | contextStack : a }
 s_contextStack value__ record__ =
     { record__ | contextStack = value__ }
+
+
+s_contractCreation : a -> { b | contractCreation : a } -> { b | contractCreation : a }
+s_contractCreation value__ record__ =
+    { record__ | contractCreation = value__ }
 
 
 s_coords : a -> { b | coords : a } -> { b | coords : a }
@@ -802,6 +812,11 @@ s_currencyBackground value__ record__ =
 s_currencyBackgroundPath : a -> { b | currencyBackgroundPath : a } -> { b | currencyBackgroundPath : a }
 s_currencyBackgroundPath value__ record__ =
     { record__ | currencyBackgroundPath = value__ }
+
+
+s_currencyCell : a -> { b | currencyCell : a } -> { b | currencyCell : a }
+s_currencyCell value__ record__ =
+    { record__ | currencyCell = value__ }
 
 
 s_currencyHeading : a -> { b | currencyHeading : a } -> { b | currencyHeading : a }
@@ -1434,6 +1449,11 @@ s_firstWeight value__ record__ =
     { record__ | firstWeight = value__ }
 
 
+s_flag : a -> { b | flag : a } -> { b | flag : a }
+s_flag value__ record__ =
+    { record__ | flag = value__ }
+
+
 s_flagsGap : a -> { b | flagsGap : a } -> { b | flagsGap : a }
 s_flagsGap value__ record__ =
     { record__ | flagsGap = value__ }
@@ -1649,14 +1669,9 @@ s_graph value__ record__ =
     { record__ | graph = value__ }
 
 
-s_graphRoot : a -> { b | graphRoot : a } -> { b | graphRoot : a }
-s_graphRoot value__ record__ =
-    { record__ | graphRoot = value__ }
-
-
-s_graphqlUrl : a -> { b | graphqlUrl : a } -> { b | graphqlUrl : a }
-s_graphqlUrl value__ record__ =
-    { record__ | graphqlUrl = value__ }
+s_graphNavbarLeft : a -> { b | graphNavbarLeft : a } -> { b | graphNavbarLeft : a }
+s_graphNavbarLeft value__ record__ =
+    { record__ | graphNavbarLeft = value__ }
 
 
 s_green : a -> { b | green : a } -> { b | green : a }
@@ -2079,6 +2094,11 @@ s_isClusterDefiner value__ record__ =
     { record__ | isClusterDefiner = value__ }
 
 
+s_isContract : a -> { b | isContract : a } -> { b | isContract : a }
+s_isContract value__ record__ =
+    { record__ | isContract = value__ }
+
+
 s_isDirty : a -> { b | isDirty : a } -> { b | isDirty : a }
 s_isDirty value__ record__ =
     { record__ | isDirty = value__ }
@@ -2464,6 +2484,11 @@ s_listHtmlId value__ record__ =
     { record__ | listHtmlId = value__ }
 
 
+s_listItem : a -> { b | listItem : a } -> { b | listItem : a }
+s_listItem value__ record__ =
+    { record__ | listItem = value__ }
+
+
 s_listStylePosition : a -> { b | listStylePosition : a } -> { b | listStylePosition : a }
 s_listStylePosition value__ record__ =
     { record__ | listStylePosition = value__ }
@@ -2532,6 +2557,11 @@ s_logo value__ record__ =
 s_logo_lightmode : a -> { b | logo_lightmode : a } -> { b | logo_lightmode : a }
 s_logo_lightmode value__ record__ =
     { record__ | logo_lightmode = value__ }
+
+
+s_logout : a -> { b | logout : a } -> { b | logout : a }
+s_logout value__ record__ =
+    { record__ | logout = value__ }
 
 
 s_logoutButton : a -> { b | logoutButton : a } -> { b | logoutButton : a }
@@ -3119,6 +3149,11 @@ s_onNotAsked value__ record__ =
     { record__ | onNotAsked = value__ }
 
 
+s_onOk : a -> { b | onOk : a } -> { b | onOk : a }
+s_onOk value__ record__ =
+    { record__ | onOk = value__ }
+
+
 s_onRequestComplete : a -> { b | onRequestComplete : a } -> { b | onRequestComplete : a }
 s_onRequestComplete value__ record__ =
     { record__ | onRequestComplete = value__ }
@@ -3324,6 +3359,11 @@ s_palette value__ record__ =
     { record__ | palette = value__ }
 
 
+s_paragraph : a -> { b | paragraph : a } -> { b | paragraph : a }
+s_paragraph value__ record__ =
+    { record__ | paragraph = value__ }
+
+
 s_param0 : a -> { b | param0 : a } -> { b | param0 : a }
 s_param0 value__ record__ =
     { record__ | param0 = value__ }
@@ -3412,6 +3452,11 @@ s_paths value__ record__ =
 s_pattern : a -> { b | pattern : a } -> { b | pattern : a }
 s_pattern value__ record__ =
     { record__ | pattern = value__ }
+
+
+s_pegCurrency : a -> { b | pegCurrency : a } -> { b | pegCurrency : a }
+s_pegCurrency value__ record__ =
+    { record__ | pegCurrency = value__ }
 
 
 s_ph : a -> { b | ph : a } -> { b | ph : a }
@@ -4054,11 +4099,6 @@ s_separator value__ record__ =
     { record__ | separator = value__ }
 
 
-s_serviceProvidersUrl : a -> { b | serviceProvidersUrl : a } -> { b | serviceProvidersUrl : a }
-s_serviceProvidersUrl value__ record__ =
-    { record__ | serviceProvidersUrl = value__ }
-
-
 s_set : a -> { b | set : a } -> { b | set : a }
 s_set value__ record__ =
     { record__ | set = value__ }
@@ -4339,6 +4379,11 @@ s_suffix value__ record__ =
     { record__ | suffix = value__ }
 
 
+s_supportedTokens : a -> { b | supportedTokens : a } -> { b | supportedTokens : a }
+s_supportedTokens value__ record__ =
+    { record__ | supportedTokens = value__ }
+
+
 s_svgRoot : a -> { b | svgRoot : a } -> { b | svgRoot : a }
 s_svgRoot value__ record__ =
     { record__ | svgRoot = value__ }
@@ -4484,11 +4529,6 @@ s_tags value__ record__ =
     { record__ | tags = value__ }
 
 
-s_tagsFlag : a -> { b | tagsFlag : a } -> { b | tagsFlag : a }
-s_tagsFlag value__ record__ =
-    { record__ | tagsFlag = value__ }
-
-
 s_tail : a -> { b | tail : a } -> { b | tail : a }
 s_tail value__ record__ =
     { record__ | tail = value__ }
@@ -4614,6 +4654,11 @@ s_tickLength value__ record__ =
     { record__ | tickLength = value__ }
 
 
+s_ticker : a -> { b | ticker : a } -> { b | ticker : a }
+s_ticker value__ record__ =
+    { record__ | ticker = value__ }
+
+
 s_time : a -> { b | time : a } -> { b | time : a }
 s_time value__ record__ =
     { record__ | time = value__ }
@@ -4699,6 +4744,26 @@ s_toWeekdayName value__ record__ =
     { record__ | toWeekdayName = value__ }
 
 
+s_tokenBalances : a -> { b | tokenBalances : a } -> { b | tokenBalances : a }
+s_tokenBalances value__ record__ =
+    { record__ | tokenBalances = value__ }
+
+
+s_tokenConfigs : a -> { b | tokenConfigs : a } -> { b | tokenConfigs : a }
+s_tokenConfigs value__ record__ =
+    { record__ | tokenConfigs = value__ }
+
+
+s_tokenTxId : a -> { b | tokenTxId : a } -> { b | tokenTxId : a }
+s_tokenTxId value__ record__ =
+    { record__ | tokenTxId = value__ }
+
+
+s_tokenValues : a -> { b | tokenValues : a } -> { b | tokenValues : a }
+s_tokenValues value__ record__ =
+    { record__ | tokenValues = value__ }
+
+
 s_tool : a -> { b | tool : a } -> { b | tool : a }
 s_tool value__ record__ =
     { record__ | tool = value__ }
@@ -4757,6 +4822,16 @@ s_totalReceived value__ record__ =
 s_totalSpent : a -> { b | totalSpent : a } -> { b | totalSpent : a }
 s_totalSpent value__ record__ =
     { record__ | totalSpent = value__ }
+
+
+s_totalTokensReceived : a -> { b | totalTokensReceived : a } -> { b | totalTokensReceived : a }
+s_totalTokensReceived value__ record__ =
+    { record__ | totalTokensReceived = value__ }
+
+
+s_totalTokensSpent : a -> { b | totalTokensSpent : a } -> { b | totalTokensSpent : a }
+s_totalTokensSpent value__ record__ =
+    { record__ | totalTokensSpent = value__ }
 
 
 s_touchAction : a -> { b | touchAction : a } -> { b | touchAction : a }
@@ -4962,6 +5037,11 @@ s_userTag value__ record__ =
 s_value : a -> { b | value : a } -> { b | value : a }
 s_value value__ record__ =
     { record__ | value = value__ }
+
+
+s_valueCell : a -> { b | valueCell : a } -> { b | valueCell : a }
+s_valueCell value__ record__ =
+    { record__ | valueCell = value__ }
 
 
 s_valuesCell : a -> { b | valuesCell : a } -> { b | valuesCell : a }

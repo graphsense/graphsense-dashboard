@@ -78,7 +78,7 @@ config vc isOutgoing coinCode =
                                 |> text
                     ]
                 )
-            , T.valueColumn vc coinCode titleValue .value
+            , T.valueColumn vc (\_ -> coinCode) titleValue .value
             ]
         , customizations = customizations vc
         }

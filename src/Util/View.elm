@@ -139,3 +139,14 @@ switchInternal showOnColor vc attrs title =
             |> List.singleton
             |> span [ Css.switchLabel vc |> css ]
         ]
+
+
+p : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
+p vc attrs =
+    Html.Styled.p
+        ((Css.paragraph vc |> css) :: attrs)
+
+
+addDot : String -> String
+addDot s =
+    s ++ "."

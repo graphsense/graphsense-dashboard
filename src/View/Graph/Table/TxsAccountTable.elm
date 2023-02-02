@@ -7,6 +7,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Model.Currency
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
@@ -21,7 +22,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.TxAccount
 init =
-    Init.Graph.Table.init filter "Transaction"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.TxAccount -> Bool
@@ -30,6 +31,7 @@ filter f a =
         || String.contains f (String.fromInt a.height)
         || String.contains f a.fromAddress
         || String.contains f a.toAddress
+        || String.contains (String.toLower f) (String.toLower a.currency)
 
 
 titleTx : String
@@ -76,6 +78,7 @@ config vc coinCode =
                                 { currency = coinCode
                                 , txHash = data.txHash
                                 , table = Nothing
+                                , tokenTxId = data.tokenTxId
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -83,12 +86,25 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc coinCode "Value" .value
-            , T.intColumn vc titleHeight .height
-            , T.timestampColumn vc titleTimestamp .timestamp
-            , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
-            , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
             ]
+                ++ [ (if vc.locale.currency /= Model.Currency.Coin then
+                        T.valueColumn
+
+                      else
+                        T.valueColumnWithoutCode
+                     )
+                        vc
+                        .currency
+                        "Value"
+                        .value
+                   ]
+                ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
+                   , T.timestampColumn vc titleTimestamp .timestamp
+                   , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   , T.intColumn vc titleHeight .height
+                   , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
+                   ]
         , customizations = customizations vc
         }
 
@@ -100,9 +116,11 @@ n s =
 prepareCSV : Api.Data.TxAccount -> List ( ( String, List String ), String )
 prepareCSV row =
     [ ( n "tx_hash", Util.Csv.string row.txHash )
+    , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
         ++ Util.Csv.values "value" row.value
-        ++ [ ( n "height", Util.Csv.int row.height )
+        ++ [ ( n "currency", Util.Csv.string row.currency )
+           , ( n "height", Util.Csv.int row.height )
            , ( n "timestamp", Util.Csv.int row.timestamp )
            , ( n "sending_address", Util.Csv.string row.fromAddress )
            , ( n "receiving_address", Util.Csv.string row.toAddress )

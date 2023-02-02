@@ -22,6 +22,7 @@ import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Model.Locale as Locale
 import Model.Search as Search
+import Model.Tx as T
 import Msg.Graph exposing (Msg(..))
 import Msg.Search as Search
 import RecordSetter exposing (..)
@@ -68,19 +69,28 @@ loadingBlock id model =
     }
 
 
-loadingTxAccount : { currency : String, txHash : String } -> Model -> ( Model, List Effect )
-loadingTxAccount id model =
+loadingTxAccount : T.TxAccount -> String -> Model -> ( Model, List Effect )
+loadingTxAccount id accountCurrency model =
     let
-        ( type_, eff ) =
-            ( TxAccount (Loading id.currency id.txHash)
-            , [ GetTxEffect
-                    { txHash = id.txHash
-                    , currency = id.currency
-                    }
-                    BrowserGotTx
+        return table =
+            ( TxAccount (Loading id.currency ( id.txHash, id.tokenTxId )) accountCurrency table
+            , [ GetTxEffect id
+                    (BrowserGotTx accountCurrency)
                     |> ApiEffect
               ]
             )
+
+        ( type_, eff ) =
+            case model.type_ of
+                TxAccount loadable _ table ->
+                    if matchTxAccountId id loadable then
+                        ( model.type_, [] )
+
+                    else
+                        return table
+
+                _ ->
+                    return Nothing
     in
     ( { model
         | type_ = type_
@@ -98,8 +108,9 @@ loadingTxUtxo id model =
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
+                    , tokenTxId = Nothing
                     }
-                    BrowserGotTx
+                    (BrowserGotTx id.currency)
                     |> ApiEffect
               ]
             )
@@ -240,7 +251,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressIncomingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init False |> AddressIncomingNeighborsTable |> Just
+            ( AddressNeighborsTable.init |> AddressIncomingNeighborsTable |> Just
             , [ getAddressNeighborsEffect
                     False
                     { currency = currency
@@ -254,7 +265,7 @@ createAddressTable route t currency address =
             n t
 
         ( Route.AddressOutgoingNeighborsTable, _ ) ->
-            ( AddressNeighborsTable.init True |> AddressOutgoingNeighborsTable |> Just
+            ( AddressNeighborsTable.init |> AddressOutgoingNeighborsTable |> Just
             , [ getAddressNeighborsEffect
                     True
                     { currency = currency
@@ -438,7 +449,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityIncomingNeighborsTable, _ ) ->
-            ( EntityNeighborsTable.init False |> EntityIncomingNeighborsTable |> Just
+            ( EntityNeighborsTable.init |> EntityIncomingNeighborsTable |> Just
             , [ getEntityNeighborsEffect
                     False
                     { currency = currency
@@ -452,7 +463,7 @@ createEntityTable route t currency entity =
             n t
 
         ( Route.EntityOutgoingNeighborsTable, _ ) ->
-            ( EntityNeighborsTable.init False |> EntityOutgoingNeighborsTable |> Just
+            ( EntityNeighborsTable.init |> EntityOutgoingNeighborsTable |> Just
             , [ getEntityNeighborsEffect
                     True
                     { currency = currency
@@ -529,6 +540,55 @@ createBlockTable route t currency block =
                         Nothing
                   ]
                 )
+
+
+showTxAccountTable : Route.TxTable -> Model -> ( Model, List Effect )
+showTxAccountTable route model =
+    case model.type_ of
+        TxAccount loadable accountCurrency t ->
+            let
+                ( currency, txHash, tx ) =
+                    case loadable of
+                        Loading curr ( tx_, _ ) ->
+                            ( curr, tx_, Nothing )
+
+                        Loaded a ->
+                            ( a.currency, a.txHash, Just a )
+            in
+            createTxAccountTable route t currency txHash
+                |> mapFirst (TxAccount loadable accountCurrency)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createTxAccountTable : Route.TxTable -> Maybe TxAccountTable -> String -> String -> ( Maybe TxAccountTable, List Effect )
+createTxAccountTable route t currency txHash =
+    case ( route, t ) of
+        ( Route.TokenTxsTable, Just (TokenTxsTable _) ) ->
+            n t
+
+        ( Route.TokenTxsTable, Nothing ) ->
+            if String.toLower currency == "eth" then
+                ( TxsAccountTable.init |> TokenTxsTable |> Just
+                , [ getTokenTxsEffect
+                        { currency = currency
+                        , txHash = txHash
+                        }
+                  ]
+                )
+
+            else
+                n t
+
+        ( Route.TxInputsTable, _ ) ->
+            n t
+
+        ( Route.TxOutputsTable, _ ) ->
+            n t
 
 
 showTxUtxoTable : Route.TxTable -> Model -> ( Model, List Effect )
@@ -611,6 +671,9 @@ createTxUtxoTable route t currency txHash tx =
                     , []
                     )
 
+        ( Route.TokenTxsTable, _ ) ->
+            n t
+
 
 show : Model -> Model
 show model =
@@ -619,7 +682,7 @@ show model =
     }
 
 
-showEntity : Entity.Entity -> Model -> Model
+showEntity : Entity.Entity -> Model -> ( Model, List Effect )
 showEntity entity model =
     show model
         |> s_type_
@@ -640,9 +703,10 @@ showEntity entity model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
-showAddress : Address.Address -> Model -> Model
+showAddress : Address.Address -> Model -> ( Model, List Effect )
 showAddress address model =
     show model
         |> s_type_
@@ -663,10 +727,11 @@ showAddress address model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
-showTx : Api.Data.Tx -> Model -> Model
-showTx data model =
+showTx : Api.Data.Tx -> String -> Model -> ( Model, List Effect )
+showTx data accountCurrency model =
     show model
         |> s_type_
             (case data of
@@ -675,10 +740,11 @@ showTx data model =
                         case model.type_ of
                             TxUtxo loadable table ->
                                 if
-                                    loadableTxId loadable
-                                        == tx.txHash
-                                        && loadableCurrency loadable
-                                        == tx.currency
+                                    matchTxId
+                                        { currency = tx.currency
+                                        , txHash = tx.txHash
+                                        }
+                                        loadable
                                 then
                                     table
 
@@ -689,11 +755,29 @@ showTx data model =
                                 Nothing
 
                 Api.Data.TxTxAccount tx ->
-                    TxAccount (Loaded tx)
+                    TxAccount (Loaded tx) accountCurrency <|
+                        case model.type_ of
+                            TxAccount loadable _ table ->
+                                if
+                                    matchTxAccountId
+                                        { currency = tx.currency
+                                        , txHash = tx.txHash
+                                        , tokenTxId = tx.tokenTxId
+                                        }
+                                        loadable
+                                then
+                                    table
+
+                                else
+                                    Nothing
+
+                            _ ->
+                                Nothing
             )
+        |> getBrowserElement
 
 
-showBlock : Api.Data.Block -> Model -> Model
+showBlock : Api.Data.Block -> Model -> ( Model, List Effect )
 showBlock block model =
     show model
         |> s_type_
@@ -714,6 +798,7 @@ showBlock block model =
                     _ ->
                         Nothing
             )
+        |> getBrowserElement
 
 
 showBlockTxsUtxo : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
@@ -778,6 +863,35 @@ showBlockTxsAccount id data model =
                             |> BlockTxsAccountTable
                             |> Just
                             |> Block loadable
+                }
+
+        _ ->
+            model
+
+
+showTokenTxs : T.Tx -> List Api.Data.TxAccount -> Model -> Model
+showTokenTxs id data model =
+    case model.type_ of
+        TxAccount loadable accountCurrency table ->
+            if
+                matchTxAccountId
+                    { currency = id.currency
+                    , txHash = id.txHash
+                    , tokenTxId = Nothing
+                    }
+                    loadable
+                    |> not
+            then
+                model
+
+            else
+                { model
+                    | type_ =
+                        TxsAccountTable.init
+                            |> appendData Nothing data
+                            |> TokenTxsTable
+                            |> Just
+                            |> TxAccount loadable accountCurrency
                 }
 
         _ ->
@@ -1162,7 +1276,7 @@ showAddressNeighbors id isOutgoing data model =
                                         |> Just
 
                                 _ ->
-                                    AddressNeighborsTable.init isOutgoing
+                                    AddressNeighborsTable.init
                                         |> s_data data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
@@ -1201,7 +1315,7 @@ showEntityNeighbors id isOutgoing data model =
                                         |> Just
 
                                 _ ->
-                                    EntityNeighborsTable.init isOutgoing
+                                    EntityNeighborsTable.init
                                         |> s_data data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
@@ -1416,6 +1530,16 @@ matchTxId { currency, txHash } loadable =
             a.currency == currency && a.txHash == txHash
 
 
+matchTxAccountId : T.TxAccount -> Loadable ( String, Maybe Int ) { a | currency : String, txHash : String, tokenTxId : Maybe Int } -> Bool
+matchTxAccountId { currency, txHash, tokenTxId } loadable =
+    case loadable of
+        Loading c ( id, ttid ) ->
+            c == currency && id == txHash && ttid == tokenTxId
+
+        Loaded a ->
+            a.currency == currency && a.txHash == txHash && a.tokenTxId == tokenTxId
+
+
 matchBlockId : { currency : String, block : Int } -> Loadable Int Api.Data.Block -> Bool
 matchBlockId { currency, block } loadable =
     case loadable of
@@ -1514,8 +1638,16 @@ tableNewState state model =
                             Nothing ->
                                 table
 
-                TxAccount _ ->
-                    model.type_
+                TxAccount loadable accountCurrency table ->
+                    TxAccount loadable accountCurrency <|
+                        case table of
+                            Just (TokenTxsTable t) ->
+                                { t | state = state }
+                                    |> TokenTxsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
 
                 None ->
                     model.type_
@@ -1710,7 +1842,7 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                     TxUtxo _ _ ->
                         ( model.type_, [] )
 
-                    TxAccount _ ->
+                    TxAccount loadable accountCurrency table ->
                         ( model.type_, [] )
 
                     Label label t ->
@@ -1984,6 +2116,16 @@ getBlockTxsEffect { currency, block } nextpage =
         |> ApiEffect
 
 
+getTokenTxsEffect : T.Tx -> Effect
+getTokenTxsEffect { currency, txHash } =
+    GetTokenTxsEffect
+        { currency = currency
+        , txHash = txHash
+        }
+        (BrowserGotTokenTxs { currency = currency, txHash = txHash })
+        |> ApiEffect
+
+
 filterTable : Maybe String -> Model -> Model
 filterTable filter model =
     { model
@@ -2072,8 +2214,16 @@ filterTable filter model =
                             Nothing ->
                                 table
 
-                TxAccount _ ->
-                    model.type_
+                TxAccount loadable accountCurrency table ->
+                    TxAccount loadable accountCurrency <|
+                        case table of
+                            Just (TokenTxsTable t) ->
+                                applyFilter filter t
+                                    |> TokenTxsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
 
                 None ->
                     model.type_
@@ -2164,6 +2314,10 @@ tableAsCSV locale gc { type_ } =
         loadableTxToList t =
             loadableTx t
                 |> (\{ txHash, currency } -> [ txHash, String.toUpper currency ])
+
+        loadableTxAccountToList t =
+            loadableTxAccount t
+                |> (\{ txHash, currency } -> [ txHash, String.toUpper currency ])
     in
     case type_ of
         Address loadable table ->
@@ -2184,12 +2338,12 @@ tableAsCSV locale gc { type_ } =
                 Just (AddressIncomingNeighborsTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Incoming neighbors of address {0} ({1})"
-                        |> asCsv (AddressNeighborsTable.prepareCSV False) t
+                        |> asCsv (AddressNeighborsTable.prepareCSV locale False (loadableAddressCurrency loadable)) t
 
                 Just (AddressOutgoingNeighborsTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
-                        |> asCsv (AddressNeighborsTable.prepareCSV True) t
+                        |> asCsv (AddressNeighborsTable.prepareCSV locale True (loadableAddressCurrency loadable)) t
 
                 Nothing ->
                     Nothing
@@ -2217,12 +2371,12 @@ tableAsCSV locale gc { type_ } =
                 Just (EntityIncomingNeighborsTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Incoming neighbors of entity {0} ({1})"
-                        |> asCsv (EntityNeighborsTable.prepareCSV False) t
+                        |> asCsv (EntityNeighborsTable.prepareCSV locale False (loadableEntityCurrency loadable)) t
 
                 Just (EntityOutgoingNeighborsTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
-                        |> asCsv (EntityNeighborsTable.prepareCSV True) t
+                        |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
 
                 Nothing ->
                     Nothing
@@ -2242,8 +2396,15 @@ tableAsCSV locale gc { type_ } =
                 Nothing ->
                     Nothing
 
-        TxAccount _ ->
-            Nothing
+        TxAccount loadable accountCurrency table ->
+            case table of
+                Just (TokenTxsTable t) ->
+                    loadableTxAccountToList loadable
+                        |> Locale.interpolated locale "Token transactions of {0} ({1})"
+                        |> asCsv TxsAccountTable.prepareCSV t
+
+                Nothing ->
+                    Nothing
 
         None ->
             Nothing
@@ -2313,3 +2474,10 @@ tableAsCSV locale gc { type_ } =
 
         Plugin ->
             Nothing
+
+
+getBrowserElement : Model -> ( Model, List Effect )
+getBrowserElement model =
+    ( model
+    , [ GetBrowserElementEffect ]
+    )

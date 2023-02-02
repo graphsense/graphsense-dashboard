@@ -9,19 +9,9 @@ import Model.Graph.Tool as Tool
 import Util.Css
 
 
-root : Config -> List Style
-root vc =
-    [ displayFlex
-    , flexDirection column
-    , pct 100 |> height
-    ]
-        ++ vc.theme.graph.root
-
-
 navbar : Config -> List Style
 navbar vc =
-    [ Util.Css.zIndexMain
-    , displayFlex
+    [ displayFlex
     , flexDirection row
     ]
         ++ vc.theme.graph.navbar vc.lightmode
@@ -52,15 +42,6 @@ tool : Config -> Tool.Status -> List Style
 tool vc status =
     cursor pointer
         :: vc.theme.graph.tool vc.lightmode status
-
-
-graphRoot : Config -> List Style
-graphRoot vc =
-    [ overflow hidden
-    , position relative
-    , pct 100 |> height
-    ]
-        ++ vc.theme.graph.graphRoot
 
 
 svgRoot : Config -> List Style
@@ -106,9 +87,9 @@ abuseFlag vc =
     vc.theme.graph.abuseFlag vc.lightmode
 
 
-tagsFlag : Config -> List Style
-tagsFlag vc =
-    vc.theme.graph.tagsFlag vc.lightmode
+flag : Config -> List Style
+flag vc =
+    vc.theme.graph.flag vc.lightmode
 
 
 addressLabel : Config -> List Style
@@ -306,7 +287,7 @@ highlightRoot vc =
 highlightColor : Config -> Bool -> List Style
 highlightColor vc selected =
     cursor pointer
-        :: vc.theme.graph.highlightColor selected
+        :: vc.theme.graph.highlightColor vc.lightmode selected
 
 
 highlightTitle : Config -> List Style

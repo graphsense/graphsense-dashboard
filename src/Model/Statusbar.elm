@@ -30,3 +30,8 @@ type alias Model =
     , visible : Bool
     , lastBlocks : List ( String, Int )
     }
+
+
+getMessage : String -> Model -> Maybe ( String, List String )
+getMessage key { messages } =
+    Dict.get key messages

@@ -4,11 +4,12 @@ import Config.View exposing (Config)
 import Css exposing (..)
 
 
-root : Config -> List Style
-root vc =
+root : Config -> Float -> List Style
+root vc width =
     position absolute
         :: height (px 0)
         :: (zIndex <| int 50)
+        :: (maxWidth <| px width)
         :: vc.theme.browser.root
 
 
@@ -112,3 +113,14 @@ propertyBoxTableLink vc active =
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.browser.loadingSpinner
+
+
+valueCell : Config -> List Style
+valueCell vc =
+    whiteSpace noWrap
+        :: vc.theme.browser.valueCell
+
+
+currencyCell : Config -> List Style
+currencyCell vc =
+    vc.theme.browser.currencyCell

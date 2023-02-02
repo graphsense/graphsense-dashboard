@@ -26,6 +26,7 @@ init { locale } =
       , currency = Coin
       , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
       , unitToString = Locale.English.unitToString
+      , supportedTokens = Nothing
       }
         |> switch locale
     , [ Effect.Locale.getTranslationEffect locale

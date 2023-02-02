@@ -10,7 +10,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
-import Util.View
+import Util.View exposing (addDot)
 import View.Locale as Locale
 
 
@@ -25,6 +25,9 @@ view vc model =
 
             Options conf ->
                 options_ vc conf
+
+            Error conf ->
+                error vc conf
         ]
 
 
@@ -118,3 +121,96 @@ body vc { onSubmit } =
         [ Css.body vc |> css
         , Html.Styled.Events.onSubmit onSubmit
         ]
+
+
+error : Config -> ErrorConfig msg -> Html msg
+error vc err =
+    let
+        title =
+            case err.type_ of
+                AddressNotFound addrs ->
+                    if List.length addrs > 1 then
+                        "Addresses not found"
+
+                    else
+                        "Address not found"
+
+        take =
+            3
+
+        details =
+            case err.type_ of
+                AddressNotFound addrs ->
+                    [ addrs
+                        |> List.take take
+                        |> List.map (text >> List.singleton >> li [ Css.View.listItem vc |> css ])
+                        |> (\lis ->
+                                if List.length addrs > take then
+                                    (List.length addrs - take)
+                                        |> String.fromInt
+                                        |> List.singleton
+                                        |> Locale.interpolated vc.locale "... and {0} more"
+                                        |> text
+                                        |> List.singleton
+                                        |> li []
+                                        |> List.singleton
+                                        |> (++) lis
+
+                                else
+                                    lis
+                           )
+                        |> ul []
+                        |> List.singleton
+                        |> Util.View.p vc []
+                    , div
+                        []
+                        [ Locale.string vc.locale "There could be various reasons"
+                            |> (\s -> s ++ ":")
+                            |> text
+                            |> List.singleton
+                            |> Util.View.p vc []
+                        , ul
+                            []
+                            [ li [ Css.View.listItem vc |> css ]
+                                [ (if List.length addrs > 1 then
+                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain."
+
+                                   else
+                                    "There are no transactions associated with this address and it is therefore not found on the blockchain."
+                                  )
+                                    |> Locale.string vc.locale
+                                    |> addDot
+                                    |> text
+                                ]
+                            , li
+                                [ Css.View.listItem vc |> css ]
+                                [ (if List.length addrs > 1 then
+                                    "They are possibly not yet in our database"
+
+                                   else
+                                    "It is possibly not yet in our database"
+                                  )
+                                    |> Locale.string vc.locale
+                                    |> addDot
+                                    |> text
+                                ]
+                            , li [ Css.View.listItem vc |> css ]
+                                [ Locale.string vc.locale "There are typos"
+                                    |> addDot
+                                    |> text
+                                ]
+                            ]
+                            |> List.singleton
+                            |> Util.View.p vc []
+                        ]
+                    ]
+    in
+    part vc title <|
+        details
+            ++ [ button
+                    [ Css.Button.primary vc |> css
+                    , onClick err.onOk
+                    ]
+                    [ Locale.string vc.locale "OK" |> text
+                    ]
+               ]

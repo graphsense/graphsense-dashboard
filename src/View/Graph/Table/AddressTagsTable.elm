@@ -68,7 +68,6 @@ config vc gc bestAddressTag entityId entityHasAddress =
                         ]
                     ]
                 )
-            , T.stringColumn vc "Entity" (.entity >> String.fromInt)
             , T.htmlColumn vc
                 "Label"
                 .label

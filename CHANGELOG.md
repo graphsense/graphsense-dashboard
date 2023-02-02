@@ -3,6 +3,49 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [23.01] - Unreleased
+### Added
+- add plugin logout hook
+- display error popup on address not found
+- allow decoding of 0.4.5 and 0.4.4 gs files
+
+### Changes
+- make all tables initially unsorted (leverage responses order)
+- hide table toolbar if no tools
+- fix browser and footer transition
+- lighten default node color
+- fix alignment of new entities with anchors
+- fix syncing links between entities on adding entities via url
+- refresh table height on browser content load
+- fix url navigation after invalid url, [#366](https://github.com/graphsense/graphsense-dashboard/issues/366)
+- remove entity column from address tags table, [#306](https://github.com/graphsense/graphsense-dashboard/issues/306)
+- fix highlighter layout
+- improve node coloring in lightmode, [#348](https://github.com/graphsense/graphsense-dashboard/issues/348)
+- improve proprietary tag label position
+- improve highlighter, underline selected color, [#303](https://github.com/graphsense/graphsense-dashboard/issues/303)
+- close highlighter by clicking somewhere, [#304](https://github.com/graphsense/graphsense-dashboard/issues/304)
+- fix displaced labels in safari, [#361](https://github.com/graphsense/graphsense-dashboard/issues/361)
+- fix [#367](https://github.com/graphsense/graphsense-dashboard/issues/367)
+- improve messages
+- fix link label background alignment
+- rename neighbors column for account coins
+- show token values in entity prop box
+- disambiguate token currencies when converted
+- display tokens on edge labels
+- sticky table headers
+- improve token values display in neighbors column, hide 0 values
+- display tokens in neighbor tables
+- show token txs table, create correct urls for links
+- align total received/balance values
+- display tokens in tx account table
+- display tokens values in address prop box, display smart contract flag
+- improve documentation of plugin development and hooks
+- load address connections on deserializing
+- dont jump to graph root url on deserializing
+- allow plugins to show dialogs
+- show "proprietary tag" label in tags table
+
+
 ## [22.11] - 2022-11-25
 ### Changes
 - have address tags table initially unsorted, so server side sorting is effective

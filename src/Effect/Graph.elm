@@ -20,7 +20,6 @@ import Task
 
 type Effect
     = NavPushRouteEffect Route
-    | GetSvgElementEffect
     | GetBrowserElementEffect
     | PluginEffect (Cmd Plugin.Msg)
     | InternalGraphAddedAddressesEffect (Set AddressId)
@@ -37,10 +36,6 @@ perform eff =
         -- managed in Effect.elm
         NavPushRouteEffect str ->
             Cmd.none
-
-        GetSvgElementEffect ->
-            Browser.Dom.getElement "graph"
-                |> Task.attempt BrowserGotSvgElement
 
         GetBrowserElementEffect ->
             Browser.Dom.getElement "propertyBox"

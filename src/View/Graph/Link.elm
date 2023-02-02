@@ -5,6 +5,7 @@ import Config.Graph as Graph exposing (expandHandleWidth, linkLabelHeight, txMax
 import Config.View as View
 import Css exposing (..)
 import Css.Graph
+import Dict
 import Init.Graph.Id as Id
 import Json.Decode
 import List.Extra
@@ -39,7 +40,7 @@ type alias Options =
     , sy : Float
     , tx : Float
     , ty : Float
-    , label : String
+    , label : List String
     , amount : Float
     , hovered : Bool
     , selected : Bool
@@ -269,7 +270,7 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
             (sx + tx) / 2
 
         ly =
-            (sy + ty) / 2 + Graph.linkLabelHeight / 3
+            (sy + ty) / 2 
     in
     g
         [ Svg.onMouseOver onMouseOver
@@ -323,38 +324,56 @@ drawLink { selected, color, hovered, sx, sy, tx, ty, amount, label, onMouseOver,
         ]
 
 
-drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> Bool -> Maybe Color.Color -> String -> Svg Msg
+drawLabel : View.Config -> Graph.Config -> Float -> Float -> Bool -> Bool -> Maybe Color.Color -> List String -> Svg Msg
 drawLabel vc gc x y hovered selected color lbl =
     let
+        len =
+            lbl
+                |> List.map String.length
+                |> List.maximum
+                |> Maybe.withDefault 0
+
         width =
-            toFloat (String.length lbl) * linkLabelHeight / 1.5
+            toFloat len * linkLabelHeight / 1.5
+
+        lineHeight =
+            linkLabelHeight * 1.2
 
         height =
-            linkLabelHeight * 1.2
+            lineHeight * (toFloat <| List.length lbl)
+
+        rectY =
+            y - height / 2
     in
     g
         []
-        [ rect
+        (rect
             [ String.fromFloat (linkLabelHeight / 2) |> rx
             , String.fromFloat (linkLabelHeight / 2) |> ry
             , x - width / 2 |> String.fromFloat |> Svg.x
-            , y - height * 0.85 |> String.fromFloat |> Svg.y
+            , rectY |> String.fromFloat |> Svg.y
             , String.fromFloat width |> Svg.width
             , String.fromFloat height |> Svg.height
             , Css.Graph.linkLabelBox vc hovered selected |> css
             , class "rectLabel"
             ]
             []
-        , S.text_
-            [ Css.Graph.linkLabel vc hovered selected color
-                |> css
-            , textAnchor "middle"
-            , String.fromFloat x |> Svg.x
-            , String.fromFloat y |> Svg.y
-            ]
-            [ text lbl
-            ]
-        ]
+            :: (lbl
+                    |> List.indexedMap
+                        (\i lb ->
+                            S.text_
+                                [ Css.Graph.linkLabel vc hovered selected color
+                                    |> css
+                                , textAnchor "middle"
+                                , String.fromFloat x |> Svg.x
+                                , (rectY + (toFloat (i + 1) * lineHeight) - 2)
+                                    |> String.fromFloat
+                                    |> Svg.y
+                                ]
+                                [ text lb ]
+                        )
+               )
+        )
 
 
 getLinkAmount : View.Config -> Graph.Config -> Link node -> Float
@@ -374,20 +393,34 @@ getLinkAmount vc gc link =
                         |> Maybe.withDefault 0
 
 
-getLabel : View.Config -> Graph.Config -> String -> Link node -> String
+getLabel : View.Config -> Graph.Config -> String -> Link node -> List String
 getLabel vc gc currency link =
     case link.link of
         Link.PlaceholderLinkData ->
-            ""
+            []
 
         Link.LinkData li ->
             case gc.txLabelType of
                 Graph.NoTxs ->
                     Locale.int vc.locale li.noTxs
+                        |> List.singleton
 
                 Graph.Value ->
-                    Locale.currencyWithoutCode vc.locale currency li.value
-                        |> (++) "~"
+                    if currency == "eth" then
+                        ( "eth", li.value )
+                            :: (li.tokenValues
+                                    |> Maybe.map Dict.toList
+                                    |> Maybe.withDefault []
+                               )
+                            |> List.map
+                                (\( coinCode, v ) ->
+                                    Locale.tokenCurrency vc.locale coinCode v
+                                )
+
+                    else
+                        Locale.currencyWithoutCode vc.locale currency li.value
+                            |> (++) "~"
+                            |> List.singleton
 
 
 arrowMarker : View.Config -> Graph.Config -> Color.Color -> Svg Msg

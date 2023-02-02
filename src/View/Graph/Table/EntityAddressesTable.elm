@@ -19,7 +19,7 @@ import View.Graph.Table as T exposing (customizations, valueColumn)
 
 init : Table Api.Data.Address
 init =
-    Init.Graph.Table.init filter "Address"
+    Init.Graph.Table.initUnsorted filter
 
 
 filter : String -> Api.Data.Address -> Bool
@@ -87,8 +87,8 @@ config vc coinCode entityId entityHasAddress =
                 )
             , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
             , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
-            , T.valueColumn vc coinCode titleFirstUsage .balance
-            , T.valueColumn vc coinCode titleTotalReceived .totalReceived
+            , T.valueColumn vc (\_ -> coinCode) titleFirstUsage .balance
+            , T.valueColumn vc (\_ -> coinCode) titleTotalReceived .totalReceived
             ]
         , customizations = customizations vc
         }

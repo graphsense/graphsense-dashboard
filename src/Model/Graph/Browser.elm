@@ -24,6 +24,7 @@ type alias Model =
     , now : Time.Posix
     , height : Maybe Float
     , layers : IntDict Layer.Layer
+    , width : Float
     }
 
 
@@ -32,7 +33,7 @@ type Type
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
-    | TxAccount (Loadable String Api.Data.TxAccount)
+    | TxAccount (Loadable ( String, Maybe Int ) Api.Data.TxAccount) String (Maybe TxAccountTable)
     | Label String (Table Api.Data.AddressTag)
     | Block (Loadable Int Api.Data.Block) (Maybe BlockTable)
     | Addresslink Address (Link Address) (Maybe AddresslinkTable)
@@ -53,6 +54,7 @@ type Value msg
     | Usage Time.Posix Int
     | Duration Int
     | Value String Api.Data.Values
+    | MultiValue String Int (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Html (Html msg)
     | LoadingValue
@@ -131,6 +133,22 @@ loadableTx l =
         Loaded a ->
             { currency = a.currency
             , txHash = a.txHash
+            }
+
+
+loadableTxAccount : Loadable ( String, Maybe Int ) Api.Data.TxAccount -> T.TxAccount
+loadableTxAccount l =
+    case l of
+        Loading curr ( id, tokenTxId ) ->
+            { currency = curr
+            , txHash = id
+            , tokenTxId = tokenTxId
+            }
+
+        Loaded a ->
+            { currency = a.currency
+            , txHash = a.txHash
+            , tokenTxId = a.tokenTxId
             }
 
 

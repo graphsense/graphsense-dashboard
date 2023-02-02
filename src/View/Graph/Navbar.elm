@@ -20,7 +20,7 @@ import View.Locale as Locale
 
 navbar : Plugins -> ModelState -> Config -> Model -> Html Msg
 navbar plugins states vc model =
-    nav
+    div
         [ Css.navbar vc |> css
         ]
         [ navbarLeft plugins states vc model
@@ -47,7 +47,7 @@ navbarLeft plugins states vc model =
                             Tool.Inactive
               }
             ]
-            ++ Plugin.navbarLeft plugins states vc
+            ++ Plugin.graphNavbarLeft plugins states vc
         )
 
 

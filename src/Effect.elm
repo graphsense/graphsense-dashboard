@@ -53,6 +53,10 @@ perform plugins key statusbarToken apiKey effect =
             Dom.getElement id
                 |> Task.attempt msg
 
+        GetContentsElementEffect ->
+            Dom.getElement "contents"
+                |> Task.attempt BrowserGotContentsElement
+
         LocaleEffect eff ->
             Locale.perform eff
                 |> Cmd.map LocaleMsg
@@ -81,10 +85,6 @@ perform plugins key statusbarToken apiKey effect =
                     Route.graphRoute route
                         |> Route.toUrl
                         |> Nav.pushUrl key
-
-                Graph.GetSvgElementEffect ->
-                    Graph.perform eff
-                        |> Cmd.map GraphMsg
 
                 Graph.GetBrowserElementEffect ->
                     Graph.perform eff

@@ -19,20 +19,29 @@ import View.Locale as Locale
 
 label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
 label vc gc nodeType title =
+    let
+        dyOffset =
+            case nodeType of
+                Model.Graph.AddressType ->
+                    0.26
+
+                Model.Graph.EntityType ->
+                    0.75
+    in
     if title == "tag locked" then
         let
             offset =
                 String.fromInt <|
                     case nodeType of
                         Model.Graph.AddressType ->
-                            10
+                            -10
 
                         Model.Graph.EntityType ->
-                            0
+                            -2
         in
         g []
             [ Svg.Styled.path
-                [ (Css.property "transform" ("translateY(-" ++ offset ++ "px) scale(0.03)")
+                [ (Css.property "transform" ("translateY(" ++ offset ++ "px) scale(0.03)")
                     :: Css.tagLockedIcon vc
                   )
                     |> css
@@ -41,7 +50,8 @@ label vc gc nodeType title =
                 []
             , Svg.Styled.text_
                 [ Util.translate 17 0 |> Svg.transform
-                , (px labelHeight |> Css.fontSize)
+                , String.fromFloat dyOffset ++ "em" |> Svg.dy
+                , (px (labelHeight * 0.9) |> Css.fontSize)
                     :: Css.labelText vc nodeType
                     ++ Css.tagLockedText vc
                     |> css
@@ -72,16 +82,13 @@ label vc gc nodeType title =
 
             spl =
                 split gc.maxLettersPerLabelRow lbl
-
-            dy =
-                toFloat (List.length spl) * height / 5 |> negate
         in
         spl
             |> List.indexedMap
                 (\i row ->
                     tspan
                         [ x "0"
-                        , (toFloat i * 1.2 |> String.fromFloat) ++ "em" |> Svg.dy
+                        , (toFloat i * 1.2 + dyOffset |> String.fromFloat) ++ "em" |> Svg.dy
                         ]
                         [ text row
                         ]

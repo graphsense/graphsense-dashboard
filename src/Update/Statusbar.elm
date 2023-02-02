@@ -57,6 +57,9 @@ messageFromEffect model effect =
         Model.GetElementEffect _ ->
             Nothing
 
+        Model.GetContentsElementEffect ->
+            Nothing
+
         Model.LocaleEffect (Locale.GetTranslationEffect _) ->
             Nothing
 
@@ -94,9 +97,6 @@ messageFromEffect model effect =
             messageFromApiEffect model eff
 
         Model.GraphEffect (Graph.NavPushRouteEffect _) ->
-            Nothing
-
-        Model.GraphEffect Graph.GetSvgElementEffect ->
             Nothing
 
         Model.GraphEffect Graph.GetBrowserElementEffect ->
@@ -148,9 +148,16 @@ update key error model =
                     | messages = Dict.remove key model.messages
                     , log = addLog ( first msg, second msg, error ) model.log
                     , visible =
-                        error
-                            |> Maybe.map (\_ -> True)
-                            |> Maybe.withDefault model.visible
+                        if first msg == loadingAddressKey then
+                            model.visible
+
+                        else if first msg == loadingAddressEntityKey then
+                            model.visible
+
+                        else
+                            error
+                                |> Maybe.map (\_ -> True)
+                                |> Maybe.withDefault model.visible
                 }
             )
         |> Maybe.withDefault model
@@ -187,6 +194,12 @@ messageFromApiEffect model effect =
         Api.GetConceptsEffect taxonomy _ ->
             ( "loading concepts for taxonomy {0}"
             , [ taxonomy ]
+            )
+                |> Just
+
+        Api.ListSupportedTokensEffect _ ->
+            ( "loading supported token currencies"
+            , []
             )
                 |> Just
 
@@ -324,6 +337,14 @@ messageFromApiEffect model effect =
         Api.GetBlockTxsEffect e _ ->
             ( "{1}: loading transactions of block {0}"
             , [ String.fromInt e.block
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.GetTokenTxsEffect e _ ->
+            ( "{1}: loading token transactions of transaction {0}"
+            , [ e.txHash
               , e.currency |> String.toUpper
               ]
             )

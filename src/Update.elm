@@ -18,14 +18,18 @@ import Http exposing (Error(..))
 import Json.Decode
 import Json.Encode exposing (Value)
 import Lense
+import List.Extra
 import Log
+import Maybe.Extra
 import Model exposing (..)
 import Model.Dialog as Dialog
 import Model.Graph.Browser as Browser
+import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Locale as Locale
 import Model.Search as Search
+import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin.Model as Plugin
@@ -108,6 +112,20 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotSupportedTokens configs ->
+            let
+                locale =
+                    Locale.supportedTokens configs model.locale
+            in
+            { model
+                | supportedTokens = Just configs
+                , locale = locale
+                , config =
+                    model.config
+                        |> s_locale locale
+            }
+                |> n
+
         BrowserGotResponseWithHeaders statusbarToken result ->
             { model
                 | statusbar =
@@ -135,10 +153,44 @@ update plugins uc msg model =
 
                                 _ ->
                                     model.statusbar
+                , dialog =
+                    statusbarToken
+                        |> Maybe.andThen
+                            (\token ->
+                                case result of
+                                    Err ( Http.BadStatus 404, _ ) ->
+                                        Statusbar.getMessage token model.statusbar
+                                            |> Maybe.andThen
+                                                (\( key, v ) ->
+                                                    if key == Statusbar.loadingAddressKey || key == Statusbar.loadingAddressEntityKey then
+                                                        Just ( key, v )
+
+                                                    else
+                                                        Nothing
+                                                )
+                                            |> Maybe.andThen (second >> List.Extra.getAt 0)
+                                            |> Maybe.map
+                                                (\address ->
+                                                    UserClosesDialog
+                                                        |> Dialog.addressNotFound address model.dialog
+                                                )
+
+                                    _ ->
+                                        model.dialog
+                            )
+                        |> Maybe.Extra.orElse model.dialog
             }
                 |> handleResponse plugins
                     uc
                     result
+
+        UserClosesDialog ->
+            case model.dialog of
+                Just (Dialog.Error _) ->
+                    n { model | dialog = Nothing }
+
+                _ ->
+                    n model
 
         UserHoversUserIcon id ->
             ( model
@@ -161,9 +213,18 @@ update plugins uc msg model =
             }
                 |> n
 
-        UserSwitchesLocale locale ->
-            ( { model | locale = Locale.switch locale model.locale }
-            , Locale.getTranslationEffect locale
+        UserSwitchesLocale loc ->
+            let
+                locale =
+                    Locale.switch loc model.locale
+            in
+            ( { model
+                | locale = locale
+                , config =
+                    model.config
+                        |> s_locale locale
+              }
+            , Locale.getTranslationEffect loc
                 |> LocaleEffect
                 |> List.singleton
             )
@@ -233,11 +294,31 @@ update plugins uc msg model =
             }
                 |> n
 
+        BrowserGotContentsElement result ->
+            result
+                |> Result.map
+                    (\{ element } ->
+                        { model
+                            | config =
+                                model.config
+                                    |> s_size
+                                        (Just
+                                            { width = element.width
+                                            , height = element.height
+                                            , x = element.x
+                                            , y = element.y
+                                            }
+                                        )
+                        }
+                    )
+                |> Result.withDefault model
+                |> n
+
         BrowserChangedWindowSize w h ->
             { model
-                | graph = Graph.updateSize (w - model.width) (h - model.height) model.graph
-                , width = w
+                | width = w
                 , height = h
+                , config = updateSize (w - model.width) (h - model.height) model.config
             }
                 |> n
 
@@ -293,8 +374,13 @@ update plugins uc msg model =
                 |> n
 
         UserClickedLogout ->
+            let
+                ( new, outMsg, cmd ) =
+                    Plugin.logout plugins model.plugins
+            in
             ( { model
-                | user =
+                | plugins = new
+                , user =
                     model.user
                         |> s_auth
                             (case model.user.auth of
@@ -306,9 +392,11 @@ update plugins uc msg model =
                                     model.user.auth
                             )
               }
-            , LogoutEffect
-                |> List.singleton
+            , [ PluginEffect cmd
+              , LogoutEffect
+              ]
             )
+                |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotLoggedOut result ->
             { model
@@ -776,44 +864,34 @@ updateByUrl plugins uc url model =
                         )
 
                     Route.Graph graphRoute ->
-                        mapSecond
-                            ((++)
-                                (if model.graph.size == Nothing then
-                                    [ GraphEffect Graph.GetSvgElementEffect ]
-
-                                 else
-                                    []
+                        case graphRoute |> Log.log "graphRoute" of
+                            Route.Graph.Plugin ( pid, value ) ->
+                                let
+                                    ( new, outMsg, cmd ) =
+                                        Plugin.updateGraphByUrl pid plugins value model.plugins
+                                in
+                                ( { model
+                                    | plugins = new
+                                    , page = Graph
+                                    , url = url
+                                  }
+                                , [ PluginEffect cmd ]
                                 )
-                            )
-                        <|
-                            case graphRoute |> Log.log "graphRoute" of
-                                Route.Graph.Plugin ( pid, value ) ->
-                                    let
-                                        ( new, outMsg, cmd ) =
-                                            Plugin.updateGraphByUrl pid plugins value model.plugins
-                                    in
-                                    ( { model
-                                        | plugins = new
-                                        , page = Graph
-                                        , url = url
-                                      }
-                                    , [ PluginEffect cmd ]
-                                    )
-                                        |> updateByPluginOutMsg plugins outMsg
+                                    |> updateByPluginOutMsg plugins outMsg
 
-                                _ ->
-                                    let
-                                        ( graph, graphEffect ) =
-                                            Graph.updateByRoute plugins graphRoute model.graph
-                                    in
-                                    ( { model
-                                        | page = Graph
-                                        , graph = graph
-                                        , url = url
-                                      }
-                                    , graphEffect
-                                        |> List.map GraphEffect
-                                    )
+                            _ ->
+                                let
+                                    ( graph, graphEffect ) =
+                                        Graph.updateByRoute plugins graphRoute model.graph
+                                in
+                                ( { model
+                                    | page = Graph
+                                    , graph = graph
+                                    , url = url
+                                  }
+                                , graphEffect
+                                    |> List.map GraphEffect
+                                )
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
@@ -829,7 +907,21 @@ updateByUrl plugins uc url model =
                         )
                             |> updateByPluginOutMsg plugins outMsg
             )
-            (Route.parse routeConfig model.url)
+            (Route.parse routeConfig model.url
+                -- in case url is invalid, assume root url
+                |> Maybe.Extra.orElse (Just Route.Stats)
+            )
+        |> Maybe.map
+            (mapSecond
+                ((++)
+                    (if uc.size == Nothing then
+                        [ GetContentsElementEffect ]
+
+                     else
+                        []
+                    )
+                )
+            )
         |> Maybe.withDefault (n model)
 
 
@@ -1037,3 +1129,18 @@ batchSearch plugins ( model, eff ) =
         |> Maybe.withDefault []
         |> (++) eff
     )
+
+
+updateSize : Int -> Int -> { a | size : Maybe BBox } -> { a | size : Maybe BBox }
+updateSize w h model =
+    { model
+        | size =
+            model.size
+                |> Maybe.map
+                    (\size ->
+                        { size
+                            | width = size.width + toFloat w
+                            , height = size.height + toFloat h
+                        }
+                    )
+    }

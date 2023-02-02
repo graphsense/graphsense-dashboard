@@ -21,6 +21,8 @@ type alias Theme =
     , logo : String
     , logo_lightmode : String
     , body : Bool -> List Style
+    , paragraph : List Style
+    , listItem : List Style
     , sectionBelowHeader : List Style
     , header : Bool -> List Style
     , headerLogo : List Style
@@ -32,6 +34,8 @@ type alias Theme =
     , sidebar : Bool -> List Style
     , sidebarIcon : Bool -> Bool -> List Style
     , main : Bool -> List Style
+    , navbar : Bool -> List Style
+    , contents : Bool -> List Style
     , link : Bool -> List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
@@ -66,6 +70,8 @@ default =
     , logo = ""
     , logo_lightmode = ""
     , body = \_ -> []
+    , paragraph = []
+    , listItem = []
     , sectionBelowHeader = []
     , header = \_ -> []
     , heading2 = []
@@ -77,6 +83,8 @@ default =
     , sidebar = \_ -> []
     , sidebarIcon = \_ _ -> []
     , main = \_ -> []
+    , navbar = \_ -> []
+    , contents = \_ -> []
     , link = \_ -> []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""

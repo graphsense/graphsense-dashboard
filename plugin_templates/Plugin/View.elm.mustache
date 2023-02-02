@@ -154,8 +154,8 @@ browser plugins vc states =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-navbarLeft : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
-navbarLeft plugins states vc =
+graphNavbarLeft : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Graph.Msg)
+graphNavbarLeft plugins states vc =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
@@ -163,7 +163,7 @@ navbarLeft plugins states vc =
                     (\fun state ->
                         fun vc state
                     )
-                    plugin.navbarLeft
+                    plugin.graphNavbarLeft
                     states.{{name}}
                     |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
             )
@@ -224,8 +224,8 @@ sidebar plugins states page vc =
         |> List.map (Html.map Model.PluginMsg)
 
 
-main_ : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (Html Model.Msg)
-main_ plugins states type_ vc =
+contents : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+contents plugins states type_ vc =
     {{^plugins}}Nothing{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
         Plugin.Model.{{package}} ->
             plugins.{{name}}
@@ -235,11 +235,31 @@ main_ plugins states type_ vc =
                             (\fun ->
                                 fun vc
                             )
-                            plugin.main
+                            plugin.contents
                             states.{{name}}
-                            |> Maybe.map (Html.map Plugin.Msg.{{package}}Msg)
+                            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
                     )
-                |> Maybe.map (Html.map Model.PluginMsg)
+                |> Maybe.map (List.map (Html.map Model.PluginMsg))
+{{/plugins}}
+{{/plugins.length}}
+
+
+navbar : Plugins -> Plugin.Model.ModelState -> Plugin.Model.PluginType -> View.Config -> Maybe (List (Html Model.Msg))
+navbar plugins states type_ vc =
+    {{^plugins}}Nothing{{/plugins}}{{#plugins.length}}case type_ of{{#plugins}} 
+        Plugin.Model.{{package}} ->
+            plugins.{{name}}
+                |> Maybe.andThen
+                    (\plugin ->
+                        Maybe.map2
+                            (\fun ->
+                                fun vc
+                            )
+                            plugin.navbar
+                            states.{{name}}
+                            |> Maybe.map (List.map (Html.map Plugin.Msg.{{package}}Msg))
+                    )
+                |> Maybe.map (List.map (Html.map Model.PluginMsg))
 {{/plugins}}
 {{/plugins.length}}
 

@@ -35,7 +35,8 @@ import Api.Data
 import Color exposing (Color)
 import Config.Graph as Graph
     exposing
-        ( entityToAddressesPaddingLeft
+        ( addressHeight
+        , entityToAddressesPaddingLeft
         , entityToAddressesPaddingTop
         , entityWidth
         , expandHandleWidth
@@ -254,11 +255,7 @@ anchorsToPositions anchors layers =
                         IntDict.insert id
                             { x = x
                             , y =
-                                entity.y
-                                    + entity.dy
-                                    + (Entity.getHeight entity / 2)
-                                    - Graph.entityMinHeight
-                                    / 2
+                                entity.y + entity.dy
                             }
                             positions
                     )

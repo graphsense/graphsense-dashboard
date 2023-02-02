@@ -20,6 +20,16 @@ body vc =
         ++ vc.theme.body vc.lightmode
 
 
+paragraph : Config -> List Style
+paragraph vc =
+    vc.theme.paragraph
+
+
+listItem : Config -> List Style
+listItem vc =
+    vc.theme.listItem
+
+
 sectionBelowHeader : Config -> List Style
 sectionBelowHeader vc =
     [ displayFlex
@@ -45,8 +55,26 @@ sidebarIcon vc active =
 main_ : Config -> List Style
 main_ vc =
     [ flexGrow (num 1)
+    , displayFlex
+    , flexDirection column
     ]
         ++ vc.theme.main vc.lightmode
+
+
+navbar : Config -> List Style
+navbar vc =
+    [ Util.Css.zIndexMain
+    ]
+        ++ vc.theme.navbar vc.lightmode
+
+
+contents : Config -> List Style
+contents vc =
+    [ flexGrow (num 1)
+    , overflow hidden
+    , position relative
+    ]
+        ++ vc.theme.contents vc.lightmode
 
 
 tool : Config -> List Style

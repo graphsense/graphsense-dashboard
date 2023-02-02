@@ -13,6 +13,8 @@ module View.Locale exposing
     , text
     , timestamp
     , timestampWithFormat
+    , tokenCurrencies
+    , tokenCurrency
     )
 
 import Api.Data
@@ -20,10 +22,8 @@ import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
 import DateFormat.Relative
-import Dict
+import Dict exposing (Dict)
 import Ease
-import FormatNumber
-import FormatNumber.Locales
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
 import Locale.Durations
@@ -32,6 +32,28 @@ import Model.Locale exposing (..)
 import RecordSetter exposing (..)
 import String.Interpolate
 import Time
+import Tuple exposing (..)
+
+
+fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
+fixpointFactor configs =
+    [ ( "eth", ( 1.0e18, "wei" ) )
+    , ( "btc", ( 1.0e8, "s" ) )
+    , ( "bch", ( 1.0e8, "s" ) )
+    , ( "ltc", ( 1.0e8, "s" ) )
+    , ( "zec", ( 1.0e8, "s" ) )
+    ]
+        ++ (configs
+                |> Maybe.map
+                    (.tokenConfigs
+                        >> List.map
+                            (\{ decimals, ticker } ->
+                                ( ticker, ( 10 ^ toFloat decimals, "wei" ) )
+                            )
+                    )
+                |> Maybe.withDefault []
+           )
+        |> Dict.fromList
 
 
 string : Model -> String -> String
@@ -192,61 +214,87 @@ percentage model =
 
 currency : Model -> String -> Api.Data.Values -> String
 currency =
-    currencyWithOptions False
+    currencyWithOptions One
+
+
+tokenCurrency : Model -> String -> Api.Data.Values -> String
+tokenCurrency =
+    currencyWithOptions Both
 
 
 currencyWithoutCode : Model -> String -> Api.Data.Values -> String
 currencyWithoutCode =
-    currencyWithOptions True
+    currencyWithOptions Hidden
 
 
-currencyWithOptions : Bool -> Model -> String -> Api.Data.Values -> String
-currencyWithOptions hideCode model coinCode values =
+type CodeVisibility
+    = Hidden
+    | One
+    | Both
+
+
+currencyWithOptions : CodeVisibility -> Model -> String -> Api.Data.Values -> String
+currencyWithOptions vis model coinCode values =
     case model.currency of
         Coin ->
-            coin model hideCode coinCode values.value
+            coin model (vis == Hidden) coinCode values.value
 
         Fiat code ->
             values.fiatValues
                 |> List.filter (.code >> String.toLower >> (==) code)
                 |> List.head
-                |> Maybe.map (fiat model hideCode)
+                |> Maybe.map (fiat model coinCode vis)
                 |> Maybe.withDefault ""
 
 
-fiat : Model -> Bool -> Api.Data.Rate -> String
-fiat model hideCode { code, value } =
+fiat : Model -> String -> CodeVisibility -> Api.Data.Rate -> String
+fiat model coinCode vis { code, value } =
     float model value
-        ++ (if hideCode then
-                ""
+        ++ (case vis of
+                Hidden ->
+                    ""
 
-            else
-                " " ++ String.toUpper code
+                One ->
+                    " " ++ String.toUpper code
+
+                Both ->
+                    " " ++ String.toUpper code ++ " (" ++ String.toUpper coinCode ++ ")"
            )
 
 
 coin : Model -> Bool -> String -> Int -> String
 coin model hideCode code v =
-    let
-        ( value, sc ) =
-            if code == "eth" then
-                ( toFloat v / 1.0e18, "wei" )
+    fixpointFactor model.supportedTokens
+        |> Dict.get code
+        |> Maybe.map
+            (mapFirst
+                (\f ->
+                    if v == 0 then
+                        0
 
-            else
-                ( toFloat v / 1.0e8, "s" )
-    in
-    if abs value < 0.0001 then
-        -- always show small currency
-        int model v ++ sc
+                    else
+                        toFloat v / f
+                )
+            )
+        |> Maybe.map
+            (\( value, sc ) ->
+                let
+                    fmt =
+                        if abs value < 0.0001 then
+                            "1,000.0000[00000000000000]"
 
-    else
-        floatWithFormat model "1,000.0000" value
-            ++ (if hideCode then
-                    ""
+                        else
+                            "1,000.0000"
+                in
+                floatWithFormat model fmt value
+                    ++ (if hideCode then
+                            ""
 
-                else
-                    " " ++ String.toUpper code
-               )
+                        else
+                            " " ++ String.toUpper code
+                       )
+            )
+        |> Maybe.withDefault ("unknown currency " ++ code)
 
 
 durationToString : Model -> Int -> String
@@ -257,3 +305,10 @@ durationToString { unitToString } dur =
         , separator = " "
         }
         dur
+
+
+tokenCurrencies : Model -> List String
+tokenCurrencies model =
+    model.supportedTokens
+        |> Maybe.map (.tokenConfigs >> List.map .ticker)
+        |> Maybe.withDefault []

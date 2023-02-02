@@ -21,6 +21,7 @@ import Json.Encode
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
+import Model.Currency as Currency
 import Model.Entity as E
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
@@ -30,6 +31,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
@@ -62,11 +64,18 @@ cm =
 
 frame : View.Config -> Bool -> List (Html msg) -> Html msg
 frame vc visible =
+    let
+        width =
+            vc.size
+                |> Maybe.map .width
+                |> Maybe.withDefault 0
+    in
     div
-        [ Css.frame vc visible |> css
+        [ Css.frame vc visible
+            |> css
         ]
         >> List.singleton
-        >> div [ Css.root vc |> css ]
+        >> div [ Css.root vc width |> css ]
 
 
 browser : Plugins -> ModelState -> View.Config -> Graph.Config -> Browser.Model -> Html Msg
@@ -164,8 +173,13 @@ browser plugins states vc gc model =
                             |> Maybe.withDefault []
                        )
 
-            Browser.TxAccount loadable ->
-                [ browseTxAccount plugins states vc gc model.now loadable ]
+            Browser.TxAccount loadable accountCurrency table ->
+                browseTxAccount plugins states vc gc model.now loadable table accountCurrency
+                    :: (table
+                            |> Maybe.map (browseTxAccountTable vc gc model.height loadable)
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
             Browser.Addresslink source link table ->
                 let
@@ -287,7 +301,8 @@ browseValue : View.Config -> Value msg -> Html msg
 browseValue vc value =
     case value of
         String str ->
-            text str
+            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
+                [ text str ]
 
         Html html ->
             html
@@ -395,6 +410,41 @@ browseValue vc value =
                 [ Locale.currency vc.locale coinCode v
                     |> text
                 ]
+
+        MultiValue parentCoin len values ->
+            values
+                |> List.map
+                    (\( coinCode, v ) ->
+                        let
+                            cc =
+                                if parentCoin == "eth" then
+                                    coinCode
+
+                                else
+                                    case vc.locale.currency of
+                                        Currency.Coin ->
+                                            parentCoin
+
+                                        Currency.Fiat fiat ->
+                                            fiat
+                        in
+                        tr []
+                            [ String.toUpper cc
+                                |> text
+                                |> List.singleton
+                                |> td [ Css.currencyCell vc |> css ]
+                            , multiValue vc parentCoin coinCode v
+                                |> text
+                                |> List.singleton
+                                |> td
+                                    [ Css.valueCell vc
+                                        ++ [ CssStyled.ex (toFloat len) |> CssStyled.width ]
+                                        |> css
+                                    ]
+                            ]
+                    )
+                |> table
+                    []
 
         LoadingValue ->
             Util.View.loadingSpinner vc Css.loadingSpinner
@@ -505,14 +555,20 @@ rowsAddress vc now address =
             , Row
                 ( "Total received"
                 , address
-                    |> ifLoaded (\a -> Value a.address.currency a.address.totalReceived)
+                    |> ifLoaded
+                        (totalReceivedValues .address
+                            >> MultiValue (loadableAddressCurrency address) len
+                        )
                     |> elseLoading
                 , Nothing
                 )
             , Row
                 ( "Final balance"
                 , address
-                    |> ifLoaded (\a -> Value a.address.currency a.address.balance)
+                    |> ifLoaded
+                        (balanceValues .address
+                            >> MultiValue (loadableAddressCurrency address) len
+                        )
                     |> elseLoading
                 , Nothing
                 )
@@ -560,6 +616,9 @@ rowsAddress vc now address =
 
                 Loading _ _ ->
                     []
+
+        len =
+            multiValueMaxLen vc .address address
     in
     [ Row
         ( "Address"
@@ -576,6 +635,27 @@ rowsAddress vc now address =
         , Nothing
         )
     ]
+        ++ (if loadableAddress address |> .currency |> (==) "eth" then
+                [ Row
+                    ( "Smart contract"
+                    , address
+                        |> ifLoaded
+                            (\a ->
+                                String <|
+                                    if a.address.isContract == Just True then
+                                        Locale.string vc.locale "yes"
+
+                                    else
+                                        Locale.string vc.locale "no"
+                            )
+                        |> elseLoading
+                    , Nothing
+                    )
+                ]
+
+            else
+                []
+           )
         ++ dataPart1
         ++ [ Rule
            , Row
@@ -632,6 +712,16 @@ elseShowAddress l =
             v
 
 
+elseShowTxAccount : Loadable ( String, Maybe Int ) (Value msg) -> Value msg
+elseShowTxAccount l =
+    case l of
+        Loading _ ( id, _ ) ->
+            String id
+
+        Loaded v ->
+            v
+
+
 elseShowCurrency : Loadable id (Value msg) -> Value msg
 elseShowCurrency l =
     case l of
@@ -668,9 +758,9 @@ browseTxUtxo plugins states vc gc now tx =
         |> propertyBox vc
 
 
-browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> Html Msg
-browseTxAccount plugins states vc gc now tx =
-    (rowsTxAccount vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> Html Msg
+browseTxAccount plugins states vc gc now tx table coinCode =
+    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
@@ -696,6 +786,9 @@ rowsEntity vc gc now ent =
                         , active = False
                         }
                     )
+
+        len =
+            multiValueMaxLen vc .entity ent
     in
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
@@ -788,14 +881,20 @@ rowsEntity vc gc now ent =
     , Row
         ( "Total received"
         , ent
-            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.totalReceived)
+            |> ifLoaded
+                (totalReceivedValues .entity
+                    >> MultiValue (loadableEntityCurrency ent) len
+                )
             |> elseLoading
         , Nothing
         )
     , Row
         ( "Final balance"
         , ent
-            |> ifLoaded (\entity -> Value entity.entity.currency entity.entity.balance)
+            |> ifLoaded
+                (balanceValues .entity
+                    >> MultiValue (loadableEntityCurrency ent) len
+                )
             |> elseLoading
         , Nothing
         )
@@ -985,6 +1084,20 @@ browseTxUtxoTable vc gc height tx table =
             table_ vc cm height (TxUtxoTable.config vc True coinCode) t
 
 
+browseTxAccountTable : View.Config -> Graph.Config -> Maybe Float -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> TxAccountTable -> Html Msg
+browseTxAccountTable vc gc height tx (TokenTxsTable table) =
+    let
+        ( coinCode, txHash ) =
+            case tx of
+                Loaded e ->
+                    ( e.currency, e.txHash |> Just )
+
+                Loading curr _ ->
+                    ( curr, Nothing )
+    in
+    table_ vc cm height (TxsAccountTable.config vc coinCode) table
+
+
 browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
 browsePlugin plugins vc states =
     Plugin.View.browser plugins vc states
@@ -1005,6 +1118,7 @@ rowsTxUtxo vc gc now tx =
                                 { currency = currency
                                 , txHash = id
                                 , table = Just tableTag
+                                , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -1070,13 +1184,13 @@ rowsTxUtxo vc gc now tx =
     ]
 
 
-rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxAccount -> List (Row (Value Msg))
-rowsTxAccount vc gc now tx =
+rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg))
+rowsTxAccount vc gc now tx table coinCode =
     let
         txLink getAddress tx_ =
             a
                 [ Route.addressRoute
-                    { currency = tx_.currency
+                    { currency = coinCode
                     , address = getAddress tx_
                     , layer = Nothing
                     , table = Nothing
@@ -1089,12 +1203,40 @@ rowsTxAccount vc gc now tx =
                 [ getAddress tx_ |> text
                 ]
                 |> Html
+
+        mkTableLink title tableTag =
+            tx
+                |> makeTableLink
+                    (\_ -> "eth")
+                    (\d -> ( d.txHash, d.tokenTxId ))
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.txRoute
+                                { currency = currency
+                                , txHash = first id
+                                , table = Just tableTag
+                                , tokenTxId = Nothing
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
     in
     [ Row
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> String)
-            |> elseShowAddress
+            |> elseShowTxAccount
+        , Nothing
+        )
+    , Row
+        ( "Value"
+        , tx
+            |> ifLoaded
+                (\t -> Value t.currency t.value)
+            |> elseLoading
         , Nothing
         )
     , Row
@@ -1122,6 +1264,24 @@ rowsTxAccount vc gc now tx =
         , Nothing
         )
     ]
+        ++ (if loadableCurrency tx == "eth" then
+                [ Row
+                    ( "Token transactions"
+                    , String <|
+                        case table of
+                            Just (TokenTxsTable t) ->
+                                List.length t.data
+                                    |> String.fromInt
+
+                            _ ->
+                                ""
+                    , mkTableLink "Show token transactions" Route.TokenTxsTable
+                    )
+                ]
+
+            else
+                []
+           )
 
 
 browseAddresslink : Plugins -> ModelState -> View.Config -> Address -> Link Address -> Html Msg
@@ -1139,7 +1299,7 @@ rowsAddresslink vc source link =
         linkData =
             case link.link of
                 Link.LinkData ld ->
-                    Just ( ld.value, ld.noTxs )
+                    Just ld
 
                 Link.PlaceholderLinkData ->
                     Nothing
@@ -1162,7 +1322,7 @@ rowsAddresslink vc source link =
         ( "Transactions"
         , linkData
             |> Maybe.map
-                (second >> Locale.int vc.locale)
+                (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
         , Just
@@ -1181,13 +1341,7 @@ rowsAddresslink vc source link =
             , active = False
             }
         )
-    , Row
-        ( "Value"
-        , linkData
-            |> Maybe.map (first >> Value currency)
-            |> Maybe.withDefault (String "")
-        , Nothing
-        )
+    , linkValueRow vc currency linkData
     ]
 
 
@@ -1206,7 +1360,7 @@ rowsEntitylink vc source link =
         linkData =
             case link.link of
                 Link.LinkData ld ->
-                    Just ( ld.value, ld.noTxs )
+                    Just ld
 
                 Link.PlaceholderLinkData ->
                     Nothing
@@ -1231,7 +1385,7 @@ rowsEntitylink vc source link =
         ( "Transactions"
         , linkData
             |> Maybe.map
-                (second >> Locale.int vc.locale)
+                (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
         , Just
@@ -1250,14 +1404,47 @@ rowsEntitylink vc source link =
             , active = False
             }
         )
-    , Row
-        ( "Value"
-        , linkData
-            |> Maybe.map (first >> Value currency)
-            |> Maybe.withDefault (String "")
-        , Nothing
-        )
+    , linkValueRow vc currency linkData
     ]
+
+
+linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg)
+linkValueRow vc parentCurrency linkData =
+    if parentCurrency /= "eth" then
+        Row
+            ( "Estimated value"
+            , linkData
+                |> Maybe.map (.value >> Value parentCurrency)
+                |> Maybe.withDefault (String "")
+            , Nothing
+            )
+
+    else
+        Row
+            ( "Value"
+            , linkData
+                |> Maybe.map
+                    (\v ->
+                        let
+                            vals =
+                                ( parentCurrency, v.value )
+                                    :: (v.tokenValues
+                                            |> Maybe.map Dict.toList
+                                            |> Maybe.withDefault []
+                                       )
+
+                            len =
+                                vals
+                                    |> List.map (\( currency, val ) -> multiValue vc parentCurrency currency val |> String.length)
+                                    |> List.maximum
+                                    |> Maybe.withDefault 0
+                                    |> (+) 2
+                        in
+                        MultiValue parentCurrency len vals
+                    )
+                |> Maybe.withDefault (String "")
+            , Nothing
+            )
 
 
 browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddresslinkTable -> Html Msg
@@ -1268,3 +1455,56 @@ browseAddresslinkTable vc gc height coinCode table =
 
         AddresslinkTxsAccountTable t ->
             table_ vc cm height (TxsAccountTable.config vc coinCode) t
+
+
+multiValue : View.Config -> String -> String -> Api.Data.Values -> String
+multiValue vc parentCoin coinCode v =
+    if parentCoin == "eth" && vc.locale.currency /= Currency.Coin then
+        Locale.currency vc.locale coinCode v
+
+    else
+        Locale.currencyWithoutCode vc.locale coinCode v
+
+
+type alias AddressOrEntity a =
+    { a
+        | balance : Api.Data.Values
+        , totalReceived : Api.Data.Values
+        , tokenBalances : Maybe (Dict.Dict String Api.Data.Values)
+        , totalTokensReceived : Maybe (Dict.Dict String Api.Data.Values)
+        , totalTokensSpent : Maybe (Dict.Dict String Api.Data.Values)
+        , currency : String
+    }
+
+
+multiValueMaxLen : View.Config -> (thing -> AddressOrEntity a) -> Loadable comparable thing -> Int
+multiValueMaxLen vc accessor thing =
+    case thing of
+        Loading _ _ ->
+            0
+
+        Loaded a ->
+            totalReceivedValues accessor a
+                ++ balanceValues accessor a
+                |> List.map (\( currency, v ) -> multiValue vc (accessor a).currency currency v |> String.length)
+                |> List.maximum
+                |> Maybe.withDefault 0
+                |> (+) 2
+
+
+totalReceivedValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
+totalReceivedValues accessor a =
+    ( (accessor a).currency, (accessor a).totalReceived )
+        :: ((accessor a).totalTokensReceived
+                |> Maybe.map Dict.toList
+                |> Maybe.withDefault []
+           )
+
+
+balanceValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
+balanceValues accessor a =
+    ( (accessor a).currency, (accessor a).balance )
+        :: ((accessor a).tokenBalances
+                |> Maybe.map Dict.toList
+                |> Maybe.withDefault []
+           )

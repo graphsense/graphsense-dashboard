@@ -53,6 +53,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
+    , supportedTokens : Maybe Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     }
 
@@ -82,11 +83,14 @@ type Msg
     | TimeUpdateReset Time.Posix
     | BrowserGotLoggedOut (Result Http.Error ())
     | BrowserGotElement (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotContentsElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
+    | BrowserGotSupportedTokens Api.Data.TokenConfigs
     | UserClickedStatusbar
+    | UserClosesDialog
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
@@ -125,6 +129,7 @@ type Effect
     | NavPushUrlEffect String
     | GetStatisticsEffect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
+    | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect

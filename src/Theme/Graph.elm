@@ -10,7 +10,7 @@ type alias Graph =
     { root : List Style
     , addressFlags : List Style
     , abuseFlag : Bool -> List Style
-    , tagsFlag : Bool -> List Style
+    , flag : Bool -> List Style
     , flagsGap : Float
     , addressLabel : Bool -> List Style
     , addressRect : List Style
@@ -35,7 +35,6 @@ type alias Graph =
     , expandHandlePath : Bool -> NodeType -> Bool -> List Style
     , expandHandleText : Bool -> NodeType -> List Style
     , nodeSeparatorToExpandHandle : Bool -> NodeType -> List Style
-    , graphRoot : List Style
     , svgRoot : Bool -> List Style
     , navbar : Bool -> List Style
     , navbarLeft : List Style
@@ -44,13 +43,17 @@ type alias Graph =
     , colorScheme : List Color
     , highlightsColorScheme : List Color
     , lightnessFactor :
-        { entity : Float
-        , address : Float
-        }
+        Bool
+        ->
+            { entity : Float
+            , address : Float
+            }
     , saturationFactor :
-        { entity : Float
-        , address : Float
-        }
+        Bool
+        ->
+            { entity : Float
+            , address : Float
+            }
     , defaultColor : Color
     , searchTextarea : Bool -> List Style
     , toolbox : Bool -> Bool -> List Style
@@ -68,7 +71,7 @@ type alias Graph =
     , highlightsColors : List Style
     , highlightsColor : List Style
     , highlightRoot : List Style
-    , highlightColor : Bool -> List Style
+    , highlightColor : Bool -> Bool -> List Style
     , highlightTitle : Bool -> List Style
     , highlightTrash : Bool -> List Style
     }
@@ -79,7 +82,7 @@ default =
     { root = []
     , addressFlags = []
     , abuseFlag = \_ -> []
-    , tagsFlag = \_ -> []
+    , flag = \_ -> []
     , flagsGap = 5
     , addressLabel = \_ -> []
     , addressRect = []
@@ -104,7 +107,6 @@ default =
     , expandHandlePath = \_ _ _ -> []
     , expandHandleText = \_ _ -> []
     , nodeSeparatorToExpandHandle = \_ _ -> []
-    , graphRoot = []
     , svgRoot = \_ -> []
     , navbar = \_ -> []
     , navbarLeft = []
@@ -113,13 +115,15 @@ default =
     , colorScheme = []
     , highlightsColorScheme = []
     , lightnessFactor =
-        { entity = 1
-        , address = 1
-        }
+        \_ ->
+            { entity = 1
+            , address = 1
+            }
     , saturationFactor =
-        { entity = 1
-        , address = 1
-        }
+        \_ ->
+            { entity = 1
+            , address = 1
+            }
     , defaultColor = Color.rgb 255 255 255
     , searchTextarea = \_ -> []
     , toolbox = \_ _ -> []
@@ -138,6 +142,6 @@ default =
     , highlightsColor = []
     , highlightRoot = []
     , highlightTitle = \_ -> []
-    , highlightColor = \_ -> []
+    , highlightColor = \_ _ -> []
     , highlightTrash = \_ -> []
     }

@@ -31,6 +31,7 @@ init plugins flags url key =
             { locale = locale
             , theme = config.theme
             , lightmode = False
+            , size = Nothing
             }
       , locale = locale
       , page = Stats
@@ -46,6 +47,7 @@ init plugins flags url key =
       , height = flags.height
       , error = ""
       , statusbar = Statusbar.init
+      , supportedTokens = Nothing
       , dialog = Nothing
       , plugins = pluginStates
       }
@@ -53,6 +55,8 @@ init plugins flags url key =
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy
                 |> ApiEffect
            , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
+                |> ApiEffect
+           , Effect.Api.ListSupportedTokensEffect BrowserGotSupportedTokens
                 |> ApiEffect
            , PluginEffect cmd
            ]

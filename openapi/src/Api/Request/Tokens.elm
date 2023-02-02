@@ -14,7 +14,7 @@
 -}
 
 
-module Api.Request.Rates exposing (..)
+module Api.Request.Tokens exposing (..)
 
 import Api
 import Api.Data
@@ -25,14 +25,14 @@ import Json.Encode
 
 
 
-getExchangeRates : (String) -> (Int) -> Api.Request Api.Data.Rates
-getExchangeRates currency_path height_path =
+listSupportedTokens : (String) -> Api.Request Api.Data.TokenConfigs
+listSupportedTokens currency_path =
     Api.request
         "GET"
-        "/{currency}/rates/{height}"
-        [ ( "currency", identity currency_path ), ( "height", String.fromInt height_path ) ]
+        "/{currency}/supported_tokens"
+        [ ( "currency", identity currency_path ) ]
         []
         []
         Nothing
-        Api.Data.ratesDecoder
+        Api.Data.tokenConfigsDecoder
 

@@ -44,6 +44,9 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
 
     -- when the graph is reset (user clicks "new graph")
     , newGraph : Maybe (modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+
+    -- when the user logs out
+    , logout : Maybe (modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
     }
 
 
@@ -62,4 +65,5 @@ init =
     , initEntity = Nothing
     , clearSearch = Nothing
     , newGraph = Nothing
+    , logout = Nothing
     }
