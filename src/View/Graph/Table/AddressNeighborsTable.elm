@@ -206,8 +206,7 @@ reduceLabels labels =
             (\label acc ->
                 if acc.i > 0 && acc.charCount > maxCount then
                     { acc
-                        | output =
-                            acc.output ++ " + " ++ (List.length labels - acc.i |> String.fromInt)
+                        | j = acc.j + 1
                     }
 
                 else
@@ -226,14 +225,22 @@ reduceLabels labels =
                                     String.left maxCount label ++ "…"
                                )
                     , i = acc.i + 1
+                    , j = acc.j
                     , charCount = acc.charCount + String.length label
                     }
             )
             { charCount = 0
+            , j = 0
             , i = 0
             , output = ""
             }
-        |> .output
+        |> (\{ output, j } ->
+                if j > 0 then
+                    output ++ " + " ++ String.fromInt j
+
+                else
+                    output
+           )
 
 
 n s =
