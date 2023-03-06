@@ -9,7 +9,7 @@ type alias Return modelState msg addressMsg entityMsg =
     ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg )
 
 
-type alias Update modelState addressState entityState msg addressMsg entityMsg =
+type alias Update flags modelState addressState entityState msg addressMsg entityMsg =
     { -- update plugin's state
       update : Maybe (msg -> modelState -> Return modelState msg addressMsg entityMsg)
 
@@ -38,7 +38,7 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , updateApiKey : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- initialize plugin's state
-    , init : Maybe (Return modelState msg addressMsg entityMsg)
+    , init : Maybe (flags -> Return modelState msg addressMsg entityMsg)
 
     -- initialize plugin state on init of address
     , initAddress : Maybe addressState
@@ -57,7 +57,7 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     }
 
 
-init : Update modelState addressState entityState msg addressMsg entityMsg
+init : Update flags modelState addressState entityState msg addressMsg entityMsg
 init =
     { update = Nothing
     , updateAddress = Nothing

@@ -17,7 +17,7 @@ import Tuple3 as T3
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Flags {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -215,13 +215,15 @@ updateGraphByUrl ns plugins url state =
 {{/plugins.length}} 
 
 
-init : Plugins -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-init plugins =
+init : Plugins -> Plugin.Model.Flags -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+init plugins flags =
     {{^plugins}}n {}{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
                 |> Maybe.andThen .init
+                |> Maybe.map (\init_ -> init_ flags.{{name}})
+
 {{/plugins}} 
     in
     ( { {{#plugins}}{{name}} = Maybe.map T3.first {{name}}

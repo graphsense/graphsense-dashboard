@@ -22,7 +22,13 @@ const height = window.innerHeight || docElem.clientHeight || body.clientHeight
 
 const now = +(new Date())
 
-const app = Elm.Main.init({ flags: { locale, width, height, now } })
+const pluginFlags = {}
+
+for (const plugin in plugins) {
+  pluginFlags[plugin] = plugins[plugin].flags()
+}
+
+const app = Elm.Main.init({ flags: { locale, width, height, now, pluginFlags } })
 
 window.onbeforeunload = function (evt) {
   const message = 'You are about to leave the site. Your work will be lost. Sure?'
@@ -126,7 +132,7 @@ app.ports.pluginsOut.subscribe(packetWithKey => {
     console.error(`plugin ${key} not found`)
     return
   }
-  plugins[key](packet, value => {
+  plugins[key].sendPacket(packet, value => {
     app.ports.pluginsIn.send([key, value])
   })
 })

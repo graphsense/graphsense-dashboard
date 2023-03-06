@@ -23,7 +23,7 @@ init plugins flags url key =
                 }
 
         ( pluginStates, outMsgs, cmd ) =
-            Plugin.init plugins
+            Plugin.init plugins flags.pluginFlags
     in
     ( { url = url
       , key = key

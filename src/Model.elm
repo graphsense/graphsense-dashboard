@@ -35,6 +35,7 @@ type alias Flags =
     , now : Int
     , width : Int
     , height : Int
+    , pluginFlags : Plugin.Flags
     }
 
 
