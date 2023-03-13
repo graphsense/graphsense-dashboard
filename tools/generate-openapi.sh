@@ -9,7 +9,7 @@ temp=`mktemp`
 dir=$PWD/`dirname $0`
 if [[ "$openapi" =~ ^http ]]; then
   echo "Fetching from $openapi"
-  wget https://raw.githubusercontent.com/graphsense/graphsense-openapi/develop/graphsense.yaml -O $temp
+  wget $openapi -O $temp
 else
   echo "Copying from $openapi"
   cp "$openapi" $temp
