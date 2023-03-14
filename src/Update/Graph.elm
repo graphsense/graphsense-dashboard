@@ -1,4 +1,4 @@
-module Update.Graph exposing (..)
+port module Update.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
@@ -70,6 +70,9 @@ import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 import Yaml.Decode
 import Yaml.Encode
+
+
+port newTab : String -> Cmd msg
 
 
 maxHistory : Int
@@ -2050,7 +2053,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map (DownloadCSVEffect >> List.singleton)
                 |> Maybe.withDefault []
             )
-
+        OpenExternalLink url -> (model,  newTab url |> CmdEffect |> List.singleton)
         NoOp ->
             n model
 

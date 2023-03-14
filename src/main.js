@@ -136,3 +136,6 @@ app.ports.pluginsOut.subscribe(packetWithKey => {
     app.ports.pluginsIn.send([key, value])
   })
 })
+
+
+app.ports.newTab.subscribe( url => window.open(url, '_blank'));
