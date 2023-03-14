@@ -2053,7 +2053,10 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map (DownloadCSVEffect >> List.singleton)
                 |> Maybe.withDefault []
             )
-        OpenExternalLink url -> (model,  newTab url |> CmdEffect |> List.singleton)
+
+        OpenExternalLink url ->
+            ( model, newTab url |> CmdEffect |> List.singleton )
+
         NoOp ->
             n model
 

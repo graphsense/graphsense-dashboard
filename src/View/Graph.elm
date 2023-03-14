@@ -15,7 +15,6 @@ import IntDict exposing (IntDict)
 import Json.Decode
 import List.Extra
 import Log
-import Dict
 import Maybe.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Address as Address
@@ -36,9 +35,9 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
+import Util.ExternalLinks exposing (getBlockExplorerLinks)
 import Util.Graph as Util
 import Util.View exposing (hovercard, none)
-import Util.ExternalLinks exposing (getBlockExplorerLinks)
 import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
 import View.Graph.ContextMenu as ContextMenu
@@ -51,6 +50,7 @@ import View.Graph.Tag as Tag
 import View.Graph.Tool as Tool
 import View.Graph.Transform as Transform
 import View.Locale as Locale
+
 
 view : Plugins -> ModelState -> Config -> Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
 view plugins states vc model =
@@ -381,15 +381,17 @@ contextMenu plugins states vc model cm =
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
 
-        addBlockExplorerLinks currency address = getBlockExplorerLinks currency address
-                                                |> List.map (\ (url, label) -> OpenExternalLink ( url ) |> option label)
+        addBlockExplorerLinks currency address =
+            getBlockExplorerLinks currency address
+                |> List.map (\( url, label ) -> OpenExternalLink url |> option label)
     in
     (case cm.type_ of
         ContextMenu.Address address ->
             [ UserClickedAnnotateAddress address.id
                 |> option "Annotate"
             , UserClickedRemoveAddress address.id
-                |> option "Remove"]
+                |> option "Remove"
+            ]
                 ++ addBlockExplorerLinks address.address.currency address.address.address
                 ++ Plugin.addressContextMenu plugins states vc address
 
