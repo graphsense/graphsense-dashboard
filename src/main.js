@@ -54,7 +54,7 @@ app.ports.exportGraphics.subscribe((filename) => {
     }
   }
   classMap.set('rectLabel', 'fill: white')
-  let svg = document.querySelector('#graph svg').outerHTML
+  let svg = document.querySelector('svg#graph').outerHTML
   // replace classes by inline styles
   svg = svg.replace(new RegExp('class="(.+?)"', 'g'), (_, classes) => {
     const repl = classes.split(' ')
