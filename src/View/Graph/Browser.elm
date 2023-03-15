@@ -307,7 +307,7 @@ browseValue vc value =
 
         AddressStr str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str CopyToClipboard ]
+                [ copyableLongIdentifier vc str UserClickedCopyToClipboard ]
 
         Html html ->
             html

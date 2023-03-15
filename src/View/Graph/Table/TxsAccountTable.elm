@@ -100,8 +100,8 @@ config vc coinCode =
                    ]
                 ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
                    , T.timestampColumn vc titleTimestamp .timestamp
-                   , T.addressColumn vc titleSendingAddress .fromAddress CopyToClipboard
-                   , T.addressColumn vc titleReceivingAddress .toAddress CopyToClipboard
+                   , T.addressColumn vc titleSendingAddress .fromAddress UserClickedCopyToClipboard
+                   , T.addressColumn vc titleReceivingAddress .toAddress UserClickedCopyToClipboard
                    , T.intColumn vc titleHeight .height
                    , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]

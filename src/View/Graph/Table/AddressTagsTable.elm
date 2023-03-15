@@ -65,7 +65,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address CopyToClipboard
+                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
                         ]
                     ]
                 )

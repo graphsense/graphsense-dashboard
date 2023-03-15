@@ -165,6 +165,6 @@ type Msg
     | UserPressesDelete
     | UserClickedTagsFlag EntityId
     | UserClicksDownloadCSVInTable
-    | OpenExternalLink String
-    | CopyToClipboard String
+    | UserClickedExternalLink String
+    | UserClickedCopyToClipboard String
     | NoOp

@@ -26,6 +26,7 @@ type alias Browser =
     , loadingSpinner : List Style
     , valueCell : List Style
     , currencyCell : List Style
+    , longIdentifier: List Style
     }
 
 
@@ -52,4 +53,5 @@ default =
     , loadingSpinner = []
     , valueCell = []
     , currencyCell = []
+    , longIdentifier = []
     }

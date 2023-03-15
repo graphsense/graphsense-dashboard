@@ -76,7 +76,7 @@ config vc gc =
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.addressColumn vc titleAddress .address (\v -> CopyToClipboard v)
+            [ T.addressColumn vc titleAddress .address (\v -> UserClickedCopyToClipboard v)
             , T.stringColumn vc titleCurrency (.currency >> String.toUpper)
             , T.stringColumn vc titleLabel .label
             , T.tickColumn vc titleDefinesEntity .isClusterDefiner

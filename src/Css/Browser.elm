@@ -117,6 +117,9 @@ propertyCopyLink vc active =
         :: marginRight (px 10)
         :: vc.theme.browser.copyLink vc.lightmode active
 
+propertyLongIdentifier : Config -> List Style
+propertyLongIdentifier vc = vc.theme.browser.longIdentifier
+
 
 loadingSpinner : Config -> List Style
 loadingSpinner vc =

@@ -383,7 +383,7 @@ contextMenu plugins states vc model cm =
 
         addBlockExplorerLinks currency address =
             getBlockExplorerLinks currency address
-                |> List.map (\( url, label ) -> OpenExternalLink url |> option label)
+                |> List.map (\( url, label ) -> UserClickedExternalLink url |> option label)
     in
     (case cm.type_ of
         ContextMenu.Address address ->

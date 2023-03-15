@@ -82,7 +82,7 @@ config vc coinCode entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address CopyToClipboard
+                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
                         ]
                     ]
                 )

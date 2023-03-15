@@ -3679,6 +3679,10 @@ s_copyLink value__ record__ =
     { record__ | copyLink = value__ }
 
 
+s_longIdentifier : a -> { b | longIdentifier : a } -> { b | longIdentifier : a }
+s_longIdentifier value__ record__ =
+    { record__ | longIdentifier = value__ }
+
 s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }
 s_propertyBoxUsageRelative value__ record__ =
     { record__ | propertyBoxUsageRelative = value__ }

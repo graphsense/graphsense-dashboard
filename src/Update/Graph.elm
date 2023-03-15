@@ -2051,10 +2051,10 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault []
             )
 
-        OpenExternalLink url ->
+        UserClickedExternalLink url ->
             ( model, Ports.newTab url |> CmdEffect |> List.singleton )
 
-        CopyToClipboard value ->
+        UserClickedCopyToClipboard value ->
             ( model, Ports.copyToClipboard value |> CmdEffect |> List.singleton )
 
         NoOp ->

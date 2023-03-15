@@ -895,7 +895,7 @@ theme =
                             ]
                         ]
                     )
-                    |> s_copyLink
+                |> s_copyLink
                     (\lightmode isActive ->
                         [ colorWithLightmode lightmode
                             (if isActive then
@@ -912,6 +912,7 @@ theme =
                             ]
                         ]
                     )
+                |> s_longIdentifier [display block, fontFamily monospace]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize
