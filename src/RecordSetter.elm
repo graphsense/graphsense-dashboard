@@ -3674,6 +3674,11 @@ s_propertyBoxTableLink value__ record__ =
     { record__ | propertyBoxTableLink = value__ }
 
 
+s_copyLink : a -> { b | copyLink : a } -> { b | copyLink : a }
+s_copyLink value__ record__ =
+    { record__ | copyLink = value__ }
+
+
 s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }
 s_propertyBoxUsageRelative value__ record__ =
     { record__ | propertyBoxUsageRelative = value__ }

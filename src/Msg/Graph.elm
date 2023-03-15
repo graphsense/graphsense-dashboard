@@ -166,4 +166,5 @@ type Msg
     | UserClickedTagsFlag EntityId
     | UserClicksDownloadCSVInTable
     | OpenExternalLink String
+    | CopyToClipboard String
     | NoOp

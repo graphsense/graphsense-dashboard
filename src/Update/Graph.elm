@@ -1,4 +1,4 @@
-port module Update.Graph exposing (..)
+module Update.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
@@ -70,9 +70,6 @@ import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 import Yaml.Decode
 import Yaml.Encode
-
-
-port newTab : String -> Cmd msg
 
 
 maxHistory : Int
@@ -2055,7 +2052,10 @@ updateByMsg plugins uc msg model =
             )
 
         OpenExternalLink url ->
-            ( model, newTab url |> CmdEffect |> List.singleton )
+            ( model, Ports.newTab url |> CmdEffect |> List.singleton )
+
+        CopyToClipboard value ->
+            ( model, Ports.copyToClipboard value |> CmdEffect |> List.singleton )
 
         NoOp ->
             n model

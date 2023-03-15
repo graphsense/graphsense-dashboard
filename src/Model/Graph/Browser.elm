@@ -49,6 +49,7 @@ type Loadable id thing
 
 type Value msg
     = String String
+    | AddressStr String
     | EntityId Graph.Config Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int

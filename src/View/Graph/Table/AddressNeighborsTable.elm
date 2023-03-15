@@ -18,6 +18,7 @@ import Util.Csv
 import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 columnTitleFromDirection : Bool -> String
@@ -107,7 +108,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ text data.address.address
+                        [ copyableLongIdentifier vc data.address.address CopyToClipboard
                         ]
                     ]
                 )

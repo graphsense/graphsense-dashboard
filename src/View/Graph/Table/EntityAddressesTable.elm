@@ -15,6 +15,7 @@ import Table
 import Util.Csv
 import Util.View exposing (none)
 import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Util exposing (copyableLongIdentifier)
 
 
 init : Table Api.Data.Address
@@ -81,7 +82,7 @@ config vc coinCode entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ text data.address
+                        [ copyableLongIdentifier vc data.address CopyToClipboard
                         ]
                     ]
                 )

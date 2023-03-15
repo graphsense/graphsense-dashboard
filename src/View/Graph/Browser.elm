@@ -55,6 +55,7 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 cm : Maybe Msg
@@ -235,7 +236,7 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> (r -> Html msg) -> Row r -> Html msg
+browseRow : View.Config -> (r -> Html Msg) -> Row r -> Html Msg
 browseRow vc map row =
     case row of
         Rule ->
@@ -297,12 +298,16 @@ tableLink vc link =
         ]
 
 
-browseValue : View.Config -> Value msg -> Html msg
+browseValue : View.Config -> Value Msg -> Html Msg
 browseValue vc value =
     case value of
         String str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
+
+        AddressStr str ->
+            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
+                [ copyableLongIdentifier vc str CopyToClipboard ]
 
         Html html ->
             html
@@ -623,7 +628,7 @@ rowsAddress vc now address =
     [ Row
         ( "Address"
         , address
-            |> ifLoaded (.address >> .address >> String)
+            |> ifLoaded (.address >> .address >> AddressStr)
             |> elseShowAddress
         , Nothing
         )
@@ -793,7 +798,7 @@ rowsEntity vc gc now ent =
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
         ( "Root address"
-        , ent |> ifLoaded (.entity >> .rootAddress >> String) |> elseLoading
+        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
         , Nothing
         )
     , Row
