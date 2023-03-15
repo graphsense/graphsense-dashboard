@@ -82,6 +82,7 @@ graphSvg plugins states vc gc model bbox =
          , Css.svgRoot vc |> Svg.css
          , UserClickedGraph model.dragging
             |> onClick
+         , HA.id "graph"
          , Svg.custom "wheel"
             (Json.Decode.map3
                 (\y mx my ->
