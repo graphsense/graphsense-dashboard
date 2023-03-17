@@ -1,5 +1,6 @@
 module Route.Graph exposing
-    ( AddressTable(..)
+    ( ActorTable(..)
+    , AddressTable(..)
     , AddresslinkTable(..)
     , BlockTable(..)
     , Config
@@ -7,6 +8,7 @@ module Route.Graph exposing
     , Route(..)
     , Thing(..)
     , TxTable(..)
+    , actorRoute
     , addressRoute
     , addresslinkRoute
     , blockRoute
@@ -41,6 +43,7 @@ type alias Config =
 type Route
     = Currency String Thing
     | Label String
+    | Actor String (Maybe ActorTable)
     | Root
     | Plugin ( Plugin.Model.PluginType, String )
 
@@ -89,6 +92,11 @@ labelSegment =
     "label"
 
 
+actorSegment : String
+actorSegment =
+    "actor"
+
+
 tableQuery : String
 tableQuery =
     "table"
@@ -112,6 +120,10 @@ type EntityTable
     | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
+
+
+type ActorTable
+    = ActorTagsTable
 
 
 type TxTable
@@ -215,6 +227,23 @@ txTableToString t =
 
         TokenTxsTable ->
             "token_txs"
+
+
+stringToActorTagsTable : String -> Maybe ActorTable
+stringToActorTagsTable t =
+    case t of
+        "tags" ->
+            Just ActorTagsTable
+
+        _ ->
+            Nothing
+
+
+actorTableToString : ActorTable -> String
+actorTableToString t =
+    case t of
+        ActorTagsTable ->
+            "tags"
 
 
 stringToTxTable : String -> Maybe TxTable
@@ -353,6 +382,15 @@ toUrl route =
         Label l ->
             absolute [ labelSegment, l ] []
 
+        Actor actorId table ->
+            let
+                query =
+                    table
+                        |> Maybe.map (actorTableToString >> B.string tableQuery >> List.singleton)
+                        |> Maybe.withDefault []
+            in
+            absolute [ actorSegment, actorId ] query
+
         Plugin ( ns, p ) ->
             "/" ++ Plugin.Model.pluginTypeToNamespace ns ++ "/" ++ p
 
@@ -397,6 +435,11 @@ labelRoute =
     Label
 
 
+actorRoute : String -> Maybe ActorTable -> Route
+actorRoute id table =
+    Actor id table
+
+
 entityRoute : { currency : String, entity : Int, layer : Maybe Int, table : Maybe EntityTable } -> Route
 entityRoute { currency, entity, layer, table } =
     Entity entity table layer
@@ -431,6 +474,7 @@ parser c =
     oneOf
         [ map Currency (parseCurrency c |> P.slash thing)
         , map Label (P.s labelSegment |> P.slash P.string)
+        , map Actor (P.s actorSegment |> P.slash P.string |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToActorTagsTable)))
         , map Plugin (P.remainder Plugin.parseUrl)
         , map Root P.top
         ]

@@ -238,6 +238,18 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetActorEffect e _ ->
+            ( loadingActorKey
+            , [ e.actorId ]
+            )
+                |> Just
+
+        Api.GetActorTagsEffect e _ ->
+            ( loadingActorTagsKey
+            , [ e.actorId ]
+            )
+                |> Just
+
         Api.GetAddressEffect e _ ->
             ( loadingAddressKey
             , [ e.address
@@ -399,7 +411,7 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.ListAddressTagsEffect e _ ->
-            ( "{1}: loading tags with label {0}"
+            ( "Loading tags with label {0}"
             , [ e.label ]
             )
                 |> Just

@@ -39,6 +39,7 @@ type alias Theme =
     , link : Bool -> List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
+    , userDefautImgUrl : String
     , overlay : List Style
     , popup : Bool -> List Style
     , stats : Stats
@@ -88,6 +89,7 @@ default =
     , link = \_ -> []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""
+    , userDefautImgUrl = ""
     , overlay = []
     , popup = \_ -> []
     , stats = Stats.default

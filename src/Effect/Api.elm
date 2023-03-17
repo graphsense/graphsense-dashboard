@@ -38,6 +38,10 @@ type Effect msg
         , entity : Int
         }
         (Api.Data.Entity -> msg)
+    | GetActorEffect
+        { actorId : String
+        }
+        (Api.Data.Actor -> msg)
     | GetBlockEffect
         { currency : String
         , height : Int
@@ -92,6 +96,12 @@ type Effect msg
     | GetAddressTagsEffect
         { currency : String
         , address : String
+        , pagesize : Int
+        , nextpage : Maybe String
+        }
+        (Api.Data.AddressTags -> msg)
+    | GetActorTagsEffect
+        { actorId : String
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -285,6 +295,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetEntityEffect eff
 
+        GetActorEffect eff m ->
+            m
+                >> mapMsg
+                |> GetActorEffect eff
+
         GetBlockEffect eff m ->
             m
                 >> mapMsg
@@ -324,6 +339,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTagsEffect eff
+
+        GetActorTagsEffect eff m ->
+            m
+                >> mapMsg
+                |> GetActorTagsEffect eff
 
         GetBlockTxsEffect eff m ->
             m
@@ -446,6 +466,10 @@ perform apiKey wrapMsg effect =
             Api.Request.Entities.getEntity currency entity
                 |> send apiKey wrapMsg effect toMsg
 
+        GetActorEffect { actorId } toMsg ->
+            Api.Request.Tags.getActor actorId
+                |> send apiKey wrapMsg effect toMsg
+
         GetBlockEffect { currency, height } toMsg ->
             Api.Request.Blocks.getBlock currency height
                 |> send apiKey wrapMsg effect toMsg
@@ -468,6 +492,10 @@ perform apiKey wrapMsg effect =
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage } toMsg ->
             Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
+            Api.Request.Tags.getActorTags actorId nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } toMsg ->

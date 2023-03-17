@@ -21,6 +21,10 @@ type EntityTable
     | EntityAddressesTable (Table Api.Data.Address)
 
 
+type ActorTable
+    = ActorTagsTable (Table Api.Data.AddressTag)
+
+
 type TxUtxoTable
     = TxUtxoInputsTable (Table Api.Data.TxValue)
     | TxUtxoOutputsTable (Table Api.Data.TxValue)

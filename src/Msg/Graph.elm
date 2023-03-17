@@ -7,6 +7,7 @@ import Bytes exposing (Bytes)
 import Color
 import File
 import Json.Encode
+import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
@@ -57,6 +58,7 @@ type Msg
     | BrowserGotAddressNeighborsTable A.Address Bool Api.Data.NeighborAddresses
     | BrowserGotNow Time.Posix
     | BrowserGotAddress Api.Data.Address
+    | BrowserGotActor Api.Data.Actor
     | BrowserGotEntity Api.Data.Entity
     | BrowserGotBlock Api.Data.Block
     | BrowserGotEntityForAddress String Api.Data.Entity
@@ -78,6 +80,7 @@ type Msg
     | BrowserGotAddressTags A.Address Api.Data.AddressTags
     | BrowserGotAddressTagsTable A.Address Api.Data.AddressTags
     | BrowserGotEntityAddressTagsTable E.Entity Api.Data.AddressTags
+    | BrowserGotActorTagsTable Act.Actor Api.Data.AddressTags
     | BrowserGotTx String Api.Data.Tx
     | BrowserGotTxUtxoAddresses T.Tx Bool (List Api.Data.TxValue)
     | BrowserGotLabelAddressTags String Api.Data.AddressTags

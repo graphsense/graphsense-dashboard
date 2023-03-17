@@ -10,9 +10,11 @@ import Init.Graph.Table as Table
 import Init.Graph.Tag as Tag
 import Json.Encode
 import Log
+import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
+import Model.Graph.Actor as Actor
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
@@ -136,6 +138,14 @@ loadingLabel label model =
     )
 
 
+loadingActor : String -> Model -> Model
+loadingActor actorId model =
+    { model
+        | type_ = Actor (Loading actorId actorId) Nothing
+        , visible = True
+    }
+
+
 showAddresslink : { source : Address.Address, link : Link Address.Address } -> Model -> Model
 showAddresslink { source, link } model =
     { model
@@ -176,6 +186,27 @@ showLabelAddressTags label data model =
                         Label current <|
                             appendData data.nextPage data.addressTags table
                 }
+
+        _ ->
+            model
+
+
+showActorTags : String -> Api.Data.AddressTags -> Model -> Model
+showActorTags actorId data model =
+    case model.type_ of
+        Actor current mtable ->
+            case mtable of
+                Just (ActorTagsTable table) ->
+                    { model
+                        | type_ =
+                            Actor current <|
+                                Just <|
+                                    ActorTagsTable <|
+                                        appendData data.nextPage data.addressTags table
+                    }
+
+                _ ->
+                    model
 
         _ ->
             model
@@ -487,6 +518,46 @@ createEntityTable route t currency entity =
             )
 
 
+showActorTagsTable : Route.ActorTable -> Model -> ( Model, List Effect )
+showActorTagsTable route model =
+    case model.type_ |> Log.log "showActorsTagsTable" of
+        Actor loadable t ->
+            let
+                actorId =
+                    case loadable of
+                        Loading curr aId ->
+                            aId
+
+                        Loaded a ->
+                            a.id
+            in
+            createActorTable route t actorId
+                |> Log.log "table"
+                |> mapFirst (Actor loadable)
+                |> mapFirst
+                    (\type_ -> { model | type_ = type_ })
+                |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createActorTable : Route.ActorTable -> Maybe ActorTable -> String -> ( Maybe ActorTable, List Effect )
+createActorTable route t actorId =
+    case ( route, t ) of
+        ( Route.ActorTagsTable, Just (ActorTagsTable _) ) ->
+            n t
+
+        ( Route.ActorTagsTable, _ ) ->
+            ( LabelAddressTagsTable.init |> ActorTagsTable |> Just
+            , [ getActorTagsEffect
+                    { actorId = actorId
+                    }
+                    Nothing
+              ]
+            )
+
+
 showBlockTable : Route.BlockTable -> Model -> ( Model, List Effect )
 showBlockTable route model =
     case model.type_ |> Log.log "showBlockTable" of
@@ -718,6 +789,28 @@ showAddress address model =
                                 == address.address.address
                                 && loadableAddressCurrency loadable
                                 == address.address.currency
+                        then
+                            table
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
+        |> getBrowserElement
+
+
+showActor : Actor.Actor -> Model -> ( Model, List Effect )
+showActor actor model =
+    show model
+        |> s_type_
+            (Actor (Loaded actor) <|
+                case model.type_ of
+                    Actor loadable table ->
+                        if
+                            loadableActorId loadable
+                                == actor.id
                         then
                             table
 
@@ -1622,6 +1715,17 @@ tableNewState state model =
                             Nothing ->
                                 table
 
+                Actor loadable table ->
+                    Actor loadable <|
+                        case table of
+                            Just (ActorTagsTable t) ->
+                                { t | state = state }
+                                    |> ActorTagsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
                 TxUtxo loadable table ->
                     TxUtxo loadable <|
                         case table of
@@ -1822,6 +1926,18 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                         )
                             |> mapFirst (Entity loadable)
 
+                    Actor loadable table ->
+                        (case table of
+                            Just (ActorTagsTable t) ->
+                                loadableActor loadable
+                                    |> getActorTagsEffect
+                                    |> wrap t ActorTagsTable
+
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Actor loadable)
+
                     Block loadable table ->
                         (case table of
                             Just (BlockTxsUtxoTable t) ->
@@ -2001,6 +2117,20 @@ getEntityAddressTagsEffect { currency, entity } nextpage =
         (BrowserGotEntityAddressTagsTable
             { currency = currency
             , entity = entity
+            }
+        )
+        |> ApiEffect
+
+
+getActorTagsEffect : Act.Actor -> Maybe String -> Effect
+getActorTagsEffect { actorId } nextpage =
+    GetActorTagsEffect
+        { actorId = actorId
+        , pagesize = 100
+        , nextpage = nextpage
+        }
+        (BrowserGotActorTagsTable
+            { actorId = actorId
             }
         )
         |> ApiEffect
@@ -2198,6 +2328,17 @@ filterTable filter model =
                             Nothing ->
                                 table
 
+                Actor loadable table ->
+                    Actor loadable <|
+                        case table of
+                            Just (ActorTagsTable t) ->
+                                applyFilter filter t
+                                    |> ActorTagsTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
                 TxUtxo loadable table ->
                     TxUtxo loadable <|
                         case table of
@@ -2377,6 +2518,14 @@ tableAsCSV locale gc { type_ } =
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
+
+                Nothing ->
+                    Nothing
+
+        Actor loadable table ->
+            case table of
+                Just (ActorTagsTable t) ->
+                    Nothing
 
                 Nothing ->
                     Nothing

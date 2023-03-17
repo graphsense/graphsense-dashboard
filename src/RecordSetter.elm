@@ -684,6 +684,11 @@ s_colorScheme value__ record__ =
     { record__ | colorScheme = value__ }
 
 
+s_contextMenuRule : a -> { b | contextMenuRule : a } -> { b | contextMenuRule : a }
+s_contextMenuRule value__ record__ =
+    { record__ | contextMenuRule = value__ }
+
+
 s_colors : a -> { b | colors : a } -> { b | colors : a }
 s_colors value__ record__ =
     { record__ | colors = value__ }
@@ -2524,6 +2529,11 @@ s_loadingSpinnerUrl value__ record__ =
     { record__ | loadingSpinnerUrl = value__ }
 
 
+s_userDefautImgUrl : a -> { b | userDefautImgUrl : a } -> { b | userDefautImgUrl : a }
+s_userDefautImgUrl value__ record__ =
+    { record__ | userDefautImgUrl = value__ }
+
+
 s_locale : a -> { b | locale : a } -> { b | locale : a }
 s_locale value__ record__ =
     { record__ | locale = value__ }
@@ -3682,6 +3692,7 @@ s_copyLink value__ record__ =
 s_longIdentifier : a -> { b | longIdentifier : a } -> { b | longIdentifier : a }
 s_longIdentifier value__ record__ =
     { record__ | longIdentifier = value__ }
+
 
 s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }
 s_propertyBoxUsageRelative value__ record__ =

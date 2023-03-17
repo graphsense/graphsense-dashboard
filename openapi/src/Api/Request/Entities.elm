@@ -58,6 +58,7 @@ makeDirectionFromString str =
     _ ->
         Nothing
 
+
 type Key
     = KeyCategory
     | KeyAddresses

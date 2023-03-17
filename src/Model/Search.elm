@@ -25,6 +25,7 @@ type ResultLine
     | Tx String
     | Block Int
     | Label String
+    | Actor ( String, String )
 
 
 getMulti : Model -> List String

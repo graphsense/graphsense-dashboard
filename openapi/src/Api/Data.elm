@@ -17,6 +17,7 @@
 module Api.Data exposing
     ( Actor
     , ActorContext
+    , ActorRef
     , Address, AddressStatus(..), addressStatusVariants
     , AddressTag
     , AddressTags
@@ -38,7 +39,6 @@ module Api.Data exposing
     , Rate
     , Rates
     , SearchResult
-    , SearchResultActor
     , SearchResultByCurrency
     , SearchResultLeaf
     , SearchResultLevel1
@@ -60,6 +60,7 @@ module Api.Data exposing
     , Values
     , encodeActor
     , encodeActorContext
+    , encodeActorRef
     , encodeAddress
     , encodeAddressTag
     , encodeAddressTags
@@ -81,7 +82,6 @@ module Api.Data exposing
     , encodeRate
     , encodeRates
     , encodeSearchResult
-    , encodeSearchResultActor
     , encodeSearchResultByCurrency
     , encodeSearchResultLeaf
     , encodeSearchResultLevel1
@@ -103,6 +103,7 @@ module Api.Data exposing
     , encodeValues
     , actorDecoder
     , actorContextDecoder
+    , actorRefDecoder
     , addressDecoder
     , addressTagDecoder
     , addressTagsDecoder
@@ -124,7 +125,6 @@ module Api.Data exposing
     , rateDecoder
     , ratesDecoder
     , searchResultDecoder
-    , searchResultActorDecoder
     , searchResultByCurrencyDecoder
     , searchResultLeafDecoder
     , searchResultLevel1Decoder
@@ -161,24 +161,32 @@ type alias Actor =
     , id : String
     , jurisdictions : List (String)
     , label : String
+    , nrTags : Maybe Int
     , uri : String
     }
 
 
 type alias ActorContext =
-    { coingeckoIds : Maybe (List (String))
-    , defilamaIds : Maybe (List (String))
+    { coingeckoIds : List (String)
+    , defilamaIds : List (String)
     , githubOrganisation : Maybe String
-    , images : Maybe (List (String))
+    , images : List (String)
     , legalName : Maybe String
-    , refs : Maybe (List (String))
+    , refs : List (String)
     , twitterHandle : Maybe String
-    , uris : Maybe (List (String))
+    , uris : List (String)
+    }
+
+
+type alias ActorRef =
+    { id : String
+    , label : String
     }
 
 
 type alias Address =
-    { address : String
+    { actors : Maybe (List (ActorRef))
+    , address : String
     , balance : Values
     , currency : String
     , entity : Int
@@ -293,7 +301,8 @@ type alias CurrencyStats =
 
 
 type alias Entity =
-    { balance : Values
+    { actors : Maybe (List (ActorRef))
+    , balance : Values
     , bestAddressTag : Maybe AddressTag
     , currency : String
     , entity : Int
@@ -386,15 +395,9 @@ type alias Rates =
 
 
 type alias SearchResult =
-    { actors : Maybe (List (SearchResultActor))
+    { actors : Maybe (List (ActorRef))
     , currencies : List (SearchResultByCurrency)
     , labels : List (String)
-    }
-
-
-type alias SearchResultActor =
-    { id : Maybe String
-    , label : Maybe String
     }
 
 
@@ -573,6 +576,7 @@ encodeActorPairs model =
             , encode "id" Json.Encode.string model.id
             , encode "jurisdictions" (Json.Encode.list Json.Encode.string) model.jurisdictions
             , encode "label" Json.Encode.string model.label
+            , maybeEncode "nr_tags" Json.Encode.int model.nrTags
             , encode "uri" Json.Encode.string model.uri
             ]
     in
@@ -593,14 +597,35 @@ encodeActorContextPairs : ActorContext -> List EncodedField
 encodeActorContextPairs model =
     let
         pairs =
-            [ maybeEncode "coingecko_ids" (Json.Encode.list Json.Encode.string) model.coingeckoIds
-            , maybeEncode "defilama_ids" (Json.Encode.list Json.Encode.string) model.defilamaIds
+            [ encode "coingecko_ids" (Json.Encode.list Json.Encode.string) model.coingeckoIds
+            , encode "defilama_ids" (Json.Encode.list Json.Encode.string) model.defilamaIds
             , maybeEncode "github_organisation" Json.Encode.string model.githubOrganisation
-            , maybeEncode "images" (Json.Encode.list Json.Encode.string) model.images
+            , encode "images" (Json.Encode.list Json.Encode.string) model.images
             , maybeEncode "legal_name" Json.Encode.string model.legalName
-            , maybeEncode "refs" (Json.Encode.list Json.Encode.string) model.refs
+            , encode "refs" (Json.Encode.list Json.Encode.string) model.refs
             , maybeEncode "twitter_handle" Json.Encode.string model.twitterHandle
-            , maybeEncode "uris" (Json.Encode.list Json.Encode.string) model.uris
+            , encode "uris" (Json.Encode.list Json.Encode.string) model.uris
+            ]
+    in
+    pairs
+
+
+encodeActorRef : ActorRef -> Json.Encode.Value
+encodeActorRef =
+    encodeObject << encodeActorRefPairs
+
+
+encodeActorRefWithTag : ( String, String ) -> ActorRef -> Json.Encode.Value
+encodeActorRefWithTag (tagField, tag) model =
+    encodeObject (encodeActorRefPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeActorRefPairs : ActorRef -> List EncodedField
+encodeActorRefPairs model =
+    let
+        pairs =
+            [ encode "id" Json.Encode.string model.id
+            , encode "label" Json.Encode.string model.label
             ]
     in
     pairs
@@ -620,7 +645,8 @@ encodeAddressPairs : Address -> List EncodedField
 encodeAddressPairs model =
     let
         pairs =
-            [ encode "address" Json.Encode.string model.address
+            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
+            , encode "address" Json.Encode.string model.address
             , encode "balance" encodeValues model.balance
             , encode "currency" Json.Encode.string model.currency
             , encode "entity" Json.Encode.int model.entity
@@ -882,7 +908,8 @@ encodeEntityPairs : Entity -> List EncodedField
 encodeEntityPairs model =
     let
         pairs =
-            [ encode "balance" encodeValues model.balance
+            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
+            , encode "balance" encodeValues model.balance
             , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
             , encode "entity" Json.Encode.int model.entity
@@ -1131,30 +1158,9 @@ encodeSearchResultPairs : SearchResult -> List EncodedField
 encodeSearchResultPairs model =
     let
         pairs =
-            [ maybeEncode "actors" (Json.Encode.list encodeSearchResultActor) model.actors
+            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
             , encode "currencies" (Json.Encode.list encodeSearchResultByCurrency) model.currencies
             , encode "labels" (Json.Encode.list Json.Encode.string) model.labels
-            ]
-    in
-    pairs
-
-
-encodeSearchResultActor : SearchResultActor -> Json.Encode.Value
-encodeSearchResultActor =
-    encodeObject << encodeSearchResultActorPairs
-
-
-encodeSearchResultActorWithTag : ( String, String ) -> SearchResultActor -> Json.Encode.Value
-encodeSearchResultActorWithTag (tagField, tag) model =
-    encodeObject (encodeSearchResultActorPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeSearchResultActorPairs : SearchResultActor -> List EncodedField
-encodeSearchResultActorPairs model =
-    let
-        pairs =
-            [ maybeEncode "id" Json.Encode.string model.id
-            , maybeEncode "label" Json.Encode.string model.label
             ]
     in
     pairs
@@ -1600,25 +1606,34 @@ actorDecoder =
         |> decode "id" Json.Decode.string 
         |> decode "jurisdictions" (Json.Decode.list Json.Decode.string) 
         |> decode "label" Json.Decode.string 
+        |> maybeDecode "nr_tags" Json.Decode.int Nothing
         |> decode "uri" Json.Decode.string 
 
 
 actorContextDecoder : Json.Decode.Decoder ActorContext
 actorContextDecoder =
     Json.Decode.succeed ActorContext
-        |> maybeDecode "coingecko_ids" (Json.Decode.list Json.Decode.string) Nothing
-        |> maybeDecode "defilama_ids" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "coingecko_ids" (Json.Decode.list Json.Decode.string) 
+        |> decode "defilama_ids" (Json.Decode.list Json.Decode.string) 
         |> maybeDecode "github_organisation" Json.Decode.string Nothing
-        |> maybeDecode "images" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "images" (Json.Decode.list Json.Decode.string) 
         |> maybeDecode "legal_name" Json.Decode.string Nothing
-        |> maybeDecode "refs" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "refs" (Json.Decode.list Json.Decode.string) 
         |> maybeDecode "twitter_handle" Json.Decode.string Nothing
-        |> maybeDecode "uris" (Json.Decode.list Json.Decode.string) Nothing
+        |> decode "uris" (Json.Decode.list Json.Decode.string) 
+
+
+actorRefDecoder : Json.Decode.Decoder ActorRef
+actorRefDecoder =
+    Json.Decode.succeed ActorRef
+        |> decode "id" Json.Decode.string 
+        |> decode "label" Json.Decode.string 
 
 
 addressDecoder : Json.Decode.Decoder Address
 addressDecoder =
     Json.Decode.succeed Address
+        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
         |> decode "address" Json.Decode.string 
         |> decode "balance" valuesDecoder 
         |> decode "currency" Json.Decode.string 
@@ -1763,6 +1778,7 @@ currencyStatsDecoder =
 entityDecoder : Json.Decode.Decoder Entity
 entityDecoder =
     Json.Decode.succeed Entity
+        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
         |> decode "balance" valuesDecoder 
         |> maybeDecode "best_address_tag" addressTagDecoder Nothing
         |> decode "currency" Json.Decode.string 
@@ -1880,16 +1896,9 @@ ratesDecoder =
 searchResultDecoder : Json.Decode.Decoder SearchResult
 searchResultDecoder =
     Json.Decode.succeed SearchResult
-        |> maybeDecode "actors" (Json.Decode.list searchResultActorDecoder) Nothing
+        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
         |> decode "currencies" (Json.Decode.list searchResultByCurrencyDecoder) 
         |> decode "labels" (Json.Decode.list Json.Decode.string) 
-
-
-searchResultActorDecoder : Json.Decode.Decoder SearchResultActor
-searchResultActorDecoder =
-    Json.Decode.succeed SearchResultActor
-        |> maybeDecode "id" Json.Decode.string Nothing
-        |> maybeDecode "label" Json.Decode.string Nothing
 
 
 searchResultByCurrencyDecoder : Json.Decode.Decoder SearchResultByCurrency

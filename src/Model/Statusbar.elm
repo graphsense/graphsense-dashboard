@@ -19,6 +19,16 @@ loadingAddressKey =
     "{1}: loading address {0}"
 
 
+loadingActorKey : String
+loadingActorKey =
+    "Loading Actor {0}"
+
+
+loadingActorTagsKey : String
+loadingActorTagsKey =
+    "Loading Tags of Actor {0}"
+
+
 loadingAddressEntityKey : String
 loadingAddressEntityKey =
     "{1}: loading entity for address {0}"

@@ -5,9 +5,11 @@ import Config.Graph as Graph
 import Html.Styled exposing (Html)
 import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
+import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
+import Model.Graph.Actor exposing (Actor)
 import Model.Graph.Address exposing (Address)
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Layer as Layer
@@ -32,6 +34,7 @@ type Type
     = None
     | Address (Loadable String Address) (Maybe AddressTable)
     | Entity (Loadable Int Entity) (Maybe EntityTable)
+    | Actor (Loadable String Actor) (Maybe ActorTable)
     | TxUtxo (Loadable String Api.Data.TxUtxo) (Maybe TxUtxoTable)
     | TxAccount (Loadable ( String, Maybe Int ) Api.Data.TxAccount) String (Maybe TxAccountTable)
     | Label String (Table Api.Data.AddressTag)
@@ -49,7 +52,10 @@ type Loadable id thing
 
 type Value msg
     = String String
+    | Stack (List (Value msg))
     | AddressStr String
+    | Uri String String
+    | InternalLink String String
     | EntityId Graph.Config Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
@@ -71,6 +77,7 @@ type alias TableLink =
 type Row r
     = Row ( String, r, Maybe TableLink )
     | Note String
+    | Image (Maybe String)
     | Rule
 
 
@@ -107,6 +114,16 @@ loadableEntity l =
             { currency = a.entity.currency
             , entity = a.entity.entity
             }
+
+
+loadableActor : Loadable String Actor -> Act.Actor
+loadableActor l =
+    case l of
+        Loading curr actorId ->
+            { actorId = actorId }
+
+        Loaded a ->
+            { actorId = a.id }
 
 
 loadableBlock : Loadable Int Api.Data.Block -> B.Block
@@ -191,6 +208,16 @@ loadableAddressId l =
 
         Loaded a ->
             a.address.address
+
+
+loadableActorId : Loadable String Actor -> String
+loadableActorId l =
+    case l of
+        Loading _ id ->
+            id
+
+        Loaded a ->
+            a.id
 
 
 loadableEntityId : Loadable Int Entity -> Int

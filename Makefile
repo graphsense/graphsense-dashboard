@@ -23,4 +23,7 @@ setem:
 serve:
 	npm run dev
 
-.PHONY: openapi serve
+test:
+	npx elm-test
+
+.PHONY: openapi serve test

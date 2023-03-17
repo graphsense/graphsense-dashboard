@@ -639,6 +639,17 @@ updateByMsg plugins uc msg model =
                     { model | adding = Adding.removeAddress id model.adding }
                         |> addAddress plugins uc added
 
+        BrowserGotActor actor ->
+            let
+                ( newbrowser, effects ) =
+                    Browser.showActor actor model.browser
+            in
+            ( { model
+                | browser = newbrowser
+              }
+            , effects
+            )
+
         BrowserGotEntityForAddress address entity ->
             let
                 id =
@@ -860,6 +871,12 @@ updateByMsg plugins uc msg model =
                     model.config |> s_colors colors
             }
                 |> updateAddresses id (Address.updateTags tags.addressTags)
+                |> n
+
+        BrowserGotActorTagsTable actor tags ->
+            { model
+                | browser = Browser.showActorTags actor.actorId tags model.browser
+            }
                 |> n
 
         BrowserGotLabelAddressTags label tags ->
@@ -2399,6 +2416,27 @@ updateByRoute plugins route model =
                 | browser = browser
               }
             , effect
+            )
+
+        Route.Actor actorId table ->
+            let
+                newbrowser =
+                    Browser.loadingActor actorId model.browser
+
+                ( browser2, effects ) =
+                    table
+                        |> Maybe.map (\tb -> Browser.showActorTagsTable tb newbrowser)
+                        |> Maybe.withDefault (n newbrowser)
+            in
+            ( { model
+                | browser = browser2
+              }
+            , [ BrowserGotActor
+                    |> GetActorEffect
+                        { actorId = actorId }
+                    |> ApiEffect
+              ]
+                ++ effects
             )
 
         Route.Plugin ( pid, value ) ->

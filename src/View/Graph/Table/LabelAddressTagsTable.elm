@@ -86,6 +86,7 @@ config vc =
                 )
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
+            , T.stringColumn vc "Actor id" (.actor >> Maybe.withDefault "")
             , T.intColumn vc
                 "Confidence"
                 (.confidenceLevel >> Maybe.withDefault 0)

@@ -392,6 +392,7 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
+                ++ [ hr [ Css.contextMenuRule vc |> HA.css ] [] ]
                 ++ addBlockExplorerLinks address.address.currency address.address.address
                 ++ Plugin.addressContextMenu plugins states vc address
 

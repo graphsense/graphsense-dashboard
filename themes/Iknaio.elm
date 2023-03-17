@@ -197,6 +197,7 @@ theme =
             [ displayFlex
             , alignItems center
             ]
+        |> s_userDefautImgUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/circle-question-regular.svg]"
         |> s_switchOnColor
             (\lightmode ->
                 if lightmode then
@@ -472,6 +473,10 @@ theme =
             )
         |> s_graph
             (Graph.default
+                |> s_contextMenuRule
+                    [ borderWidth (px 0)
+                    , scaled 1 |> rem |> margin
+                    ]
                 |> s_colorScheme
                     [ rgb255 228 148 68
                     , rgb255 209 97 93

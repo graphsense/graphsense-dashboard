@@ -23,6 +23,7 @@ import Maybe.Extra
 import Model.Address as A
 import Model.Currency as Currency
 import Model.Entity as E
+import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
 import Model.Graph.Entity exposing (Entity)
@@ -158,6 +159,17 @@ browser plugins states vc gc model =
                             |> Maybe.withDefault []
                        )
 
+            Browser.Actor loadable table ->
+                browseActor plugins states vc gc model.now loadable
+                    :: (table
+                            |> Maybe.map
+                                (\t ->
+                                    browseActorTable vc gc model.height loadable t
+                                )
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
+
             Browser.Block loadable table ->
                 browseBlock plugins states vc gc model.now loadable
                     :: (table
@@ -242,6 +254,36 @@ browseRow vc map row =
         Rule ->
             rule vc
 
+        Image muri ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    []
+                , span
+                    []
+                    [ case muri of
+                        Just uri ->
+                            let
+                                uriWithPrefix =
+                                    if String.startsWith "http" uri then
+                                        uri
+
+                                    else
+                                        "https://" ++ uri
+                            in
+                            {- Setting a default image see https://stackoverflow.com/questions/980855/inputting-a-default-image-in-case-the-src-attribute-of-an-html-img-is-not-vali -}
+                            object [ attribute "data" uriWithPrefix, Css.propertyBoxImage vc |> css ]
+                                [ img [ src vc.theme.userDefautImgUrl, Css.propertyBoxImage vc |> css ] []
+                                ]
+
+                        Nothing ->
+                            img [ src vc.theme.userDefautImgUrl, Css.propertyBoxImage vc |> css ] []
+                    ]
+                ]
+
         Note note ->
             div
                 [ Css.propertyBoxRow vc |> css
@@ -301,6 +343,9 @@ tableLink vc link =
 browseValue : View.Config -> Value Msg -> Html Msg
 browseValue vc value =
     case value of
+        Stack values ->
+            ul [] (List.map (\val -> li [] [ browseValue vc val ]) values)
+
         String str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
@@ -308,6 +353,22 @@ browseValue vc value =
         AddressStr str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
                 [ copyableLongIdentifier vc str UserClickedCopyToClipboard ]
+
+        Uri lbl uri ->
+            let
+                uriWithPrefix =
+                    if String.startsWith "http" uri then
+                        uri
+
+                    else
+                        "https://" ++ uri
+            in
+            a [ href uriWithPrefix, target "_blank", CssView.link vc |> css ]
+                [ text lbl ]
+
+        InternalLink lbl uri ->
+            a [ href uri, CssView.link vc |> css ]
+                [ text lbl ]
 
         Html html ->
             html
@@ -639,6 +700,11 @@ rowsAddress vc now address =
             |> elseShowCurrency
         , Nothing
         )
+    , Row
+        ( "Actors"
+        , address |> ifLoaded (.address >> .actors >> Maybe.withDefault [] >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl)) >> Stack) |> elseLoading
+        , Nothing
+        )
     ]
         ++ (if loadableAddress address |> .currency |> (==) "eth" then
                 [ Row
@@ -751,6 +817,12 @@ browseEntity plugins states vc gc now entity =
         |> propertyBox vc
 
 
+browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> Html Msg
+browseActor plugins states vc gc now actor =
+    (rowsActor vc gc now actor |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
 browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
 browseBlock plugins states vc gc now block =
     (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
@@ -799,6 +871,11 @@ rowsEntity vc gc now ent =
     , Row
         ( "Root address"
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
+        , Nothing
+        )
+    , Row
+        ( "Actors"
+        , ent |> ifLoaded (.entity >> .actors >> Maybe.withDefault [] >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl)) >> Stack) |> elseLoading
         , Nothing
         )
     , Row
@@ -903,6 +980,47 @@ rowsEntity vc gc now ent =
             |> elseLoading
         , Nothing
         )
+    ]
+
+
+rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg))
+rowsActor vc gc now actor =
+    let
+        mkTableLink title tableTag =
+            actor
+                |> makeTableLink
+                    (\_ -> "")
+                    .id
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.actorRoute id (Just tableTag)
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
+    [ Image
+        (case actor of
+            Loaded a ->
+                getImageUri a
+
+            _ ->
+                Nothing
+        )
+    , Rule
+    , Row ( "Actor", actor |> ifLoaded (.label >> String) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Uri", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Categories", actor |> ifLoaded (.categories >> List.map String >> Stack) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Jurisdictions", actor |> ifLoaded (.jurisdictions >> List.map String >> Stack) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Social", actor |> ifLoaded (getUris >> List.map (\x -> Uri x x) >> Stack) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Tags", actor |> ifLoaded (.nrTags >> Maybe.map String.fromInt >> Maybe.withDefault "-" >> String) |> elseLoading, mkTableLink "Show Actor Tags" Route.ActorTagsTable )
     ]
 
 
@@ -1049,6 +1167,13 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
 
         EntityOutgoingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+
+
+browseActorTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Actor -> ActorTable -> Html Msg
+browseActorTable vc gc height actor table =
+    case table of
+        ActorTagsTable t ->
+            table_ vc Nothing height (LabelAddressTagsTable.config vc) t
 
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
