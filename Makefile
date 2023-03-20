@@ -26,4 +26,7 @@ serve:
 test:
 	npx elm-test
 
-.PHONY: openapi serve test
+format:
+	npx elm-format --yes src
+
+.PHONY: openapi serve test format

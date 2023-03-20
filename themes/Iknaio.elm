@@ -176,6 +176,16 @@ theme =
                     ]
                 ]
             )
+        |> s_iconLink
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandText
+                , hover
+                    [ textDecoration none
+                    ]
+                , scaled 5 |> rem |> fontSize
+                , scaled 1 |> rem |> padding
+                ]
+            )
         |> s_loadingSpinner [ loadingSpinner ]
         |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
         |> s_popup

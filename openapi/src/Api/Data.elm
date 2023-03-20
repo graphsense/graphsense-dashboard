@@ -17,7 +17,6 @@
 module Api.Data exposing
     ( Actor
     , ActorContext
-    , ActorRef
     , Address, AddressStatus(..), addressStatusVariants
     , AddressTag
     , AddressTags
@@ -29,6 +28,7 @@ module Api.Data exposing
     , CurrencyStats
     , Entity
     , EntityAddresses
+    , LabeledItemRef
     , Link(..)
     , LinkUtxo
     , Links
@@ -60,7 +60,6 @@ module Api.Data exposing
     , Values
     , encodeActor
     , encodeActorContext
-    , encodeActorRef
     , encodeAddress
     , encodeAddressTag
     , encodeAddressTags
@@ -72,6 +71,7 @@ module Api.Data exposing
     , encodeCurrencyStats
     , encodeEntity
     , encodeEntityAddresses
+    , encodeLabeledItemRef
     , encodeLink
     , encodeLinkUtxo
     , encodeLinks
@@ -103,7 +103,6 @@ module Api.Data exposing
     , encodeValues
     , actorDecoder
     , actorContextDecoder
-    , actorRefDecoder
     , addressDecoder
     , addressTagDecoder
     , addressTagsDecoder
@@ -115,6 +114,7 @@ module Api.Data exposing
     , currencyStatsDecoder
     , entityDecoder
     , entityAddressesDecoder
+    , labeledItemRefDecoder
     , linkDecoder
     , linkUtxoDecoder
     , linksDecoder
@@ -156,10 +156,10 @@ import Json.Encode
 
 
 type alias Actor =
-    { categories : List (String)
+    { categories : List (LabeledItemRef)
     , context : Maybe ActorContext
     , id : String
-    , jurisdictions : List (String)
+    , jurisdictions : List (LabeledItemRef)
     , label : String
     , nrTags : Maybe Int
     , uri : String
@@ -178,14 +178,8 @@ type alias ActorContext =
     }
 
 
-type alias ActorRef =
-    { id : String
-    , label : String
-    }
-
-
 type alias Address =
-    { actors : Maybe (List (ActorRef))
+    { actors : Maybe (List (LabeledItemRef))
     , address : String
     , balance : Values
     , currency : String
@@ -301,7 +295,7 @@ type alias CurrencyStats =
 
 
 type alias Entity =
-    { actors : Maybe (List (ActorRef))
+    { actors : Maybe (List (LabeledItemRef))
     , balance : Values
     , bestAddressTag : Maybe AddressTag
     , currency : String
@@ -326,6 +320,12 @@ type alias Entity =
 type alias EntityAddresses =
     { addresses : List (Address)
     , nextPage : Maybe String
+    }
+
+
+type alias LabeledItemRef =
+    { id : String
+    , label : String
     }
 
 
@@ -395,7 +395,7 @@ type alias Rates =
 
 
 type alias SearchResult =
-    { actors : Maybe (List (ActorRef))
+    { actors : Maybe (List (LabeledItemRef))
     , currencies : List (SearchResultByCurrency)
     , labels : List (String)
     }
@@ -571,10 +571,10 @@ encodeActorPairs : Actor -> List EncodedField
 encodeActorPairs model =
     let
         pairs =
-            [ encode "categories" (Json.Encode.list Json.Encode.string) model.categories
+            [ encode "categories" (Json.Encode.list encodeLabeledItemRef) model.categories
             , maybeEncode "context" encodeActorContext model.context
             , encode "id" Json.Encode.string model.id
-            , encode "jurisdictions" (Json.Encode.list Json.Encode.string) model.jurisdictions
+            , encode "jurisdictions" (Json.Encode.list encodeLabeledItemRef) model.jurisdictions
             , encode "label" Json.Encode.string model.label
             , maybeEncode "nr_tags" Json.Encode.int model.nrTags
             , encode "uri" Json.Encode.string model.uri
@@ -610,27 +610,6 @@ encodeActorContextPairs model =
     pairs
 
 
-encodeActorRef : ActorRef -> Json.Encode.Value
-encodeActorRef =
-    encodeObject << encodeActorRefPairs
-
-
-encodeActorRefWithTag : ( String, String ) -> ActorRef -> Json.Encode.Value
-encodeActorRefWithTag (tagField, tag) model =
-    encodeObject (encodeActorRefPairs model ++ [ encode tagField Json.Encode.string tag ])
-
-
-encodeActorRefPairs : ActorRef -> List EncodedField
-encodeActorRefPairs model =
-    let
-        pairs =
-            [ encode "id" Json.Encode.string model.id
-            , encode "label" Json.Encode.string model.label
-            ]
-    in
-    pairs
-
-
 encodeAddress : Address -> Json.Encode.Value
 encodeAddress =
     encodeObject << encodeAddressPairs
@@ -645,7 +624,7 @@ encodeAddressPairs : Address -> List EncodedField
 encodeAddressPairs model =
     let
         pairs =
-            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
+            [ maybeEncode "actors" (Json.Encode.list encodeLabeledItemRef) model.actors
             , encode "address" Json.Encode.string model.address
             , encode "balance" encodeValues model.balance
             , encode "currency" Json.Encode.string model.currency
@@ -908,7 +887,7 @@ encodeEntityPairs : Entity -> List EncodedField
 encodeEntityPairs model =
     let
         pairs =
-            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
+            [ maybeEncode "actors" (Json.Encode.list encodeLabeledItemRef) model.actors
             , encode "balance" encodeValues model.balance
             , maybeEncode "best_address_tag" encodeAddressTag model.bestAddressTag
             , encode "currency" Json.Encode.string model.currency
@@ -948,6 +927,27 @@ encodeEntityAddressesPairs model =
         pairs =
             [ encode "addresses" (Json.Encode.list encodeAddress) model.addresses
             , maybeEncode "next_page" Json.Encode.string model.nextPage
+            ]
+    in
+    pairs
+
+
+encodeLabeledItemRef : LabeledItemRef -> Json.Encode.Value
+encodeLabeledItemRef =
+    encodeObject << encodeLabeledItemRefPairs
+
+
+encodeLabeledItemRefWithTag : ( String, String ) -> LabeledItemRef -> Json.Encode.Value
+encodeLabeledItemRefWithTag (tagField, tag) model =
+    encodeObject (encodeLabeledItemRefPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeLabeledItemRefPairs : LabeledItemRef -> List EncodedField
+encodeLabeledItemRefPairs model =
+    let
+        pairs =
+            [ encode "id" Json.Encode.string model.id
+            , encode "label" Json.Encode.string model.label
             ]
     in
     pairs
@@ -1158,7 +1158,7 @@ encodeSearchResultPairs : SearchResult -> List EncodedField
 encodeSearchResultPairs model =
     let
         pairs =
-            [ maybeEncode "actors" (Json.Encode.list encodeActorRef) model.actors
+            [ maybeEncode "actors" (Json.Encode.list encodeLabeledItemRef) model.actors
             , encode "currencies" (Json.Encode.list encodeSearchResultByCurrency) model.currencies
             , encode "labels" (Json.Encode.list Json.Encode.string) model.labels
             ]
@@ -1601,10 +1601,10 @@ encodeValuesPairs model =
 actorDecoder : Json.Decode.Decoder Actor
 actorDecoder =
     Json.Decode.succeed Actor
-        |> decode "categories" (Json.Decode.list Json.Decode.string) 
+        |> decode "categories" (Json.Decode.list labeledItemRefDecoder) 
         |> maybeDecode "context" actorContextDecoder Nothing
         |> decode "id" Json.Decode.string 
-        |> decode "jurisdictions" (Json.Decode.list Json.Decode.string) 
+        |> decode "jurisdictions" (Json.Decode.list labeledItemRefDecoder) 
         |> decode "label" Json.Decode.string 
         |> maybeDecode "nr_tags" Json.Decode.int Nothing
         |> decode "uri" Json.Decode.string 
@@ -1623,17 +1623,10 @@ actorContextDecoder =
         |> decode "uris" (Json.Decode.list Json.Decode.string) 
 
 
-actorRefDecoder : Json.Decode.Decoder ActorRef
-actorRefDecoder =
-    Json.Decode.succeed ActorRef
-        |> decode "id" Json.Decode.string 
-        |> decode "label" Json.Decode.string 
-
-
 addressDecoder : Json.Decode.Decoder Address
 addressDecoder =
     Json.Decode.succeed Address
-        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
+        |> maybeDecode "actors" (Json.Decode.list labeledItemRefDecoder) Nothing
         |> decode "address" Json.Decode.string 
         |> decode "balance" valuesDecoder 
         |> decode "currency" Json.Decode.string 
@@ -1778,7 +1771,7 @@ currencyStatsDecoder =
 entityDecoder : Json.Decode.Decoder Entity
 entityDecoder =
     Json.Decode.succeed Entity
-        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
+        |> maybeDecode "actors" (Json.Decode.list labeledItemRefDecoder) Nothing
         |> decode "balance" valuesDecoder 
         |> maybeDecode "best_address_tag" addressTagDecoder Nothing
         |> decode "currency" Json.Decode.string 
@@ -1804,6 +1797,13 @@ entityAddressesDecoder =
     Json.Decode.succeed EntityAddresses
         |> decode "addresses" (Json.Decode.list addressDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
+
+
+labeledItemRefDecoder : Json.Decode.Decoder LabeledItemRef
+labeledItemRefDecoder =
+    Json.Decode.succeed LabeledItemRef
+        |> decode "id" Json.Decode.string 
+        |> decode "label" Json.Decode.string 
 
 
 linkDecoder : Json.Decode.Decoder Link
@@ -1896,7 +1896,7 @@ ratesDecoder =
 searchResultDecoder : Json.Decode.Decoder SearchResult
 searchResultDecoder =
     Json.Decode.succeed SearchResult
-        |> maybeDecode "actors" (Json.Decode.list actorRefDecoder) Nothing
+        |> maybeDecode "actors" (Json.Decode.list labeledItemRefDecoder) Nothing
         |> decode "currencies" (Json.Decode.list searchResultByCurrencyDecoder) 
         |> decode "labels" (Json.Decode.list Json.Decode.string) 
 

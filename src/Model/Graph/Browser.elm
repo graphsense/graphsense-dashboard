@@ -2,6 +2,7 @@ module Model.Graph.Browser exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import FontAwesome
 import Html.Styled exposing (Html)
 import IntDict exposing (IntDict)
 import Json.Encode exposing (Value)
@@ -53,8 +54,11 @@ type Loadable id thing
 type Value msg
     = String String
     | Stack (List (Value msg))
+    | Grid Int (List (Value msg))
     | AddressStr String
+    | Country String String
     | Uri String String
+    | IconLink FontAwesome.Icon String
     | InternalLink String String
     | EntityId Graph.Config Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }

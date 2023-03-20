@@ -2449,6 +2449,11 @@ s_link value__ record__ =
     { record__ | link = value__ }
 
 
+s_iconLink : a -> { b | iconLink : a } -> { b | iconLink : a }
+s_iconLink value__ record__ =
+    { record__ | iconLink = value__ }
+
+
 s_linkColorFaded : a -> { b | linkColorFaded : a } -> { b | linkColorFaded : a }
 s_linkColorFaded value__ record__ =
     { record__ | linkColorFaded = value__ }

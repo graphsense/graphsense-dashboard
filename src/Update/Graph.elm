@@ -2420,23 +2420,34 @@ updateByRoute plugins route model =
 
         Route.Actor actorId table ->
             let
-                newbrowser =
-                    Browser.loadingActor actorId model.browser
+                getActorAction = [ BrowserGotActor
+                        |> GetActorEffect
+                            { actorId = actorId }
+                        |> ApiEffect
+                  ]
+                (newbrowser, effectsActor) = (
+                    case model.browser.type_ of
+                        Browser.Actor (Browser.Loading currentActorId _) _ -> 
+                            if currentActorId /= actorId
+                            then (Browser.loadingActor actorId model.browser, getActorAction) 
+                            else (Browser.openActor True model.browser, [])
+                        Browser.Actor (Browser.Loaded actor) _ -> 
+                            if actor.id /= actorId
+                            then (Browser.loadingActor actorId model.browser, getActorAction)
+                            else (Browser.openActor True model.browser, [])
+                        _ -> (Browser.loadingActor actorId model.browser, getActorAction)
+                    )
+                    
 
-                ( browser2, effects ) =
+                ( browser2, effectsTagsActor ) =
                     table
-                        |> Maybe.map (\tb -> Browser.showActorTagsTable tb newbrowser)
+                        |> Maybe.map (\tb -> Browser.showActorTable tb newbrowser)
                         |> Maybe.withDefault (n newbrowser)
             in
             ( { model
                 | browser = browser2
               }
-            , [ BrowserGotActor
-                    |> GetActorEffect
-                        { actorId = actorId }
-                    |> ApiEffect
-              ]
-                ++ effects
+            , effectsActor ++ effectsTagsActor
             )
 
         Route.Plugin ( pid, value ) ->

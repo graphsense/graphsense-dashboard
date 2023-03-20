@@ -37,6 +37,7 @@ type alias Theme =
     , navbar : Bool -> List Style
     , contents : Bool -> List Style
     , link : Bool -> List Style
+    , iconLink : Bool -> List Style
     , loadingSpinner : List Style
     , loadingSpinnerUrl : String
     , userDefautImgUrl : String
@@ -87,6 +88,7 @@ default =
     , navbar = \_ -> []
     , contents = \_ -> []
     , link = \_ -> []
+    , iconLink = \_ -> []
     , loadingSpinner = []
     , loadingSpinnerUrl = ""
     , userDefautImgUrl = ""

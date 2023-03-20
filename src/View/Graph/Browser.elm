@@ -41,6 +41,8 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
+import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
+import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
 import Util.View exposing (none, toCssColor)
 import View.Graph.Table as Table
@@ -55,6 +57,7 @@ import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
+import View.Graph.Table.LinksTable as LinksTable
 import View.Locale as Locale
 import View.Util exposing (copyableLongIdentifier)
 
@@ -267,12 +270,7 @@ browseRow vc map row =
                     [ case muri of
                         Just uri ->
                             let
-                                uriWithPrefix =
-                                    if String.startsWith "http" uri then
-                                        uri
-
-                                    else
-                                        "https://" ++ uri
+                                uriWithPrefix = addProtocolPrefx uri
                             in
                             {- Setting a default image see https://stackoverflow.com/questions/980855/inputting-a-default-image-in-case-the-src-attribute-of-an-html-img-is-not-vali -}
                             object [ attribute "data" uriWithPrefix, Css.propertyBoxImage vc |> css ]
@@ -346,6 +344,16 @@ browseValue vc value =
         Stack values ->
             ul [] (List.map (\val -> li [] [ browseValue vc val ]) values)
 
+        Grid width values ->
+            let
+                gvalues =
+                    List.Extra.greedyGroupsOf width values
+
+                viewRow row =
+                    li [] [ List.map (browseValue vc) row |> span [] ]
+            in
+            ul [] (List.map viewRow gvalues)
+
         String str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
@@ -354,17 +362,28 @@ browseValue vc value =
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
                 [ copyableLongIdentifier vc str UserClickedCopyToClipboard ]
 
+        Country isocode name ->
+            span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1], title name ]
+                [ 
+                span [css [ CssStyled.fontSize <| CssStyled.em 1.2] ] [  (getFlagEmoji isocode) |> text ]
+                , span [css [ CssStyled.fontFamily <| CssStyled.monospace]] [text isocode]
+                ]
+
         Uri lbl uri ->
             let
                 uriWithPrefix =
-                    if String.startsWith "http" uri then
-                        uri
-
-                    else
-                        "https://" ++ uri
+                    addProtocolPrefx uri
             in
             a [ href uriWithPrefix, target "_blank", CssView.link vc |> css ]
                 [ text lbl ]
+
+        IconLink icon uri ->
+            let
+                uriWithPrefix =
+                    addProtocolPrefx uri
+            in
+            a [ href uriWithPrefix, target "_blank", CssView.iconLink vc |> css ]
+                [ FontAwesome.icon icon |> Html.fromUnstyled ]
 
         InternalLink lbl uri ->
             a [ href uri, CssView.link vc |> css ]
@@ -1014,13 +1033,50 @@ rowsActor vc gc now actor =
     , Rule
     , Row ( "Uri", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Categories", actor |> ifLoaded (.categories >> List.map String >> Stack) |> elseLoading, Nothing )
+    , Row ( "Categories", actor |> ifLoaded (.categories 
+                                            >> List.map .label 
+                                            >> List.map String
+                                            >> Stack) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Jurisdictions", actor |> ifLoaded (.jurisdictions >> List.map String >> Stack) |> elseLoading, Nothing )
+    , Row ( "Jurisdictions", actor |> ifLoaded (.jurisdictions 
+                                                >> List.map (\x -> Country x.id x.label) 
+                                                >> Grid 3) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Social", actor |> ifLoaded (getUris >> List.map (\x -> Uri x x) >> Stack) |> elseLoading, Nothing )
+    , Row
+        ( "Social"
+        , actor
+            |> ifLoaded
+                (getUrisWithoutMain
+                    >> getFontAwesomeIconForUris
+                    >> List.filter (\( uri, icon ) -> icon /= Nothing)
+                    >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
+                    >> Grid 8
+                )
+            |> elseLoading
+        , Nothing
+        )
     , Rule
-    , Row ( "Tags", actor |> ifLoaded (.nrTags >> Maybe.map String.fromInt >> Maybe.withDefault "-" >> String) |> elseLoading, mkTableLink "Show Actor Tags" Route.ActorTagsTable )
+    , Row
+        ( "Other Links"
+        , actor
+            |> ifLoaded
+                ((\x -> "") >> String)
+            |> elseLoading
+        , mkTableLink "More links" Route.ActorOtherLinksTable
+        )
+    , Rule
+    , Row
+        ( "Tags"
+        , actor
+            |> ifLoaded
+                (.nrTags
+                    >> Maybe.map String.fromInt
+                    >> Maybe.withDefault "-"
+                    >> String
+                )
+            |> elseLoading
+        , mkTableLink "Show Actor Tags" Route.ActorTagsTable
+        )
     ]
 
 
@@ -1174,7 +1230,8 @@ browseActorTable vc gc height actor table =
     case table of
         ActorTagsTable t ->
             table_ vc Nothing height (LabelAddressTagsTable.config vc) t
-
+        ActorOtherLinksTable t ->
+            table_ vc Nothing height (LinksTable.config vc) t
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
 browseBlockTable vc gc height block table =

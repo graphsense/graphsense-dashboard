@@ -23,6 +23,7 @@ type EntityTable
 
 type ActorTable
     = ActorTagsTable (Table Api.Data.AddressTag)
+    | ActorOtherLinksTable (Table String)
 
 
 type TxUtxoTable

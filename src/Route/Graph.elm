@@ -124,6 +124,7 @@ type EntityTable
 
 type ActorTable
     = ActorTagsTable
+    | ActorOtherLinksTable
 
 
 type TxTable
@@ -234,6 +235,8 @@ stringToActorTagsTable t =
     case t of
         "tags" ->
             Just ActorTagsTable
+        "links" ->
+            Just ActorOtherLinksTable
 
         _ ->
             Nothing
@@ -244,6 +247,8 @@ actorTableToString t =
     case t of
         ActorTagsTable ->
             "tags"
+        ActorOtherLinksTable -> 
+            "links"
 
 
 stringToTxTable : String -> Maybe TxTable
