@@ -111,8 +111,10 @@ link vc =
 
 
 iconLink : Config -> List Style
-iconLink vc =  cursor pointer
-                    :: vc.theme.iconLink vc.lightmode
+iconLink vc =
+    cursor pointer
+        :: vc.theme.iconLink vc.lightmode
+
 
 overlay : Config -> List Style
 overlay vc =

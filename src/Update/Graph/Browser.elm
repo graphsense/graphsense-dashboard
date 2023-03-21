@@ -33,6 +33,7 @@ import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData, applyFilter, setData)
 import Update.Search as Search
+import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
@@ -40,13 +41,12 @@ import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import View.Graph.Table.LinksTable as LinksTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
-import View.Graph.Table.LinksTable as LinksTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -147,8 +147,11 @@ loadingActor actorId model =
         , visible = True
     }
 
+
 openActor : Bool -> Model -> Model
-openActor open model = { model | visible = open}
+openActor open model =
+    { model | visible = open }
+
 
 showAddresslink : { source : Address.Address, link : Link Address.Address } -> Model -> Model
 showAddresslink { source, link } model =
@@ -529,19 +532,20 @@ showActorTable route model =
             case loadable of
                 Loading curr aId ->
                     createActorTable route t aId
-                    |> Log.log "table"
-                    |> mapFirst (Actor loadable)
-                    |> mapFirst
-                        (\type_ -> { model | type_ = type_ })
-                    |> mapSecond ((::) GetBrowserElementEffect)
+                        |> Log.log "table"
+                        |> mapFirst (Actor loadable)
+                        |> mapFirst
+                            (\type_ -> { model | type_ = type_ })
+                        |> mapSecond ((::) GetBrowserElementEffect)
 
                 Loaded a ->
                     changeActorTable route t a
-                    |> Log.log "table"
-                    |> mapFirst (Actor loadable)
-                    |> mapFirst
-                        (\type_ -> { model | type_ = type_ })
-                    |> mapSecond ((::) GetBrowserElementEffect)
+                        |> Log.log "table"
+                        |> mapFirst (Actor loadable)
+                        |> mapFirst
+                            (\type_ -> { model | type_ = type_ })
+                        |> mapSecond ((::) GetBrowserElementEffect)
+
         _ ->
             n model
 
@@ -551,10 +555,13 @@ createActorTable route t actorId =
     case ( route, t ) of
         ( Route.ActorOtherLinksTable, Just (ActorOtherLinksTable _) ) ->
             n t
+
         ( Route.ActorOtherLinksTable, _ ) ->
-            (LinksTable.init |> ActorOtherLinksTable  |> Just, [])
+            ( LinksTable.init |> ActorOtherLinksTable |> Just, [] )
+
         ( Route.ActorTagsTable, Just (ActorTagsTable _) ) ->
             n t
+
         ( Route.ActorTagsTable, _ ) ->
             ( LabelAddressTagsTable.init |> ActorTagsTable |> Just
             , [ getActorTagsEffect
@@ -564,20 +571,25 @@ createActorTable route t actorId =
               ]
             )
 
+
 changeActorTable : Route.ActorTable -> Maybe ActorTable -> Actor.Actor -> ( Maybe ActorTable, List Effect )
 changeActorTable route t actor =
     case ( route, t ) of
         ( Route.ActorOtherLinksTable, _ ) ->
-            let 
+            let
                 otherUrls : List String
-                otherUrls = (Actor.getUrisWithoutMain actor)
-                            |> getFontAwesomeIconForUris
-                            |> List.filter (\( uri, icon ) -> icon == Nothing)
-                            |> List.map Tuple.first
-                            |> List.map addProtocolPrefx
+                otherUrls =
+                    Actor.getUrisWithoutMain actor
+                        |> getFontAwesomeIconForUris
+                        |> List.filter (\( uri, icon ) -> icon == Nothing)
+                        |> List.map Tuple.first
+                        |> List.map addProtocolPrefx
             in
-                (LinksTable.init |> (setData otherUrls) |> ActorOtherLinksTable  |> Just, [])
-        _ -> createActorTable route t actor.id
+            ( LinksTable.init |> setData otherUrls |> ActorOtherLinksTable |> Just, [] )
+
+        _ ->
+            createActorTable route t actor.id
+
 
 showBlockTable : Route.BlockTable -> Model -> ( Model, List Effect )
 showBlockTable route model =
@@ -1743,10 +1755,12 @@ tableNewState state model =
                                 { t | state = state }
                                     |> ActorTagsTable
                                     |> Just
+
                             Just (ActorOtherLinksTable t) ->
                                 { t | state = state }
                                     |> ActorOtherLinksTable
                                     |> Just
+
                             Nothing ->
                                 table
 
@@ -1956,7 +1970,10 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 loadableActor loadable
                                     |> getActorTagsEffect
                                     |> wrap t ActorTagsTable
-                            Just (ActorOtherLinksTable t) -> ( table, [] )
+
+                            Just (ActorOtherLinksTable t) ->
+                                ( table, [] )
+
                             Nothing ->
                                 ( table, [] )
                         )
@@ -2555,8 +2572,10 @@ tableAsCSV locale gc { type_ } =
             case table of
                 Just (ActorTagsTable t) ->
                     Nothing
+
                 Just (ActorOtherLinksTable t) ->
                     Nothing
+
                 Nothing ->
                     Nothing
 

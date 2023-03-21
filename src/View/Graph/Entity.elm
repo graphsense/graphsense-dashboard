@@ -190,19 +190,13 @@ getLabel vc gc ent =
         |> Maybe.withDefault (String.fromInt ent.entity.entity)
 
 
+addFlagsOffset : (Float -> List (Svg Msg)) -> List (Svg Msg) -> List (Svg Msg)
+addFlagsOffset f acc =
+    acc ++ f -((List.length acc |> toFloat) * 20.0 - 0.0)
+
+
 flags : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
 flags plugins vc gc ent =
-    let
-        tf =
-            tagsFlag vc ent
-
-        offset =
-            if List.isEmpty tf then
-                0
-
-            else
-                18
-    in
     g
         [ Css.entityFlags vc |> css
         , Graph.entityPaddingTop
@@ -214,21 +208,29 @@ flags plugins vc gc ent =
             |> Util.Graph.scale 0.75
             |> transform
         ]
-        (tf
-            ++ [ Plugin.entityFlags plugins ent.plugins vc
-                    |> (\( pluginOffset, pluginFlags ) ->
-                            g [ translate (-offset - pluginOffset) 0 |> transform ]
-                                pluginFlags
-                       )
-               ]
+        (List.foldl addFlagsOffset
+            []
+            ((tagsFlag vc ent
+                :: actorsFlag vc ent
+                :: []
+             )
+                ++ [ \pluginOffsetStart ->
+                        Plugin.entityFlags plugins ent.plugins vc
+                            |> (\( pluginOffset, pluginFlags ) ->
+                                    g [ translate (pluginOffsetStart - pluginOffset) 0 |> transform ]
+                                        pluginFlags
+                               )
+                            |> List.singleton
+                   ]
+            )
         )
 
 
-tagsFlag : Config -> Entity -> List (Svg Msg)
-tagsFlag vc ent =
+tagsFlag : Config -> Entity -> Float -> List (Svg Msg)
+tagsFlag vc ent offsetX =
     if ent.entity.noAddressTags > 0 then
         [ Svg.path
-            [ translate 0 0
+            [ translate offsetX 0
                 |> Util.Graph.scale 0.033
                 |> transform
             , Css.flag vc |> css
@@ -236,6 +238,32 @@ tagsFlag vc ent =
             , onClick <| UserClickedTagsFlag ent.id
             ]
             []
+        ]
+
+    else
+        []
+
+
+actorsFlag : Config -> Entity -> Float -> List (Svg Msg)
+actorsFlag vc ent offsetX =
+    if Entity.getActorsCount ent > 0 then
+        [ Svg.path
+            [ translate offsetX 0
+                |> Util.Graph.scale 0.03
+                |> transform
+            , Css.flag vc |> css
+            , d "M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"
+            ]
+            (Entity.getActorsStr ent
+                |> Maybe.map
+                    (\x ->
+                        Svg.text x
+                            |> List.singleton
+                            |> Svg.title []
+                            |> List.singleton
+                    )
+                |> Maybe.withDefault []
+            )
         ]
 
     else

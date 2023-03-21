@@ -73,3 +73,17 @@ bestTag =
         (List.sortBy (.confidenceLevel >> Maybe.withDefault 0)
             >> List.Extra.last
         )
+
+
+getActorsStr : Address -> Maybe String
+getActorsStr address =
+    address.address.actors
+        |> Maybe.map (List.map .label)
+        |> Maybe.map (String.join ",")
+
+
+getActorsCount : Address -> Int
+getActorsCount address =
+    address.address.actors
+        |> Maybe.map List.length
+        |> Maybe.withDefault 0

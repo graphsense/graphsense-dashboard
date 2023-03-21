@@ -88,4 +88,4 @@ emptyHint vc =
 
 tick : Config -> List Style
 tick vc =
-    vc.theme.table.tick
+    display inlineBlock :: vc.theme.table.tick

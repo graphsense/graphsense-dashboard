@@ -53,11 +53,11 @@ import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import View.Graph.Table.LinksTable as LinksTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
-import View.Graph.Table.LinksTable as LinksTable
 import View.Locale as Locale
 import View.Util exposing (copyableLongIdentifier)
 
@@ -270,7 +270,8 @@ browseRow vc map row =
                     [ case muri of
                         Just uri ->
                             let
-                                uriWithPrefix = addProtocolPrefx uri
+                                uriWithPrefix =
+                                    addProtocolPrefx uri
                             in
                             {- Setting a default image see https://stackoverflow.com/questions/980855/inputting-a-default-image-in-case-the-src-attribute-of-an-html-img-is-not-vali -}
                             object [ attribute "data" uriWithPrefix, Css.propertyBoxImage vc |> css ]
@@ -363,10 +364,9 @@ browseValue vc value =
                 [ copyableLongIdentifier vc str UserClickedCopyToClipboard ]
 
         Country isocode name ->
-            span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1], title name ]
-                [ 
-                span [css [ CssStyled.fontSize <| CssStyled.em 1.2] ] [  (getFlagEmoji isocode) |> text ]
-                , span [css [ CssStyled.fontFamily <| CssStyled.monospace]] [text isocode]
+            span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]
+                [ span [ css [ CssStyled.fontSize <| CssStyled.em 1.2 ] ] [ getFlagEmoji isocode |> text ]
+                , span [ css [ CssStyled.fontFamily <| CssStyled.monospace ] ] [ text isocode ]
                 ]
 
         Uri lbl uri ->
@@ -894,7 +894,22 @@ rowsEntity vc gc now ent =
         )
     , Row
         ( "Actors"
-        , ent |> ifLoaded (.entity >> .actors >> Maybe.withDefault [] >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl)) >> Stack) |> elseLoading
+        , ent
+            |> ifLoaded
+                (.entity
+                    >> .actors
+                    >> Maybe.withDefault []
+                    >> List.map
+                        (\x ->
+                            InternalLink x.label
+                                (Route.actorRoute x.id Nothing
+                                    |> Route.graphRoute
+                                    |> toUrl
+                                )
+                        )
+                    >> Stack
+                )
+            |> elseLoading
         , Nothing
         )
     , Row
@@ -1031,16 +1046,32 @@ rowsActor vc gc now actor =
     , Rule
     , Row ( "Actor", actor |> ifLoaded (.label >> String) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Uri", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
+    , Row ( "Url", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Categories", actor |> ifLoaded (.categories 
-                                            >> List.map .label 
-                                            >> List.map String
-                                            >> Stack) |> elseLoading, Nothing )
+    , Row
+        ( "Categories"
+        , actor
+            |> ifLoaded
+                (.categories
+                    >> List.map .label
+                    >> List.map String
+                    >> Stack
+                )
+            |> elseLoading
+        , Nothing
+        )
     , Rule
-    , Row ( "Jurisdictions", actor |> ifLoaded (.jurisdictions 
-                                                >> List.map (\x -> Country x.id x.label) 
-                                                >> Grid 3) |> elseLoading, Nothing )
+    , Row
+        ( "Jurisdictions"
+        , actor
+            |> ifLoaded
+                (.jurisdictions
+                    >> List.map (\x -> Country x.id x.label)
+                    >> Grid 3
+                )
+            |> elseLoading
+        , Nothing
+        )
     , Rule
     , Row
         ( "Social"
@@ -1050,7 +1081,7 @@ rowsActor vc gc now actor =
                     >> getFontAwesomeIconForUris
                     >> List.filter (\( uri, icon ) -> icon /= Nothing)
                     >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
-                    >> Grid 8
+                    >> Grid 7
                 )
             |> elseLoading
         , Nothing
@@ -1230,8 +1261,10 @@ browseActorTable vc gc height actor table =
     case table of
         ActorTagsTable t ->
             table_ vc Nothing height (LabelAddressTagsTable.config vc) t
+
         ActorOtherLinksTable t ->
             table_ vc Nothing height (LinksTable.config vc) t
+
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
 browseBlockTable vc gc height block table =

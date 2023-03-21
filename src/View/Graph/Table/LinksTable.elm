@@ -28,6 +28,7 @@ filter : String -> String -> Bool
 filter f a =
     String.contains f a
 
+
 config : View.Config -> Table.Config String Msg
 config vc =
     Table.customConfig
@@ -37,8 +38,8 @@ config vc =
             [ T.htmlColumn vc
                 "Url"
                 identity
-                (\data -> [
-                    text data
+                (\data ->
+                    [ text data
                         |> List.singleton
                         |> a
                             [ href data

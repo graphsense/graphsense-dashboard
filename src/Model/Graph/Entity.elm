@@ -75,3 +75,17 @@ getY entity =
 getX : Entity -> Float
 getX entity =
     entity.x + entity.dx
+
+
+getActorsStr : Entity -> Maybe String
+getActorsStr ent =
+    ent.entity.actors
+        |> Maybe.map (List.map .label)
+        |> Maybe.map (String.join ",")
+
+
+getActorsCount : Entity -> Int
+getActorsCount ent =
+    ent.entity.actors
+        |> Maybe.map List.length
+        |> Maybe.withDefault 0

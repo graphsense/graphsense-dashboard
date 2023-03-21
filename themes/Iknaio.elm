@@ -927,7 +927,7 @@ theme =
                             ]
                         ]
                     )
-                |> s_longIdentifier [display block, fontFamily monospace]
+                |> s_longIdentifier [fontFamily monospace]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize

@@ -2420,24 +2420,31 @@ updateByRoute plugins route model =
 
         Route.Actor actorId table ->
             let
-                getActorAction = [ BrowserGotActor
+                getActorAction =
+                    [ BrowserGotActor
                         |> GetActorEffect
                             { actorId = actorId }
                         |> ApiEffect
-                  ]
-                (newbrowser, effectsActor) = (
+                    ]
+
+                ( newbrowser, effectsActor ) =
                     case model.browser.type_ of
-                        Browser.Actor (Browser.Loading currentActorId _) _ -> 
-                            if currentActorId /= actorId
-                            then (Browser.loadingActor actorId model.browser, getActorAction) 
-                            else (Browser.openActor True model.browser, [])
-                        Browser.Actor (Browser.Loaded actor) _ -> 
-                            if actor.id /= actorId
-                            then (Browser.loadingActor actorId model.browser, getActorAction)
-                            else (Browser.openActor True model.browser, [])
-                        _ -> (Browser.loadingActor actorId model.browser, getActorAction)
-                    )
-                    
+                        Browser.Actor (Browser.Loading currentActorId _) _ ->
+                            if currentActorId /= actorId then
+                                ( Browser.loadingActor actorId model.browser, getActorAction )
+
+                            else
+                                ( Browser.openActor True model.browser, [] )
+
+                        Browser.Actor (Browser.Loaded actor) _ ->
+                            if actor.id /= actorId then
+                                ( Browser.loadingActor actorId model.browser, getActorAction )
+
+                            else
+                                ( Browser.openActor True model.browser, [] )
+
+                        _ ->
+                            ( Browser.loadingActor actorId model.browser, getActorAction )
 
                 ( browser2, effectsTagsActor ) =
                     table

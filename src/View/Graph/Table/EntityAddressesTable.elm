@@ -45,7 +45,7 @@ titleLastUsage =
 
 titleFinalBalance : String
 titleFinalBalance =
-    "Final balance"
+    "Balance"
 
 
 titleTotalReceived : String
@@ -88,7 +88,7 @@ config vc coinCode entityId entityHasAddress =
                 )
             , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
             , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
-            , T.valueColumn vc (\_ -> coinCode) titleFirstUsage .balance
+            , T.valueColumn vc (\_ -> coinCode) titleFinalBalance .balance
             , T.valueColumn vc (\_ -> coinCode) titleTotalReceived .totalReceived
             ]
         , customizations = customizations vc

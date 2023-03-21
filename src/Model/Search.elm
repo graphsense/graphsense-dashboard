@@ -5,9 +5,13 @@ import Bounce exposing (Bounce)
 import RemoteData exposing (WebData)
 
 
+
+{- Many Actors have 3 letter names -}
+
+
 minSearchInputLength : Int
 minSearchInputLength =
-    4
+    3
 
 
 type alias Model =

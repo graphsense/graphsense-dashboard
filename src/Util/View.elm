@@ -63,21 +63,19 @@ truncate len str =
 
 truncateLongIdentifier : String -> String
 truncateLongIdentifier str =
-    if String.length str > 16 then
+    if String.length str > 18 then
         let
+            sigPart =
+                if String.startsWith "0x" str then
+                    String.right (String.length str - 2) str
+
+                else
+                    str
+
             len =
                 8
-
-            start_len =
-                len
-                    + (if String.startsWith "0x" str then
-                        2
-
-                       else
-                        0
-                      )
         in
-        String.left start_len str ++ "…" ++ String.right len str
+        String.left len sigPart ++ "…" ++ String.right len sigPart
 
     else
         str

@@ -235,6 +235,7 @@ stringToActorTagsTable t =
     case t of
         "tags" ->
             Just ActorTagsTable
+
         "links" ->
             Just ActorOtherLinksTable
 
@@ -247,7 +248,8 @@ actorTableToString t =
     case t of
         ActorTagsTable ->
             "tags"
-        ActorOtherLinksTable -> 
+
+        ActorOtherLinksTable ->
             "links"
 
 
