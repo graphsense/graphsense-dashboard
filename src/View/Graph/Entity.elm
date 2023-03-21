@@ -180,11 +180,13 @@ getLabel vc gc ent =
                 ent.entity.bestAddressTag
                     |> Maybe.map
                         (\tag ->
-                            if not tag.tagpackIsPublic && String.isEmpty tag.label then
-                                "tag locked"
+                            Util.truncate 18
+                                (if not tag.tagpackIsPublic && String.isEmpty tag.label then
+                                    "tag locked"
 
-                            else
-                                tag.label
+                                 else
+                                    tag.label
+                                )
                         )
             )
         |> Maybe.withDefault (String.fromInt ent.entity.entity)

@@ -83,6 +83,7 @@ type Row r
     | Note String
     | Image (Maybe String)
     | Rule
+    | OptionalRow (Row r) Bool
 
 
 type alias ScrollPos =

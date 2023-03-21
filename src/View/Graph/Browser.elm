@@ -326,6 +326,13 @@ browseRow vc map row =
                     ]
                 ]
 
+        OptionalRow optionalRow bool ->
+            if bool then
+                browseRow vc map optionalRow
+
+            else
+                span [] []
+
 
 tableLink : View.Config -> TableLink -> Html msg
 tableLink vc link =
@@ -365,24 +372,16 @@ browseValue vc value =
 
         Country isocode name ->
             span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]
-                [ span [ css [ CssStyled.fontSize <| CssStyled.em 1.2 ] ] [ getFlagEmoji isocode |> text ]
+                [ span [ css [ CssStyled.fontSize <| CssStyled.em 1.2, CssStyled.marginRight <| CssStyled.em 0.2 ] ] [ getFlagEmoji isocode |> text ]
                 , span [ css [ CssStyled.fontFamily <| CssStyled.monospace ] ] [ text isocode ]
                 ]
 
         Uri lbl uri ->
-            let
-                uriWithPrefix =
-                    addProtocolPrefx uri
-            in
-            a [ href uriWithPrefix, target "_blank", CssView.link vc |> css ]
+            a [ href (addProtocolPrefx uri), target "_blank", CssView.link vc |> css ]
                 [ text lbl ]
 
         IconLink icon uri ->
-            let
-                uriWithPrefix =
-                    addProtocolPrefx uri
-            in
-            a [ href uriWithPrefix, target "_blank", CssView.iconLink vc |> css ]
+            a [ href (addProtocolPrefx uri), target "_blank", CssView.iconLink vc |> css ]
                 [ FontAwesome.icon icon |> Html.fromUnstyled ]
 
         InternalLink lbl uri ->
@@ -719,10 +718,27 @@ rowsAddress vc now address =
             |> elseShowCurrency
         , Nothing
         )
-    , Row
-        ( "Actors"
-        , address |> ifLoaded (.address >> .actors >> Maybe.withDefault [] >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl)) >> Stack) |> elseLoading
-        , Nothing
+    , OptionalRow
+        (Row
+            ( "Actors"
+            , address
+                |> ifLoaded
+                    (.address
+                        >> .actors
+                        >> Maybe.withDefault []
+                        >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl))
+                        >> Stack
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case address of
+            Loaded a ->
+                List.length (a.address.actors |> Maybe.withDefault []) > 0
+
+            _ ->
+                False
         )
     ]
         ++ (if loadableAddress address |> .currency |> (==) "eth" then
@@ -892,25 +908,34 @@ rowsEntity vc gc now ent =
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
         , Nothing
         )
-    , Row
-        ( "Actors"
-        , ent
-            |> ifLoaded
-                (.entity
-                    >> .actors
-                    >> Maybe.withDefault []
-                    >> List.map
-                        (\x ->
-                            InternalLink x.label
-                                (Route.actorRoute x.id Nothing
-                                    |> Route.graphRoute
-                                    |> toUrl
-                                )
-                        )
-                    >> Stack
-                )
-            |> elseLoading
-        , Nothing
+    , OptionalRow
+        (Row
+            ( "Actors"
+            , ent
+                |> ifLoaded
+                    (.entity
+                        >> .actors
+                        >> Maybe.withDefault []
+                        >> List.map
+                            (\x ->
+                                InternalLink x.label
+                                    (Route.actorRoute x.id Nothing
+                                        |> Route.graphRoute
+                                        |> toUrl
+                                    )
+                            )
+                        >> Stack
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case ent of
+            Loaded a ->
+                List.length (a.entity.actors |> Maybe.withDefault []) > 0
+
+            _ ->
+                False
         )
     , Row
         ( "Currency"
@@ -1061,30 +1086,54 @@ rowsActor vc gc now actor =
         , Nothing
         )
     , Rule
-    , Row
-        ( "Jurisdictions"
-        , actor
-            |> ifLoaded
-                (.jurisdictions
-                    >> List.map (\x -> Country x.id x.label)
-                    >> Grid 3
-                )
-            |> elseLoading
-        , Nothing
+    , OptionalRow
+        (Row
+            ( "Jurisdictions"
+            , actor
+                |> ifLoaded
+                    (.jurisdictions
+                        >> List.map (\x -> Country x.id x.label)
+                        >> Grid 3
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case actor of
+            Loaded a ->
+                List.length a.jurisdictions > 0
+
+            _ ->
+                False
         )
     , Rule
-    , Row
-        ( "Social"
-        , actor
-            |> ifLoaded
-                (getUrisWithoutMain
-                    >> getFontAwesomeIconForUris
-                    >> List.filter (\( uri, icon ) -> icon /= Nothing)
-                    >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
-                    >> Grid 7
-                )
-            |> elseLoading
-        , Nothing
+    , OptionalRow
+        (Row
+            ( "Social"
+            , actor
+                |> ifLoaded
+                    (getUrisWithoutMain
+                        >> getFontAwesomeIconForUris
+                        >> List.filter (\( uri, icon ) -> icon /= Nothing)
+                        >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
+                        >> Grid 7
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case actor of
+            Loaded a ->
+                List.length
+                    (a
+                        |> getUrisWithoutMain
+                        |> getFontAwesomeIconForUris
+                        |> List.filter (\( uri, icon ) -> icon /= Nothing)
+                    )
+                    > 0
+
+            _ ->
+                False
         )
     , Rule
     , Row

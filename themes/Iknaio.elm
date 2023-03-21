@@ -484,7 +484,7 @@ theme =
         |> s_graph
             (Graph.default
                 |> s_contextMenuRule
-                    [ borderWidth (px 0)
+                    [ borderWidth (px 0.5)
                     , scaled 1 |> rem |> margin
                     ]
                 |> s_colorScheme
