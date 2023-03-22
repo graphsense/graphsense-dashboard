@@ -251,7 +251,7 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> (r -> Html Msg) -> Row r -> Html Msg
+browseRow : View.Config -> (r -> Html msg) -> Row r -> Html msg
 browseRow vc map row =
     case row of
         Rule ->
@@ -346,7 +346,7 @@ tableLink vc link =
         ]
 
 
-browseValue : View.Config -> Value Msg -> Html Msg
+browseValue : View.Config -> Value msg -> Html msg
 browseValue vc value =
     case value of
         Stack values ->
@@ -366,9 +366,9 @@ browseValue vc value =
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
 
-        AddressStr str ->
+        AddressStr msg str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str UserClickedCopyToClipboard ]
+                [ copyableLongIdentifier vc str msg ]
 
         Country isocode name ->
             span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]
@@ -707,7 +707,7 @@ rowsAddress vc now address =
     [ Row
         ( "Address"
         , address
-            |> ifLoaded (.address >> .address >> AddressStr)
+            |> ifLoaded (.address >> .address >> AddressStr UserClickedCopyToClipboard)
             |> elseShowAddress
         , Nothing
         )
@@ -905,7 +905,7 @@ rowsEntity vc gc now ent =
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
         ( "Root address"
-        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
+        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
         , Nothing
         )
     , OptionalRow
