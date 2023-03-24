@@ -289,3 +289,6 @@ Actors: Akteure
 Other Links: Links
 Social: Social Media
 Jurisdictions: Gerichtsbarkeit
+list sending entities: einzahlende cluster
+list receiving entities: ausgehend cluster
+list entity transactions: Cluster Transaktionen

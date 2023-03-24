@@ -8,3 +8,6 @@ currency: cryptoasset
 change currency: value denomination
 for entities: for clusters
 final balance: Balance
+list sending entities: list sending clusters
+list receiving entities: list receiving clusters
+list entity transactions: list cluster transactions
