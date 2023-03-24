@@ -29,7 +29,7 @@ getActor : (String) -> Api.Request Api.Data.Actor
 getActor actor_path =
     Api.request
         "GET"
-        "/tags/actor/{actor}"
+        "/tags/actors/{actor}"
         [ ( "actor", identity actor_path ) ]
         []
         []
@@ -42,7 +42,7 @@ getActorTags : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data
 getActorTags actor_path page_query pagesize_query =
     Api.request
         "GET"
-        "/tags/actor/{actor}/tags"
+        "/tags/actors/{actor}/tags"
         [ ( "actor", identity actor_path ) ]
         [ ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
