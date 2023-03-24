@@ -7,3 +7,4 @@ Receiving entities: receiving clusters
 currency: cryptoasset
 change currency: value denomination
 for entities: for clusters
+final balance: Balance
