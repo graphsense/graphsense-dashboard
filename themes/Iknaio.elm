@@ -869,7 +869,7 @@ theme =
                             ]
                         , displayFlex
                         , scaled 2 |> rem |> padding
-                        , width <| calc (pct 100) minus (scaled 4 |> rem)
+                        , width <| calc (pct 100) minus (scaled 3 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30

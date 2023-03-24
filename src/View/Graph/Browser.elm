@@ -26,7 +26,7 @@ import Model.Entity as E
 import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
-import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Entity exposing (Entity, getActorsStr)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
@@ -403,30 +403,39 @@ browseValue vc value =
         EntityId gc entity ->
             div
                 []
-                [ entity.entity.bestAddressTag
-                    |> Maybe.map
-                        (\tag ->
-                            span
-                                [ tag.category
-                                    |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
-                                    |> Maybe.map
-                                        (toCssColor
-                                            >> CssStyled.color
-                                            >> List.singleton
-                                        )
-                                    |> Maybe.withDefault []
-                                    |> css
-                                ]
-                                [ text
-                                    (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                        Util.Graph.getCategory gc tag.category
-                                            |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
+                [ Maybe.Extra.orListLazy
+                    [ \() ->
+                        Model.Graph.Entity.getActorsStr entity
+                            |> Maybe.map
+                                (\actorstr ->
+                                    span [] [ text actorstr ]
+                                )
+                    , \() ->
+                        entity.entity.bestAddressTag
+                            |> Maybe.map
+                                (\tag ->
+                                    span
+                                        [ tag.category
+                                            |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
+                                            |> Maybe.map
+                                                (toCssColor
+                                                    >> CssStyled.color
+                                                    >> List.singleton
+                                                )
+                                            |> Maybe.withDefault []
+                                            |> css
+                                        ]
+                                        [ text
+                                            (if String.isEmpty tag.label && not tag.tagpackIsPublic then
+                                                Util.Graph.getCategory gc tag.category
+                                                    |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
-                                     else
-                                        tag.label
-                                    )
-                                ]
-                        )
+                                             else
+                                                tag.label
+                                            )
+                                        ]
+                                )
+                    ]
                     |> Maybe.withDefault (span [] [ Locale.string vc.locale "Unknown" |> text ])
                 , span
                     [ Css.propertyBoxEntityId vc |> css
@@ -600,18 +609,18 @@ rowsAddress vc now address =
                 , mkTableLink "List address transactions" Route.AddressTxsTable
                 )
             , Row
-                ( "Receiving addresses"
-                , address
-                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
-                    |> elseLoading
-                , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
-                )
-            , Row
                 ( "Sending addresses"
                 , address
                     |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
                     |> elseLoading
                 , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
+                )
+            , Row
+                ( "Receiving addresses"
+                , address
+                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+                    |> elseLoading
+                , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
                 )
             ]
 
@@ -904,7 +913,7 @@ rowsEntity vc gc now ent =
     in
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
-        ( "Root address"
+        ( "Root Address"
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
         , Nothing
         )
@@ -983,6 +992,13 @@ rowsEntity vc gc now ent =
         , mkTableLink "List entity transactions" Route.EntityTxsTable
         )
     , Row
+        ( "Sending entities"
+        , ent
+            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
+            |> elseLoading
+        , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
+        )
+    , Row
         ( "Receiving entities"
         , ent
             |> ifLoaded
@@ -992,13 +1008,6 @@ rowsEntity vc gc now ent =
                 )
             |> elseLoading
         , mkTableLink "List receiving entities" Route.EntityOutgoingNeighborsTable
-        )
-    , Row
-        ( "Sending entities"
-        , ent
-            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
-            |> elseLoading
-        , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
         )
     , Rule
     , Row

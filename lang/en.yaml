@@ -1,8 +1,8 @@
 # attention: put phrases containing a colon in quotation marks (see "error requesting" for an example)
 address: address
 addresses: addresses
-entity: entity
-entities: entities
+entity: cluster
+entities: clusters
 transaction: transaction
 transactions: transactions
 label: label
@@ -10,24 +10,24 @@ labels: labels
 tag: tag
 tags: tags
 address tags: address tags
-entity tags: entity tags
+entity tags: cluster tags
 block: block
 blocks: blocks
-supported currencies: supported currencies
+supported currencies: supported assets
 ledger statistics: ledger statistics
 last update: last update
 latest block: latest block
 loading_type_id: loading %0 %1  # results in eg. loading address xyz
 loading_thing: loading %0 
-currency: currency
+currency: cryptoasset
 transfers: transfers
 withdrawals: withdrawals
 deposits: deposits
 neighbors: neighbors
 receiving neighbors: receiving neighbors
 sending neighbors: sending neighbors
-receiving entities: receiving entities
-sending entities: sending entities
+receiving entities: receiving clusters
+sending entities: sending clusters
 receiving addresses: receiving addresses
 sending addresses: sending addresses
 first usage: first usage
@@ -67,12 +67,12 @@ value: value
 timestamp: timestamp
 outgoing address: outgoing address
 incoming address: incoming address
-outgoing entity: outgoing entity
-incoming entity: incoming entity
+outgoing entity: outgoing cluster
+incoming entity: incoming cluster
 outgoing addresses: outgoing addresses
 incoming addresses: incoming addresses
-outgoing entities: outgoing entities
-incoming entities: incoming entities
+outgoing entities: outgoing clusters
+incoming entities: incoming clusters
 output address: output address
 input address: input address
 no. transactions: no. transactions # number transactions
@@ -115,7 +115,7 @@ institution: institution
 summary: summary
 cancel: cancel
 creator: creator
-change currency: change currency
+change currency: value denomination
 start from scratch: start from scratch
 load from file: load from file
 undo last graph change: undo last graph change
@@ -148,10 +148,10 @@ add tag: add tag
 search incoming neighbors: search incoming neighbors
 search outgoing neighbors: search outgoing neighbors
 nothing to display yet: nothing to display yet!
-entity_tooltip: An entity represents an entity dealing with one or more addresses.
+entity_tooltip: A cluster represents an entity dealing with one or more addresses.
 address_tooltip: An address which can receive and spend coins.
 link_tooltip: A link indicates that there exist one or more transactions between the nodes. flow is always from left to right.
-shadow_tooltip: A shadow link connects identical addresses and entities.
+shadow_tooltip: A shadow link connects identical addresses and clusters.
 searching criterion category_name: category %0
 searching criterion addresses_ids: addresses %0
 searching between: between %0 and %1
@@ -175,13 +175,13 @@ saving to file: saving to file
 saved to file: saved to file %0
 loading file: loading file %0
 loaded file: loaded file %0
-loading entity for: loading entity for %0
-loaded entity for: loaded entity for %0
-no entity for: no entity for %0
+loading entity for: loading cluster for %0
+loaded entity for: loaded cluster for %0
+no entity for: no cluster for %0
 loading tags for: loading tags for %0 %1
 loaded tags for: loaded tags for %0 %1
-trying to load addresses for entity: trying to load %1 addresses for entity %0
-loaded addresses for entity: loaded %1 addresses for entity %0
+trying to load addresses for entity: trying to load %1 addresses for cluster %0
+loaded addresses for entity: loaded %1 addresses for cluster %0
 removed node of: removed %0 node %1 # %0 = type, %1 = id
 found paths to nodes: found %0 paths 
 go to dashboard: go to dashboard
@@ -194,7 +194,7 @@ unknown: unknown
 API rate limit exceeded: Maximale Anzahl API Zugriffe erreicht. Bitte später nochmals versuchen.
 legend empty: legend empty
 pick a color: pick a color
-start highlighting addresses and entities: highlight addresses and entities
+start highlighting addresses and entities: highlight addresses and clusters
 api request limit: request limit
 reset in %0 s: reset in %0s
 from address: from address
@@ -203,7 +203,7 @@ transactions file: transactions of %0 %1 # %0 = type, %1 = id
 neighbors file: %0 of %1 %2 # %0 = incoming/outgoing neighbors, %1 = type, %2 = id
 tags file: %0 tags of %1 %2 # %0 = type, %1 = id
 links file: transactions between %0 %1 and %2 # %0 = type, %1 = source, %2 = target
-addresses file: addresses of entity %0
+addresses file: addresses of cluster %0
 address/entity balance: %0 balance
 address/entity received: %0 received
 tagged addresses: tagged addresses

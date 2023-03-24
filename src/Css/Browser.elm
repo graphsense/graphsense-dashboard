@@ -117,8 +117,9 @@ propertyBoxActivityPeriod vc =
 
 propertyBoxTableLink : Config -> Bool -> List Style
 propertyBoxTableLink vc active =
-    position absolute
+    position relative
         :: right (px 0)
+        :: paddingLeft (px 5)
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
 
 

@@ -1,1 +1,9 @@
 the search: search
+entity: cluster
+entities: clusters
+Root Address: cluster root
+Sending entities: sending clusters
+Receiving entities: receiving clusters
+currency: cryptoasset
+change currency: value denomination
+for entities: for clusters
