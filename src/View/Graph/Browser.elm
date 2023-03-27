@@ -45,6 +45,7 @@ import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
 import Util.View exposing (none, toCssColor)
+import View.Button exposing (actorLink)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -405,11 +406,9 @@ browseValue vc value =
                 []
                 [ Maybe.Extra.orListLazy
                     [ \() ->
-                        Model.Graph.Entity.getActorsStr entity
+                        Model.Graph.Entity.getBestActor entity
                             |> Maybe.map
-                                (\actorstr ->
-                                    span [] [ text actorstr ]
-                                )
+                                (\actor -> actorLink vc actor.id actor.label)
                     , \() ->
                         entity.entity.bestAddressTag
                             |> Maybe.map
@@ -720,16 +719,9 @@ rowsAddress vc now address =
             |> elseShowAddress
         , Nothing
         )
-    , Row
-        ( "Currency"
-        , address
-            |> ifLoaded (.address >> .currency >> String.toUpper >> String)
-            |> elseShowCurrency
-        , Nothing
-        )
     , OptionalRow
         (Row
-            ( "Actors"
+            ( "Actor"
             , address
                 |> ifLoaded
                     (.address
@@ -748,6 +740,13 @@ rowsAddress vc now address =
 
             _ ->
                 False
+        )
+    , Row
+        ( "Currency"
+        , address
+            |> ifLoaded (.address >> .currency >> String.toUpper >> String)
+            |> elseShowCurrency
+        , Nothing
         )
     ]
         ++ (if loadableAddress address |> .currency |> (==) "eth" then
@@ -917,35 +916,37 @@ rowsEntity vc gc now ent =
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
         , Nothing
         )
-    , OptionalRow
-        (Row
-            ( "Actors"
-            , ent
-                |> ifLoaded
-                    (.entity
-                        >> .actors
-                        >> Maybe.withDefault []
-                        >> List.map
-                            (\x ->
-                                InternalLink x.label
-                                    (Route.actorRoute x.id Nothing
-                                        |> Route.graphRoute
-                                        |> toUrl
-                                    )
-                            )
-                        >> Stack
-                    )
-                |> elseLoading
-            , Nothing
-            )
-        )
-        (case ent of
-            Loaded a ->
-                List.length (a.entity.actors |> Maybe.withDefault []) > 0
 
-            _ ->
-                False
-        )
+    {- , OptionalRow
+       (Row
+           ( "Actors"
+           , ent
+               |> ifLoaded
+                   (.entity
+                       >> .actors
+                       >> Maybe.withDefault []
+                       >> List.map
+                           (\x ->
+                               InternalLink x.label
+                                   (Route.actorRoute x.id Nothing
+                                       |> Route.graphRoute
+                                       |> toUrl
+                                   )
+                           )
+                       >> Stack
+                   )
+               |> elseLoading
+           , Nothing
+           )
+       )
+       (case ent of
+           Loaded a ->
+               List.length (a.entity.actors |> Maybe.withDefault []) > 0
+
+           _ ->
+               False
+       )
+    -}
     , Row
         ( "Currency"
         , ent |> ifLoaded (.entity >> .currency >> String.toUpper >> String) |> elseShowCurrency

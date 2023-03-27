@@ -14,6 +14,8 @@ import Config.Graph
         )
 import Config.Update exposing (Config)
 import Dict exposing (Dict)
+import List.Extra
+import Maybe.Extra
 import Model.Graph.Address exposing (..)
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
@@ -82,6 +84,29 @@ getActorsStr ent =
     ent.entity.actors
         |> Maybe.map (List.map .label)
         |> Maybe.map (String.join ",")
+
+
+getActorById : Entity -> String -> Maybe Api.Data.LabeledItemRef
+getActorById ent actorId =
+    getActorByIdApi ent.entity actorId
+
+
+getActorByIdApi : Api.Data.Entity -> String -> Maybe Api.Data.LabeledItemRef
+getActorByIdApi ent actorId =
+    List.Extra.find (\x -> x.id == actorId) (ent.actors |> Maybe.withDefault [])
+
+
+getBestActor : Entity -> Maybe Api.Data.LabeledItemRef
+getBestActor ent =
+    getBestActorApi ent.entity
+
+
+getBestActorApi : Api.Data.Entity -> Maybe Api.Data.LabeledItemRef
+getBestActorApi ent =
+    ent.bestAddressTag
+        |> Maybe.map (.actor >> Maybe.map (getActorByIdApi ent))
+        |> Maybe.Extra.join
+        |> Maybe.Extra.join
 
 
 getActorsCount : Entity -> Int
