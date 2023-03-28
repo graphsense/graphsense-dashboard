@@ -61,6 +61,26 @@ truncate len str =
         str
 
 
+truncateLongIdentifier : String -> String
+truncateLongIdentifier str =
+    if String.length str > 18 then
+        let
+            sigPart =
+                if String.startsWith "0x" str then
+                    String.right (String.length str - 2) str
+
+                else
+                    str
+
+            len =
+                8
+        in
+        String.left len sigPart ++ "…" ++ String.right len sigPart
+
+    else
+        str
+
+
 setAlpha : Float -> Color.Color -> Color.Color
 setAlpha alpha =
     Color.toRgba

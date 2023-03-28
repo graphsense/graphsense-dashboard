@@ -9,6 +9,11 @@ import Model.Graph.Tool as Tool
 import Util.Css
 
 
+contextMenuRule : Config -> List Style
+contextMenuRule vc =
+    vc.theme.graph.contextMenuRule
+
+
 navbar : Config -> List Style
 navbar vc =
     [ displayFlex

@@ -18,6 +18,7 @@ import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (longIdentifier)
 
 
 init : Table Api.Data.AddressTxUtxo
@@ -61,8 +62,7 @@ config vc coinCode =
                 titleTx
                 .txHash
                 (\data ->
-                    Util.View.truncate vc.theme.table.urlMaxLength data.txHash
-                        |> text
+                    longIdentifier vc data.txHash
                         |> List.singleton
                         |> a
                             [ Css.View.link vc |> css

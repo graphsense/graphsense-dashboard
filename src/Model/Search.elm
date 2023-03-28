@@ -5,9 +5,13 @@ import Bounce exposing (Bounce)
 import RemoteData exposing (WebData)
 
 
+
+{- Many Actors have 3 letter names -}
+
+
 minSearchInputLength : Int
 minSearchInputLength =
-    4
+    3
 
 
 type alias Model =
@@ -25,6 +29,7 @@ type ResultLine
     | Tx String
     | Block Int
     | Label String
+    | Actor ( String, String )
 
 
 getMulti : Model -> List String

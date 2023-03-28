@@ -3,7 +3,7 @@ include .env
 API_ELM=openapi/src/Api.elm
 
 openapi:
-	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
+	tools/generate-openapi.sh https\://$(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
 			#--global-property=debugOperations \
 
@@ -20,4 +20,13 @@ $(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 setem:
 	npx setem --output src/
 
-.PHONY: openapi
+serve:
+	npm run dev
+
+test:
+	npx elm-test
+
+format:
+	npx elm-format --yes src
+
+.PHONY: openapi serve test format

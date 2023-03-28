@@ -22,6 +22,7 @@ import Util.Graph
 import Util.View exposing (none, truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 init : Table Api.Data.AddressTag
@@ -64,7 +65,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ text data.address
+                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
                         ]
                     ]
                 )

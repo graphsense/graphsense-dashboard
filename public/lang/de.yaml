@@ -2,8 +2,8 @@ address: Adresse
 addresses: Adressen
 "{0} address": "{0} Adresse"
 "{0} addresses": "{0} Adressen"
-entity: Entität
-entities: Entitäten
+entity: Cluster
+entities: Clusters
 transaction: Transaktion
 transactions: Transaktionen
 label: Schlagwort
@@ -11,7 +11,7 @@ labels: Schlagwörter
 tag: Schlagwort
 tags: Schlagwörter
 address tags: Adress-Schlagwörter
-entity tags: Entitäts-Schlagwörter
+entity tags: Cluster-Schlagwörter
 block: Block
 blocks: Blöcke
 supported currencies: unterstützte Währungen
@@ -19,15 +19,15 @@ ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
 "addresses, transaction, label, block": Adressen, Transaktion, Schlagwort, Block
-currency: Währung
+currency: Cryptoasset
 transfers: Transaktionen
 withdrawals: Abbuchungen
 deposits: Einzahlungen
 neighbors: Nachbarn
-receiving entities: abbuchende Entitäten
-sending entities: einzahlende Entitäten
-receiving entity: abbuchende Entität
-sending entity: einzahlende Entität
+receiving entities: abbuchende Cluster
+sending entities: einzahlende Cluster
+receiving entity: abbuchende Cluster
+sending entity: einzahlende Cluster
 receiving addresses: abbuchende Adressen
 receiving address: abbuchende Adresse
 sending addresses: einzahlende Adressen
@@ -39,12 +39,12 @@ total received: Eingänge
 "total received {0}": Eingänge {0}
 final balance: Bilanz
 "final balance {0}": Bilanz {0}
-entity balance: Bilanz Entität
-"entity balance {0}": Bilanz Entität {0}
+entity balance: Bilanz Cluster
+"entity balance {0}": Bilanz Cluster {0}
 address balance: Bilanz Adresse
 "address balance {0}": Bilanz Adresse {0}
-entity received: Eingänge Entität
-"entity received {0}": Eingänge Entität {0}
+entity received: Eingänge Cluster
+"entity received {0}": Eingänge Cluster {0}
 address received: Eingänge Adresse
 "address received {0}": Eingänge Adresse {0}
 category: Kategorie
@@ -82,12 +82,12 @@ value: Wert
 timestamp: Zeitstempel
 outgoing address: ausgehende Adresse
 incoming address: eingehende Adresse
-outgoing entity: ausgehende Entität
-incoming entity: eingehende Entität
+outgoing entity: ausgehender Cluster
+incoming entity: eingehender Cluster
 outgoing addresses: ausgehende Adressen
 incoming addresses: eingehende Adressen
-outgoing entities: ausgehende Entitäten
-incoming entities: eingehende Entitäten
+outgoing entities: ausgehende Cluster
+incoming entities: eingehende Cluster
 output address: ausgehende Adresse
 input address: eingehende Adresse
 no. transactions: Anz. Transaktionen
@@ -130,7 +130,7 @@ institution: Institution
 summary: Zusammenfassung
 cancel: Abbrechen
 creator: Ersteller
-change currency: Währung ändern
+change currency: Wertbezeichung
 start from scratch: neu
 load from file: aus Datei laden
 undo last graph change: rückgängig
@@ -159,11 +159,11 @@ add tag: Schlagwort hinzufügen
 search incoming neighbors: suche eingehende Nachbarn
 search outgoing neighbors: suche ausgehende Nachbarn
 nothing to display yet: noch nichts anzuzeigen!
-entity_tooltip: Eine Entität umfasst eine oder mehrere Adressen
+entity_tooltip: Eine Cluster umfasst eine oder mehrere Adressen
 address_tooltip: Eine Adresse kann Coins senden und empfangen
 link_tooltip: Eine Verbindung zeigt an, dass es eine oder mehrere Transaktionen
   zwischen den Knoten gab. Der Geldfluss ist immer von links nach rechts.
-shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Entitäten.
+shadow_tooltip: Eine Schattenverbindung verbindet identische Adressen und Cluster.
 "category {0}": Kategorie {0}
 searching outgoing: ausgehenden
 searching incoming: eingehenden
@@ -186,7 +186,7 @@ legend empty: Legende noch leer
 from: von
 to: bis
 pick a color: Farbe wählen
-start highlighting addresses and entities: Adressen/Entitäten durch Klicken einfärben
+start highlighting addresses and entities: Adressen/Cluster durch Klicken einfärben
 api request limit: Abfragelimit
 from address: Sendende Adresse
 to address: Empfangende Adresse
@@ -194,7 +194,8 @@ tagged addresses: Adressen mit Tags
 please provide an API key: Bitte einen API-Schlüssel eingeben
 invalid key: ungültiger Schlüssel
 unlimited: unlimitiert
-root address: Wurzeladresse
+root address: Clusterwurzel
+Root Address: Clusterwurzel
 direction: Richtung
 both: beide
 search neighbors: Suche Nachbarn
@@ -213,52 +214,52 @@ proprietary tag: Proprietäres Tag
 "{1}: loading address {0}": "{1}: lade Adresse {0}"
 "{1}: loading block {0}": "{1}: lade Block {0}"
 "{1}: loading transaction {0}": "{1}: lade Transaktion {0}"
-"{1}: loading entity {0}": "{1}: lade Entität {0}"
-"{1}: loading entity for address {0}": "{1}: lade Entität zur Adresse {0}"
+"{1}: loading entity {0}": "{1}: lade Cluster {0}"
+"{1}: loading entity for address {0}": "{1}: lade Cluster zur Adresse {0}"
 "{1}: loading input addresses of transaction {0}": "{1}: lade eingehende Adressen der Transaktion {0}"
 "{1}: loading output addresses of transaction {0}": "{1}: lade ausgehende Adressen der Transaktion {0}"
-"{1}: loading outgoing neighbors of entity {0}": "{1}: lade ausgehende Nachbarn von Entität {0}"
-"{1}: loading incoming neighbors of entity {0}": "{1}: lade eingehende Nachbarn von Entität {0}"
+"{1}: loading outgoing neighbors of entity {0}": "{1}: lade ausgehende Nachbarn von Cluster {0}"
+"{1}: loading incoming neighbors of entity {0}": "{1}: lade eingehende Nachbarn von Cluster {0}"
 "{1}: loading outgoing neighbors of address {0}": "{1}: lade ausgehende Nachbarn von Adresse {0}"
 "{1}: loading incoming neighbors of address {0}": "{1}: lade eingehende Nachbarn von Adresse {0}"
 "{1}: loading {0} addresses": "{1}: lade {0} Addressen"
-"{1}: loading {0} entities": "{1}: lade {0} Entitäten"
-"{1}: loading entities of {0} addresses": "{1}: lade Entitäten zu {0} Adressen"
-"{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Entitäten"
-"{1}: loading incoming neighbors of {0} entities": "{1}: lade eingehende Nachbarn von {0} Entitäten"
+"{1}: loading {0} entities": "{1}: lade {0} Cluster"
+"{1}: loading entities of {0} addresses": "{1}: lade Cluster zu {0} Adressen"
+"{1}: loading outgoing neighbors of {0} entities": "{1}: lade ausgehende Nachbarn von {0} Cluster"
+"{1}: loading incoming neighbors of {0} entities": "{1}: lade eingehende Nachbarn von {0} Cluster"
 "{1}: loading outgoing neighbors of {0} addresses": "{1}: lade ausgehende Nachbarn von {0} Adressen"
 "{1}: loading incoming neighbors of {0} addresses": "{1}: lade eingehende Nachbarn von {0} Adressen"
 "{1}: loading tags of address {0}": "{1}: lade Tags der Adresse {0}"
 "{1}: loading tags {0} addresses": "{1}: lade Tags zu {0} Adressen"
-"{1}: loading address tags of entity {0}": "{1}: lade Adress-Tags der Entität {0}"
+"{1}: loading address tags of entity {0}": "{1}: lade Adress-Tags der Cluster {0}"
 "{1}: loading transactions of address {0}": "{1}: lade Transaktionen der Adresse {0}"
 "{1}: loading transactions of block {0}": "{1}: lade Transaktionen des Blocks {0}"
-"{1}: loading addresses of entity {0}": "{1}: lade Adressen der Entität {0}"
+"{1}: loading addresses of entity {0}": "{1}: lade Adressen der Cluster {0}"
 "{1}: loading tags with label {0}": "{1}: lade Tags mit Schlagwort {0}"
 "{2}: loading address link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
 "{2}: loading entity link transactions between {0} and {1}": "{2}: lade Transaktionen zwischen {0} and {1}"
 Please try again with a lower depth/breadth setting.: Bitte versuche es mit einem niedrigeren Wert für die Tiefe/Breite.
-defines entity: definiert Entität
+defines entity: definiert Cluster
 delete: löschen
 address statistics not yet computed: Adress-Statistik noch nicht berechnet
 address statistics might be out of date: Adress-Statistik eventuell nicht mehr aktuell
 no external transactions: Keine externen Transaktionen
 show shadow links: Schatten anzeigen
-for entities: für Entitäten
+for entities: für Cluster
 for addresses: für Adressen
-show entity link: Zeige Verbindung der Entitäten
-hide entity link: Verberge Verbindung der Entitäten
+show entity link: Zeige Verbindung der Cluster
+hide entity link: Verberge Verbindung der Cluster
 filter table: Tabelle filtern
 download table as CSV: Tabelle als CSV herunterladen
 "address transactions of {0} ({1})": Transaktionen der Adresse {0} ({1})
 "incoming neighbors of address {0} ({1})": Eingehende Nachbarn der Adresse {0} ({1})
 "outgoing neighbors of address {0} ({1})": Ausgehende Nachbarn der Adresse {0} ({1})
-"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn der Entität {0} ({1})
-"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn der Entität {0} ({1})
-"addresses of entity {0} ({1})": Adressen der Entität {0} ({1})
+"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn des Cluster {0} ({1})
+"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn des Cluster {0} ({1})
+"addresses of entity {0} ({1})": Adressen des Clusterss {0} ({1})
 user address tags: Benutzerdefinierte Address-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
-"transactions between entities {0} and {1} ({2})": Transaktionen zwischen Entitäten {0} und {1} ({2})
+"transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
 "transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
 "Incoming values of transaction {0} ({1})": Eingangswerte der Transaktion {0} ({1})
 "Outgoing values of transaction {0} ({1})": Ausgangswerte der Transaktion {0} ({1})
@@ -283,3 +284,11 @@ no: nein
 smart contract: Smart contract
 "token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})
 "loading supported token currencies": lade unterstützte Token-Währungen
+Actor: Akteur
+Actors: Akteure
+Other Links: Links
+Social: Social Media
+Jurisdictions: Gerichtsbarkeit
+list sending entities: einzahlende cluster
+list receiving entities: ausgehend cluster
+list entity transactions: Cluster Transaktionen

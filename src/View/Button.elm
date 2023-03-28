@@ -1,12 +1,17 @@
-module View.Button exposing (tool)
+module View.Button exposing (actorLink, copyLink, tool)
 
 import Config.View exposing (Config)
+import Css as CssStyled
+import Css.Browser as BCss
 import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick, onMouseOver)
+import Route exposing (toUrl)
+import Route.Graph as Route
 import Util.View exposing (aa)
+import View.Locale as Locale
 
 
 tool :
@@ -24,3 +29,29 @@ tool vc { icon } attr =
             ([ Css.tool vc |> css ]
                 ++ attr
             )
+
+
+copyLink : Config -> msg -> Html msg
+copyLink vc cpyMsg =
+    a
+        [ BCss.propertyCopyLink vc True |> css
+        , href "#"
+        , onClick cpyMsg
+        , title (Locale.string vc.locale "copy")
+        ]
+        [ FontAwesome.icon FontAwesome.copy
+            |> Html.Styled.fromUnstyled
+        ]
+
+
+actorLink : Config -> String -> String -> Html msg
+actorLink vc id label =
+    a
+        [ href
+            (Route.actorRoute id Nothing
+                |> Route.graphRoute
+                |> toUrl
+            )
+        , Css.link vc |> css
+        ]
+        [ span [] [ FontAwesome.icon FontAwesome.user |> Html.Styled.fromUnstyled ], span [ css [ CssStyled.paddingLeft (CssStyled.rem 0.2) ] ] [ text label ] ]

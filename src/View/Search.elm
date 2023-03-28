@@ -65,7 +65,7 @@ search plugins vc sc model =
                  ]
                     ++ (case sc.searchable of
                             SearchAll _ ->
-                                [ "Addresses", "transaction", "label", "block" ]
+                                [ "Addresses", "transaction", "label", "block", "actors" ]
                                     |> List.map (Locale.string vc.locale)
                                     |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
                                     |> String.join ", "
@@ -146,6 +146,14 @@ resultList plugins vc sc { found, input } =
                     |> List.map Label
             }
 
+        actorBadge =
+            { title = Locale.string vc.locale "Actors"
+            , badge =
+                Maybe.map (.actors >> Maybe.withDefault []) found
+                    |> Maybe.withDefault []
+                    |> List.map (\x -> Actor ( x.id, x.label ))
+            }
+
         badgeToResult { title, badge } =
             if List.isEmpty badge then
                 Nothing
@@ -171,7 +179,8 @@ resultList plugins vc sc { found, input } =
 
         SearchAll { latestBlocks, pluginStates } ->
             (List.map (currencyToResult vc input filtered) latestBlocks
-                ++ [ labelBadge
+                ++ [ actorBadge
+                   , labelBadge
                    ]
                 |> List.filterMap badgeToResult
             )
@@ -203,6 +212,9 @@ resultLineToHtml vc title asLink resultLine =
 
                 Label a ->
                     ( Route.labelRoute a, FontAwesome.tag, a )
+
+                Actor ( id, lbl ) ->
+                    ( Route.actorRoute id Nothing, FontAwesome.user, lbl )
 
         el attr =
             if asLink then

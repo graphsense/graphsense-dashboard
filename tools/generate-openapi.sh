@@ -19,9 +19,9 @@ echo "Generating"
 python3 $dir/mangle-openapi.py $temp $resturl > $temp2
 
 docker run --rm \
-    -v "${dir}/../openapi:/build"  \
-    -v "${temp2}:/spec.yaml" \
-    -v "${dir}/../templates:/templates" \
+    -v "${dir}/../openapi:/build:Z"  \
+    -v "${temp2}:/spec.yaml:Z" \
+    -v "${dir}/../templates:/templates:Z" \
     openapitools/openapi-generator-cli:latest generate \
     -i /spec.yaml \
     -g elm \

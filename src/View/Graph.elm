@@ -35,6 +35,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
+import Util.ExternalLinks exposing (getBlockExplorerLinks)
 import Util.Graph as Util
 import Util.View exposing (hovercard, none)
 import View.Graph.Address as Address
@@ -380,6 +381,10 @@ contextMenu plugins states vc model cm =
     let
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
+
+        addBlockExplorerLinks currency address =
+            getBlockExplorerLinks currency address
+                |> List.map (\( url, label ) -> UserClickedExternalLink url |> option label)
     in
     (case cm.type_ of
         ContextMenu.Address address ->
@@ -388,6 +393,8 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
+                ++ [ hr [ Css.contextMenuRule vc |> HA.css ] [] ]
+                ++ addBlockExplorerLinks address.address.currency address.address.address
                 ++ Plugin.addressContextMenu plugins states vc address
 
         ContextMenu.Entity entity ->

@@ -23,9 +23,10 @@ import Maybe.Extra
 import Model.Address as A
 import Model.Currency as Currency
 import Model.Entity as E
+import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
-import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Entity exposing (Entity, getActorsStr)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
@@ -40,8 +41,11 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
+import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
+import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
 import Util.View exposing (none, toCssColor)
+import View.Button exposing (actorLink)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -50,11 +54,13 @@ import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import View.Graph.Table.LinksTable as LinksTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 cm : Maybe Msg
@@ -157,6 +163,17 @@ browser plugins states vc gc model =
                             |> Maybe.withDefault []
                        )
 
+            Browser.Actor loadable table ->
+                browseActor plugins states vc gc model.now loadable
+                    :: (table
+                            |> Maybe.map
+                                (\t ->
+                                    browseActorTable vc gc model.height loadable t
+                                )
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
+
             Browser.Block loadable table ->
                 browseBlock plugins states vc gc model.now loadable
                     :: (table
@@ -241,6 +258,32 @@ browseRow vc map row =
         Rule ->
             rule vc
 
+        Image muri ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    []
+                , span
+                    []
+                    [ case muri of
+                        Just uri ->
+                            let
+                                uriWithPrefix =
+                                    addProtocolPrefx uri
+                            in
+                            {- Setting a default image see https://stackoverflow.com/questions/980855/inputting-a-default-image-in-case-the-src-attribute-of-an-html-img-is-not-vali -}
+                            object [ attribute "data" uriWithPrefix, Css.propertyBoxImage vc |> css ]
+                                [ img [ src vc.theme.userDefautImgUrl, Css.propertyBoxImage vc |> css ] []
+                                ]
+
+                        Nothing ->
+                            img [ src vc.theme.userDefautImgUrl, Css.propertyBoxImage vc |> css ] []
+                    ]
+                ]
+
         Note note ->
             div
                 [ Css.propertyBoxRow vc |> css
@@ -284,6 +327,13 @@ browseRow vc map row =
                     ]
                 ]
 
+        OptionalRow optionalRow bool ->
+            if bool then
+                browseRow vc map optionalRow
+
+            else
+                span [] []
+
 
 tableLink : View.Config -> TableLink -> Html msg
 tableLink vc link =
@@ -300,9 +350,44 @@ tableLink vc link =
 browseValue : View.Config -> Value msg -> Html msg
 browseValue vc value =
     case value of
+        Stack values ->
+            ul [] (List.map (\val -> li [] [ browseValue vc val ]) values)
+
+        Grid width values ->
+            let
+                gvalues =
+                    List.Extra.greedyGroupsOf width values
+
+                viewRow row =
+                    li [] [ List.map (browseValue vc) row |> span [] ]
+            in
+            ul [] (List.map viewRow gvalues)
+
         String str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
+
+        AddressStr msg str ->
+            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
+                [ copyableLongIdentifier vc str msg ]
+
+        Country isocode name ->
+            span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]
+                [ span [ css [ CssStyled.fontSize <| CssStyled.em 1.2, CssStyled.marginRight <| CssStyled.em 0.2 ] ] [ getFlagEmoji isocode |> text ]
+                , span [ css [ CssStyled.fontFamily <| CssStyled.monospace ] ] [ text isocode ]
+                ]
+
+        Uri lbl uri ->
+            a [ href (addProtocolPrefx uri), target "_blank", CssView.link vc |> css ]
+                [ text lbl ]
+
+        IconLink icon uri ->
+            a [ href (addProtocolPrefx uri), target "_blank", CssView.iconLink vc |> css ]
+                [ FontAwesome.icon icon |> Html.fromUnstyled ]
+
+        InternalLink lbl uri ->
+            a [ href uri, CssView.link vc |> css ]
+                [ text lbl ]
 
         Html html ->
             html
@@ -319,30 +404,37 @@ browseValue vc value =
         EntityId gc entity ->
             div
                 []
-                [ entity.entity.bestAddressTag
-                    |> Maybe.map
-                        (\tag ->
-                            span
-                                [ tag.category
-                                    |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
-                                    |> Maybe.map
-                                        (toCssColor
-                                            >> CssStyled.color
-                                            >> List.singleton
-                                        )
-                                    |> Maybe.withDefault []
-                                    |> css
-                                ]
-                                [ text
-                                    (if String.isEmpty tag.label && not tag.tagpackIsPublic then
-                                        Util.Graph.getCategory gc tag.category
-                                            |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
+                [ Maybe.Extra.orListLazy
+                    [ \() ->
+                        Model.Graph.Entity.getBestActor entity
+                            |> Maybe.map
+                                (\actor -> actorLink vc actor.id actor.label)
+                    , \() ->
+                        entity.entity.bestAddressTag
+                            |> Maybe.map
+                                (\tag ->
+                                    span
+                                        [ tag.category
+                                            |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
+                                            |> Maybe.map
+                                                (toCssColor
+                                                    >> CssStyled.color
+                                                    >> List.singleton
+                                                )
+                                            |> Maybe.withDefault []
+                                            |> css
+                                        ]
+                                        [ text
+                                            (if String.isEmpty tag.label && not tag.tagpackIsPublic then
+                                                Util.Graph.getCategory gc tag.category
+                                                    |> Maybe.withDefault (Locale.string vc.locale "Tag locked")
 
-                                     else
-                                        tag.label
-                                    )
-                                ]
-                        )
+                                             else
+                                                tag.label
+                                            )
+                                        ]
+                                )
+                    ]
                     |> Maybe.withDefault (span [] [ Locale.string vc.locale "Unknown" |> text ])
                 , span
                     [ Css.propertyBoxEntityId vc |> css
@@ -516,18 +608,18 @@ rowsAddress vc now address =
                 , mkTableLink "List address transactions" Route.AddressTxsTable
                 )
             , Row
-                ( "Receiving addresses"
-                , address
-                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
-                    |> elseLoading
-                , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
-                )
-            , Row
                 ( "Sending addresses"
                 , address
                     |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
                     |> elseLoading
                 , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
+                )
+            , Row
+                ( "Receiving addresses"
+                , address
+                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+                    |> elseLoading
+                , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
                 )
             ]
 
@@ -623,9 +715,31 @@ rowsAddress vc now address =
     [ Row
         ( "Address"
         , address
-            |> ifLoaded (.address >> .address >> String)
+            |> ifLoaded (.address >> .address >> AddressStr UserClickedCopyToClipboard)
             |> elseShowAddress
         , Nothing
+        )
+    , OptionalRow
+        (Row
+            ( "Actor"
+            , address
+                |> ifLoaded
+                    (.address
+                        >> .actors
+                        >> Maybe.withDefault []
+                        >> List.map (\x -> InternalLink x.label (Route.actorRoute x.id Nothing |> Route.graphRoute |> toUrl))
+                        >> Stack
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case address of
+            Loaded a ->
+                List.length (a.address.actors |> Maybe.withDefault []) > 0
+
+            _ ->
+                False
         )
     , Row
         ( "Currency"
@@ -746,6 +860,12 @@ browseEntity plugins states vc gc now entity =
         |> propertyBox vc
 
 
+browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> Html Msg
+browseActor plugins states vc gc now actor =
+    (rowsActor vc gc now actor |> List.map (browseRow vc (browseValue vc)))
+        |> propertyBox vc
+
+
 browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
 browseBlock plugins states vc gc now block =
     (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
@@ -792,10 +912,41 @@ rowsEntity vc gc now ent =
     in
     [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
     , Row
-        ( "Root address"
-        , ent |> ifLoaded (.entity >> .rootAddress >> String) |> elseLoading
+        ( "Root Address"
+        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
         , Nothing
         )
+
+    {- , OptionalRow
+       (Row
+           ( "Actors"
+           , ent
+               |> ifLoaded
+                   (.entity
+                       >> .actors
+                       >> Maybe.withDefault []
+                       >> List.map
+                           (\x ->
+                               InternalLink x.label
+                                   (Route.actorRoute x.id Nothing
+                                       |> Route.graphRoute
+                                       |> toUrl
+                                   )
+                           )
+                       >> Stack
+                   )
+               |> elseLoading
+           , Nothing
+           )
+       )
+       (case ent of
+           Loaded a ->
+               List.length (a.entity.actors |> Maybe.withDefault []) > 0
+
+           _ ->
+               False
+       )
+    -}
     , Row
         ( "Currency"
         , ent |> ifLoaded (.entity >> .currency >> String.toUpper >> String) |> elseShowCurrency
@@ -842,6 +993,13 @@ rowsEntity vc gc now ent =
         , mkTableLink "List entity transactions" Route.EntityTxsTable
         )
     , Row
+        ( "Sending entities"
+        , ent
+            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
+            |> elseLoading
+        , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
+        )
+    , Row
         ( "Receiving entities"
         , ent
             |> ifLoaded
@@ -851,13 +1009,6 @@ rowsEntity vc gc now ent =
                 )
             |> elseLoading
         , mkTableLink "List receiving entities" Route.EntityOutgoingNeighborsTable
-        )
-    , Row
-        ( "Sending entities"
-        , ent
-            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
-            |> elseLoading
-        , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
         )
     , Rule
     , Row
@@ -897,6 +1048,124 @@ rowsEntity vc gc now ent =
                 )
             |> elseLoading
         , Nothing
+        )
+    ]
+
+
+rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg))
+rowsActor vc gc now actor =
+    let
+        mkTableLink title tableTag =
+            actor
+                |> makeTableLink
+                    (\_ -> "")
+                    .id
+                    (\currency id ->
+                        { title = Locale.string vc.locale title
+                        , link =
+                            Route.actorRoute id (Just tableTag)
+                                |> Route.graphRoute
+                                |> toUrl
+                        , active = False
+                        }
+                    )
+    in
+    [ Image
+        (case actor of
+            Loaded a ->
+                getImageUri a
+
+            _ ->
+                Nothing
+        )
+    , Rule
+    , Row ( "Actor", actor |> ifLoaded (.label >> String) |> elseLoading, Nothing )
+    , Rule
+    , Row ( "Url", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
+    , Rule
+    , Row
+        ( "Categories"
+        , actor
+            |> ifLoaded
+                (.categories
+                    >> List.map .label
+                    >> List.map String
+                    >> Stack
+                )
+            |> elseLoading
+        , Nothing
+        )
+    , Rule
+    , OptionalRow
+        (Row
+            ( "Jurisdictions"
+            , actor
+                |> ifLoaded
+                    (.jurisdictions
+                        >> List.map (\x -> Country x.id x.label)
+                        >> Grid 3
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case actor of
+            Loaded a ->
+                List.length a.jurisdictions > 0
+
+            _ ->
+                False
+        )
+    , Rule
+    , OptionalRow
+        (Row
+            ( "Social"
+            , actor
+                |> ifLoaded
+                    (getUrisWithoutMain
+                        >> getFontAwesomeIconForUris
+                        >> List.filter (\( uri, icon ) -> icon /= Nothing)
+                        >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
+                        >> Grid 7
+                    )
+                |> elseLoading
+            , Nothing
+            )
+        )
+        (case actor of
+            Loaded a ->
+                List.length
+                    (a
+                        |> getUrisWithoutMain
+                        |> getFontAwesomeIconForUris
+                        |> List.filter (\( uri, icon ) -> icon /= Nothing)
+                    )
+                    > 0
+
+            _ ->
+                False
+        )
+    , Rule
+    , Row
+        ( "Other Links"
+        , actor
+            |> ifLoaded
+                ((\x -> "") >> String)
+            |> elseLoading
+        , mkTableLink "More links" Route.ActorOtherLinksTable
+        )
+    , Rule
+    , Row
+        ( "Tags"
+        , actor
+            |> ifLoaded
+                (.nrTags
+                    >> Maybe.map String.fromInt
+                    >> Maybe.withDefault "-"
+                    >> String
+                )
+            |> elseLoading
+        , mkTableLink "Show Actor Tags" Route.ActorTagsTable
         )
     ]
 
@@ -1044,6 +1313,16 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
 
         EntityOutgoingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+
+
+browseActorTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Actor -> ActorTable -> Html Msg
+browseActorTable vc gc height actor table =
+    case table of
+        ActorTagsTable t ->
+            table_ vc Nothing height (LabelAddressTagsTable.config vc) t
+
+        ActorOtherLinksTable t ->
+            table_ vc Nothing height (LinksTable.config vc) t
 
 
 browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
