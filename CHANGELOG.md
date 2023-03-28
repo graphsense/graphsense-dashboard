@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Actor browser to show actor details. [#369](https://github.com/graphsense/graphsense-dashboard/issues/369)
 - Entities and Addresses can be liked to actors. [#369](https://github.com/graphsense/graphsense-dashboard/issues/369)
 - added links to external tools (block explorers etc.) for addresses [#290](https://github.com/graphsense/graphsense-dashboard/issues/290)
+- search for any category [#329](https://github.com/graphsense/graphsense-dashboard/issues/329)
 ### Changes
 - Improved address display [#359](https://github.com/graphsense/graphsense-dashboard/issues/359)
 - Improved currency value display [#371](https://github.com/graphsense/graphsense-dashboard/issues/371)
