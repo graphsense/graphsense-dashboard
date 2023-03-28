@@ -3,7 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [23.01] - Unreleased
+## [23.03] - 2023-03-28
+### Added
+- Actor browser to show actor details. [#369](https://github.com/graphsense/graphsense-dashboard/issues/369)
+- Entities and Addresses can be liked to actors. [#369](https://github.com/graphsense/graphsense-dashboard/issues/369)
+- added links to external tools (block explorers etc.) for addresses [#290](https://github.com/graphsense/graphsense-dashboard/issues/290)
+### Changes
+- Improved address display [#359](https://github.com/graphsense/graphsense-dashboard/issues/359)
+- Improved currency value display [#371](https://github.com/graphsense/graphsense-dashboard/issues/371)
+
+## [23.01] - 2023-01-30
 ### Added
 - add plugin logout hook
 - display error popup on address not found
