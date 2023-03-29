@@ -442,7 +442,7 @@ perform apiKey wrapMsg effect =
                 direction =
                     isOutgoingToDirection isOutgoing
             in
-            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just includeLabels) nextpage (Just pagesize)
+            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage } toMsg ->
