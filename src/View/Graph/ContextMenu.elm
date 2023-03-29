@@ -1,4 +1,4 @@
-module View.Graph.ContextMenu exposing (option, view)
+module View.Graph.ContextMenu exposing (option, optionHtml, view)
 
 import Config.View as View
 import Css exposing (left, px, top)
@@ -25,9 +25,16 @@ view vc coords =
 
 option : View.Config -> String -> msg -> Html msg
 option vc title msg =
+    optionHtml vc
+        [ text title
+        ]
+        msg
+
+
+optionHtml : View.Config -> List (Html msg) -> msg -> Html msg
+optionHtml vc title msg =
     div
         [ Css.ContextMenu.option vc |> css
         , onClick msg
         ]
-        [ text title
-        ]
+        title

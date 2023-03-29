@@ -6,8 +6,10 @@ import Browser.Dom as Dom
 import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
+import Css
 import Css.Graph as Css
 import Dict
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
@@ -384,7 +386,18 @@ contextMenu plugins states vc model cm =
 
         addBlockExplorerLinks currency address =
             getBlockExplorerLinks currency address
-                |> List.map (\( url, label ) -> UserClickedExternalLink url |> option label)
+                |> List.map
+                    (\( url, label ) ->
+                        ContextMenu.optionHtml vc
+                            [ FontAwesome.icon FontAwesome.externalLinkAlt
+                                |> Html.Styled.fromUnstyled
+                                |> List.singleton
+                                |> span
+                                    [ HA.css [ Css.marginRight <| Css.em 0.5 ] ]
+                            , Locale.string vc.locale label |> Html.Styled.text
+                            ]
+                            (UserClickedExternalLink url)
+                    )
     in
     (case cm.type_ of
         ContextMenu.Address address ->
