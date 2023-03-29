@@ -10,6 +10,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Maybe.Extra
 import Model.Entity as E
 import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id exposing (EntityId)
@@ -127,14 +128,31 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
             {- , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels) -}
             , T.htmlColumn vc
                 titleLabels
-                (.labels >> Maybe.withDefault [] >> reduceLabels)
+                (\data ->
+                    data.entity
+                        |> Model.Graph.Entity.getBestActorApi
+                        |> Maybe.map .id
+                        |> Maybe.Extra.orElseLazy
+                            (\_ ->
+                                data.entity.bestAddressTag
+                                    |> Maybe.map .label
+                            )
+                        |> Maybe.withDefault ""
+                )
                 (\data ->
                     case data.entity |> Model.Graph.Entity.getBestActorApi of
                         Just actor ->
                             [ actorLink vc actor.id actor.label ]
 
                         Nothing ->
-                            [ span [] [ text (data.labels |> Maybe.withDefault [] |> reduceLabels) ] ]
+                            [ span []
+                                [ text
+                                    (data.entity.bestAddressTag
+                                        |> Maybe.map .label
+                                        |> Maybe.withDefault ""
+                                    )
+                                ]
+                            ]
                 )
             , T.intColumn vc titleNoAddresses (.entity >> .noAddresses)
             , T.intColumn vc titleNoTxs .noTxs
