@@ -484,9 +484,13 @@ theme =
         |> s_graph
             (Graph.default
                 |> s_contextMenuRule
-                    [ borderWidth (px 0.5)
-                    , scaled 1 |> rem |> margin
-                    ]
+                    (\lightmode ->
+                        [ borderWidth (px 0.5)
+                        , scaled 1 |> rem |> margin
+                        , colors.greyLight |> colorWithLightmode lightmode
+                        , opacity <| num 0.5
+                        ]
+                    )
                 |> s_colorScheme
                     [ rgb255 228 148 68
                     , rgb255 209 97 93
@@ -927,7 +931,7 @@ theme =
                             ]
                         ]
                     )
-                |> s_longIdentifier [fontFamily monospace]
+                |> s_longIdentifier [ fontFamily monospace ]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize

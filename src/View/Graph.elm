@@ -37,7 +37,7 @@ import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
 import Util.ExternalLinks exposing (getBlockExplorerLinks)
 import Util.Graph as Util
-import Util.View exposing (hovercard, none)
+import Util.View exposing (contextMenuRule, hovercard, none)
 import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
 import View.Graph.ContextMenu as ContextMenu
@@ -393,7 +393,7 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
-                ++ [ hr [ Css.contextMenuRule vc |> HA.css ] [] ]
+                ++ contextMenuRule vc
                 ++ addBlockExplorerLinks address.address.currency address.address.address
                 ++ Plugin.addressContextMenu plugins states vc address
 

@@ -4,6 +4,7 @@ import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
+import Css.Graph
 import Css.View as Css
 import Hovercard
 import Html
@@ -170,3 +171,8 @@ p vc attrs =
 addDot : String -> String
 addDot s =
     s ++ "."
+
+
+contextMenuRule : View.Config -> List (Html msg)
+contextMenuRule vc =
+    [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]

@@ -11,7 +11,7 @@ import Util.Css
 
 contextMenuRule : Config -> List Style
 contextMenuRule vc =
-    vc.theme.graph.contextMenuRule
+    vc.theme.graph.contextMenuRule vc.lightmode
 
 
 navbar : Config -> List Style

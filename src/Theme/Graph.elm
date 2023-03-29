@@ -74,7 +74,7 @@ type alias Graph =
     , highlightColor : Bool -> Bool -> List Style
     , highlightTitle : Bool -> List Style
     , highlightTrash : Bool -> List Style
-    , contextMenuRule : List Style
+    , contextMenuRule : Bool -> List Style
     }
 
 
@@ -145,5 +145,5 @@ default =
     , highlightTitle = \_ -> []
     , highlightColor = \_ _ -> []
     , highlightTrash = \_ -> []
-    , contextMenuRule = []
+    , contextMenuRule = \_ -> []
     }
