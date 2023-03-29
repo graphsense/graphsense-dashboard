@@ -442,7 +442,7 @@ perform apiKey wrapMsg effect =
                 direction =
                     isOutgoingToDirection isOutgoing
             in
-            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
+            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just <| not includeLabels) (Just includeLabels) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage } toMsg ->
@@ -463,7 +463,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
-            Api.Request.Entities.getEntity currency entity
+            Api.Request.Entities.getEntity currency entity Nothing (Just True)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
@@ -479,7 +479,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTxsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressTxs currency address Nothing nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressTxs currency address Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
@@ -507,7 +507,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing nextpage (Just pagesize)
+            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->
