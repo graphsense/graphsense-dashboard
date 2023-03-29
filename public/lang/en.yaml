@@ -11,3 +11,5 @@ final balance: Balance
 list sending entities: list sending clusters
 list receiving entities: list receiving clusters
 list entity transactions: list cluster transactions
+Incoming entity: Incoming cluster
+Outgoing entity: Outgoing cluster
