@@ -57,6 +57,18 @@ propertyBoxKey vc =
         :: vc.theme.browser.propertyBoxKey
 
 
+propertyBoxImage : Config -> List Style
+propertyBoxImage vc =
+    display block
+        {- :: marginLeft auto
+           :: marginRight auto
+        -}
+        :: borderRadius (pct 50)
+        :: height (px 40)
+        :: width (px 40)
+        :: []
+
+
 propertyBoxValue : Config -> List Style
 propertyBoxValue vc =
     display tableCell
@@ -105,9 +117,23 @@ propertyBoxActivityPeriod vc =
 
 propertyBoxTableLink : Config -> Bool -> List Style
 propertyBoxTableLink vc active =
-    position absolute
+    position relative
         :: right (px 0)
+        :: paddingLeft (px 5)
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
+
+
+propertyCopyLink : Config -> Bool -> List Style
+propertyCopyLink vc active =
+    position relative
+        :: left (px 5)
+        :: marginRight (px 10)
+        :: vc.theme.browser.copyLink vc.lightmode active
+
+
+propertyLongIdentifier : Config -> List Style
+propertyLongIdentifier vc =
+    display inlineBlock :: vc.theme.browser.longIdentifier
 
 
 loadingSpinner : Config -> List Style

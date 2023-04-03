@@ -4,6 +4,7 @@ import Config.View as View
 import Html.Styled as Html exposing (Html)
 import Model
 import Model.Graph.Address exposing (Address)
+import Util.View
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin.Model
@@ -49,6 +50,7 @@ addressContextMenu plugins states vc address =
     [ 
     ]
         |> List.filterMap identity
+        |> List.map ((++) (Util.View.contextMenuRule vc))
         |> List.concat
         |> List.map (Html.map Graph.PluginMsg)
 

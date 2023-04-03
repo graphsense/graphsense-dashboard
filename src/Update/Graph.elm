@@ -639,6 +639,17 @@ updateByMsg plugins uc msg model =
                     { model | adding = Adding.removeAddress id model.adding }
                         |> addAddress plugins uc added
 
+        BrowserGotActor actor ->
+            let
+                ( newbrowser, effects ) =
+                    Browser.showActor actor model.browser
+            in
+            ( { model
+                | browser = newbrowser
+              }
+            , effects
+            )
+
         BrowserGotEntityForAddress address entity ->
             let
                 id =
@@ -860,6 +871,12 @@ updateByMsg plugins uc msg model =
                     model.config |> s_colors colors
             }
                 |> updateAddresses id (Address.updateTags tags.addressTags)
+                |> n
+
+        BrowserGotActorTagsTable actor tags ->
+            { model
+                | browser = Browser.showActorTags actor.actorId tags model.browser
+            }
                 |> n
 
         BrowserGotLabelAddressTags label tags ->
@@ -2051,6 +2068,12 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault []
             )
 
+        UserClickedExternalLink url ->
+            ( model, Ports.newTab url |> CmdEffect |> List.singleton )
+
+        UserClickedCopyToClipboard value ->
+            ( model, Ports.copyToClipboard value |> CmdEffect |> List.singleton )
+
         NoOp ->
             n model
 
@@ -2393,6 +2416,45 @@ updateByRoute plugins route model =
                 | browser = browser
               }
             , effect
+            )
+
+        Route.Actor actorId table ->
+            let
+                getActorAction =
+                    [ BrowserGotActor
+                        |> GetActorEffect
+                            { actorId = actorId }
+                        |> ApiEffect
+                    ]
+
+                ( newbrowser, effectsActor ) =
+                    case model.browser.type_ of
+                        Browser.Actor (Browser.Loading currentActorId _) _ ->
+                            if currentActorId /= actorId then
+                                ( Browser.loadingActor actorId model.browser, getActorAction )
+
+                            else
+                                ( Browser.openActor True model.browser, [] )
+
+                        Browser.Actor (Browser.Loaded actor) _ ->
+                            if actor.id /= actorId then
+                                ( Browser.loadingActor actorId model.browser, getActorAction )
+
+                            else
+                                ( Browser.openActor True model.browser, [] )
+
+                        _ ->
+                            ( Browser.loadingActor actorId model.browser, getActorAction )
+
+                ( browser2, effectsTagsActor ) =
+                    table
+                        |> Maybe.map (\tb -> Browser.showActorTable tb newbrowser)
+                        |> Maybe.withDefault (n newbrowser)
+            in
+            ( { model
+                | browser = browser2
+              }
+            , effectsActor ++ effectsTagsActor
             )
 
         Route.Plugin ( pid, value ) ->

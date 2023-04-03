@@ -3,12 +3,16 @@ module View.Graph.Table.EntityNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Css.View as CssView
 import Dict
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Maybe.Extra
 import Model.Entity as E
+import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
 import Model.Locale as Locale
@@ -16,6 +20,7 @@ import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
 import Util.View exposing (none)
+import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Graph.Table.AddressNeighborsTable exposing (reduceLabels)
 import View.Locale as Locale
@@ -45,7 +50,7 @@ filter f a =
 
 titleLabels : String
 titleLabels =
-    "Labels"
+    "Tags"
 
 
 titleEntityBalance : String
@@ -119,7 +124,36 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                         ]
                     ]
                 )
-            , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
+
+            {- , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels) -}
+            , T.htmlColumn vc
+                titleLabels
+                (\data ->
+                    data.entity
+                        |> Model.Graph.Entity.getBestActorApi
+                        |> Maybe.map .id
+                        |> Maybe.Extra.orElseLazy
+                            (\_ ->
+                                data.entity.bestAddressTag
+                                    |> Maybe.map .label
+                            )
+                        |> Maybe.withDefault ""
+                )
+                (\data ->
+                    case data.entity |> Model.Graph.Entity.getBestActorApi of
+                        Just actor ->
+                            [ actorLink vc actor.id actor.label ]
+
+                        Nothing ->
+                            [ span []
+                                [ text
+                                    (data.entity.bestAddressTag
+                                        |> Maybe.map .label
+                                        |> Maybe.withDefault ""
+                                    )
+                                ]
+                            ]
+                )
             , T.intColumn vc titleNoAddresses (.entity >> .noAddresses)
             , T.intColumn vc titleNoTxs .noTxs
             ]

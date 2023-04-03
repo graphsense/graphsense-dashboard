@@ -10,9 +10,11 @@ import Init.Graph.Table as Table
 import Init.Graph.Tag as Tag
 import Json.Encode
 import Log
+import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
 import Model.Entity as E
+import Model.Graph.Actor as Actor
 import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
@@ -31,6 +33,7 @@ import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData, applyFilter, setData)
 import Update.Search as Search
+import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
@@ -38,6 +41,7 @@ import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import View.Graph.Table.LinksTable as LinksTable
 import View.Graph.Table.TxUtxoTable as TxUtxoTable
 import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
@@ -136,6 +140,19 @@ loadingLabel label model =
     )
 
 
+loadingActor : String -> Model -> Model
+loadingActor actorId model =
+    { model
+        | type_ = Actor (Loading actorId actorId) Nothing
+        , visible = True
+    }
+
+
+openActor : Bool -> Model -> Model
+openActor open model =
+    { model | visible = open }
+
+
 showAddresslink : { source : Address.Address, link : Link Address.Address } -> Model -> Model
 showAddresslink { source, link } model =
     { model
@@ -176,6 +193,27 @@ showLabelAddressTags label data model =
                         Label current <|
                             appendData data.nextPage data.addressTags table
                 }
+
+        _ ->
+            model
+
+
+showActorTags : String -> Api.Data.AddressTags -> Model -> Model
+showActorTags actorId data model =
+    case model.type_ of
+        Actor current mtable ->
+            case mtable of
+                Just (ActorTagsTable table) ->
+                    { model
+                        | type_ =
+                            Actor current <|
+                                Just <|
+                                    ActorTagsTable <|
+                                        appendData data.nextPage data.addressTags table
+                    }
+
+                _ ->
+                    model
 
         _ ->
             model
@@ -487,6 +525,72 @@ createEntityTable route t currency entity =
             )
 
 
+showActorTable : Route.ActorTable -> Model -> ( Model, List Effect )
+showActorTable route model =
+    case model.type_ |> Log.log "showActorsTagsTable" of
+        Actor loadable t ->
+            case loadable of
+                Loading curr aId ->
+                    createActorTable route t aId
+                        |> Log.log "table"
+                        |> mapFirst (Actor loadable)
+                        |> mapFirst
+                            (\type_ -> { model | type_ = type_ })
+                        |> mapSecond ((::) GetBrowserElementEffect)
+
+                Loaded a ->
+                    changeActorTable route t a
+                        |> Log.log "table"
+                        |> mapFirst (Actor loadable)
+                        |> mapFirst
+                            (\type_ -> { model | type_ = type_ })
+                        |> mapSecond ((::) GetBrowserElementEffect)
+
+        _ ->
+            n model
+
+
+createActorTable : Route.ActorTable -> Maybe ActorTable -> String -> ( Maybe ActorTable, List Effect )
+createActorTable route t actorId =
+    case ( route, t ) of
+        ( Route.ActorOtherLinksTable, Just (ActorOtherLinksTable _) ) ->
+            n t
+
+        ( Route.ActorOtherLinksTable, _ ) ->
+            ( LinksTable.init |> ActorOtherLinksTable |> Just, [] )
+
+        ( Route.ActorTagsTable, Just (ActorTagsTable _) ) ->
+            n t
+
+        ( Route.ActorTagsTable, _ ) ->
+            ( LabelAddressTagsTable.init |> ActorTagsTable |> Just
+            , [ getActorTagsEffect
+                    { actorId = actorId
+                    }
+                    Nothing
+              ]
+            )
+
+
+changeActorTable : Route.ActorTable -> Maybe ActorTable -> Actor.Actor -> ( Maybe ActorTable, List Effect )
+changeActorTable route t actor =
+    case ( route, t ) of
+        ( Route.ActorOtherLinksTable, _ ) ->
+            let
+                otherUrls : List String
+                otherUrls =
+                    Actor.getUrisWithoutMain actor
+                        |> getFontAwesomeIconForUris
+                        |> List.filter (\( uri, icon ) -> icon == Nothing)
+                        |> List.map Tuple.first
+                        |> List.map addProtocolPrefx
+            in
+            ( LinksTable.init |> setData otherUrls |> ActorOtherLinksTable |> Just, [] )
+
+        _ ->
+            createActorTable route t actor.id
+
+
 showBlockTable : Route.BlockTable -> Model -> ( Model, List Effect )
 showBlockTable route model =
     case model.type_ |> Log.log "showBlockTable" of
@@ -718,6 +822,28 @@ showAddress address model =
                                 == address.address.address
                                 && loadableAddressCurrency loadable
                                 == address.address.currency
+                        then
+                            table
+
+                        else
+                            Nothing
+
+                    _ ->
+                        Nothing
+            )
+        |> getBrowserElement
+
+
+showActor : Actor.Actor -> Model -> ( Model, List Effect )
+showActor actor model =
+    show model
+        |> s_type_
+            (Actor (Loaded actor) <|
+                case model.type_ of
+                    Actor loadable table ->
+                        if
+                            loadableActorId loadable
+                                == actor.id
                         then
                             table
 
@@ -1622,6 +1748,22 @@ tableNewState state model =
                             Nothing ->
                                 table
 
+                Actor loadable table ->
+                    Actor loadable <|
+                        case table of
+                            Just (ActorTagsTable t) ->
+                                { t | state = state }
+                                    |> ActorTagsTable
+                                    |> Just
+
+                            Just (ActorOtherLinksTable t) ->
+                                { t | state = state }
+                                    |> ActorOtherLinksTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
                 TxUtxo loadable table ->
                     TxUtxo loadable <|
                         case table of
@@ -1822,6 +1964,21 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                         )
                             |> mapFirst (Entity loadable)
 
+                    Actor loadable table ->
+                        (case table of
+                            Just (ActorTagsTable t) ->
+                                loadableActor loadable
+                                    |> getActorTagsEffect
+                                    |> wrap t ActorTagsTable
+
+                            Just (ActorOtherLinksTable t) ->
+                                ( table, [] )
+
+                            Nothing ->
+                                ( table, [] )
+                        )
+                            |> mapFirst (Actor loadable)
+
                     Block loadable table ->
                         (case table of
                             Just (BlockTxsUtxoTable t) ->
@@ -2001,6 +2158,20 @@ getEntityAddressTagsEffect { currency, entity } nextpage =
         (BrowserGotEntityAddressTagsTable
             { currency = currency
             , entity = entity
+            }
+        )
+        |> ApiEffect
+
+
+getActorTagsEffect : Act.Actor -> Maybe String -> Effect
+getActorTagsEffect { actorId } nextpage =
+    GetActorTagsEffect
+        { actorId = actorId
+        , pagesize = 100
+        , nextpage = nextpage
+        }
+        (BrowserGotActorTagsTable
+            { actorId = actorId
             }
         )
         |> ApiEffect
@@ -2198,6 +2369,22 @@ filterTable filter model =
                             Nothing ->
                                 table
 
+                Actor loadable table ->
+                    Actor loadable <|
+                        case table of
+                            Just (ActorTagsTable t) ->
+                                applyFilter filter t
+                                    |> ActorTagsTable
+                                    |> Just
+
+                            Just (ActorOtherLinksTable t) ->
+                                applyFilter filter t
+                                    |> ActorOtherLinksTable
+                                    |> Just
+
+                            Nothing ->
+                                table
+
                 TxUtxo loadable table ->
                     TxUtxo loadable <|
                         case table of
@@ -2377,6 +2564,17 @@ tableAsCSV locale gc { type_ } =
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
+
+                Nothing ->
+                    Nothing
+
+        Actor loadable table ->
+            case table of
+                Just (ActorTagsTable t) ->
+                    Nothing
+
+                Just (ActorOtherLinksTable t) ->
+                    Nothing
 
                 Nothing ->
                     Nothing

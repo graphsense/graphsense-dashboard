@@ -4,6 +4,7 @@ import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
+import Css.Graph
 import Css.View as Css
 import Hovercard
 import Html
@@ -56,6 +57,26 @@ truncate : Int -> String -> String
 truncate len str =
     if String.length str > len then
         String.left len str ++ "…"
+
+    else
+        str
+
+
+truncateLongIdentifier : String -> String
+truncateLongIdentifier str =
+    if String.length str > 18 then
+        let
+            sigPart =
+                if String.startsWith "0x" str then
+                    String.right (String.length str - 2) str
+
+                else
+                    str
+
+            len =
+                8
+        in
+        String.left len sigPart ++ "…" ++ String.right len sigPart
 
     else
         str
@@ -150,3 +171,8 @@ p vc attrs =
 addDot : String -> String
 addDot s =
     s ++ "."
+
+
+contextMenuRule : View.Config -> List (Html msg)
+contextMenuRule vc =
+    [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]

@@ -3,7 +3,9 @@ module View.Graph.Table.AddressNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Css.View as CssView
 import Dict
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -16,8 +18,10 @@ import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
 import Util.View exposing (none)
+import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 columnTitleFromDirection : Bool -> String
@@ -44,7 +48,7 @@ filter f a =
 
 titleLabels : String
 titleLabels =
-    "Labels"
+    "Tags"
 
 
 titleAddressBalance : String
@@ -107,11 +111,25 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ text data.address.address
+                        [ copyableLongIdentifier vc data.address.address UserClickedCopyToClipboard
                         ]
                     ]
                 )
-            , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels)
+
+            {- , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels) -}
+            , T.htmlColumn vc
+                titleLabels
+                (.labels >> Maybe.withDefault [] >> reduceLabels)
+                (\data ->
+                    case data.address.actors of
+                        Just actors ->
+                            actors
+                                |> List.map
+                                    (\ac -> actorLink vc ac.id ac.label)
+
+                        Nothing ->
+                            [ span [] [ text (data.labels |> Maybe.withDefault [] |> reduceLabels) ] ]
+                )
             , T.intColumn vc titleNoTxs .noTxs
             ]
                 ++ valueColumns vc

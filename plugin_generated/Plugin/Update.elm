@@ -52,8 +52,8 @@ updateGraphByUrl : Plugin.Model.PluginType -> Plugins -> String -> Plugin.Model.
 updateGraphByUrl ns plugins url state =
     n state
 
-init : Plugins -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-init plugins =
+init : Plugins -> Plugin.Model.Flags -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+init plugins flags =
     n {}
 
 initAddress : Plugins -> Plugin.Model.AddressState
@@ -72,8 +72,12 @@ clearSearch : Plugins -> Plugin.Model.ModelState -> Plugin.Model.ModelState
 clearSearch plugins states =
     states
 
-updateApiKeyHash : Plugins -> Plugin.Model.ModelState -> String -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-updateApiKeyHash plugins state apiKeyHash =
+updateApiKeyHash : Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateApiKeyHash plugins apiKeyHash state =
+    n state
+
+updateApiKey : Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateApiKey plugins apiKeyHash state =
     n state
 
 newGraph : Plugins -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )

@@ -38,6 +38,10 @@ type Effect msg
         , entity : Int
         }
         (Api.Data.Entity -> msg)
+    | GetActorEffect
+        { actorId : String
+        }
+        (Api.Data.Actor -> msg)
     | GetBlockEffect
         { currency : String
         , height : Int
@@ -92,6 +96,12 @@ type Effect msg
     | GetAddressTagsEffect
         { currency : String
         , address : String
+        , pagesize : Int
+        , nextpage : Maybe String
+        }
+        (Api.Data.AddressTags -> msg)
+    | GetActorTagsEffect
+        { actorId : String
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -285,6 +295,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetEntityEffect eff
 
+        GetActorEffect eff m ->
+            m
+                >> mapMsg
+                |> GetActorEffect eff
+
         GetBlockEffect eff m ->
             m
                 >> mapMsg
@@ -324,6 +339,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTagsEffect eff
+
+        GetActorTagsEffect eff m ->
+            m
+                >> mapMsg
+                |> GetActorTagsEffect eff
 
         GetBlockTxsEffect eff m ->
             m
@@ -422,7 +442,7 @@ perform apiKey wrapMsg effect =
                 direction =
                     isOutgoingToDirection isOutgoing
             in
-            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just includeLabels) nextpage (Just pagesize)
+            Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage } toMsg ->
@@ -443,7 +463,11 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
-            Api.Request.Entities.getEntity currency entity
+            Api.Request.Entities.getEntity currency entity (Just False) (Just True)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetActorEffect { actorId } toMsg ->
+            Api.Request.Tags.getActor actorId
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockEffect { currency, height } toMsg ->
@@ -455,7 +479,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTxsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressTxs currency address Nothing nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressTxs currency address Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
@@ -470,6 +494,10 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
+        GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
+            Api.Request.Tags.getActorTags actorId nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
         GetEntityAddressTagsEffect { currency, entity, pagesize, nextpage } toMsg ->
             Api.Request.Entities.listAddressTagsByEntity currency entity nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
@@ -479,7 +507,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing nextpage (Just pagesize)
+            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->

@@ -14,10 +14,19 @@ dev: $(API_ELM) $(wildcard src/**)
 	make setem
 	npx elm-test-rs --watch tests/Graph/View/TestLabel.elm
 
-$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
-	make openapi
+#$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
+	#make openapi
 
 setem:
 	npx setem --output src/
 
-.PHONY: openapi
+serve:
+	npm run dev
+
+test:
+	npx elm-test
+
+format:
+	npx elm-format --yes src
+
+.PHONY: openapi serve test format

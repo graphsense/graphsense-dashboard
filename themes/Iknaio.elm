@@ -176,6 +176,16 @@ theme =
                     ]
                 ]
             )
+        |> s_iconLink
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandText
+                , hover
+                    [ textDecoration none
+                    ]
+                , scaled 5 |> rem |> fontSize
+                , scaled 1 |> rem |> padding
+                ]
+            )
         |> s_loadingSpinner [ loadingSpinner ]
         |> s_logo "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/logo.svg]"
         |> s_popup
@@ -197,6 +207,7 @@ theme =
             [ displayFlex
             , alignItems center
             ]
+        |> s_userDefautImgUrl "[VITE_PLUGIN_ELM_ASSET:/themes/Iknaio/circle-question-regular.svg]"
         |> s_switchOnColor
             (\lightmode ->
                 if lightmode then
@@ -472,6 +483,14 @@ theme =
             )
         |> s_graph
             (Graph.default
+                |> s_contextMenuRule
+                    (\lightmode ->
+                        [ borderWidth (px 0.5)
+                        , scaled 1 |> rem |> margin
+                        , colors.greyLight |> colorWithLightmode lightmode
+                        , opacity <| num 0.5
+                        ]
+                    )
                 |> s_colorScheme
                     [ rgb255 228 148 68
                     , rgb255 209 97 93
@@ -854,7 +873,7 @@ theme =
                             ]
                         , displayFlex
                         , scaled 2 |> rem |> padding
-                        , width <| calc (pct 100) minus (scaled 4 |> rem)
+                        , width <| calc (pct 100) minus (scaled 3 |> rem)
                         , translateY (pct p) |> transform
                         , shadowSm
                         , minHeight <| px 30
@@ -895,6 +914,24 @@ theme =
                             ]
                         ]
                     )
+                |> s_copyLink
+                    (\lightmode isActive ->
+                        [ colorWithLightmode lightmode
+                            (if isActive then
+                                colors.brandBase
+
+                             else
+                                colors.brandLight
+                            )
+                        , hover
+                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                            ]
+                        , active
+                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                            ]
+                        ]
+                    )
+                |> s_longIdentifier [ fontFamily monospace ]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize

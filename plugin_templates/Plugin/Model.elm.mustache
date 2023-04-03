@@ -4,6 +4,12 @@ module Plugin.Model exposing (..)
 import {{package}}.Model
 {{/plugins}}
 
+type alias Flags =
+    { {{#plugins}}{{name}} : {{package}}.Model.Flags
+    {{^last}}, {{/last}}{{/plugins}}
+    }
+    
+
 type alias ModelState =
     { {{#plugins}}{{name}} : Maybe {{package}}.Model.Model
     {{^last}}, {{/last}}{{/plugins}}

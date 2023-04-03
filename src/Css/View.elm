@@ -110,6 +110,12 @@ link vc =
         :: vc.theme.link vc.lightmode
 
 
+iconLink : Config -> List Style
+iconLink vc =
+    cursor pointer
+        :: vc.theme.iconLink vc.lightmode
+
+
 overlay : Config -> List Style
 overlay vc =
     position absolute

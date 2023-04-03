@@ -16,6 +16,7 @@ import Table
 import Util.View exposing (truncate)
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 init : Table Api.Data.AddressTag
@@ -47,7 +48,7 @@ config vc =
                             |> onClick
                         , css [ Css.cursor Css.pointer ]
                         ]
-                        [ text data.address
+                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
                         ]
                     ]
                 )
@@ -85,6 +86,7 @@ config vc =
                 )
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
+            , T.stringColumn vc "Actor id" (.actor >> Maybe.withDefault "")
             , T.intColumn vc
                 "Confidence"
                 (.confidenceLevel >> Maybe.withDefault 0)

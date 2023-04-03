@@ -6,8 +6,10 @@ import Browser.Dom as Dom
 import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
+import Css
 import Css.Graph as Css
 import Dict
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
@@ -35,8 +37,9 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
+import Util.ExternalLinks exposing (getBlockExplorerLinks)
 import Util.Graph as Util
-import Util.View exposing (hovercard, none)
+import Util.View exposing (contextMenuRule, hovercard, none)
 import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
 import View.Graph.ContextMenu as ContextMenu
@@ -380,6 +383,21 @@ contextMenu plugins states vc model cm =
     let
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
+
+        addBlockExplorerLinks currency address =
+            getBlockExplorerLinks currency address
+                |> List.map
+                    (\( url, label ) ->
+                        ContextMenu.optionHtml vc
+                            [ FontAwesome.icon FontAwesome.externalLinkAlt
+                                |> Html.Styled.fromUnstyled
+                                |> List.singleton
+                                |> span
+                                    [ HA.css [ Css.marginRight <| Css.em 0.5 ] ]
+                            , Locale.string vc.locale label |> Html.Styled.text
+                            ]
+                            (UserClickedExternalLink url)
+                    )
     in
     (case cm.type_ of
         ContextMenu.Address address ->
@@ -388,6 +406,8 @@ contextMenu plugins states vc model cm =
             , UserClickedRemoveAddress address.id
                 |> option "Remove"
             ]
+                ++ contextMenuRule vc
+                ++ addBlockExplorerLinks address.address.currency address.address.address
                 ++ Plugin.addressContextMenu plugins states vc address
 
         ContextMenu.Entity entity ->

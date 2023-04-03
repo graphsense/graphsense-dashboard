@@ -1,6 +1,11 @@
 module Plugin.Model exposing (..)
 
 
+type alias Flags =
+    { 
+    }
+    
+
 type alias ModelState =
     { 
     }

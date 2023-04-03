@@ -684,6 +684,11 @@ s_colorScheme value__ record__ =
     { record__ | colorScheme = value__ }
 
 
+s_contextMenuRule : a -> { b | contextMenuRule : a } -> { b | contextMenuRule : a }
+s_contextMenuRule value__ record__ =
+    { record__ | contextMenuRule = value__ }
+
+
 s_colors : a -> { b | colors : a } -> { b | colors : a }
 s_colors value__ record__ =
     { record__ | colors = value__ }
@@ -2444,6 +2449,11 @@ s_link value__ record__ =
     { record__ | link = value__ }
 
 
+s_iconLink : a -> { b | iconLink : a } -> { b | iconLink : a }
+s_iconLink value__ record__ =
+    { record__ | iconLink = value__ }
+
+
 s_linkColorFaded : a -> { b | linkColorFaded : a } -> { b | linkColorFaded : a }
 s_linkColorFaded value__ record__ =
     { record__ | linkColorFaded = value__ }
@@ -2522,6 +2532,11 @@ s_loadingSpinner value__ record__ =
 s_loadingSpinnerUrl : a -> { b | loadingSpinnerUrl : a } -> { b | loadingSpinnerUrl : a }
 s_loadingSpinnerUrl value__ record__ =
     { record__ | loadingSpinnerUrl = value__ }
+
+
+s_userDefautImgUrl : a -> { b | userDefautImgUrl : a } -> { b | userDefautImgUrl : a }
+s_userDefautImgUrl value__ record__ =
+    { record__ | userDefautImgUrl = value__ }
 
 
 s_locale : a -> { b | locale : a } -> { b | locale : a }
@@ -3672,6 +3687,16 @@ s_propertyBoxTable value__ record__ =
 s_propertyBoxTableLink : a -> { b | propertyBoxTableLink : a } -> { b | propertyBoxTableLink : a }
 s_propertyBoxTableLink value__ record__ =
     { record__ | propertyBoxTableLink = value__ }
+
+
+s_copyLink : a -> { b | copyLink : a } -> { b | copyLink : a }
+s_copyLink value__ record__ =
+    { record__ | copyLink = value__ }
+
+
+s_longIdentifier : a -> { b | longIdentifier : a } -> { b | longIdentifier : a }
+s_longIdentifier value__ record__ =
+    { record__ | longIdentifier = value__ }
 
 
 s_propertyBoxUsageRelative : a -> { b | propertyBoxUsageRelative : a } -> { b | propertyBoxUsageRelative : a }

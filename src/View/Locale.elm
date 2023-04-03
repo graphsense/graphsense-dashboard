@@ -26,6 +26,7 @@ import Dict exposing (Dict)
 import Ease
 import Html.Styled exposing (Html, span, text)
 import Html.Styled.Attributes exposing (css)
+import List.Extra exposing (find)
 import Locale.Durations
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
@@ -280,11 +281,18 @@ coin model hideCode code v =
             (\( value, sc ) ->
                 let
                     fmt =
-                        if abs value < 0.0001 then
-                            "1,000.0000[00000000000000]"
+                        if value == 0.0 then
+                            "1,000"
+
+                        else if abs value >= 1.0 then
+                            "1,000.00"
 
                         else
-                            "1,000.0000"
+                            let
+                                n =
+                                    find (\exp -> (abs value * (10 ^ toFloat exp)) >= 1) (List.range 0 10) |> Maybe.withDefault 2
+                            in
+                            "1,000." ++ String.repeat (n + 1) "0"
                 in
                 floatWithFormat model fmt value
                     ++ (if hideCode then

@@ -6,6 +6,10 @@ namespace =
     "stub"
 
 
+type alias Flags =
+    {}
+
+
 type alias Model =
     ()
 

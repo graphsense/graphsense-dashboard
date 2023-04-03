@@ -1,1 +1,15 @@
 the search: search
+entity: cluster
+entities: clusters
+Root Address: cluster root
+Sending entities: sending clusters
+Receiving entities: receiving clusters
+currency: cryptoasset
+change currency: value denomination
+for entities: for clusters
+final balance: Balance
+list sending entities: list sending clusters
+list receiving entities: list receiving clusters
+list entity transactions: list cluster transactions
+Incoming entity: Incoming cluster
+Outgoing entity: Outgoing cluster

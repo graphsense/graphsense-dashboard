@@ -30,7 +30,7 @@ legend vc items =
         items
             |> List.map
                 (\item ->
-                    a
+                    span
                         [ Css.legendItem vc |> css
                         ]
                         [ span
@@ -42,15 +42,18 @@ legend vc items =
                                 |> css
                             ]
                             [ text "◼" ]
-                        , a
+                        , span
                             [ [ Css.legendItemTitle vc |> Css.batch
-                              , Css.View.link vc |> Css.batch
+
+                              {- , Css.View.link vc |> Css.batch -}
                               ]
                                 |> css
-                            , href item.uri
-                            , target "_blank"
-                            , Json.Decode.succeed ( NoOp, True )
-                                |> stopPropagationOn "click"
+
+                            {- , href item.uri -}
+                            {- , target "_blank" -}
+                            {- , Json.Decode.succeed ( NoOp, True )
+                               |> stopPropagationOn "click"
+                            -}
                             ]
                             [ text item.title
                             ]

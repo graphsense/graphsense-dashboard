@@ -17,11 +17,10 @@ done
 
 npm run build && \
     mkdir -p /usr/share/nginx/html /run/nginx && \
-    mv $WORKDIR/dist/* /usr/share/nginx/html/ && \
+    cp -r $WORKDIR/dist/* /usr/share/nginx/html/ && \
     rm -rf /root/.config /root/.npm && \
     rm -f /etc/nginx/http.d/default.conf && \
     apk del build-dependendencies
-
 
 sed -i "s|http://localhost:9000|$REST_URL|g" /usr/share/nginx/html/assets/index.*.js 
 

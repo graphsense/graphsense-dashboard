@@ -36,6 +36,7 @@ import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
+import PluginInterface.Update as PluginInterface
 import Ports
 import Process
 import RecordSetter exposing (..)
@@ -260,8 +261,8 @@ update plugins uc msg model =
                                 []
 
                     ( new, outMsg, cmd ) =
-                        Sha256.sha256 model.user.apiKey
-                            |> Plugin.updateApiKeyHash plugins model.plugins
+                        Plugin.updateApiKeyHash plugins (Sha256.sha256 model.user.apiKey) model.plugins
+                            |> PluginInterface.andThen (Plugin.updateApiKey plugins model.user.apiKey)
                 in
                 ( { model
                     | user =
@@ -282,7 +283,8 @@ update plugins uc msg model =
                                 )
                     , plugins = new
                   }
-                , PluginEffect cmd :: effs
+                , PluginEffect cmd
+                    :: effs
                 )
                     |> updateByPluginOutMsg plugins outMsg
 

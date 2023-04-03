@@ -17,7 +17,7 @@ import Tuple3 as T3
 
 
 type alias Plugins =
-    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
+    { {{#plugins}}{{name}} : Maybe (PluginInterface.Update.Update {{package}}.Model.Flags {{package}}.Model.Model {{package}}.Model.AddressState {{package}}.Model.EntityState {{package}}.Msg.Msg {{package}}.Msg.AddressMsg {{package}}.Msg.EntityMsg)
     {{^last}}, {{/last}}{{/plugins}}
     }
 
@@ -215,13 +215,15 @@ updateGraphByUrl ns plugins url state =
 {{/plugins.length}} 
 
 
-init : Plugins -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-init plugins =
+init : Plugins -> Plugin.Model.Flags -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+init plugins flags =
     {{^plugins}}n {}{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
             plugins.{{name}}
                 |> Maybe.andThen .init
+                |> Maybe.map (\init_ -> init_ flags.{{name}})
+
 {{/plugins}} 
     in
     ( { {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
@@ -284,8 +286,8 @@ clearSearch plugins states =
 {{/plugins.length}} 
 
 
-updateApiKeyHash : Plugins -> Plugin.Model.ModelState -> String -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-updateApiKeyHash plugins state apiKeyHash =
+updateApiKeyHash : Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateApiKeyHash plugins apiKeyHash state =
     {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
 {{#plugins}}
         {{name}} =
@@ -299,6 +301,42 @@ updateApiKeyHash plugins state apiKeyHash =
                                     |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
                             )
                             plugin.updateApiKeyHash
+                            state.{{name}}
+                    )
+                |> Maybe.Extra.orElse (Maybe.map n state.{{name}})
+{{/plugins}} 
+    in
+    ( { state
+        | {{#plugins}}{{name}} = Maybe.map T3.first {{name}}
+        {{^last}}, {{/last}}{{/plugins}}
+      }
+    , [ {{#plugins}}Maybe.map T3.second {{name}} |> Maybe.withDefault [] 
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> List.concat
+    , [ {{#plugins}}Maybe.map T3.third {{name}} |> Maybe.withDefault Cmd.none
+      {{^last}}, {{/last}}{{/plugins}}
+      ]
+        |> Cmd.batch
+    )
+{{/plugins.length}} 
+
+
+updateApiKey : Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateApiKey plugins apiKeyHash state =
+    {{^plugins}}n state{{/plugins}}{{#plugins.length}}let
+{{#plugins}}
+        {{name}} =
+            plugins.{{name}}
+                |> Maybe.andThen
+                    (\plugin ->
+                        Maybe.map2
+                            (\fun model ->
+                                fun apiKeyHash model
+                                    |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
+                                    |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
+                            )
+                            plugin.updateApiKey
                             state.{{name}}
                     )
                 |> Maybe.Extra.orElse (Maybe.map n state.{{name}})

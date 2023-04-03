@@ -19,7 +19,9 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Util.View exposing (loadingSpinner, none)
+import View.Button exposing (copyLink)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 type alias Tools msg =
@@ -242,6 +244,15 @@ stringColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
         , viewData = accessor >> text >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy accessor
+        }
+
+
+addressColumn : View.Config -> String -> (data -> String) -> (String -> msg) -> Table.Column data msg
+addressColumn vc name accessor onCopy =
+    Table.veryCustomColumn
+        { name = name
+        , viewData = accessor >> (\x -> copyableLongIdentifier vc x onCopy) >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

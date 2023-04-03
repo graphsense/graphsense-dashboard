@@ -18,6 +18,7 @@ import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (longIdentifier)
 
 
 init : Table Api.Data.TxAccount
@@ -69,8 +70,7 @@ config vc coinCode =
                 titleTx
                 .txHash
                 (\data ->
-                    Util.View.truncate vc.theme.table.urlMaxLength data.txHash
-                        |> text
+                    longIdentifier vc data.txHash
                         |> List.singleton
                         |> a
                             [ Css.View.link vc |> css
@@ -100,8 +100,8 @@ config vc coinCode =
                    ]
                 ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
                    , T.timestampColumn vc titleTimestamp .timestamp
-                   , T.stringColumn vc titleSendingAddress (.fromAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
-                   , T.stringColumn vc titleReceivingAddress (.toAddress >> Util.View.truncate vc.theme.table.urlMaxLength)
+                   , T.addressColumn vc titleSendingAddress .fromAddress UserClickedCopyToClipboard
+                   , T.addressColumn vc titleReceivingAddress .toAddress UserClickedCopyToClipboard
                    , T.intColumn vc titleHeight .height
                    , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]

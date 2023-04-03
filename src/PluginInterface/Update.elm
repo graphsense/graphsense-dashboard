@@ -5,9 +5,13 @@ import PluginInterface.Msg exposing (OutMsg)
 import Set exposing (Set)
 
 
-type alias Update modelState addressState entityState msg addressMsg entityMsg =
+type alias Return modelState msg addressMsg entityMsg =
+    ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg )
+
+
+type alias Update flags modelState addressState entityState msg addressMsg entityMsg =
     { -- update plugin's state
-      update : Maybe (msg -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+      update : Maybe (msg -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- update an address's plugin state
     , updateAddress : Maybe (addressMsg -> addressState -> addressState)
@@ -16,22 +20,25 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , updateEntity : Maybe (entityMsg -> entityState -> entityState)
 
     -- update by change of URL
-    , updateByUrl : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , updateByUrl : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- update by change of URL below /graph
-    , updateGraphByUrl : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , updateGraphByUrl : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- when addresses are added to the graph
-    , addressesAdded : Maybe (Set Id.AddressId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , addressesAdded : Maybe (Set Id.AddressId -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- when entities are added to the graph
-    , entitiesAdded : Maybe (Set Id.EntityId -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , entitiesAdded : Maybe (Set Id.EntityId -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- when user inputs an API key, process the sha256 hash of the key
-    , updateApiKeyHash : Maybe (String -> modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , updateApiKeyHash : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
+
+    -- when user inputs an API key
+    , updateApiKey : Maybe (String -> modelState -> Return modelState msg addressMsg entityMsg)
 
     -- initialize plugin's state
-    , init : Maybe ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg )
+    , init : Maybe (flags -> Return modelState msg addressMsg entityMsg)
 
     -- initialize plugin state on init of address
     , initAddress : Maybe addressState
@@ -43,14 +50,14 @@ type alias Update modelState addressState entityState msg addressMsg entityMsg =
     , clearSearch : Maybe (modelState -> modelState)
 
     -- when the graph is reset (user clicks "new graph")
-    , newGraph : Maybe (modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , newGraph : Maybe (modelState -> Return modelState msg addressMsg entityMsg)
 
     -- when the user logs out
-    , logout : Maybe (modelState -> ( modelState, List (OutMsg msg addressMsg entityMsg), Cmd msg ))
+    , logout : Maybe (modelState -> Return modelState msg addressMsg entityMsg)
     }
 
 
-init : Update modelState addressState entityState msg addressMsg entityMsg
+init : Update flags modelState addressState entityState msg addressMsg entityMsg
 init =
     { update = Nothing
     , updateAddress = Nothing
@@ -60,6 +67,7 @@ init =
     , addressesAdded = Nothing
     , entitiesAdded = Nothing
     , updateApiKeyHash = Nothing
+    , updateApiKey = Nothing
     , init = Nothing
     , initAddress = Nothing
     , initEntity = Nothing
@@ -67,3 +75,12 @@ init =
     , newGraph = Nothing
     , logout = Nothing
     }
+
+
+andThen : (modelState -> Return modelState msg addressMsg entityMsg) -> Return modelState msg addressMsg entityMsg -> Return modelState msg addressMsg entityMsg
+andThen fun ( modelA, outMsgA, cmdA ) =
+    let
+        ( modelB, outMsgB, cmdB ) =
+            fun modelA
+    in
+    ( modelB, outMsgA ++ outMsgB, Cmd.batch [ cmdA, cmdB ] )

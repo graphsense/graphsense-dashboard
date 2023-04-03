@@ -13,7 +13,7 @@
     "test": "elm-test-rs"
   },
   "devDependencies": {
-    "elm-format": "^0.8.5",
+    "elm-format": "^0.8.6",
     "elm-test": "^0.19.1-revision7",
     "level": "^8.0.0",
     "mustache": "^4.2.0",
@@ -22,6 +22,7 @@
     "vite-plugin-elm": "^2.7.2"
   },
   "dependencies": {
+    "elm-tooling": "^1.13.1",
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",
     "js-base64": "^3.7.2",

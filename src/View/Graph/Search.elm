@@ -168,6 +168,14 @@ partByCriterion vc crit =
                                 [ text c.label
                                 ]
                         )
+                    |> (++)
+                        [ option
+                            [ value "--"
+                            , "--" == active |> selected
+                            ]
+                            [ text (Locale.string vc.locale "Any Category")
+                            ]
+                        ]
                     |> select
                         [ onInput UserSelectsSearchCategory
                         , Css.View.input vc |> css
