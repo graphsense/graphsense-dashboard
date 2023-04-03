@@ -16,3 +16,5 @@ testdata
 elm.js
 conv
 src/sw.mjs
+.ctags_ignore
+.tags
