@@ -21,7 +21,7 @@ import View.Locale as Locale
 
 init : Table Api.Data.LinkUtxo
 init =
-    Init.Graph.Table.initUnsorted filter
+    Init.Graph.Table.initSorted True filter titleTimestamp
 
 
 filter : String -> Api.Data.LinkUtxo -> Bool

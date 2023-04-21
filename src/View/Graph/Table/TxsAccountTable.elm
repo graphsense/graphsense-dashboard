@@ -23,7 +23,7 @@ import View.Util exposing (longIdentifier)
 
 init : Table Api.Data.TxAccount
 init =
-    Init.Graph.Table.initUnsorted filter
+    Init.Graph.Table.initSorted True filter titleTimestamp
 
 
 filter : String -> Api.Data.TxAccount -> Bool
