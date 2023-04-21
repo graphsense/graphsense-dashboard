@@ -48,13 +48,19 @@ app.ports.exportGraphics.subscribe((filename) => {
   const sheets = ([...document.styleSheets]).filter(({ href }) => !href)
   if (!sheets) return
   for (let i = 0; i < sheets.length; i++) {
-    const rules = sheets[i].cssRules
-    for (let j = 0; j < rules.length; j++) {
-      const selectorText = rules[j].selectorText
-      const cssText = rules[j].cssText
-      if (!selectorText) continue
-      const s = selectorText.replace('.', '').trim()
-      classMap.set(s, cssText.split('{')[1].replace('}', ''))
+    try {
+      const rules = sheets[i].cssRules
+      for (let j = 0; j < rules.length; j++) {
+        const selectorText = rules[j].selectorText
+        const cssText = rules[j].cssText
+        if (!selectorText) continue
+        const s = selectorText.replace('.', '').trim()
+        classMap.set(s, cssText.split('{')[1].replace('}', ''))
+      }
+    } catch (e) {
+      if (!(e instanceof DOMException)) {
+        throw e
+      }
     }
   }
   classMap.set('rectLabel', 'fill: white')
