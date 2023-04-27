@@ -85,6 +85,7 @@ const appendLang = (plugin) => {
 
 const copyPublic = (plugin) => {
   const pluginPublicFolder = path.join(pluginsFolder, plugin, publicFolder)
+  if (!fs.existsSync(pluginPublicFolder)) return
   fse.copySync(pluginPublicFolder, publicFolder)
   console.log('Copied public folder', pluginPublicFolder)
 }
