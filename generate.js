@@ -1,4 +1,5 @@
 var fs = require('fs')
+var fse = require('fs-extra')
 var mustache = require('mustache')
 var path = require('path')
 var yaml = require('yaml')
@@ -82,10 +83,18 @@ const appendLang = (plugin) => {
     })
 }
 
+const copyPublic = (plugin) => {
+  const pluginPublicFolder = path.join(pluginsFolder, plugin, publicFolder)
+  if (!fs.existsSync(pluginPublicFolder)) return
+  fse.copySync(pluginPublicFolder, publicFolder)
+  console.log('Copied public folder', pluginPublicFolder)
+}
+
 transform('./')
 
 for(const plugin in plugins) {
   appendLang(plugins[plugin].name)
+  copyPublic(plugins[plugin].name)
 }
 
 
