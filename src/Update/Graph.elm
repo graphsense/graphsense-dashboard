@@ -2306,6 +2306,13 @@ updateByRoute plugins route model =
                     , at = Maybe.map AtLayer layer
                     }
 
+        Route.Currency currency (Route.AddressPath addresses) ->
+            loadPath plugins
+                { currency = currency
+                , addresses = addresses
+                }
+                model
+
         Route.Currency currency (Route.Entity e table layer) ->
             layer
                 |> Maybe.andThen
