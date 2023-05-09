@@ -24,6 +24,7 @@ type Effect
     | PluginEffect (Cmd Plugin.Msg)
     | InternalGraphAddedAddressesEffect (Set AddressId)
     | InternalGraphAddedEntitiesEffect (Set EntityId)
+    | InternalGraphSelectedAddressEffect AddressId
     | TagSearchEffect Search.Effect
     | ApiEffect (Api.Effect Msg)
     | CmdEffect (Cmd Msg)
@@ -47,6 +48,9 @@ perform eff =
 
         -- managed in Effect.elm
         InternalGraphAddedEntitiesEffect _ ->
+            Cmd.none
+
+        InternalGraphSelectedAddressEffect _ ->
             Cmd.none
 
         PluginEffect cmd ->

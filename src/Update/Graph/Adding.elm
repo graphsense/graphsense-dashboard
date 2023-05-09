@@ -3,7 +3,9 @@ module Update.Graph.Adding exposing (..)
 import Api.Data
 import Dict exposing (Dict)
 import Init.Graph.Adding as Init
+import Model.Address as A
 import Model.Graph.Adding exposing (..)
+import Model.Graph.Id as Id
 import RemoteData exposing (RemoteData(..))
 import Set exposing (Set)
 
@@ -17,10 +19,10 @@ normalizeEth currency address =
         address
 
 
-loadAddress : { currency : String, address : String } -> Model -> Model
-loadAddress { currency, address } model =
+loadAddress : { currency : String, address : String } -> Maybe ( Bool, Id.AddressId ) -> Model -> Model
+loadAddress { currency, address } anchor model =
     { model
-        | addresses = Dict.insert ( currency, normalizeEth currency address ) Init.addresses model.addresses
+        | addresses = Dict.insert ( currency, normalizeEth currency address ) (Init.addresses anchor) model.addresses
     }
 
 
@@ -44,6 +46,11 @@ setEntityForAddress { currency, address } data model =
                 (Maybe.map (\a -> { a | entity = Just data }))
                 model.addresses
     }
+
+
+setPath : String -> String -> List String -> Model -> Model
+setPath currency fst addresses model =
+    { model | path = Just ( currency, fst :: addresses ) }
 
 
 setOutgoingForAddress : { currency : String, address : String } -> List Api.Data.NeighborEntity -> Model -> Model
@@ -122,7 +129,17 @@ removeAddress { currency, address } model =
     }
 
 
-readyAddress : { currency : String, address : String } -> Model -> Maybe { address : Api.Data.Address, entity : Api.Data.Entity, outgoing : List Api.Data.NeighborEntity, incoming : List Api.Data.NeighborEntity }
+readyAddress :
+    { currency : String, address : String }
+    -> Model
+    ->
+        Maybe
+            { address : Api.Data.Address
+            , entity : Api.Data.Entity
+            , outgoing : List Api.Data.NeighborEntity
+            , incoming : List Api.Data.NeighborEntity
+            , anchor : Maybe ( Bool, Id.AddressId )
+            }
 readyAddress { currency, address } model =
     Dict.get ( currency, normalizeEth currency address ) model.addresses
         |> Maybe.andThen
@@ -133,6 +150,7 @@ readyAddress { currency, address } model =
                         , entity = e
                         , incoming = i
                         , outgoing = o
+                        , anchor = add.anchor
                         }
                     )
                     add.address
@@ -165,3 +183,31 @@ readyEntity { currency, entity } model =
                     add.incoming
                     add.outgoing
             )
+
+
+getNextFor : A.Address -> Model -> Maybe A.Address
+getNextFor { currency, address } model =
+    case model.path of
+        Just ( curr, a :: rest ) ->
+            if curr /= currency || a /= address then
+                Nothing
+
+            else
+                List.head rest
+                    |> Maybe.map (A.Address currency)
+
+        _ ->
+            Nothing
+
+
+popPath : Model -> Model
+popPath model =
+    { model
+        | path =
+            case model.path of
+                Just ( c, addresses :: rest ) ->
+                    Just ( c, rest )
+
+                _ ->
+                    Nothing
+    }

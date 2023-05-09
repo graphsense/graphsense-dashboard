@@ -43,6 +43,7 @@ import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
+import Set
 import Sha256
 import Task
 import Time
@@ -484,11 +485,16 @@ update plugins uc msg model =
                             |> n
 
                 Search.UserPicksCurrency currency ->
-                    { model
-                        | search = Search.batch currency model.search
-                    }
-                        |> n
-                        |> batchSearch plugins
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.loadPath plugins
+                                { currency = currency
+                                , addresses = Search.getMulti model.search
+                                }
+                                model.graph
+                    in
+                    clearSearch plugins { model | graph = graph, dialog = Nothing }
+                        |> mapSecond ((++) (List.map GraphEffect graphEffects))
 
                 Search.BouncedBlur ->
                     clearSearch plugins model
@@ -523,7 +529,6 @@ update plugins uc msg model =
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
-                        |> batchSearch plugins
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
@@ -1101,35 +1106,6 @@ pluginNewGraph plugins ( model, eff ) =
       }
     , PluginEffect cmd
         :: eff
-    )
-
-
-batchSearch : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
-batchSearch plugins ( model, eff ) =
-    let
-        ( term, search ) =
-            Search.popInput model.search
-    in
-    ( { model
-        | search = search
-        , dialog = Nothing
-      }
-    , term
-        |> Maybe.map
-            (\( currency, t ) ->
-                Route.Graph.addressRoute
-                    { currency = currency
-                    , address = t
-                    , table = Nothing
-                    , layer = Nothing
-                    }
-                    |> Route.graphRoute
-                    |> Route.toUrl
-                    |> NavPushUrlEffect
-                    |> List.singleton
-            )
-        |> Maybe.withDefault []
-        |> (++) eff
     )
 
 

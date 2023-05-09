@@ -98,6 +98,10 @@ perform plugins key statusbarToken apiKey effect =
                     Task.succeed ids
                         |> Task.perform (Graph.InternalGraphAddedEntities >> GraphMsg)
 
+                Graph.InternalGraphSelectedAddressEffect id ->
+                    Task.succeed id
+                        |> Task.perform (Graph.InternalGraphSelectedAddress >> GraphMsg)
+
                 Graph.PluginEffect _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg

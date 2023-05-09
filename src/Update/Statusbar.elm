@@ -111,6 +111,9 @@ messageFromEffect model effect =
         Model.GraphEffect (Graph.InternalGraphAddedEntitiesEffect _) ->
             Nothing
 
+        Model.GraphEffect (Graph.InternalGraphSelectedAddressEffect _) ->
+            Nothing
+
         Model.GraphEffect (Graph.TagSearchEffect _) ->
             Nothing
 
