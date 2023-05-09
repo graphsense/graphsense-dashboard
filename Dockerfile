@@ -29,7 +29,10 @@ COPY ./themes $WORKDIR/themes
 COPY ./docker/site.conf /etc/nginx/http.d/
 COPY ./generate.js $WORKDIR/generate.js
 
-RUN chown -R $DOCKER_USER $WORKDIR
+RUN chown -R $DOCKER_USER $WORKDIR && \
+    mkdir -p /usr/share/nginx/html /run/nginx && \
+    chown -R $DOCKER_USER /usr/share/nginx/html && \
+    rm -f /etc/nginx/http.d/default.conf 
 
 USER $DOCKER_USER
 RUN npm install 
