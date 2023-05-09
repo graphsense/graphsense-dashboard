@@ -522,7 +522,7 @@ thing =
             |> map Address
         , s addresspathSegment
             |> P.slash encodedString
-            |> map (String.split " " >> AddressPath)
+            |> map (String.split "," >> AddressPath)
         , s entitySegment
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
