@@ -38,7 +38,7 @@ n m =
 
 perform : Plugins -> Nav.Key -> Maybe String -> String -> Effect -> Cmd Msg
 perform plugins key statusbarToken apiKey effect =
-    case effect of
+    case Debug.log "effect" effect of
         NavLoadEffect url ->
             Nav.load url
 

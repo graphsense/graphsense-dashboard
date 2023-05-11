@@ -11,7 +11,7 @@ type alias Model =
     { addresses : Dict ( String, String ) AddingAddress
     , entities : Dict ( String, Int ) AddingEntity
     , labels : Set String
-    , path : Maybe ( String, List String )
+    , path : List Id.AddressId
     }
 
 

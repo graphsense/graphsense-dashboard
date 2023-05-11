@@ -111,6 +111,7 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
 
         added =
             Layer.addAddress plugins uc newModel.config.colors address newModel.layers
+                |> Debug.log "added"
 
         newModel_ =
             { newModel
@@ -266,17 +267,17 @@ syncBrowser old model =
 
 loadNextAddress : Plugins -> Model -> Id.AddressId -> Maybe ( Model, List Effect )
 loadNextAddress plugins model id =
-    Adding.getNextFor (A.fromId id) model.adding
+    Adding.getNextFor id model.adding
         |> Maybe.map
-            (\{ currency, address } ->
+            (\nextId ->
                 { model
                     | adding = Adding.popPath model.adding
                 }
-                    |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
+                    |> s_selectIfLoaded (Just (SelectAddress (A.fromId nextId)))
                     |> loadAddress
                         plugins
-                        { currency = currency
-                        , address = address
+                        { currency = Id.currency nextId
+                        , address = Id.addressId nextId
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
@@ -2714,6 +2715,7 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     let
         added =
             addAddressNeighborsWithEntity plugins uc anchor isOutgoing neighbors model
+                |> Debug.log "handleAddressNeighbor added"
     in
     ( added.newAddresses
         |> List.foldl
@@ -3481,6 +3483,7 @@ addAddressesAtEntity plugins uc entityId addresses model =
                 , colors = model.config.colors
                 }
                 addresses
+                |> Debug.log "addAddressAtEntity added"
     in
     ( { model
         | layers =
@@ -3581,7 +3584,14 @@ loadAddress plugins { currency, address, table, at } model =
                 Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = layer }) model.layers
             )
         |> Maybe.Extra.orElseLazy
-            (\_ -> Layer.getFirstAddress { currency = currency, address = address } model.layers)
+            (\_ ->
+                case at of
+                    Nothing ->
+                        Layer.getFirstAddress { currency = currency, address = address } model.layers
+
+                    _ ->
+                        Nothing
+            )
         |> Maybe.map
             (\a ->
                 selectAddress a table model

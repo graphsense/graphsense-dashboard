@@ -11,7 +11,7 @@ init =
     { addresses = Dict.empty
     , entities = Dict.empty
     , labels = Set.empty
-    , path = Nothing
+    , path = []
     }
 
 

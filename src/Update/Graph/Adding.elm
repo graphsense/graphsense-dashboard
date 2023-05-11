@@ -3,6 +3,7 @@ module Update.Graph.Adding exposing (..)
 import Api.Data
 import Dict exposing (Dict)
 import Init.Graph.Adding as Init
+import Init.Graph.Id as Id
 import Model.Address as A
 import Model.Graph.Adding exposing (..)
 import Model.Graph.Id as Id
@@ -50,7 +51,12 @@ setEntityForAddress { currency, address } data model =
 
 setPath : String -> String -> List String -> Model -> Model
 setPath currency fst addresses model =
-    { model | path = Just ( currency, fst :: addresses ) }
+    { model
+        | path =
+            fst
+                :: addresses
+                |> List.indexedMap (\i a -> Id.initAddressId { currency = currency, id = a, layer = i })
+    }
 
 
 setOutgoingForAddress : { currency : String, address : String } -> List Api.Data.NeighborEntity -> Model -> Model
@@ -185,29 +191,22 @@ readyEntity { currency, entity } model =
             )
 
 
-getNextFor : A.Address -> Model -> Maybe A.Address
-getNextFor { currency, address } model =
+getNextFor : Id.AddressId -> Model -> Maybe Id.AddressId
+getNextFor id model =
     case model.path of
-        Just ( curr, a :: rest ) ->
-            if curr /= currency || a /= address then
+        nextId :: rest ->
+            if nextId /= id then
                 Nothing
 
             else
                 List.head rest
-                    |> Maybe.map (A.Address currency)
 
-        _ ->
+        [] ->
             Nothing
 
 
 popPath : Model -> Model
 popPath model =
     { model
-        | path =
-            case model.path of
-                Just ( c, addresses :: rest ) ->
-                    Just ( c, rest )
-
-                _ ->
-                    Nothing
+        | path = List.drop 1 model.path
     }
