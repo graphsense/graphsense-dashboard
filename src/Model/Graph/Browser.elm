@@ -81,6 +81,7 @@ type alias TableLink =
 type Row r
     = Row ( String, r, Maybe TableLink )
     | Note String
+    | Footnote String
     | Image (Maybe String)
     | Rule
     | OptionalRow (Row r) Bool

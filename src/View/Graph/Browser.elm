@@ -305,6 +305,20 @@ browseRow vc map row =
                     ]
                 ]
 
+        Footnote note ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    []
+                , span
+                    [ (Css.propertyBoxNote vc ++ [ CssStyled.fontSize <| CssStyled.em 0.8 ]) |> css ]
+                    [ div [ [ CssStyled.textAlign CssStyled.right ] |> css ] [ text note ]
+                    ]
+                ]
+
         Row ( key, value, table ) ->
             div
                 [ Css.propertyBoxRow vc |> css
@@ -1166,6 +1180,14 @@ rowsActor vc gc now actor =
                 )
             |> elseLoading
         , mkTableLink "Show Actor Tags" Route.ActorTagsTable
+        )
+    , OptionalRow (Footnote "Image provided by CoinGecko")
+        (case actor of
+            Loaded a ->
+                getImageUri a |> Maybe.map (String.contains "coingecko") |> Maybe.withDefault False
+
+            _ ->
+                False
         )
     ]
 
