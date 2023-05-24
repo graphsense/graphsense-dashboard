@@ -1181,7 +1181,7 @@ rowsActor vc gc now actor =
             |> elseLoading
         , mkTableLink "Show Actor Tags" Route.ActorTagsTable
         )
-    , OptionalRow (Footnote "Image provided by CoinGecko")
+    , OptionalRow (Footnote "Logo provided by CoinGecko")
         (case actor of
             Loaded a ->
                 getImageUri a |> Maybe.map (String.contains "coingecko") |> Maybe.withDefault False
