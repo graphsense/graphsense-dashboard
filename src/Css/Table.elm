@@ -21,6 +21,11 @@ sidebar vc =
     vc.theme.table.sidebar vc.lightmode
 
 
+tableSeperator : Config -> List Style
+tableSeperator vc =
+    vc.theme.table.tableSeperator vc.lightmode
+
+
 sidebarIcon : Config -> Bool -> List Style
 sidebarIcon vc =
     vc.theme.table.sidebarIcon vc.lightmode

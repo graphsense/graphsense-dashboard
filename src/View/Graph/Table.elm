@@ -44,7 +44,7 @@ table vc attributes tools height config tbl =
             tbl.data
                 |> List.length
                 |> toFloat
-                |> (+) 3
+                |> (+) 1
                 |> (*) vc.theme.table.rowHeight
                 |> Basics.min vc.theme.table.maxHeight
     in
@@ -52,12 +52,22 @@ table vc attributes tools height config tbl =
         [ Css.Table.root vc |> css
         ]
         [ div
+            [ Css.Table.tableSeperator vc |> css
+            ]
+            []
+        , div
             ([ (height
                     |> Maybe.withDefault vc.theme.table.maxHeight
                     |> Basics.max minHeight
                     |> Css.px
                     |> Css.maxHeight
                )
+                :: (height
+                        |> Maybe.withDefault vc.theme.table.maxHeight
+                        |> Basics.max minHeight
+                        |> Css.px
+                        |> Css.minHeight
+                   )
                 :: (height
                         |> Maybe.map (Css.px >> Css.height >> List.singleton)
                         |> Maybe.withDefault []

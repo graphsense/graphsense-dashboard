@@ -974,6 +974,16 @@ theme =
                         , scaled 1 |> rem |> paddingTop
                         ]
                     )
+                |> s_tableSeperator
+                    (\lightmode ->
+                        [ borderLeftWidth (px 1)
+                        , borderStyle solid
+                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 1 |> rem |> paddingRight
+                        , scaled 4 |> rem |> marginLeft
+                        , scaled 1 |> rem |> paddingTop
+                        ]
+                    )
                 |> s_sidebarIcon
                     (\lightmode active ->
                         [ cursor pointer
