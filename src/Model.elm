@@ -9,12 +9,8 @@ import Effect.Api
 import Effect.Graph
 import Effect.Locale
 import Effect.Search
-import Html exposing (Attribute, Html)
 import Http
-import Json.Encode
-import Model.Address exposing (Address)
 import Model.Dialog
-import Model.Entity exposing (Entity)
 import Model.Graph
 import Model.Locale
 import Model.Search
@@ -25,7 +21,6 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
-import Theme.Theme exposing (Theme)
 import Time
 import Url exposing (Url)
 

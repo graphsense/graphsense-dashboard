@@ -3,14 +3,7 @@ module Effect exposing (n, perform)
 --import Plugin.Effect
 
 import Api
-import Api.Data
-import Api.Request.Addresses
-import Api.Request.Blocks
-import Api.Request.Entities
 import Api.Request.General
-import Api.Request.MyBulk
-import Api.Request.Tags
-import Api.Request.Txs
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
@@ -19,8 +12,6 @@ import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
-import Json.Decode
-import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -110,7 +101,6 @@ perform plugins key statusbarToken apiKey effect =
                     handleSearchEffect apiKey
                         Nothing
                         (Graph.TagSearchMsg >> GraphMsg)
-                        (Graph.TagSearchEffect >> GraphEffect)
                         e
 
                 Graph.CmdEffect cmd ->
@@ -122,7 +112,7 @@ perform plugins key statusbarToken apiKey effect =
                         |> Cmd.map GraphMsg
 
         SearchEffect e ->
-            handleSearchEffect apiKey (Just plugins) SearchMsg SearchEffect e
+            handleSearchEffect apiKey (Just plugins) SearchMsg e
 
         PortsConsoleEffect msg ->
             Ports.console msg
@@ -135,8 +125,8 @@ perform plugins key statusbarToken apiKey effect =
             cmd
 
 
-handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> (Search.Effect -> Effect) -> Search.Effect -> Cmd Msg
-handleSearchEffect apiKey plugins tag tagEffect effect =
+handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
+handleSearchEffect apiKey plugins tag effect =
     case effect of
         Search.SearchEffect { query, currency, limit, toMsg } ->
             (Effect.Api.SearchEffect

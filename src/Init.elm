@@ -1,7 +1,6 @@
 module Init exposing (init)
 
 import Config exposing (config)
-import Dict
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
@@ -63,14 +62,6 @@ init plugins flags url key =
     )
         |> getStatistics
         |> updateByPluginOutMsg plugins outMsgs
-
-
-devAuth =
-    Authorized
-        { requestLimit = Unlimited
-        , expiration = Nothing
-        , loggingOut = False
-        }
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
