@@ -44,7 +44,7 @@ import Tuple exposing (..)
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
-import Util.View exposing (none, toCssColor)
+import Util.View exposing (none, toCssColor, truncateLongIdentifier)
 import View.Button exposing (actorLink)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -60,7 +60,7 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
+import View.Util exposing (copyableLongIdentifier, longIdentifier)
 
 
 cm : Maybe Msg
@@ -380,6 +380,10 @@ browseValue vc value =
         String str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
+
+        HashStr msg str ->
+            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
+                [ copyableLongIdentifier vc str msg ]
 
         AddressStr msg str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
@@ -834,7 +838,7 @@ elseShowAddress : Loadable String (Value msg) -> Value msg
 elseShowAddress l =
     case l of
         Loading _ id ->
-            String id
+            String (truncateLongIdentifier id)
 
         Loaded v ->
             v
@@ -844,7 +848,7 @@ elseShowTxAccount : Loadable ( String, Maybe Int ) (Value msg) -> Value msg
 elseShowTxAccount l =
     case l of
         Loading _ ( id, _ ) ->
-            String id
+            String (truncateLongIdentifier id)
 
         Loaded v ->
             v
@@ -1232,7 +1236,7 @@ rowsBlock vc gc now block =
     , Row
         ( "Block hash"
         , block
-            |> ifLoaded (.blockHash >> String)
+            |> ifLoaded (.blockHash >> HashStr UserClickedCopyToClipboard)
             |> elseLoading
         , Nothing
         )
@@ -1430,7 +1434,7 @@ rowsTxUtxo vc gc now tx =
     [ Row
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> String)
+            |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowAddress
         , Nothing
         )
@@ -1501,7 +1505,7 @@ rowsTxAccount vc gc now tx table coinCode =
                     |> href
                 , CssView.link vc |> css
                 ]
-                [ getAddress tx_ |> text
+                [ longIdentifier vc (getAddress tx_)
                 ]
                 |> Html
 
@@ -1528,7 +1532,7 @@ rowsTxAccount vc gc now tx table coinCode =
     [ Row
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> String)
+            |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowTxAccount
         , Nothing
         )
@@ -1609,14 +1613,14 @@ rowsAddresslink vc source link =
         ( "Source"
         , source.id
             |> Id.addressId
-            |> String
+            |> AddressStr UserClickedCopyToClipboard
         , Nothing
         )
     , Row
         ( "Target"
         , link.node.id
             |> Id.addressId
-            |> String
+            |> AddressStr UserClickedCopyToClipboard
         , Nothing
         )
     , Row
