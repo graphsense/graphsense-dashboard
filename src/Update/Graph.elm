@@ -111,7 +111,6 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
 
         added =
             Layer.addAddress plugins uc newModel.config.colors address newModel.layers
-                |> Debug.log "added"
 
         newModel_ =
             { newModel
@@ -2715,7 +2714,6 @@ handleAddressNeighbor plugins uc anchor isOutgoing neighbors model =
     let
         added =
             addAddressNeighborsWithEntity plugins uc anchor isOutgoing neighbors model
-                |> Debug.log "handleAddressNeighbor added"
     in
     ( added.newAddresses
         |> List.foldl
@@ -3483,7 +3481,6 @@ addAddressesAtEntity plugins uc entityId addresses model =
                 , colors = model.config.colors
                 }
                 addresses
-                |> Debug.log "addAddressAtEntity added"
     in
     ( { model
         | layers =
