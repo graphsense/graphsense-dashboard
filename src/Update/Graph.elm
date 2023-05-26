@@ -2045,7 +2045,7 @@ updateByMsg plugins uc msg model =
                             )
                             (uc.size
                                 |> Maybe.map
-                                    (\{ width, height } ->
+                                    (\{ width, height} ->
                                         { width = width
                                         , height = height
                                         }
