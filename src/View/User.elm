@@ -49,17 +49,21 @@ hovercard plugins vc appModel model =
             [ apiKeyForm vc loading model
             ]
     )
-        ++ [ Dialog.part vc
-                "Language"
-                [ localeSwitch vc ]
+        ++ [ Dialog.part vc "Language" [ localeSwitch vc ]
            , Dialog.part vc
                 "Display"
-                [ switch vc
-                    [ checked vc.lightmode
-                    , onClick UserClickedLightmode
-                    ]
-                  <|
-                    Locale.string vc.locale "Light mode"
+                [ (if vc.lightmode then
+                    "Light"
+
+                   else
+                    "Dark"
+                  )
+                    |> Locale.string vc.locale
+                    |> (++) " "
+                    |> switch vc
+                        [ checked vc.lightmode
+                        , onClick UserClickedLightmode
+                        ]
                 ]
            ]
         ++ (Plugin.profile plugins appModel.plugins vc
