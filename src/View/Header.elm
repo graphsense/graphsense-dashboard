@@ -61,5 +61,5 @@ logo vc =
             , Css.headerLogo vc |> css
             ]
             []
-        , h1 [ Css.headerTitle vc |> css ] [ text "App" ]
+        , h1 [ Css.headerTitle vc |> css ] [ text "Pathfinder" ]
         ]

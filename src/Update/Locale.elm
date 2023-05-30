@@ -130,6 +130,19 @@ changeCurrency curr model =
     }
 
 
+changeValueDetail : String -> Model -> Model
+changeValueDetail curr model =
+    { model
+        | valueDetail =
+            case String.toLower curr of
+                "magnitude" ->
+                    Magnitude
+
+                _ ->
+                    Exact
+    }
+
+
 supportedTokens : Api.Data.TokenConfigs -> Model -> Model
 supportedTokens configs model =
     { model | supportedTokens = Just configs }

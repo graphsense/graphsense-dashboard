@@ -560,6 +560,19 @@ update plugins uc msg model =
                     }
                         |> n
 
+                Graph.UserChangesValueDetail detail ->
+                    let
+                        locale =
+                            Locale.changeValueDetail detail model.locale
+                    in
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
+                        |> n
+
                 Graph.UserClickedExportGS time ->
                     ( model
                     , (case time of

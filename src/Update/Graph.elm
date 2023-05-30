@@ -1539,6 +1539,10 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
+        UserChangesValueDetail detail ->
+            -- handled upstream
+            n model
+
         UserChangesAddressLabelType at ->
             { model
                 | config =
@@ -2045,7 +2049,7 @@ updateByMsg plugins uc msg model =
                             )
                             (uc.size
                                 |> Maybe.map
-                                    (\{ width, height} ->
+                                    (\{ width, height } ->
                                         { width = width
                                         , height = height
                                         }

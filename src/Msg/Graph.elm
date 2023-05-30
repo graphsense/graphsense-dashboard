@@ -123,6 +123,7 @@ type Msg
     | BrowserGotImportElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotHighlighterElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserChangesCurrency String
+    | UserChangesValueDetail String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
     | UserClickedSearch EntityId

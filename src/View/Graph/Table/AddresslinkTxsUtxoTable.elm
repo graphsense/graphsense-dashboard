@@ -84,7 +84,7 @@ config vc coinCode =
                 )
             , T.valueColumn vc (\_ -> coinCode) titleInputValue .inputValue
             , T.valueColumn vc (\_ -> coinCode) titleOutputValue .outputValue
-            , T.intColumn vc titleHeight .height
+            , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]
         , customizations = customizations vc

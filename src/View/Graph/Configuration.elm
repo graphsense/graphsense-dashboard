@@ -8,6 +8,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency as Currency
+import Model.Locale exposing (ValueDetail)
 import Msg.Graph exposing (Msg(..))
 import Util.View exposing (onOffSwitch)
 import View.Dialog as Dialog
@@ -71,6 +72,28 @@ configuration vc config =
                     , config.addressLabelType == Graph.Tag |> selected
                     ]
                     [ Locale.string vc.locale "Label"
+                        |> text
+                    ]
+                ]
+            ]
+        , Dialog.part vc
+            "Value format"
+            [ select
+                [ Css.View.input vc |> css
+                , onInput UserChangesValueDetail
+                ]
+                [ option
+                    [ value "exact"
+                    , vc.locale.valueDetail == Model.Locale.Exact |> selected
+                    ]
+                    [ Locale.string vc.locale "Exact"
+                        |> text
+                    ]
+                , option
+                    [ value "magnitude"
+                    , vc.locale.valueDetail == Model.Locale.Magnitude |> selected
+                    ]
+                    [ Locale.string vc.locale "Magnitude"
                         |> text
                     ]
                 ]

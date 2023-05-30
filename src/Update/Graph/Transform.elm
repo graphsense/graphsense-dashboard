@@ -58,5 +58,5 @@ updateByBoundingBox : Model -> { width : Float, height : Float } -> BBox -> Mode
 updateByBoundingBox model { width, height } bbox =
     { x = bbox.x + bbox.width / 2 - (2 * expandHandleWidth + entityWidth) / 2
     , y = bbox.y + bbox.height / 2 - (entityMinHeight + addressHeight) / 2
-    ,z = model.z
+    , z = model.z
     }

@@ -21,6 +21,7 @@ init { locale } =
     ( { mapping = Empty
       , locale = locale
       , numberFormat = Numeral.format
+      , valueDetail = Magnitude
       , zone = Time.utc
       , timeLang = DateFormat.Language.english
       , currency = Coin

@@ -6,6 +6,7 @@ module View.Locale exposing
     , floatWithFormat
     , int
     , intWithFormat
+    , intWithoutValueDetailFormatting
     , interpolated
     , percentage
     , relativeTime
@@ -139,20 +140,40 @@ text model key =
         ]
 
 
+formatWithValueDetail : Model -> String -> String
+formatWithValueDetail model fmtStr =
+    case model.valueDetail of
+        Exact ->
+            fmtStr
+
+        Magnitude ->
+            if String.endsWith fmtStr "a" then
+                fmtStr
+
+            else
+                fmtStr ++ "a"
+
+
 float : Model -> Float -> String
-float { numberFormat } x =
-    numberFormat "1,000.0" x
+float model value =
+    model.numberFormat (formatWithValueDetail model "1,000.0") value
 
 
 floatWithFormat : Model -> String -> Float -> String
-floatWithFormat { numberFormat } =
-    numberFormat
+floatWithFormat model fmtStr value =
+    model.numberFormat (formatWithValueDetail model fmtStr) value
 
 
 int : Model -> Int -> String
 int model =
     toFloat
         >> floatWithFormat model "1,000"
+
+
+intWithoutValueDetailFormatting : Model -> Int -> String
+intWithoutValueDetailFormatting model =
+    toFloat
+        >> model.numberFormat "1,000"
 
 
 intWithFormat : Model -> String -> Int -> String
@@ -290,9 +311,9 @@ coin model hideCode code v =
                         else
                             let
                                 n =
-                                    find (\exp -> (abs value * (10 ^ toFloat exp)) >= 1) (List.range 0 10) |> Maybe.withDefault 2
+                                    find (\exp -> (abs value * (10 ^ toFloat exp)) >= 1) (List.range 0 14) |> Maybe.withDefault 2
                             in
-                            "1,000." ++ String.repeat (n + 1) "0"
+                            "1,000." ++ String.repeat (n + 2) "0"
                 in
                 floatWithFormat model fmt value
                     ++ (if hideCode then
