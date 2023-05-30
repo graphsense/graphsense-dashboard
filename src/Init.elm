@@ -29,7 +29,7 @@ init plugins flags url key =
       , config =
             { locale = locale
             , theme = config.theme
-            , lightmode = False
+            , lightmode = True
             , size = Nothing
             }
       , locale = locale
