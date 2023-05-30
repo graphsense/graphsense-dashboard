@@ -72,8 +72,8 @@ colors =
     , brandText = { dark = rgb255 236 243 249, light = rgb255 51 51 51 }
     , brandDarker = { dark = rgb255 236 243 249, light = rgb255 113 133 138 }
     , brandDark = { dark = rgb255 211 227 241, light = rgb255 113 161 165 }
-    , brandBase = { dark = rgb255 132 165 194, light = rgb255 107 194 194 }
-    , brandLight = { dark = rgb255 70 109 145, light = rgb255 192 226 225 }
+    , brandBase = { dark = rgb255 132 165 194, light = rgb255 107 203 186 }
+    , brandLight = { dark = rgb255 70 109 145, light = rgb255 151 219 207 }
     , brandLighter = { dark = rgb255 7 69 116, light = rgb255 210 236 237 }
     , brandLightest = { dark = rgb255 5 50 84, light = rgb255 248 250 252 }
     , brandRed = { dark = rgb255 185 86 86, light = rgb255 204 106 66 }
@@ -84,6 +84,10 @@ colors =
 
 fontFam =
     [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
+
+
+headingFontFamilies =
+    [ "Conv_Octarine-Light" ]
 
 
 theme : Theme
@@ -107,7 +111,7 @@ theme =
                 ]
             )
         |> s_headerTitle
-            [ fontFamilies [ "Conv_Octarine-Light" ]
+            [ fontFamilies headingFontFamilies
             , scaled 5 |> rem |> fontSize
             , fontWeight bold
             , letterSpacingWide
@@ -115,7 +119,7 @@ theme =
             , scaled 2 |> rem |> marginLeft
             ]
         |> s_heading2
-            [ fontFamilies [ "Conv_Octarine-Light" ]
+            [ fontFamilies headingFontFamilies
             , letterSpacingWide
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
@@ -130,7 +134,7 @@ theme =
             ]
         |> s_inputRaw (\lightmode -> inputStyleRaw lightmode)
         |> s_headerLogo
-            [ maxWidth <| px 190
+            [ width <| px 190
             ]
         |> s_headerLogoWrap
             []
@@ -256,7 +260,7 @@ theme =
                         , scaled 3.5 |> rem |> paddingTop
                         , scaled currencyPadding |> rem |> paddingLeft
                         , width auto
-                        , fontFamilies [ "Conv_Octarine-Light" ]
+                        , fontFamilies headingFontFamilies
                         ]
                     )
                 |> s_tableWrapperInner
