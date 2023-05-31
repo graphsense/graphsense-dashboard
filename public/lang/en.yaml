@@ -13,6 +13,6 @@ list receiving entities: list receiving clusters
 list entity transactions: list cluster transactions
 Incoming entity: Incoming cluster
 Outgoing entity: Outgoing cluster
-exact: Exact
-magnitude: Magnitude
-Value format: Wertedarstellung
+Exact: Exact
+Magnitude: Magnitude
+Value format: Value Format
