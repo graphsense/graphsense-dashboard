@@ -672,7 +672,7 @@ withAuthorization apiKey request =
 
 send : String -> (Result ( Http.Error, eff ) ( Dict String String, msg ) -> msg) -> eff -> (a -> msg) -> Api.Request a -> Cmd msg
 send apiKey wrapMsg effect toMsg =
-    withAuthorization apiKey
+    withAuthorization ""
         >> Api.sendAndAlsoReceiveHeaders wrapMsg effect toMsg
 
 
