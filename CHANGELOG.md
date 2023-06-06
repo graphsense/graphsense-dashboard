@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [23.06] - 2023-06-12
+### Added
+- Add address path link that allows importing an entire address path to the graph
+- Coingecko contribution statement
+### Changes
+- set light mode as default
+- update iknaio theme to match new CI
+- Display all identifiers uniformly (shorted) [#386](https://github.com/graphsense/graphsense-dashboard/issues/386), [#385](https://github.com/graphsense/graphsense-dashboard/issues/385)
+- Show confidence label instead of numeric level [#376](https://github.com/graphsense/graphsense-dashboard/issues/376)
+- Fix min height of property box tables [#374](https://github.com/graphsense/graphsense-dashboard/issues/374)
+- Fix resize behavior on graph centering [#388](https://github.com/graphsense/graphsense-dashboard/issues/388)
+- Improved display of large numbers, added new setting [#383](https://github.com/graphsense/graphsense-dashboard/issues/383)
+
 ## [23.03] - 2023-03-28
 ### Added
 - Actor browser to show actor details. [#369](https://github.com/graphsense/graphsense-dashboard/issues/369)
