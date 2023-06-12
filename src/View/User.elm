@@ -46,8 +46,8 @@ hovercard plugins vc appModel model =
             []
 
         Unauthorized loading _ ->
-            [ apiKeyForm vc loading model
-            ]
+            apiKeyForm vc loading model
+                :: Plugin.login (Debug.log "plugins" plugins) appModel.plugins vc
     )
         ++ [ Dialog.part vc "Language" [ localeSwitch vc ]
            , Dialog.part vc

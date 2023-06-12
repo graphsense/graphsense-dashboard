@@ -6,7 +6,7 @@ import Stub.Msg
 
 
 type alias Plugin =
-    PluginInterface.Plugin Stub.Model.Model Stub.Model.AddressState Stub.Model.EntityState Stub.Msg.Msg Stub.Msg.AddressMsg Stub.Msg.EntityMsg
+    PluginInterface.Plugin Stub.Model.Flags Stub.Model.Model Stub.Model.AddressState Stub.Model.EntityState Stub.Msg.Msg Stub.Msg.AddressMsg Stub.Msg.EntityMsg
 
 
 plugin : String -> Plugin
@@ -37,7 +37,8 @@ plugin url =
         , addressesAdded = Nothing
         , entitiesAdded = Nothing
         , updateApiKeyHash = Nothing
-        , init = Just ( (), [], Cmd.none )
+        , updateApiKey = Nothing
+        , init = Just (\_ -> ( (), [], Cmd.none ))
         , initAddress = Nothing
         , initEntity = Nothing
         , clearSearch = Nothing
