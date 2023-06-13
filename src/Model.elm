@@ -51,6 +51,7 @@ type alias Model navigationKey =
     , dialog : Maybe (Model.Dialog.Model Msg)
     , supportedTokens : Maybe Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
+    , dirty : Bool
     }
 
 
@@ -134,6 +135,7 @@ type Effect
     | PortsConsoleEffect String
     | CmdEffect (Cmd Msg)
     | LogoutEffect
+    | SetDirtyEffect
 
 
 type Thing

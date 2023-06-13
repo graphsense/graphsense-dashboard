@@ -28,3 +28,6 @@ port newTab : String -> Cmd msg
 
 
 port copyToClipboard : String -> Cmd msg
+
+
+port setDirty : Bool -> Cmd msg

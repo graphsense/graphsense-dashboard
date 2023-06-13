@@ -94,6 +94,9 @@ perform plugins key statusbarToken apiKey effect =
                     }
                 ]
 
+        SetDirtyEffect ->
+            Ports.setDirty True
+
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
 

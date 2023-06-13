@@ -49,6 +49,7 @@ init plugins flags url key =
       , supportedTokens = Nothing
       , dialog = Nothing
       , plugins = pluginStates
+      , dirty = False
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

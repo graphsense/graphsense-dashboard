@@ -90,6 +90,9 @@ messageFromEffect model effect =
         Model.LogoutEffect ->
             Nothing
 
+        Model.SetDirtyEffect ->
+            Nothing
+
         Model.ApiEffect eff ->
             messageFromApiEffect model eff
 

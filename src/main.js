@@ -30,7 +30,10 @@ for (const plugin in plugins) {
 
 const app = Elm.Main.init({ flags: { locale, width, height, now, pluginFlags } })
 
+let isDirty = false
+
 window.onbeforeunload = function (evt) {
+  if (!isDirty) return
   const message = 'You are about to leave the site. Your work will be lost. Sure?'
   if (typeof evt === 'undefined') {
     evt = window.event
@@ -150,3 +153,7 @@ app.ports.copyToClipboard.subscribe( value => navigator.clipboard.writeText(valu
 }, function(err) {
   console.error('Could not copy to clipboard', err);
 }));
+
+app.ports.setDirty.subscribe(dirty => {
+  isDirty = dirty
+})

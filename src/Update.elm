@@ -526,6 +526,7 @@ update plugins uc msg model =
                         , graph = graph
                       }
                     , PluginEffect cmd
+                        :: SetDirtyEffect
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
