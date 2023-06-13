@@ -55,6 +55,7 @@
             "ianmackenzie/elm-geometry": "3.9.1",
             "ianmackenzie/elm-units": "2.9.0",
             "jasonliang-dev/elm-heroicons": "2.0.0",
+            "jzxhuang/http-extras": "2.1.0",
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "mgold/elm-nonempty-list": "4.2.0",
