@@ -7,11 +7,14 @@ import Api.Request.General
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Config exposing (logoutUrl)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
+import Http.Extras
+import Json.Decode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -53,15 +56,43 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Http.riskyRequest
-                { method = "GET"
-                , headers = [ Http.header "Authorization" apiKey ]
-                , url = Api.baseUrl ++ "/search?logout"
-                , body = Http.emptyBody
-                , expect = Http.expectWhatever BrowserGotLoggedOut
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+            Cmd.batch
+                [ Http.riskyTask
+                    { method = "GET"
+                    , headers = []
+                    , url = logoutUrl
+                    , resolver =
+                        Http.stringResolver
+                            (Http.Extras.responseToJson
+                                (Json.Decode.field "logout_url" Json.Decode.string)
+                            )
+                    , body = Http.emptyBody
+                    , timeout = Nothing
+                    }
+                    |> Task.andThen
+                        (\url ->
+                            Http.riskyTask
+                                { method = "GET"
+                                , headers = []
+                                , url = url
+                                , resolver =
+                                    Http.stringResolver
+                                        (Http.Extras.responseToString >> Result.map (always ()))
+                                , body = Http.emptyBody
+                                , timeout = Nothing
+                                }
+                        )
+                    |> Task.attempt BrowserGotLoggedOut
+                , Http.riskyRequest
+                    { method = "GET"
+                    , headers = []
+                    , url = Api.baseUrl ++ "/search?logout"
+                    , body = Http.emptyBody
+                    , expect = Http.expectWhatever BrowserGotLoggedOut
+                    , timeout = Nothing
+                    , tracker = Nothing
+                    }
+                ]
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
