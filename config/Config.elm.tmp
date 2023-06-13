@@ -7,7 +7,7 @@ import Theme.Theme as Theme exposing (Theme)
 
 logoutUrl : String
 logoutUrl =
-    ""
+    "{logout_url}"
 
 config : { theme : Theme }
 config =
