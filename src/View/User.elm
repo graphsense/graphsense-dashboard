@@ -183,6 +183,7 @@ apiKeyForm vc loading model =
                 , Events.onInput UserInputsApiKeyForm
                 , disabled loading
                 , value model.apiKey
+                , spellcheck False
                 ]
                 []
             , if loading then
