@@ -60,6 +60,7 @@
             "lukewestby/elm-string-interpolate": "1.0.4",
             "mgold/elm-nonempty-list": "4.2.0",
             "myrho/elm-hovercard": "3.0.0",
+            "myrho/numeral-elm": "1.0.0",
             "myrho/yaml": "1.0.0",
             "noahzgordon/elm-color-extra": "1.0.2",
             "rtfeldman/elm-css": "16.1.1",
@@ -78,7 +79,7 @@
             "j-maas/elm-ordered-containers": "1.0.0",
             "jinjor/elm-diff": "1.0.6",
             "myrho/elm-parser-extras": "1.0.1",
-            "myrho/elm-round": "1.0.4",
+            "myrho/elm-round": "1.0.5",
             "rtfeldman/elm-hex": "1.0.0"
         }
     },
