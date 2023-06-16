@@ -148,3 +148,12 @@ profile plugins states vc =
         |> List.filterMap identity
         |> List.concat
         |> List.map (mapSecond (Html.map Model.PluginMsg))
+
+
+login : Plugins -> Plugin.Model.ModelState -> View.Config -> List (Html Model.Msg)
+login plugins states vc =
+    [ 
+    ]
+        |> List.filterMap identity
+        |> List.concat
+        |> List.map (Html.map Model.PluginMsg)
