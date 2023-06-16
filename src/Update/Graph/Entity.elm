@@ -42,15 +42,17 @@ type alias Acc =
 
 addAddress : Plugins -> Update.Config -> Int -> Api.Data.Address -> Acc -> Acc
 addAddress plugins uc layerId address acc =
-    Dict.get (Id.initEntityId { layer = layerId, currency = address.currency, id = address.entity }) acc.entities
+    let
+        entityId =
+            Id.initEntityId { layer = layerId, currency = address.currency, id = address.entity }
+    in
+    Dict.get entityId acc.entities
+        |> Maybe.andThen (addAddressToEntity plugins uc acc.colors address)
         |> Maybe.map
-            (\entity ->
+            (\newAcc ->
                 let
-                    newAcc =
-                        addAddressToEntity plugins uc acc.colors address entity
-
                     ( entities, repositioned ) =
-                        Dict.insert entity.id newAcc.updatedEntity acc.entities
+                        Dict.insert entityId newAcc.updatedEntity acc.entities
                             |> repositionAround newAcc.updatedEntity
                 in
                 { entities = entities
@@ -64,27 +66,28 @@ addAddress plugins uc layerId address acc =
         |> Maybe.withDefault acc
 
 
-addAddressToEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> Entity -> { updatedEntity : Entity, new : AddressId, colors : Dict String Color }
+addAddressToEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> Entity -> Maybe { updatedEntity : Entity, new : AddressId, colors : Dict String Color }
 addAddressToEntity plugins uc colors address entity =
-    Dict.get (Id.initAddressId { layer = Id.layer entity.id, id = address.address, currency = address.currency }) entity.addresses
-        |> Maybe.map (\{ id } -> { updatedEntity = entity, new = id, colors = colors })
-        |> Maybe.withDefault
-            (let
-                newAddress =
-                    Address.init plugins entity address
+    if Dict.member (Id.initAddressId { layer = Id.layer entity.id, id = address.address, currency = address.currency }) entity.addresses then
+        Nothing
 
-                newColors =
-                    Color.update uc colors newAddress.category
-             in
-             { updatedEntity =
-                { entity
-                    | addresses =
-                        Dict.insert newAddress.id newAddress entity.addresses
-                }
-             , new = newAddress.id
-             , colors = newColors
-             }
-            )
+    else
+        let
+            newAddress =
+                Address.init plugins entity address
+
+            newColors =
+                Color.update uc colors newAddress.category
+        in
+        { updatedEntity =
+            { entity
+                | addresses =
+                    Dict.insert newAddress.id newAddress entity.addresses
+            }
+        , new = newAddress.id
+        , colors = newColors
+        }
+            |> Just
 
 
 updateEntity : EntityId -> (Entity -> ( Entity, a )) -> List Entity -> List Entity -> ( List Entity, Maybe a )

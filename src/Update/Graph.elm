@@ -85,11 +85,20 @@ addAddress :
         , entity : Api.Data.Entity
         , incoming : List Api.Data.NeighborEntity
         , outgoing : List Api.Data.NeighborEntity
+        , anchor : Maybe ( Bool, Id.AddressId )
         }
     -> Model
     -> ( Model, List Effect )
-addAddress plugins uc { address, entity, incoming, outgoing } model =
+addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
     let
+        entityAnchor =
+            anchor
+                |> Maybe.andThen
+                    (\( io, ad ) ->
+                        Layer.getAddress ad model.layers
+                            |> Maybe.map (.entityId >> pair io)
+                    )
+
         ( newModel, eff ) =
             addEntity plugins
                 uc
@@ -97,6 +106,7 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
                 , incoming = incoming
                 , outgoing = outgoing
                 }
+                entityAnchor
                 model
 
         added =
@@ -149,62 +159,88 @@ addAddress plugins uc { address, entity, incoming, outgoing } model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-addEntity : Plugins -> Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Model -> ( Model, List Effect )
-addEntity plugins uc { entity, incoming, outgoing } model =
-    let
-        findEntities e =
-            (++)
-                (Layer.getEntities e.entity.currency e.entity.entity model.layers)
+addEntity : Plugins -> Update.Config -> { entity : Api.Data.Entity, incoming : List Api.Data.NeighborEntity, outgoing : List Api.Data.NeighborEntity } -> Maybe ( Bool, Id.EntityId ) -> Model -> ( Model, List Effect )
+addEntity plugins uc { entity, incoming, outgoing } anchor model =
+    anchor
+        |> Maybe.andThen
+            (\( isOutgoing, anch ) ->
+                Layer.getEntity anch model.layers
+                    |> Maybe.map
+                        (\e ->
+                            if isOutgoing then
+                                ( [ e ], [] )
 
-        outgoingAnchors =
-            incoming
-                |> List.foldl findEntities []
-                |> List.map (\e -> ( Id.layer e.id, ( e, True ) ))
-                |> IntDict.fromList
+                            else
+                                ( [], [ e ] )
+                        )
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                let
+                    findEntities e =
+                        (++)
+                            (Layer.getEntities e.entity.currency e.entity.entity model.layers)
 
-        incomingAnchors =
-            outgoing
-                |> List.foldl findEntities []
-                |> List.map (\e -> ( Id.layer e.id, ( e, False ) ))
-                |> IntDict.fromList
+                    outgoingAnchors =
+                        incoming
+                            |> List.foldl findEntities []
 
-        added =
-            if IntDict.isEmpty outgoingAnchors && IntDict.isEmpty incomingAnchors then
-                Layer.addEntity plugins uc model.config.colors entity model.layers
+                    incomingAnchors =
+                        outgoing
+                            |> List.foldl findEntities []
+                in
+                ( outgoingAnchors, incomingAnchors )
+            )
+        |> (\( oa, ia ) ->
+                let
+                    outgoingAnchors =
+                        oa
+                            |> List.map (\e -> ( Id.layer e.id, ( e, True ) ))
+                            |> IntDict.fromList
 
-            else
-                Layer.addEntitiesAt plugins
-                    uc
-                    (Layer.anchorsToPositions (Just outgoingAnchors) model.layers)
-                    [ entity ]
-                    { layers = model.layers
-                    , new = Set.empty
-                    , colors = model.config.colors
-                    , repositioned = Set.empty
-                    }
-                    |> Layer.addEntitiesAt plugins
-                        uc
-                        (Layer.anchorsToPositions (Just incomingAnchors) model.layers)
-                        [ entity ]
+                    incomingAnchors =
+                        ia
+                            |> List.map (\e -> ( Id.layer e.id, ( e, False ) ))
+                            |> IntDict.fromList
 
-        newModel =
-            { model
-                | layers = added.layers
-                , config =
-                    model.config
-                        |> s_colors added.colors
-            }
-                |> syncLinks added.repositioned
-                |> addEntityEgonet entity.currency entity.entity True outgoing
-                |> addEntityEgonet entity.currency entity.entity False incoming
-    in
-    added.new
-        |> Set.toList
-        |> List.head
-        |> Maybe.andThen (\e -> Layer.getEntity e added.layers)
-        |> Maybe.map (\e -> selectEntity e Nothing newModel)
-        |> Maybe.map (mapSecond ((::) (InternalGraphAddedEntitiesEffect added.new)))
-        |> Maybe.withDefault (n newModel)
+                    added =
+                        if IntDict.isEmpty outgoingAnchors && IntDict.isEmpty incomingAnchors then
+                            Layer.addEntity plugins uc model.config.colors entity model.layers
+
+                        else
+                            Layer.addEntitiesAt plugins
+                                uc
+                                (Layer.anchorsToPositions (Just outgoingAnchors) model.layers)
+                                [ entity ]
+                                { layers = model.layers
+                                , new = Set.empty
+                                , colors = model.config.colors
+                                , repositioned = Set.empty
+                                }
+                                |> Layer.addEntitiesAt plugins
+                                    uc
+                                    (Layer.anchorsToPositions (Just incomingAnchors) model.layers)
+                                    [ entity ]
+
+                    newModel =
+                        { model
+                            | layers = added.layers
+                            , config =
+                                model.config
+                                    |> s_colors added.colors
+                        }
+                            |> syncLinks added.repositioned
+                            |> addEntityEgonet entity.currency entity.entity True outgoing
+                            |> addEntityEgonet entity.currency entity.entity False incoming
+                in
+                added.new
+                    |> Set.toList
+                    |> List.head
+                    |> Maybe.andThen (\e -> Layer.getEntity e added.layers)
+                    |> Maybe.map (\e -> selectEntity e Nothing newModel)
+                    |> Maybe.map (mapSecond ((::) (InternalGraphAddedEntitiesEffect added.new)))
+                    |> Maybe.withDefault (n newModel)
+           )
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -228,6 +264,25 @@ syncBrowser old model =
     }
 
 
+loadNextAddress : Plugins -> Model -> Id.AddressId -> Maybe ( Model, List Effect )
+loadNextAddress plugins model id =
+    Adding.getNextFor id model.adding
+        |> Maybe.map
+            (\nextId ->
+                { model
+                    | adding = Adding.popPath model.adding
+                }
+                    |> s_selectIfLoaded (Just (SelectAddress (A.fromId nextId)))
+                    |> loadAddress
+                        plugins
+                        { currency = Id.currency nextId
+                        , address = Id.addressId nextId
+                        , table = Nothing
+                        , at = AtAnchor True id |> Just
+                        }
+            )
+
+
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -239,11 +294,18 @@ updateByMsg plugins uc msg model =
             effects
                 |> pair { model | browser = browser }
 
-        InternalGraphAddedAddresses _ ->
-            n model
+        InternalGraphAddedAddresses ids ->
+            Set.toList ids
+                |> List.head
+                |> Maybe.andThen (loadNextAddress plugins model)
+                |> Maybe.withDefault (n model)
 
         InternalGraphAddedEntities ids ->
             n model
+
+        InternalGraphSelectedAddress id ->
+            loadNextAddress plugins model id
+                |> Maybe.withDefault (n model)
 
         -- handled upstream
         BrowserGotBrowserElement result ->
@@ -690,7 +752,7 @@ updateByMsg plugins uc msg model =
 
                 Just added ->
                     { model | adding = Adding.removeEntity id model.adding }
-                        |> addEntity plugins uc added
+                        |> addEntity plugins uc added Nothing
 
         BrowserGotEntityNeighbors id isOutgoing neighbors ->
             Layer.getEntity id model.layers
@@ -727,7 +789,7 @@ updateByMsg plugins uc msg model =
 
                 Just added ->
                     { model | adding = Adding.removeEntity e model.adding }
-                        |> addEntity plugins uc added
+                        |> addEntity plugins uc added Nothing
 
         BrowserGotAddressEgonet anchor isOutgoing neighbors ->
             Layer.getAddresses (A.fromId anchor) model.layers
@@ -741,12 +803,7 @@ updateByMsg plugins uc msg model =
                                             Id.initAddressId
                                                 { layer =
                                                     Id.layer anch.id
-                                                        + (if isOutgoing then
-                                                            1
-
-                                                           else
-                                                            -1
-                                                          )
+                                                        |> layerDelta isOutgoing
                                                 , id = n.address.address
                                                 , currency = n.address.currency
                                                 }
@@ -1211,7 +1268,7 @@ updateByMsg plugins uc msg model =
                     { currency = currency
                     , address = address
                     , table = Nothing
-                    , layer = Nothing
+                    , at = Nothing
                     }
 
         BrowserGotAddressForEntity entityId address ->
@@ -1263,13 +1320,9 @@ updateByMsg plugins uc msg model =
                                     { currency = Id.currency addressId
                                     , layer =
                                         Id.layer addressId
-                                            + (if isOutgoing then
-                                                1
-
-                                               else
-                                                -1
-                                              )
-                                    , id = neighbor.address.entity
+                                    , id =
+                                        neighbor.address.entity
+                                            |> layerDelta isOutgoing
                                     }
 
                             added =
@@ -1483,6 +1536,10 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserChangesCurrency currency ->
+            -- handled upstream
+            n model
+
+        UserChangesValueDetail detail ->
             -- handled upstream
             n model
 
@@ -1850,12 +1907,7 @@ updateByMsg plugins uc msg model =
                                                                     , id = neighbor.entity.entity
                                                                     , layer =
                                                                         Id.layer anchor.id
-                                                                            + (if isOutgoing then
-                                                                                1
-
-                                                                               else
-                                                                                -1
-                                                                              )
+                                                                            |> layerDelta isOutgoing
                                                                     }
                                                         in
                                                         Layer.getEntity entityId model__.layers
@@ -1890,12 +1942,7 @@ updateByMsg plugins uc msg model =
                                                                     , id = neighbor.address.address
                                                                     , layer =
                                                                         Id.layer anchor.id
-                                                                            + (if isOutgoing then
-                                                                                1
-
-                                                                               else
-                                                                                -1
-                                                                              )
+                                                                            |> layerDelta isOutgoing
                                                                     }
                                                         in
                                                         Layer.getAddress addressId model__.layers
@@ -2171,13 +2218,7 @@ handleEntitySearchResult plugins uc anchor nodes isOutgoing ( model, effects ) =
                             { currency = neighbor.entity.currency
                             , id = neighbor.entity.entity
                             , layer =
-                                Id.layer anchor.id
-                                    + (if isOutgoing then
-                                        1
-
-                                       else
-                                        -1
-                                      )
+                                Id.layer anchor.id |> layerDelta isOutgoing
                             }
                 in
                 Layer.getEntity id mo.layers
@@ -2266,8 +2307,15 @@ updateByRoute plugins route model =
                     { currency = currency
                     , address = a
                     , table = table
-                    , layer = layer
+                    , at = Maybe.map AtLayer layer
                     }
+
+        Route.Currency currency (Route.AddressPath addresses) ->
+            loadPath plugins
+                { currency = currency
+                , addresses = addresses
+                }
+                model
 
         Route.Currency currency (Route.Entity e table layer) ->
             layer
@@ -2533,13 +2581,7 @@ addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                                     { currency = anchor.entity.currency
                                     , layer =
                                         Id.layer anchor.id
-                                            + (if isOutgoing then
-                                                1
-
-                                               else
-                                                -1
-                                              )
-                                    , id = neighbor.entity.entity
+                                    , id = neighbor.entity.entity |> layerDelta isOutgoing
                                     }
                         in
                         if Set.member entityId acc.new then
@@ -2789,7 +2831,7 @@ selectAddress address table model =
             , selectIfLoaded = Nothing
             , layers = Layer.updateAddress address.id (\a -> { a | selected = True }) newmodel.layers
           }
-        , effects1 ++ effects2
+        , InternalGraphSelectedAddressEffect address.id :: effects1 ++ effects2
         )
 
 
@@ -3484,22 +3526,73 @@ addAddressesAtEntity plugins uc entityId addresses model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
+loadPath :
+    Plugins
+    ->
+        { currency : String
+        , addresses : List String
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadPath plugins { currency, addresses } model =
+    case addresses of
+        address :: rest ->
+            { model
+                | adding = Adding.setPath currency address rest model.adding
+            }
+                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
+                |> loadAddress
+                    plugins
+                    { currency = currency
+                    , address = address
+                    , table = Nothing
+                    , at = Nothing
+                    }
+
+        [] ->
+            n model
+
+
+type At
+    = AtLayer Int
+    | AtAnchor Bool AddressId
+
+
 loadAddress :
     Plugins
     ->
         { currency : String
         , address : String
         , table : Maybe Route.AddressTable
-        , layer : Maybe Int
+        , at : Maybe At
         }
     -> Model
     -> ( Model, List Effect )
-loadAddress plugins { currency, address, table, layer } model =
-    layer
+loadAddress plugins { currency, address, table, at } model =
+    at
         |> Maybe.andThen
-            (\l -> Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = l }) model.layers)
+            (\l ->
+                let
+                    layer =
+                        case l of
+                            AtLayer ll ->
+                                ll
+
+                            AtAnchor isOutgoing id ->
+                                Id.layer id
+                                    |> layerDelta isOutgoing
+                in
+                Layer.getAddress (Id.initAddressId { currency = currency, id = address, layer = layer }) model.layers
+            )
         |> Maybe.Extra.orElseLazy
-            (\_ -> Layer.getFirstAddress { currency = currency, address = address } model.layers)
+            (\_ ->
+                case at of
+                    Nothing ->
+                        Layer.getFirstAddress { currency = currency, address = address } model.layers
+
+                    _ ->
+                        Nothing
+            )
         |> Maybe.map
             (\a ->
                 selectAddress a table model
@@ -3525,9 +3618,17 @@ loadAddress plugins { currency, address, table, layer } model =
 
                         else
                             n browser
+
+                    anchor =
+                        case at of
+                            Just (AtAnchor isOutgoing a) ->
+                                Just ( isOutgoing, a )
+
+                            _ ->
+                                Nothing
                 in
                 ( { model
-                    | adding = Adding.loadAddress { currency = currency, address = address } model.adding
+                    | adding = Adding.loadAddress { currency = currency, address = address } anchor model.adding
                     , browser = browser2
                   }
                 , [ BrowserGotEntityForAddress address
@@ -3692,3 +3793,14 @@ selectEntityLink table source link model =
       }
     , effects
     )
+
+
+layerDelta : Bool -> Int -> Int
+layerDelta isOutgoing =
+    (+)
+        (if isOutgoing then
+            1
+
+         else
+            -1
+        )

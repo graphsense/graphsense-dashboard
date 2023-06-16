@@ -102,7 +102,7 @@ config vc coinCode =
                    , T.timestampColumn vc titleTimestamp .timestamp
                    , T.addressColumn vc titleSendingAddress .fromAddress UserClickedCopyToClipboard
                    , T.addressColumn vc titleReceivingAddress .toAddress UserClickedCopyToClipboard
-                   , T.intColumn vc titleHeight .height
+                   , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
                    , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]
         , customizations = customizations vc

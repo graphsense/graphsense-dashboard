@@ -4169,6 +4169,11 @@ s_sidebar value__ record__ =
     { record__ | sidebar = value__ }
 
 
+s_tableSeperator : a -> { b | tableSeperator : a } -> { b | tableSeperator : a }
+s_tableSeperator value__ record__ =
+    { record__ | tableSeperator = value__ }
+
+
 s_sidebarIcon : a -> { b | sidebarIcon : a } -> { b | sidebarIcon : a }
 s_sidebarIcon value__ record__ =
     { record__ | sidebarIcon = value__ }

@@ -90,6 +90,9 @@ messageFromEffect model effect =
         Model.LogoutEffect ->
             Nothing
 
+        Model.SetDirtyEffect ->
+            Nothing
+
         Model.ApiEffect eff ->
             messageFromApiEffect model eff
 
@@ -109,6 +112,9 @@ messageFromEffect model effect =
             Nothing
 
         Model.GraphEffect (Graph.InternalGraphAddedEntitiesEffect _) ->
+            Nothing
+
+        Model.GraphEffect (Graph.InternalGraphSelectedAddressEffect _) ->
             Nothing
 
         Model.GraphEffect (Graph.TagSearchEffect _) ->

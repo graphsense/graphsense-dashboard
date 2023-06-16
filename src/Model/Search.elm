@@ -19,7 +19,6 @@ type alias Model =
     , visible : Bool
     , found : Maybe Api.Data.SearchResult
     , input : String
-    , batch : Maybe ( String, List String )
     , bounce : Bounce
     }
 

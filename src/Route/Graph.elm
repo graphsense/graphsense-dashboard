@@ -55,11 +55,17 @@ type Thing
     | Tx String (Maybe TxTable) (Maybe Int)
     | Addresslink String Int String Int (Maybe AddresslinkTable)
     | Entitylink Int Int Int Int (Maybe AddresslinkTable)
+    | AddressPath (List String)
 
 
 addressSegment : String
 addressSegment =
     "address"
+
+
+addresspathSegment : String
+addresspathSegment =
+    "addresspath"
 
 
 entitySegment : String
@@ -386,6 +392,13 @@ toUrl route =
                 ]
                 query
 
+        Currency curr (AddressPath addresses) ->
+            absolute
+                [ curr
+                , String.join " " addresses
+                ]
+                []
+
         Label l ->
             absolute [ labelSegment, l ] []
 
@@ -494,6 +507,11 @@ parseCurrency c =
             List.Extra.find ((==) segment) c.currencies
 
 
+encodedString : Parser (String -> a) a
+encodedString =
+    P.custom "ENCODED_STRING" Url.percentDecode
+
+
 thing : Parser (Thing -> a) a
 thing =
     oneOf
@@ -502,6 +520,9 @@ thing =
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddressTable))
             |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Address
+        , s addresspathSegment
+            |> P.slash encodedString
+            |> map (String.split "," >> AddressPath)
         , s entitySegment
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))

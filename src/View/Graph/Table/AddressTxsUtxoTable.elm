@@ -79,7 +79,7 @@ config vc coinCode =
                         |> List.singleton
                 )
             , T.valueColumn vc (\_ -> coinCode) titleValue .value
-            , T.intColumn vc titleHeight .height
+            , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]
         , customizations = customizations vc

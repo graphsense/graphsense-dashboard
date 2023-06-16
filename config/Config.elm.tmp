@@ -1,9 +1,13 @@
-module Config exposing (config, plugins)
+module Config exposing (logoutUrl, config, plugins)
 
 import Iknaio
 import Plugin
 import Theme.Theme as Theme exposing (Theme)
 
+
+logoutUrl : String
+logoutUrl =
+    "{logout_url}"
 
 config : { theme : Theme }
 config =

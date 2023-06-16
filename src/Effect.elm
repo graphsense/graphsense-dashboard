@@ -3,24 +3,18 @@ module Effect exposing (n, perform)
 --import Plugin.Effect
 
 import Api
-import Api.Data
-import Api.Request.Addresses
-import Api.Request.Blocks
-import Api.Request.Entities
 import Api.Request.General
-import Api.Request.MyBulk
-import Api.Request.Tags
-import Api.Request.Txs
 import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
+import Config exposing (logoutUrl)
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
+import Http.Extras
 import Json.Decode
-import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -62,15 +56,46 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Http.riskyRequest
-                { method = "GET"
-                , headers = [ Http.header "Authorization" apiKey ]
-                , url = Api.baseUrl ++ "/search?logout"
-                , body = Http.emptyBody
-                , expect = Http.expectWhatever BrowserGotLoggedOut
-                , timeout = Nothing
-                , tracker = Nothing
-                }
+            Cmd.batch
+                [ Http.riskyTask
+                    { method = "GET"
+                    , headers = []
+                    , url = logoutUrl
+                    , resolver =
+                        Http.stringResolver
+                            (Http.Extras.responseToJson
+                                (Json.Decode.field "logout_url" Json.Decode.string)
+                            )
+                    , body = Http.emptyBody
+                    , timeout = Nothing
+                    }
+                    |> Task.andThen
+                        (\url ->
+                            Http.riskyTask
+                                { method = "GET"
+                                , headers = []
+                                , url = url
+                                , resolver =
+                                    Http.stringResolver
+                                        (Http.Extras.responseToString >> Result.map (always ()))
+                                , body = Http.emptyBody
+                                , timeout = Nothing
+                                }
+                        )
+                    |> Task.attempt BrowserGotLoggedOut
+                , Http.riskyRequest
+                    { method = "GET"
+                    , headers = []
+                    , url = Api.baseUrl ++ "/search?logout"
+                    , body = Http.emptyBody
+                    , expect = Http.expectWhatever BrowserGotLoggedOut
+                    , timeout = Nothing
+                    , tracker = Nothing
+                    }
+                ]
+
+        SetDirtyEffect ->
+            Ports.setDirty True
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
@@ -98,6 +123,10 @@ perform plugins key statusbarToken apiKey effect =
                     Task.succeed ids
                         |> Task.perform (Graph.InternalGraphAddedEntities >> GraphMsg)
 
+                Graph.InternalGraphSelectedAddressEffect id ->
+                    Task.succeed id
+                        |> Task.perform (Graph.InternalGraphSelectedAddress >> GraphMsg)
+
                 Graph.PluginEffect _ ->
                     Graph.perform eff
                         |> Cmd.map GraphMsg
@@ -106,7 +135,6 @@ perform plugins key statusbarToken apiKey effect =
                     handleSearchEffect apiKey
                         Nothing
                         (Graph.TagSearchMsg >> GraphMsg)
-                        (Graph.TagSearchEffect >> GraphEffect)
                         e
 
                 Graph.CmdEffect cmd ->
@@ -118,7 +146,7 @@ perform plugins key statusbarToken apiKey effect =
                         |> Cmd.map GraphMsg
 
         SearchEffect e ->
-            handleSearchEffect apiKey (Just plugins) SearchMsg SearchEffect e
+            handleSearchEffect apiKey (Just plugins) SearchMsg e
 
         PortsConsoleEffect msg ->
             Ports.console msg
@@ -131,8 +159,8 @@ perform plugins key statusbarToken apiKey effect =
             cmd
 
 
-handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> (Search.Effect -> Effect) -> Search.Effect -> Cmd Msg
-handleSearchEffect apiKey plugins tag tagEffect effect =
+handleSearchEffect : String -> Maybe Plugins -> (Search.Msg -> Msg) -> Search.Effect -> Cmd Msg
+handleSearchEffect apiKey plugins tag effect =
     case effect of
         Search.SearchEffect { query, currency, limit, toMsg } ->
             (Effect.Api.SearchEffect

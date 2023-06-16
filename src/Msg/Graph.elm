@@ -102,6 +102,7 @@ type Msg
     | UserClickedEntityInNeighborsTable EntityId Bool Api.Data.NeighborEntity
     | InternalGraphAddedAddresses (Set AddressId)
     | InternalGraphAddedEntities (Set EntityId)
+    | InternalGraphSelectedAddress AddressId
     | UserScrolledTable Browser.ScrollPos
     | TagSearchMsg Search.Msg
     | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)
@@ -122,6 +123,7 @@ type Msg
     | BrowserGotImportElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotHighlighterElement (Result Browser.Dom.Error Browser.Dom.Element)
     | UserChangesCurrency String
+    | UserChangesValueDetail String
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
     | UserClickedSearch EntityId

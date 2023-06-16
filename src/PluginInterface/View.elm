@@ -51,6 +51,9 @@ type alias View modelState addressState entityState msg =
 
     -- additional stuff for the user's profile
     , profile : Maybe (View.Config -> modelState -> List ( String, Html msg ))
+
+    -- additional stuff for login
+    , login : Maybe (View.Config -> modelState -> List (Html msg))
     }
 
 
@@ -71,4 +74,5 @@ init =
     , hovercards = Nothing
     , title = Nothing
     , profile = Nothing
+    , login = Nothing
     }

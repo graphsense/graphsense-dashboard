@@ -16,6 +16,7 @@ import Table
 import Util.Csv
 import View.Graph.Table as T exposing (customizations, valueColumn)
 import View.Locale as Locale
+import View.Util exposing (copyableLongIdentifier)
 
 
 columnTitleFromDirection : Bool -> String
@@ -70,12 +71,11 @@ config vc isOutgoing coinCode =
                                     |> onClick
                                 , css [ Css.cursor Css.pointer ]
                                 ]
-                                [ text one
+                                [ copyableLongIdentifier vc one UserClickedCopyToClipboard
                                 ]
 
                         _ ->
-                            joinAddresses data
-                                |> text
+                            copyableLongIdentifier vc (joinAddresses data) UserClickedCopyToClipboard
                     ]
                 )
             , T.valueColumn vc (\_ -> coinCode) titleValue .value

@@ -81,15 +81,15 @@ currency vc cs =
                     ]
                     [ Locale.timestamp (s_zone Time.utc vc.locale) cs.timestamp
                         |> statsRow vc "Last update"
-                    , Locale.int vc.locale (cs.noBlocks - 1)
+                    , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
-                    , Locale.int vc.locale cs.noTxs
+                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
                         |> statsRow vc "Transactions"
-                    , Locale.int vc.locale cs.noAddresses
+                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
                         |> statsRow vc "Addresses"
-                    , Locale.int vc.locale cs.noEntities
+                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
                         |> statsRow vc "Entities"
-                    , Locale.int vc.locale cs.noLabels
+                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
                         |> statsRow vc "Labels"
                     , taggedAddressesWithPercentage vc cs
                         |> statsRow vc "Tagged addresses"
@@ -139,7 +139,7 @@ statsRow vc label value =
 
 taggedAddressesWithPercentage : Config -> Api.Data.CurrencyStats -> String
 taggedAddressesWithPercentage vc cs =
-    Locale.int vc.locale cs.noTaggedAddresses
+    Locale.intWithoutValueDetailFormatting vc.locale cs.noTaggedAddresses
         ++ " ("
         ++ Locale.percentage vc.locale
             (toFloat cs.noTaggedAddresses / toFloat cs.noAddresses)

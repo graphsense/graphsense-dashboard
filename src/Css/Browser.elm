@@ -120,6 +120,7 @@ propertyBoxTableLink vc active =
     position relative
         :: right (px 0)
         :: paddingLeft (px 5)
+        :: borderRight (px 1)
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
 
 

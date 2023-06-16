@@ -56,6 +56,7 @@ type Value msg
     | Stack (List (Value msg))
     | Grid Int (List (Value msg))
     | AddressStr (String -> msg) String
+    | HashStr (String -> msg) String
     | Country String String
     | Uri String String
     | IconLink FontAwesome.Icon String
@@ -81,6 +82,7 @@ type alias TableLink =
 type Row r
     = Row ( String, r, Maybe TableLink )
     | Note String
+    | Footnote String
     | Image (Maybe String)
     | Rule
     | OptionalRow (Row r) Bool

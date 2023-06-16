@@ -15,12 +15,7 @@ for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do
     done
 done
 
-npm run build && \
-    mkdir -p /usr/share/nginx/html /run/nginx && \
-    cp -r $WORKDIR/dist/* /usr/share/nginx/html/ && \
-    rm -rf /root/.config /root/.npm && \
-    rm -f /etc/nginx/http.d/default.conf && \
-    apk del build-dependendencies
+npm run build && cp -r $WORKDIR/dist/* /usr/share/nginx/html/ 
 
 sed -i "s|http://localhost:9000|$REST_URL|g" /usr/share/nginx/html/assets/index.*.js 
 

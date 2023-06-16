@@ -21,6 +21,11 @@ type State
     | Settled (Dict String String)
 
 
+type ValueDetail
+    = Exact
+    | Magnitude
+
+
 {-|
 
     locale : the two digit locale id
@@ -36,6 +41,7 @@ type alias Flags =
 type alias Model =
     { mapping : State
     , numberFormat : String -> Float -> String
+    , valueDetail : ValueDetail
     , locale : String
     , zone : Time.Zone
     , timeLang : DateFormat.Language.Language

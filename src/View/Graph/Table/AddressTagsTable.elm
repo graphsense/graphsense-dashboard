@@ -128,9 +128,9 @@ config vc gc bestAddressTag entityId entityHasAddress =
                     >> Util.Graph.getAbuse gc
                     >> Maybe.withDefault ""
                 )
-            , T.intColumn vc
+            , T.stringColumn vc
                 "Confidence"
-                (.confidenceLevel >> Maybe.withDefault 0)
+                (.confidence >> Maybe.withDefault "")
             , T.htmlColumn vc
                 "TagPack"
                 .tagpackTitle

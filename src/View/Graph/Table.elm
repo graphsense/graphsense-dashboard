@@ -44,7 +44,7 @@ table vc attributes tools height config tbl =
             tbl.data
                 |> List.length
                 |> toFloat
-                |> (+) 3
+                |> (+) 1
                 |> (*) vc.theme.table.rowHeight
                 |> Basics.min vc.theme.table.maxHeight
     in
@@ -52,12 +52,22 @@ table vc attributes tools height config tbl =
         [ Css.Table.root vc |> css
         ]
         [ div
+            [ Css.Table.tableSeperator vc |> css
+            ]
+            []
+        , div
             ([ (height
                     |> Maybe.withDefault vc.theme.table.maxHeight
                     |> Basics.max minHeight
                     |> Css.px
                     |> Css.maxHeight
                )
+                :: (height
+                        |> Maybe.withDefault vc.theme.table.maxHeight
+                        |> Basics.max minHeight
+                        |> Css.px
+                        |> Css.minHeight
+                   )
                 :: (height
                         |> Maybe.map (Css.px >> Css.height >> List.singleton)
                         |> Maybe.withDefault []
@@ -280,13 +290,27 @@ intColumn vc name accessor =
         }
 
 
+intColumnWithoutValueDetailFormatting : View.Config -> String -> (data -> Int) -> Table.Column data msg
+intColumnWithoutValueDetailFormatting vc name accessor =
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            accessor
+                >> Locale.intWithoutValueDetailFormatting vc.locale
+                >> text
+                >> List.singleton
+                >> Table.HtmlDetails [ Css.Table.numberCell vc |> css ]
+        , sorter = Table.increasingOrDecreasingBy accessor
+        }
+
+
 maybeIntColumn : View.Config -> String -> (data -> Maybe Int) -> Table.Column data msg
 maybeIntColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
         , viewData =
             accessor
-                >> Maybe.map (Locale.int vc.locale)
+                >> Maybe.map (Locale.intWithoutValueDetailFormatting vc.locale)
                 >> Maybe.withDefault ""
                 >> text
                 >> List.singleton

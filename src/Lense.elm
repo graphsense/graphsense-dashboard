@@ -4,7 +4,6 @@ import Lense.Dialog as Dialog
 import Model exposing (..)
 import Model.Dialog as Dialog
 import Monocle.Compose exposing (optionalWithOptional)
-import Monocle.Lens exposing (Lens)
 import Monocle.Optional exposing (Optional)
 
 
