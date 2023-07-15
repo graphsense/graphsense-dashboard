@@ -68,6 +68,7 @@ type Value msg
     | Value String Api.Data.Values
     | MultiValue String Int (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
+    | Select (List ( String, String )) (String -> msg) String
     | Html (Html msg)
     | LoadingValue
 

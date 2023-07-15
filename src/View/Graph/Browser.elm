@@ -1,4 +1,4 @@
-module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, propertyBox, rule)
+module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, properties, propertyBox, rule)
 
 --import Plugin.View.Graph.Address
 --import Plugin.View.Graph.Browser
@@ -419,6 +419,23 @@ browseValue vc value =
                 ]
                 []
 
+        Select options msg current ->
+            options
+                |> List.map
+                    (\( key, title ) ->
+                        option
+                            [ Html.Styled.Attributes.value key
+                            , current == key |> selected
+                            ]
+                            [ Locale.string vc.locale title
+                                |> text
+                            ]
+                    )
+                |> select
+                    [ CssView.input vc |> css
+                    , onInput msg
+                    ]
+
         EntityId gc entity ->
             div
                 []
@@ -575,7 +592,7 @@ browseValue vc value =
 
 browseAddress : Plugins -> ModelState -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
 browseAddress plugins states vc now address =
-    (rowsAddress vc now address |> List.map (browseRow vc (browseValue vc)))
+    (rowsAddress vc now address |> properties vc)
         ++ [ rule vc ]
         ++ (case address of
                 Loading _ _ ->
@@ -585,6 +602,11 @@ browseAddress plugins states vc now address =
                     Plugin.View.addressProperties plugins states ad.plugins vc
            )
         |> propertyBox vc
+
+
+properties : View.Config -> List (Row (Value msg)) -> List (Html msg)
+properties vc =
+    List.map (browseRow vc (browseValue vc))
 
 
 rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg))

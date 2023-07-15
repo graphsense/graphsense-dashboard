@@ -1784,8 +1784,11 @@ updateByMsg plugins uc msg model =
               ]
             )
 
-        BrowserGotBulkAddressEntities currency deserializing entities ->
+        BrowserGotBulkAddressEntities currency deserializing ents ->
             let
+                entities =
+                    ents |> List.map second
+
                 deser =
                     deserializing
                         |> s_entities (entities ++ deserializing.entities)
