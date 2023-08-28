@@ -853,6 +853,19 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                           }
                         , eff
                         )
+
+                    PluginInterface.ShowInfoDialog conf ->
+                        ( { model
+                            | dialog =
+                                Dialog.info
+                                    { info = conf.info
+                                    , variables = conf.variables
+                                    , onOk = PluginMsg conf.onOk
+                                    }
+                                    |> Just
+                          }
+                        , eff
+                        )
             )
             ( mo, effects )
 

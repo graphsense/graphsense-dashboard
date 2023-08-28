@@ -28,6 +28,9 @@ view vc model =
 
             Error conf ->
                 error vc conf
+
+            Info conf ->
+                info vc conf
         ]
 
 
@@ -214,3 +217,20 @@ error vc err =
                     [ Locale.string vc.locale "OK" |> text
                     ]
                ]
+
+
+info : Config -> InfoConfig Msg -> Html Msg
+info vc inf =
+    part vc
+        (Locale.interpolated vc.locale inf.info inf.variables)
+        [ div
+            [ Css.singleButton vc |> css
+            ]
+            [ button
+                [ Css.Button.primary vc |> css
+                , UserClickedConfirm inf.onOk |> onClick
+                ]
+                [ Locale.string vc.locale "OK" |> text
+                ]
+            ]
+        ]

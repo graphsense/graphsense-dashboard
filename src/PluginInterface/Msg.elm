@@ -3,6 +3,7 @@ module PluginInterface.Msg exposing (..)
 import Api.Data
 import Browser.Dom
 import Effect.Api as Api exposing (..)
+import Html.Styled as Html
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Dialog
@@ -46,6 +47,8 @@ type OutMsg msg addressMsg entityMsg
     | ApiRequest (Api.Effect msg)
       -- show confirmation dialog
     | ShowConfirmDialog (Model.Dialog.ConfirmConfig msg)
+      -- show info dialog
+    | ShowInfoDialog (Model.Dialog.InfoConfig msg)
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -107,3 +110,10 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
             , onNo = mapMsg onNo
             }
                 |> ShowConfirmDialog
+
+        ShowInfoDialog { info, variables, onOk } ->
+            { info = info
+            , variables = variables
+            , onOk = mapMsg onOk
+            }
+                |> ShowInfoDialog

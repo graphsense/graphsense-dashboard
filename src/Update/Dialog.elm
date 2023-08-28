@@ -32,3 +32,8 @@ addressNotFound address model onOk =
     , onOk = onOk
     }
         |> Error
+
+
+info : InfoConfig msg -> Model msg
+info =
+    Info

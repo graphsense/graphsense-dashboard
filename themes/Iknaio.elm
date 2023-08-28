@@ -451,6 +451,10 @@ theme =
                     , px 100 |> minWidth
                     , pct 50 |> width
                     ]
+                |> s_singleButton
+                    [ displayFlex
+                    , justifyContent center
+                    ]
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
                     , scaled 2 |> rem |> paddingRight
