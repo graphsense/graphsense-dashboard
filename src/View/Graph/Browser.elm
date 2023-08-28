@@ -76,10 +76,11 @@ frame vc visible =
                 |> Maybe.map .width
                 |> Maybe.withDefault 0
     in
-    div
-        [ Css.frame vc visible
-            |> css
-        ]
+    List.intersperse (tableSeparator vc)
+        >> div
+            [ Css.frame vc visible
+                |> css
+            ]
         >> List.singleton
         >> div [ Css.root vc width |> css ]
 
@@ -1848,3 +1849,11 @@ balanceValues accessor a =
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
            )
+
+
+tableSeparator : View.Config -> Html msg
+tableSeparator vc =
+    div
+        [ Css.tableSeparator vc |> css
+        ]
+        []

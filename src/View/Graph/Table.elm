@@ -39,40 +39,11 @@ noTools =
 
 table : View.Config -> List (Attribute msg) -> Tools msg -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
 table vc attributes tools height config tbl =
-    let
-        minHeight =
-            tbl.data
-                |> List.length
-                |> toFloat
-                |> (+) 1
-                |> (*) vc.theme.table.rowHeight
-                |> Basics.min vc.theme.table.maxHeight
-    in
     div
         [ Css.Table.root vc |> css
         ]
         [ div
-            [ Css.Table.tableSeperator vc |> css
-            ]
-            []
-        , div
-            ([ (height
-                    |> Maybe.withDefault vc.theme.table.maxHeight
-                    |> Basics.max minHeight
-                    |> Css.px
-                    |> Css.maxHeight
-               )
-                :: (height
-                        |> Maybe.withDefault vc.theme.table.maxHeight
-                        |> Basics.max minHeight
-                        |> Css.px
-                        |> Css.minHeight
-                   )
-                :: (height
-                        |> Maybe.map (Css.px >> Css.height >> List.singleton)
-                        |> Maybe.withDefault []
-                   )
-                ++ Css.Table.tableRoot vc
+            ([ Css.Table.tableRoot vc
                 |> css
              ]
                 ++ attributes

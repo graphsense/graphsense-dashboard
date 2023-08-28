@@ -72,3 +72,14 @@ switchColor lm c =
 
     else
         c.dark
+
+
+setAlpha : Float -> Theme.SwitchableColor -> Theme.SwitchableColor
+setAlpha pct col =
+    let
+        updAlpha rgba =
+            { rgba | alpha = pct }
+    in
+    { dark = Color.toRgba col.dark |> updAlpha |> Color.fromRgba
+    , light = Color.toRgba col.light |> updAlpha |> Color.fromRgba
+    }
