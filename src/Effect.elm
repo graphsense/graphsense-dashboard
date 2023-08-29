@@ -39,10 +39,6 @@ perform plugins key statusbarToken apiKey effect =
         NavPushUrlEffect url ->
             Nav.pushUrl key url
 
-        GetStatisticsEffect ->
-            Api.Request.General.getStatistics
-                |> Api.send BrowserGotStatistics
-
         GetElementEffect { id, msg } ->
             Dom.getElement id
                 |> Task.attempt msg

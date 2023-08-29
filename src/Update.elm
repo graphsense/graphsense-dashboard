@@ -86,19 +86,14 @@ update plugins uc msg model =
         BrowserChangedUrl url ->
             updateByUrl plugins uc url model
 
-        BrowserGotStatistics result ->
-            case result of
-                Ok stats ->
-                    updateByUrl plugins
-                        uc
-                        model.url
-                        { model
-                            | stats = RD.Success stats
-                            , statusbar = Statusbar.updateLastBlocks stats model.statusbar
-                        }
-
-                Err error ->
-                    n { model | stats = RD.Failure error }
+        BrowserGotStatistics stats ->
+            updateByUrl plugins
+                uc
+                model.url
+                { model
+                    | stats = RD.Success stats
+                    , statusbar = Statusbar.updateLastBlocks stats model.statusbar
+                }
 
         BrowserGotEntityTaxonomy concepts ->
             { model
@@ -880,7 +875,7 @@ updateByUrl plugins uc url model =
                                 []
 
                             _ ->
-                                [ GetStatisticsEffect ]
+                                [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
                         )
 
                     Route.Graph graphRoute ->

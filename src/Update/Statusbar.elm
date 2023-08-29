@@ -51,9 +51,6 @@ messageFromEffect model effect =
         Model.NavPushUrlEffect _ ->
             Nothing
 
-        Model.GetStatisticsEffect ->
-            Nothing
-
         Model.GetElementEffect _ ->
             Nothing
 
@@ -213,6 +210,9 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.SearchEffect _ _ ->
+            Nothing
+
+        Api.GetStatisticsEffect _ ->
             Nothing
 
         Api.SearchEntityNeighborsEffect e _ ->

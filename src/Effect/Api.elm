@@ -26,6 +26,7 @@ type Effect msg
         , limit : Maybe Int
         }
         (Api.Data.SearchResult -> msg)
+    | GetStatisticsEffect (Api.Data.Stats -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect (Api.Data.TokenConfigs -> msg)
     | GetAddressEffect
@@ -275,6 +276,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> SearchEffect eff
 
+        GetStatisticsEffect m ->
+            m
+                >> mapMsg
+                |> GetStatisticsEffect
+
         GetConceptsEffect eff m ->
             m
                 >> mapMsg
@@ -427,6 +433,10 @@ perform apiKey wrapMsg effect =
         SearchEffect { query, currency, limit } toMsg ->
             Api.Request.General.search query currency limit
                 |> Api.withTracker "search"
+                |> send apiKey wrapMsg effect toMsg
+
+        GetStatisticsEffect toMsg ->
+            Api.Request.General.getStatistics
                 |> send apiKey wrapMsg effect toMsg
 
         GetConceptsEffect taxonomy toMsg ->

@@ -65,7 +65,7 @@ type Msg
     = NoOp
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
-    | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
+    | BrowserGotStatistics Api.Data.Stats
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
@@ -124,7 +124,6 @@ type Auth
 type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
-    | GetStatisticsEffect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
