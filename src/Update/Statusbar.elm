@@ -93,6 +93,9 @@ messageFromEffect model effect =
         Model.SetDirtyEffect ->
             Nothing
 
+        Model.SetCleanEffect ->
+            Nothing
+
         Model.ApiEffect eff ->
             messageFromApiEffect model eff
 

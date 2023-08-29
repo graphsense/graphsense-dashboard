@@ -136,6 +136,7 @@ type Effect
     | CmdEffect (Cmd Msg)
     | LogoutEffect
     | SetDirtyEffect
+    | SetCleanEffect
 
 
 type Thing

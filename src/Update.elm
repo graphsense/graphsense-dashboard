@@ -544,6 +544,7 @@ update plugins uc msg model =
                         , graph = graph
                       }
                     , PluginEffect cmd
+                        :: SetDirtyEffect
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
@@ -576,22 +577,24 @@ update plugins uc msg model =
 
                 Graph.UserClickedExportGS time ->
                     ( model
-                    , (case time of
-                        Nothing ->
-                            Time.now
-                                |> Task.perform (Just >> Graph.UserClickedExportGS)
+                    , ((case time of
+                            Nothing ->
+                                Time.now
+                                    |> Task.perform (Just >> Graph.UserClickedExportGS)
 
-                        Just t ->
-                            Graph.serialize model.graph
-                                |> pair
-                                    (makeTimestampFilename model.locale t
-                                        |> (\tt -> tt ++ ".gs")
-                                    )
-                                |> Ports.serialize
-                      )
+                            Just t ->
+                                Graph.serialize model.graph
+                                    |> pair
+                                        (makeTimestampFilename model.locale t
+                                            |> (\tt -> tt ++ ".gs")
+                                        )
+                                    |> Ports.serialize
+                       )
                         |> Graph.CmdEffect
                         |> GraphEffect
                         |> List.singleton
+                      )
+                        ++ [ SetCleanEffect ]
                     )
 
                 Graph.UserClickedExportGraphics time ->
