@@ -3120,10 +3120,7 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.ApiRequest _ ->
                         ( mo, [] )
 
-                    PluginInterface.ShowConfirmDialog _ ->
-                        ( mo, [] )
-
-                    PluginInterface.ShowInfoDialog _ ->
+                    PluginInterface.ShowDialog _ ->
                         ( mo, [] )
             )
             ( model, [] )

@@ -174,7 +174,7 @@ update plugins uc msg model =
                                             |> Maybe.map
                                                 (\address ->
                                                     UserClosesDialog
-                                                        |> Dialog.addressNotFound address model.dialog
+                                                        |> Dialog.addressNotFoundError address model.dialog
                                                 )
 
                                     _ ->
@@ -841,27 +841,10 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                         , (Effect.Api.map PluginMsg effect |> ApiEffect) :: eff
                         )
 
-                    PluginInterface.ShowConfirmDialog conf ->
+                    PluginInterface.ShowDialog conf ->
                         ( { model
                             | dialog =
-                                Dialog.confirm
-                                    { message = conf.message
-                                    , onYes = PluginMsg conf.onYes
-                                    , onNo = PluginMsg conf.onNo
-                                    }
-                                    |> Just
-                          }
-                        , eff
-                        )
-
-                    PluginInterface.ShowInfoDialog conf ->
-                        ( { model
-                            | dialog =
-                                Dialog.info
-                                    { info = conf.info
-                                    , variables = conf.variables
-                                    , onOk = PluginMsg conf.onOk
-                                    }
+                                Dialog.mapMsg PluginMsg conf
                                     |> Just
                           }
                         , eff

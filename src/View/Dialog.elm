@@ -126,7 +126,7 @@ body vc { onSubmit } =
         ]
 
 
-error : Config -> ErrorConfig msg -> Html msg
+error : Config -> ErrorConfig Msg -> Html Msg
 error vc err =
     let
         title =
@@ -138,11 +138,31 @@ error vc err =
                     else
                         "Address not found"
 
+                Http titl _ ->
+                    titl
+
+                General config ->
+                    config.title
+
         take =
             3
 
         details =
             case err.type_ of
+                General { message, variables } ->
+                    Locale.interpolated vc.locale message variables
+                        |> text
+                        |> List.singleton
+                        |> Util.View.p vc []
+                        |> List.singleton
+
+                Http _ e ->
+                    Locale.httpErrorToString vc.locale e
+                        |> text
+                        |> List.singleton
+                        |> Util.View.p vc []
+                        |> List.singleton
+
                 AddressNotFound addrs ->
                     [ addrs
                         |> List.take take
@@ -212,7 +232,7 @@ error vc err =
         details
             ++ [ button
                     [ Css.Button.primary vc |> css
-                    , onClick err.onOk
+                    , UserClickedConfirm err.onOk |> onClick
                     ]
                     [ Locale.string vc.locale "OK" |> text
                     ]

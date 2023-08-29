@@ -1,6 +1,7 @@
 module Model.Dialog exposing (..)
 
 import Html.Styled exposing (Html)
+import Http
 
 
 type Model msg
@@ -38,3 +39,12 @@ type alias InfoConfig msg =
 
 type ErrorType
     = AddressNotFound (List String)
+    | Http String Http.Error
+    | General GeneralErrorConfig
+
+
+type alias GeneralErrorConfig =
+    { title : String
+    , message : String
+    , variables : List String
+    }
