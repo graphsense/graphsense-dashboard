@@ -9,7 +9,7 @@
     "dev": "npm run gen && vite",
     "prebuild": "elm-tooling install",
     "gen": "mkdir -p gen/recordsetter; node generate.js; elm make; npm run setem",
-    "build": "npm run gen && vite build",
+    "build": "vite build",
     "serve": "vite preview",
     "test": "elm-test-rs",
     "setem": "setem --output gen/recordsetter"
