@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "elm-tooling install",
-    "dev": "vite",
+    "dev": "make setem && vite",
     "prebuild": "elm-tooling install",
     "build": "vite build",
     "serve": "vite preview",

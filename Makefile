@@ -18,7 +18,7 @@ dev: $(API_ELM) $(wildcard src/**)
 	#make openapi
 
 setem:
-	npx setem --output src/
+	npx setem --output gen/
 
 serve:
 	npm run dev
