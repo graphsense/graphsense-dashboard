@@ -6,12 +6,13 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "elm-tooling install",
-    "dev": "npm run gen && vite",
+    "dev": "npm run setem && vite",
     "prebuild": "elm-tooling install",
     "gen": "node generate.js && make setem",
-    "build": "npm run gen && vite build",
+    "build": "npm run setem && vite build",
     "serve": "vite preview",
-    "test": "elm-test-rs"
+    "test": "elm-test-rs",
+    "setem": "setem --output gen/recordsetter"
   },
   "devDependencies": {
     "elm-format": "^0.8.6",
