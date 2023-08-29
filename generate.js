@@ -17,7 +17,7 @@ const isDir = fileName => {
 
 const pluginsFolder = './plugins'
 const templatesFolder = './plugin_templates'
-const generatedFolder = './plugin_generated'
+const generatedFolder = './gen/plugins'
 const langFolder = 'lang'
 const publicFolder = './public'
 
@@ -99,6 +99,8 @@ for(const plugin in plugins) {
 
 
 const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
+
+elmJson['source-directories'] = elmJson['source-directories'].filter(p => !p.startsWith(path.join(pluginsFolder)))
 
 plugins.forEach(plugin => {
   const p = path.join(pluginsFolder, plugin.name, 'src')
