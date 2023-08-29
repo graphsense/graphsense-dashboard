@@ -37,6 +37,6 @@ RUN chown -R $DOCKER_USER $WORKDIR && \
 USER $DOCKER_USER
 RUN npm install 
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+#ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
 EXPOSE 8000

@@ -1,7 +1,7 @@
 #!/bin/ash
 set -e
 
-node generate.js
+npm run gen
 
 for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do 
     cd $WORKDIR/$plugin 
