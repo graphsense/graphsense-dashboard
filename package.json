@@ -9,7 +9,7 @@
     "dev": "npm run gen && vite",
     "prebuild": "elm-tooling install",
     "gen": "node generate.js && make setem",
-    "build": "vite build",
+    "build": "npm run gen && vite build",
     "serve": "vite preview",
     "test": "elm-test-rs"
   },
