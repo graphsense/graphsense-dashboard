@@ -10,6 +10,7 @@ elm-stuff
 .parcel-cache
 .venv
 plugins/*
+plugins_iknaio/*
 !plugins/EMPTY
 config/Config.elm
 testdata
