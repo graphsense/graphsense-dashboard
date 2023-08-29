@@ -11,7 +11,7 @@ import RemoteData exposing (WebData)
 
 minSearchInputLength : Int
 minSearchInputLength =
-    3
+    2
 
 
 type alias Model =
@@ -36,3 +36,8 @@ getMulti model =
     String.split " " model.input
         |> List.map (String.replace "," "")
         |> List.map String.trim
+
+
+isLikelyPathSearchInput : Model -> Bool
+isLikelyPathSearchInput model =
+    getMulti model |> List.all (\i -> String.length i > 20)

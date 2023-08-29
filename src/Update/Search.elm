@@ -87,13 +87,13 @@ maybeTriggerSearch ( model, cmd ) =
         limit =
             10
 
-        multi =
-            getMulti model
+        isPathSearch =
+            isLikelyPathSearchInput model
     in
     if
         Bounce.steady model.bounce
             && (String.length model.input >= minSearchInputLength)
-            && (List.length multi == 1)
+            && not isPathSearch
     then
         ( { model
             | loading = True
