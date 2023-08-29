@@ -189,7 +189,7 @@ type Effect msg
         { currency : String
         , addresses : List String
         }
-        (List Api.Data.Entity -> msg)
+        (List ( String, Api.Data.Entity ) -> msg)
     | BulkGetEntityNeighborsEffect
         { currency : String
         , isOutgoing : Bool
@@ -580,7 +580,15 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEntityEffect e toMsg ->
-            listWithMaybes Api.Data.entityDecoder
+            listWithMaybes
+                (Json.Decode.field "_request_address" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestAddress ->
+                            Json.Decode.map
+                                (\entity -> ( requestAddress, entity ))
+                                Api.Data.entityDecoder
+                        )
+                )
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationGetAddressEntity

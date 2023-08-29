@@ -1,10 +1,14 @@
 module Model.Dialog exposing (..)
 
+import Html.Styled exposing (Html)
+import Http
+
 
 type Model msg
     = Confirm (ConfirmConfig msg)
     | Options (OptionsConfig msg)
     | Error (ErrorConfig msg)
+    | Info (InfoConfig msg)
 
 
 type alias ConfirmConfig msg =
@@ -26,5 +30,21 @@ type alias ErrorConfig msg =
     }
 
 
+type alias InfoConfig msg =
+    { info : String
+    , variables : List String
+    , onOk : msg
+    }
+
+
 type ErrorType
     = AddressNotFound (List String)
+    | Http String Http.Error
+    | General GeneralErrorConfig
+
+
+type alias GeneralErrorConfig =
+    { title : String
+    , message : String
+    , variables : List String
+    }

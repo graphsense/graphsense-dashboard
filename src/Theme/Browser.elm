@@ -27,6 +27,7 @@ type alias Browser =
     , valueCell : List Style
     , currencyCell : List Style
     , longIdentifier : List Style
+    , tableSeparator : Bool -> List Style
     }
 
 
@@ -54,4 +55,5 @@ default =
     , valueCell = []
     , currencyCell = []
     , longIdentifier = []
+    , tableSeparator = \_ -> []
     }

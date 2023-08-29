@@ -6,24 +6,25 @@ import Css exposing (..)
 
 root : Config -> List Style
 root vc =
-    vc.theme.table.root
+    displayFlex
+        :: flexDirection Css.row
+        :: overflowX auto
+        :: vc.theme.table.root
 
 
 tableRoot : Config -> List Style
 tableRoot vc =
     overflowY auto
         :: overflowX auto
+        :: displayFlex
+        :: flexDirection column
+        :: maxHeight (px vc.theme.table.maxHeight)
         :: vc.theme.table.tableRoot
 
 
 sidebar : Config -> List Style
 sidebar vc =
     vc.theme.table.sidebar vc.lightmode
-
-
-tableSeperator : Config -> List Style
-tableSeperator vc =
-    vc.theme.table.tableSeperator vc.lightmode
 
 
 sidebarIcon : Config -> Bool -> List Style

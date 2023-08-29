@@ -2,10 +2,11 @@
     "type": "application",
     "source-directories": [
         "src",
+        "gen/recordsetter",
+        "gen/plugins",
         "openapi/src",
         "themes",
-        "config",
-        "plugin_generated"
+        "config"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

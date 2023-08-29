@@ -1784,8 +1784,11 @@ updateByMsg plugins uc msg model =
               ]
             )
 
-        BrowserGotBulkAddressEntities currency deserializing entities ->
+        BrowserGotBulkAddressEntities currency deserializing ents ->
             let
+                entities =
+                    ents |> List.map second
+
                 deser =
                     deserializing
                         |> s_entities (entities ++ deserializing.entities)
@@ -3117,7 +3120,7 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.ApiRequest _ ->
                         ( mo, [] )
 
-                    PluginInterface.ShowConfirmDialog _ ->
+                    PluginInterface.ShowDialog _ ->
                         ( mo, [] )
             )
             ( model, [] )

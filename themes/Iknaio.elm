@@ -27,6 +27,7 @@ import Util.Theme
         , borderColor_backgroundColorWithLightmode
         , colorWithLightmode
         , color_backgroundColorWithLightmode
+        , setAlpha
         , switchColor
         )
 import Util.View exposing (toCssColor)
@@ -366,6 +367,7 @@ theme =
                 |> s_button
                     (\lightmode ->
                         [ fontWeight bold
+                        , textDecoration none
                         , scaled 1 |> rem |> paddingY
                         , scaled 2 |> rem |> paddingX
                         , scaled 1 |> rem |> marginX
@@ -379,6 +381,9 @@ theme =
                 |> s_primary
                     (\lightmode ->
                         [ color_backgroundColorWithLightmode lightmode colors.brandDark colors.greyLighter
+                        , disabled
+                            [ colorWithLightmode lightmode colors.brandLight
+                            ]
                         ]
                     )
                 |> s_danger
@@ -445,6 +450,10 @@ theme =
                     , margin2 zero auto
                     , px 100 |> minWidth
                     , pct 50 |> width
+                    ]
+                |> s_singleButton
+                    [ displayFlex
+                    , justifyContent center
                     ]
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
@@ -851,7 +860,7 @@ theme =
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
-                    , scaled 0.5 |> rem |> paddingY
+                    , scaled 1 |> rem |> paddingBottom
                     , whiteSpace noWrap
                     ]
                 |> s_propertyBoxValue
@@ -860,6 +869,7 @@ theme =
                 |> s_propertyBoxValueInner
                     [ displayFlex
                     , justifyContent spaceBetween
+                    , whiteSpace noWrap
                     ]
                 |> s_frame
                     (\lightmode visible ->
@@ -954,37 +964,25 @@ theme =
                     , textAlign right
                     , ex 30 |> width
                     ]
+                |> s_tableSeparator
+                    (\lightmode ->
+                        [ borderLeftWidth (px 1)
+                        , borderStyle solid
+                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 1 |> rem |> paddingLeft
+                        , scaled 4 |> rem |> marginLeft
+                        ]
+                    )
             )
         |> s_table
             (Table.default
-                |> s_root
-                    [ displayFlex
-                    , flexDirection row
-                    , overflowX auto
-                    ]
-                |> s_tableRoot
-                    [ scaled 3 |> rem |> paddingX
-                    , displayFlex
-                    , flexDirection column
-
-                    --, overflowX hidden
-                    ]
                 |> s_sidebar
                     (\lightmode ->
                         [ borderLeftWidth (px 1)
                         , borderStyle solid
                         , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 2 |> rem |> marginLeft
                         , scaled 2 |> rem |> paddingLeft
-                        , scaled 1 |> rem |> paddingTop
-                        ]
-                    )
-                |> s_tableSeperator
-                    (\lightmode ->
-                        [ borderLeftWidth (px 1)
-                        , borderStyle solid
-                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
-                        , scaled 1 |> rem |> paddingRight
-                        , scaled 4 |> rem |> marginLeft
                         , scaled 1 |> rem |> paddingTop
                         ]
                     )
@@ -1025,7 +1023,7 @@ theme =
                 |> s_headCell
                     (\lightmode ->
                         [ tableCell
-                        , rowHeight |> px |> height
+                        , paddingTop zero
                         , position sticky
                         , top <| px 0
                         , zIndex <| int 2
@@ -1034,7 +1032,7 @@ theme =
                     )
                 |> s_headRow
                     [ textAlign left
-                    , fontWeight bold
+                    , fontBold
                     ]
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
@@ -1045,7 +1043,12 @@ theme =
                 |> s_row
                     (\lightmode ->
                         [ nthChild "2n"
-                            [ backgroundColorWithLightmode lightmode colors.brandLightest
+                            [ backgroundColorWithLightmode lightmode colors.greyLighter
+                            ]
+                        , nthChild "2n+1"
+                            [ colors.greyLighter
+                                |> setAlpha 0.3
+                                |> backgroundColorWithLightmode lightmode
                             ]
                         , rowHeight |> px |> height
                         ]

@@ -14,6 +14,11 @@ buttons vc =
     vc.theme.dialog.buttons
 
 
+singleButton : Config -> List Style
+singleButton vc =
+    vc.theme.dialog.singleButton
+
+
 part : Config -> List Style
 part vc =
     vc.theme.dialog.part

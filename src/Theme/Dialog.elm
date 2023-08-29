@@ -6,6 +6,7 @@ import Css exposing (Style)
 type alias Dialog =
     { dialog : Bool -> List Style
     , buttons : List Style
+    , singleButton : List Style
     , heading : List Style
     , part : List Style
     , headRow : Bool -> List Style
@@ -19,6 +20,7 @@ default : Dialog
 default =
     { dialog = \_ -> []
     , buttons = []
+    , singleButton = []
     , heading = []
     , part = []
     , headRow = \_ -> []
