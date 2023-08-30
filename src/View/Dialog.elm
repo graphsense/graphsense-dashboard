@@ -196,10 +196,10 @@ error vc err =
                             []
                             [ li [ Css.View.listItem vc |> css ]
                                 [ (if List.length addrs > 1 then
-                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain."
+                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain"
 
                                    else
-                                    "There are no transactions associated with this address and it is therefore not found on the blockchain."
+                                    "There are no transactions associated with this address and it is therefore not found on the blockchain"
                                   )
                                     |> Locale.string vc.locale
                                     |> addDot
