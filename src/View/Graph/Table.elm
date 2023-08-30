@@ -37,8 +37,8 @@ noTools =
     }
 
 
-table : View.Config -> List (Attribute msg) -> Tools msg -> Maybe Float -> Table.Config data msg -> T.Table data -> Html msg
-table vc attributes tools height config tbl =
+table : View.Config -> List (Attribute msg) -> Tools msg -> Table.Config data msg -> T.Table data -> Html msg
+table vc attributes tools config tbl =
     div
         [ Css.Table.root vc |> css
         ]
