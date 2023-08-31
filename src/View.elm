@@ -14,7 +14,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
-import Model exposing (Auth(..), Model, Msg(..), Page(..))
+import Model exposing (Auth(..), Model, Msg(..), Page(..), getLatestBlocks)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Route
@@ -63,11 +63,7 @@ body plugins vc model =
             vc
             { search = model.search
             , user = model.user
-            , latestBlocks =
-                model.stats
-                    |> RemoteData.map .currencies
-                    |> RemoteData.withDefault []
-                    |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
+            , latestBlocks = getLatestBlocks model.stats
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css

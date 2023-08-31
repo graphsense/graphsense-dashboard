@@ -13,6 +13,7 @@ import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
+import Theme.Landingpage as Landingpage
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
@@ -286,6 +287,13 @@ theme =
                     , scaled 8 |> rem |> width
                     , scaled 2 |> rem |> paddingTop
                     , scaled -1 |> rem |> marginLeft
+                    ]
+            )
+        |> s_landingpage
+            (Landingpage.default
+                |> s_root
+                    [ displayFlex
+                    , justifyContent center
                     ]
             )
         |> s_search

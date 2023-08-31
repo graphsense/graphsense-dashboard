@@ -158,3 +158,10 @@ userSettingsFromMainModel model =
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
     , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
     }
+
+
+getLatestBlocks : WebData Api.Data.Stats -> List ( String, Int )
+getLatestBlocks =
+    RemoteData.map .currencies
+        >> RemoteData.withDefault []
+        >> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
