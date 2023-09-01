@@ -1,5 +1,6 @@
 module Init.Locale exposing (init)
 
+import Config.UserSettings exposing (UserSettings)
 import DateFormat.Language
 import DateFormat.Relative
 import Dict
@@ -16,15 +17,19 @@ import Time
 import Update.Locale exposing (switch)
 
 
-init : Flags -> ( Model, List Effect )
-init { locale } =
+init : UserSettings -> ( Model, List Effect )
+init uc =
+    let
+        locale =
+            uc.selectedLanguage
+    in
     ( { mapping = Empty
       , locale = locale
       , numberFormat = Numeral.format
-      , valueDetail = Magnitude
+      , valueDetail = uc.valueDetail |> Maybe.withDefault Magnitude
       , zone = Time.utc
       , timeLang = DateFormat.Language.english
-      , currency = Coin
+      , currency = uc.valueDenomination |> Maybe.withDefault Coin
       , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
       , unitToString = Locale.English.unitToString
       , supportedTokens = Nothing

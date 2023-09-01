@@ -1,6 +1,7 @@
 module Init.Graph exposing (init)
 
 import Config.Graph as Config
+import Config.UserSettings exposing (UserSettings)
 import Dict
 import Init.Graph.Adding as Adding
 import Init.Graph.Browser as Browser
@@ -11,9 +12,9 @@ import Model.Graph exposing (..)
 import Model.Graph.Tool exposing (Toolbox(..))
 
 
-init : Int -> Model
-init now =
-    { config = Config.default
+init : UserSettings -> Int -> Model
+init us now =
+    { config = Config.init us.addressLabel us.edgeLabel us.showClusterShadowLinks us.showAddressShadowLinks
     , layers = IntDict.empty
     , browser = Browser.init now
     , adding = Adding.init

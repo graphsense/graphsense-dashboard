@@ -90,6 +90,9 @@ messageFromEffect model effect =
         Model.SetDirtyEffect ->
             Nothing
 
+        Model.SaveUserSettingsEffect _ ->
+            Nothing
+
         Model.SetCleanEffect ->
             Nothing
 

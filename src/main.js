@@ -15,6 +15,15 @@ const getNavigatorLanguage = () => {
 
 const locale = getNavigatorLanguage().split('-')[0]
 
+let userSettings = localStorage.getItem("gs_user_settings");
+
+let settings;
+if (typeof userSettings !== 'undefined' && userSettings !== null){
+  settings = JSON.parse(userSettings)
+} else {
+  settings = { "selectedLanguage": locale}
+}
+
 const docElem = document.documentElement
 const body = document.getElementsByTagName('body')[0]
 const width = window.innerWidth || docElem.clientWidth || body.clientWidth
@@ -28,7 +37,7 @@ for (const plugin in plugins) {
   pluginFlags[plugin] = plugins[plugin].flags()
 }
 
-const app = Elm.Main.init({ flags: { locale, width, height, now, pluginFlags } })
+const app = Elm.Main.init({ flags: { settings, width, height, now, pluginFlags } })
 
 let isDirty = false
 
@@ -156,4 +165,14 @@ app.ports.copyToClipboard.subscribe( value => navigator.clipboard.writeText(valu
 
 app.ports.setDirty.subscribe(dirty => {
   isDirty = dirty
-})
+});
+
+app.ports.saveToLocalStorage.subscribe(data_tuple => {
+  let k, v;
+  [k, v] = data_tuple;
+  localStorage.setItem(k, JSON.stringify(v));
+});
+
+// app.ports.loadFromLocalStorage.subscribe((key, value) => {
+//   app.ports.load.send(localStorage.getItem(key, value));
+// });

@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Config exposing (config)
+import Config.UserSettings exposing (default)
 import Dict
 import Effect exposing (perform)
 import Init exposing (init)
@@ -39,7 +40,7 @@ main =
             { defaultColor = config.theme.graph.defaultColor
             , colorScheme = config.theme.graph.colorScheme
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
-            , locale = Locale.init { locale = "" } |> first
+            , locale = Locale.init default |> first
             , size = Nothing
             }
 

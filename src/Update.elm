@@ -15,6 +15,7 @@ import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
 import Http exposing (Error(..))
+import Init.Graph
 import Json.Decode
 import Json.Encode exposing (Value)
 import Lense
@@ -214,25 +215,33 @@ update plugins uc msg model =
             let
                 locale =
                     Locale.switch loc model.locale
+
+                newModel =
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
             in
-            ( { model
-                | locale = locale
-                , config =
-                    model.config
-                        |> s_locale locale
-              }
-            , Locale.getTranslationEffect loc
+            ( newModel
+            , (Locale.getTranslationEffect loc
                 |> LocaleEffect
                 |> List.singleton
+              )
+                ++ [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
             )
 
         UserClickedLightmode ->
-            { model
-                | config =
-                    model.config
-                        |> s_lightmode (not model.config.lightmode)
-            }
-                |> n
+            let
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_lightmode (not model.config.lightmode)
+                    }
+            in
+            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
         UserInputsApiKeyForm input ->
             { model
@@ -548,27 +557,71 @@ update plugins uc msg model =
                     let
                         locale =
                             Locale.changeCurrency currency model.locale
+
+                        newModel =
+                            { model
+                                | locale = locale
+                                , config =
+                                    model.config
+                                        |> s_locale locale
+                            }
                     in
-                    { model
-                        | locale = locale
-                        , config =
-                            model.config
-                                |> s_locale locale
-                    }
-                        |> n
+                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
                 Graph.UserChangesValueDetail detail ->
                     let
                         locale =
                             Locale.changeValueDetail detail model.locale
+
+                        newModel =
+                            { model
+                                | locale = locale
+                                , config =
+                                    model.config
+                                        |> s_locale locale
+                            }
                     in
-                    { model
-                        | locale = locale
-                        , config =
-                            model.config
-                                |> s_locale locale
-                    }
-                        |> n
+                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
+                Graph.UserClickedShowEntityShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedShowAddressShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserChangesAddressLabelType _ ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserChangesTxLabelType _ ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedExportGS time ->
                     ( model
@@ -671,9 +724,18 @@ update plugins uc msg model =
                     let
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
+
+                        newGraph =
+                            Time.posixToMillis graph.browser.now
+                                |> Init.Graph.init (userSettingsFromMainModel model)
+                                |> s_history graph.history
+                                |> s_config
+                                    (graph.config
+                                        |> s_highlighter False
+                                    )
                     in
                     ( { model
-                        | graph = graph
+                        | graph = newGraph
                       }
                     , (Route.Graph.Root
                         |> Route.graphRoute

@@ -8,6 +8,7 @@ import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
 import Config exposing (logoutUrl)
+import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
@@ -15,6 +16,7 @@ import Effect.Search as Search
 import Http
 import Http.Extras
 import Json.Decode
+import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -95,6 +97,9 @@ perform plugins key statusbarToken apiKey effect =
 
         SetCleanEffect ->
             Ports.setDirty False
+
+        SaveUserSettingsEffect model ->
+            Ports.saveToLocalStorage ( "gs_user_settings", Config.UserSettings.encoder model )
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff

@@ -29,6 +29,7 @@ import Json.Encode exposing (Value)
 import List.Extra
 import Log
 import Maybe.Extra
+import Model exposing (userSettingsFromMainModel)
 import Model.Address as A
 import Model.Entity as E
 import Model.Graph exposing (..)
@@ -2008,14 +2009,8 @@ updateByMsg plugins uc msg model =
             n model
 
         UserClickedNewYes ->
-            Time.posixToMillis model.browser.now
-                |> Init.Graph.init
-                |> s_history model.history
-                |> s_config
-                    (model.config
-                        |> s_highlighter False
-                    )
-                |> n
+            -- handled upstream
+            n model
 
         UserInputsFilterTable input ->
             ( { model

@@ -134,15 +134,15 @@ type alias Config =
     }
 
 
-default : Config
-default =
-    { addressLabelType = Tag
-    , txLabelType = Value
+init : Maybe AddressLabelType -> Maybe TxLabelType -> Maybe Bool -> Maybe Bool -> Config
+init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks =
+    { addressLabelType = addressLabelType |> Maybe.withDefault Tag
+    , txLabelType = txLabelType |> Maybe.withDefault Value
     , maxLettersPerLabelRow = 18
     , colors = Dict.empty
     , entityConcepts = []
     , abuseConcepts = []
     , highlighter = False
-    , showEntityShadowLinks = True
-    , showAddressShadowLinks = False
+    , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
+    , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
     }
