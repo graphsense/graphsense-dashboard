@@ -2073,6 +2073,14 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserClickedToggleShowDatesInUserLocale ->
+            { model
+                | config =
+                    model.config
+                        |> s_showDatesInUserLocale (not model.config.showDatesInUserLocale)
+            }
+                |> n
+
         UserPressesDelete ->
             { model
                 | layers =

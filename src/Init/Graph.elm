@@ -14,7 +14,7 @@ import Model.Graph.Tool exposing (Toolbox(..))
 
 init : UserSettings -> Int -> Model
 init us now =
-    { config = Config.init us.addressLabel us.edgeLabel us.showClusterShadowLinks us.showAddressShadowLinks
+    { config = Config.init us.addressLabel us.edgeLabel us.showClusterShadowLinks us.showAddressShadowLinks us.showDatesInUserLocale
     , layers = IntDict.empty
     , browser = Browser.init now
     , adding = Adding.init

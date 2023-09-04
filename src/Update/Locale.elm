@@ -13,7 +13,7 @@ import Model.Currency exposing (..)
 import Model.Locale as Model exposing (..)
 import Msg.Locale as Msg exposing (Msg(..))
 import Numeral
-import RemoteData
+import Time
 
 
 duration : Float
@@ -127,6 +127,13 @@ changeCurrency curr model =
 
                 fiat ->
                     Fiat fiat
+    }
+
+
+changeTimeZone : Time.Zone -> Model -> Model
+changeTimeZone tz m =
+    { m
+        | zone = tz
     }
 
 

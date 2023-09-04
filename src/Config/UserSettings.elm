@@ -17,6 +17,7 @@ type alias UserSettings =
     , edgeLabel : Maybe TxLabelType
     , showAddressShadowLinks : Maybe Bool
     , showClusterShadowLinks : Maybe Bool
+    , showDatesInUserLocale : Maybe Bool
     }
 
 
@@ -126,6 +127,7 @@ decoder =
         |> optional "edgeLabel" (nullable (Decode.string |> Decode.map stringToEdgeLabel)) Nothing
         |> optional "showAddressShadowLinks" (nullable bool) Nothing
         |> optional "showClusterShadowLinks" (nullable bool) Nothing
+        |> optional "showDatesInUserLocale" (nullable bool) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value
@@ -139,6 +141,7 @@ encoder settings =
         , ( "edgeLabel", settings.edgeLabel |> Maybe.map edgeLabelToString |> Maybe.map Json.Encode.string |> Maybe.withDefault Json.Encode.null )
         , ( "showAddressShadowLinks", settings.showAddressShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showClusterShadowLinks", settings.showClusterShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "showDatesInUserLocale", settings.showDatesInUserLocale |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -152,4 +155,5 @@ default =
     , edgeLabel = Nothing
     , showAddressShadowLinks = Nothing
     , showClusterShadowLinks = Nothing
+    , showDatesInUserLocale = Nothing
     }

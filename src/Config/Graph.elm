@@ -131,11 +131,12 @@ type alias Config =
     , highlighter : Bool
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
+    , showDatesInUserLocale : Bool
     }
 
 
-init : Maybe AddressLabelType -> Maybe TxLabelType -> Maybe Bool -> Maybe Bool -> Config
-init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks =
+init : Maybe AddressLabelType -> Maybe TxLabelType -> Maybe Bool -> Maybe Bool -> Maybe Bool -> Config
+init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks showDatesInUserLocale =
     { addressLabelType = addressLabelType |> Maybe.withDefault Tag
     , txLabelType = txLabelType |> Maybe.withDefault Value
     , maxLettersPerLabelRow = 18
@@ -145,4 +146,5 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks =
     , highlighter = False
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
+    , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
     }

@@ -156,4 +156,5 @@ userSettingsFromMainModel model =
     , edgeLabel = Just model.graph.config.txLabelType
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
+    , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
     }

@@ -133,5 +133,19 @@ configuration vc config =
                     , onClick UserClickedShowAddressShadowLinks
                     ]
             ]
+        , Dialog.part vc
+            "Timezone"
+            [ Locale.string vc.locale
+                (if config.showDatesInUserLocale then
+                    "User"
+
+                 else
+                    "UTC"
+                )
+                |> onOffSwitch vc
+                    [ checked config.showDatesInUserLocale
+                    , onClick UserClickedToggleShowDatesInUserLocale
+                    ]
+            ]
         ]
     ]

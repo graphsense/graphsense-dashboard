@@ -32,6 +32,7 @@ import Model.Locale as Locale
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
+import Msg.Locale as LocaleMsg
 import Msg.Search as Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
@@ -437,14 +438,25 @@ update plugins uc msg model =
             let
                 ( locale, localeEffects ) =
                     Locale.update m model.locale
+
+                newModel =
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
+
+                eff =
+                    case m of
+                        LocaleMsg.BrowserSentTimezone _ ->
+                            [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
+
+                        _ ->
+                            []
             in
-            ( { model
-                | locale = locale
-                , config =
-                    model.config
-                        |> s_locale locale
-              }
-            , List.map LocaleEffect localeEffects
+            ( newModel
+            , List.map LocaleEffect localeEffects ++ eff
             )
 
         SearchMsg m ->
@@ -602,6 +614,36 @@ update plugins uc msg model =
                             { model | graph = graph }
                     in
                     ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedToggleShowDatesInUserLocale ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+
+                        modeleff =
+                            case newModel.graph.config.showDatesInUserLocale of
+                                True ->
+                                    ( newModel, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) :: List.map GraphEffect graphEffects )
+
+                                False ->
+                                    let
+                                        locale =
+                                            Locale.changeTimeZone Time.utc model.locale
+
+                                        mwithtz =
+                                            { newModel
+                                                | locale = locale
+                                                , config =
+                                                    newModel.config
+                                                        |> s_locale locale
+                                            }
+                                    in
+                                    ( mwithtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwithtz) :: List.map GraphEffect graphEffects )
+                    in
+                    modeleff
 
                 Graph.UserChangesAddressLabelType _ ->
                     let

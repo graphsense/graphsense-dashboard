@@ -167,6 +167,7 @@ type Msg
     | UserClickedForceShowEntityLink (LinkId EntityId) Bool
     | UserClickedShowEntityShadowLinks
     | UserClickedShowAddressShadowLinks
+    | UserClickedToggleShowDatesInUserLocale
     | UserPressesDelete
     | UserClickedTagsFlag EntityId
     | UserClicksDownloadCSVInTable
