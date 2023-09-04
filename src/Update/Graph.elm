@@ -17,7 +17,6 @@ import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
 import File
 import File.Select
-import Init.Graph
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Highlighter as Highlighter
 import Init.Graph.Id as Id
@@ -29,7 +28,6 @@ import Json.Encode exposing (Value)
 import List.Extra
 import Log
 import Maybe.Extra
-import Model exposing (userSettingsFromMainModel)
 import Model.Address as A
 import Model.Entity as E
 import Model.Graph exposing (..)
@@ -51,9 +49,7 @@ import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import Ports
-import Process
 import RecordSetter exposing (..)
-import Route as R exposing (toUrl)
 import Route.Graph as Route
 import Set exposing (Set)
 import Task

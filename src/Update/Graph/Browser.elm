@@ -8,7 +8,6 @@ import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Init.Graph.Tag as Tag
-import Json.Encode
 import Log
 import Model.Actor as Act
 import Model.Address as A
@@ -23,16 +22,13 @@ import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Model.Locale as Locale
-import Model.Search as Search
 import Model.Tx as T
 import Msg.Graph exposing (Msg(..))
-import Msg.Search as Search
 import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData, applyFilter, setData)
-import Update.Search as Search
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable

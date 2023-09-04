@@ -1,6 +1,5 @@
 module Update.Search exposing (clear, getFirstResultUrl, update)
 
-import Api.Data
 import Bounce
 import Effect exposing (n)
 import Effect.Search as Effect exposing (Effect(..))
@@ -9,7 +8,6 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Result.Extra as RE
 import Route exposing (toUrl)
 import Route.Graph as Route
 

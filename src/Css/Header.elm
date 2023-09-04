@@ -2,7 +2,6 @@ module Css.Header exposing (..)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-import Util.Css
 
 
 header : Config -> List Style

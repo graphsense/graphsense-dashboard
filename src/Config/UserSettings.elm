@@ -1,8 +1,8 @@
 module Config.UserSettings exposing (..)
 
 import Config.Graph exposing (AddressLabelType(..), TxLabelType(..))
-import Json.Decode as Decode exposing (Decoder, bool, decodeString, float, int, nullable, string)
-import Json.Decode.Pipeline exposing (hardcoded, optional, required)
+import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
+import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import Model.Currency exposing (Currency(..))
 import Model.Locale exposing (ValueDetail(..))

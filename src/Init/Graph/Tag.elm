@@ -2,7 +2,7 @@ module Init.Graph.Tag exposing (..)
 
 import Browser.Dom as Dom
 import Init.Search as Search
-import Model.Graph.Id as Id exposing (..)
+import Model.Graph.Id exposing (..)
 import Model.Graph.Tag exposing (..)
 import Model.Node exposing (Node(..))
 import RecordSetter exposing (..)

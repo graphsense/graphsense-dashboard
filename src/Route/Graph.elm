@@ -23,9 +23,7 @@ module Route.Graph exposing
     , txRoute
     )
 
-import Json.Encode
 import List.Extra
-import Maybe.Extra
 import Plugin.Model
 import Plugin.Route as Plugin
 import Tuple exposing (..)

@@ -3,10 +3,7 @@ module Init.Locale exposing (init)
 import Config.UserSettings exposing (UserSettings)
 import DateFormat.Language
 import DateFormat.Relative
-import Dict
 import Effect.Locale exposing (Effect(..))
-import Http
-import Languages.German
 import Locale.English
 import Model.Currency exposing (..)
 import Model.Locale as Model exposing (..)

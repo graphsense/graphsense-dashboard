@@ -1,7 +1,5 @@
 module Config.View exposing (Config)
 
-import Dict exposing (Dict)
-import Html.Styled exposing (Html)
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
 import Theme.Theme exposing (Theme)

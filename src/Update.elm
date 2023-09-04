@@ -5,7 +5,6 @@ module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 import Api
 import Browser
 import Browser.Dom
-import Browser.Navigation as Nav
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
@@ -18,7 +17,6 @@ import Http exposing (Error(..))
 import Init.Graph
 import Json.Decode
 import Json.Encode exposing (Value)
-import Lense
 import List.Extra
 import Log
 import Maybe.Extra
@@ -40,22 +38,18 @@ import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import PluginInterface.Update as PluginInterface
 import Ports
-import Process
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
-import Set
 import Sha256
 import Task
 import Time
 import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
-import Update.Graph.Adding as Adding
 import Update.Graph.Browser as Browser
 import Update.Graph.Layer as Layer
-import Update.Graph.Search
 import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar

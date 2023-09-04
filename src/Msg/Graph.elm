@@ -1,9 +1,7 @@
 module Msg.Graph exposing (..)
 
 import Api.Data
-import Api.Request.Entities
 import Browser.Dom
-import Bytes exposing (Bytes)
 import Color
 import File
 import Json.Encode
@@ -16,7 +14,6 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
-import Model.Graph.Transform as Transform
 import Model.Tx as T
 import Msg.Search as Search
 import Plugin.Msg as Plugin

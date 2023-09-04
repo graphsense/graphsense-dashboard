@@ -2,8 +2,6 @@ module Model.Search exposing (..)
 
 import Api.Data
 import Bounce exposing (Bounce)
-import RemoteData exposing (WebData)
-
 
 
 {- Many Actors have 3 letter names -}

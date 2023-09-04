@@ -4,7 +4,6 @@ import Api.Data
 import Dict exposing (Dict)
 import Init.Graph.Adding as Init
 import Init.Graph.Id as Id
-import Model.Address as A
 import Model.Graph.Adding exposing (..)
 import Model.Graph.Id as Id
 import RemoteData exposing (RemoteData(..))

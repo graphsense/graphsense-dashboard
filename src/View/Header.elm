@@ -10,7 +10,6 @@ import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
-import Ports
 import View.Search as Search
 import View.User as User
 

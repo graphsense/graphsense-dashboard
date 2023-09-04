@@ -26,7 +26,7 @@ import DateFormat exposing (..)
 import DateFormat.Relative
 import Dict exposing (Dict)
 import Ease
-import Html.Styled exposing (Html, span, text)
+import Html.Styled exposing (Html, span)
 import Html.Styled.Attributes exposing (css)
 import Http
 import List.Extra exposing (find)

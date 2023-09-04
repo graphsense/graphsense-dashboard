@@ -2,7 +2,6 @@ module Model.Actor exposing (..)
 
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId)
 
 
 type alias Actor =

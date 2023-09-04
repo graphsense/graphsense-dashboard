@@ -2,16 +2,13 @@ module View.Search exposing (Searchable(..), search)
 
 import Api.Data
 import Config.View exposing (Config)
-import Css exposing (Style, block, display, none)
+import Css exposing (Style)
 import Css.Button
 import Css.Search as Css
-import Css.View
 import FontAwesome
-import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Search as Search
 import Json.Decode
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
@@ -19,9 +16,8 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
-import Route.Graph as Route exposing (Route)
-import Util.RemoteData exposing (webdata)
-import Util.View exposing (loadingSpinner, truncate)
+import Route.Graph as Route
+import Util.View
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 

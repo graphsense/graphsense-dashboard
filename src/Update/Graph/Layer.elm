@@ -33,16 +33,13 @@ module Update.Graph.Layer exposing
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph as Graph
+import Config.Graph
     exposing
-        ( addressHeight
-        , entityToAddressesPaddingLeft
+        ( entityToAddressesPaddingLeft
         , entityToAddressesPaddingTop
         , entityWidth
-        , expandHandleWidth
         , layerMargin
         , padding
-        , txMaxWidth
         )
 import Config.Update as Update
 import Dict exposing (Dict)
@@ -51,7 +48,6 @@ import Init.Graph.Id as Id
 import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
 import List.Extra
-import Log
 import Maybe.Extra
 import Model.Entity as E
 import Model.Graph exposing (DeserializedAddress, Deserializing)
@@ -61,7 +57,6 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link exposing (..)
-import Model.Locale as Locale
 import Plugin.Update as Plugin exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)

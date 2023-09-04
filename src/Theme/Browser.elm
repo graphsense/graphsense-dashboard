@@ -1,6 +1,5 @@
 module Theme.Browser exposing (Browser, default)
 
-import Color exposing (Color)
 import Css exposing (Style)
 
 

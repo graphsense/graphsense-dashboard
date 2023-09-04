@@ -4,17 +4,11 @@ import Api.Data
 import Config.Graph
     exposing
         ( addressHeight
-        , addressWidth
         , entityToAddressesPaddingLeft
         , entityToAddressesPaddingTop
-        , expandHandleWidth
-        , labelHeight
-        , padding
         )
-import Config.Update exposing (Config)
 import Dict
 import Init.Graph.Id as Id exposing (..)
-import Json.Encode
 import Model.Graph.Address exposing (..)
 import Model.Graph.Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)

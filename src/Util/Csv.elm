@@ -1,7 +1,6 @@
 module Util.Csv exposing (..)
 
 import Api.Data
-import Json.Encode
 
 
 int : Int -> String

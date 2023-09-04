@@ -15,7 +15,7 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId, EntityId)
+import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 
 

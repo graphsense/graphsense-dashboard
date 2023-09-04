@@ -1,9 +1,5 @@
 module View.Graph exposing (view)
 
---import Plugin.View.Graph.Address
-
-import Browser.Dom as Dom
-import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css
@@ -15,7 +11,6 @@ import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
 import IntDict exposing (IntDict)
 import Json.Decode
-import List.Extra
 import Log
 import Maybe.Extra
 import Model.Graph exposing (..)
@@ -74,7 +69,7 @@ graph plugins states vc gc model =
 
 
 graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> BBox -> Svg Msg
-graphSvg plugins states vc gc model bbox =
+graphSvg plugins _ vc gc model bbox =
     let
         dim =
             { width = bbox.width, height = bbox.height }
@@ -436,10 +431,9 @@ contextMenu plugins states vc model cm =
                             |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
                         )
             in
-            [ UserClickedRemoveAddressLink id
-                |> option "Remove"
-            ]
-                ++ (srcLink
+            (UserClickedRemoveAddressLink id
+                |> option "Remove")
+                :: (srcLink
                         |> Maybe.map
                             (\( src, li ) ->
                                 let

@@ -3,7 +3,7 @@ module Util.Graph exposing (..)
 import Config.Graph as Graph
 import Json.Decode
 import List.Extra
-import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Coords exposing (Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg
 

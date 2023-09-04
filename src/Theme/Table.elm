@@ -1,6 +1,5 @@
 module Theme.Table exposing (Table, default)
 
-import Color exposing (Color)
 import Css exposing (Style)
 
 

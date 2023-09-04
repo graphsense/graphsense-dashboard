@@ -1,6 +1,5 @@
 module Model.Dialog exposing (..)
 
-import Html.Styled exposing (Html)
 import Http
 
 

@@ -8,7 +8,6 @@ import Model exposing (Model, Msg(..), Page(..))
 import Plugin.View as Plugin exposing (Plugins)
 import Util.View
 import View.Graph as Graph
-import View.Graph.Navbar
 import View.Stats as Stats
 
 
