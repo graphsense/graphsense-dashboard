@@ -64,6 +64,7 @@ body plugins vc model =
             { search = model.search
             , user = model.user
             , latestBlocks = getLatestBlocks model.stats
+            , hideSearch = model.graph.showLandingpage
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css

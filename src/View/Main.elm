@@ -8,6 +8,7 @@ import Model exposing (Model, Msg(..), Page(..))
 import Plugin.View as Plugin exposing (Plugins)
 import Util.View
 import View.Graph as Graph
+import View.Landingpage as Landingpage
 import View.Stats as Stats
 
 
@@ -22,13 +23,20 @@ view plugins vc model =
             Stats.stats vc model.stats
 
         Graph ->
-            Graph.view plugins model.plugins vc model.graph
-                |> (\{ navbar, contents } ->
-                        { navbar = List.map (Html.Styled.map GraphMsg) navbar
-                        , contents = List.map (Html.Styled.map GraphMsg) contents
-                        }
-                   )
-                |> main_ vc
+            if model.graph.showLandingpage then
+                { navbar = []
+                , contents = [ Landingpage.view plugins vc model ]
+                }
+                    |> main_ vc
+
+            else
+                Graph.view plugins model.plugins vc model.graph
+                    |> (\{ navbar, contents } ->
+                            { navbar = List.map (Html.Styled.map GraphMsg) navbar
+                            , contents = List.map (Html.Styled.map GraphMsg) contents
+                            }
+                       )
+                    |> main_ vc
 
         Plugin type_ ->
             Plugin.contents plugins model.plugins type_ vc

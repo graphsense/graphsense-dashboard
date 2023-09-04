@@ -33,4 +33,5 @@ init us now =
     , history = History [] []
     , highlights = Highlighter.init
     , selectIfLoaded = Nothing
+    , showLandingpage = True
     }

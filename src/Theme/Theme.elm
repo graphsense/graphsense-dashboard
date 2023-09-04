@@ -118,9 +118,3 @@ default =
     , switchOnColor = \_ -> Color.rgba 0 0 0 0
     , disabled = \_ -> []
     }
-
-
-type alias SwitchableColor =
-    { dark : Color.Color
-    , light : Color.Color
-    }

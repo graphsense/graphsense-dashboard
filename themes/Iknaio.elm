@@ -17,6 +17,7 @@ import Theme.Landingpage as Landingpage
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
+import Theme.SwitchableColor as Theme
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
@@ -293,8 +294,65 @@ theme =
             (Landingpage.default
                 |> s_root
                     [ displayFlex
-                    , justifyContent center
+                    , width <| pct 100
+                    , height <| pct 100
+                    , flexDirection column
+                    , alignItems center
+                    , scaled 20 |> rem |> marginTop
                     ]
+                |> s_searchRoot
+                    [ paddingTop <| rem <| scaled 5
+                    ]
+                |> s_frame
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.white
+                        , displayFlex
+                        , alignItems center
+                        , flexDirection column
+                        , scaled 7 |> rem |> padding
+                        , borderRadiusSm
+                        , shadowSm
+                        ]
+                    )
+                |> s_rule
+                    (\lightmode ->
+                        [ width <| pct 50
+                        , colorWithLightmode lightmode colors.grey
+                        , paddingTop <| rem <| scaled 8
+                        , paddingBottom <| rem <| scaled 5
+                        ]
+                    )
+                |> s_ruleColor colors.grey
+                |> s_loadBox
+                    (\lightmode ->
+                        [ scaled 4 |> rem |> padding
+                        , borderRadiusSm
+                        , border zero
+                        , backgroundColorWithLightmode lightmode colors.greyLighter
+                        , hover
+                            [ backgroundColorWithLightmode lightmode colors.brandLighter
+                            ]
+                        , disabled
+                            [ colorWithLightmode lightmode colors.brandLight
+                            ]
+                        , displayFlex
+                        , flexDirection column
+                        , alignItems center
+                        , cursor pointer
+                        ]
+                    )
+                |> s_loadBoxIcon
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode colors.brandDark
+                        , paddingBottom <| rem <| scaled 4
+                        , fontSize <| rem <| scaled 7
+                        ]
+                    )
+                |> s_loadBoxText
+                    (\lightmode ->
+                        [ textDecoration none
+                        ]
+                    )
             )
         |> s_search
             (Search.default
@@ -308,8 +366,7 @@ theme =
                     ]
                 |> s_textarea
                     (\lightmode input ->
-                        [ scaled 1 |> rem |> padding
-                        , scaled 5 |> rem |> height
+                        [ scaled 5 |> rem |> height
                         , inputStyle lightmode
                         , scaled 2 |> rem |> paddingX
                         , scaled 2 |> rem |> paddingTop

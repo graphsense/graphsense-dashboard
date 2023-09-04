@@ -996,6 +996,14 @@ updateByUrl plugins uc url model =
                                 let
                                     ( graph, graphEffect ) =
                                         Graph.updateByRoute plugins graphRoute model.graph
+                                            |> mapFirst
+                                                (\g ->
+                                                    if graphRoute /= Route.Graph.Root then
+                                                        { g | showLandingpage = False }
+
+                                                    else
+                                                        g
+                                                )
                                 in
                                 ( { model
                                     | page = Graph
