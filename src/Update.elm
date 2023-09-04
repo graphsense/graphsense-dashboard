@@ -745,16 +745,20 @@ update plugins uc msg model =
                            )
 
                 Graph.UserClickedNew ->
-                    { model
-                        | dialog =
-                            { message = Locale.string model.locale "Do you want to start from scratch?"
-                            , onYes = GraphMsg Graph.UserClickedNewYes
-                            , onNo = NoOp
-                            }
-                                |> Dialog.confirm
-                                |> Just
-                    }
-                        |> n
+                    if model.dirty then
+                        { model
+                            | dialog =
+                                { message = Locale.string model.locale "Do you want to start from scratch?"
+                                , onYes = GraphMsg Graph.UserClickedNewYes
+                                , onNo = NoOp
+                                }
+                                    |> Dialog.confirm
+                                    |> Just
+                        }
+                            |> n
+
+                    else
+                        n model
 
                 Graph.UserClickedNewYes ->
                     let
@@ -963,6 +967,14 @@ updateByUrl plugins uc url model =
         |> Maybe.map2
             (\oldRoute route ->
                 case Log.log "route" route of
+                    Route.Home ->
+                        ( { model
+                            | page = Home
+                            , url = url
+                          }
+                        , []
+                        )
+
                     Route.Stats ->
                         ( { model
                             | page = Stats
@@ -996,14 +1008,6 @@ updateByUrl plugins uc url model =
                                 let
                                     ( graph, graphEffect ) =
                                         Graph.updateByRoute plugins graphRoute model.graph
-                                            |> mapFirst
-                                                (\g ->
-                                                    if graphRoute /= Route.Graph.Root then
-                                                        { g | showLandingpage = False }
-
-                                                    else
-                                                        g
-                                                )
                                 in
                                 ( { model
                                     | page = Graph

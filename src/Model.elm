@@ -58,7 +58,8 @@ type alias Model navigationKey =
 
 
 type Page
-    = Stats
+    = Home
+    | Stats
     | Graph
     | Plugin Plugin.PluginType
 

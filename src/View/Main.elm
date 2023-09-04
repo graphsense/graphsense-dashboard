@@ -19,24 +19,23 @@ view :
     -> Html Msg
 view plugins vc model =
     case model.page of
+        Home ->
+            { navbar = []
+            , contents = [ Landingpage.view plugins vc model ]
+            }
+                |> main_ vc
+
         Stats ->
             Stats.stats vc model.stats
 
         Graph ->
-            if model.graph.showLandingpage then
-                { navbar = []
-                , contents = [ Landingpage.view plugins vc model ]
-                }
-                    |> main_ vc
-
-            else
-                Graph.view plugins model.plugins vc model.graph
-                    |> (\{ navbar, contents } ->
-                            { navbar = List.map (Html.Styled.map GraphMsg) navbar
-                            , contents = List.map (Html.Styled.map GraphMsg) contents
-                            }
-                       )
-                    |> main_ vc
+            Graph.view plugins model.plugins vc model.graph
+                |> (\{ navbar, contents } ->
+                        { navbar = List.map (Html.Styled.map GraphMsg) navbar
+                        , contents = List.map (Html.Styled.map GraphMsg) contents
+                        }
+                   )
+                |> main_ vc
 
         Plugin type_ ->
             Plugin.contents plugins model.plugins type_ vc

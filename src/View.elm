@@ -64,7 +64,7 @@ body plugins vc model =
             { search = model.search
             , user = model.user
             , latestBlocks = getLatestBlocks model.stats
-            , hideSearch = model.graph.showLandingpage
+            , hideSearch = model.page == Home
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css
@@ -97,8 +97,8 @@ sidebar plugins vc model =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
-                [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-                , Route.statsRoute
+                [ model.page == Home |> Css.View.sidebarIcon vc |> css
+                , Route.homeRoute
                     |> Route.toUrl
                     |> href
                 ]
@@ -114,6 +114,16 @@ sidebar plugins vc model =
                 ]
          ]
             ++ Plugin.sidebar plugins model.plugins model.page vc
+            ++ [ FontAwesome.icon FontAwesome.bitcoin
+                    |> Html.Styled.fromUnstyled
+                    |> List.singleton
+                    |> a
+                        [ model.page == Stats |> Css.View.sidebarIcon vc |> css
+                        , Route.statsRoute
+                            |> Route.toUrl
+                            |> href
+                        ]
+               ]
         )
 
 

@@ -38,7 +38,6 @@ type alias Model =
     , history : History
     , highlights : Highlighter.Model
     , selectIfLoaded : Maybe SelectIfLoaded
-    , showLandingpage : Bool
     }
 
 
