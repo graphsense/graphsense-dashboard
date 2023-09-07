@@ -89,35 +89,34 @@ browser plugins states vc gc model =
                 []
 
             Browser.Address loadable table ->
-                    (browseAddress plugins states vc model.now loadable
-                        :: (table
-                                |> Maybe.map
-                                    (\t ->
-                                        let
-                                            neighborLayerHasAddress aid isOutgoing address =
-                                                Layer.getAddress
-                                                    (Id.initAddressId
-                                                        { currency = address.currency
-                                                        , id = address.address
-                                                        , layer =
-                                                            Id.layer aid
-                                                                + (if isOutgoing then
-                                                                    1
+                browseAddress plugins states vc model.now loadable
+                    :: (table
+                            |> Maybe.map
+                                (\t ->
+                                    let
+                                        neighborLayerHasAddress aid isOutgoing address =
+                                            Layer.getAddress
+                                                (Id.initAddressId
+                                                    { currency = address.currency
+                                                    , id = address.address
+                                                    , layer =
+                                                        Id.layer aid
+                                                            + (if isOutgoing then
+                                                                1
 
-                                                                   else
-                                                                    -1
-                                                                  )
-                                                        }
-                                                    )
-                                                    model.layers
-                                                    |> Maybe.Extra.isJust
-                                        in
-                                        browseAddressTable vc gc neighborLayerHasAddress loadable t
-                                    )
-                                |> Maybe.map List.singleton
-                                |> Maybe.withDefault []
-                           )
-                    )
+                                                               else
+                                                                -1
+                                                              )
+                                                    }
+                                                )
+                                                model.layers
+                                                |> Maybe.Extra.isJust
+                                    in
+                                    browseAddressTable vc gc neighborLayerHasAddress loadable t
+                                )
+                            |> Maybe.map List.singleton
+                            |> Maybe.withDefault []
+                       )
 
             Browser.Entity loadable table ->
                 browseEntity plugins states vc gc model.now loadable

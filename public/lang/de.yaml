@@ -146,6 +146,7 @@ annotate entity: cluster annotieren
 annotate address: addresse annotieren
 remove from graph: vom Graphen entfernen
 remove: entfernen
+remove link: verbindung entfernen
 expand: erweitern
 collapse: Adressen ausblenden
 show address table: Adressentabelle

@@ -437,7 +437,7 @@ contextMenu plugins states vc model cm =
                         )
             in
             (UserClickedRemoveAddressLink id
-                |> option "Remove"
+                |> optionWithIcon "Remove link" FontAwesome.eraser
             )
                 :: (srcLink
                         |> Maybe.map

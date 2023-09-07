@@ -1260,7 +1260,17 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveEntity id ->
             { model
                 | layers = Layer.removeEntity id model.layers
-                , selected = SelectedNone
+                , browser =
+                    case model.browser.type_ of
+                        Browser.Entity (Browser.Loaded e) _ ->
+                            if e.id == id then
+                                model.browser |> s_visible False |> s_type_ Browser.None
+
+                            else
+                                model.browser
+
+                        _ ->
+                            model.browser
             }
                 |> n
 
