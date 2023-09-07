@@ -89,7 +89,6 @@ browser plugins states vc gc model =
                 []
 
             Browser.Address loadable table ->
-                Debug.log ""
                     (browseAddress plugins states vc model.now loadable
                         :: (table
                                 |> Maybe.map
