@@ -142,6 +142,9 @@ password: Passwort
 sign in: anmelden
 signing in: anmelden
 annotate: annotieren
+annotate entity: cluster annotieren
+annotate address: addresse annotieren
+remove from graph: vom Graphen entfernen
 remove: entfernen
 expand: erweitern
 collapse: Adressen ausblenden

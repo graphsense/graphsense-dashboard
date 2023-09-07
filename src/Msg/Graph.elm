@@ -27,9 +27,11 @@ type Msg
     = UserClickedGraph Dragging
     | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId Coords
+    | UserClickedAddressActions AddressId Coords
     | UserHoversAddress AddressId
     | UserClickedEntity EntityId Coords
     | UserRightClickedEntity EntityId Coords
+    | UserClickedEntityActions EntityId Coords
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
     | UserClicksEntityLink (LinkId EntityId)
@@ -37,6 +39,7 @@ type Msg
     | UserHoversAddressLink (LinkId AddressId)
     | UserClicksAddressLink (LinkId AddressId)
     | UserRightClicksAddressLink (LinkId AddressId) Coords
+    | UserClickedTransactionActions String String Coords
     | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool

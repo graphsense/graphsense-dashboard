@@ -1,9 +1,5 @@
 module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, properties, propertyBox, rule)
 
---import Plugin.View.Graph.Address
---import Plugin.View.Graph.Browser
---import Plugin.View.Graph.Entity
-
 import Api.Data
 import Config.Graph as Graph
 import Config.View as View
@@ -17,7 +13,6 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Id as Id
 import Json.Decode as JD
-import Json.Encode
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
@@ -26,12 +21,12 @@ import Model.Entity as E
 import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
-import Model.Graph.Entity exposing (Entity, getActorsStr)
+import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
-import Model.Graph.Tag as Tag
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -94,34 +89,36 @@ browser plugins states vc gc model =
                 []
 
             Browser.Address loadable table ->
-                browseAddress plugins states vc model.now loadable
-                    :: (table
-                            |> Maybe.map
-                                (\t ->
-                                    let
-                                        neighborLayerHasAddress aid isOutgoing address =
-                                            Layer.getAddress
-                                                (Id.initAddressId
-                                                    { currency = address.currency
-                                                    , id = address.address
-                                                    , layer =
-                                                        Id.layer aid
-                                                            + (if isOutgoing then
-                                                                1
+                Debug.log ""
+                    (browseAddress plugins states vc model.now loadable
+                        :: (table
+                                |> Maybe.map
+                                    (\t ->
+                                        let
+                                            neighborLayerHasAddress aid isOutgoing address =
+                                                Layer.getAddress
+                                                    (Id.initAddressId
+                                                        { currency = address.currency
+                                                        , id = address.address
+                                                        , layer =
+                                                            Id.layer aid
+                                                                + (if isOutgoing then
+                                                                    1
 
-                                                               else
-                                                                -1
-                                                              )
-                                                    }
-                                                )
-                                                model.layers
-                                                |> Maybe.Extra.isJust
-                                    in
-                                    browseAddressTable vc gc neighborLayerHasAddress loadable t
-                                )
-                            |> Maybe.map List.singleton
-                            |> Maybe.withDefault []
-                       )
+                                                                   else
+                                                                    -1
+                                                                  )
+                                                        }
+                                                    )
+                                                    model.layers
+                                                    |> Maybe.Extra.isJust
+                                        in
+                                        browseAddressTable vc gc neighborLayerHasAddress loadable t
+                                    )
+                                |> Maybe.map List.singleton
+                                |> Maybe.withDefault []
+                           )
+                    )
 
             Browser.Entity loadable table ->
                 browseEntity plugins states vc gc model.now loadable
@@ -253,7 +250,7 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> (r -> Html msg) -> Row r -> Html msg
+browseRow : View.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
 browseRow vc map row =
     case row of
         Rule ->
@@ -338,6 +335,37 @@ browseRow vc map row =
                         , table
                             |> Maybe.map (tableLink vc)
                             |> Maybe.withDefault none
+                        ]
+                    ]
+                ]
+
+        RowWithMoreActionsButton ( key, value, msg ) ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    [ Locale.text vc.locale key
+                    ]
+                , span
+                    []
+                    [ div
+                        [ Css.propertyBoxValueInner vc |> css
+                        ]
+                        [ map value
+                        , msg
+                            |> Maybe.map
+                                (\vmsg ->
+                                    div
+                                        [ Locale.string vc.locale "more actions" |> title
+                                        , on "click" (Util.Graph.decodeCoords Coords |> JD.map vmsg)
+                                        , Css.propertyBoxTableLink vc True |> css
+                                        , CssView.link vc |> css
+                                        ]
+                                        [ FontAwesome.icon FontAwesome.caretSquareDown |> Html.fromUnstyled ]
+                                )
+                            |> Maybe.withDefault (div [] [])
                         ]
                     ]
                 ]
@@ -605,12 +633,12 @@ browseAddress plugins states vc now address =
         |> propertyBox vc
 
 
-properties : View.Config -> List (Row (Value msg)) -> List (Html msg)
+properties : View.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
 properties vc =
     List.map (browseRow vc (browseValue vc))
 
 
-rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg))
+rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
 rowsAddress vc now address =
     let
         mkTableLink title tableTag =
@@ -766,12 +794,17 @@ rowsAddress vc now address =
         len =
             multiValueMaxLen vc .address address
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Address"
         , address
             |> ifLoaded (.address >> .address >> AddressStr UserClickedCopyToClipboard)
             |> elseShowAddress
-        , Nothing
+        , case address of
+            Loaded addr ->
+                Just (UserClickedAddressActions addr.id)
+
+            _ ->
+                Nothing
         )
     , OptionalRow
         (Row
@@ -938,7 +971,7 @@ browseTxAccount plugins states vc gc now tx table coinCode =
         |> propertyBox vc
 
 
-rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg))
+rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg) Coords Msg)
 rowsEntity vc gc now ent =
     let
         mkTableLink title tableTag =
@@ -964,7 +997,16 @@ rowsEntity vc gc now ent =
         len =
             multiValueMaxLen vc .entity ent
     in
-    [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
+    [ RowWithMoreActionsButton
+        ( "Entity"
+        , ent |> ifLoaded (EntityId gc) |> elseLoading
+        , case ent of
+            Loaded entity ->
+                Just (UserClickedEntityActions entity.id)
+
+            _ ->
+                Nothing
+        )
     , Row
         ( "Root Address"
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
@@ -1106,7 +1148,7 @@ rowsEntity vc gc now ent =
     ]
 
 
-rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg))
+rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
 rowsActor vc gc now actor =
     let
         mkTableLink title tableTag =
@@ -1232,7 +1274,7 @@ rowsActor vc gc now actor =
     ]
 
 
-rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg))
+rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg) Coords Msg)
 rowsBlock vc gc now block =
     let
         mkTableLink title tableTag =
@@ -1444,7 +1486,7 @@ browsePlugin plugins vc states =
     Plugin.View.browser plugins vc states
 
 
-rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg))
+rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
 rowsTxUtxo vc gc now tx =
     let
         mkTableLink title tableTag =
@@ -1467,12 +1509,17 @@ rowsTxUtxo vc gc now tx =
                         }
                     )
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowAddress
-        , Nothing
+        , case tx of
+            Loaded txi ->
+                Just (UserClickedTransactionActions txi.txHash txi.currency)
+
+            _ ->
+                Nothing
         )
     , Row
         ( "Included in block"
@@ -1525,7 +1572,7 @@ rowsTxUtxo vc gc now tx =
     ]
 
 
-rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg))
+rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg) Coords Msg)
 rowsTxAccount vc gc now tx table coinCode =
     let
         txLink getAddress tx_ =
@@ -1565,12 +1612,17 @@ rowsTxAccount vc gc now tx table coinCode =
                         }
                     )
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowTxAccount
-        , Nothing
+        , case tx of
+            Loaded txi ->
+                Just (UserClickedTransactionActions txi.txHash txi.currency)
+
+            _ ->
+                Nothing
         )
     , Row
         ( "Value"
@@ -1631,7 +1683,7 @@ browseAddresslink plugins states vc source link =
         |> propertyBox vc
 
 
-rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg))
+rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
 rowsAddresslink vc source link =
     let
         currency =
@@ -1692,7 +1744,7 @@ browseEntitylink plugins states vc source link =
         |> propertyBox vc
 
 
-rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg))
+rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
 rowsEntitylink vc source link =
     let
         currency =
@@ -1749,7 +1801,7 @@ rowsEntitylink vc source link =
     ]
 
 
-linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg)
+linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
 linkValueRow vc parentCurrency linkData =
     if parentCurrency /= "eth" then
         Row

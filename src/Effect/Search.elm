@@ -3,6 +3,7 @@ module Effect.Search exposing (Effect(..))
 import Api.Data
 import Msg.Search exposing (Msg)
 
+
 type Effect
     = SearchEffect
         { query : String

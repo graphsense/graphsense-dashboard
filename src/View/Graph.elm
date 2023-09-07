@@ -32,7 +32,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
-import Util.ExternalLinks exposing (getBlockExplorerLinks)
+import Util.ExternalLinks exposing (getBlockExplorerLinks, getBlockExplorerTransactionLinks)
 import Util.Graph as Util
 import Util.View exposing (contextMenuRule, hovercard, none)
 import View.Graph.Address as Address
@@ -379,27 +379,29 @@ contextMenu plugins states vc model cm =
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
 
+        optionWithIcon title icon msg =
+            ContextMenu.optionWithIcon vc (Locale.string vc.locale title) icon msg
+
         addBlockExplorerLinks currency address =
             getBlockExplorerLinks currency address
                 |> List.map
                     (\( url, label ) ->
-                        ContextMenu.optionHtml vc
-                            [ FontAwesome.icon FontAwesome.externalLinkAlt
-                                |> Html.Styled.fromUnstyled
-                                |> List.singleton
-                                |> span
-                                    [ HA.css [ Css.marginRight <| Css.em 0.5 ] ]
-                            , Locale.string vc.locale label |> Html.Styled.text
-                            ]
-                            (UserClickedExternalLink url)
+                        optionWithIcon label FontAwesome.externalLinkAlt (UserClickedExternalLink url)
+                    )
+
+        addBlockExplorerTransactionLinks currency txHash =
+            getBlockExplorerTransactionLinks currency txHash
+                |> List.map
+                    (\( url, label ) ->
+                        optionWithIcon label FontAwesome.externalLinkAlt (UserClickedExternalLink url)
                     )
     in
     (case cm.type_ of
         ContextMenu.Address address ->
             [ UserClickedAnnotateAddress address.id
-                |> option "Annotate"
+                |> optionWithIcon "Annotate address" FontAwesome.userTag
             , UserClickedRemoveAddress address.id
-                |> option "Remove"
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             ]
                 ++ contextMenuRule vc
                 ++ addBlockExplorerLinks address.address.currency address.address.address
@@ -407,12 +409,15 @@ contextMenu plugins states vc model cm =
 
         ContextMenu.Entity entity ->
             [ UserClickedAnnotateEntity entity.id
-                |> option "Annotate"
+                |> optionWithIcon "Annotate entity" FontAwesome.userTag
             , UserClickedSearch entity.id
-                |> option "Search neighbors"
+                |> optionWithIcon "Search neighbors" FontAwesome.search
             , UserClickedRemoveEntity entity.id
-                |> option "Remove"
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             ]
+
+        ContextMenu.Transaction txHash currency ->
+            addBlockExplorerTransactionLinks currency txHash
 
         ContextMenu.AddressLink id ->
             let
@@ -432,7 +437,8 @@ contextMenu plugins states vc model cm =
                         )
             in
             (UserClickedRemoveAddressLink id
-                |> option "Remove")
+                |> option "Remove"
+            )
                 :: (srcLink
                         |> Maybe.map
                             (\( src, li ) ->
@@ -455,7 +461,7 @@ contextMenu plugins states vc model cm =
 
         ContextMenu.EntityLink id ->
             [ UserClickedRemoveEntityLink id
-                |> option "Remove"
+                |> optionWithIcon "Remove" FontAwesome.eraser
             ]
     )
         |> ContextMenu.view vc cm.coords

@@ -22,5 +22,5 @@ result vc =
 
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
-    (position absolute)
+    position absolute
         :: vc.theme.autocomplete.loadingSpinner

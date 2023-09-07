@@ -487,6 +487,19 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault model
                 |> n
 
+        UserClickedAddressActions id coords ->
+            Layer.getAddress id model.layers
+                |> Maybe.map
+                    (\address ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initAddress (Coords.relativeToGraph uc.size coords) address
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
         UserHoversAddress id ->
             n { model | hovered = HoveredAddress id }
 
@@ -527,6 +540,27 @@ updateByMsg plugins uc msg model =
                         }
                     )
                 |> Maybe.withDefault model
+                |> n
+
+        UserClickedEntityActions id coords ->
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\entity ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initEntity (Coords.relativeToGraph uc.size coords) entity
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
+        UserClickedTransactionActions hash currency coords ->
+            { model
+                | contextMenu =
+                    ContextMenu.initTransaction (Coords.relativeToGraph uc.size coords) hash currency
+                        |> Just
+            }
                 |> n
 
         UserHoversEntity id ->
@@ -1226,6 +1260,7 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveEntity id ->
             { model
                 | layers = Layer.removeEntity id model.layers
+                , selected = SelectedNone
             }
                 |> n
 

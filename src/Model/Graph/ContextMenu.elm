@@ -11,6 +11,7 @@ type Type
     | Entity Entity
     | AddressLink (LinkId AddressId)
     | EntityLink (LinkId EntityId)
+    | Transaction String String
 
 
 type alias Model =

@@ -25,7 +25,7 @@ tool vc { icon } attr =
         |> Html.Styled.fromUnstyled
         |> List.singleton
         |> span
-            ( (Css.tool vc |> css )
+            ((Css.tool vc |> css)
                 :: attr
             )
 

@@ -80,13 +80,14 @@ type alias TableLink =
     }
 
 
-type Row r
+type Row r i msg
     = Row ( String, r, Maybe TableLink )
+    | RowWithMoreActionsButton ( String, r, Maybe (i -> msg) )
     | Note String
     | Footnote String
     | Image (Maybe String)
     | Rule
-    | OptionalRow (Row r) Bool
+    | OptionalRow (Row r i msg) Bool
 
 
 type alias ScrollPos =
