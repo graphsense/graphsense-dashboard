@@ -15,8 +15,8 @@ import Msg.Graph exposing (..)
 view : View.Config -> Coords -> List (Html Msg) -> Html Msg
 view vc coords =
     div
-        [ top (px coords.y)
-            :: left (px coords.x)
+        [ top (px (coords.y - 5))
+            :: left (px (coords.x - 5))
             :: zIndex (int 100)
             :: Css.ContextMenu.root vc
             |> css
