@@ -534,6 +534,7 @@ update plugins uc msg model =
                     ( { model
                         | plugins = new
                         , graph = graph
+                        , dirty = True
                       }
                     , PluginEffect cmd
                         :: SetDirtyEffect
@@ -552,6 +553,7 @@ update plugins uc msg model =
                     ( { model
                         | plugins = new
                         , graph = graph
+                        , dirty = True
                       }
                     , PluginEffect cmd
                         :: SetDirtyEffect

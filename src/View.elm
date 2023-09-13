@@ -64,7 +64,7 @@ body plugins vc model =
             { search = model.search
             , user = model.user
             , latestBlocks = getLatestBlocks model.stats
-            , hideSearch = model.page == Home
+            , hideSearch = model.page /= Graph
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css
@@ -114,7 +114,7 @@ sidebar plugins vc model =
                 ]
          ]
             ++ Plugin.sidebar plugins model.plugins model.page vc
-            ++ [ FontAwesome.icon FontAwesome.bitcoin
+            ++ [ FontAwesome.icon FontAwesome.chartPie
                     |> Html.Styled.fromUnstyled
                     |> List.singleton
                     |> a
