@@ -401,29 +401,9 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotLoggedOut result ->
-            { model
-                | user =
-                    result
-                        |> Result.map
-                            (\_ ->
-                                model.user
-                                    |> s_auth (Unauthorized False [])
-                                    |> s_apiKey ""
-                            )
-                        |> Result.withDefault
-                            (model.user
-                                |> s_auth
-                                    (case model.user.auth of
-                                        Authorized auth ->
-                                            { auth | loggingOut = False }
-                                                |> Authorized
-
-                                        _ ->
-                                            model.user.auth
-                                    )
-                            )
-            }
-                |> n
+            ( model
+            , [ NavLoadEffect "/" ]
+            )
 
         BrowserGotElementForPlugin pmsg element ->
             updatePlugins plugins (pmsg element) model

@@ -54,43 +54,15 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Cmd.batch
-                [ Http.riskyTask
-                    { method = "GET"
-                    , headers = []
-                    , url = logoutUrl
-                    , resolver =
-                        Http.stringResolver
-                            (Http.Extras.responseToJson
-                                (Json.Decode.field "logout_url" Json.Decode.string)
-                            )
-                    , body = Http.emptyBody
-                    , timeout = Nothing
-                    }
-                    |> Task.andThen
-                        (\url ->
-                            Http.riskyTask
-                                { method = "GET"
-                                , headers = []
-                                , url = url
-                                , resolver =
-                                    Http.stringResolver
-                                        (Http.Extras.responseToString >> Result.map (always ()))
-                                , body = Http.emptyBody
-                                , timeout = Nothing
-                                }
-                        )
-                    |> Task.attempt BrowserGotLoggedOut
-                , Http.riskyRequest
-                    { method = "GET"
-                    , headers = []
-                    , url = Api.baseUrl ++ "/search?logout"
-                    , body = Http.emptyBody
-                    , expect = Http.expectWhatever BrowserGotLoggedOut
-                    , timeout = Nothing
-                    , tracker = Nothing
-                    }
-                ]
+            Http.riskyRequest
+                { method = "GET"
+                , headers = []
+                , url = "/?logout"
+                , body = Http.emptyBody
+                , expect = Http.expectWhatever BrowserGotLoggedOut
+                , timeout = Nothing
+                , tracker = Nothing
+                }
 
         SetDirtyEffect ->
             Ports.setDirty True
