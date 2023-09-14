@@ -261,8 +261,13 @@ syncBrowser old model =
     }
 
 
-loadNextAddress : Plugins -> Model -> Id.AddressId -> Maybe ( Model, List Effect )
+loadNextAddress : Plugins -> Model -> Id.AddressId -> ( Model, List Effect )
 loadNextAddress plugins model id =
+    let 
+        add_fitgraph_on_path =if (Adding.isLastPathItem model.adding) then
+            (CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x ->x)) |> List.singleton)
+            else []
+    in 
     Adding.getNextFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -277,8 +282,10 @@ loadNextAddress plugins model id =
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
+                    |> \(m,eff) -> (m, eff ++ add_fitgraph_on_path)
             )
-
+        |> Maybe.withDefault (model, add_fitgraph_on_path)
+        
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
@@ -294,7 +301,7 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedAddresses ids ->
             Set.toList ids
                 |> List.head
-                |> Maybe.andThen (loadNextAddress plugins model)
+                |> Maybe.map (loadNextAddress plugins model)
                 |> Maybe.withDefault (n model)
 
         InternalGraphAddedEntities ids ->
@@ -302,7 +309,6 @@ updateByMsg plugins uc msg model =
 
         InternalGraphSelectedAddress id ->
             loadNextAddress plugins model id
-                |> Maybe.withDefault (n model)
 
         -- handled upstream
         BrowserGotBrowserElement result ->

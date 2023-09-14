@@ -209,3 +209,8 @@ popPath model =
     { model
         | path = List.drop 1 model.path
     }
+
+
+isLastPathItem : Model -> Bool
+isLastPathItem model =
+   List.length model.path == 1
