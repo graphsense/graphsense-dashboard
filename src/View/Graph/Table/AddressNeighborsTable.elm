@@ -286,9 +286,9 @@ prepareCSV locale isOutgoing coinCode row =
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( n "no_txs", Util.Csv.int row.noTxs )
     ]
-        ++ Util.Csv.values ("address_balance" ++ suffix) row.address.totalReceived
-        ++ Util.Csv.values ("address_received" ++ suffix) row.address.balance
-        ++ Util.Csv.values (estimatedValueTitle ++ suffix) row.value
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale coinCode
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale coinCode
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale coinCode
         ++ (if coinCode == "eth" then
                 prepareCsvTokens locale row
 
