@@ -18,7 +18,7 @@ supported currencies: unterstützte Währungen
 ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
-"addresses, transaction, label, block": Adressen, Transaktion, Schlagwort, Block
+"address, transaction, label, block": Adresse, Transaktion, Schlagwort, Block
 currency: Cryptoasset
 transfers: Transaktionen
 withdrawals: Abbuchungen
@@ -355,3 +355,6 @@ Graph: Graph
 Statistics: Statistiken
 Home: Home
 or try these examples: oder versuche diese Beispiele
+Start a new investigation: Starte eine neue Nachforschung
+or: oder
+Load graph from .gs file: Lade eine bestehende .gs Datei

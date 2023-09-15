@@ -61,7 +61,7 @@ search plugins vc sc model =
                  ]
                     ++ (case sc.searchable of
                             SearchAll _ ->
-                                [ "Addresses", "transaction", "label", "block", "actors" ]
+                                [ "Address", "transaction", "label", "block", "actor" ]
                                     |> List.map (Locale.string vc.locale)
                                     |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
                                     |> String.join ", "
