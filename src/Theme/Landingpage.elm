@@ -15,6 +15,7 @@ type alias Landingpage =
     , loadBox : Bool -> List Style
     , loadBoxIcon : Bool -> List Style
     , loadBoxText : Bool -> List Style
+    , exampleLinkBox : Bool -> List Style
     }
 
 
@@ -32,4 +33,5 @@ default =
     , loadBox = \_ -> []
     , loadBoxIcon = \_ -> []
     , loadBoxText = \_ -> []
+    , exampleLinkBox = \_ -> []
     }

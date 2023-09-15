@@ -34,6 +34,11 @@ loadBox vc =
     vc.theme.landingpage.loadBox vc.lightmode
 
 
+exampleLinkBox : Config -> List Style
+exampleLinkBox vc =
+    vc.theme.landingpage.exampleLinkBox vc.lightmode
+
+
 loadBoxIcon : Config -> List Style
 loadBoxIcon vc =
     vc.theme.landingpage.loadBoxIcon vc.lightmode

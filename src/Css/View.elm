@@ -52,6 +52,16 @@ sidebarIcon vc active =
     vc.theme.sidebarIcon vc.lightmode active
 
 
+sidebarIconBottom : Config -> Bool -> List Style
+sidebarIconBottom vc active =
+    vc.theme.sidebarIconBottom vc.lightmode active
+
+
+sidebarRule : Config -> List Style
+sidebarRule vc =
+    vc.theme.sidebarRule vc.lightmode
+
+
 main_ : Config -> List Style
 main_ vc =
     [ flexGrow (num 1)

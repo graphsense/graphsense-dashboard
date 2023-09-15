@@ -164,6 +164,34 @@ theme =
                             ]
                        )
             )
+         |> s_sidebarIconBottom
+            (\lightmode active ->
+                [ colorWithLightmode lightmode iconInactive
+                , scaled 5 |> rem |> fontSize
+                , scaled 4 |> rem |> padding
+                , position absolute
+                , bottom (px 15)
+                , left (px 0)
+                ]
+                    ++ (if active then
+                            [ color_backgroundColorWithLightmode lightmode iconActive colors.brandLightest
+                            ]
+
+                        else
+                            [ hover
+                                [ switchColor lightmode iconHovered |> toCssColor |> color
+                                ]
+                            ]
+                       )
+            )
+        |> s_sidebarRule (\lightmode ->
+                        [ Css.width (pct 50)
+                        , borderWidth (px 0.5)
+                        --, scaled 1 |> rem |> margin
+                        , colors.greyLight |> colorWithLightmode lightmode
+                        , opacity <| num 0.5
+                        ]
+                    )
         |> s_main
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
@@ -352,6 +380,10 @@ theme =
                     (\lightmode ->
                         [ textDecoration none
                         ]
+                    )
+                |> s_exampleLinkBox
+                    (\lightmode ->
+                        []--[paddingTop <| rem <| scaled 4]
                     )
             )
         |> s_search

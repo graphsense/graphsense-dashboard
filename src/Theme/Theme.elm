@@ -34,6 +34,8 @@ type alias Theme =
     , addonsNav : List Style
     , sidebar : Bool -> List Style
     , sidebarIcon : Bool -> Bool -> List Style
+    , sidebarIconBottom : Bool -> Bool -> List Style
+    , sidebarRule : Bool -> List Style
     , main : Bool -> List Style
     , navbar : Bool -> List Style
     , contents : Bool -> List Style
@@ -86,6 +88,8 @@ default =
     , addonsNav = []
     , sidebar = \_ -> []
     , sidebarIcon = \_ _ -> []
+    , sidebarIconBottom = \_ _ -> []
+    , sidebarRule = \_ -> []
     , main = \_ -> []
     , navbar = \_ -> []
     , contents = \_ -> []

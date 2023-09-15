@@ -4,6 +4,7 @@ import Browser exposing (Document)
 import Browser.Dom as Dom
 import Config.View exposing (Config)
 import Css exposing (..)
+import Css.Media exposing (width)
 import Css.Reset
 import Css.View
 import FontAwesome
@@ -90,6 +91,10 @@ body plugins vc model =
 
 sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
+    let
+        plugin_menu_items =
+            Plugin.sidebar plugins model.plugins model.page vc
+    in
     div
         [ Css.View.sidebar vc |> css
         ]
@@ -98,6 +103,7 @@ sidebar plugins vc model =
             |> List.singleton
             |> a
                 [ model.page == Home |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Home")
                 , Route.homeRoute
                     |> Route.toUrl
                     |> href
@@ -107,23 +113,31 @@ sidebar plugins vc model =
             |> List.singleton
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Graph")
                 , Route.Graph.rootRoute
                     |> Route.graphRoute
                     |> Route.toUrl
                     |> href
                 ]
          ]
-            ++ Plugin.sidebar plugins model.plugins model.page vc
-            ++ [ FontAwesome.icon FontAwesome.chartPie
-                    |> Html.Styled.fromUnstyled
-                    |> List.singleton
-                    |> a
-                        [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-                        , Route.statsRoute
-                            |> Route.toUrl
-                            |> href
-                        ]
-               ]
+            ++ (if List.length plugin_menu_items > 0 then
+                    [ hr [ Css.View.sidebarRule vc |> css ] [] ]
+
+                else
+                    []
+                        ++ plugin_menu_items
+                        ++ [ FontAwesome.icon FontAwesome.chartPie
+                                |> Html.Styled.fromUnstyled
+                                |> List.singleton
+                                |> a
+                                    [ model.page == Stats |> Css.View.sidebarIconBottom vc |> css
+                                    , title (Locale.string vc.locale "Statistics")
+                                    , Route.statsRoute
+                                        |> Route.toUrl
+                                        |> href
+                                    ]
+                           ]
+               )
         )
 
 
