@@ -125,19 +125,19 @@ sidebar plugins vc model =
 
                 else
                     []
-                        ++ plugin_menu_items
-                        ++ [ FontAwesome.icon FontAwesome.chartPie
-                                |> Html.Styled.fromUnstyled
-                                |> List.singleton
-                                |> a
-                                    [ model.page == Stats |> Css.View.sidebarIconBottom vc |> css
-                                    , title (Locale.string vc.locale "Statistics")
-                                    , Route.statsRoute
-                                        |> Route.toUrl
-                                        |> href
-                                    ]
-                           ]
                )
+            ++ plugin_menu_items
+            ++ [ FontAwesome.icon FontAwesome.chartPie
+                    |> Html.Styled.fromUnstyled
+                    |> List.singleton
+                    |> a
+                        [ model.page == Stats |> Css.View.sidebarIconBottom vc |> css
+                        , title (Locale.string vc.locale "Statistics")
+                        , Route.statsRoute
+                            |> Route.toUrl
+                            |> href
+                        ]
+               ]
         )
 
 
