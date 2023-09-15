@@ -164,7 +164,7 @@ theme =
                             ]
                        )
             )
-         |> s_sidebarIconBottom
+        |> s_sidebarIconBottom
             (\lightmode active ->
                 [ colorWithLightmode lightmode iconInactive
                 , scaled 5 |> rem |> fontSize
@@ -184,14 +184,16 @@ theme =
                             ]
                        )
             )
-        |> s_sidebarRule (\lightmode ->
-                        [ Css.width (pct 50)
-                        , borderWidth (px 0.5)
-                        --, scaled 1 |> rem |> margin
-                        , colors.greyLight |> colorWithLightmode lightmode
-                        , opacity <| num 0.5
-                        ]
-                    )
+        |> s_sidebarRule
+            (\lightmode ->
+                [ Css.width (pct 50)
+                , borderWidth (px 0.5)
+
+                --, scaled 1 |> rem |> margin
+                , colors.greyLight |> colorWithLightmode lightmode
+                , opacity <| num 0.5
+                ]
+            )
         |> s_main
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
@@ -206,6 +208,7 @@ theme =
         |> s_link
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText
+                , textDecoration underline
                 , hover
                     [ textDecoration none
                     ]
@@ -383,7 +386,7 @@ theme =
                     )
                 |> s_exampleLinkBox
                     (\lightmode ->
-                        []--[paddingTop <| rem <| scaled 4]
+                        [ paddingTop <| rem <| scaled 4 ]
                     )
             )
         |> s_search
@@ -400,6 +403,7 @@ theme =
                     (\lightmode input ->
                         [ scaled 5 |> rem |> height
                         , inputStyle lightmode
+                        , marginBottom zero
                         , scaled 2 |> rem |> paddingX
                         , scaled 2 |> rem |> paddingTop
                         , scaled 1 |> rem |> paddingBottom

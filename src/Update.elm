@@ -375,6 +375,10 @@ update plugins uc msg model =
             }
                 |> n
 
+        UserClickedExampleSearch str ->
+            update plugins uc (Search.UserFocusSearch |> SearchMsg) model
+                |> (\( m, _ ) -> update plugins uc (Search.UserInputsSearch str |> SearchMsg) m)
+
         UserClickedLogout ->
             let
                 ( new, outMsg, cmd ) =

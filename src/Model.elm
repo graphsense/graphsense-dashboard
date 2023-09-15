@@ -95,6 +95,7 @@ type Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
     | PluginMsg Plugin.Msg
+    | UserClickedExampleSearch String
 
 
 type RequestLimit

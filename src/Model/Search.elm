@@ -39,4 +39,10 @@ getMulti model =
 
 isLikelyPathSearchInput : Model -> Bool
 isLikelyPathSearchInput model =
-    getMulti model |> List.all (\i -> String.length i > 20)
+    let
+        mul =
+            getMulti model
+    in
+    List.length mul
+        > 1
+        && List.all (\i -> String.length i > 20) mul

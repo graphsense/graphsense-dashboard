@@ -10,6 +10,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Json.Decode
 import Model exposing (Model, Msg(..), getLatestBlocks)
 import Msg.Graph as Graph
 import Plugin.Model exposing (ModelState)
@@ -63,6 +64,25 @@ view plugins vc model =
             |> div
                 [ CssLanding.searchRoot vc |> css
                 ]
+        , [ ( "1Archive1n2C579dMsAu3iC6tWzuQJz8dN", "address" )
+          , ( "8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6", "transaction" )
+          , ( "internet archive", "label" )
+          , ( "1", "block" )
+          ]
+            |> List.map
+                (\( str, name ) ->
+                    span
+                        [ Css.View.link vc |> css
+                        , ( UserClickedExampleSearch str, True )
+                            |> Json.Decode.succeed
+                            |> stopPropagationOn "click"
+                        ]
+                        [ name |> Locale.string vc.locale |> text
+                        ]
+                )
+            |> List.intersperse (text " / ")
+            |> (::) (Locale.string vc.locale "Try an example" ++ ": " |> text)
+            |> div [ CssLanding.exampleLinkBox vc |> css ]
         , rule
             (if vc.lightmode then
                 vc.theme.landingpage.ruleColor.light
@@ -89,27 +109,5 @@ view plugins vc model =
                 ]
                 [ Locale.string vc.locale "Load graph from .gs file" |> text
                 ]
-            ]
-        , rule
-            (if vc.lightmode then
-                vc.theme.landingpage.ruleColor.light
-
-             else
-                vc.theme.landingpage.ruleColor.dark
-            )
-            [ CssLanding.rule vc |> css
-            ]
-            [ Locale.string vc.locale "or try these examples" |> text
-            ]
-        , div [ CssLanding.exampleLinkBox vc |> css ]
-            [ a [ Css.View.link vc |> css, href "/graph/btc/address/1Archive1n2C579dMsAu3iC6tWzuQJz8dN" ] [ text "1Archi...QJz8dN" ]
-            , text " / "
-            , a [ Css.View.link vc |> css, href "/graph/btc/tx/8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6" ] [ text "8c510d...07beb6" ]
-            , text " / "
-            , a [ Css.View.link vc |> css, href "/graph/label/internet%20archive" ] [ text "internet archive" ]
-            , text " / "
-            , a [ Css.View.link vc |> css, href "/graph/btc/block/1" ] [ text "1" ]
-            , text " / "
-            , a [ Css.View.link vc |> css, href "/graph/actor/internet_archive" ] [ text "Internet Archive" ]
             ]
         ]

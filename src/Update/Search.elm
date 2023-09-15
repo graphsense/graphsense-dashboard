@@ -89,9 +89,10 @@ maybeTriggerSearch ( model, cmd ) =
             isLikelyPathSearchInput model
     in
     if
-        Bounce.steady model.bounce
-            && (String.length model.input >= minSearchInputLength)
-            && not isPathSearch
+        (Bounce.steady model.bounce |> Debug.log "steady")
+            && (String.length model.input >= minSearchInputLength |> Debug.log "min")
+            && (not isPathSearch |> Debug.log "path")
+            |> Debug.log "check"
     then
         ( { model
             | loading = True
