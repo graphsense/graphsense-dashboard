@@ -72,7 +72,7 @@ options_ vc { message, options } =
                         ]
                 )
             |> div
-                [ align "center"]
+                [ align "center" ]
         ]
 
 

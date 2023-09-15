@@ -261,13 +261,19 @@ syncBrowser old model =
     }
 
 
-loadNextAddress : Plugins -> Model -> Id.AddressId -> ( Model, List Effect )
-loadNextAddress plugins model id =
-    let 
-        add_fitgraph_on_path =if (Adding.isLastPathItem model.adding) then
-            (CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x ->x)) |> List.singleton)
-            else []
-    in 
+loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
+loadNextAddress plugins uc model id =
+    let
+        items_out_of_bbox =
+            not (uc.size |> Maybe.map (Layer.isContentWithinViewPort model.layers model.transform) |> Maybe.withDefault True)
+
+        add_fitgraph_on_path =
+            if Adding.isLastPathItem model.adding && items_out_of_bbox then
+                CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x -> x)) |> List.singleton
+
+            else
+                []
+    in
     Adding.getNextFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -282,10 +288,10 @@ loadNextAddress plugins model id =
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
-                    |> \(m,eff) -> (m, eff ++ add_fitgraph_on_path)
+                    |> (\( m, eff ) -> ( m, eff ++ add_fitgraph_on_path ))
             )
-        |> Maybe.withDefault (model, add_fitgraph_on_path)
-        
+        |> Maybe.withDefault ( model, add_fitgraph_on_path )
+
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
@@ -301,14 +307,14 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedAddresses ids ->
             Set.toList ids
                 |> List.head
-                |> Maybe.map (loadNextAddress plugins model)
+                |> Maybe.map (loadNextAddress plugins uc model)
                 |> Maybe.withDefault (n model)
 
         InternalGraphAddedEntities ids ->
             n model
 
         InternalGraphSelectedAddress id ->
-            loadNextAddress plugins model id
+            loadNextAddress plugins uc model id
 
         -- handled upstream
         BrowserGotBrowserElement result ->

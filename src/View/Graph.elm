@@ -127,10 +127,41 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
             ++ [ Svg.lazy3 addressLinks vc gc model.layers
+
+               --, Svg.lazy4 showOrigin plugins vc gc model.layers
+               --, Svg.lazy4 showLayerBoundingBox plugins vc gc model.layers
                , Svg.lazy4 addresses plugins vc gc model.layers
                , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
                ]
         )
+
+
+showOrigin : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+showOrigin plugins vc gc layers =
+    rect [ x "0", y "0", Svg.width "10", Svg.height "10" ] []
+
+
+showLayerBoundingBox : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+showLayerBoundingBox plugins vc gc layers =
+    let
+        lb =
+            Layer.getBoundingBox layers
+    in
+    lb
+        |> Maybe.map
+            (\bx ->
+                rect
+                    [ x (String.fromFloat bx.x)
+                    , y (String.fromFloat bx.y)
+                    , Svg.width (String.fromFloat bx.width)
+                    , Svg.height (String.fromFloat bx.height)
+                    , Svg.fillOpacity "0.5"
+                    , rx "15"
+                    , ry "15"
+                    ]
+                    []
+            )
+        |> Maybe.withDefault (rect [] [])
 
 
 addresses : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg

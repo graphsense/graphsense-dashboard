@@ -213,4 +213,4 @@ popPath model =
 
 isLastPathItem : Model -> Bool
 isLastPathItem model =
-   List.length model.path == 1
+    List.length model.path == 1
