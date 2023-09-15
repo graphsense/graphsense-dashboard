@@ -65,11 +65,8 @@ label vc gc nodeType title =
             lbl =
                 String.left (gc.maxLettersPerLabelRow * 2) title
 
-            ll =
-                String.length lbl
-
             maxLettersBeforeResize =
-                15
+                18
 
             height =
                 labelHeight
