@@ -105,6 +105,15 @@ searchResult plugins vc sc model =
             }
 
 
+removeLeading0x : String -> String
+removeLeading0x s =
+    if String.startsWith "0x" s then
+        s |> String.dropLeft 2
+
+    else
+        s
+
+
 filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
 filterByPrefix input result =
     { result
@@ -121,7 +130,7 @@ filterByPrefix input result =
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (String.startsWith input) currency.txs
+                        , txs = List.filter (\x -> String.startsWith (removeLeading0x input) (removeLeading0x x)) currency.txs
                     }
                 )
                 result.currencies
