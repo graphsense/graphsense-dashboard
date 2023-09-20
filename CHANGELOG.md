@@ -3,6 +3,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [23.09] - 2023-09-20
+### Added
+- new more user friendly landing page, statistics is now found in the left menu
+- New setting to select in which timezone dates are show (user, UTC) [#408](https://github.com/graphsense/graphsense-dashboard/issues/408)
+- User settings are now preserved in localStorage [#399](https://github.com/graphsense/graphsense-dashboard/issues/399)
+- Api key field is now type password to enhance pw-manager integration [#409](https://github.com/graphsense/graphsense-dashboard/issues/409)
+- Add links to blockexplorer on tx views [#381](https://github.com/graphsense/graphsense-dashboard/issues/381)
+- Added context menu options to property boxes [#353](https://github.com/graphsense/graphsense-dashboard/issues/353)
+### Changes
+- improved handling plugin handling and code generation
+- clear search after item was selected [#410](https://github.com/graphsense/graphsense-dashboard/issues/410)
+- avoid inserting self referential neighbor links [#378](https://github.com/graphsense/graphsense-dashboard/issues/378)
+- fixed undo history [#393](https://github.com/graphsense/graphsense-dashboard/issues/393)
+- fixed search with space chars [#396](https://github.com/graphsense/graphsense-dashboard/issues/396)
+- fixed show warning on close only if graph is dirty [#370](https://github.com/graphsense/graphsense-dashboard/issues/370)
+- fixed nodes out of viewport on inserting long paths [#394](https://github.com/graphsense/graphsense-dashboard/issues/394)
+- fixed text overlap on long entity labels [#406](https://github.com/graphsense/graphsense-dashboard/issues/406)
+- fixed confusing large integers (satoshis, Wei) on csv export [#389](https://github.com/graphsense/graphsense-dashboard/issues/389) 
+- fixed allow search for txhashes with leading 0x
+
+
 ## [23.06] - 2023-06-12
 ### Added
 - Add address path link that allows importing an entire address path to the graph
