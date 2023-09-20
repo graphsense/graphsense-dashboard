@@ -31,7 +31,7 @@ update msg model =
 
         UserClicksResult ->
             -- handled upstream
-            hide model |> n
+            clear model |> n
 
         UserPicksCurrency _ ->
             -- handled upstream
