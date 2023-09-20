@@ -179,12 +179,19 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                         (++)
                             (Layer.getEntities e.entity.currency e.entity.entity model.layers)
 
+                    filterSelf : Api.Data.NeighborEntity -> Bool
+                    filterSelf neighbor =
+                        (neighbor.entity.entity /= entity.entity)
+                            && (neighbor.entity.currency /= entity.currency)
+
                     outgoingAnchors =
                         incoming
+                            |> List.filter filterSelf
                             |> List.foldl findEntities []
 
                     incomingAnchors =
                         outgoing
+                            |> List.filter filterSelf
                             |> List.foldl findEntities []
                 in
                 ( outgoingAnchors, incomingAnchors )
