@@ -14,3 +14,4 @@ type Effect
     | BlurBounceEffect
     | CancelEffect
     | BounceEffect Float Msg
+    | CmdEffect (Cmd Msg)

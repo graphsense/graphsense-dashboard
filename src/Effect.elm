@@ -166,3 +166,6 @@ handleSearchEffect apiKey plugins tag effect =
             Process.sleep 200
                 |> Task.perform (\_ -> Search.BouncedBlur)
                 |> Cmd.map tag
+
+        Search.CmdEffect cmd ->
+            Cmd.map tag cmd

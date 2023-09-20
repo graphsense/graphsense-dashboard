@@ -6,10 +6,12 @@ import Effect.Search as Effect exposing (Effect(..))
 import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
+import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
+import Task
 
 
 update : Msg -> Model -> ( Model, List Effect )
@@ -62,7 +64,12 @@ update msg model =
             n { model | visible = True }
 
         UserLeavesSearch ->
-            hide model |> n
+            ( model
+            , Process.sleep 100
+                |> Task.perform (\_ -> BouncedBlur)
+                |> CmdEffect
+                |> List.singleton
+            )
 
         BouncedBlur ->
             hide model |> n
