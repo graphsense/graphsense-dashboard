@@ -20,6 +20,7 @@ type alias ConfirmConfig msg =
 type alias OptionsConfig msg =
     { message : String
     , options : List ( String, msg )
+    , onClose : msg
     }
 
 
@@ -47,3 +48,19 @@ type alias GeneralErrorConfig =
     , message : String
     , variables : List String
     }
+
+
+defaultMsg : Model msg -> msg
+defaultMsg model =
+    case model of
+        Options { onClose } ->
+            onClose
+
+        Confirm { onNo } ->
+            onNo
+
+        Error { onOk } ->
+            onOk
+
+        Info { onOk } ->
+            onOk

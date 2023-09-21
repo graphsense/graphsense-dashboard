@@ -39,6 +39,10 @@ update msg model =
             -- handled upstream
             n model
 
+        UserClickedCloseCurrencyPicker ->
+            -- handled upstream
+            n model
+
         UserClicksResultLine _ ->
             n model
 

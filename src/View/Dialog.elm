@@ -8,6 +8,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
 import Util.View exposing (addDot)
@@ -18,6 +19,7 @@ view : Config -> Model Msg -> Html Msg
 view vc model =
     div
         [ Css.dialog vc |> css
+        , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
         [ case model of
             Confirm conf ->

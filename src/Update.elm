@@ -447,7 +447,10 @@ update plugins uc msg model =
                         multi =
                             Search.getMulti model.search
                     in
-                    if model.search.found /= Nothing && List.length multi == 1 then
+                    if String.isEmpty model.search.input then
+                        n model
+
+                    else if model.search.found /= Nothing && List.length multi == 1 then
                         Search.getFirstResultUrl model.search
                             |> Maybe.map
                                 (NavPushUrlEffect >> List.singleton)
@@ -470,6 +473,7 @@ update plugins uc msg model =
                                                             , Search.UserPicksCurrency name |> SearchMsg
                                                             )
                                                         )
+                                            , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
                                             }
                                                 |> Dialog.options
                                                 |> Just
@@ -478,12 +482,16 @@ update plugins uc msg model =
                             |> RD.withDefault model
                             |> n
 
+                Search.UserClickedCloseCurrencyPicker ->
+                    clearSearch plugins { model | dialog = Nothing }
+
                 Search.UserPicksCurrency currency ->
                     let
                         ( graph, graphEffects ) =
                             Graph.loadPath plugins
                                 { currency = currency
-                                , addresses = Search.getMulti model.search
+                                , addresses =
+                                    Search.getMulti model.search
                                 }
                                 model.graph
                     in

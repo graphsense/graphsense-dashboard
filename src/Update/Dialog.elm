@@ -74,6 +74,7 @@ mapMsg map model =
             , options =
                 conf.options
                     |> List.map (Tuple.mapSecond map)
+            , onClose = map conf.onClose
             }
                 |> Options
 

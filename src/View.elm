@@ -16,6 +16,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..), Page(..), getLatestBlocks)
+import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Route
@@ -156,10 +157,11 @@ hovercards plugins vc model =
 overlay : Plugins -> Config -> Model key -> List (Html Msg)
 overlay plugins vc model =
     let
-        ov =
+        ov onClickOutside =
             List.singleton
                 >> div
                     [ Css.View.overlay vc |> css
+                    , onClick onClickOutside
                     ]
                 >> List.singleton
     in
@@ -184,14 +186,14 @@ overlay plugins vc model =
                             (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
                             |> Html.Styled.fromUnstyled
                     )
-                |> Maybe.map ov
+                |> Maybe.map (ov NoOp)
                 |> Maybe.withDefault []
 
         _ ->
             case model.dialog of
                 Just dialog ->
                     Dialog.view vc dialog
-                        |> ov
+                        |> ov (Dialog.defaultMsg dialog)
 
                 Nothing ->
                     []

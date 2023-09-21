@@ -35,6 +35,7 @@ getMulti model =
     String.split " " model.input
         |> List.map (String.replace "," "")
         |> List.map String.trim
+        |> List.filter (String.isEmpty >> not)
 
 
 isLikelyPathSearchInput : Model -> Bool
