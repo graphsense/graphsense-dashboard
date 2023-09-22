@@ -8,6 +8,7 @@ import Model.Address exposing (Address)
 import Model.Dialog
 import Model.Entity exposing (Entity)
 import Model.Graph.Id as Id
+import Update.Dialog
 
 
 
@@ -44,8 +45,8 @@ type OutMsg msg addressMsg entityMsg
     | SendToPort Json.Encode.Value
       -- send a request to the Graphsense API
     | ApiRequest (Api.Effect msg)
-      -- show confirmation dialog
-    | ShowConfirmDialog (Model.Dialog.ConfirmConfig msg)
+      -- show dialog
+    | ShowDialog (Model.Dialog.Model msg)
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -101,9 +102,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
             Api.map mapMsg effect
                 |> ApiRequest
 
-        ShowConfirmDialog { message, onYes, onNo } ->
-            { message = message
-            , onYes = mapMsg onYes
-            , onNo = mapMsg onNo
-            }
-                |> ShowConfirmDialog
+        ShowDialog dialog ->
+            Update.Dialog.mapMsg mapMsg dialog
+                |> ShowDialog

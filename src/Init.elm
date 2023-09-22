@@ -1,11 +1,13 @@
 module Init exposing (init)
 
 import Config exposing (config)
+import Config.UserSettings
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
 import Init.Search as Search
 import Init.Statusbar as Statusbar
+import Json.Decode
 import Model exposing (..)
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
@@ -16,10 +18,11 @@ import Url exposing (Url)
 init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
 init plugins flags url key =
     let
+        settings =
+            Json.Decode.decodeValue Config.UserSettings.decoder flags.settings |> Result.withDefault Config.UserSettings.default
+
         ( locale, localeEffect ) =
-            Locale.init
-                { locale = flags.locale
-                }
+            Locale.init settings
 
         ( pluginStates, outMsgs, cmd ) =
             Plugin.init plugins flags.pluginFlags
@@ -29,13 +32,13 @@ init plugins flags url key =
       , config =
             { locale = locale
             , theme = config.theme
-            , lightmode = True
+            , lightmode = settings.lightMode |> Maybe.withDefault True
             , size = Nothing
             }
       , locale = locale
       , page = Stats
       , search = Search.init
-      , graph = Graph.init flags.now
+      , graph = Graph.init settings flags.now
       , user =
             { apiKey = ""
             , auth = Unknown
@@ -69,7 +72,7 @@ getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )
 getStatistics ( model, eff ) =
     if model.stats == NotAsked then
         ( { model | stats = RemoteData.Loading }
-        , GetStatisticsEffect :: eff
+        , ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) :: eff
         )
 
     else

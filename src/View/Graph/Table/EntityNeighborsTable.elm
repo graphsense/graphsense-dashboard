@@ -264,9 +264,9 @@ prepareCSV locale isOutgoing coinCode row =
     , ( n "no_txs", Util.Csv.int row.noTxs )
     , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
-        ++ Util.Csv.values ("entity_received" ++ suffix) row.entity.totalReceived
-        ++ Util.Csv.values ("entity_balance" ++ suffix) row.entity.balance
-        ++ Util.Csv.values (estimatedValueTitle ++ suffix) row.value
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale coinCode
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale coinCode
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale coinCode
         ++ (if coinCode == "eth" then
                 prepareCsvTokens locale row
 

@@ -6,11 +6,13 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "elm-tooling install",
-    "dev": "vite",
+    "dev": "npm run gen && vite",
     "prebuild": "elm-tooling install",
-    "build": "vite build",
+    "gen": "mkdir -p gen/recordsetter && node generate.js && elm make; npm run setem",
+    "build": "npm run gen && vite build",
     "serve": "vite preview",
-    "test": "elm-test-rs"
+    "test": "elm-test-rs",
+    "setem": "setem --output gen/recordsetter"
   },
   "devDependencies": {
     "elm-format": "^0.8.6",
@@ -19,7 +21,7 @@
     "level": "^8.0.0",
     "mustache": "^4.2.0",
     "setem": "^0.3.6",
-    "vite": "^2.9.13",
+    "vite": "^2.9.16",
     "vite-plugin-elm": "^2.7.2",
     "yaml": "^2.3.1"
   },

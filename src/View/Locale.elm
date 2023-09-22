@@ -4,6 +4,7 @@ module View.Locale exposing
     , durationToString
     , float
     , floatWithFormat
+    , httpErrorToString
     , int
     , intWithFormat
     , intWithoutValueDetailFormatting
@@ -25,8 +26,9 @@ import DateFormat exposing (..)
 import DateFormat.Relative
 import Dict exposing (Dict)
 import Ease
-import Html.Styled exposing (Html, span, text)
+import Html.Styled exposing (Html, span)
 import Html.Styled.Attributes exposing (css)
+import Http
 import List.Extra exposing (find)
 import Locale.Durations
 import Model.Currency exposing (..)
@@ -341,3 +343,34 @@ tokenCurrencies model =
     model.supportedTokens
         |> Maybe.map (.tokenConfigs >> List.map .ticker)
         |> Maybe.withDefault []
+
+
+httpErrorToString : Model -> Http.Error -> String
+httpErrorToString model error =
+    case error of
+        Http.BadUrl url ->
+            string model "bad url" ++ " " ++ url
+
+        Http.Timeout ->
+            string model "timeout"
+
+        Http.NetworkError ->
+            string model "network error"
+
+        Http.BadStatus 500 ->
+            string model "server error"
+
+        Http.BadStatus 429 ->
+            string model "API rate limit exceeded. Please try again later."
+
+        Http.BadStatus 404 ->
+            string model "not found"
+
+        Http.BadStatus 504 ->
+            string model "timeout"
+
+        Http.BadStatus s ->
+            string model "bad status" ++ ": " ++ String.fromInt s
+
+        Http.BadBody str ->
+            string model str

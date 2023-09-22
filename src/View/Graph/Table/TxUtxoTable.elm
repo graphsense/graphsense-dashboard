@@ -9,6 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table as T exposing (Table)
+import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -84,8 +85,8 @@ config vc isOutgoing coinCode =
         }
 
 
-prepareCSV : Bool -> Api.Data.TxValue -> List ( ( String, List String ), String )
-prepareCSV isOutgoing row =
+prepareCSV : Model.Locale.Model -> String -> Bool -> Api.Data.TxValue -> List ( ( String, List String ), String )
+prepareCSV locModel currency isOutgoing row =
     [ ( ( "addresses", [] ), Util.Csv.string <| joinAddresses row )
     ]
-        ++ Util.Csv.values "value" row.value
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency

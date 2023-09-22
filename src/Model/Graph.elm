@@ -1,9 +1,8 @@
 module Model.Graph exposing (..)
 
 import Api.Data
-import Api.Request.Entities
 import Browser.Dom as Dom
-import Color exposing (Color)
+import Color
 import Config.Graph exposing (Config)
 import Dict exposing (Dict)
 import IntDict exposing (IntDict)
@@ -20,7 +19,6 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Graph.Transform as Transform
-import Set exposing (Set)
 
 
 type alias Model =

@@ -13,7 +13,7 @@ module Update.Graph.Entity exposing
 
 import Api.Data
 import Color exposing (Color)
-import Config.Graph as Graph exposing (padding)
+import Config.Graph exposing (padding)
 import Config.Update as Update
 import Dict exposing (Dict)
 import Init.Graph.Address as Address

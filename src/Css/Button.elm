@@ -2,7 +2,6 @@ module Css.Button exposing (..)
 
 import Config.View exposing (Config)
 import Css exposing (..)
-import Util.Css
 
 
 button : Config -> List Style

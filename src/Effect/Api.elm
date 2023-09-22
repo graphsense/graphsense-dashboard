@@ -15,7 +15,7 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId, EntityId)
+import Model.Graph.Id as Id exposing (AddressId)
 import Model.Graph.Layer as Layer exposing (Layer)
 
 
@@ -26,6 +26,7 @@ type Effect msg
         , limit : Maybe Int
         }
         (Api.Data.SearchResult -> msg)
+    | GetStatisticsEffect (Api.Data.Stats -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
     | ListSupportedTokensEffect (Api.Data.TokenConfigs -> msg)
     | GetAddressEffect
@@ -189,7 +190,7 @@ type Effect msg
         { currency : String
         , addresses : List String
         }
-        (List Api.Data.Entity -> msg)
+        (List ( String, Api.Data.Entity ) -> msg)
     | BulkGetEntityNeighborsEffect
         { currency : String
         , isOutgoing : Bool
@@ -274,6 +275,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> SearchEffect eff
+
+        GetStatisticsEffect m ->
+            m
+                >> mapMsg
+                |> GetStatisticsEffect
 
         GetConceptsEffect eff m ->
             m
@@ -429,6 +435,10 @@ perform apiKey wrapMsg effect =
                 |> Api.withTracker "search"
                 |> send apiKey wrapMsg effect toMsg
 
+        GetStatisticsEffect toMsg ->
+            Api.Request.General.getStatistics
+                |> send apiKey wrapMsg effect toMsg
+
         GetConceptsEffect taxonomy toMsg ->
             Api.Request.Tags.listConcepts taxonomy
                 |> send apiKey wrapMsg effect toMsg
@@ -580,7 +590,15 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressEntityEffect e toMsg ->
-            listWithMaybes Api.Data.entityDecoder
+            listWithMaybes
+                (Json.Decode.field "_request_address" Json.Decode.string
+                    |> Json.Decode.andThen
+                        (\requestAddress ->
+                            Json.Decode.map
+                                (\entity -> ( requestAddress, entity ))
+                                Api.Data.entityDecoder
+                        )
+                )
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationGetAddressEntity

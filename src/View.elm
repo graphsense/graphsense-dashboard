@@ -4,6 +4,7 @@ import Browser exposing (Document)
 import Browser.Dom as Dom
 import Config.View exposing (Config)
 import Css exposing (..)
+import Css.Media exposing (width)
 import Css.Reset
 import Css.View
 import FontAwesome
@@ -14,7 +15,8 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
-import Model exposing (Auth(..), Model, Msg(..), Page(..))
+import Model exposing (Auth(..), Model, Msg(..), Page(..), getLatestBlocks)
+import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Route
@@ -63,11 +65,8 @@ body plugins vc model =
             vc
             { search = model.search
             , user = model.user
-            , latestBlocks =
-                model.stats
-                    |> RemoteData.map .currencies
-                    |> RemoteData.withDefault []
-                    |> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
+            , latestBlocks = getLatestBlocks model.stats
+            , hideSearch = model.page /= Graph
             }
          , section
             [ Css.View.sectionBelowHeader vc |> css
@@ -93,6 +92,10 @@ body plugins vc model =
 
 sidebar : Plugins -> Config -> Model key -> Html Msg
 sidebar plugins vc model =
+    let
+        plugin_menu_items =
+            Plugin.sidebar plugins model.plugins model.page vc
+    in
     div
         [ Css.View.sidebar vc |> css
         ]
@@ -100,8 +103,9 @@ sidebar plugins vc model =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
-                [ model.page == Stats |> Css.View.sidebarIcon vc |> css
-                , Route.statsRoute
+                [ model.page == Home |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Home")
+                , Route.homeRoute
                     |> Route.toUrl
                     |> href
                 ]
@@ -110,13 +114,31 @@ sidebar plugins vc model =
             |> List.singleton
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Graph")
                 , Route.Graph.rootRoute
                     |> Route.graphRoute
                     |> Route.toUrl
                     |> href
                 ]
          ]
-            ++ Plugin.sidebar plugins model.plugins model.page vc
+            ++ (if List.length plugin_menu_items > 0 then
+                    [ hr [ Css.View.sidebarRule vc |> css ] [] ]
+
+                else
+                    []
+               )
+            ++ plugin_menu_items
+            ++ [ FontAwesome.icon FontAwesome.chartPie
+                    |> Html.Styled.fromUnstyled
+                    |> List.singleton
+                    |> a
+                        [ model.page == Stats |> Css.View.sidebarIconBottom vc |> css
+                        , title (Locale.string vc.locale "Statistics")
+                        , Route.statsRoute
+                            |> Route.toUrl
+                            |> href
+                        ]
+               ]
         )
 
 
@@ -135,10 +157,11 @@ hovercards plugins vc model =
 overlay : Plugins -> Config -> Model key -> List (Html Msg)
 overlay plugins vc model =
     let
-        ov =
+        ov onClickOutside =
             List.singleton
                 >> div
                     [ Css.View.overlay vc |> css
+                    , onClick onClickOutside
                     ]
                 >> List.singleton
     in
@@ -163,14 +186,14 @@ overlay plugins vc model =
                             (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
                             |> Html.Styled.fromUnstyled
                     )
-                |> Maybe.map ov
+                |> Maybe.map (ov NoOp)
                 |> Maybe.withDefault []
 
         _ ->
             case model.dialog of
                 Just dialog ->
                     Dialog.view vc dialog
-                        |> ov
+                        |> ov (Dialog.defaultMsg dialog)
 
                 Nothing ->
                     []

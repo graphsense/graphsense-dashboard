@@ -32,3 +32,8 @@ initEntityLink coords =
 initAddressLink : Coords -> Id.LinkId Id.AddressId -> Model
 initAddressLink coords =
     AddressLink >> init coords
+
+
+initTransaction : Coords -> String -> String -> Model
+initTransaction coords txHash currency =
+    { coords = coords, type_ = Transaction txHash currency }

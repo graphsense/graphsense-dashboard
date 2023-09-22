@@ -1,6 +1,5 @@
 module Theme.Table exposing (Table, default)
 
-import Color exposing (Color)
 import Css exposing (Style)
 
 
@@ -8,7 +7,6 @@ type alias Table =
     { root : List Style
     , tableRoot : List Style
     , sidebar : Bool -> List Style
-    , tableSeperator : Bool -> List Style
     , sidebarIcon : Bool -> Bool -> List Style
     , filter : List Style
     , filterInput : Bool -> List Style
@@ -34,7 +32,6 @@ default =
     { root = []
     , tableRoot = []
     , sidebar = \_ -> []
-    , tableSeperator = \_ -> []
     , sidebarIcon = \_ _ -> []
     , filter = []
     , filterInput = \_ -> []

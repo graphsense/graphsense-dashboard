@@ -4,7 +4,6 @@ import Api.Data
 import DateFormat.Language
 import DateFormat.Relative
 import Dict exposing (Dict)
-import FormatNumber.Locales
 import Locale.Durations
 import Model.Currency exposing (..)
 import Time

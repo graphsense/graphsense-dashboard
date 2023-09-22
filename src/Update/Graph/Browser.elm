@@ -8,7 +8,6 @@ import Effect.Graph exposing (Effect(..))
 import Init.Graph.Browser exposing (..)
 import Init.Graph.Table as Table
 import Init.Graph.Tag as Tag
-import Json.Encode
 import Log
 import Model.Actor as Act
 import Model.Address as A
@@ -23,16 +22,13 @@ import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
 import Model.Locale as Locale
-import Model.Search as Search
 import Model.Tx as T
 import Msg.Graph exposing (Msg(..))
-import Msg.Search as Search
 import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (appendData, applyFilter, setData)
-import Update.Search as Search
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -2512,12 +2508,12 @@ tableAsCSV locale gc { type_ } =
                 Just (AddressTxsUtxoTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Address transactions of {0} ({1})"
-                        |> asCsv AddressTxsUtxoTable.prepareCSV t
+                        |> asCsv (AddressTxsUtxoTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Just (AddressTxsAccountTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Address transactions of {0} ({1})"
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Just (AddressTagsTable t) ->
                     Nothing
@@ -2540,17 +2536,17 @@ tableAsCSV locale gc { type_ } =
                 Just (EntityAddressesTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "addresses of entity {0} ({1})"
-                        |> asCsv EntityAddressesTable.prepareCSV t
+                        |> asCsv (EntityAddressesTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Just (EntityTxsUtxoTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
-                        |> asCsv AddressTxsUtxoTable.prepareCSV t
+                        |> asCsv (AddressTxsUtxoTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Just (EntityTxsAccountTable t) ->
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Just (EntityTagsTable t) ->
                     Nothing
@@ -2584,12 +2580,12 @@ tableAsCSV locale gc { type_ } =
                 Just (TxUtxoInputsTable t) ->
                     loadableTxToList loadable
                         |> Locale.interpolated locale "Incoming values of transaction {0} ({1})"
-                        |> asCsv (TxUtxoTable.prepareCSV False) t
+                        |> asCsv (TxUtxoTable.prepareCSV locale (loadableCurrency loadable) False) t
 
                 Just (TxUtxoOutputsTable t) ->
                     loadableTxToList loadable
                         |> Locale.interpolated locale "Outgoing values of transaction {0} ({1})"
-                        |> asCsv (TxUtxoTable.prepareCSV True) t
+                        |> asCsv (TxUtxoTable.prepareCSV locale (loadableCurrency loadable) False) t
 
                 Nothing ->
                     Nothing
@@ -2599,7 +2595,7 @@ tableAsCSV locale gc { type_ } =
                 Just (TokenTxsTable t) ->
                     loadableTxAccountToList loadable
                         |> Locale.interpolated locale "Token transactions of {0} ({1})"
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale accountCurrency) t
 
                 Nothing ->
                     Nothing
@@ -2615,39 +2611,45 @@ tableAsCSV locale gc { type_ } =
                 Just (BlockTxsUtxoTable t) ->
                     loadableBlockToList loadable
                         |> Locale.interpolated locale "Transactions of block {0} ({1})"
-                        |> asCsv TxsUtxoTable.prepareCSV t
+                        |> asCsv (TxsUtxoTable.prepareCSV locale (loadableCurrency loadable)) t
 
                 Just (BlockTxsAccountTable t) ->
                     loadableBlockToList loadable
                         |> Locale.interpolated locale "Transactions of block {0} ({1})"
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale (loadableCurrency loadable)) t
 
                 Nothing ->
                     Nothing
 
         Addresslink src lnk table ->
             let
+                currency =
+                    String.toUpper src.address.currency
+
                 title =
                     [ src.address.address
                     , lnk.node.address.address
-                    , String.toUpper src.address.currency
+                    , currency
                     ]
                         |> Locale.interpolated locale "Transactions between addresses {0} and {1} ({2})"
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
                     title
-                        |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+                        |> asCsv (AddresslinkTxsUtxoTable.prepareCSV locale currency) t
 
                 Just (AddresslinkTxsAccountTable t) ->
                     title
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing
 
         Entitylink src lnk table ->
             let
+                currency =
+                    src.entity.currency
+
                 title =
                     [ String.fromInt src.entity.entity
                     , String.fromInt lnk.node.entity.entity
@@ -2657,11 +2659,11 @@ tableAsCSV locale gc { type_ } =
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    title |> asCsv AddresslinkTxsUtxoTable.prepareCSV t
+                    title |> asCsv (AddresslinkTxsUtxoTable.prepareCSV locale currency) t
 
                 Just (AddresslinkTxsAccountTable t) ->
                     title
-                        |> asCsv TxsAccountTable.prepareCSV t
+                        |> asCsv (TxsAccountTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing

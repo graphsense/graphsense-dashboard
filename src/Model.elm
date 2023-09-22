@@ -3,6 +3,7 @@ module Model exposing (..)
 import Api.Data
 import Browser exposing (UrlRequest)
 import Browser.Dom
+import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)
 import Effect.Api
@@ -10,6 +11,7 @@ import Effect.Graph
 import Effect.Locale
 import Effect.Search
 import Http
+import Json.Encode
 import Model.Dialog
 import Model.Graph
 import Model.Locale
@@ -26,7 +28,7 @@ import Url exposing (Url)
 
 
 type alias Flags =
-    { locale : String
+    { settings : Json.Encode.Value
     , now : Int
     , width : Int
     , height : Int
@@ -56,7 +58,8 @@ type alias Model navigationKey =
 
 
 type Page
-    = Stats
+    = Home
+    | Stats
     | Graph
     | Plugin Plugin.PluginType
 
@@ -65,7 +68,7 @@ type Msg
     = NoOp
     | UserRequestsUrl UrlRequest
     | BrowserChangedUrl Url
-    | BrowserGotStatistics (Result Http.Error Api.Data.Stats)
+    | BrowserGotStatistics Api.Data.Stats
     | BrowserGotResponseWithHeaders (Maybe String) (Result ( Http.Error, Effect.Api.Effect Msg ) ( Dict String String, Msg ))
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
@@ -92,6 +95,7 @@ type Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
     | PluginMsg Plugin.Msg
+    | UserClickedExampleSearch String
 
 
 type RequestLimit
@@ -124,7 +128,6 @@ type Auth
 type Effect
     = NavLoadEffect String
     | NavPushUrlEffect String
-    | GetStatisticsEffect
     | GetElementEffect { id : String, msg : Result Browser.Dom.Error Browser.Dom.Element -> Msg }
     | GetContentsElementEffect
     | LocaleEffect Effect.Locale.Effect
@@ -136,8 +139,31 @@ type Effect
     | CmdEffect (Cmd Msg)
     | LogoutEffect
     | SetDirtyEffect
+    | SetCleanEffect
+    | SaveUserSettingsEffect UserSettings
 
 
 type Thing
     = Address Api.Data.Address
     | Entity Api.Data.Entity
+
+
+userSettingsFromMainModel : Model key -> UserSettings
+userSettingsFromMainModel model =
+    { selectedLanguage = model.locale.locale
+    , lightMode = Just model.config.lightmode
+    , valueDetail = Just model.locale.valueDetail
+    , valueDenomination = Just model.locale.currency
+    , addressLabel = Just model.graph.config.addressLabelType
+    , edgeLabel = Just model.graph.config.txLabelType
+    , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
+    , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
+    , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
+    }
+
+
+getLatestBlocks : WebData Api.Data.Stats -> List ( String, Int )
+getLatestBlocks =
+    RemoteData.map .currencies
+        >> RemoteData.withDefault []
+        >> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))

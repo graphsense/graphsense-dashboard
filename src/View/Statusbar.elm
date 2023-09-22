@@ -108,21 +108,6 @@ log vc lastBlocks ( key, values, error ) =
                         Just e ->
                             ": "
                                 ++ (case e of
-                                        Http.BadUrl url ->
-                                            Locale.string vc.locale "bad url" ++ " " ++ url
-
-                                        Http.Timeout ->
-                                            Locale.string vc.locale "timeout"
-
-                                        Http.NetworkError ->
-                                            Locale.string vc.locale "network error"
-
-                                        Http.BadStatus 500 ->
-                                            Locale.string vc.locale "server error"
-
-                                        Http.BadStatus 429 ->
-                                            Locale.string vc.locale "API rate limit exceeded. Please try again later."
-
                                         Http.BadStatus 404 ->
                                             if key == loadingAddressKey then
                                                 List.Extra.getAt 1 values
@@ -139,10 +124,10 @@ log vc lastBlocks ( key, values, error ) =
                                                     |> Maybe.withDefault (Locale.string vc.locale "not found")
 
                                             else
-                                                Locale.string vc.locale "not found"
+                                                Locale.httpErrorToString vc.locale e
 
                                         Http.BadStatus 504 ->
-                                            Locale.string vc.locale "timeout"
+                                            Locale.httpErrorToString vc.locale e
                                                 ++ (if key == searchNeighborsKey then
                                                         ". " ++ Locale.string vc.locale "Please try again with a lower depth/breadth setting."
 
@@ -150,15 +135,15 @@ log vc lastBlocks ( key, values, error ) =
                                                         ""
                                                    )
 
-                                        Http.BadStatus s ->
-                                            Locale.string vc.locale "bad status" ++ ": " ++ String.fromInt s
-
                                         Http.BadBody str ->
                                             if str == Api.noExternalTransactions then
                                                 Locale.string vc.locale str
 
                                             else
-                                                Locale.string vc.locale "data error" ++ " " ++ str
+                                                Locale.httpErrorToString vc.locale e
+
+                                        _ ->
+                                            Locale.httpErrorToString vc.locale e
                                    )
 
                         Nothing ->

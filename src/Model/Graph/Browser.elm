@@ -68,6 +68,7 @@ type Value msg
     | Value String Api.Data.Values
     | MultiValue String Int (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
+    | Select (List ( String, String )) (String -> msg) String
     | Html (Html msg)
     | LoadingValue
 
@@ -79,13 +80,14 @@ type alias TableLink =
     }
 
 
-type Row r
+type Row r i msg
     = Row ( String, r, Maybe TableLink )
+    | RowWithMoreActionsButton ( String, r, Maybe (i -> msg) )
     | Note String
     | Footnote String
     | Image (Maybe String)
     | Rule
-    | OptionalRow (Row r) Bool
+    | OptionalRow (Row r i msg) Bool
 
 
 type alias ScrollPos =

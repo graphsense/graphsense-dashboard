@@ -151,3 +151,8 @@ valueCell vc =
 currencyCell : Config -> List Style
 currencyCell vc =
     vc.theme.browser.currencyCell
+
+
+tableSeparator : Config -> List Style
+tableSeparator vc =
+    vc.theme.browser.tableSeparator vc.lightmode

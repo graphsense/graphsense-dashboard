@@ -7,10 +7,9 @@ import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (onClick, onMouseOver)
+import Html.Styled.Events exposing (onClick)
 import Route exposing (toUrl)
 import Route.Graph as Route
-import Util.View exposing (aa)
 import View.Locale as Locale
 
 
@@ -26,8 +25,8 @@ tool vc { icon } attr =
         |> Html.Styled.fromUnstyled
         |> List.singleton
         |> span
-            ([ Css.tool vc |> css ]
-                ++ attr
+            ((Css.tool vc |> css)
+                :: attr
             )
 
 

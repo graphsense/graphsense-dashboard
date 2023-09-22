@@ -8,6 +8,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Json.Decode
 import Model exposing (Msg(..))
 import Model.Dialog exposing (..)
 import Util.View exposing (addDot)
@@ -18,6 +19,7 @@ view : Config -> Model Msg -> Html Msg
 view vc model =
     div
         [ Css.dialog vc |> css
+        , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
         [ case model of
             Confirm conf ->
@@ -28,6 +30,9 @@ view vc model =
 
             Error conf ->
                 error vc conf
+
+            Info conf ->
+                info vc conf
         ]
 
 
@@ -69,7 +74,7 @@ options_ vc { message, options } =
                         ]
                 )
             |> div
-                []
+                [ align "center" ]
         ]
 
 
@@ -123,7 +128,7 @@ body vc { onSubmit } =
         ]
 
 
-error : Config -> ErrorConfig msg -> Html msg
+error : Config -> ErrorConfig Msg -> Html Msg
 error vc err =
     let
         title =
@@ -135,11 +140,31 @@ error vc err =
                     else
                         "Address not found"
 
+                Http titl _ ->
+                    titl
+
+                General config ->
+                    config.title
+
         take =
             3
 
         details =
             case err.type_ of
+                General { message, variables } ->
+                    Locale.interpolated vc.locale message variables
+                        |> text
+                        |> List.singleton
+                        |> Util.View.p vc []
+                        |> List.singleton
+
+                Http _ e ->
+                    Locale.httpErrorToString vc.locale e
+                        |> text
+                        |> List.singleton
+                        |> Util.View.p vc []
+                        |> List.singleton
+
                 AddressNotFound addrs ->
                     [ addrs
                         |> List.take take
@@ -173,10 +198,10 @@ error vc err =
                             []
                             [ li [ Css.View.listItem vc |> css ]
                                 [ (if List.length addrs > 1 then
-                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain."
+                                    "There are no transactions associated with these addresses and they are therefore not found on the blockchain"
 
                                    else
-                                    "There are no transactions associated with this address and it is therefore not found on the blockchain."
+                                    "There are no transactions associated with this address and it is therefore not found on the blockchain"
                                   )
                                     |> Locale.string vc.locale
                                     |> addDot
@@ -209,8 +234,25 @@ error vc err =
         details
             ++ [ button
                     [ Css.Button.primary vc |> css
-                    , onClick err.onOk
+                    , UserClickedConfirm err.onOk |> onClick
                     ]
                     [ Locale.string vc.locale "OK" |> text
                     ]
                ]
+
+
+info : Config -> InfoConfig Msg -> Html Msg
+info vc inf =
+    part vc
+        (Locale.interpolated vc.locale inf.info inf.variables)
+        [ div
+            [ Css.singleButton vc |> css
+            ]
+            [ button
+                [ Css.Button.primary vc |> css
+                , UserClickedConfirm inf.onOk |> onClick
+                ]
+                [ Locale.string vc.locale "OK" |> text
+                ]
+            ]
+        ]

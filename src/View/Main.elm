@@ -8,7 +8,7 @@ import Model exposing (Model, Msg(..), Page(..))
 import Plugin.View as Plugin exposing (Plugins)
 import Util.View
 import View.Graph as Graph
-import View.Graph.Navbar
+import View.Landingpage as Landingpage
 import View.Stats as Stats
 
 
@@ -19,6 +19,12 @@ view :
     -> Html Msg
 view plugins vc model =
     case model.page of
+        Home ->
+            { navbar = []
+            , contents = [ Landingpage.view plugins vc model ]
+            }
+                |> main_ vc
+
         Stats ->
             Stats.stats vc model.stats
 

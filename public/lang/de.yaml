@@ -18,7 +18,7 @@ supported currencies: unterstützte Währungen
 ledger statistics: Währungsstatistiken
 last update: letztes Update
 latest block: letzter Block
-"addresses, transaction, label, block": Adressen, Transaktion, Schlagwort, Block
+"address, transaction, label, block": Adresse, Transaktion, Schlagwort, Block
 currency: Cryptoasset
 transfers: Transaktionen
 withdrawals: Abbuchungen
@@ -142,7 +142,11 @@ password: Passwort
 sign in: anmelden
 signing in: anmelden
 annotate: annotieren
+annotate entity: cluster annotieren
+annotate address: addresse annotieren
+remove from graph: vom Graphen entfernen
 remove: entfernen
+remove link: verbindung entfernen
 expand: erweitern
 collapse: Adressen ausblenden
 show address table: Adressentabelle
@@ -245,6 +249,9 @@ address statistics not yet computed: Adress-Statistik noch nicht berechnet
 address statistics might be out of date: Adress-Statistik eventuell nicht mehr aktuell
 no external transactions: Keine externen Transaktionen
 show shadow links: Schatten anzeigen
+Timezone: Zeitzone
+User: Benutzer
+UTC: UTC
 for entities: für Cluster
 for addresses: für Adressen
 show entity link: Zeige Verbindung der Cluster
@@ -272,18 +279,22 @@ user address tags: Benutzerdefinierte Address-Schlagwörter
   Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert.
 yes: ja
 no: nein
-"address not found": "Adresse nicht gefunden"
-"addresses not found": "Adressen nicht gefunden"
-"... and {0} more": "... und {0} weitere"
-"there could be various reasons": "Dies kann mehrere Ursachen haben"
-"they are possibly not yet in our database": "Sie sind möglicherweise noch nicht in unsere Datenbank eingespielt"
-"it is possibly not yet in our database": "Sie ist möglicherweise noch nicht in unsere Datenbank eingespielt"
-"there are no transactions associated with these addresses and they are therefore not found on the blockchain": "Sie haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in der Blockchain gespeichert"
-"there are no transactions associated with this address and it is therefore not found on the blockchain.": "Sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der Blockchain gespeichert"
-"there are typos": "Es gibt Tippfehler"
+address not found: Adresse nicht gefunden
+addresses not found: Adressen nicht gefunden
+"... and {0} more": ... und {0} weitere
+there could be various reasons: Dies kann mehrere Ursachen haben
+they are possibly not yet in our database: Sie sind möglicherweise noch nicht in unsere Datenbank eingespielt
+it is possibly not yet in our database: Sie ist möglicherweise noch nicht in unsere Datenbank eingespielt
+there are no transactions associated with these addresses and they are therefore not found on the blockchain:
+  Sie haben bis jetzt noch keine Transaktionen erhalten und sind daher nicht in
+  der Blockchain gespeichert
+there are no transactions associated with this address and it is therefore not found on the blockchain.:
+  Sie hat bis jetzt noch keine Transaktionen erhalten und ist daher nicht in der
+  Blockchain gespeichert
+there are typos: Es gibt Tippfehler
 smart contract: Smart contract
 "token transactions of {0} ({1})": Token-Transaktionen von {0} ({1})
-"loading supported token currencies": lade unterstützte Token-Währungen
+loading supported token currencies: lade unterstützte Token-Währungen
 Actor: Akteur
 Actors: Akteure
 Other Links: Links
@@ -302,3 +313,48 @@ Open Palkeo: Palkeo öffnen
 Exact: Genau
 Magnitude: Größenordnung
 Value format: Wertedarstellung
+Case Management: Case Management
+calculating connections: Verbindungen werden berechnet
+pol. case number: pol. Aktenzeichen
+jud. case number: jus. Aktenzeichen
+info: Info
+case number preference: Anzeige Aktenzeichen
+judicial: justiziell
+police: polizeilich
+mine: meine
+list addresses: Adressen anzeigen
+inquiry requested: Auskunft eingeholt
+case connection: Akteverknüpfung
+connect case: Akte verknüpfen
+cases: Akten
+case: Akte
+case connections based on common entity: Aktverbindungen auf Basis gemeinsamer Entität
+case connections based on common receiving entity: Aktverbindungen auf Basis gemeinsamer abbuchender Entität
+connect address to case: Adresse mit Akte verknüpfen
+existing cases: existierende Akten
+service provider: Service provider
+choose service provider: Service provider wählen
+input service provider: Service provider eingeben
+please input at least a pol. or jud. case number: zumindest ein pol. oder ein jus. Aktenzeichen eingeben
+choose category: Kategorie wählen
+name: Name
+payment address: Ersteinzahlungsadresse
+victim address: Geschädigtenadresse
+really trash?: Wirklich wegwerfen?
+"the first address the victim has sent money to, probably the address of the perpetrator": Die erste Adresse auf die vom Geschädigten eingezahlt wurde
+an address owned by the victim: Adresse die im Besitz des Geschädigten ist
+the exchange service used by the victim: Der Wechseldienst den der Geschädigte verwendet hat
+has an inquiry been sent to the owner of this address?: Wurde beim Besitzer der Adresse eine Auskunft einholt?
+open case: offener Akt
+group: Gruppe
+Login for this adress not yet enabled: Login für diese Adresse noch nicht möglich
+Try again: Erneut versuchen
+Continue: Weiter
+Institutional Login: Login über Institution
+Graph: Graph
+Statistics: Statistiken
+Home: Home
+or try these examples: oder versuche diese Beispiele
+Start a new investigation: Starte eine neue Nachforschung
+or: oder
+Load graph from .gs file: Lade eine bestehende .gs Datei

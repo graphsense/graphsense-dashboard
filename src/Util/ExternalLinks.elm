@@ -42,12 +42,54 @@ blockExplorerLinks =
         ]
 
 
+blockExplorerTransactionLinks : Dict.Dict String (List ( String, String ))
+blockExplorerTransactionLinks =
+    Dict.fromList
+        [ ( "eth"
+          , [ ( "https://etherscan.io/tx/0x", "Open Etherscan" )
+            , ( "https://www.oklink.com/eth/tx/", "Open Oklink" )
+            , ( "https://www.blockchain.com/eth/tx/", "Open Blockchain.com" )
+            , ( "https://blockchair.com/ethereum/transaction/", "Open Blockchair" )
+            ]
+          )
+        , ( "btc"
+          , [ ( "https://www.oklink.com/btc/tx/", "Open Oklink" )
+            , ( "https://www.blockchain.com/btc/tx/", "Open Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin/transaction/", "Open Blockchair" )
+            ]
+          )
+        , ( "zec"
+          , [ ( "https://blockchair.com/zcash/transaction/", "Open Blockchair" )
+            ]
+          )
+        , ( "ltc"
+          , [ ( "https://www.oklink.com/ltc/tx/", "Open Oklink" )
+            , ( "https://blockchair.com/litecoin/transaction/", "Open Blockchair" )
+            ]
+          )
+        , ( "bch"
+          , [ ( "https://www.oklink.com/bch/tx/", "Open Oklink" )
+            , ( "https://www.blockchain.com/bch/tx/", "Open Blockchain.com" )
+            , ( "https://blockchair.com/bitcoin-cash/transaction/", "Open Blockchair" )
+            ]
+          )
+        ]
+
+
 getBlockExplorerLinks : String -> String -> List ( String, String )
 getBlockExplorerLinks currency address =
     blockExplorerLinks
         |> Dict.get currency
         |> Maybe.withDefault []
         |> List.map (\( url_template, label ) -> ( url_template ++ address, label ))
+
+
+getBlockExplorerTransactionLinks : String -> String -> List ( String, String )
+getBlockExplorerTransactionLinks currency txHash =
+    blockExplorerTransactionLinks
+        |> Dict.get currency
+        |> Maybe.withDefault []
+        |> List.map (\( url_template, label ) -> ( url_template ++ txHash, label ))
 
 
 fontAwesomeIconAssignments : List ( Regex.Regex, FontAwesome.Icon )

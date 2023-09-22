@@ -5,7 +5,6 @@ module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 import Api
 import Browser
 import Browser.Dom
-import Browser.Navigation as Nav
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
@@ -15,9 +14,9 @@ import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
 import Http exposing (Error(..))
+import Init.Graph
 import Json.Decode
 import Json.Encode exposing (Value)
-import Lense
 import List.Extra
 import Log
 import Maybe.Extra
@@ -31,6 +30,7 @@ import Model.Locale as Locale
 import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
+import Msg.Locale as LocaleMsg
 import Msg.Search as Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
@@ -38,22 +38,18 @@ import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import PluginInterface.Update as PluginInterface
 import Ports
-import Process
 import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
-import Set
 import Sha256
 import Task
 import Time
 import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
-import Update.Graph.Adding as Adding
 import Update.Graph.Browser as Browser
 import Update.Graph.Layer as Layer
-import Update.Graph.Search
 import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
@@ -86,19 +82,14 @@ update plugins uc msg model =
         BrowserChangedUrl url ->
             updateByUrl plugins uc url model
 
-        BrowserGotStatistics result ->
-            case result of
-                Ok stats ->
-                    updateByUrl plugins
-                        uc
-                        model.url
-                        { model
-                            | stats = RD.Success stats
-                            , statusbar = Statusbar.updateLastBlocks stats model.statusbar
-                        }
-
-                Err error ->
-                    n { model | stats = RD.Failure error }
+        BrowserGotStatistics stats ->
+            updateByUrl plugins
+                uc
+                model.url
+                { model
+                    | stats = RD.Success stats
+                    , statusbar = Statusbar.updateLastBlocks stats model.statusbar
+                }
 
         BrowserGotEntityTaxonomy concepts ->
             { model
@@ -174,7 +165,7 @@ update plugins uc msg model =
                                             |> Maybe.map
                                                 (\address ->
                                                     UserClosesDialog
-                                                        |> Dialog.addressNotFound address model.dialog
+                                                        |> Dialog.addressNotFoundError address model.dialog
                                                 )
 
                                     _ ->
@@ -219,25 +210,33 @@ update plugins uc msg model =
             let
                 locale =
                     Locale.switch loc model.locale
+
+                newModel =
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
             in
-            ( { model
-                | locale = locale
-                , config =
-                    model.config
-                        |> s_locale locale
-              }
-            , Locale.getTranslationEffect loc
+            ( newModel
+            , (Locale.getTranslationEffect loc
                 |> LocaleEffect
                 |> List.singleton
+              )
+                ++ [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
             )
 
         UserClickedLightmode ->
-            { model
-                | config =
-                    model.config
-                        |> s_lightmode (not model.config.lightmode)
-            }
-                |> n
+            let
+                newModel =
+                    { model
+                        | config =
+                            model.config
+                                |> s_lightmode (not model.config.lightmode)
+                    }
+            in
+            ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
         UserInputsApiKeyForm input ->
             { model
@@ -376,6 +375,10 @@ update plugins uc msg model =
             }
                 |> n
 
+        UserClickedExampleSearch str ->
+            update plugins uc (Search.UserFocusSearch |> SearchMsg) model
+                |> (\( m, _ ) -> update plugins uc (Search.UserInputsSearch str |> SearchMsg) m)
+
         UserClickedLogout ->
             let
                 ( new, outMsg, cmd ) =
@@ -402,29 +405,9 @@ update plugins uc msg model =
                 |> updateByPluginOutMsg plugins outMsg
 
         BrowserGotLoggedOut result ->
-            { model
-                | user =
-                    result
-                        |> Result.map
-                            (\_ ->
-                                model.user
-                                    |> s_auth (Unauthorized False [])
-                                    |> s_apiKey ""
-                            )
-                        |> Result.withDefault
-                            (model.user
-                                |> s_auth
-                                    (case model.user.auth of
-                                        Authorized auth ->
-                                            { auth | loggingOut = False }
-                                                |> Authorized
-
-                                        _ ->
-                                            model.user.auth
-                                    )
-                            )
-            }
-                |> n
+            ( model
+            , [ NavLoadEffect "/" ]
+            )
 
         BrowserGotElementForPlugin pmsg element ->
             updatePlugins plugins (pmsg element) model
@@ -433,14 +416,25 @@ update plugins uc msg model =
             let
                 ( locale, localeEffects ) =
                     Locale.update m model.locale
+
+                newModel =
+                    { model
+                        | locale = locale
+                        , config =
+                            model.config
+                                |> s_locale locale
+                    }
+
+                eff =
+                    case m of
+                        LocaleMsg.BrowserSentTimezone _ ->
+                            [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ]
+
+                        _ ->
+                            []
             in
-            ( { model
-                | locale = locale
-                , config =
-                    model.config
-                        |> s_locale locale
-              }
-            , List.map LocaleEffect localeEffects
+            ( newModel
+            , List.map LocaleEffect localeEffects ++ eff
             )
 
         SearchMsg m ->
@@ -453,7 +447,10 @@ update plugins uc msg model =
                         multi =
                             Search.getMulti model.search
                     in
-                    if model.search.found /= Nothing && List.length multi == 1 then
+                    if String.isEmpty model.search.input then
+                        n model
+
+                    else if model.search.found /= Nothing && List.length multi == 1 then
                         Search.getFirstResultUrl model.search
                             |> Maybe.map
                                 (NavPushUrlEffect >> List.singleton)
@@ -476,6 +473,7 @@ update plugins uc msg model =
                                                             , Search.UserPicksCurrency name |> SearchMsg
                                                             )
                                                         )
+                                            , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
                                             }
                                                 |> Dialog.options
                                                 |> Just
@@ -484,12 +482,16 @@ update plugins uc msg model =
                             |> RD.withDefault model
                             |> n
 
+                Search.UserClickedCloseCurrencyPicker ->
+                    clearSearch plugins { model | dialog = Nothing }
+
                 Search.UserPicksCurrency currency ->
                     let
                         ( graph, graphEffects ) =
                             Graph.loadPath plugins
                                 { currency = currency
-                                , addresses = Search.getMulti model.search
+                                , addresses =
+                                    Search.getMulti model.search
                                 }
                                 model.graph
                     in
@@ -524,6 +526,7 @@ update plugins uc msg model =
                     ( { model
                         | plugins = new
                         , graph = graph
+                        , dirty = True
                       }
                     , PluginEffect cmd
                         :: SetDirtyEffect
@@ -542,8 +545,10 @@ update plugins uc msg model =
                     ( { model
                         | plugins = new
                         , graph = graph
+                        , dirty = True
                       }
                     , PluginEffect cmd
+                        :: SetDirtyEffect
                         :: List.map GraphEffect graphEffects
                     )
                         |> updateByPluginOutMsg plugins outMsg
@@ -552,46 +557,122 @@ update plugins uc msg model =
                     let
                         locale =
                             Locale.changeCurrency currency model.locale
+
+                        newModel =
+                            { model
+                                | locale = locale
+                                , config =
+                                    model.config
+                                        |> s_locale locale
+                            }
                     in
-                    { model
-                        | locale = locale
-                        , config =
-                            model.config
-                                |> s_locale locale
-                    }
-                        |> n
+                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
 
                 Graph.UserChangesValueDetail detail ->
                     let
                         locale =
                             Locale.changeValueDetail detail model.locale
+
+                        newModel =
+                            { model
+                                | locale = locale
+                                , config =
+                                    model.config
+                                        |> s_locale locale
+                            }
                     in
-                    { model
-                        | locale = locale
-                        , config =
-                            model.config
-                                |> s_locale locale
-                    }
-                        |> n
+                    ( newModel, [ SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) ] )
+
+                Graph.UserClickedShowEntityShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedShowAddressShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedToggleShowDatesInUserLocale ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+
+                        modeleff =
+                            case newModel.graph.config.showDatesInUserLocale of
+                                True ->
+                                    ( newModel, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) :: List.map GraphEffect graphEffects )
+
+                                False ->
+                                    let
+                                        locale =
+                                            Locale.changeTimeZone Time.utc model.locale
+
+                                        mwithtz =
+                                            { newModel
+                                                | locale = locale
+                                                , config =
+                                                    newModel.config
+                                                        |> s_locale locale
+                                            }
+                                    in
+                                    ( mwithtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwithtz) :: List.map GraphEffect graphEffects )
+                    in
+                    modeleff
+
+                Graph.UserChangesAddressLabelType _ ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserChangesTxLabelType _ ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedExportGS time ->
                     ( model
-                    , (case time of
-                        Nothing ->
-                            Time.now
-                                |> Task.perform (Just >> Graph.UserClickedExportGS)
+                    , ((case time of
+                            Nothing ->
+                                Time.now
+                                    |> Task.perform (Just >> Graph.UserClickedExportGS)
 
-                        Just t ->
-                            Graph.serialize model.graph
-                                |> pair
-                                    (makeTimestampFilename model.locale t
-                                        |> (\tt -> tt ++ ".gs")
-                                    )
-                                |> Ports.serialize
-                      )
+                            Just t ->
+                                Graph.serialize model.graph
+                                    |> pair
+                                        (makeTimestampFilename model.locale t
+                                            |> (\tt -> tt ++ ".gs")
+                                        )
+                                    |> Ports.serialize
+                       )
                         |> Graph.CmdEffect
                         |> GraphEffect
                         |> List.singleton
+                      )
+                        ++ [ SetCleanEffect ]
                     )
 
                 Graph.UserClickedExportGraphics time ->
@@ -658,24 +739,37 @@ update plugins uc msg model =
                            )
 
                 Graph.UserClickedNew ->
-                    { model
-                        | dialog =
-                            { message = Locale.string model.locale "Do you want to start from scratch?"
-                            , onYes = GraphMsg Graph.UserClickedNewYes
-                            , onNo = NoOp
-                            }
-                                |> Dialog.confirm
-                                |> Just
-                    }
-                        |> n
+                    if model.dirty then
+                        { model
+                            | dialog =
+                                { message = Locale.string model.locale "Do you want to start from scratch?"
+                                , onYes = GraphMsg Graph.UserClickedNewYes
+                                , onNo = NoOp
+                                }
+                                    |> Dialog.confirm
+                                    |> Just
+                        }
+                            |> n
+
+                    else
+                        n model
 
                 Graph.UserClickedNewYes ->
                     let
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
+
+                        newGraph =
+                            Time.posixToMillis graph.browser.now
+                                |> Init.Graph.init (userSettingsFromMainModel model)
+                                |> s_history graph.history
+                                |> s_config
+                                    (graph.config
+                                        |> s_highlighter False
+                                    )
                     in
                     ( { model
-                        | graph = graph
+                        | graph = newGraph
                       }
                     , (Route.Graph.Root
                         |> Route.graphRoute
@@ -841,14 +935,10 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                         , (Effect.Api.map PluginMsg effect |> ApiEffect) :: eff
                         )
 
-                    PluginInterface.ShowConfirmDialog conf ->
+                    PluginInterface.ShowDialog conf ->
                         ( { model
                             | dialog =
-                                Dialog.confirm
-                                    { message = conf.message
-                                    , onYes = PluginMsg conf.onYes
-                                    , onNo = PluginMsg conf.onNo
-                                    }
+                                Dialog.mapMsg PluginMsg conf
                                     |> Just
                           }
                         , eff
@@ -871,6 +961,14 @@ updateByUrl plugins uc url model =
         |> Maybe.map2
             (\oldRoute route ->
                 case Log.log "route" route of
+                    Route.Home ->
+                        ( { model
+                            | page = Home
+                            , url = url
+                          }
+                        , []
+                        )
+
                     Route.Stats ->
                         ( { model
                             | page = Stats
@@ -881,7 +979,7 @@ updateByUrl plugins uc url model =
                                 []
 
                             _ ->
-                                [ GetStatisticsEffect ]
+                                [ ApiEffect (Effect.Api.GetStatisticsEffect BrowserGotStatistics) ]
                         )
 
                     Route.Graph graphRoute ->

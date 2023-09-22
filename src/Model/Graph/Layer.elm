@@ -288,6 +288,30 @@ getFirstEntity { currency, entity } layers =
             Nothing
 
 
+isContentWithinViewPort : IntDict Layer -> { x : Float, y : Float, z : Float } -> Coords.BBox -> Bool
+isContentWithinViewPort layers transform viewport =
+    let
+        tfx box =
+            transform.x + (2 * expandHandleWidth + entityWidth) / 2 - box.width / 2 * transform.z
+
+        ffw box =
+            max 0 <| box.width * transform.z
+
+        xwidth =
+            ffw viewport
+
+        xroot =
+            tfx viewport
+
+        is_within layerbox =
+            (abs xroot + layerbox.x + layerbox.width) <= xwidth
+    in
+    layers
+        |> getBoundingBox
+        |> Maybe.map is_within
+        |> Maybe.withDefault True
+
+
 getBoundingBox : IntDict Layer -> Maybe Coords.BBox
 getBoundingBox layers =
     case entities layers of

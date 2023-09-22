@@ -184,6 +184,7 @@ apiKeyForm vc loading model =
                 , disabled loading
                 , value model.apiKey
                 , spellcheck False
+                , type_ "password"
                 ]
                 []
             , if loading then

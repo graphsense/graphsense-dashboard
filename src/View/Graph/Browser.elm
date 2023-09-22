@@ -1,8 +1,4 @@
-module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, propertyBox, rule)
-
---import Plugin.View.Graph.Address
---import Plugin.View.Graph.Browser
---import Plugin.View.Graph.Entity
+module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, properties, propertyBox, rule)
 
 import Api.Data
 import Config.Graph as Graph
@@ -17,7 +13,6 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Id as Id
 import Json.Decode as JD
-import Json.Encode
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
@@ -26,12 +21,12 @@ import Model.Entity as E
 import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
 import Model.Graph.Browser as Browser exposing (..)
-import Model.Graph.Entity exposing (Entity, getActorsStr)
+import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
-import Model.Graph.Tag as Tag
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -76,10 +71,11 @@ frame vc visible =
                 |> Maybe.map .width
                 |> Maybe.withDefault 0
     in
-    div
-        [ Css.frame vc visible
-            |> css
-        ]
+    List.intersperse (tableSeparator vc)
+        >> div
+            [ Css.frame vc visible
+                |> css
+            ]
         >> List.singleton
         >> div [ Css.root vc width |> css ]
 
@@ -116,7 +112,7 @@ browser plugins states vc gc model =
                                                 model.layers
                                                 |> Maybe.Extra.isJust
                                     in
-                                    browseAddressTable vc gc model.height neighborLayerHasAddress loadable t
+                                    browseAddressTable vc gc neighborLayerHasAddress loadable t
                                 )
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
@@ -157,7 +153,7 @@ browser plugins states vc gc model =
                                                 model.layers
                                                 |> Maybe.Extra.isJust
                                     in
-                                    browseEntityTable vc gc model.height entityHasAddress neighborLayerHasEntity loadable t
+                                    browseEntityTable vc gc entityHasAddress neighborLayerHasEntity loadable t
                                 )
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
@@ -168,7 +164,7 @@ browser plugins states vc gc model =
                     :: (table
                             |> Maybe.map
                                 (\t ->
-                                    browseActorTable vc gc model.height loadable t
+                                    browseActorTable vc gc loadable t
                                 )
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
@@ -177,7 +173,7 @@ browser plugins states vc gc model =
             Browser.Block loadable table ->
                 browseBlock plugins states vc gc model.now loadable
                     :: (table
-                            |> Maybe.map (browseBlockTable vc gc model.height loadable)
+                            |> Maybe.map (browseBlockTable vc gc loadable)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                        )
@@ -185,7 +181,7 @@ browser plugins states vc gc model =
             Browser.TxUtxo loadable table ->
                 browseTxUtxo plugins states vc gc model.now loadable
                     :: (table
-                            |> Maybe.map (browseTxUtxoTable vc gc model.height loadable)
+                            |> Maybe.map (browseTxUtxoTable vc gc loadable)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                        )
@@ -193,7 +189,7 @@ browser plugins states vc gc model =
             Browser.TxAccount loadable accountCurrency table ->
                 browseTxAccount plugins states vc gc model.now loadable table accountCurrency
                     :: (table
-                            |> Maybe.map (browseTxAccountTable vc gc model.height loadable)
+                            |> Maybe.map (browseTxAccountTable vc gc loadable)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                        )
@@ -205,7 +201,7 @@ browser plugins states vc gc model =
                 in
                 browseAddresslink plugins states vc source link
                     :: (table
-                            |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
+                            |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                        )
@@ -217,19 +213,19 @@ browser plugins states vc gc model =
                 in
                 browseEntitylink plugins states vc source link
                     :: (table
-                            |> Maybe.map (browseAddresslinkTable vc gc model.height currency)
+                            |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
                             |> Maybe.withDefault []
                        )
 
             Browser.Label label table ->
                 table
-                    |> table_ vc Nothing model.height (LabelAddressTagsTable.config vc)
+                    |> table_ vc Nothing (LabelAddressTagsTable.config vc)
                     |> List.singleton
 
             Browser.UserTags table ->
                 table
-                    |> table_ vc cm model.height (UserAddressTagsTable.config vc gc)
+                    |> table_ vc cm (UserAddressTagsTable.config vc gc)
                     |> List.singleton
 
             Browser.Plugin ->
@@ -252,7 +248,7 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> (r -> Html msg) -> Row r -> Html msg
+browseRow : View.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
 browseRow vc map row =
     case row of
         Rule ->
@@ -341,6 +337,37 @@ browseRow vc map row =
                     ]
                 ]
 
+        RowWithMoreActionsButton ( key, value, msg ) ->
+            div
+                [ Css.propertyBoxRow vc |> css
+                ]
+                [ span
+                    [ Css.propertyBoxKey vc |> css
+                    ]
+                    [ Locale.text vc.locale key
+                    ]
+                , span
+                    []
+                    [ div
+                        [ Css.propertyBoxValueInner vc |> css
+                        ]
+                        [ map value
+                        , msg
+                            |> Maybe.map
+                                (\vmsg ->
+                                    div
+                                        [ Locale.string vc.locale "more actions" |> title
+                                        , on "click" (Util.Graph.decodeCoords Coords |> JD.map vmsg)
+                                        , Css.propertyBoxTableLink vc True |> css
+                                        , CssView.link vc |> css
+                                        ]
+                                        [ FontAwesome.icon FontAwesome.caretSquareDown |> Html.fromUnstyled ]
+                                )
+                            |> Maybe.withDefault (div [] [])
+                        ]
+                    ]
+                ]
+
         OptionalRow optionalRow bool ->
             if bool then
                 browseRow vc map optionalRow
@@ -418,6 +445,23 @@ browseValue vc value =
                 , CssView.input vc |> css
                 ]
                 []
+
+        Select options msg current ->
+            options
+                |> List.map
+                    (\( key, title ) ->
+                        option
+                            [ Html.Styled.Attributes.value key
+                            , current == key |> selected
+                            ]
+                            [ Locale.string vc.locale title
+                                |> text
+                            ]
+                    )
+                |> select
+                    [ CssView.input vc |> css
+                    , onInput msg
+                    ]
 
         EntityId gc entity ->
             div
@@ -575,7 +619,7 @@ browseValue vc value =
 
 browseAddress : Plugins -> ModelState -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
 browseAddress plugins states vc now address =
-    (rowsAddress vc now address |> List.map (browseRow vc (browseValue vc)))
+    (rowsAddress vc now address |> properties vc)
         ++ [ rule vc ]
         ++ (case address of
                 Loading _ _ ->
@@ -587,7 +631,12 @@ browseAddress plugins states vc now address =
         |> propertyBox vc
 
 
-rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg))
+properties : View.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
+properties vc =
+    List.map (browseRow vc (browseValue vc))
+
+
+rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
 rowsAddress vc now address =
     let
         mkTableLink title tableTag =
@@ -743,12 +792,17 @@ rowsAddress vc now address =
         len =
             multiValueMaxLen vc .address address
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Address"
         , address
             |> ifLoaded (.address >> .address >> AddressStr UserClickedCopyToClipboard)
             |> elseShowAddress
-        , Nothing
+        , case address of
+            Loaded addr ->
+                Just (UserClickedAddressActions addr.id)
+
+            _ ->
+                Nothing
         )
     , OptionalRow
         (Row
@@ -915,7 +969,7 @@ browseTxAccount plugins states vc gc now tx table coinCode =
         |> propertyBox vc
 
 
-rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg))
+rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg) Coords Msg)
 rowsEntity vc gc now ent =
     let
         mkTableLink title tableTag =
@@ -941,7 +995,16 @@ rowsEntity vc gc now ent =
         len =
             multiValueMaxLen vc .entity ent
     in
-    [ Row ( "Entity", ent |> ifLoaded (EntityId gc) |> elseLoading, Nothing )
+    [ RowWithMoreActionsButton
+        ( "Entity"
+        , ent |> ifLoaded (EntityId gc) |> elseLoading
+        , case ent of
+            Loaded entity ->
+                Just (UserClickedEntityActions entity.id)
+
+            _ ->
+                Nothing
+        )
     , Row
         ( "Root Address"
         , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
@@ -1083,7 +1146,7 @@ rowsEntity vc gc now ent =
     ]
 
 
-rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg))
+rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
 rowsActor vc gc now actor =
     let
         mkTableLink title tableTag =
@@ -1209,7 +1272,7 @@ rowsActor vc gc now actor =
     ]
 
 
-rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg))
+rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg) Coords Msg)
 rowsBlock vc gc now block =
     let
         mkTableLink title tableTag =
@@ -1261,8 +1324,8 @@ rowsBlock vc gc now block =
     ]
 
 
-browseAddressTable : View.Config -> Graph.Config -> Maybe Float -> (Id.AddressId -> Bool -> A.Address -> Bool) -> Loadable String Address -> AddressTable -> Html Msg
-browseAddressTable vc gc height neighborLayerHasAddress address table =
+browseAddressTable : View.Config -> Graph.Config -> (Id.AddressId -> Bool -> A.Address -> Bool) -> Loadable String Address -> AddressTable -> Html Msg
+browseAddressTable vc gc neighborLayerHasAddress address table =
     let
         ( coinCode, addressId ) =
             case address of
@@ -1273,7 +1336,7 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
                     ( curr, Nothing )
 
         tt =
-            table_ vc cm height
+            table_ vc cm
     in
     case table of
         AddressTxsUtxoTable t ->
@@ -1283,7 +1346,7 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
             tt (TxsAccountTable.config vc coinCode) t
 
         AddressTagsTable t ->
-            table_ vc Nothing height (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
+            table_ vc Nothing (AddressTagsTable.config vc gc Nothing Nothing (\_ _ -> False)) t
 
         AddressIncomingNeighborsTable t ->
             tt (AddressNeighborsTable.config vc False coinCode addressId neighborLayerHasAddress) t
@@ -1292,7 +1355,7 @@ browseAddressTable vc gc height neighborLayerHasAddress address table =
             tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
 
-table_ : View.Config -> Maybe Msg -> Maybe Float -> Table.Config data Msg -> Table data -> Html Msg
+table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg
 table_ vc csvMsg =
     Table.table vc
         [ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
@@ -1320,8 +1383,8 @@ clientHeight =
     JD.oneOf [ JD.at [ "target", "clientHeight" ] JD.int, JD.at [ "target", "scrollingElement", "clientHeight" ] JD.int ]
 
 
-browseEntityTable : View.Config -> Graph.Config -> Maybe Float -> (Id.EntityId -> A.Address -> Bool) -> (Id.EntityId -> Bool -> E.Entity -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg
-browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity table =
+browseEntityTable : View.Config -> Graph.Config -> (Id.EntityId -> A.Address -> Bool) -> (Id.EntityId -> Bool -> E.Entity -> Bool) -> Loadable Int Entity -> EntityTable -> Html Msg
+browseEntityTable vc gc entityHasAddress neighborLayerHasEntity entity table =
     let
         ( coinCode, entityId, bestAddressTag ) =
             case entity of
@@ -1332,7 +1395,7 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
                     ( curr, Nothing, Nothing )
 
         tt =
-            table_ vc cm height
+            table_ vc cm
     in
     case table of
         EntityAddressesTable t ->
@@ -1345,7 +1408,7 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
             tt (TxsAccountTable.config vc coinCode) t
 
         EntityTagsTable t ->
-            table_ vc Nothing height (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
+            table_ vc Nothing (AddressTagsTable.config vc gc bestAddressTag entityId entityHasAddress) t
 
         EntityIncomingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc False coinCode entityId neighborLayerHasEntity) t
@@ -1354,18 +1417,18 @@ browseEntityTable vc gc height entityHasAddress neighborLayerHasEntity entity ta
             tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
 
 
-browseActorTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Actor -> ActorTable -> Html Msg
-browseActorTable vc gc height actor table =
+browseActorTable : View.Config -> Graph.Config -> Loadable String Actor -> ActorTable -> Html Msg
+browseActorTable vc gc actor table =
     case table of
         ActorTagsTable t ->
-            table_ vc Nothing height (LabelAddressTagsTable.config vc) t
+            table_ vc Nothing (LabelAddressTagsTable.config vc) t
 
         ActorOtherLinksTable t ->
-            table_ vc Nothing height (LinksTable.config vc) t
+            table_ vc Nothing (LinksTable.config vc) t
 
 
-browseBlockTable : View.Config -> Graph.Config -> Maybe Float -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
-browseBlockTable vc gc height block table =
+browseBlockTable : View.Config -> Graph.Config -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
+browseBlockTable vc gc block table =
     let
         ( coinCode, blockId ) =
             case block of
@@ -1377,14 +1440,14 @@ browseBlockTable vc gc height block table =
     in
     case table of
         BlockTxsUtxoTable t ->
-            table_ vc cm height (TxsUtxoTable.config vc coinCode) t
+            table_ vc cm (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm (TxsAccountTable.config vc coinCode) t
 
 
-browseTxUtxoTable : View.Config -> Graph.Config -> Maybe Float -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
-browseTxUtxoTable vc gc height tx table =
+browseTxUtxoTable : View.Config -> Graph.Config -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
+browseTxUtxoTable vc gc tx table =
     let
         ( coinCode, txHash ) =
             case tx of
@@ -1396,14 +1459,14 @@ browseTxUtxoTable vc gc height tx table =
     in
     case table of
         TxUtxoInputsTable t ->
-            table_ vc cm height (TxUtxoTable.config vc False coinCode) t
+            table_ vc cm (TxUtxoTable.config vc False coinCode) t
 
         TxUtxoOutputsTable t ->
-            table_ vc cm height (TxUtxoTable.config vc True coinCode) t
+            table_ vc cm (TxUtxoTable.config vc True coinCode) t
 
 
-browseTxAccountTable : View.Config -> Graph.Config -> Maybe Float -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> TxAccountTable -> Html Msg
-browseTxAccountTable vc gc height tx (TokenTxsTable table) =
+browseTxAccountTable : View.Config -> Graph.Config -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> TxAccountTable -> Html Msg
+browseTxAccountTable vc gc tx (TokenTxsTable table) =
     let
         ( coinCode, txHash ) =
             case tx of
@@ -1413,7 +1476,7 @@ browseTxAccountTable vc gc height tx (TokenTxsTable table) =
                 Loading curr _ ->
                     ( curr, Nothing )
     in
-    table_ vc cm height (TxsAccountTable.config vc coinCode) table
+    table_ vc cm (TxsAccountTable.config vc coinCode) table
 
 
 browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
@@ -1421,7 +1484,7 @@ browsePlugin plugins vc states =
     Plugin.View.browser plugins vc states
 
 
-rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg))
+rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
 rowsTxUtxo vc gc now tx =
     let
         mkTableLink title tableTag =
@@ -1444,12 +1507,17 @@ rowsTxUtxo vc gc now tx =
                         }
                     )
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowAddress
-        , Nothing
+        , case tx of
+            Loaded txi ->
+                Just (UserClickedTransactionActions txi.txHash txi.currency)
+
+            _ ->
+                Nothing
         )
     , Row
         ( "Included in block"
@@ -1502,7 +1570,7 @@ rowsTxUtxo vc gc now tx =
     ]
 
 
-rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg))
+rowsTxAccount : View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> List (Row (Value Msg) Coords Msg)
 rowsTxAccount vc gc now tx table coinCode =
     let
         txLink getAddress tx_ =
@@ -1542,12 +1610,17 @@ rowsTxAccount vc gc now tx table coinCode =
                         }
                     )
     in
-    [ Row
+    [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
             |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
             |> elseShowTxAccount
-        , Nothing
+        , case tx of
+            Loaded txi ->
+                Just (UserClickedTransactionActions txi.txHash txi.currency)
+
+            _ ->
+                Nothing
         )
     , Row
         ( "Value"
@@ -1608,7 +1681,7 @@ browseAddresslink plugins states vc source link =
         |> propertyBox vc
 
 
-rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg))
+rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
 rowsAddresslink vc source link =
     let
         currency =
@@ -1669,7 +1742,7 @@ browseEntitylink plugins states vc source link =
         |> propertyBox vc
 
 
-rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg))
+rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
 rowsEntitylink vc source link =
     let
         currency =
@@ -1726,7 +1799,7 @@ rowsEntitylink vc source link =
     ]
 
 
-linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg)
+linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
 linkValueRow vc parentCurrency linkData =
     if parentCurrency /= "eth" then
         Row
@@ -1765,14 +1838,14 @@ linkValueRow vc parentCurrency linkData =
             )
 
 
-browseAddresslinkTable : View.Config -> Graph.Config -> Maybe Float -> String -> AddresslinkTable -> Html Msg
-browseAddresslinkTable vc gc height coinCode table =
+browseAddresslinkTable : View.Config -> Graph.Config -> String -> AddresslinkTable -> Html Msg
+browseAddresslinkTable vc gc coinCode table =
     case table of
         AddresslinkTxsUtxoTable t ->
-            table_ vc cm height (AddresslinkTxsUtxoTable.config vc coinCode) t
+            table_ vc cm (AddresslinkTxsUtxoTable.config vc coinCode) t
 
         AddresslinkTxsAccountTable t ->
-            table_ vc cm height (TxsAccountTable.config vc coinCode) t
+            table_ vc cm (TxsAccountTable.config vc coinCode) t
 
 
 multiValue : View.Config -> String -> String -> Api.Data.Values -> String
@@ -1826,3 +1899,11 @@ balanceValues accessor a =
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
            )
+
+
+tableSeparator : View.Config -> Html msg
+tableSeparator vc =
+    div
+        [ Css.tableSeparator vc |> css
+        ]
+        []

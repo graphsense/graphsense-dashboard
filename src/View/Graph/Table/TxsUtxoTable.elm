@@ -9,6 +9,7 @@ import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
+import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -90,11 +91,11 @@ config vc coinCode =
         }
 
 
-prepareCSV : Api.Data.TxUtxo -> List ( ( String, List String ), String )
-prepareCSV row =
+prepareCSV : Model.Locale.Model -> String -> Api.Data.TxUtxo -> List ( ( String, List String ), String )
+prepareCSV locModel currency row =
     [ ( ( "tx_hash", [] ), Util.Csv.string row.txHash )
     , ( ( "no_inputs", [] ), Util.Csv.int row.noInputs )
     , ( ( "no_outputs", [] ), Util.Csv.int row.noOutputs )
     ]
-        ++ Util.Csv.values "total_input" row.totalInput
-        ++ Util.Csv.values "total_output" row.totalOutput
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_input" row.totalInput locModel currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_output" row.totalOutput locModel currency

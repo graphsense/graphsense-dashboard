@@ -4,13 +4,7 @@ import Browser.Dom
 import Effect.Api as Api
 import Effect.Search as Search
 import File.Download
-import IntDict exposing (IntDict)
-import Json.Encode
-import Model.Address as A
-import Model.Entity as E
-import Model.Graph.Id as Id exposing (AddressId, EntityId)
-import Model.Graph.Layer as Layer exposing (Layer)
-import Model.Graph.Search exposing (Criterion)
+import Model.Graph.Id exposing (AddressId, EntityId)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Msg as Plugin
 import Route.Graph exposing (Route)
@@ -35,7 +29,7 @@ perform : Effect -> Cmd Msg
 perform eff =
     case eff of
         -- managed in Effect.elm
-        NavPushRouteEffect str ->
+        NavPushRouteEffect _ ->
             Cmd.none
 
         GetBrowserElementEffect ->

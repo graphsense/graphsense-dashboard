@@ -8,6 +8,7 @@ import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
 import Config exposing (logoutUrl)
+import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
@@ -15,6 +16,7 @@ import Effect.Search as Search
 import Http
 import Http.Extras
 import Json.Decode
+import Json.Encode
 import Model exposing (Auth(..), Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -39,10 +41,6 @@ perform plugins key statusbarToken apiKey effect =
         NavPushUrlEffect url ->
             Nav.pushUrl key url
 
-        GetStatisticsEffect ->
-            Api.Request.General.getStatistics
-                |> Api.send BrowserGotStatistics
-
         GetElementEffect { id, msg } ->
             Dom.getElement id
                 |> Task.attempt msg
@@ -56,46 +54,24 @@ perform plugins key statusbarToken apiKey effect =
                 |> Cmd.map LocaleMsg
 
         LogoutEffect ->
-            Cmd.batch
-                [ Http.riskyTask
-                    { method = "GET"
-                    , headers = []
-                    , url = logoutUrl
-                    , resolver =
-                        Http.stringResolver
-                            (Http.Extras.responseToJson
-                                (Json.Decode.field "logout_url" Json.Decode.string)
-                            )
-                    , body = Http.emptyBody
-                    , timeout = Nothing
-                    }
-                    |> Task.andThen
-                        (\url ->
-                            Http.riskyTask
-                                { method = "GET"
-                                , headers = []
-                                , url = url
-                                , resolver =
-                                    Http.stringResolver
-                                        (Http.Extras.responseToString >> Result.map (always ()))
-                                , body = Http.emptyBody
-                                , timeout = Nothing
-                                }
-                        )
-                    |> Task.attempt BrowserGotLoggedOut
-                , Http.riskyRequest
-                    { method = "GET"
-                    , headers = []
-                    , url = Api.baseUrl ++ "/search?logout"
-                    , body = Http.emptyBody
-                    , expect = Http.expectWhatever BrowserGotLoggedOut
-                    , timeout = Nothing
-                    , tracker = Nothing
-                    }
-                ]
+            Http.riskyRequest
+                { method = "GET"
+                , headers = []
+                , url = "/?logout"
+                , body = Http.emptyBody
+                , expect = Http.expectWhatever BrowserGotLoggedOut
+                , timeout = Nothing
+                , tracker = Nothing
+                }
 
         SetDirtyEffect ->
             Ports.setDirty True
+
+        SetCleanEffect ->
+            Ports.setDirty False
+
+        SaveUserSettingsEffect model ->
+            Ports.saveToLocalStorage ( "gs_user_settings", Config.UserSettings.encoder model )
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
@@ -190,3 +166,6 @@ handleSearchEffect apiKey plugins tag effect =
             Process.sleep 200
                 |> Task.perform (\_ -> Search.BouncedBlur)
                 |> Cmd.map tag
+
+        Search.CmdEffect cmd ->
+            Cmd.map tag cmd

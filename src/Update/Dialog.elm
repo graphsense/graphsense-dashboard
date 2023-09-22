@@ -1,5 +1,6 @@
 module Update.Dialog exposing (..)
 
+import Http
 import Model.Dialog exposing (..)
 import Set
 
@@ -14,8 +15,8 @@ options =
     Options
 
 
-addressNotFound : String -> Maybe (Model msg) -> msg -> Model msg
-addressNotFound address model onOk =
+addressNotFoundError : String -> Maybe (Model msg) -> msg -> Model msg
+addressNotFoundError address model onOk =
     { type_ =
         AddressNotFound <|
             case model of
@@ -27,8 +28,65 @@ addressNotFound address model onOk =
                                 |> Set.fromList
                                 |> Set.toList
 
+                        _ ->
+                            [ address ]
+
                 _ ->
                     [ address ]
     , onOk = onOk
     }
         |> Error
+
+
+generalError : GeneralErrorConfig -> msg -> Model msg
+generalError conf onOk =
+    { type_ = General conf
+    , onOk = onOk
+    }
+        |> Error
+
+
+httpError : { title : String, error : Http.Error, onOk : msg } -> Model msg
+httpError { title, error, onOk } =
+    { type_ = Http title error
+    , onOk = onOk
+    }
+        |> Error
+
+
+info : InfoConfig msg -> Model msg
+info =
+    Info
+
+
+mapMsg : (a -> b) -> Model a -> Model b
+mapMsg map model =
+    case model of
+        Confirm conf ->
+            { message = conf.message
+            , onYes = map conf.onYes
+            , onNo = map conf.onNo
+            }
+                |> Confirm
+
+        Options conf ->
+            { message = conf.message
+            , options =
+                conf.options
+                    |> List.map (Tuple.mapSecond map)
+            , onClose = map conf.onClose
+            }
+                |> Options
+
+        Error conf ->
+            { type_ = conf.type_
+            , onOk = map conf.onOk
+            }
+                |> Error
+
+        Info conf ->
+            { info = conf.info
+            , variables = conf.variables
+            , onOk = map conf.onOk
+            }
+                |> Info

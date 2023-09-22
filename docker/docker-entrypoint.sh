@@ -1,18 +1,10 @@
 #!/bin/ash
 set -e
 
-node generate.js
-
 for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do 
     cd $WORKDIR/$plugin 
     npm install
     cd -
-    deps=$WORKDIR/$plugin/dependencies.txt
-    [ ! -e "$deps" ] && continue
-
-    for dep in `cat "$deps"`; do
-        yes | ./node_modules/.bin/elm install $dep
-    done
 done
 
 npm run build && cp -r $WORKDIR/dist/* /usr/share/nginx/html/ 

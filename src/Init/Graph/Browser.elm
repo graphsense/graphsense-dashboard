@@ -2,9 +2,6 @@ module Init.Graph.Browser exposing (..)
 
 import IntDict
 import Model.Graph.Browser exposing (..)
-import Model.Graph.Table exposing (Table)
-import Table
-import Task
 import Time
 
 

@@ -1,6 +1,5 @@
 module Theme.ContextMenu exposing (ContextMenu, default)
 
-import Color exposing (Color)
 import Css exposing (Style)
 
 

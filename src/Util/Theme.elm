@@ -3,6 +3,7 @@ module Util.Theme exposing (..)
 import Color
 import Css
 import Css.Transitions
+import Theme.SwitchableColor as Theme
 import Theme.Theme as Theme
 import Tuple exposing (..)
 import Util.View as Util
@@ -72,3 +73,14 @@ switchColor lm c =
 
     else
         c.dark
+
+
+setAlpha : Float -> Theme.SwitchableColor -> Theme.SwitchableColor
+setAlpha pct col =
+    let
+        updAlpha rgba =
+            { rgba | alpha = pct }
+    in
+    { dark = Color.toRgba col.dark |> updAlpha |> Color.fromRgba
+    , light = Color.toRgba col.light |> updAlpha |> Color.fromRgba
+    }

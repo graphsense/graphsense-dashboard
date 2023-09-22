@@ -180,7 +180,7 @@ getLabel vc gc ent =
                 ent.entity.bestAddressTag
                     |> Maybe.map
                         (\tag ->
-                            Util.truncate 18
+                            Util.truncate gc.maxLettersPerLabelRow
                                 (if not tag.tagpackIsPublic && String.isEmpty tag.label then
                                     "tag locked"
 

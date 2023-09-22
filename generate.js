@@ -3,7 +3,7 @@ var fse = require('fs-extra')
 var mustache = require('mustache')
 var path = require('path')
 var yaml = require('yaml')
-const { spawn } = require("child_process");
+const { execSync } = require("child_process");
 
 const isDir = fileName => {
   try {
@@ -17,7 +17,7 @@ const isDir = fileName => {
 
 const pluginsFolder = './plugins'
 const templatesFolder = './plugin_templates'
-const generatedFolder = './plugin_generated'
+const generatedFolder = './gen/plugins'
 const langFolder = 'lang'
 const publicFolder = './public'
 
@@ -98,7 +98,7 @@ for(const plugin in plugins) {
 }
 
 
-const elmJson = JSON.parse(fs.readFileSync('./elm.json'))
+const elmJson = JSON.parse(fs.readFileSync('./elm.json.base'))
 
 plugins.forEach(plugin => {
   const p = path.join(pluginsFolder, plugin.name, 'src')
@@ -111,14 +111,19 @@ fs.writeFileSync('./elm.json', JSON.stringify(elmJson, null, 4))
 
 console.log("\nUpdated src directories in elm.json")
 
-console.log("\nNow please run:")
-
 plugins.forEach(plugin => {
   const deps = fs.readFileSync(path.join(pluginsFolder, plugin.name, 'dependencies.txt'), 'utf8')
   deps.split("\n").forEach(dep => {
     if(!dep) return
-    console.log('elm install ' + dep)
+    let cmd = 'yes | elm install ' + dep
+    console.log(cmd)
+    try {
+      console.log(execSync(cmd).toString('utf-8'))
+    } catch(e) {
+      console.error('ERROR:')
+      console.error(e.message)
+      process.exit(1)
+    }
   })
-
 })
 

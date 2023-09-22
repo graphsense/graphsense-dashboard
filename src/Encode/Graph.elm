@@ -1,11 +1,10 @@
 module Encode.Graph exposing (..)
 
 import Color
-import Dict
 import Json.Encode exposing (..)
 import Model.Graph exposing (..)
-import Model.Graph.Address as Address exposing (Address)
-import Model.Graph.Entity as Entity exposing (Entity)
+import Model.Graph.Address exposing (Address)
+import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Tag as Tag

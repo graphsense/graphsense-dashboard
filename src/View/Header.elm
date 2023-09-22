@@ -10,7 +10,7 @@ import Model exposing (Msg(..), UserModel)
 import Model.Search as Search
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
-import Ports
+import Util.View as View
 import View.Search as Search
 import View.User as User
 
@@ -19,6 +19,7 @@ type alias HeaderConfig =
     { latestBlocks : List ( String, Int )
     , search : Search.Model
     , user : UserModel
+    , hideSearch : Bool
     }
 
 
@@ -29,20 +30,24 @@ header plugins states vc hc =
         , id "header"
         ]
         [ logo vc
-        , Search.search plugins
-            vc
-            { searchable =
-                { latestBlocks = hc.latestBlocks
-                , pluginStates = states
+        , if hc.hideSearch then
+            View.none
+
+          else
+            Search.search plugins
+                vc
+                { searchable =
+                    { latestBlocks = hc.latestBlocks
+                    , pluginStates = states
+                    }
+                        |> Search.SearchAll
+                , css = Css.Search.textarea vc
+                , resultsAsLink = True
+                , multiline = True
+                , showIcon = True
                 }
-                    |> Search.SearchAll
-            , css = Css.Search.textarea vc
-            , resultsAsLink = True
-            , multiline = True
-            , showIcon = True
-            }
-            hc.search
-            |> Html.Styled.map SearchMsg
+                hc.search
+                |> Html.Styled.map SearchMsg
         , User.user vc hc.user
         ]
 

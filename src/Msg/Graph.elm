@@ -1,9 +1,7 @@
 module Msg.Graph exposing (..)
 
 import Api.Data
-import Api.Request.Entities
 import Browser.Dom
-import Bytes exposing (Bytes)
 import Color
 import File
 import Json.Encode
@@ -16,7 +14,6 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Tag as Tag
-import Model.Graph.Transform as Transform
 import Model.Tx as T
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -30,9 +27,11 @@ type Msg
     = UserClickedGraph Dragging
     | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId Coords
+    | UserClickedAddressActions AddressId Coords
     | UserHoversAddress AddressId
     | UserClickedEntity EntityId Coords
     | UserRightClickedEntity EntityId Coords
+    | UserClickedEntityActions EntityId Coords
     | UserHoversEntity EntityId
     | UserHoversEntityLink (LinkId EntityId)
     | UserClicksEntityLink (LinkId EntityId)
@@ -40,6 +39,7 @@ type Msg
     | UserHoversAddressLink (LinkId AddressId)
     | UserClicksAddressLink (LinkId AddressId)
     | UserRightClicksAddressLink (LinkId AddressId) Coords
+    | UserClickedTransactionActions String String Coords
     | UserLeavesThing
     | UserClickedEntityExpandHandle EntityId Bool
     | UserClickedAddressExpandHandle AddressId Bool
@@ -151,7 +151,7 @@ type Msg
     | BrowserGotBulkAddresses String Deserializing (List Api.Data.Address)
     | BrowserGotBulkAddressTags String (List Api.Data.AddressTag)
     | BrowserGotBulkEntities String Deserializing (List Api.Data.Entity)
-    | BrowserGotBulkAddressEntities String Deserializing (List Api.Data.Entity)
+    | BrowserGotBulkAddressEntities String Deserializing (List ( String, Api.Data.Entity ))
     | BrowserGotBulkEntityNeighbors String Bool (List ( Int, Api.Data.NeighborEntity ))
     | BrowserGotBulkAddressNeighbors String Bool (List ( String, Api.Data.NeighborAddress ))
     | UserClickedNew
@@ -167,6 +167,7 @@ type Msg
     | UserClickedForceShowEntityLink (LinkId EntityId) Bool
     | UserClickedShowEntityShadowLinks
     | UserClickedShowAddressShadowLinks
+    | UserClickedToggleShowDatesInUserLocale
     | UserPressesDelete
     | UserClickedTagsFlag EntityId
     | UserClicksDownloadCSVInTable

@@ -2,7 +2,6 @@ module Model.Store exposing (..)
 
 import Api.Data
 import Dict exposing (Dict)
-import Effect.Store exposing (Effect)
 import RemoteData exposing (WebData)
 
 

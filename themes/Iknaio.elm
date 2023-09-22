@@ -13,9 +13,11 @@ import Theme.ContextMenu as ContextMenu
 import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
+import Theme.Landingpage as Landingpage
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
+import Theme.SwitchableColor as Theme
 import Theme.Table as Table
 import Theme.Theme as Theme exposing (Theme, default)
 import Theme.User as User
@@ -27,6 +29,7 @@ import Util.Theme
         , borderColor_backgroundColorWithLightmode
         , colorWithLightmode
         , color_backgroundColorWithLightmode
+        , setAlpha
         , switchColor
         )
 import Util.View exposing (toCssColor)
@@ -161,6 +164,36 @@ theme =
                             ]
                        )
             )
+        |> s_sidebarIconBottom
+            (\lightmode active ->
+                [ colorWithLightmode lightmode iconInactive
+                , scaled 5 |> rem |> fontSize
+                , scaled 4 |> rem |> padding
+                , position absolute
+                , bottom (px 15)
+                , left (px 0)
+                ]
+                    ++ (if active then
+                            [ color_backgroundColorWithLightmode lightmode iconActive colors.brandLightest
+                            ]
+
+                        else
+                            [ hover
+                                [ switchColor lightmode iconHovered |> toCssColor |> color
+                                ]
+                            ]
+                       )
+            )
+        |> s_sidebarRule
+            (\lightmode ->
+                [ Css.width (pct 50)
+                , borderWidth (px 0.5)
+
+                --, scaled 1 |> rem |> margin
+                , colors.greyLight |> colorWithLightmode lightmode
+                , opacity <| num 0.5
+                ]
+            )
         |> s_main
             (\lightmode ->
                 [ backgroundColorWithLightmode lightmode colors.brandLightest
@@ -175,6 +208,7 @@ theme =
         |> s_link
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.brandText
+                , textDecoration underline
                 , hover
                     [ textDecoration none
                     ]
@@ -287,6 +321,74 @@ theme =
                     , scaled -1 |> rem |> marginLeft
                     ]
             )
+        |> s_landingpage
+            (Landingpage.default
+                |> s_root
+                    [ displayFlex
+                    , width <| pct 100
+                    , height <| pct 100
+                    , flexDirection column
+                    , alignItems center
+                    , scaled 20 |> rem |> marginTop
+                    ]
+                |> s_searchRoot
+                    [ paddingTop <| rem <| scaled 5
+                    ]
+                |> s_frame
+                    (\lightmode ->
+                        [ backgroundColorWithLightmode lightmode colors.white
+                        , displayFlex
+                        , alignItems center
+                        , flexDirection column
+                        , scaled 7 |> rem |> padding
+                        , borderRadiusSm
+                        , shadowSm
+                        ]
+                    )
+                |> s_rule
+                    (\lightmode ->
+                        [ width <| pct 50
+                        , colorWithLightmode lightmode colors.grey
+                        , paddingTop <| rem <| scaled 8
+                        , paddingBottom <| rem <| scaled 5
+                        ]
+                    )
+                |> s_ruleColor colors.grey
+                |> s_loadBox
+                    (\lightmode ->
+                        [ scaled 4 |> rem |> padding
+                        , borderRadiusSm
+                        , border zero
+                        , backgroundColorWithLightmode lightmode colors.greyLighter
+                        , hover
+                            [ backgroundColorWithLightmode lightmode colors.brandLighter
+                            ]
+                        , disabled
+                            [ colorWithLightmode lightmode colors.brandLight
+                            ]
+                        , displayFlex
+                        , flexDirection column
+                        , alignItems center
+                        , cursor pointer
+                        ]
+                    )
+                |> s_loadBoxIcon
+                    (\lightmode ->
+                        [ colorWithLightmode lightmode colors.brandDark
+                        , paddingBottom <| rem <| scaled 4
+                        , fontSize <| rem <| scaled 7
+                        ]
+                    )
+                |> s_loadBoxText
+                    (\lightmode ->
+                        [ textDecoration none
+                        ]
+                    )
+                |> s_exampleLinkBox
+                    (\lightmode ->
+                        [ paddingTop <| rem <| scaled 4 ]
+                    )
+            )
         |> s_search
             (Search.default
                 |> s_frame
@@ -299,9 +401,9 @@ theme =
                     ]
                 |> s_textarea
                     (\lightmode input ->
-                        [ scaled 1 |> rem |> padding
-                        , scaled 5 |> rem |> height
+                        [ scaled 5 |> rem |> height
                         , inputStyle lightmode
+                        , marginBottom zero
                         , scaled 2 |> rem |> paddingX
                         , scaled 2 |> rem |> paddingTop
                         , scaled 1 |> rem |> paddingBottom
@@ -366,6 +468,7 @@ theme =
                 |> s_button
                     (\lightmode ->
                         [ fontWeight bold
+                        , textDecoration none
                         , scaled 1 |> rem |> paddingY
                         , scaled 2 |> rem |> paddingX
                         , scaled 1 |> rem |> marginX
@@ -379,6 +482,9 @@ theme =
                 |> s_primary
                     (\lightmode ->
                         [ color_backgroundColorWithLightmode lightmode colors.brandDark colors.greyLighter
+                        , disabled
+                            [ colorWithLightmode lightmode colors.brandLight
+                            ]
                         ]
                     )
                 |> s_danger
@@ -445,6 +551,10 @@ theme =
                     , margin2 zero auto
                     , px 100 |> minWidth
                     , pct 50 |> width
+                    ]
+                |> s_singleButton
+                    [ displayFlex
+                    , justifyContent center
                     ]
                 |> s_part
                     [ scaled 2 |> rem |> paddingBottom
@@ -851,7 +961,7 @@ theme =
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
-                    , scaled 0.5 |> rem |> paddingY
+                    , scaled 1 |> rem |> paddingBottom
                     , whiteSpace noWrap
                     ]
                 |> s_propertyBoxValue
@@ -860,6 +970,7 @@ theme =
                 |> s_propertyBoxValueInner
                     [ displayFlex
                     , justifyContent spaceBetween
+                    , whiteSpace noWrap
                     ]
                 |> s_frame
                     (\lightmode visible ->
@@ -954,37 +1065,25 @@ theme =
                     , textAlign right
                     , ex 30 |> width
                     ]
+                |> s_tableSeparator
+                    (\lightmode ->
+                        [ borderLeftWidth (px 1)
+                        , borderStyle solid
+                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 1 |> rem |> paddingLeft
+                        , scaled 4 |> rem |> marginLeft
+                        ]
+                    )
             )
         |> s_table
             (Table.default
-                |> s_root
-                    [ displayFlex
-                    , flexDirection row
-                    , overflowX auto
-                    ]
-                |> s_tableRoot
-                    [ scaled 3 |> rem |> paddingX
-                    , displayFlex
-                    , flexDirection column
-
-                    --, overflowX hidden
-                    ]
                 |> s_sidebar
                     (\lightmode ->
                         [ borderLeftWidth (px 1)
                         , borderStyle solid
                         , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
+                        , scaled 2 |> rem |> marginLeft
                         , scaled 2 |> rem |> paddingLeft
-                        , scaled 1 |> rem |> paddingTop
-                        ]
-                    )
-                |> s_tableSeperator
-                    (\lightmode ->
-                        [ borderLeftWidth (px 1)
-                        , borderStyle solid
-                        , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
-                        , scaled 1 |> rem |> paddingRight
-                        , scaled 4 |> rem |> marginLeft
                         , scaled 1 |> rem |> paddingTop
                         ]
                     )
@@ -1025,7 +1124,7 @@ theme =
                 |> s_headCell
                     (\lightmode ->
                         [ tableCell
-                        , rowHeight |> px |> height
+                        , paddingTop zero
                         , position sticky
                         , top <| px 0
                         , zIndex <| int 2
@@ -1034,7 +1133,7 @@ theme =
                     )
                 |> s_headRow
                     [ textAlign left
-                    , fontWeight bold
+                    , fontBold
                     ]
                 |> s_headCellSortable
                     [ ( "cursor", "pointer" )
@@ -1045,7 +1144,12 @@ theme =
                 |> s_row
                     (\lightmode ->
                         [ nthChild "2n"
-                            [ backgroundColorWithLightmode lightmode colors.brandLightest
+                            [ backgroundColorWithLightmode lightmode colors.greyLighter
+                            ]
+                        , nthChild "2n+1"
+                            [ colors.greyLighter
+                                |> setAlpha 0.3
+                                |> backgroundColorWithLightmode lightmode
                             ]
                         , rowHeight |> px |> height
                         ]

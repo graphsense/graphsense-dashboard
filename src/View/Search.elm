@@ -2,16 +2,13 @@ module View.Search exposing (Searchable(..), search)
 
 import Api.Data
 import Config.View exposing (Config)
-import Css exposing (Style, block, display, none)
+import Css exposing (Style)
 import Css.Button
 import Css.Search as Css
-import Css.View
 import FontAwesome
-import Heroicons.Solid as Heroicons
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Init.Search as Search
 import Json.Decode
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
@@ -19,9 +16,8 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..), WebData)
 import Route exposing (toUrl)
-import Route.Graph as Route exposing (Route)
-import Util.RemoteData exposing (webdata)
-import Util.View exposing (loadingSpinner, truncate)
+import Route.Graph as Route
+import Util.View
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
@@ -61,11 +57,12 @@ search plugins vc sc model =
                  , onInput UserInputsSearch
                  , onEnter UserHitsEnter
                  , onFocus UserFocusSearch
+                 , onBlur UserLeavesSearch
                  , value model.input
                  ]
                     ++ (case sc.searchable of
                             SearchAll _ ->
-                                [ "Addresses", "transaction", "label", "block", "actors" ]
+                                [ "Address", "transaction", "label", "block", "actor" ]
                                     |> List.map (Locale.string vc.locale)
                                     |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
                                     |> String.join ", "
@@ -109,6 +106,15 @@ searchResult plugins vc sc model =
             }
 
 
+removeLeading0x : String -> String
+removeLeading0x s =
+    if String.startsWith "0x" s then
+        s |> String.dropLeft 2
+
+    else
+        s
+
+
 filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
 filterByPrefix input result =
     { result
@@ -125,7 +131,7 @@ filterByPrefix input result =
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (String.startsWith input) currency.txs
+                        , txs = List.filter (\x -> String.startsWith (removeLeading0x input) (removeLeading0x x)) currency.txs
                     }
                 )
                 result.currencies

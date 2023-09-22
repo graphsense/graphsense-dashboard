@@ -2,7 +2,6 @@ module Model.Search exposing (..)
 
 import Api.Data
 import Bounce exposing (Bounce)
-import RemoteData exposing (WebData)
 
 
 
@@ -11,7 +10,7 @@ import RemoteData exposing (WebData)
 
 minSearchInputLength : Int
 minSearchInputLength =
-    3
+    2
 
 
 type alias Model =
@@ -36,3 +35,15 @@ getMulti model =
     String.split " " model.input
         |> List.map (String.replace "," "")
         |> List.map String.trim
+        |> List.filter (String.isEmpty >> not)
+
+
+isLikelyPathSearchInput : Model -> Bool
+isLikelyPathSearchInput model =
+    let
+        mul =
+            getMulti model
+    in
+    List.length mul
+        > 1
+        && List.all (\i -> String.length i > 20) mul

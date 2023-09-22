@@ -1,8 +1,6 @@
 module Lense.Dialog exposing (..)
 
 import Model.Dialog exposing (..)
-import Monocle.Compose exposing (optionalWithOptional)
-import Monocle.Lens exposing (Lens)
 import Monocle.Optional exposing (Optional)
 
 

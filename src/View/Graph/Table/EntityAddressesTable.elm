@@ -10,6 +10,7 @@ import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table as T exposing (Table)
+import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
@@ -99,11 +100,11 @@ n s =
     ( s, [] )
 
 
-prepareCSV : Api.Data.Address -> List ( ( String, List String ), String )
-prepareCSV row =
+prepareCSV : Model.Locale.Model -> String -> Api.Data.Address -> List ( ( String, List String ), String )
+prepareCSV locModel currency row =
     [ ( n "address", Util.Csv.string row.address )
-    , ( n "first_usage", Util.Csv.int row.firstTx.timestamp )
-    , ( n "last_usage", Util.Csv.int row.lastTx.timestamp )
+    , ( n "first_usage", Util.Csv.timestamp locModel row.firstTx.timestamp )
+    , ( n "last_usage", Util.Csv.timestamp locModel row.lastTx.timestamp )
     ]
-        ++ Util.Csv.values "final_balance" row.totalReceived
-        ++ Util.Csv.values "total_received" row.balance
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "final_balance" row.totalReceived locModel currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "total_received" row.balance locModel currency

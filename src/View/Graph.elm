@@ -1,9 +1,5 @@
 module View.Graph exposing (view)
 
---import Plugin.View.Graph.Address
-
-import Browser.Dom as Dom
-import Conditional exposing (applyIf)
 import Config.Graph as Graph
 import Config.View exposing (Config)
 import Css
@@ -15,7 +11,6 @@ import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
 import IntDict exposing (IntDict)
 import Json.Decode
-import List.Extra
 import Log
 import Maybe.Extra
 import Model.Graph exposing (..)
@@ -37,7 +32,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
-import Util.ExternalLinks exposing (getBlockExplorerLinks)
+import Util.ExternalLinks exposing (getBlockExplorerLinks, getBlockExplorerTransactionLinks)
 import Util.Graph as Util
 import Util.View exposing (contextMenuRule, hovercard, none)
 import View.Graph.Address as Address
@@ -74,7 +69,7 @@ graph plugins states vc gc model =
 
 
 graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> BBox -> Svg Msg
-graphSvg plugins states vc gc model bbox =
+graphSvg plugins _ vc gc model bbox =
     let
         dim =
             { width = bbox.width, height = bbox.height }
@@ -132,10 +127,41 @@ graphSvg plugins states vc gc model bbox =
                     []
                )
             ++ [ Svg.lazy3 addressLinks vc gc model.layers
+
+               --, Svg.lazy4 showOrigin plugins vc gc model.layers
+               --, Svg.lazy4 showLayerBoundingBox plugins vc gc model.layers
                , Svg.lazy4 addresses plugins vc gc model.layers
                , Svg.lazy4 hoveredLinks vc gc model.hovered model.layers
                ]
         )
+
+
+showOrigin : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+showOrigin plugins vc gc layers =
+    rect [ x "0", y "0", Svg.width "10", Svg.height "10" ] []
+
+
+showLayerBoundingBox : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
+showLayerBoundingBox plugins vc gc layers =
+    let
+        lb =
+            Layer.getBoundingBox layers
+    in
+    lb
+        |> Maybe.map
+            (\bx ->
+                rect
+                    [ x (String.fromFloat bx.x)
+                    , y (String.fromFloat bx.y)
+                    , Svg.width (String.fromFloat bx.width)
+                    , Svg.height (String.fromFloat bx.height)
+                    , Svg.fillOpacity "0.5"
+                    , rx "15"
+                    , ry "15"
+                    ]
+                    []
+            )
+        |> Maybe.withDefault (rect [] [])
 
 
 addresses : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
@@ -384,27 +410,29 @@ contextMenu plugins states vc model cm =
         option title msg =
             ContextMenu.option vc (Locale.string vc.locale title) msg
 
+        optionWithIcon title icon msg =
+            ContextMenu.optionWithIcon vc (Locale.string vc.locale title) icon msg
+
         addBlockExplorerLinks currency address =
             getBlockExplorerLinks currency address
                 |> List.map
                     (\( url, label ) ->
-                        ContextMenu.optionHtml vc
-                            [ FontAwesome.icon FontAwesome.externalLinkAlt
-                                |> Html.Styled.fromUnstyled
-                                |> List.singleton
-                                |> span
-                                    [ HA.css [ Css.marginRight <| Css.em 0.5 ] ]
-                            , Locale.string vc.locale label |> Html.Styled.text
-                            ]
-                            (UserClickedExternalLink url)
+                        optionWithIcon label FontAwesome.externalLinkAlt (UserClickedExternalLink url)
+                    )
+
+        addBlockExplorerTransactionLinks currency txHash =
+            getBlockExplorerTransactionLinks currency txHash
+                |> List.map
+                    (\( url, label ) ->
+                        optionWithIcon label FontAwesome.externalLinkAlt (UserClickedExternalLink url)
                     )
     in
     (case cm.type_ of
         ContextMenu.Address address ->
             [ UserClickedAnnotateAddress address.id
-                |> option "Annotate"
+                |> optionWithIcon "Annotate address" FontAwesome.userTag
             , UserClickedRemoveAddress address.id
-                |> option "Remove"
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             ]
                 ++ contextMenuRule vc
                 ++ addBlockExplorerLinks address.address.currency address.address.address
@@ -412,12 +440,15 @@ contextMenu plugins states vc model cm =
 
         ContextMenu.Entity entity ->
             [ UserClickedAnnotateEntity entity.id
-                |> option "Annotate"
+                |> optionWithIcon "Annotate entity" FontAwesome.userTag
             , UserClickedSearch entity.id
-                |> option "Search neighbors"
+                |> optionWithIcon "Search neighbors" FontAwesome.search
             , UserClickedRemoveEntity entity.id
-                |> option "Remove"
+                |> optionWithIcon "Remove from graph" FontAwesome.eraser
             ]
+
+        ContextMenu.Transaction txHash currency ->
+            addBlockExplorerTransactionLinks currency txHash
 
         ContextMenu.AddressLink id ->
             let
@@ -436,10 +467,10 @@ contextMenu plugins states vc model cm =
                             |> Maybe.andThen (\a -> Layer.getEntity a.entityId model.layers)
                         )
             in
-            [ UserClickedRemoveAddressLink id
-                |> option "Remove"
-            ]
-                ++ (srcLink
+            (UserClickedRemoveAddressLink id
+                |> optionWithIcon "Remove link" FontAwesome.eraser
+            )
+                :: (srcLink
                         |> Maybe.map
                             (\( src, li ) ->
                                 let
@@ -461,7 +492,7 @@ contextMenu plugins states vc model cm =
 
         ContextMenu.EntityLink id ->
             [ UserClickedRemoveEntityLink id
-                |> option "Remove"
+                |> optionWithIcon "Remove" FontAwesome.eraser
             ]
     )
         |> ContextMenu.view vc cm.coords

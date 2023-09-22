@@ -31,3 +31,10 @@ port copyToClipboard : String -> Cmd msg
 
 
 port setDirty : Bool -> Cmd msg
+
+
+port saveToLocalStorage : ( String, Value ) -> Cmd msg
+
+
+
+--port loadFromLocalStorage : String -> Cmd msg

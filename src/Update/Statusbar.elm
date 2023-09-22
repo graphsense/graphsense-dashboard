@@ -51,9 +51,6 @@ messageFromEffect model effect =
         Model.NavPushUrlEffect _ ->
             Nothing
 
-        Model.GetStatisticsEffect ->
-            Nothing
-
         Model.GetElementEffect _ ->
             Nothing
 
@@ -78,6 +75,9 @@ messageFromEffect model effect =
         Model.SearchEffect Search.BlurBounceEffect ->
             Nothing
 
+        Model.SearchEffect (Search.CmdEffect _) ->
+            Nothing
+
         Model.PluginEffect _ ->
             Nothing
 
@@ -91,6 +91,12 @@ messageFromEffect model effect =
             Nothing
 
         Model.SetDirtyEffect ->
+            Nothing
+
+        Model.SaveUserSettingsEffect _ ->
+            Nothing
+
+        Model.SetCleanEffect ->
             Nothing
 
         Model.ApiEffect eff ->
@@ -210,6 +216,9 @@ messageFromApiEffect model effect =
                 |> Just
 
         Api.SearchEffect _ _ ->
+            Nothing
+
+        Api.GetStatisticsEffect _ ->
             Nothing
 
         Api.SearchEntityNeighborsEffect e _ ->

@@ -55,8 +55,8 @@ firstToUpper str =
 
 truncate : Int -> String -> String
 truncate len str =
-    if String.length str > len then
-        String.left len str ++ "…"
+    if String.length str > len && len > 6 then
+        String.left (len - 3) str ++ "…"
 
     else
         str

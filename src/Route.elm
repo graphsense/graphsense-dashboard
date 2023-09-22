@@ -1,4 +1,4 @@
-module Route exposing (Route(..), graphRoute, graphSegment, parse, pluginRoute, statsRoute, toUrl)
+module Route exposing (Route(..), graphRoute, graphSegment, homeRoute, parse, pluginRoute, statsRoute, toUrl)
 
 import List.Extra
 import Plugin.Model
@@ -17,6 +17,7 @@ type alias Config =
 
 type Route
     = Graph Graph.Route
+    | Home
     | Stats
     | Plugin ( Plugin.Model.PluginType, String )
 
@@ -24,6 +25,10 @@ type Route
 graphSegment : String
 graphSegment =
     "graph"
+
+
+statsSegment =
+    "stats"
 
 
 parse : Config -> Url -> Maybe Route
@@ -35,9 +40,15 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
-        , map Stats top
+        , map Stats (s statsSegment)
+        , map Home top
         , map Plugin (remainder Plugin.parseUrl)
         ]
+
+
+homeRoute : Route
+homeRoute =
+    Home
 
 
 statsRoute : Route
@@ -71,6 +82,9 @@ toUrl route =
             absolute [ graphSegment ] [] ++ Graph.toUrl graph
 
         Stats ->
+            absolute [ statsSegment ] []
+
+        Home ->
             absolute [] []
 
         Plugin ( pid, _ ) ->

@@ -2,7 +2,6 @@ module Update.Graph.Color exposing (..)
 
 import Color exposing (Color)
 import Config.Update as Update
-import Config.View as View
 import Dict exposing (Dict)
 import List.Extra
 

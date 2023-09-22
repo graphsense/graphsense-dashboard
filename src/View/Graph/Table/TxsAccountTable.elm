@@ -10,6 +10,7 @@ import Init.Graph.Table
 import Model.Currency
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
+import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
@@ -113,15 +114,15 @@ n s =
     ( s, [] )
 
 
-prepareCSV : Api.Data.TxAccount -> List ( ( String, List String ), String )
-prepareCSV row =
+prepareCSV : Model.Locale.Model -> String -> Api.Data.TxAccount -> List ( ( String, List String ), String )
+prepareCSV locModel currency row =
     [ ( n "tx_hash", Util.Csv.string row.txHash )
     , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
-        ++ Util.Csv.values "value" row.value
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency
         ++ [ ( n "currency", Util.Csv.string row.currency )
            , ( n "height", Util.Csv.int row.height )
-           , ( n "timestamp", Util.Csv.int row.timestamp )
+           , ( n "timestamp", Util.Csv.timestamp locModel row.timestamp )
            , ( n "sending_address", Util.Csv.string row.fromAddress )
            , ( n "receiving_address", Util.Csv.string row.toAddress )
            ]

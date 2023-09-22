@@ -1,17 +1,17 @@
 module Update.Search exposing (clear, getFirstResultUrl, update)
 
-import Api.Data
 import Bounce
 import Effect exposing (n)
 import Effect.Search as Effect exposing (Effect(..))
 import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
+import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Result.Extra as RE
 import Route exposing (toUrl)
 import Route.Graph as Route
+import Task
 
 
 update : Msg -> Model -> ( Model, List Effect )
@@ -33,9 +33,13 @@ update msg model =
 
         UserClicksResult ->
             -- handled upstream
-            hide model |> n
+            clear model |> n
 
         UserPicksCurrency _ ->
+            -- handled upstream
+            n model
+
+        UserClickedCloseCurrencyPicker ->
             -- handled upstream
             n model
 
@@ -64,7 +68,12 @@ update msg model =
             n { model | visible = True }
 
         UserLeavesSearch ->
-            hide model |> n
+            ( model
+            , Process.sleep 100
+                |> Task.perform (\_ -> BouncedBlur)
+                |> CmdEffect
+                |> List.singleton
+            )
 
         BouncedBlur ->
             hide model |> n
@@ -87,13 +96,14 @@ maybeTriggerSearch ( model, cmd ) =
         limit =
             10
 
-        multi =
-            getMulti model
+        isPathSearch =
+            isLikelyPathSearchInput model
     in
     if
         Bounce.steady model.bounce
-            && (String.length model.input >= minSearchInputLength)
-            && (List.length multi == 1)
+            && String.length model.input
+            >= minSearchInputLength
+            && not isPathSearch
     then
         ( { model
             | loading = True

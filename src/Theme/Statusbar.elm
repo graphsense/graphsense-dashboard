@@ -1,6 +1,5 @@
 module Theme.Statusbar exposing (Statusbar, default)
 
-import Color exposing (Color)
 import Css exposing (Style)
 
 

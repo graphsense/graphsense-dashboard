@@ -1,13 +1,9 @@
 module Update.Graph.Transform exposing (update, updateByBoundingBox, vector, wheel)
 
 import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
-import List.Extra
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (..)
-import Pixels
-import Point2d
 import RecordSetter exposing (..)
-import Rectangle2d
 
 
 update : Coords -> Coords -> Model -> Model

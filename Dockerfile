@@ -17,7 +17,7 @@ WORKDIR $WORKDIR
 COPY ./docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh 
 
-COPY ./elm.json ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
+COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
 
 COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src

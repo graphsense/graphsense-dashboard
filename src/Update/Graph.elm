@@ -17,7 +17,6 @@ import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
 import File
 import File.Select
-import Init.Graph
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Highlighter as Highlighter
 import Init.Graph.Id as Id
@@ -50,9 +49,7 @@ import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
 import Ports
-import Process
 import RecordSetter exposing (..)
-import Route as R exposing (toUrl)
 import Route.Graph as Route
 import Set exposing (Set)
 import Task
@@ -64,6 +61,7 @@ import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
 import Update.Graph.Entity as Entity
 import Update.Graph.Highlighter as Highlighter
+import Update.Graph.History as History
 import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
 import Update.Graph.Tag as Tag
@@ -181,12 +179,19 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                         (++)
                             (Layer.getEntities e.entity.currency e.entity.entity model.layers)
 
+                    filterSelf : Api.Data.NeighborEntity -> Bool
+                    filterSelf neighbor =
+                        (neighbor.entity.entity /= entity.entity)
+                            && (neighbor.entity.currency /= entity.currency)
+
                     outgoingAnchors =
                         incoming
+                            |> List.filter filterSelf
                             |> List.foldl findEntities []
 
                     incomingAnchors =
                         outgoing
+                            |> List.filter filterSelf
                             |> List.foldl findEntities []
                 in
                 ( outgoingAnchors, incomingAnchors )
@@ -248,6 +253,7 @@ update plugins uc msg model =
     model
         |> pushHistory msg
         |> updateByMsg plugins uc msg
+        |> cleanHistory
         |> mapFirst (syncBrowser model)
 
 
@@ -264,8 +270,19 @@ syncBrowser old model =
     }
 
 
-loadNextAddress : Plugins -> Model -> Id.AddressId -> Maybe ( Model, List Effect )
-loadNextAddress plugins model id =
+loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
+loadNextAddress plugins uc model id =
+    let
+        items_out_of_bbox =
+            not (uc.size |> Maybe.map (Layer.isContentWithinViewPort model.layers model.transform) |> Maybe.withDefault True)
+
+        add_fitgraph_on_path =
+            if Adding.isLastPathItem model.adding && items_out_of_bbox then
+                CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x -> x)) |> List.singleton
+
+            else
+                []
+    in
     Adding.getNextFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -280,7 +297,9 @@ loadNextAddress plugins model id =
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
+                    |> (\( m, eff ) -> ( m, eff ++ add_fitgraph_on_path ))
             )
+        |> Maybe.withDefault ( model, add_fitgraph_on_path )
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -297,15 +316,14 @@ updateByMsg plugins uc msg model =
         InternalGraphAddedAddresses ids ->
             Set.toList ids
                 |> List.head
-                |> Maybe.andThen (loadNextAddress plugins model)
+                |> Maybe.map (loadNextAddress plugins uc model)
                 |> Maybe.withDefault (n model)
 
         InternalGraphAddedEntities ids ->
             n model
 
         InternalGraphSelectedAddress id ->
-            loadNextAddress plugins model id
-                |> Maybe.withDefault (n model)
+            loadNextAddress plugins uc model id
 
         -- handled upstream
         BrowserGotBrowserElement result ->
@@ -490,6 +508,19 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault model
                 |> n
 
+        UserClickedAddressActions id coords ->
+            Layer.getAddress id model.layers
+                |> Maybe.map
+                    (\address ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initAddress (Coords.relativeToGraph uc.size coords) address
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
         UserHoversAddress id ->
             n { model | hovered = HoveredAddress id }
 
@@ -530,6 +561,27 @@ updateByMsg plugins uc msg model =
                         }
                     )
                 |> Maybe.withDefault model
+                |> n
+
+        UserClickedEntityActions id coords ->
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\entity ->
+                        { model
+                            | contextMenu =
+                                ContextMenu.initEntity (Coords.relativeToGraph uc.size coords) entity
+                                    |> Just
+                        }
+                    )
+                |> Maybe.withDefault model
+                |> n
+
+        UserClickedTransactionActions hash currency coords ->
+            { model
+                | contextMenu =
+                    ContextMenu.initTransaction (Coords.relativeToGraph uc.size coords) hash currency
+                        |> Just
+            }
                 |> n
 
         UserHoversEntity id ->
@@ -1229,6 +1281,17 @@ updateByMsg plugins uc msg model =
         UserClickedRemoveEntity id ->
             { model
                 | layers = Layer.removeEntity id model.layers
+                , browser =
+                    case model.browser.type_ of
+                        Browser.Entity (Browser.Loaded e) _ ->
+                            if e.id == id then
+                                model.browser |> s_visible False |> s_type_ Browser.None
+
+                            else
+                                model.browser
+
+                        _ ->
+                            model.browser
             }
                 |> n
 
@@ -1311,75 +1374,87 @@ updateByMsg plugins uc msg model =
                 |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
         UserClickedAddressInNeighborsTable addressId isOutgoing neighbor ->
-            Layer.getAddress addressId model.layers
-                |> Maybe.map
-                    (\address ->
-                        let
-                            entityId =
-                                Id.initEntityId
-                                    { currency = Id.currency addressId
-                                    , layer =
-                                        Id.layer addressId
-                                    , id =
-                                        neighbor.address.entity
-                                            |> layerDelta isOutgoing
-                                    }
+            Layer.getAddress
+                (Id.initAddressId
+                    { layer = Id.layer addressId |> layerDelta isOutgoing
+                    , currency = neighbor.address.currency
+                    , id = neighbor.address.address
+                    }
+                )
+                model.layers
+                |> Maybe.map (\_ -> n model)
+                |> Maybe.Extra.orElseLazy
+                    (\_ ->
+                        Layer.getAddress addressId model.layers
+                            |> Maybe.map
+                                (\address ->
+                                    let
+                                        entityId =
+                                            Id.initEntityId
+                                                { currency = Id.currency addressId
+                                                , layer =
+                                                    Id.layer addressId
+                                                        |> layerDelta isOutgoing
+                                                , id =
+                                                    neighbor.address.entity
+                                                }
 
-                            added =
-                                Layer.addAddressAtEntity plugins
-                                    uc
-                                    entityId
-                                    neighbor.address
-                                    { layers = model.layers
-                                    , colors = model.config.colors
-                                    , new = Set.empty
-                                    , repositioned = Set.empty
-                                    }
-                        in
-                        case Set.toList added.new of
-                            [] ->
-                                ( model
-                                , [ BrowserGotEntityForAddressNeighbor
-                                        { anchor = addressId
-                                        , isOutgoing = isOutgoing
-                                        , neighbors = [ neighbor ]
-                                        }
-                                        |> GetEntityEffect
-                                            { entity = neighbor.address.entity
-                                            , currency = Id.currency addressId
-                                            }
-                                        |> ApiEffect
-                                  ]
-                                )
-
-                            addedAddressId :: _ ->
-                                Layer.getAddress addedAddressId added.layers
-                                    |> Maybe.map
-                                        (\addedAddress ->
-                                            ( { model
-                                                | layers =
-                                                    added.layers
-                                                        |> addUserTag added.new model.userAddressTags
-                                                , config = model.config |> s_colors added.colors
-                                              }
-                                                |> addAddressLinks address isOutgoing [ ( neighbor, addedAddress ) ]
-                                                |> syncLinks added.repositioned
-                                            , [ BrowserGotAddressTags
-                                                    { currency = Id.currency addressId
-                                                    , address = Id.addressId addressId
+                                        added =
+                                            Layer.addAddressAtEntity plugins
+                                                uc
+                                                entityId
+                                                neighbor.address
+                                                { layers = model.layers
+                                                , colors = model.config.colors
+                                                , new = Set.empty
+                                                , repositioned = Set.empty
+                                                }
+                                    in
+                                    case Set.toList added.new of
+                                        [] ->
+                                            ( model
+                                            , [ BrowserGotEntityForAddressNeighbor
+                                                    { anchor = addressId
+                                                    , isOutgoing = isOutgoing
+                                                    , neighbors = [ neighbor ]
                                                     }
-                                                    |> GetAddressTagsEffect
-                                                        { currency = Id.currency addressId
-                                                        , address = Id.addressId addressId
-                                                        , pagesize = 10
-                                                        , nextpage = Nothing
+                                                    |> GetEntityEffect
+                                                        { entity = neighbor.address.entity
+                                                        , currency = Id.currency addressId
                                                         }
                                                     |> ApiEffect
                                               ]
                                             )
-                                                |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
-                                        )
-                                    |> Maybe.withDefault (n model)
+
+                                        addedAddressId :: _ ->
+                                            Layer.getAddress addedAddressId added.layers
+                                                |> Maybe.map
+                                                    (\addedAddress ->
+                                                        ( { model
+                                                            | layers =
+                                                                added.layers
+                                                                    |> addUserTag added.new model.userAddressTags
+                                                            , config = model.config |> s_colors added.colors
+                                                          }
+                                                            |> addAddressLinks address isOutgoing [ ( neighbor, addedAddress ) ]
+                                                            |> syncLinks added.repositioned
+                                                        , [ BrowserGotAddressTags
+                                                                { currency = Id.currency addressId
+                                                                , address = Id.addressId addressId
+                                                                }
+                                                                |> GetAddressTagsEffect
+                                                                    { currency = Id.currency addressId
+                                                                    , address = Id.addressId addressId
+                                                                    , pagesize = 10
+                                                                    , nextpage = Nothing
+                                                                    }
+                                                                |> ApiEffect
+                                                          ]
+                                                        )
+                                                            |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
+                                                    )
+                                                |> Maybe.withDefault (n model)
+                                )
                     )
                 |> Maybe.withDefault (n model)
 
@@ -1784,8 +1859,11 @@ updateByMsg plugins uc msg model =
               ]
             )
 
-        BrowserGotBulkAddressEntities currency deserializing entities ->
+        BrowserGotBulkAddressEntities currency deserializing ents ->
             let
+                entities =
+                    ents |> List.map second
+
                 deser =
                     deserializing
                         |> s_entities (entities ++ deserializing.entities)
@@ -1978,10 +2056,11 @@ updateByMsg plugins uc msg model =
                     { model
                         | layers = recent
                         , history =
-                            model.layers
+                            deselectLayers model.selected model.layers
                                 :: future
                                 |> History rest
                     }
+                        |> deselect
                         |> n
 
                 _ ->
@@ -2005,14 +2084,8 @@ updateByMsg plugins uc msg model =
             n model
 
         UserClickedNewYes ->
-            Time.posixToMillis model.browser.now
-                |> Init.Graph.init
-                |> s_history model.history
-                |> s_config
-                    (model.config
-                        |> s_highlighter False
-                    )
-                |> n
+            -- handled upstream
+            n model
 
         UserInputsFilterTable input ->
             ( { model
@@ -2072,6 +2145,14 @@ updateByMsg plugins uc msg model =
                 | config =
                     model.config
                         |> s_showAddressShadowLinks (not model.config.showAddressShadowLinks)
+            }
+                |> n
+
+        UserClickedToggleShowDatesInUserLocale ->
+            { model
+                | config =
+                    model.config
+                        |> s_showDatesInUserLocale (not model.config.showDatesInUserLocale)
             }
                 |> n
 
@@ -2580,8 +2661,8 @@ addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
                                 Id.initEntityId
                                     { currency = anchor.entity.currency
                                     , layer =
-                                        Id.layer anchor.id
-                                    , id = neighbor.entity.entity |> layerDelta isOutgoing
+                                        Id.layer anchor.id |> layerDelta isOutgoing
+                                    , id = neighbor.entity.entity
                                     }
                         in
                         if Set.member entityId acc.new then
@@ -2872,26 +2953,31 @@ deselect model =
             model.browser
                 |> s_visible False
         , layers =
-            case model.selected of
-                SelectedEntity id ->
-                    Layer.updateEntity id
-                        (\e -> { e | selected = False })
-                        model.layers
-
-                SelectedAddress id ->
-                    Layer.updateAddress id
-                        (\e -> { e | selected = False })
-                        model.layers
-
-                SelectedAddresslink id ->
-                    Layer.updateAddressLink id (\e -> { e | selected = False }) model.layers
-
-                SelectedEntitylink id ->
-                    Layer.updateEntityLink id (\e -> { e | selected = False }) model.layers
-
-                SelectedNone ->
-                    model.layers
+            deselectLayers model.selected model.layers
     }
+
+
+deselectLayers : Selected -> IntDict Layer -> IntDict Layer
+deselectLayers selected layers =
+    case selected of
+        SelectedEntity id ->
+            Layer.updateEntity id
+                (\e -> { e | selected = False })
+                layers
+
+        SelectedAddress id ->
+            Layer.updateAddress id
+                (\e -> { e | selected = False })
+                layers
+
+        SelectedAddresslink id ->
+            Layer.updateAddressLink id (\e -> { e | selected = False }) layers
+
+        SelectedEntitylink id ->
+            Layer.updateEntityLink id (\e -> { e | selected = False }) layers
+
+        SelectedNone ->
+            layers
 
 
 draggingToClick : Coords -> Coords -> Bool
@@ -3117,7 +3203,7 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.ApiRequest _ ->
                         ( mo, [] )
 
-                    PluginInterface.ShowConfirmDialog _ ->
+                    PluginInterface.ShowDialog _ ->
                         ( mo, [] )
             )
             ( model, [] )
@@ -3341,74 +3427,49 @@ deserializeByVersion version =
 
 pushHistory : Msg -> Model -> Model
 pushHistory msg model =
-    if shallPushHistory msg model then
-        case model.history of
-            History past future ->
-                { model
-                    | history =
-                        History
-                            (model.layers
-                                :: (if List.length past >= maxHistory then
-                                        List.take (maxHistory - 1) past
-
-                                    else
-                                        past
-                                   )
-                            )
-                            []
-                }
+    if History.shallPushHistory msg then
+        forcePushHistory model
 
     else
         model
 
 
-shallPushHistory : Msg -> Model -> Bool
-shallPushHistory msg model =
-    case msg of
-        UserClickedEntityExpandHandle _ _ ->
-            True
+forcePushHistory : Model -> Model
+forcePushHistory model =
+    case model.history of
+        History past future ->
+            { model
+                | history =
+                    History
+                        (deselectLayers model.selected model.layers :: past)
+                        []
+            }
 
-        UserClickedAddressExpandHandle _ _ ->
-            True
 
-        UserClickedAddressesExpand _ ->
-            True
+cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
+cleanHistory ( model, eff ) =
+    let
+        filter old =
+            case old of
+                fst :: rest ->
+                    if fst == model.layers then
+                        filter rest
 
-        UserClickedRemoveAddress _ ->
-            True
+                    else
+                        old
 
-        UserClickedRemoveEntity _ ->
-            True
+                [] ->
+                    []
+    in
+    ( if List.isEmpty eff then
+        case model.history of
+            History past future ->
+                { model | history = History (filter past |> List.take maxHistory) future }
 
-        UserClickedAddressInEntityAddressesTable _ _ ->
-            True
-
-        UserClickedAddressInNeighborsTable _ _ _ ->
-            True
-
-        UserClickedEntityInNeighborsTable _ _ _ ->
-            True
-
-        UserSubmitsTagInput ->
-            True
-
-        UserSubmitsSearchInput ->
-            True
-
-        UserClickedNewYes ->
-            True
-
-        UserPressesDelete ->
-            True
-
-        UserClickedRemoveAddressLink _ ->
-            True
-
-        UserClickedRemoveEntityLink _ ->
-            True
-
-        _ ->
-            False
+      else
+        model
+    , eff
+    )
 
 
 fromDeserialized : Deserialized -> Model -> ( Model, List Effect )
