@@ -2,6 +2,7 @@ module Sub exposing (subscriptions)
 
 import Browser.Events
 import Browser.Navigation as Nav
+import Draggable
 import Model exposing (Model, Msg(..))
 import Plugin.Sub as Plugin
 import Ports
@@ -33,6 +34,7 @@ subscriptions model =
 
         _ ->
             Sub.none
+    , Draggable.subscriptions DragMsg model.drag
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
     ]

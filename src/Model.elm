@@ -6,6 +6,7 @@ import Browser.Dom
 import Config.UserSettings exposing (UserSettings)
 import Config.View
 import Dict exposing (Dict)
+import Draggable
 import Effect.Api
 import Effect.Graph
 import Effect.Locale
@@ -15,6 +16,7 @@ import Json.Encode
 import Model.Dialog
 import Model.Graph
 import Model.Locale
+import Model.Popup
 import Model.Search
 import Model.Statusbar
 import Msg.Graph
@@ -54,6 +56,8 @@ type alias Model navigationKey =
     , supportedTokens : Maybe Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , dirty : Bool
+    , popup : Maybe Model.Popup.Model
+    , drag : Draggable.State String
     }
 
 
@@ -89,6 +93,8 @@ type Msg
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotSupportedTokens Api.Data.TokenConfigs
+    | UserDragsPopup Draggable.Delta
+    | DragMsg (Draggable.Msg String)
     | UserClickedStatusbar
     | UserClosesDialog
     | LocaleMsg Msg.Locale.Msg

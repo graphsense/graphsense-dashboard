@@ -92,7 +92,7 @@ tool vc =
     vc.theme.tool
 
 
-hovercard : Config -> List ( String, String )
+hovercard : Config -> List Style
 hovercard vc =
     (vc.theme.hovercard vc.lightmode).root
 

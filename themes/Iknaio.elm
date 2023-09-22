@@ -505,8 +505,8 @@ theme =
                     |> s_backgroundColor (switchColor lightmode colors.brandWhite)
                     |> s_borderWidth 1
                     |> s_root
-                        [ ( "box-shadow", "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)" )
-                        , ( "border-radius", scaled borderRadiusSmValue |> String.fromFloat |> (\s -> s ++ "rem") )
+                        [ property "box-shadow" "0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08)"
+                        , borderRadius <| rem <| scaled borderRadiusSmValue
                         ]
             )
         |> s_user

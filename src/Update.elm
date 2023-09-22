@@ -5,9 +5,11 @@ module Update exposing (update, updateByPluginOutMsg, updateByUrl)
 import Api
 import Browser
 import Browser.Dom
+import Config.Popup as Popup
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
+import Draggable
 import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
@@ -15,6 +17,7 @@ import Effect.Locale as Locale
 import File.Download
 import Http exposing (Error(..))
 import Init.Graph
+import Init.Popup as Popup
 import Json.Decode
 import Json.Encode exposing (Value)
 import List.Extra
@@ -51,6 +54,7 @@ import Update.Graph as Graph
 import Update.Graph.Browser as Browser
 import Update.Graph.Layer as Layer
 import Update.Locale as Locale
+import Update.Popup as Popup
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
@@ -793,6 +797,23 @@ update plugins uc msg model =
                         , List.map GraphEffect graphEffects
                         )
 
+                Graph.BrowserGotAddressElementForAnnotate id element ->
+                    element
+                        |> Result.map
+                            (\el ->
+                                let
+                                    ( graph, graphEffects ) =
+                                        Graph.update plugins uc m model.graph
+                                in
+                                ( { model
+                                    | graph = graph
+                                    , popup = Popup.init (Id.addressIdToString id) el.element.x el.element.y |> Just
+                                  }
+                                , List.map GraphEffect graphEffects
+                                )
+                            )
+                        |> Result.withDefault (n model)
+
                 _ ->
                     let
                         ( graph, graphEffects ) =
@@ -807,6 +828,16 @@ update plugins uc msg model =
 
         UserClickedOption ms ->
             update plugins uc ms { model | dialog = Nothing }
+
+        DragMsg ms ->
+            Draggable.update Popup.config ms model
+                |> mapSecond (CmdEffect >> List.singleton)
+
+        UserDragsPopup delta ->
+            { model
+                | popup = Maybe.map (Popup.update delta) model.popup
+            }
+                |> n
 
         PluginMsg msgValue ->
             updatePlugins plugins msgValue model

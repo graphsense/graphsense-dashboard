@@ -2,8 +2,10 @@ module View.Graph.Tag exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css
 import Css.Button
 import Css.Graph as Css
+import Css.Hovercard
 import Css.View
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -115,4 +117,5 @@ inputHovercard plugins vc tc model =
         ]
     ]
         |> div
-            []
+            [ Css.Hovercard.root vc |> css
+            ]

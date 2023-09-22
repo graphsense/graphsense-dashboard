@@ -65,7 +65,10 @@ graph plugins states vc gc model =
         |> Maybe.withDefault none
     , model.contextMenu |> Maybe.map (contextMenu plugins states vc model) |> Maybe.withDefault none
     ]
-        ++ hovercards plugins states vc model
+
+
+
+--++ hovercards plugins states vc model
 
 
 graphSvg : Plugins -> ModelState -> Config -> Graph.Config -> Model -> BBox -> Svg Msg

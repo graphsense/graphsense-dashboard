@@ -2,6 +2,7 @@ module Init exposing (init)
 
 import Config exposing (config)
 import Config.UserSettings
+import Draggable
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
@@ -53,6 +54,8 @@ init plugins flags url key =
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False
+      , popup = Nothing
+      , drag = Draggable.init
       }
     , List.map LocaleEffect localeEffect
         ++ [ Effect.Api.GetConceptsEffect "entity" BrowserGotEntityTaxonomy

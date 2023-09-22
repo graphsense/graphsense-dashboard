@@ -23,9 +23,11 @@ import Route
 import Route.Graph
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
+import View.Graph.Tag as Tag
 import View.Header as Header
 import View.Locale as Locale
 import View.Main as Main
+import View.Popup as Popup
 import View.Statusbar as Statusbar
 import View.User as User
 
@@ -85,7 +87,8 @@ body plugins vc model =
             [ Statusbar.view vc model.statusbar
             ]
          ]
-            ++ hovercards plugins vc model
+            --++ hovercards plugins vc model
+            ++ popups plugins vc model
             ++ overlay plugins vc model
         )
 
@@ -152,6 +155,28 @@ hovercards plugins vc model =
                     |> hovercard vc element
             )
         |> Maybe.withDefault []
+
+
+popups : Plugins -> Config -> Model key -> List (Html Msg)
+popups plugins vc model =
+    model.popup
+        |> Maybe.map2
+            (\tag popup ->
+                Tag.inputHovercard plugins
+                    vc
+                    { entityConcepts = model.graph.config.entityConcepts
+                    , abuseConcepts = model.graph.config.abuseConcepts
+                    }
+                    tag
+                    |> Html.Styled.toUnstyled
+                    |> Html.map GraphMsg
+                    |> List.singleton
+                    |> Popup.view popup
+                    |> List.singleton
+            )
+            model.graph.tag
+        |> Maybe.withDefault []
+        |> List.map Html.Styled.fromUnstyled
 
 
 overlay : Plugins -> Config -> Model key -> List (Html Msg)

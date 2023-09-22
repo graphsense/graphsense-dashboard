@@ -89,23 +89,26 @@ setAlpha alpha =
         >> Color.fromRgba
 
 
-hovercard : View.Config -> Dom.Element -> List (Html.Html msg) -> List (Html.Styled.Html msg)
-hovercard vc element =
-    Hovercard.hovercard
-        { maxWidth = 300
-        , maxHeight = 500
-        , tickLength = 0
-        , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-        , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-        , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , overflow = "visible"
-        }
-        element
-        (Css.hovercard vc
-            |> List.map (\( k, v ) -> Html.Attributes.style k v)
-        )
-        >> Html.Styled.fromUnstyled
-        >> List.singleton
+
+{-
+   hovercard : View.Config -> Dom.Element -> List (Html.Html msg) -> List (Html.Styled.Html msg)
+   hovercard vc element =
+       Hovercard.hovercard
+           { maxWidth = 300
+           , maxHeight = 500
+           , tickLength = 0
+           , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
+           , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
+           , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
+           , overflow = "visible"
+           }
+           element
+           (Css.hovercard vc
+               |> List.map (\( k, v ) -> Html.Attributes.style k v)
+           )
+           >> Html.Styled.fromUnstyled
+           >> List.singleton
+-}
 
 
 switch : View.Config -> List (Attribute msg) -> String -> Html msg

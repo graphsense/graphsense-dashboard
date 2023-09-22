@@ -1,10 +1,11 @@
 module Theme.Hovercard exposing (Hovercard, default)
 
 import Color
+import Css exposing (Style)
 
 
 type alias Hovercard =
-    { root : List ( String, String )
+    { root : List Style
     , borderColor : Color.Color
     , backgroundColor : Color.Color
     , borderWidth : Float
