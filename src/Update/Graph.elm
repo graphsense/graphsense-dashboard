@@ -181,8 +181,7 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
 
                     filterSelf : Api.Data.NeighborEntity -> Bool
                     filterSelf neighbor =
-                        (neighbor.entity.entity /= entity.entity)
-                            && (neighbor.entity.currency /= entity.currency)
+                        neighbor.entity.entity /= entity.entity
 
                     outgoingAnchors =
                         incoming
