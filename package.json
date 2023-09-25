@@ -9,7 +9,8 @@
     "dev": "npm run gen && vite",
     "prebuild": "elm-tooling install",
     "gen": "mkdir -p gen/recordsetter && node generate.js && elm make; npm run setem",
-    "build": "npm run gen && vite build",
+    "build": "npm run gen && NODE_ENV=${NODE_ENV:=production} vite build",
+    "x": "npm run gen && echo ${NODE_ENV:=production}",
     "serve": "vite preview",
     "test": "elm-test-rs",
     "setem": "setem --output gen/recordsetter"
@@ -22,7 +23,7 @@
     "mustache": "^4.2.0",
     "setem": "^0.3.6",
     "vite": "^2.9.16",
-    "vite-plugin-elm": "^2.7.2",
+    "vite-plugin-elm": "^2.8.0",
     "yaml": "^2.3.1"
   },
   "dependencies": {
