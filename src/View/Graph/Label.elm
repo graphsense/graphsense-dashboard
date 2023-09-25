@@ -20,13 +20,13 @@ import View.Locale as Locale
 label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
 label vc gc nodeType title =
     let
-        dyOffset =
+        ( dyOffset, linespacing ) =
             case nodeType of
                 Model.Graph.AddressType ->
-                    0.26
+                    ( 0.36, 0.8 )
 
                 Model.Graph.EntityType ->
-                    0.75
+                    ( 0.75, 0.2 )
     in
     if title == "tag locked" then
         let
@@ -85,7 +85,7 @@ label vc gc nodeType title =
                 (\i row ->
                     tspan
                         [ x "0"
-                        , (toFloat i * 1.2 + dyOffset |> String.fromFloat) ++ "em" |> Svg.dy
+                        , (toFloat i * linespacing + dyOffset |> String.fromFloat) ++ "em" |> Svg.dy
                         ]
                         [ text row
                         ]
