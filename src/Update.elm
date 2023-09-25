@@ -497,6 +497,14 @@ update plugins uc msg model =
                     in
                     clearSearch plugins { model | graph = graph, dialog = Nothing }
                         |> mapSecond ((++) (List.map GraphEffect graphEffects))
+                        |> mapSecond
+                            ((++)
+                                [ Route.Graph.Root
+                                    |> Route.graphRoute
+                                    |> Route.toUrl
+                                    |> NavPushUrlEffect
+                                ]
+                            )
 
                 Search.BouncedBlur ->
                     clearSearch plugins model
