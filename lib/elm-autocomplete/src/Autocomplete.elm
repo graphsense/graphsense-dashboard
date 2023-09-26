@@ -3,7 +3,7 @@ module Autocomplete exposing
     , init, update
     , reset, selectedValue
     , viewState, query, choices, selectedIndex, isSelected
-    , onFetch, setQuery, setSelectedIndex
+    , onFetch, setChoices, setQuery, setSelectedIndex, setStatus
     )
 
 {-| Autocomplete contains the main logic to handle auto-complete.
@@ -394,6 +394,18 @@ setSelectedIndex i (Autocomplete s) =
 setQuery : String -> Autocomplete a -> Autocomplete a
 setQuery q (Autocomplete s) =
     { s | query = q }
+        |> Autocomplete
+
+
+setChoices : List a -> Autocomplete a -> Autocomplete a
+setChoices ch (Autocomplete s) =
+    { s | choices = ch }
+        |> Autocomplete
+
+
+setStatus : ViewStatus -> Autocomplete a -> Autocomplete a
+setStatus st (Autocomplete s) =
+    { s | viewStatus = st }
         |> Autocomplete
 
 

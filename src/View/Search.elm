@@ -108,7 +108,7 @@ searchResult plugins vc sc model =
         resultList plugins vc sc model
             |> Autocomplete.dropdown vc
                 { loading = viewState.status == Autocomplete.Fetching
-                , visible = viewState.status /= Autocomplete.NotFetched
+                , visible = model.visible
                 , onClick = NoOp
                 }
 

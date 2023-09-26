@@ -187,42 +187,49 @@ update msg model =
                     Autocomplete.query ac
 
                 blockResults =
-                    Debug.log "blockresults" <|
-                        case model.searchType of
-                            SearchAll { latestBlocks } ->
-                                latestBlocks
-                                    |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
-                                    |> List.concat
+                    case model.searchType of
+                        SearchAll { latestBlocks } ->
+                            latestBlocks
+                                |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
+                                |> List.concat
 
-                            SearchTagsOnly ->
-                                []
-
-                acc =
-                    Autocomplete.choices ac
-
-                choices =
-                    { choices = blockResults
-                    , ignoreList = []
-                    , query = query
-                    }
+                        SearchTagsOnly ->
+                            []
 
                 m2 =
                     { model
-                        | autocomplete = Autocomplete.onFetch (Ok choices) ac
+                        | autocomplete =
+                            if List.isEmpty blockResults then
+                                ac
+
+                            else
+                                Autocomplete.setChoices blockResults ac
                         , visible =
                             query
                                 |> String.isEmpty
                                 |> not
                     }
-            in
-            CmdEffect (Cmd.map AutocompleteMsg cmd)
-                :: (if Debug.log "doFetch" doFetch then
+
+                eff =
+                    if doFetch then
                         maybeTriggerSearch m2
 
                     else
                         []
-                   )
-                |> pair m2
+
+                m3 =
+                    { m2
+                        | autocomplete =
+                            if List.isEmpty eff then
+                                Autocomplete.setStatus Autocomplete.NotFetched m2.autocomplete
+
+                            else
+                                m2.autocomplete
+                    }
+            in
+            CmdEffect (Cmd.map AutocompleteMsg cmd)
+                :: eff
+                |> pair m3
 
 
 maybeTriggerSearch : Model -> List Effect

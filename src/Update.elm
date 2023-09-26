@@ -506,7 +506,10 @@ update plugins uc msg model =
                                                     }
                                                         |> Dialog.options
                                                         |> Just
-                                                , search = Search.setIsPickingCurrency search
+                                                , search =
+                                                    Search.setIsPickingCurrency search
+                                                        -- add back the query for UserPicksCurrency
+                                                        |> Search.setQuery query
                                             }
                                         )
                                     |> RD.withDefault model
