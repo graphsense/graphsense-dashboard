@@ -158,14 +158,5 @@ handleSearchEffect apiKey plugins tag effect =
             Http.cancel "search"
                 |> Cmd.map tag
 
-        Search.BounceEffect delay msg ->
-            Bounce.delay delay msg
-                |> Cmd.map tag
-
-        Search.BlurBounceEffect ->
-            Process.sleep 200
-                |> Task.perform (\_ -> Search.BouncedBlur)
-                |> Cmd.map tag
-
         Search.CmdEffect cmd ->
             Cmd.map tag cmd

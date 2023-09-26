@@ -11,6 +11,7 @@ type alias Search =
     , resultGroupList : List Style
     , resultGroupTitle : List Style
     , resultLine : Bool -> List Style
+    , resultLineHighlighted : Bool -> List Style
     , resultLineIcon : List Style
     , button : List Style
     }
@@ -25,6 +26,7 @@ default =
     , resultGroupList = []
     , resultGroupTitle = []
     , resultLine = \_ -> []
+    , resultLineHighlighted = \_ -> []
     , resultLineIcon = []
     , button = []
     }

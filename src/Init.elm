@@ -9,6 +9,7 @@ import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
+import Model.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Update exposing (updateByPluginOutMsg)
@@ -37,7 +38,7 @@ init plugins flags url key =
             }
       , locale = locale
       , page = Stats
-      , search = Search.init
+      , search = Search.init (Search.initSearchAll Nothing)
       , graph = Graph.init settings flags.now
       , user =
             { apiKey = ""

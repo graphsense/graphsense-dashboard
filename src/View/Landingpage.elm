@@ -11,7 +11,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Decode
-import Model exposing (Model, Msg(..), getLatestBlocks)
+import Model exposing (Model, Msg(..))
 import Msg.Graph as Graph
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -46,12 +46,7 @@ view plugins vc model =
             ]
         , let
             sc =
-                { searchable =
-                    Search.SearchAll
-                        { pluginStates = model.plugins
-                        , latestBlocks = getLatestBlocks model.stats
-                        }
-                , css =
+                { css =
                     Css.Search.textarea vc
                 , resultsAsLink = True
                 , multiline = True
@@ -67,7 +62,7 @@ view plugins vc model =
         , [ ( "1Archive1n2C579dMsAu3iC6tWzuQJz8dN", "address" )
           , ( "8c510d39be9458721bdde62f64b096812de23c0ebd37a4aff82b8abb6307beb6", "transaction" )
           , ( "internet archive", "label" )
-          , ( "1", "block" )
+          , ( "123", "block" )
           ]
             |> List.map
                 (\( str, name ) ->

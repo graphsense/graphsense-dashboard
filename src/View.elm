@@ -15,7 +15,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra
-import Model exposing (Auth(..), Model, Msg(..), Page(..), getLatestBlocks)
+import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
@@ -65,7 +65,6 @@ body plugins vc model =
             vc
             { search = model.search
             , user = model.user
-            , latestBlocks = getLatestBlocks model.stats
             , hideSearch = model.page /= Graph
             }
          , section

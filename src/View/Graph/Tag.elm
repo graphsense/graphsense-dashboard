@@ -33,8 +33,7 @@ inputHovercard plugins vc tc model =
             "Label"
             [ Search.search plugins
                 vc
-                { searchable = Search.SearchTagsOnly
-                , css = \_ -> Css.searchTextarea vc
+                { css = \_ -> Css.searchTextarea vc
                 , resultsAsLink = False
                 , multiline = False
                 , showIcon = False
