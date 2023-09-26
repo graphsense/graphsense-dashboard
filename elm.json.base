@@ -6,7 +6,8 @@
         "gen/plugins",
         "openapi/src",
         "themes",
-        "config"
+        "config",
+        "lib/elm-autocomplete/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

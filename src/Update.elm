@@ -15,6 +15,7 @@ import Effect.Locale as Locale
 import File.Download
 import Http exposing (Error(..))
 import Init.Graph
+import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
 import List.Extra
@@ -89,6 +90,10 @@ update plugins uc msg model =
                 { model
                     | stats = RD.Success stats
                     , statusbar = Statusbar.updateLastBlocks stats model.statusbar
+                    , search =
+                        model.search
+                            |> s_searchType
+                                (Search.initSearchAll (Just stats))
                 }
 
         BrowserGotEntityTaxonomy concepts ->
@@ -376,8 +381,7 @@ update plugins uc msg model =
                 |> n
 
         UserClickedExampleSearch str ->
-            update plugins uc (Search.UserFocusSearch |> SearchMsg) model
-                |> (\( m, _ ) -> update plugins uc (Search.UserInputsSearch str |> SearchMsg) m)
+            Debug.todo "update plugins uc (Search.UserFocusSearch |> SearchMsg) model |> (( m, _ ) -> update plugins uc (Search.UserInputsSearch str |> SearchMsg) m)"
 
         UserClickedLogout ->
             let
@@ -442,45 +446,63 @@ update plugins uc msg model =
                 Search.PluginMsg ms ->
                     updatePlugins plugins ms model
 
-                Search.UserHitsEnter ->
+                Search.UserClicksResultLine ->
                     let
+                        query =
+                            Search.query model.search
+
                         multi =
-                            Search.getMulti model.search
+                            Search.getMulti query
+
+                        selectedValue =
+                            Search.selectedValue model.search
+                                |> Maybe.Extra.orElse (Search.firstResult model.search)
+
+                        ( search, searchEffects ) =
+                            Search.update m model.search
+
+                        m2 =
+                            { model | search = search }
                     in
-                    if String.isEmpty model.search.input then
+                    if String.isEmpty query then
                         n model
 
-                    else if model.search.found /= Nothing && List.length multi == 1 then
-                        Search.getFirstResultUrl model.search
-                            |> Maybe.map
-                                (NavPushUrlEffect >> List.singleton)
-                            |> Maybe.withDefault []
-                            |> pair { model | search = Search.clear model.search }
-
                     else
-                        model.stats
-                            |> RD.map
-                                (\stats ->
-                                    { model
-                                        | dialog =
-                                            { message = Locale.string model.locale "Please choose a crypto ledger"
-                                            , options =
-                                                stats.currencies
-                                                    |> List.map .name
-                                                    |> List.map
-                                                        (\name ->
-                                                            ( String.toUpper name
-                                                            , Search.UserPicksCurrency name |> SearchMsg
-                                                            )
-                                                        )
-                                            , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
+                        case selectedValue of
+                            Just value ->
+                                value
+                                    |> Search.resultLineToRoute
+                                    |> Route.graphRoute
+                                    |> Route.toUrl
+                                    |> NavPushUrlEffect
+                                    |> List.singleton
+                                    |> pair m2
+
+                            Nothing ->
+                                model.stats
+                                    |> RD.map
+                                        (\stats ->
+                                            { m2
+                                                | dialog =
+                                                    { message = Locale.string model.locale "Please choose a crypto ledger"
+                                                    , options =
+                                                        stats.currencies
+                                                            |> List.map .name
+                                                            |> List.map
+                                                                (\name ->
+                                                                    ( String.toUpper name
+                                                                    , Search.UserPicksCurrency name |> SearchMsg
+                                                                    )
+                                                                )
+                                                    , onClose = SearchMsg Search.UserClickedCloseCurrencyPicker
+                                                    }
+                                                        |> Dialog.options
+                                                        |> Just
+                                                , search = Search.setIsPickingCurrency search
                                             }
-                                                |> Dialog.options
-                                                |> Just
-                                    }
-                                )
-                            |> RD.withDefault model
-                            |> n
+                                        )
+                                    |> RD.withDefault model
+                                    |> n
 
                 Search.UserClickedCloseCurrencyPicker ->
                     clearSearch plugins { model | dialog = Nothing }
@@ -491,12 +513,17 @@ update plugins uc msg model =
                             Graph.loadPath plugins
                                 { currency = currency
                                 , addresses =
-                                    Search.getMulti model.search
+                                    Search.query model.search
+                                        |> Search.getMulti
                                 }
                                 model.graph
+
+                        ( search, searchEffects ) =
+                            Search.update m model.search
                     in
-                    clearSearch plugins { model | graph = graph, dialog = Nothing }
+                    clearSearch plugins { model | graph = graph, search = search, dialog = Nothing }
                         |> mapSecond ((++) (List.map GraphEffect graphEffects))
+                        |> mapSecond ((++) (List.map SearchEffect searchEffects))
                         |> mapSecond
                             ((++)
                                 [ Route.Graph.Root
@@ -505,9 +532,6 @@ update plugins uc msg model =
                                     |> NavPushUrlEffect
                                 ]
                             )
-
-                Search.BouncedBlur ->
-                    clearSearch plugins model
 
                 _ ->
                     let
@@ -787,19 +811,6 @@ update plugins uc msg model =
                         :: List.map GraphEffect graphEffects
                     )
                         |> pluginNewGraph plugins
-
-                Graph.UserClickedGraph _ ->
-                    if model.search.visible then
-                        n model
-
-                    else
-                        let
-                            ( graph, graphEffects ) =
-                                Graph.update plugins uc m model.graph
-                        in
-                        ( { model | graph = graph }
-                        , List.map GraphEffect graphEffects
-                        )
 
                 _ ->
                     let
@@ -1158,6 +1169,9 @@ makeTimestampFilename locale t =
 clearSearch : Plugins -> Model key -> ( Model key, List Effect )
 clearSearch plugins model =
     let
+        _ =
+            Debug.todo "integrate this into Update.Search?"
+
         new =
             Plugin.clearSearch plugins model.plugins
     in

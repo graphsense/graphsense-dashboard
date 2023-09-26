@@ -1,8 +1,11 @@
-module Update.Search exposing (clear, getFirstResultUrl, update)
+module Update.Search exposing (clear, resultLineToRoute, update)
 
+import Api.Data
+import Autocomplete
 import Bounce
 import Effect exposing (n)
 import Effect.Search as Effect exposing (Effect(..))
+import Init.Search exposing (init)
 import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
@@ -10,8 +13,90 @@ import Process
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route exposing (toUrl)
-import Route.Graph as Route
+import Route.Graph as Graph
 import Task
+import Tuple exposing (pair)
+
+
+currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
+currencyToResult query found ( currency, latestBlock ) =
+    (found.currencies
+        |> List.filter (.currency >> (==) currency)
+        |> List.head
+        |> Maybe.map
+            (\{ addresses, txs } ->
+                List.map (Address currency) addresses
+                    ++ List.map (Tx currency) txs
+            )
+        |> Maybe.withDefault []
+    )
+        ++ blocksToResult query currency latestBlock
+
+
+blocksToResult : String -> String -> Int -> List ResultLine
+blocksToResult input currency latestBlock =
+    String.toInt input
+        |> Maybe.map
+            (\i ->
+                if i >= 0 && i <= latestBlock then
+                    [ Block currency i ]
+
+                else
+                    []
+            )
+        |> Maybe.withDefault []
+
+
+searchResultToResultLines : String -> List ( String, Int ) -> Api.Data.SearchResult -> List ResultLine
+searchResultToResultLines query latestBlocks searchResult =
+    latestBlocks
+        |> List.map (currencyToResult query searchResult)
+        |> List.concat
+
+
+labelResultLines : Api.Data.SearchResult -> List ResultLine
+labelResultLines =
+    .labels
+        >> List.map Label
+
+
+actorResultLines : Api.Data.SearchResult -> List ResultLine
+actorResultLines =
+    .actors
+        >> Maybe.withDefault []
+        >> List.map (\x -> Actor ( x.id, x.label ))
+
+
+filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
+filterByPrefix input result =
+    { result
+        | currencies =
+            List.map
+                (\currency ->
+                    let
+                        addr =
+                            if String.toLower currency.currency == "eth" then
+                                String.toLower input
+
+                            else
+                                input
+                    in
+                    { currency
+                        | addresses = List.filter (String.startsWith addr) currency.addresses
+                        , txs = List.filter (\x -> String.startsWith (removeLeading0x input) (removeLeading0x x)) currency.txs
+                    }
+                )
+                result.currencies
+    }
+
+
+removeLeading0x : String -> String
+removeLeading0x s =
+    if String.startsWith "0x" s then
+        s |> String.dropLeft 2
+
+    else
+        s
 
 
 update : Msg -> Model -> ( Model, List Effect )
@@ -20,181 +105,172 @@ update msg model =
         NoOp ->
             n model
 
-        BrowserGotSearchResult result ->
-            if model.loading then
-                n
-                    { model
-                        | loading = False
-                        , found = Just result
+        BrowserGotSearchResult query res ->
+            let
+                result =
+                    filterByPrefix query res
+
+                choices =
+                    { choices =
+                        case model.searchType of
+                            SearchAll { latestBlocks } ->
+                                searchResultToResultLines query latestBlocks result
+                                    ++ actorResultLines result
+                                    ++ labelResultLines result
+
+                            SearchTagsOnly ->
+                                labelResultLines result
+                    , query = query
+                    , ignoreList = []
                     }
+            in
+            { model
+                | autocomplete =
+                    Autocomplete.onFetch (Ok choices) model.autocomplete
+                        |> Autocomplete.setSelectedIndex 0
+            }
+                |> n
 
-            else
-                n model
+        UserFocusSearch ->
+            n
+                { model
+                    | visible = True
+                }
 
-        UserClicksResult ->
-            -- handled upstream
-            clear model |> n
+        UserLeavesSearch ->
+            case model.searchType of
+                SearchAll { pickingCurrency } ->
+                    if pickingCurrency then
+                        n model
+
+                    else
+                        hide model
+                            |> n
+
+                SearchTagsOnly ->
+                    hide model
+                        |> n
 
         UserPicksCurrency _ ->
             -- handled upstream
-            n model
+            n
+                { model
+                    | searchType =
+                        case model.searchType of
+                            SearchAll sa ->
+                                { sa | pickingCurrency = False }
+                                    |> SearchAll
+
+                            SearchTagsOnly ->
+                                SearchTagsOnly
+                }
 
         UserClickedCloseCurrencyPicker ->
             -- handled upstream
             n model
 
-        UserClicksResultLine _ ->
-            n model
-
-        UserInputsSearch input ->
-            ( { model
-                | input = input
-                , bounce = Bounce.push model.bounce
-              }
-            , BounceEffect 200 RuntimeBounced
-                :: (if model.loading then
-                        [ CancelEffect ]
-
-                    else
-                        []
-                   )
-            )
-
-        UserHitsEnter ->
-            -- handled upstream
-            n model
-
-        UserFocusSearch ->
-            n { model | visible = True }
-
-        UserLeavesSearch ->
-            ( model
-            , Process.sleep 100
-                |> Task.perform (\_ -> BouncedBlur)
-                |> CmdEffect
-                |> List.singleton
-            )
-
-        BouncedBlur ->
-            hide model |> n
-
-        RuntimeBounced ->
-            { model
-                | bounce = Bounce.pop model.bounce
-            }
+        UserClicksResultLine ->
+            clear model
                 |> n
-                |> maybeTriggerSearch
 
         PluginMsg msgValue ->
             -- handled in src/Update.elm
             n model
 
+        AutocompleteMsg ms ->
+            let
+                ( ac, doFetch, cmd ) =
+                    Autocomplete.update ms model.autocomplete
 
-maybeTriggerSearch : ( Model, List Effect ) -> ( Model, List Effect )
-maybeTriggerSearch ( model, cmd ) =
+                m2 =
+                    { model
+                        | autocomplete = ac
+                        , visible =
+                            Autocomplete.query ac
+                                |> String.isEmpty
+                                |> not
+                    }
+            in
+            CmdEffect (Cmd.map AutocompleteMsg cmd)
+                :: (if Debug.log "doFetch" doFetch then
+                        maybeTriggerSearch m2
+
+                    else
+                        []
+                   )
+                |> pair m2
+
+
+maybeTriggerSearch : Model -> List Effect
+maybeTriggerSearch model =
     let
         limit =
             10
 
-        isPathSearch =
-            isLikelyPathSearchInput model
+        query =
+            Autocomplete.query model.autocomplete
+
+        isPickingCurrency =
+            Debug.log "isPickingCurrency" <|
+                case model.searchType of
+                    SearchAll { pickingCurrency } ->
+                        pickingCurrency
+
+                    SearchTagsOnly ->
+                        False
     in
-    if
-        Bounce.steady model.bounce
-            && String.length model.input
-            >= minSearchInputLength
-            && not isPathSearch
-    then
-        ( { model
-            | loading = True
-          }
-        , SearchEffect
-            { query = model.input
+    if not isPickingCurrency && not (isLikelyPathSearchInput query) |> Debug.log "isliek" then
+        SearchEffect
+            { query = query
             , currency = Nothing
             , limit = Just limit
-            , toMsg = BrowserGotSearchResult
+            , toMsg = BrowserGotSearchResult query
             }
-            :: cmd
-        )
+            |> List.singleton
 
     else
-        model
-            |> s_loading False
-            |> n
+        []
 
 
-getFirstResultUrl : Model -> Maybe String
-getFirstResultUrl { input, found } =
-    found
-        |> Maybe.andThen
-            (\{ currencies, labels } ->
-                currencies
-                    |> List.filter
-                        (\{ addresses, txs } ->
-                            List.isEmpty addresses
-                                && List.isEmpty txs
-                                |> not
-                        )
-                    |> List.head
-                    |> Maybe.andThen
-                        (\{ addresses, currency, txs } ->
-                            addresses
-                                |> List.head
-                                |> Maybe.map
-                                    (\address ->
-                                        Route.addressRoute
-                                            { currency = currency
-                                            , address = address
-                                            , table = Nothing
-                                            , layer = Nothing
-                                            }
-                                    )
-                                |> Maybe.Extra.orElse
-                                    (txs
-                                        |> List.head
-                                        |> Maybe.map
-                                            (\tx ->
-                                                Route.txRoute
-                                                    { currency = currency
-                                                    , txHash = tx
-                                                    , table = Nothing
-                                                    , tokenTxId = Nothing
-                                                    }
-                                            )
-                                    )
-                        )
-                    |> Maybe.Extra.orElse
-                        (labels
-                            |> List.head
-                            |> Maybe.map Route.labelRoute
-                        )
-            )
-        |> Maybe.Extra.orElse
-            (if String.length input < 26 then
-                Nothing
+resultLineToRoute : ResultLine -> Graph.Route
+resultLineToRoute resultLine =
+    case resultLine of
+        Address currency address ->
+            Graph.addressRoute
+                { currency = currency
+                , address = address
+                , table = Nothing
+                , layer = Nothing
+                }
 
-             else
-                Route.addressRoute
-                    { currency = "btc"
-                    , address = input
-                    , table = Nothing
-                    , layer = Nothing
-                    }
-                    |> Just
-            )
-        |> Maybe.map (Route.graphRoute >> toUrl)
+        Tx currency tx ->
+            Graph.txRoute
+                { currency = currency
+                , txHash = tx
+                , table = Nothing
+                , tokenTxId = Nothing
+                }
+
+        Block currency block ->
+            Graph.blockRoute
+                { currency = currency
+                , block = block
+                , table = Nothing
+                }
+
+        Label label ->
+            Graph.labelRoute label
+
+        Actor ( id, label ) ->
+            Graph.actorRoute id Nothing
 
 
 clear : Model -> Model
 clear model =
-    { model
-        | found = Nothing
-        , input = ""
-        , loading = False
-        , visible = False
-    }
+    init model.searchType
 
 
 hide : Model -> Model
 hide model =
     { model | visible = False }
+        |> setQuery (query model)

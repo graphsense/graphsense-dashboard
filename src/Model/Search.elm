@@ -1,7 +1,7 @@
 module Model.Search exposing (..)
 
 import Api.Data
-import Bounce exposing (Bounce)
+import Autocomplete exposing (Autocomplete)
 
 
 
@@ -14,36 +14,84 @@ minSearchInputLength =
 
 
 type alias Model =
-    { loading : Bool
+    { searchType : SearchType
     , visible : Bool
-    , found : Maybe Api.Data.SearchResult
-    , input : String
-    , bounce : Bounce
+    , autocomplete : Autocomplete ResultLine
     }
 
 
+type SearchType
+    = SearchAll
+        { latestBlocks : List ( String, Int )
+        , pickingCurrency : Bool
+        }
+    | SearchTagsOnly
+
+
 type ResultLine
-    = Address String
-    | Tx String
-    | Block Int
+    = Address String String
+    | Tx String String
+    | Block String Int
     | Label String
     | Actor ( String, String )
 
 
-getMulti : Model -> List String
-getMulti model =
-    String.split " " model.input
-        |> List.map (String.replace "," "")
-        |> List.map String.trim
-        |> List.filter (String.isEmpty >> not)
+getMulti : String -> List String
+getMulti =
+    String.split " "
+        >> List.map (String.replace "," "")
+        >> List.map String.trim
+        >> List.filter (String.isEmpty >> not)
 
 
-isLikelyPathSearchInput : Model -> Bool
-isLikelyPathSearchInput model =
+isLikelyPathSearchInput : String -> Bool
+isLikelyPathSearchInput q =
     let
         mul =
-            getMulti model
+            getMulti q
     in
     List.length mul
         > 1
         && List.all (\i -> String.length i > 20) mul
+
+
+query : Model -> String
+query { autocomplete } =
+    Autocomplete.query autocomplete
+
+
+setQuery : String -> Model -> Model
+setQuery q model =
+    { model
+        | autocomplete = Autocomplete.setQuery q model.autocomplete
+    }
+
+
+selectedValue : Model -> Maybe ResultLine
+selectedValue { autocomplete } =
+    Autocomplete.selectedValue autocomplete
+
+
+firstResult : Model -> Maybe ResultLine
+firstResult { autocomplete } =
+    Autocomplete.choices autocomplete |> List.head
+
+
+getLatestBlocks : Api.Data.Stats -> List ( String, Int )
+getLatestBlocks =
+    .currencies
+        >> List.map (\{ name, noBlocks } -> ( name, noBlocks - 1 ))
+
+
+setIsPickingCurrency : Model -> Model
+setIsPickingCurrency model =
+    { model
+        | searchType =
+            case model.searchType of
+                SearchAll sa ->
+                    { sa | pickingCurrency = True }
+                        |> SearchAll
+
+                SearchTagsOnly ->
+                    SearchTagsOnly
+    }

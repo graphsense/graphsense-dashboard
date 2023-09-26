@@ -427,11 +427,10 @@ theme =
                         , colorWithLightmode lightmode colors.black
                         , display block
                         , scaled 0.5 |> rem |> paddingY
-                        , hover
-                            [ backgroundColorWithLightmode lightmode colors.brandLighter
-                            ]
+                        , hover (resultLineHighlighted lightmode)
                         ]
                     )
+                |> s_resultLineHighlighted resultLineHighlighted
                 |> s_resultLineIcon
                     [ opacity <| num 0.5
                     , scaled 1 |> rem |> paddingRight
@@ -1485,3 +1484,9 @@ backgroundHoverColor =
 rowHeight : Float
 rowHeight =
     scaled 90
+
+
+resultLineHighlighted : Bool -> List Style
+resultLineHighlighted lightmode =
+    [ backgroundColorWithLightmode lightmode colors.brandLighter
+    ]

@@ -69,12 +69,6 @@ messageFromEffect model effect =
         Model.SearchEffect Search.CancelEffect ->
             Nothing
 
-        Model.SearchEffect (Search.BounceEffect _ _) ->
-            Nothing
-
-        Model.SearchEffect Search.BlurBounceEffect ->
-            Nothing
-
         Model.SearchEffect (Search.CmdEffect _) ->
             Nothing
 

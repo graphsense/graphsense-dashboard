@@ -1,15 +1,22 @@
-module Init.Search exposing (init)
+module Init.Search exposing (..)
 
-import Bounce
-import Model.Search exposing (Model)
+import Api.Data
+import Autocomplete
+import Model.Search exposing (Model, SearchType(..), getLatestBlocks, minSearchInputLength)
 import RemoteData exposing (RemoteData(..))
 
 
-init : Model
-init =
-    { loading = False
+init : SearchType -> Model
+init searchType =
+    { searchType = searchType
     , visible = False
-    , found = Nothing
-    , input = ""
-    , bounce = Bounce.init
+    , autocomplete = Autocomplete.init minSearchInputLength { query = "", choices = [], ignoreList = [] }
     }
+
+
+initSearchAll : Maybe Api.Data.Stats -> SearchType
+initSearchAll stats =
+    SearchAll
+        { latestBlocks = Maybe.map getLatestBlocks stats |> Maybe.withDefault []
+        , pickingCurrency = False
+        }

@@ -43,6 +43,7 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Node as Node
+import Model.Search
 import Msg.Graph as Msg exposing (Msg(..))
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -350,31 +351,24 @@ updateByMsg plugins uc msg model =
                             draggingToClick start current
             in
             if click then
-                model.tag
-                    |> Maybe.map
-                        (\tag ->
-                            Tag.searchMsg Search.UserLeavesSearch tag
-                                |> mapFirst (\t -> { model | tag = Just t })
-                        )
-                    |> Maybe.withDefault
-                        ( case ( model.activeTool.toolbox, model.activeTool.element ) of
-                            ( Tool.Highlighter, Just ( el, vis ) ) ->
-                                toolVisible
-                                    (if vis then
-                                        deselectHighlighter model
+                ( case ( model.activeTool.toolbox, model.activeTool.element ) of
+                    ( Tool.Highlighter, Just ( el, vis ) ) ->
+                        toolVisible
+                            (if vis then
+                                deselectHighlighter model
 
-                                     else
-                                        model
-                                    )
-                                    el
-                                    vis
-
-                            _ ->
+                             else
                                 model
-                        , Route.rootRoute
-                            |> NavPushRouteEffect
-                            |> List.singleton
-                        )
+                            )
+                            el
+                            vis
+
+                    _ ->
+                        model
+                , Route.rootRoute
+                    |> NavPushRouteEffect
+                    |> List.singleton
+                )
 
             else
                 n model
@@ -3765,7 +3759,7 @@ tagInputToUserTag model input =
     address
         |> Maybe.map
             (\addr ->
-                { label = input.label.input
+                { label = Model.Search.query input.label
                 , category =
                     if String.isEmpty input.category then
                         Nothing

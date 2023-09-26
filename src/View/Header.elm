@@ -16,8 +16,7 @@ import View.User as User
 
 
 type alias HeaderConfig =
-    { latestBlocks : List ( String, Int )
-    , search : Search.Model
+    { search : Search.Model
     , user : UserModel
     , hideSearch : Bool
     }
@@ -36,12 +35,7 @@ header plugins states vc hc =
           else
             Search.search plugins
                 vc
-                { searchable =
-                    { latestBlocks = hc.latestBlocks
-                    , pluginStates = states
-                    }
-                        |> Search.SearchAll
-                , css = Css.Search.textarea vc
+                { css = Css.Search.textarea vc
                 , resultsAsLink = True
                 , multiline = True
                 , showIcon = True

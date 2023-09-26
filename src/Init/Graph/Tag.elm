@@ -5,6 +5,7 @@ import Init.Search as Search
 import Model.Graph.Id exposing (..)
 import Model.Graph.Tag exposing (..)
 import Model.Node exposing (Node(..))
+import Model.Search as Search
 import RecordSetter exposing (..)
 
 
@@ -27,8 +28,8 @@ initEntityTag id element existing =
 initInput : Node AddressId EntityId -> Maybe UserTag -> Input
 initInput id existing =
     { label =
-        Search.init
-            |> s_input (Maybe.map .label existing |> Maybe.withDefault "")
+        Search.init Search.SearchTagsOnly
+            |> Search.setQuery (Maybe.map .label existing |> Maybe.withDefault "")
     , source = Maybe.map .source existing |> Maybe.withDefault ""
     , category = Maybe.andThen .category existing |> Maybe.withDefault ""
     , abuse = Maybe.andThen .abuse existing |> Maybe.withDefault ""

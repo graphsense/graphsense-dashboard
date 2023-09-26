@@ -11,7 +11,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Decode
-import Model exposing (Model, Msg(..), getLatestBlocks)
+import Model exposing (Model, Msg(..))
 import Msg.Graph as Graph
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -46,12 +46,7 @@ view plugins vc model =
             ]
         , let
             sc =
-                { searchable =
-                    Search.SearchAll
-                        { pluginStates = model.plugins
-                        , latestBlocks = getLatestBlocks model.stats
-                        }
-                , css =
+                { css =
                     Css.Search.textarea vc
                 , resultsAsLink = True
                 , multiline = True
