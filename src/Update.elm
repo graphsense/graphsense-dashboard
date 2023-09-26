@@ -381,7 +381,15 @@ update plugins uc msg model =
                 |> n
 
         UserClickedExampleSearch str ->
-            Debug.todo "update plugins uc (Search.UserFocusSearch |> SearchMsg) model |> (( m, _ ) -> update plugins uc (Search.UserInputsSearch str |> SearchMsg) m)"
+            let
+                search =
+                    Search.setQuery str model.search
+                        |> s_visible True
+            in
+            update plugins uc (Search.UserFocusSearch |> SearchMsg) model
+                |> mapFirst (s_search search)
+                |> mapSecond
+                    ((++) (Search.maybeTriggerSearch search |> List.map SearchEffect))
 
         UserClickedLogout ->
             let
@@ -1169,9 +1177,6 @@ makeTimestampFilename locale t =
 clearSearch : Plugins -> Model key -> ( Model key, List Effect )
 clearSearch plugins model =
     let
-        _ =
-            Debug.todo "integrate this into Update.Search?"
-
         new =
             Plugin.clearSearch plugins model.plugins
     in

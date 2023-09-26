@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, resultLineToRoute, update)
+module Update.Search exposing (clear, maybeTriggerSearch, resultLineToRoute, update)
 
 import Api.Data
 import Autocomplete
@@ -16,6 +16,7 @@ import Route exposing (toUrl)
 import Route.Graph as Graph
 import Task
 import Tuple exposing (pair)
+import Tuple3
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -182,11 +183,34 @@ update msg model =
                 ( ac, doFetch, cmd ) =
                     Autocomplete.update ms model.autocomplete
 
+                query =
+                    Autocomplete.query ac
+
+                blockResults =
+                    Debug.log "blockresults" <|
+                        case model.searchType of
+                            SearchAll { latestBlocks } ->
+                                latestBlocks
+                                    |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
+                                    |> List.concat
+
+                            SearchTagsOnly ->
+                                []
+
+                acc =
+                    Autocomplete.choices ac
+
+                choices =
+                    { choices = blockResults
+                    , ignoreList = []
+                    , query = query
+                    }
+
                 m2 =
                     { model
-                        | autocomplete = ac
+                        | autocomplete = Autocomplete.onFetch (Ok choices) ac
                         , visible =
-                            Autocomplete.query ac
+                            query
                                 |> String.isEmpty
                                 |> not
                     }
