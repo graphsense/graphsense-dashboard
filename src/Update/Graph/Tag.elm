@@ -14,10 +14,23 @@ searchMsg msg model =
     let
         ( search, eff ) =
             case msg of
-                Search.UserClicksResultLine (Search.Label lb) ->
+                Search.UserClicksResultLine ->
                     Search.update msg model.input.label
-                        -- add back the input string
-                        |> mapFirst (s_input lb)
+                        |> mapFirst
+                            (Search.setQuery
+                                (Search.selectedValue model.input.label
+                                    |> Maybe.andThen
+                                        (\rl ->
+                                            case rl of
+                                                Search.Label lbl ->
+                                                    Just lbl
+
+                                                _ ->
+                                                    Nothing
+                                        )
+                                    |> Maybe.withDefault ""
+                                )
+                            )
 
                 _ ->
                     Search.update msg model.input.label

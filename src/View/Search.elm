@@ -1,6 +1,8 @@
-module View.Search exposing (Searchable(..), search)
+module View.Search exposing (search)
 
 import Api.Data
+import Autocomplete
+import Autocomplete.Styled as Autocomplete
 import Config.View exposing (Config)
 import Css exposing (Style)
 import Css.Button
@@ -10,6 +12,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Json.Decode
+import List.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -23,44 +26,43 @@ import View.Locale as Locale
 
 
 type alias SearchConfig =
-    { searchable : Searchable
-    , css : String -> List Style
+    { css : String -> List Style
     , resultsAsLink : Bool
     , multiline : Bool
     , showIcon : Bool
     }
 
 
-type Searchable
-    = SearchAll
-        { latestBlocks : List ( String, Int )
-        , pluginStates : ModelState
-        }
-    | SearchTagsOnly
-
-
 search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
 search plugins vc sc model =
+    let
+        { inputEvents } =
+            Autocomplete.events
+                { onSelect = UserClicksResultLine
+                , mapHtml = AutocompleteMsg
+                }
+
+        { query, choices, selectedIndex, status } =
+            Autocomplete.viewState model.autocomplete
+    in
     Html.Styled.form
         [ Css.form vc |> css
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
-        , onSubmit UserHitsEnter
         ]
         [ div
             [ Css.frame vc |> css
             ]
             [ input
-                ([ sc.css model.input |> css
+                ([ sc.css query |> css
                  , autocomplete False
                  , spellcheck False
                  , Locale.string vc.locale "The search" |> title
-                 , onInput UserInputsSearch
-                 , onEnter UserHitsEnter
-                 , onFocus UserFocusSearch
                  , onBlur UserLeavesSearch
-                 , value model.input
+                 , onFocus UserFocusSearch
+                 , value query
                  ]
-                    ++ (case sc.searchable of
+                    ++ inputEvents
+                    ++ (case model.searchType of
                             SearchAll _ ->
                                 [ "Address", "transaction", "label", "block", "actor" ]
                                     |> List.map (Locale.string vc.locale)
@@ -98,67 +100,83 @@ search plugins vc sc model =
 
 searchResult : Plugins -> Config -> SearchConfig -> Model -> Html Msg
 searchResult plugins vc sc model =
-    resultList plugins vc sc model
-        |> Autocomplete.dropdown vc
-            { loading = model.loading
-            , visible = model.visible
-            , onClick = UserClicksResult
-            }
-
-
-removeLeading0x : String -> String
-removeLeading0x s =
-    if String.startsWith "0x" s then
-        s |> String.dropLeft 2
+    let
+        viewState =
+            Autocomplete.viewState model.autocomplete
+    in
+    if model.visible then
+        resultList plugins vc sc model
+            |> Autocomplete.dropdown vc
+                { loading = viewState.status == Autocomplete.Fetching
+                , visible = model.visible
+                , onClick = NoOp
+                }
 
     else
-        s
-
-
-filterByPrefix : String -> Api.Data.SearchResult -> Api.Data.SearchResult
-filterByPrefix input result =
-    { result
-        | currencies =
-            List.map
-                (\currency ->
-                    let
-                        addr =
-                            if String.toLower currency.currency == "eth" then
-                                String.toLower input
-
-                            else
-                                input
-                    in
-                    { currency
-                        | addresses = List.filter (String.startsWith addr) currency.addresses
-                        , txs = List.filter (\x -> String.startsWith (removeLeading0x input) (removeLeading0x x)) currency.txs
-                    }
-                )
-                result.currencies
-    }
+        text ""
 
 
 resultList : Plugins -> Config -> SearchConfig -> Model -> List (Html Msg)
-resultList plugins vc sc { found, input } =
+resultList plugins vc sc { autocomplete, searchType } =
     let
-        filtered =
-            Maybe.map (filterByPrefix input) found
+        choices =
+            Autocomplete.choices autocomplete
+                |> List.indexedMap Tuple.pair
 
         labelBadge =
             { title = Locale.string vc.locale "Labels"
             , badge =
-                Maybe.map .labels found
-                    |> Maybe.withDefault []
-                    |> List.map Label
+                choices
+                    |> List.filter
+                        (\( _, rl ) ->
+                            case rl of
+                                Label _ ->
+                                    True
+
+                                _ ->
+                                    False
+                        )
             }
 
         actorBadge =
             { title = Locale.string vc.locale "Actors"
             , badge =
-                Maybe.map (.actors >> Maybe.withDefault []) found
-                    |> Maybe.withDefault []
-                    |> List.map (\x -> Actor ( x.id, x.label ))
+                choices
+                    |> List.filter
+                        (\( _, rl ) ->
+                            case rl of
+                                Actor _ ->
+                                    True
+
+                                _ ->
+                                    False
+                        )
             }
+
+        currencyBadges =
+            choices
+                |> List.Extra.groupWhile
+                    (\( _, a ) ( _, b ) -> resultLineCurrency a == resultLineCurrency b)
+                |> List.filterMap
+                    (\( fst, rest ) ->
+                        Tuple.second fst
+                            |> resultLineCurrency
+                            |> Maybe.map
+                                (\cur ->
+                                    { title = String.toUpper cur
+                                    , badge = fst :: rest
+                                    }
+                                )
+                    )
+
+        { choiceEvents } =
+            Autocomplete.events
+                { onSelect = UserClicksResultLine
+                , mapHtml = AutocompleteMsg
+                }
+
+        selectedValue =
+            Autocomplete.selectedValue autocomplete
 
         badgeToResult { title, badge } =
             if List.isEmpty badge then
@@ -173,66 +191,74 @@ resultList plugins vc sc { found, input } =
                         ]
                         [ text title
                         ]
-                    , List.map (resultLineToHtml vc title sc.resultsAsLink) badge
+                    , List.map
+                        (\( index, rl ) ->
+                            resultLineToHtml vc
+                                sc.resultsAsLink
+                                selectedValue
+                                (choiceEvents index)
+                                rl
+                        )
+                        badge
                         |> ol [ Css.resultGroupList vc |> css ]
                     ]
                     |> Just
     in
-    case sc.searchable of
+    case searchType of
         SearchTagsOnly ->
             [ labelBadge ]
                 |> List.filterMap badgeToResult
 
-        SearchAll { latestBlocks, pluginStates } ->
-            (List.map (currencyToResult vc input filtered) latestBlocks
+        SearchAll _ ->
+            currencyBadges
                 ++ [ actorBadge
                    , labelBadge
                    ]
                 |> List.filterMap badgeToResult
-            )
-                ++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> String -> Bool -> ResultLine -> Html Msg
-resultLineToHtml vc title asLink resultLine =
+
+--++ Plugin.searchResultList plugins pluginStates vc
+
+
+resultLineToHtml : Config -> Bool -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
     let
-        currency =
-            String.toLower title
-
-        ( route, icon, label ) =
+        ( icon, label ) =
             case resultLine of
-                Address a ->
-                    ( Route.addressRoute { currency = currency, address = a, table = Nothing, layer = Nothing }
-                    , FontAwesome.at
+                Address currency a ->
+                    ( FontAwesome.at
                     , a
                     )
 
-                Tx a ->
-                    ( Route.txRoute { currency = currency, txHash = a, table = Nothing, tokenTxId = Nothing }
-                    , FontAwesome.exchangeAlt
+                Tx currency a ->
+                    ( FontAwesome.exchangeAlt
                     , Util.View.truncate 50 a
                     )
 
-                Block a ->
-                    ( Route.blockRoute { currency = currency, block = a, table = Nothing }, FontAwesome.cube, String.fromInt a )
+                Block currency a ->
+                    ( FontAwesome.cube
+                    , String.fromInt a
+                    )
 
                 Label a ->
-                    ( Route.labelRoute a, FontAwesome.tag, a )
+                    ( FontAwesome.tag, a )
 
                 Actor ( id, lbl ) ->
-                    ( Route.actorRoute id Nothing, FontAwesome.user, lbl )
-
-        el attr =
-            if asLink then
-                a ((Route.graphRoute route |> toUrl |> href) :: attr)
-
-            else
-                a (href "#" :: attr)
+                    ( FontAwesome.user, lbl )
     in
-    el
-        [ Css.resultLine vc |> css
-        , onClick (UserClicksResultLine resultLine)
-        ]
+    span
+        ([ Css.resultLine vc
+            ++ (if selectedValue == Just resultLine then
+                    Css.resultLineHighlighted vc
+
+                else
+                    []
+               )
+            |> css
+         ]
+            ++ choiceEvents
+        )
         [ FontAwesome.icon icon
             |> Html.Styled.fromUnstyled
             |> List.singleton
@@ -241,44 +267,23 @@ resultLineToHtml vc title asLink resultLine =
         ]
 
 
-currencyToResult : Config -> String -> Maybe Api.Data.SearchResult -> ( String, Int ) -> { title : String, badge : List ResultLine }
-currencyToResult vc input found ( currency, latestBlock ) =
-    { title = String.toUpper currency
-    , badge =
-        (if String.length input < minSearchInputLength then
-            []
+resultLineCurrency : ResultLine -> Maybe String
+resultLineCurrency rl =
+    case rl of
+        Address currency _ ->
+            Just currency
 
-         else
-            Maybe.map
-                (\{ currencies } ->
-                    List.filter (.currency >> (==) currency) currencies
-                        |> List.head
-                        |> Maybe.map
-                            (\{ addresses, txs } ->
-                                List.map Address addresses
-                                    ++ List.map Tx txs
-                            )
-                        |> Maybe.withDefault []
-                )
-                found
-                |> Maybe.withDefault []
-        )
-            ++ blocksToResult input latestBlock
-    }
+        Tx currency _ ->
+            Just currency
 
+        Block currency _ ->
+            Just currency
 
-blocksToResult : String -> Int -> List ResultLine
-blocksToResult input latestBlock =
-    String.toInt input
-        |> Maybe.andThen
-            (\i ->
-                if i >= 0 && i <= latestBlock then
-                    Just [ Block i ]
+        Label _ ->
+            Nothing
 
-                else
-                    Nothing
-            )
-        |> Maybe.withDefault []
+        Actor _ ->
+            Nothing
 
 
 onEnter : msg -> Attribute msg

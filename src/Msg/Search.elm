@@ -1,21 +1,18 @@
 module Msg.Search exposing (Msg(..))
 
 import Api.Data
+import Autocomplete
 import Model.Search exposing (..)
 import Plugin.Msg
 
 
 type Msg
-    = BrowserGotSearchResult Api.Data.SearchResult
-    | UserInputsSearch String
-    | UserLeavesSearch
+    = BrowserGotSearchResult String Api.Data.SearchResult
     | UserFocusSearch
-    | BouncedBlur
-    | UserHitsEnter
-    | UserClicksResult
-    | UserClicksResultLine ResultLine
+    | UserClicksResultLine
+    | UserLeavesSearch
     | UserPicksCurrency String
     | UserClickedCloseCurrencyPicker
-    | RuntimeBounced
     | PluginMsg Plugin.Msg.Msg
+    | AutocompleteMsg (Autocomplete.Msg ResultLine)
     | NoOp

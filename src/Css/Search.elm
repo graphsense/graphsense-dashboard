@@ -45,6 +45,11 @@ resultLine vc =
         :: vc.theme.search.resultLine vc.lightmode
 
 
+resultLineHighlighted : Config -> List Style
+resultLineHighlighted vc =
+    vc.theme.search.resultLineHighlighted vc.lightmode
+
+
 resultLineIcon : Config -> List Style
 resultLineIcon vc =
     vc.theme.search.resultLineIcon
