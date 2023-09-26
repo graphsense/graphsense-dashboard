@@ -242,15 +242,14 @@ maybeTriggerSearch model =
             Autocomplete.query model.autocomplete
 
         isPickingCurrency =
-            Debug.log "isPickingCurrency" <|
-                case model.searchType of
-                    SearchAll { pickingCurrency } ->
-                        pickingCurrency
+            case model.searchType of
+                SearchAll { pickingCurrency } ->
+                    pickingCurrency
 
-                    SearchTagsOnly ->
-                        False
+                SearchTagsOnly ->
+                    False
     in
-    if not isPickingCurrency && not (isLikelyPathSearchInput query) |> Debug.log "isliek" then
+    if not isPickingCurrency && not (isLikelyPathSearchInput query) then
         SearchEffect
             { query = query
             , currency = Nothing
