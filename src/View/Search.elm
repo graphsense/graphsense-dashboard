@@ -48,6 +48,7 @@ search plugins vc sc model =
     Html.Styled.form
         [ Css.form vc |> css
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
+        , onSubmit UserClicksResultLine
         ]
         [ div
             [ Css.frame vc |> css
