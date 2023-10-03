@@ -1,17 +1,16 @@
 module View.Graph.Tool exposing (..)
 
-import Browser.Dom as Dom
 import Config.View exposing (Config)
 import Css exposing (color)
 import Css.Graph as Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Graph exposing (ActiveTool, Model)
+import Model.Graph exposing (Model)
 import Model.Graph.Tool as Tool exposing (Tool)
-import Msg.Graph exposing (Msg(..))
+import Msg.Graph exposing (Msg)
 import Tuple exposing (..)
-import Util.View exposing (none, toCssColor)
+import Util.View exposing (toCssColor)
 import View.Graph.Configuration as Configuration
 import View.Graph.ExportImport as Export
 import View.Graph.Highlighter as Highlighter
@@ -39,10 +38,10 @@ toolbox vc model =
     let
         isRight =
             case model.activeTool.toolbox of
-                Tool.Legend data ->
+                Tool.Legend _ ->
                     True
 
-                Tool.Configuration config ->
+                Tool.Configuration _ ->
                     True
 
                 Tool.Export ->
@@ -57,7 +56,7 @@ toolbox vc model =
     div
         [ [ model.activeTool.element
                 |> Maybe.map
-                    (\( el, visible ) ->
+                    (\( el, _ ) ->
                         if isRight then
                             Css.right (Css.px 0)
 
@@ -90,7 +89,7 @@ toolbox vc model =
                 Tool.Legend data ->
                     Legend.legend vc data
 
-                Tool.Configuration config ->
+                Tool.Configuration _ ->
                     Configuration.configuration vc model.config
 
                 Tool.Export ->

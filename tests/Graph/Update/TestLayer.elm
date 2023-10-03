@@ -8,10 +8,9 @@ import Expect
 import Init.Graph.Id as Id
 import Init.Graph.Layer as Layer
 import IntDict exposing (IntDict)
-import List.Extra
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Entity as Entity exposing (Entity)
-import Model.Graph.Id as Id exposing (EntityId)
+import Model.Graph.Id as Id
 import Model.Graph.Layer exposing (Layer)
 import RecordSetter exposing (..)
 import Set

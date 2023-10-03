@@ -6,7 +6,6 @@ import Dict
 import Model.Graph.Address exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Link as Link
-import RecordSetter exposing (..)
 
 
 move : Coords -> Address -> Address

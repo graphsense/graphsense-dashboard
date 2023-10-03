@@ -1,8 +1,8 @@
 module Setup.Locale exposing (simulateEffects)
 
 import Effect.Locale exposing (Effect(..))
-import Msg.Locale exposing (Msg(..))
-import ProgramTest exposing (ProgramTest)
+import Msg.Locale exposing (Msg)
+import ProgramTest
 import SimulatedEffect.Cmd
 import SimulatedEffect.Http as Http
 
@@ -23,5 +23,5 @@ simulateEffects eff =
                 , expect = Http.expectString toMsg
                 }
 
-        GetTimezoneEffect toMsg ->
+        GetTimezoneEffect _ ->
             SimulatedEffect.Cmd.none

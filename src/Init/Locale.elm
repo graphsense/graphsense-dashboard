@@ -6,7 +6,7 @@ import DateFormat.Relative
 import Effect.Locale exposing (Effect(..))
 import Locale.English
 import Model.Currency exposing (..)
-import Model.Locale as Model exposing (..)
+import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time

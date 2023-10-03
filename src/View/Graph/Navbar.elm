@@ -15,7 +15,6 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import Tuple exposing (..)
 import View.Graph.Tool as Tool
-import View.Locale as Locale
 
 
 navbar : Plugins -> ModelState -> Config -> Model -> Html Msg

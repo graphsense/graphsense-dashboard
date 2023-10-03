@@ -11,8 +11,6 @@ import Html.Styled.Events exposing (..)
 import Http
 import List.Extra
 import Model exposing (Msg(..))
-import Model.Graph.Id as Id
-import Model.Graph.Search as Search
 import Model.Statusbar exposing (..)
 import Tuple exposing (..)
 import Util.View exposing (firstToUpper, loadingSpinner, none)

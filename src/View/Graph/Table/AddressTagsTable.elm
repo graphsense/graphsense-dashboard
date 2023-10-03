@@ -11,16 +11,15 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import List.Extra
 import Model.Address as A
 import Model.Graph.Id as Id
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Util.Graph
-import Util.View exposing (none, truncate)
-import View.Graph.Table as T exposing (customizations, valueColumn)
+import Util.View exposing (none)
+import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
 import View.Util exposing (copyableLongIdentifier)
 

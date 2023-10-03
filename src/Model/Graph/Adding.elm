@@ -3,7 +3,6 @@ module Model.Graph.Adding exposing (..)
 import Api.Data
 import Dict exposing (Dict)
 import Model.Graph.Id as Id
-import RemoteData exposing (WebData)
 import Set exposing (Set)
 
 

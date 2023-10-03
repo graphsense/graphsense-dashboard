@@ -2,7 +2,7 @@ module PluginInterface.Msg exposing (..)
 
 import Api.Data
 import Browser.Dom
-import Effect.Api as Api exposing (..)
+import Effect.Api as Api
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Dialog

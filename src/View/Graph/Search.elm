@@ -1,7 +1,6 @@
 module View.Graph.Search exposing (..)
 
 import Config.View as View
-import Css
 import Css.Button
 import Css.Graph as Css
 import Css.View
@@ -21,9 +20,6 @@ import View.Locale as Locale
 inputHovercard : Plugins -> View.Config -> Model -> Html Msg
 inputHovercard plugins vc model =
     let
-        current =
-            criterionToString model.criterion
-
         dir =
             directionToString model.direction
     in

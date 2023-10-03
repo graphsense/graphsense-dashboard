@@ -2,7 +2,6 @@ module Update.Graph exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
-import Color
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
 import DateFormat
@@ -45,7 +44,6 @@ import Model.Graph.Tool as Tool
 import Model.Node as Node
 import Model.Search
 import Msg.Graph as Msg exposing (Msg(..))
-import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -319,7 +317,7 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map (loadNextAddress plugins uc model)
                 |> Maybe.withDefault (n model)
 
-        InternalGraphAddedEntities ids ->
+        InternalGraphAddedEntities _ ->
             n model
 
         InternalGraphSelectedAddress id ->
@@ -861,7 +859,7 @@ updateByMsg plugins uc msg model =
                     model
                 |> n
 
-        BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
+        BrowserGotEntityEgonetForAddress address currency _ isOutgoing neighbors ->
             let
                 e =
                     { currency = currency, address = address }
@@ -1145,7 +1143,7 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        PluginMsg msgValue ->
+        PluginMsg _ ->
             -- handled in src/Update.elm
             n model
 
@@ -1603,11 +1601,11 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        UserChangesCurrency currency ->
+        UserChangesCurrency _ ->
             -- handled upstream
             n model
 
-        UserChangesValueDetail detail ->
+        UserChangesValueDetail _ ->
             -- handled upstream
             n model
 
@@ -1733,11 +1731,11 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        UserClickedExportGraphics time ->
+        UserClickedExportGraphics _ ->
             -- handled upstream
             n model
 
-        UserClickedExportTagPack time ->
+        UserClickedExportTagPack _ ->
             -- handled upstream
             n model
 
@@ -1762,7 +1760,7 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        BrowserReadTagPackFile filename result ->
+        BrowserReadTagPackFile _ _ ->
             -- handled upstream
             n model
 
@@ -1777,7 +1775,7 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
-        PortDeserializedGS data ->
+        PortDeserializedGS _ ->
             -- handled upstream
             n model
 
@@ -2027,7 +2025,7 @@ updateByMsg plugins uc msg model =
                     model
                 |> n
 
-        BrowserGotBulkAddressTags currency tags ->
+        BrowserGotBulkAddressTags _ tags ->
             (tags
                 |> List.Extra.groupWhile
                     (\t1 t2 -> t1.currency == t2.currency && t1.address == t2.address)
@@ -2579,7 +2577,7 @@ updateByRoute plugins route model =
             , effectsActor ++ effectsTagsActor
             )
 
-        Route.Plugin ( pid, value ) ->
+        Route.Plugin _ ->
             n model
 
 
@@ -3178,16 +3176,16 @@ updateByPluginOutMsg plugins outMsgs model =
                     PluginInterface.GetEntities _ _ ->
                         ( mo, [] )
 
-                    PluginInterface.PushUrl url ->
+                    PluginInterface.PushUrl _ ->
                         ( mo, [] )
 
-                    PluginInterface.GetSerialized pmsg ->
+                    PluginInterface.GetSerialized _ ->
                         ( mo, [] )
 
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
 
-                    PluginInterface.GetAddressDomElement id pmsg ->
+                    PluginInterface.GetAddressDomElement _ _ ->
                         ( mo, [] )
 
                     PluginInterface.SendToPort _ ->
@@ -3297,7 +3295,7 @@ makeTagPack model time =
           , model.userAddressTags
                 |> Dict.values
                 |> Yaml.Encode.list
-                    (\{ currency, address, label, source, category, abuse, isClusterDefiner } ->
+                    (\{ currency, address, label, category, abuse, isClusterDefiner } ->
                         Yaml.Encode.record
                             [ ( "currency", Yaml.Encode.string currency )
                             , ( "address", Yaml.Encode.string address )
@@ -3430,7 +3428,7 @@ pushHistory msg model =
 forcePushHistory : Model -> Model
 forcePushHistory model =
     case model.history of
-        History past future ->
+        History past _ ->
             { model
                 | history =
                     History

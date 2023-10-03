@@ -1,4 +1,4 @@
-module View.User exposing (apiKeyForm, hovercard, user)
+module View.User exposing (hovercard, user)
 
 import Config.View exposing (Config)
 import Css.Button
@@ -7,13 +7,13 @@ import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events as Events exposing (onClick, onInput, stopPropagationOn)
+import Html.Styled.Events as Events exposing (onClick, onInput)
 import Json.Decode
 import Model exposing (Auth(..), Model, Msg(..), RequestLimit(..), UserModel)
 import Model.Locale as Locale
 import Plugin.View as Plugin exposing (Plugins)
 import Time
-import Util.View exposing (loadingSpinner, nona, none, switch)
+import Util.View exposing (loadingSpinner, none, switch)
 import View.Button as Button
 import View.Dialog as Dialog
 import View.Locale as Locale

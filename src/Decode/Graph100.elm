@@ -1,7 +1,6 @@
 module Decode.Graph100 exposing (decoder)
 
 import Color
-import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode exposing (..)
 import Model.Address as A

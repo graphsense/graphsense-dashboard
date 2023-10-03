@@ -5,21 +5,17 @@ import Config.View as View
 import Css
 import Css.Table
 import FontAwesome
-import FontAwesome.Layers
 import Html
 import Html.Attributes as Html
-import Html.Events
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency as Currency
 import Model.Graph.Table as T
-import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Util.View exposing (loadingSpinner, none)
-import View.Button exposing (copyLink)
 import View.Locale as Locale
 import View.Util exposing (copyableLongIdentifier)
 
@@ -49,7 +45,7 @@ table vc attributes tools config tbl =
                 ++ attributes
             )
             ((Maybe.map2
-                (\filter fm ->
+                (\_ fm ->
                     div
                         [ Css.Table.filter vc |> css
                         ]

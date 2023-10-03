@@ -447,7 +447,7 @@ perform apiKey wrapMsg effect =
             Api.Request.Tokens.listSupportedTokens "eth"
                 |> send apiKey wrapMsg effect toMsg
 
-        GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage } toMsg ->
+        GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, nextpage } toMsg ->
             let
                 direction =
                     isOutgoingToDirection isOutgoing

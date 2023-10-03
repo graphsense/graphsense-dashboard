@@ -1,13 +1,11 @@
-module Route exposing (Route(..), graphRoute, graphSegment, homeRoute, parse, pluginRoute, statsRoute, toUrl)
+module Route exposing (Route(..), graphRoute, homeRoute, parse, pluginRoute, statsRoute, toUrl)
 
-import List.Extra
 import Plugin.Model
 import Plugin.Route as Plugin
 import Route.Graph as Graph
 import Url exposing (..)
-import Url.Builder as B exposing (..)
+import Url.Builder exposing (..)
 import Util.Url.Parser as P exposing (..)
-import Util.Url.Parser.Query as Q
 
 
 type alias Config =

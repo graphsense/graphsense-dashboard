@@ -63,7 +63,7 @@ messageFromEffect model effect =
         Model.LocaleEffect (Locale.GetTimezoneEffect _) ->
             Nothing
 
-        Model.SearchEffect (Search.SearchEffect { query }) ->
+        Model.SearchEffect (Search.SearchEffect _) ->
             Nothing
 
         Model.SearchEffect Search.CancelEffect ->

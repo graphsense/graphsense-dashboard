@@ -8,7 +8,6 @@ import Model.Graph.Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Tag as Tag
-import Tuple exposing (..)
 
 
 encode : Model -> Value

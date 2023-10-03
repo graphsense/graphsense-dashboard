@@ -1,4 +1,4 @@
-module Effect.Locale exposing (Effect(..), getTranslationEffect, n, perform)
+module Effect.Locale exposing (Effect(..), getTranslationEffect, perform)
 
 import Http
 import Msg.Locale exposing (Msg(..))
@@ -10,11 +10,6 @@ import Yaml.Decode exposing (dict, fromString, string)
 type Effect
     = GetTranslationEffect { url : String, toMsg : Result Http.Error String -> Msg }
     | GetTimezoneEffect (Time.Zone -> Msg)
-
-
-n : model -> ( model, List Effect )
-n model =
-    ( model, [] )
 
 
 perform : Effect -> Cmd Msg

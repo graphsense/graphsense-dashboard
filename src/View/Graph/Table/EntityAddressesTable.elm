@@ -9,13 +9,13 @@ import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id exposing (EntityId)
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
 import Util.View exposing (none)
-import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Graph.Table as T exposing (customizations)
 import View.Util exposing (copyableLongIdentifier)
 
 

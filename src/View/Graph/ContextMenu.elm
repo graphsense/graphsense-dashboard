@@ -1,4 +1,4 @@
-module View.Graph.ContextMenu exposing (option, optionHtml, optionWithIcon, view)
+module View.Graph.ContextMenu exposing (option, optionWithIcon, view)
 
 import Config.View as View
 import Css exposing (int, left, px, top, zIndex)
@@ -7,7 +7,6 @@ import FontAwesome exposing (Icon)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Graph.ContextMenu exposing (..)
 import Model.Graph.Coords exposing (Coords)
 import Msg.Graph exposing (..)
 

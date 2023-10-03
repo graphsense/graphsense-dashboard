@@ -2,7 +2,6 @@ module View.Graph exposing (view)
 
 import Config.Graph as Graph
 import Config.View exposing (Config)
-import Css
 import Css.Graph as Css
 import Dict
 import FontAwesome
@@ -11,7 +10,6 @@ import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
 import IntDict exposing (IntDict)
 import Json.Decode
-import Log
 import Maybe.Extra
 import Model.Graph exposing (..)
 import Model.Graph.Address as Address
@@ -20,12 +18,9 @@ import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer exposing (Layer)
-import Model.Graph.Link as Link
-import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RecordSetter exposing (..)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -35,7 +30,6 @@ import Tuple exposing (..)
 import Util.ExternalLinks exposing (getBlockExplorerLinks, getBlockExplorerTransactionLinks)
 import Util.Graph as Util
 import Util.View exposing (contextMenuRule, hovercard, none)
-import View.Graph.Address as Address
 import View.Graph.Browser exposing (browser)
 import View.Graph.ContextMenu as ContextMenu
 import View.Graph.Entity as Entity
@@ -136,40 +130,8 @@ graphSvg plugins _ vc gc model bbox =
         )
 
 
-showOrigin : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
-showOrigin plugins vc gc layers =
-    rect [ x "0", y "0", Svg.width "10", Svg.height "10" ] []
-
-
-showLayerBoundingBox : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
-showLayerBoundingBox plugins vc gc layers =
-    let
-        lb =
-            Layer.getBoundingBox layers
-    in
-    lb
-        |> Maybe.map
-            (\bx ->
-                rect
-                    [ x (String.fromFloat bx.x)
-                    , y (String.fromFloat bx.y)
-                    , Svg.width (String.fromFloat bx.width)
-                    , Svg.height (String.fromFloat bx.height)
-                    , Svg.fillOpacity "0.5"
-                    , rx "15"
-                    , ry "15"
-                    ]
-                    []
-            )
-        |> Maybe.withDefault (rect [] [])
-
-
 addresses : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
 addresses plugins vc gc layers =
-    let
-        _ =
-            Log.log "Graph.addresses" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
@@ -184,10 +146,6 @@ addresses plugins vc gc layers =
 
 entities : Plugins -> Config -> Graph.Config -> IntDict Layer -> Svg Msg
 entities plugins vc gc layers =
-    let
-        _ =
-            Log.log "Graph.entities" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
@@ -202,10 +160,6 @@ entities plugins vc gc layers =
 
 entityShadowLinks : Config -> IntDict Layer -> Svg Msg
 entityShadowLinks vc layers =
-    let
-        _ =
-            Log.log "Graph.entityShadowLinks" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
@@ -220,10 +174,6 @@ entityShadowLinks vc layers =
 
 addressShadowLinks : Config -> IntDict Layer -> Svg Msg
 addressShadowLinks vc layers =
-    let
-        _ =
-            Log.log "Graph.addressShadowLinks" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
@@ -238,10 +188,6 @@ addressShadowLinks vc layers =
 
 entityLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
 entityLinks vc gc layers =
-    let
-        _ =
-            Log.log "Graph.entityLinks" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->
@@ -256,10 +202,6 @@ entityLinks vc gc layers =
 
 addressLinks : Config -> Graph.Config -> IntDict Layer -> Svg Msg
 addressLinks vc gc layers =
-    let
-        _ =
-            Log.log "Graph.addressLinks" ""
-    in
     layers
         |> IntDict.foldl
             (\layerId layer svg ->

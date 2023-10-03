@@ -33,7 +33,7 @@ selectCriterion config criterion model =
 selectCategory : String -> Model -> ( Model, List Effect )
 selectCategory category model =
     case model.criterion of
-        Category categories active ->
+        Category categories _ ->
             { model
                 | criterion = Category categories category
             }

@@ -144,8 +144,7 @@ type Effect
 
 
 type Thing
-    = Address Api.Data.Address
-    | Entity Api.Data.Entity
+    = Entity Api.Data.Entity
 
 
 userSettingsFromMainModel : Model key -> UserSettings

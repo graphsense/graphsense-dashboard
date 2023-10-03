@@ -1,19 +1,17 @@
 module View.Graph.Label exposing (label, split)
 
-import Config.Graph as Graph exposing (addressesCountHeight, labelHeight)
+import Config.Graph as Graph exposing (labelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Graph as Css
 import List.Extra
 import Model.Graph
-import Msg.Graph exposing (Msg(..))
+import Msg.Graph exposing (Msg)
 import String.Extra
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events exposing (..)
 import Tuple exposing (mapSecond)
-import Util.Graph as Util exposing (translate)
-import Util.View exposing (truncate)
+import Util.Graph as Util
 import View.Locale as Locale
 
 

@@ -2,7 +2,7 @@ module Util.Csv exposing (..)
 
 import Api.Data
 import Model.Locale exposing (..)
-import View.Locale exposing (currencyWithoutCode, timestamp)
+import View.Locale exposing (currencyWithoutCode)
 
 
 int : Int -> String

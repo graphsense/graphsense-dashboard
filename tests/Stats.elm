@@ -2,15 +2,12 @@ module Stats exposing (statsTest)
 
 import Api
 import Api.Data
-import Expect exposing (Expectation)
 import Mockup.Stats
-import Model exposing (Effect(..), Flags, Model, Msg(..))
+import Model exposing (Effect, Model, Msg)
 import ProgramTest exposing (..)
 import Setup
 import Test exposing (..)
-import Test.Html.Query as Query
 import Test.Html.Selector exposing (..)
-import Theme.Theme as Theme
 import Util exposing (ensureAndSimulateHttp)
 
 

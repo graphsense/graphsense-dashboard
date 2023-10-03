@@ -19,9 +19,9 @@ import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
 import Theme.SwitchableColor as Theme
 import Theme.Table as Table
-import Theme.Theme as Theme exposing (Theme, default)
+import Theme.Theme as Theme exposing (Theme)
 import Theme.User as User
-import Tuple exposing (..)
+import Tuple
 import Util.Theme
     exposing
         ( backgroundColorWithLightmode
@@ -33,7 +33,6 @@ import Util.Theme
         , switchColor
         )
 import Util.View exposing (toCssColor)
-import VitePluginHelper
 
 
 type alias Colors =
@@ -380,12 +379,12 @@ theme =
                         ]
                     )
                 |> s_loadBoxText
-                    (\lightmode ->
+                    (\_ ->
                         [ textDecoration none
                         ]
                     )
                 |> s_exampleLinkBox
-                    (\lightmode ->
+                    (\_ ->
                         [ paddingTop <| rem <| scaled 4 ]
                     )
             )
@@ -946,7 +945,7 @@ theme =
                     [ letterSpacingWide
                     ]
                 |> s_propertyBoxNote
-                    (\lightmode ->
+                    (\_ ->
                         [ scaled 1 |> rem |> paddingLeft
                         ]
                     )
@@ -1306,11 +1305,6 @@ statsMargin =
     5
 
 
-wFull : Style
-wFull =
-    width <| pct 100
-
-
 paddingY : Length compatibleB unitsB -> Style
 paddingY y =
     batch
@@ -1400,11 +1394,6 @@ spinnerPadding =
 letterSpacingWide : Style
 letterSpacingWide =
     scaled 0.2 |> rem |> letterSpacing
-
-
-entityStrokeDashArray : String
-entityStrokeDashArray =
-    "4 1"
 
 
 nodeStrokeWidth : Float

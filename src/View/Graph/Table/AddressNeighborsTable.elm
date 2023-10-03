@@ -3,9 +3,7 @@ module View.Graph.Table.AddressNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
-import Css.View as CssView
 import Dict
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -19,7 +17,7 @@ import Table
 import Util.Csv
 import Util.View exposing (none)
 import View.Button exposing (actorLink)
-import View.Graph.Table as T exposing (customizations, valueColumn)
+import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
 import View.Util exposing (copyableLongIdentifier)
 

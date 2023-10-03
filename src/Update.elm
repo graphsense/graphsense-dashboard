@@ -23,7 +23,6 @@ import Log
 import Maybe.Extra
 import Model exposing (..)
 import Model.Dialog as Dialog
-import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
@@ -33,7 +32,6 @@ import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
 import Msg.Search as Search
-import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -49,8 +47,6 @@ import Time
 import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
-import Update.Graph.Browser as Browser
-import Update.Graph.Layer as Layer
 import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
@@ -343,7 +339,7 @@ update plugins uc msg model =
                             |> s_hovercardElement Nothing
                 }
 
-        TimeUpdateReset time ->
+        TimeUpdateReset _ ->
             { model
                 | user =
                     model.user
@@ -416,7 +412,7 @@ update plugins uc msg model =
             )
                 |> updateByPluginOutMsg plugins outMsg
 
-        BrowserGotLoggedOut result ->
+        BrowserGotLoggedOut _ ->
             ( model
             , [ NavLoadEffect "/" ]
             )
@@ -459,14 +455,11 @@ update plugins uc msg model =
                         query =
                             Search.query model.search
 
-                        multi =
-                            Search.getMulti query
-
                         selectedValue =
                             Search.selectedValue model.search
                                 |> Maybe.Extra.orElse (Search.firstResult model.search)
 
-                        ( search, searchEffects ) =
+                        ( search, _ ) =
                             Search.update m model.search
 
                         m2 =
@@ -1118,7 +1111,7 @@ handleResponse plugins uc result model =
                     model.user
                         |> s_auth
                             (case model.user.auth of
-                                Unauthorized loading effs ->
+                                Unauthorized _ effs ->
                                     Unauthorized False <| effs ++ [ eff ]
 
                                 _ ->
@@ -1240,7 +1233,7 @@ updatePlugins plugins msg model =
 pluginNewGraph : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
 pluginNewGraph plugins ( model, eff ) =
     let
-        ( new, outMsg, cmd ) =
+        ( new, _, cmd ) =
             Plugin.newGraph plugins model.plugins
     in
     ( { model

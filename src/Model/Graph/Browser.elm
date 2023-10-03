@@ -128,7 +128,7 @@ loadableEntity l =
 loadableActor : Loadable String Actor -> Act.Actor
 loadableActor l =
     case l of
-        Loading curr actorId ->
+        Loading _ actorId ->
             { actorId = actorId }
 
         Loaded a ->

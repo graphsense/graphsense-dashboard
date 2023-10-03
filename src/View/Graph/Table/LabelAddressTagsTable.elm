@@ -8,14 +8,11 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
-import Route exposing (toUrl)
-import Route.Graph as Route
 import Table
-import Util.View exposing (truncate)
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
+import Util.View
+import View.Graph.Table as T exposing (customizations)
 import View.Util exposing (copyableLongIdentifier)
 
 

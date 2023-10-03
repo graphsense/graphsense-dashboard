@@ -3,7 +3,6 @@ module Init.Search exposing (..)
 import Api.Data
 import Autocomplete
 import Model.Search exposing (Model, SearchType(..), getLatestBlocks, minSearchInputLength)
-import RemoteData exposing (RemoteData(..))
 
 
 init : SearchType -> Model

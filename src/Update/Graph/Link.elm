@@ -7,7 +7,7 @@ import Model.Graph.Link exposing (..)
 entityNeighborsToLinks : IntDict Layer -> List Api.Data.EntityNeighbor -> List ( EntityId, Link Entity )
 entityNeighborsToLinks layers neighbors =
     List.foldl
-        (\neighbor acc ->
+        (\_ acc ->
             Layer.getEntity
                 Dict.foldl
                 (\_ entity acc_ ->

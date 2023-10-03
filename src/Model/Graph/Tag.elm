@@ -2,10 +2,8 @@ module Model.Graph.Tag exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
-import Model.Address as A
-import Model.Entity as E
 import Model.Graph.Id exposing (AddressId, EntityId)
-import Model.Node exposing (Node(..))
+import Model.Node exposing (Node)
 import Model.Search as Search
 
 

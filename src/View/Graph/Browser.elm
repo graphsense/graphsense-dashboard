@@ -1,4 +1,4 @@
-module View.Graph.Browser exposing (browseRow, browseValue, browser, elseLoading, frame, ifLoaded, properties, propertyBox, rule)
+module View.Graph.Browser exposing (browseRow, browseValue, browser, frame, properties, propertyBox)
 
 import Api.Data
 import Config.Graph as Graph
@@ -218,7 +218,7 @@ browser plugins states vc gc model =
                             |> Maybe.withDefault []
                        )
 
-            Browser.Label label table ->
+            Browser.Label _ table ->
                 table
                     |> table_ vc Nothing (LabelAddressTagsTable.config vc)
                     |> List.singleton
@@ -1154,7 +1154,7 @@ rowsActor vc gc now actor =
                 |> makeTableLink
                     (\_ -> "")
                     .id
-                    (\currency id ->
+                    (\_ id ->
                         { title = Locale.string vc.locale title
                         , link =
                             Route.actorRoute id (Just tableTag)
@@ -1218,7 +1218,7 @@ rowsActor vc gc now actor =
                 |> ifLoaded
                     (getUrisWithoutMain
                         >> getFontAwesomeIconForUris
-                        >> List.filter (\( uri, icon ) -> icon /= Nothing)
+                        >> List.filter (\( _, icon ) -> icon /= Nothing)
                         >> List.map (\( uri, icon ) -> IconLink (icon |> Maybe.withDefault FontAwesome.question) uri)
                         >> Grid 7
                     )
@@ -1232,7 +1232,7 @@ rowsActor vc gc now actor =
                     (a
                         |> getUrisWithoutMain
                         |> getFontAwesomeIconForUris
-                        |> List.filter (\( uri, icon ) -> icon /= Nothing)
+                        |> List.filter (\( _, icon ) -> icon /= Nothing)
                     )
                     > 0
 
@@ -1244,7 +1244,7 @@ rowsActor vc gc now actor =
         ( "Other Links"
         , actor
             |> ifLoaded
-                ((\x -> "") >> String)
+                ((\_ -> "") >> String)
             |> elseLoading
         , mkTableLink "More links" Route.ActorOtherLinksTable
         )
@@ -1430,7 +1430,7 @@ browseActorTable vc gc actor table =
 browseBlockTable : View.Config -> Graph.Config -> Loadable Int Api.Data.Block -> BlockTable -> Html Msg
 browseBlockTable vc gc block table =
     let
-        ( coinCode, blockId ) =
+        ( coinCode, _ ) =
             case block of
                 Loaded e ->
                     ( e.currency, e.height |> Just )
@@ -1449,7 +1449,7 @@ browseBlockTable vc gc block table =
 browseTxUtxoTable : View.Config -> Graph.Config -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg
 browseTxUtxoTable vc gc tx table =
     let
-        ( coinCode, txHash ) =
+        ( coinCode, _ ) =
             case tx of
                 Loaded e ->
                     ( e.currency, e.txHash |> Just )
@@ -1468,7 +1468,7 @@ browseTxUtxoTable vc gc tx table =
 browseTxAccountTable : View.Config -> Graph.Config -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> TxAccountTable -> Html Msg
 browseTxAccountTable vc gc tx (TokenTxsTable table) =
     let
-        ( coinCode, txHash ) =
+        ( coinCode, _ ) =
             case tx of
                 Loaded e ->
                     ( e.currency, e.txHash |> Just )

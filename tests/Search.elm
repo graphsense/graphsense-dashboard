@@ -2,10 +2,9 @@ module Search exposing (..)
 
 import Api
 import Api.Data
-import Expect exposing (Expectation)
-import Json.Encode
+import Expect
 import Mockup.Search
-import Model exposing (Effect(..), Flags, Model, Msg(..))
+import Model exposing (Effect, Model, Msg)
 import ProgramTest exposing (..)
 import Setup
 import Test exposing (..)

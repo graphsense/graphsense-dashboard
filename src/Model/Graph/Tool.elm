@@ -3,7 +3,6 @@ module Model.Graph.Tool exposing (..)
 import Color exposing (Color)
 import Config.Graph exposing (Config)
 import Html exposing (Html)
-import Model.Graph.Highlighter as Highlighter
 import Model.Graph.Legend as Legend
 
 

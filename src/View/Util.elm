@@ -2,7 +2,7 @@ module View.Util exposing (copyableLongIdentifier, longIdentifier)
 
 import Config.View exposing (Config)
 import Css.Browser as BCss
-import Html.Styled as Html exposing (..)
+import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Util.View exposing (truncateLongIdentifier)
 import View.Button exposing (copyLink)

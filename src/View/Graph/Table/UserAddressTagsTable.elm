@@ -1,26 +1,23 @@
 module View.Graph.Table.UserAddressTagsTable exposing (..)
 
-import Api.Data
 import Config.Graph as Graph
 import Config.View as View
 import Css
 import Css.Table
 import Css.View
 import Dict
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Util.Csv
 import Util.Graph
-import Util.View exposing (truncate)
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
+import Util.View
+import View.Graph.Table as T exposing (customizations)
 
 
 init : Table Tag.UserTag

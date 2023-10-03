@@ -1,8 +1,6 @@
 module Locale.Durations exposing (Unit(..), durationToString)
 
-import DateTime
 import List.Extra
-import Time
 import Tuple exposing (second)
 
 

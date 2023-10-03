@@ -1,33 +1,29 @@
 module View.Graph.Entity exposing (addressLinks, addressShadowLinks, addresses, entity, links, shadowLinks, showLink)
 
 import Color
-import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
+import Config.Graph as Graph exposing (expandHandleWidth, labelHeight)
 import Config.View exposing (Config)
-import Css exposing (fill)
+import Css
 import Css.Graph as Css
 import Dict exposing (Dict)
 import Init.Graph.Id as Id
 import Json.Decode
-import List.Extra
-import Log
 import Maybe.Extra
-import Model.Graph exposing (NodeType(..))
+import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
-import Model.Graph.Transform as Transform
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Svg exposing (..)
+import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
-import Svg.Styled.Lazy as Svg exposing (..)
-import Tuple exposing (..)
-import Util.Graph exposing (decodeCoords, rotate, scale, translate)
+import Svg.Styled.Lazy as Svg
+import Util.Graph exposing (decodeCoords, translate)
 import Util.View as Util
 import View.Graph.Address as Address
 import View.Graph.Label as Label
@@ -53,9 +49,6 @@ addresses plugins vc gc ent =
 entity : Plugins -> Config -> Graph.Config -> Entity -> Svg Msg
 entity plugins vc gc ent =
     let
-        _ =
-            Log.log "Entity.entity" ent.id
-
         color =
             ent.color
                 |> Maybe.Extra.withDefaultLazy
@@ -290,10 +283,6 @@ currency vc gc ent =
 addressesCount : Config -> Graph.Config -> Entity -> Svg Msg
 addressesCount vc gc ent =
     let
-        size =
-            Dict.size ent.addresses
-                |> Locale.int vc.locale
-
         total =
             Locale.int vc.locale ent.entity.noAddresses
 
@@ -330,10 +319,6 @@ addressesCount vc gc ent =
 
 addressLinks : Config -> Graph.Config -> Float -> Float -> Entity -> Svg Msg
 addressLinks vc gc mn mx ent =
-    let
-        _ =
-            Log.log "Entity.addressLinks" ent.id
-    in
     ent.addresses
         |> Dict.foldl
             (\_ address svg ->
@@ -348,10 +333,6 @@ addressLinks vc gc mn mx ent =
 
 addressShadowLinks : Config -> Entity -> Svg Msg
 addressShadowLinks vc ent =
-    let
-        _ =
-            Log.log "Entity.addressShadowLinks" ent.id
-    in
     ent.addresses
         |> Dict.foldl
             (\_ address svg ->

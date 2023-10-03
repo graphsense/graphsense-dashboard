@@ -1,8 +1,8 @@
-module Css.Reset exposing (meyerV2, borderBoxV201408)
+module Css.Reset exposing (meyerV2)
 
 {-| Some CSS resets using elm-css.
 
-@docs meyerV2, borderBoxV201408
+@docs meyerV2
 
 -}
 
@@ -140,22 +140,5 @@ meyerV2 =
         , selector "table"
             [ borderCollapse collapse
             , borderSpacing zero
-            ]
-        ]
-
-
-{-| Set `box-sizing: border-box` everywhere.
-
-See <https://www.paulirish.com/2012/box-sizing-border-box-ftw/> for more.
-
--}
-borderBoxV201408 : Html msg
-borderBoxV201408 =
-    global
-        [ html [ boxSizing Css.borderBox ]
-        , everything
-            [ boxSizing inherit
-            , before [ boxSizing inherit ]
-            , after [ boxSizing inherit ]
             ]
         ]

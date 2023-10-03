@@ -2,13 +2,12 @@ module View.Graph.Configuration exposing (..)
 
 import Config.Graph as Graph
 import Config.View as View
-import Css.Graph as Css
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency as Currency
-import Model.Locale exposing (ValueDetail)
+import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Util.View exposing (onOffSwitch)
 import View.Dialog as Dialog

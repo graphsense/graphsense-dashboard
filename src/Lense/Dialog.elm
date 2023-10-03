@@ -14,5 +14,5 @@ dialog2ConfirmConfig =
 
                 _ ->
                     Nothing
-    , set = \confirm dialog -> Confirm confirm
+    , set = \confirm _ -> Confirm confirm
     }

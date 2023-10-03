@@ -4,22 +4,18 @@ import Api exposing (Request)
 import Api.Request.Addresses
 import Api.Request.Entities
 import Api.Request.General
-import Api.Request.Txs
 import Dict
 import Effect.Graph as Graph
 import Effect.Search as Search
 import Init exposing (init)
-import Init.Locale as Locale
-import Model exposing (Effect(..), Flags, Model, Msg(..))
+import Model exposing (Effect(..), Model, Msg(..))
 import ProgramTest exposing (ProgramTest)
 import Result.Extra
 import Setup.Graph as Graph
 import Setup.Locale as Locale
 import Setup.Search as Search
 import SimulatedEffect.Cmd
-import SimulatedEffect.Http as Http
 import Theme.Theme as Theme
-import Tuple exposing (first)
 import Update exposing (update)
 import Util.Debug
 import View exposing (view)
@@ -109,7 +105,7 @@ simulateEffect effect =
 
         GraphEffect eff ->
             case eff of
-                Graph.NavPushRouteEffect route ->
+                Graph.NavPushRouteEffect _ ->
                     SimulatedEffect.Cmd.none
 
                 Graph.GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, toMsg } ->

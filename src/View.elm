@@ -1,24 +1,18 @@
 module View exposing (view)
 
 import Browser exposing (Document)
-import Browser.Dom as Dom
 import Config.View exposing (Config)
-import Css exposing (..)
-import Css.Media exposing (width)
 import Css.Reset
 import Css.View
 import FontAwesome
 import Hovercard
-import Html
 import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
-import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
-import RemoteData
 import Route
 import Route.Graph
 import Util.View exposing (hovercard)

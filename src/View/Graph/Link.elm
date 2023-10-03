@@ -1,23 +1,19 @@
 module View.Graph.Link exposing (..)
 
 import Color
-import Config.Graph as Graph exposing (expandHandleWidth, linkLabelHeight, txMaxWidth)
+import Config.Graph as Graph exposing (linkLabelHeight, txMaxWidth)
 import Config.View as View
 import Css exposing (..)
 import Css.Graph
 import Dict
 import Init.Graph.Id as Id
 import Json.Decode
-import List.Extra
-import Log
 import Model.Currency as Currency
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
-import Model.Graph.Id as Id
 import Model.Graph.Link as Link exposing (Link)
-import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Regex
@@ -25,8 +21,7 @@ import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
-import Util.Graph exposing (decodeCoords, translate)
-import Util.View
+import Util.Graph exposing (decodeCoords)
 import View.Locale as Locale
 
 

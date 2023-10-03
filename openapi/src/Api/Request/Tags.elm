@@ -18,14 +18,10 @@ module Api.Request.Tags exposing (..)
 
 import Api
 import Api.Data
-import Dict
-import Http
 import Json.Decode
-import Json.Encode
 
 
-
-getActor : (String) -> Api.Request Api.Data.Actor
+getActor : String -> Api.Request Api.Data.Actor
 getActor actor_path =
     Api.request
         "GET"
@@ -37,34 +33,31 @@ getActor actor_path =
         Api.Data.actorDecoder
 
 
-
-getActorTags : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
+getActorTags : String -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTags
 getActorTags actor_path page_query pagesize_query =
     Api.request
         "GET"
         "/tags/actors/{actor}/tags"
         [ ( "actor", identity actor_path ) ]
-        [ ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
+        [ ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
         []
         Nothing
         Api.Data.addressTagsDecoder
 
 
-
-listAddressTags : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
+listAddressTags : String -> Maybe String -> Maybe Int -> Api.Request Api.Data.AddressTags
 listAddressTags label_query page_query pagesize_query =
     Api.request
         "GET"
         "/tags"
         []
-        [ ( "label", Just <| (identity) label_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
+        [ ( "label", Just <| identity label_query ), ( "page", Maybe.map identity page_query ), ( "pagesize", Maybe.map String.fromInt pagesize_query ) ]
         []
         Nothing
         Api.Data.addressTagsDecoder
 
 
-
-listConcepts : (String) -> Api.Request (List Api.Data.Concept)
+listConcepts : String -> Api.Request (List Api.Data.Concept)
 listConcepts taxonomy_path =
     Api.request
         "GET"
@@ -74,7 +67,6 @@ listConcepts taxonomy_path =
         []
         Nothing
         (Json.Decode.list Api.Data.conceptDecoder)
-
 
 
 listTaxonomies : Api.Request (List Api.Data.Taxonomy)
@@ -87,4 +79,3 @@ listTaxonomies =
         []
         Nothing
         (Json.Decode.list Api.Data.taxonomyDecoder)
-

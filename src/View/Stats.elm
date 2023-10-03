@@ -8,9 +8,8 @@ import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
-import Model.Locale as Locale
 import RecordSetter exposing (..)
-import RemoteData as RD exposing (WebData)
+import RemoteData exposing (WebData)
 import Svg.Styled exposing (path, svg)
 import Svg.Styled.Attributes as Svg exposing (d, viewBox)
 import Time

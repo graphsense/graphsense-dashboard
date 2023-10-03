@@ -4,19 +4,16 @@ import Browser
 import Browser.Navigation as Nav
 import Config exposing (config)
 import Config.UserSettings exposing (default)
-import Dict
 import Effect exposing (perform)
 import Init exposing (init)
 import Init.Locale as Locale
 import Model exposing (Flags, Model, Msg(..))
-import Model.Locale as Locale
 import Plugin
 import Sub exposing (subscriptions)
 import Tuple exposing (..)
 import Update exposing (update, updateByUrl)
 import Update.Statusbar as Statusbar
 import View exposing (view)
-import View.Locale as Locale
 
 
 plugins =

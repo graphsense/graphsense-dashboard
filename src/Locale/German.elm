@@ -147,11 +147,6 @@ past =
     relative "vor"
 
 
-future : String -> String -> Int -> String
-future =
-    relative "in"
-
-
 relativeTimeOptions : RelativeTimeOptions
 relativeTimeOptions =
     { someSecondsAgo = past "Sekunde" "Sekunden"

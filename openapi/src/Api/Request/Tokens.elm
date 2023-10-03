@@ -18,14 +18,9 @@ module Api.Request.Tokens exposing (..)
 
 import Api
 import Api.Data
-import Dict
-import Http
-import Json.Decode
-import Json.Encode
 
 
-
-listSupportedTokens : (String) -> Api.Request Api.Data.TokenConfigs
+listSupportedTokens : String -> Api.Request Api.Data.TokenConfigs
 listSupportedTokens currency_path =
     Api.request
         "GET"
@@ -35,4 +30,3 @@ listSupportedTokens currency_path =
         []
         Nothing
         Api.Data.tokenConfigsDecoder
-

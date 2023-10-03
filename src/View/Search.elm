@@ -1,6 +1,5 @@
 module View.Search exposing (search)
 
-import Api.Data
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
 import Config.View exposing (Config)
@@ -15,11 +14,7 @@ import Json.Decode
 import List.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RemoteData exposing (RemoteData(..), WebData)
-import Route exposing (toUrl)
-import Route.Graph as Route
 import Util.View
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
@@ -42,7 +37,7 @@ search plugins vc sc model =
                 , mapHtml = AutocompleteMsg
                 }
 
-        { query, choices, selectedIndex, status } =
+        { query } =
             Autocomplete.viewState model.autocomplete
     in
     Html.Styled.form
@@ -227,17 +222,17 @@ resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
     let
         ( icon, label ) =
             case resultLine of
-                Address currency a ->
+                Address _ a ->
                     ( FontAwesome.at
                     , a
                     )
 
-                Tx currency a ->
+                Tx _ a ->
                     ( FontAwesome.exchangeAlt
                     , Util.View.truncate 50 a
                     )
 
-                Block currency a ->
+                Block _ a ->
                     ( FontAwesome.cube
                     , String.fromInt a
                     )
@@ -245,7 +240,7 @@ resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
                 Label a ->
                     ( FontAwesome.tag, a )
 
-                Actor ( id, lbl ) ->
+                Actor ( _, lbl ) ->
                     ( FontAwesome.user, lbl )
     in
     span
@@ -285,17 +280,3 @@ resultLineCurrency rl =
 
         Actor _ ->
             Nothing
-
-
-onEnter : msg -> Attribute msg
-onEnter onEnterAction =
-    preventDefaultOn "keypress" <|
-        Json.Decode.andThen
-            (\keyCode ->
-                if keyCode == 13 then
-                    Json.Decode.succeed ( onEnterAction, True )
-
-                else
-                    Json.Decode.fail (String.fromInt keyCode)
-            )
-            keyCode

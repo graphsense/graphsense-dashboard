@@ -3,7 +3,7 @@ module View.Graph.Address exposing (address, links, shadowLinks)
 --import Plugin.View.Graph.Address
 
 import Color
-import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth, labelHeight)
+import Config.Graph as Graph exposing (AddressLabelType(..), expandHandleWidth)
 import Config.View exposing (Config)
 import Css
 import Css.Graph as Css
@@ -14,17 +14,16 @@ import Log
 import Maybe.Extra
 import Model.Graph
 import Model.Graph.Address as Address exposing (Address)
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Msg.Graph exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
-import Route
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events exposing (..)
 import Svg.Styled.Keyed as Keyed
-import Svg.Styled.Lazy as Svg exposing (..)
+import Svg.Styled.Lazy as Svg
 import Util.Graph exposing (decodeCoords, translate)
 import Util.View as Util
 import View.Graph.Label as Label
@@ -36,9 +35,6 @@ import View.Locale as Locale
 address : Plugins -> Config -> Graph.Config -> Address -> Svg Msg
 address plugins vc gc addr =
     let
-        _ =
-            Log.log "rednerAddress" addr.id
-
         color =
             addr.color
                 |> Maybe.Extra.withDefaultLazy

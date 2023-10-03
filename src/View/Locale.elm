@@ -2,8 +2,6 @@ module View.Locale exposing
     ( currency
     , currencyWithoutCode
     , durationToString
-    , float
-    , floatWithFormat
     , httpErrorToString
     , int
     , intWithFormat
@@ -33,7 +31,6 @@ import List.Extra exposing (find)
 import Locale.Durations
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
-import RecordSetter exposing (..)
 import String.Interpolate
 import Time
 import Tuple exposing (..)
@@ -301,7 +298,7 @@ coin model hideCode code v =
                 )
             )
         |> Maybe.map
-            (\( value, sc ) ->
+            (\( value, _ ) ->
                 let
                     fmt =
                         if value == 0.0 then

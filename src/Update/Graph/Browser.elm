@@ -5,9 +5,6 @@ import Config.Graph as Graph
 import Effect exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
-import Init.Graph.Browser exposing (..)
-import Init.Graph.Table as Table
-import Init.Graph.Tag as Tag
 import Log
 import Model.Actor as Act
 import Model.Address as A
@@ -526,7 +523,7 @@ showActorTable route model =
     case model.type_ |> Log.log "showActorsTagsTable" of
         Actor loadable t ->
             case loadable of
-                Loading curr aId ->
+                Loading _ aId ->
                     createActorTable route t aId
                         |> Log.log "table"
                         |> mapFirst (Actor loadable)
@@ -577,7 +574,7 @@ changeActorTable route t actor =
                 otherUrls =
                     Actor.getUrisWithoutMain actor
                         |> getFontAwesomeIconForUris
-                        |> List.filter (\( uri, icon ) -> icon == Nothing)
+                        |> List.filter (\( _, icon ) -> icon == Nothing)
                         |> List.map Tuple.first
                         |> List.map addProtocolPrefx
             in
@@ -647,7 +644,7 @@ showTxAccountTable route model =
     case model.type_ of
         TxAccount loadable accountCurrency t ->
             let
-                ( currency, txHash, tx ) =
+                ( currency, txHash, _ ) =
                     case loadable of
                         Loading curr ( tx_, _ ) ->
                             ( curr, tx_, Nothing )
@@ -939,7 +936,7 @@ showBlockTxsUtxo id data model =
                     )
     in
     case model.type_ of
-        Block loadable table ->
+        Block loadable _ ->
             if matchBlockId id loadable |> not then
                 model
 
@@ -973,7 +970,7 @@ showBlockTxsAccount id data model =
                     )
     in
     case model.type_ of
-        Block loadable table ->
+        Block loadable _ ->
             if matchBlockId id loadable |> not then
                 model
 
@@ -994,7 +991,7 @@ showBlockTxsAccount id data model =
 showTokenTxs : T.Tx -> List Api.Data.TxAccount -> Model -> Model
 showTokenTxs id data model =
     case model.type_ of
-        TxAccount loadable accountCurrency table ->
+        TxAccount loadable accountCurrency _ ->
             if
                 matchTxAccountId
                     { currency = id.currency
@@ -1967,7 +1964,7 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                     |> getActorTagsEffect
                                     |> wrap t ActorTagsTable
 
-                            Just (ActorOtherLinksTable t) ->
+                            Just (ActorOtherLinksTable _) ->
                                 ( table, [] )
 
                             Nothing ->
@@ -1995,7 +1992,7 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                     TxUtxo _ _ ->
                         ( model.type_, [] )
 
-                    TxAccount loadable accountCurrency table ->
+                    TxAccount _ _ _ ->
                         ( model.type_, [] )
 
                     Label label t ->
@@ -2220,7 +2217,7 @@ getEntityAddressesEffect { currency, entity } nextpage =
 showTxUtxoAddresses : { currency : String, txHash : String } -> Bool -> List Api.Data.TxValue -> Model -> Model
 showTxUtxoAddresses id isOutgoing data model =
     case model.type_ of
-        TxUtxo loadable table ->
+        TxUtxo loadable _ ->
             if matchTxId id loadable |> not then
                 model
 
@@ -2515,7 +2512,7 @@ tableAsCSV locale gc { type_ } =
                         |> Locale.interpolated locale "Address transactions of {0} ({1})"
                         |> asCsv (TxsAccountTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
-                Just (AddressTagsTable t) ->
+                Just (AddressTagsTable _) ->
                     Nothing
 
                 Just (AddressIncomingNeighborsTable t) ->
@@ -2548,7 +2545,7 @@ tableAsCSV locale gc { type_ } =
                         |> Locale.interpolated locale "Address transactions of entity {0} ({1})"
                         |> asCsv (TxsAccountTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
-                Just (EntityTagsTable t) ->
+                Just (EntityTagsTable _) ->
                     Nothing
 
                 Just (EntityIncomingNeighborsTable t) ->
@@ -2564,12 +2561,12 @@ tableAsCSV locale gc { type_ } =
                 Nothing ->
                     Nothing
 
-        Actor loadable table ->
+        Actor _ table ->
             case table of
-                Just (ActorTagsTable t) ->
+                Just (ActorTagsTable _) ->
                     Nothing
 
-                Just (ActorOtherLinksTable t) ->
+                Just (ActorOtherLinksTable _) ->
                     Nothing
 
                 Nothing ->
@@ -2603,7 +2600,7 @@ tableAsCSV locale gc { type_ } =
         None ->
             Nothing
 
-        Label label t ->
+        Label _ _ ->
             Nothing
 
         Block loadable table ->

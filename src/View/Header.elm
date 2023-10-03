@@ -1,7 +1,6 @@
 module View.Header exposing (header)
 
 import Config.View exposing (Config)
-import Css exposing (..)
 import Css.Header as Css
 import Css.Search
 import Html.Styled exposing (..)

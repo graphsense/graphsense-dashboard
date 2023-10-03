@@ -1,6 +1,6 @@
 module Util.Url.Parser.Query exposing
-    ( Parser, string, int, enum, custom
-    , map, map2, map3, map4, map5, map6, map7, map8
+    ( Parser, string, int
+    , map
     )
 
 {-| In [the URI spec](https://tools.ietf.org/html/rfc3986), Tim Berners-Lee
@@ -20,12 +20,12 @@ parameter by the `&` character.
 
 # Parse Query Parameters
 
-@docs Parser, string, int, enum, custom
+@docs Parser, string, int
 
 
 # Mapping
 
-@docs map, map2, map3, map4, map5, map6, map7, map8
+@docs map
 
 -}
 
@@ -104,41 +104,6 @@ int key =
                     Nothing
 
 
-{-| Handle enumerated parameters. Maybe you want a true-or-false parameter:
-
-    import Dict
-
-    debug : Parser (Maybe Bool)
-    debug =
-        enum "debug" (Dict.fromList [ ( "true", True ), ( "false", False ) ])
-
-    -- ?debug=true            == Just True
-    -- ?debug=false           == Just False
-    -- ?debug=1               == Nothing
-    -- ?debug=0               == Nothing
-    -- ?true=true             == Nothing
-    -- ?debug=true&debug=true == Nothing
-
-You could add `0` and `1` to the dictionary if you want to handle those as
-well. You can also use [`map`](#map) to say `map (Result.withDefault False) debug`
-to get a parser of type `Parser Bool` that swallows any errors and defaults to
-`False`.
-
-**Note:** Parameters like `?debug` with no `=` are not supported by this library.
-
--}
-enum : String -> Dict.Dict String a -> Parser (Maybe a)
-enum key dict =
-    custom key <|
-        \stringList ->
-            case stringList of
-                [ str ] ->
-                    Dict.get str dict
-
-                _ ->
-                    Nothing
-
-
 
 -- CUSTOM PARSERS
 
@@ -183,109 +148,3 @@ default to `1` if there is any problem?
 map : (a -> b) -> Parser a -> Parser b
 map func (Q.Parser a) =
     Q.Parser <| \dict -> func (a dict)
-
-
-{-| Combine two parsers. A query like `?search=hats&page=2` could be parsed
-with something like this:
-
-    type alias Query =
-        { search : Maybe String
-        , page : Maybe Int
-        }
-
-    query : Parser Query
-    query =
-        map2 Query (string "search") (int "page")
-
--}
-map2 : (a -> b -> result) -> Parser a -> Parser b -> Parser result
-map2 func (Q.Parser a) (Q.Parser b) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict)
-
-
-{-| Combine three parsers. A query like `?search=hats&page=2&sort=ascending`
-could be parsed with something like this:
-
-    import Dict
-
-    type alias Query =
-        { search : Maybe String
-        , page : Maybe Int
-        , sort : Maybe Order
-        }
-
-    type Order
-        = Ascending
-        | Descending
-
-    query : Parser Query
-    query =
-        map3 Query (string "search") (int "page") (enum "sort" order)
-
-    order : Dict.Dict String Order
-    order =
-        Dict.fromList
-            [ ( "ascending", Ascending )
-            , ( "descending", Descending )
-            ]
-
--}
-map3 : (a -> b -> c -> result) -> Parser a -> Parser b -> Parser c -> Parser result
-map3 func (Q.Parser a) (Q.Parser b) (Q.Parser c) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict)
-
-
-{-| -}
-map4 : (a -> b -> c -> d -> result) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser result
-map4 func (Q.Parser a) (Q.Parser b) (Q.Parser c) (Q.Parser d) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict) (d dict)
-
-
-{-| -}
-map5 : (a -> b -> c -> d -> e -> result) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e -> Parser result
-map5 func (Q.Parser a) (Q.Parser b) (Q.Parser c) (Q.Parser d) (Q.Parser e) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict) (d dict) (e dict)
-
-
-{-| -}
-map6 : (a -> b -> c -> d -> e -> f -> result) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e -> Parser f -> Parser result
-map6 func (Q.Parser a) (Q.Parser b) (Q.Parser c) (Q.Parser d) (Q.Parser e) (Q.Parser f) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict) (d dict) (e dict) (f dict)
-
-
-{-| -}
-map7 : (a -> b -> c -> d -> e -> f -> g -> result) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e -> Parser f -> Parser g -> Parser result
-map7 func (Q.Parser a) (Q.Parser b) (Q.Parser c) (Q.Parser d) (Q.Parser e) (Q.Parser f) (Q.Parser g) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict) (d dict) (e dict) (f dict) (g dict)
-
-
-{-| If you need higher than eight, you can define a function like this:
-
-    apply : Parser a -> Parser (a -> b) -> Parser b
-    apply argParser funcParser =
-        map2 (<|) funcParser argParser
-
-And then you can chain it to do as many of these as you would like:
-
-    map func (string "search")
-        |> apply (int "page")
-        |> apply (int "per-page")
-
--}
-map8 : (a -> b -> c -> d -> e -> f -> g -> h -> result) -> Parser a -> Parser b -> Parser c -> Parser d -> Parser e -> Parser f -> Parser g -> Parser h -> Parser result
-map8 func (Q.Parser a) (Q.Parser b) (Q.Parser c) (Q.Parser d) (Q.Parser e) (Q.Parser f) (Q.Parser g) (Q.Parser h) =
-    Q.Parser <|
-        \dict ->
-            func (a dict) (b dict) (c dict) (d dict) (e dict) (f dict) (g dict) (h dict)

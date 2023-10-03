@@ -1,8 +1,6 @@
 module View.Landingpage exposing (..)
 
-import Browser exposing (UrlRequest(..))
 import Config.View as View
-import Css exposing (..)
 import Css.Landingpage as CssLanding
 import Css.Search
 import Css.View
@@ -13,9 +11,7 @@ import Html.Styled.Events exposing (..)
 import Json.Decode
 import Model exposing (Model, Msg(..))
 import Msg.Graph as Graph
-import Plugin.Model exposing (ModelState)
-import Plugin.View as Plugin exposing (Plugins)
-import Url
+import Plugin.View exposing (Plugins)
 import Util.View.Rule exposing (rule)
 import View.Locale as Locale
 import View.Search as Search

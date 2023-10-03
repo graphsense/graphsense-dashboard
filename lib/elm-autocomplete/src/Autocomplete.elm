@@ -1,8 +1,8 @@
 module Autocomplete exposing
     ( Autocomplete, Msg, Choices, ViewState, ViewStatus(..)
     , init, update
-    , reset, selectedValue
-    , viewState, query, choices, selectedIndex, isSelected
+    , selectedValue
+    , viewState, query, choices
     , onFetch, setChoices, setQuery, setSelectedIndex, setStatus
     )
 
@@ -25,18 +25,17 @@ To render the Autocomplete, please refer to `Autocomplete.View` or `Autocomplete
 
 # Helpers
 
-@docs reset, selectedValue
+@docs selectedValue
 
 
 # Accessors
 
-@docs viewState, query, choices, selectedIndex, isSelected
+@docs viewState, query, choices
 
 -}
 
 import Bounce
-import Internal exposing (KeyDown(..), Msg(..))
-import Task exposing (Task)
+import Internal exposing (Msg(..))
 
 
 {-| Opaque type of Autocomplete state
@@ -316,34 +315,6 @@ onFetch result (Autocomplete state) =
 -- Helpers
 
 
-{-| Reset the Autocomplete State
-
-There are many scenarios Autocomplete can handle using the `reset`.
-
-On selected value, display selectedValue but remove all choices:
-
-    Autocomplete.reset
-        { query = Maybe.withDefault query selectedValue
-        , choices = []
-        , ignoreList = []
-        }
-        autocompleteState
-
-On selected multiple values, ignore selected values but still display the choices:
-
-    Autocomplete.reset
-        { query = ""
-        , choices = Autocomplete.choices autocompleteState
-        , ignoreList = selectedValueList
-        }
-        autocompleteState
-
--}
-reset : Choices a -> Autocomplete a -> Autocomplete a
-reset c (Autocomplete s) =
-    init s.minQueryLength c
-
-
 {-| Returns the selectedValue
 -}
 selectedValue : Autocomplete a -> Maybe a
@@ -407,34 +378,3 @@ setStatus : ViewStatus -> Autocomplete a -> Autocomplete a
 setStatus st (Autocomplete s) =
     { s | viewStatus = st }
         |> Autocomplete
-
-
-{-| Returns the selected index of the Autocomplete
--}
-selectedIndex : Autocomplete a -> Maybe Int
-selectedIndex (Autocomplete s) =
-    s.selectedIndex
-
-
-{-| Helper function to calculate if an index is selected
-
-    renderChoice : (Int -> List (Attribute Msg)) -> Maybe Int -> Int -> String -> Html Msg
-    renderChoice events selectedIndex index s =
-        Html.div
-            (if Autocomplete.isSelected selectedIndex index then
-                Html.Attributes.style "backgroundColor" "#EEE" :: events index
-
-             else
-                Html.Attributes.style "backgroundColor" "#FFF" :: events index
-            )
-            [ Html.text s ]
-
--}
-isSelected : Maybe Int -> Int -> Bool
-isSelected selected index =
-    case selected of
-        Nothing ->
-            False
-
-        Just i ->
-            i == index

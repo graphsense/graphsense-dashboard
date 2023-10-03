@@ -6,7 +6,6 @@ import Model.Graph.Id exposing (..)
 import Model.Graph.Tag exposing (..)
 import Model.Node exposing (Node(..))
 import Model.Search as Search
-import RecordSetter exposing (..)
 
 
 initAddressTag : AddressId -> Dom.Element -> Maybe UserTag -> Model

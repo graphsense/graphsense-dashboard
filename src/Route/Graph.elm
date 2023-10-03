@@ -15,7 +15,6 @@ module Route.Graph exposing
     , entityRoute
     , entitylinkRoute
     , labelRoute
-    , parse
     , parser
     , pluginRoute
     , rootRoute
@@ -26,8 +25,7 @@ module Route.Graph exposing
 import List.Extra
 import Plugin.Model
 import Plugin.Route as Plugin
-import Tuple exposing (..)
-import Url exposing (..)
+import Url
 import Url.Builder as B exposing (..)
 import Util.Url.Parser as P exposing (..)
 import Util.Url.Parser.Query as Q
@@ -480,11 +478,6 @@ pluginRoute ( ns, url ) =
                     |> Plugin
             )
         |> Maybe.withDefault Root
-
-
-parse : Config -> Url -> Maybe Route
-parse c =
-    P.parse (parser c)
 
 
 parser : Config -> Parser (Route -> a) a

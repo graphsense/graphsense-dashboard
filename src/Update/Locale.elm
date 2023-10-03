@@ -5,13 +5,13 @@ import DateFormat.Language
 import DateFormat.Relative
 import Dict
 import Effect exposing (n)
-import Effect.Locale as Effect exposing (Effect(..))
+import Effect.Locale exposing (Effect)
 import Languages.German
 import Locale.English
 import Locale.German
 import Model.Currency exposing (..)
-import Model.Locale as Model exposing (..)
-import Msg.Locale as Msg exposing (Msg(..))
+import Model.Locale exposing (..)
+import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
 
@@ -27,7 +27,7 @@ update msg model =
         BrowserSentTimezone zone ->
             n { model | zone = zone }
 
-        BrowserLoadedTranslation locale result ->
+        BrowserLoadedTranslation _ result ->
             result
                 |> Result.map
                     (Dict.foldl
@@ -49,7 +49,7 @@ update msg model =
                                     Empty ->
                                         Transition Dict.empty mapping 0
 
-                                    Transition start end delta ->
+                                    Transition start _ delta ->
                                         Transition start mapping delta
 
                                     Settled end ->

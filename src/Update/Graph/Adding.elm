@@ -1,13 +1,12 @@
 module Update.Graph.Adding exposing (..)
 
 import Api.Data
-import Dict exposing (Dict)
+import Dict
 import Init.Graph.Adding as Init
 import Init.Graph.Id as Id
 import Model.Graph.Adding exposing (..)
 import Model.Graph.Id as Id
-import RemoteData exposing (RemoteData(..))
-import Set exposing (Set)
+import Set
 
 
 normalizeEth : String -> String -> String

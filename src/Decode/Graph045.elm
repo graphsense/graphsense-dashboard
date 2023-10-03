@@ -8,7 +8,6 @@ import Json.Decode exposing (..)
 import Model.Graph exposing (..)
 import Model.Graph.Id as Id
 import Model.Graph.Tag as Tag
-import Tuple exposing (..)
 
 
 decoder : Decoder Deserialized
@@ -280,11 +279,3 @@ decodeColor =
             >> Result.withDefault (fail "could not convert color")
         )
         string
-
-
-decodeHighlights : Decoder (List ( String, Color.Color ))
-decodeHighlights =
-    map2 pair
-        (index 1 string)
-        (index 0 decodeColor)
-        |> list
