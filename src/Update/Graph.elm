@@ -2190,9 +2190,6 @@ updateByMsg plugins uc msg model =
         UserClickedExternalLink url ->
             ( model, Ports.newTab url |> CmdEffect |> List.singleton )
 
-        UserClickedCopyToClipboard value ->
-            ( model, Ports.copyToClipboard value |> CmdEffect |> List.singleton )
-
         NoOp ->
             n model
 

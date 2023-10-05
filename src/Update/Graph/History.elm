@@ -426,9 +426,6 @@ shallPushHistory msg =
         UserClickedExternalLink _ ->
             False
 
-        UserClickedCopyToClipboard _ ->
-            False
-
         NoOp ->
             False
 

@@ -172,5 +172,4 @@ type Msg
     | UserClickedTagsFlag EntityId
     | UserClicksDownloadCSVInTable
     | UserClickedExternalLink String
-    | UserClickedCopyToClipboard String
     | NoOp
