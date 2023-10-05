@@ -224,11 +224,11 @@ stringColumn vc name accessor =
         }
 
 
-addressColumn : View.Config -> String -> (data -> String) -> (String -> msg) -> Table.Column data msg
-addressColumn vc name accessor onCopy =
+addressColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
+addressColumn vc name accessor =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> (\x -> copyableLongIdentifier vc x onCopy) >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , viewData = accessor >> (\x -> copyableLongIdentifier vc x) >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

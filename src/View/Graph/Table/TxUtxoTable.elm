@@ -68,11 +68,11 @@ config vc isOutgoing coinCode =
                                     |> onClick
                                 , css [ Css.cursor Css.pointer ]
                                 ]
-                                [ copyableLongIdentifier vc one UserClickedCopyToClipboard
+                                [ copyableLongIdentifier vc one
                                 ]
 
                         _ ->
-                            copyableLongIdentifier vc (joinAddresses data) UserClickedCopyToClipboard
+                            copyableLongIdentifier vc (joinAddresses data)
                     ]
                 )
             , T.valueColumn vc (\_ -> coinCode) titleValue .value

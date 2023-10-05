@@ -12,8 +12,9 @@ import Hovercard
 import Html
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src, title)
-import Html.Styled.Events exposing (onClick)
+import Html.Styled.Attributes exposing (classList, css, src, title, value)
+import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Json.Decode
 import Switch
 import View.Locale as Locale
 
@@ -182,25 +183,28 @@ contextMenuRule vc =
     [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
 
 
-copyableLongIdentifier : View.Config -> String -> (String -> msg) -> Html msg
-copyableLongIdentifier vc address effConst =
+copyableLongIdentifier : View.Config -> String -> Html msg
+copyableLongIdentifier vc identifier =
     span
         [ Css.longIdentifier vc |> css
         ]
-        [ text (truncateLongIdentifier address)
-        , copyIcon vc (effConst address)
+        [ text (truncateLongIdentifier identifier)
+        , copyIcon vc identifier
         ]
 
 
-copyIcon : View.Config -> msg -> Html msg
-copyIcon vc cpyMsg =
-    span
+copyIcon : View.Config -> String -> Html msg
+copyIcon vc value =
+    Html.Styled.a
         [ Css.copyIcon vc |> css
-        , onClick cpyMsg
         , title (Locale.string vc.locale "copy")
         ]
-        [ FontAwesome.icon FontAwesome.copy
-            |> Html.Styled.fromUnstyled
+        [ Html.Styled.node "copy-icon"
+            [ Html.Styled.Attributes.attribute "data-value" value
+            ]
+            [ FontAwesome.icon FontAwesome.copy
+                |> Html.Styled.fromUnstyled
+            ]
         ]
 
 

@@ -414,13 +414,13 @@ browseValue vc value =
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ]
                 [ text str ]
 
-        HashStr msg str ->
+        HashStr str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str msg ]
+                [ copyableLongIdentifier vc str ]
 
-        AddressStr msg str ->
+        AddressStr str ->
             div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str msg ]
+                [ copyableLongIdentifier vc str ]
 
         Country isocode name ->
             span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]
@@ -801,7 +801,7 @@ rowsAddress vc now address =
     [ RowWithMoreActionsButton
         ( "Address"
         , address
-            |> ifLoaded (.address >> .address >> AddressStr UserClickedCopyToClipboard)
+            |> ifLoaded (.address >> .address >> AddressStr)
             |> elseShowAddress
         , case address of
             Loaded addr ->
@@ -1013,7 +1013,7 @@ rowsEntity vc gc now ent =
         )
     , Row
         ( "Root Address"
-        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr UserClickedCopyToClipboard) |> elseLoading
+        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
         , Nothing
         )
 
@@ -1318,7 +1318,7 @@ rowsBlock vc gc now block =
     , Row
         ( "Block hash"
         , block
-            |> ifLoaded (.blockHash >> HashStr UserClickedCopyToClipboard)
+            |> ifLoaded (.blockHash >> HashStr)
             |> elseLoading
         , Nothing
         )
@@ -1516,7 +1516,7 @@ rowsTxUtxo vc gc now tx =
     [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
+            |> ifLoaded (.txHash >> HashStr)
             |> elseShowAddress
         , case tx of
             Loaded txi ->
@@ -1619,7 +1619,7 @@ rowsTxAccount vc gc now tx table coinCode =
     [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> HashStr UserClickedCopyToClipboard)
+            |> ifLoaded (.txHash >> HashStr)
             |> elseShowTxAccount
         , case tx of
             Loaded txi ->
@@ -1705,14 +1705,14 @@ rowsAddresslink vc source link =
         ( "Source"
         , source.id
             |> Id.addressId
-            |> AddressStr UserClickedCopyToClipboard
+            |> AddressStr
         , Nothing
         )
     , Row
         ( "Target"
         , link.node.id
             |> Id.addressId
-            |> AddressStr UserClickedCopyToClipboard
+            |> AddressStr
         , Nothing
         )
     , Row

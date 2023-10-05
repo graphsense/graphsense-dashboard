@@ -108,7 +108,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address.address UserClickedCopyToClipboard
+                        [ copyableLongIdentifier vc data.address.address
                         ]
                     ]
                 )

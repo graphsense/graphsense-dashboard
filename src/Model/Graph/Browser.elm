@@ -55,8 +55,8 @@ type Value msg
     = String String
     | Stack (List (Value msg))
     | Grid Int (List (Value msg))
-    | AddressStr (String -> msg) String
-    | HashStr (String -> msg) String
+    | AddressStr String
+    | HashStr String
     | Country String String
     | Uri String String
     | IconLink FontAwesome.Icon String

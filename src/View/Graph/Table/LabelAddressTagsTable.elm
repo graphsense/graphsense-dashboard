@@ -44,7 +44,7 @@ config vc =
                             |> onClick
                         , css [ Css.cursor Css.pointer ]
                         ]
-                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
+                        [ copyableLongIdentifier vc data.address
                         ]
                     ]
                 )

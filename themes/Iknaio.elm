@@ -278,7 +278,7 @@ theme =
                     [ switchColor lightmode colors.brandBase |> toCssColor |> color
                     ]
                 , active
-                    [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                    [ switchColor lightmode colors.brandDark |> toCssColor |> color
                     ]
                 ]
             )
