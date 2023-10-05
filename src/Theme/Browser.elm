@@ -21,11 +21,9 @@ type alias Browser =
     , propertyBoxUsageRelative : List Style
     , propertyBoxActivityPeriod : List Style
     , propertyBoxTableLink : Bool -> Bool -> List Style
-    , copyLink : Bool -> Bool -> List Style
     , loadingSpinner : List Style
     , valueCell : List Style
     , currencyCell : List Style
-    , longIdentifier : List Style
     , tableSeparator : Bool -> List Style
     }
 
@@ -49,10 +47,8 @@ default =
     , propertyBoxUsageRelative = []
     , propertyBoxActivityPeriod = []
     , propertyBoxTableLink = \_ _ -> []
-    , copyLink = \_ _ -> []
     , loadingSpinner = []
     , valueCell = []
     , currencyCell = []
-    , longIdentifier = []
     , tableSeparator = \_ -> []
     }

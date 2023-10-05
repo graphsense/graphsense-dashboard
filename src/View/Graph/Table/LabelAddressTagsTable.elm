@@ -11,9 +11,8 @@ import Init.Graph.Table
 import Model.Graph.Table exposing (Table)
 import Msg.Graph exposing (Msg(..))
 import Table
-import Util.View
+import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import View.Util exposing (copyableLongIdentifier)
 
 
 init : Table Api.Data.AddressTag

@@ -15,9 +15,8 @@ import Model.Graph.Table as T
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
-import Util.View exposing (loadingSpinner, none)
+import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
 
 
 type alias Tools msg =

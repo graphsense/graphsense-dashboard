@@ -18,10 +18,9 @@ import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Util.Graph
-import Util.View exposing (none)
+import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
 
 
 init : Table Api.Data.AddressTag

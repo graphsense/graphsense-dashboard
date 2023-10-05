@@ -15,11 +15,10 @@ import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
-import Util.View exposing (none)
+import Util.View exposing (copyableLongIdentifier, none)
 import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
 
 
 columnTitleFromDirection : Bool -> String

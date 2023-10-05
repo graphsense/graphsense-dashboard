@@ -177,3 +177,17 @@ switchRoot vc =
 disabled : Config -> List Style
 disabled vc =
     vc.theme.disabled vc.lightmode
+
+
+copyIcon : Config -> List Style
+copyIcon vc =
+    position relative
+        :: cursor pointer
+        :: left (px 5)
+        :: marginRight (px 10)
+        :: vc.theme.copyIcon vc.lightmode
+
+
+longIdentifier : Config -> List Style
+longIdentifier vc =
+    display inlineBlock :: vc.theme.longIdentifier

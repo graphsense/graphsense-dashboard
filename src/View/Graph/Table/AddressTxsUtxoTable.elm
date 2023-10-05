@@ -13,8 +13,8 @@ import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Util.Csv
+import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import View.Util exposing (longIdentifier)
 
 
 init : Table Api.Data.AddressTxUtxo

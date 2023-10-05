@@ -67,6 +67,8 @@ type alias Theme =
     , switchRoot : List Style
     , switchOnColor : Bool -> Color.Color
     , disabled : Bool -> List Style
+    , copyIcon : Bool -> List Style
+    , longIdentifier : List Style
     }
 
 
@@ -121,4 +123,6 @@ default =
     , switchRoot = []
     , switchOnColor = \_ -> Color.rgba 0 0 0 0
     , disabled = \_ -> []
+    , copyIcon = \_ -> []
+    , longIdentifier = []
     }

@@ -124,19 +124,6 @@ propertyBoxTableLink vc active =
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
 
 
-propertyCopyLink : Config -> Bool -> List Style
-propertyCopyLink vc active =
-    position relative
-        :: left (px 5)
-        :: marginRight (px 10)
-        :: vc.theme.browser.copyLink vc.lightmode active
-
-
-propertyLongIdentifier : Config -> List Style
-propertyLongIdentifier vc =
-    display inlineBlock :: vc.theme.browser.longIdentifier
-
-
 loadingSpinner : Config -> List Style
 loadingSpinner vc =
     vc.theme.browser.loadingSpinner

@@ -4,14 +4,18 @@ import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
+import Css.Browser
 import Css.Graph
 import Css.View as Css
+import FontAwesome
 import Hovercard
 import Html
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src)
+import Html.Styled.Attributes exposing (classList, css, src, title)
+import Html.Styled.Events exposing (onClick)
 import Switch
+import View.Locale as Locale
 
 
 none : Html msg
@@ -176,3 +180,34 @@ addDot s =
 contextMenuRule : View.Config -> List (Html msg)
 contextMenuRule vc =
     [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
+
+
+copyableLongIdentifier : View.Config -> String -> (String -> msg) -> Html msg
+copyableLongIdentifier vc address effConst =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifier address)
+        , copyIcon vc (effConst address)
+        ]
+
+
+copyIcon : View.Config -> msg -> Html msg
+copyIcon vc cpyMsg =
+    span
+        [ Css.copyIcon vc |> css
+        , onClick cpyMsg
+        , title (Locale.string vc.locale "copy")
+        ]
+        [ FontAwesome.icon FontAwesome.copy
+            |> Html.Styled.fromUnstyled
+        ]
+
+
+longIdentifier : View.Config -> String -> Html msg
+longIdentifier vc address =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifier address)
+        ]

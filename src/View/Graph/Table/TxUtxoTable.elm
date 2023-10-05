@@ -12,8 +12,8 @@ import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
+import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import View.Util exposing (copyableLongIdentifier)
 
 
 columnTitleFromDirection : Bool -> String

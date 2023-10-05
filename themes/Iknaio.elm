@@ -271,6 +271,18 @@ theme =
                     [ c ]
                 ]
             )
+        |> s_copyIcon
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandBase
+                , hover
+                    [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                    ]
+                , active
+                    [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                    ]
+                ]
+            )
+        |> s_longIdentifier [ fontFamily monospace ]
         |> s_stats
             (Stats.default
                 |> s_root
@@ -1027,24 +1039,6 @@ theme =
                             ]
                         ]
                     )
-                |> s_copyLink
-                    (\lightmode isActive ->
-                        [ colorWithLightmode lightmode
-                            (if isActive then
-                                colors.brandBase
-
-                             else
-                                colors.brandLight
-                            )
-                        , hover
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        , active
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        ]
-                    )
-                |> s_longIdentifier [ fontFamily monospace ]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize

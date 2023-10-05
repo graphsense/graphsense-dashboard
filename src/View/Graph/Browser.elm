@@ -39,7 +39,14 @@ import Tuple exposing (..)
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import Util.Flags exposing (getFlagEmoji)
 import Util.Graph
-import Util.View exposing (none, toCssColor, truncateLongIdentifier)
+import Util.View
+    exposing
+        ( copyableLongIdentifier
+        , longIdentifier
+        , none
+        , toCssColor
+        , truncateLongIdentifier
+        )
 import View.Button exposing (actorLink)
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -55,7 +62,6 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier, longIdentifier)
 
 
 cm : Maybe Msg
