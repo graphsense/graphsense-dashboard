@@ -1,6 +1,6 @@
 # GraphSense Dashboard
 
-A web dashboard for interactive cryptocurrency analysis.
+GraphSense's Web GUI for interactive cryptocurrency analysis written in [Elm](https://elm-lang.org).
 
 ## Configuration
 
