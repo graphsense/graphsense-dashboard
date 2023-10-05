@@ -2,7 +2,10 @@ module PluginInterface.View exposing (..)
 
 import Config.View as View
 import Html.Styled exposing (Html)
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address exposing (Address)
+import Model.Node as Node
 import Svg.Styled exposing (Svg)
 
 
@@ -23,7 +26,8 @@ type alias View modelState addressState entityState msg =
     , entityProperties : Maybe (View.Config -> modelState -> entityState -> List (Html msg))
 
     -- browser contents
-    , browser : Maybe (View.Config -> modelState -> List (Html msg))
+    -- functor for checking whether a node is visible in the graph
+    , browser : Maybe (View.Config -> (Node.Node A.Address E.Entity -> Bool) -> modelState -> List (Html msg))
 
     -- additional stuff for the left part of the graph's navbar
     , graphNavbarLeft : Maybe (View.Config -> modelState -> List (Html msg))

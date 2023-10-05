@@ -868,6 +868,9 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.UpdateEntitiesByRootAddress _ _ ->
                         updateGraphByPluginOutMsg model eff
 
+                    PluginInterface.LoadAddressIntoGraph _ ->
+                        updateGraphByPluginOutMsg model eff
+
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo
                         , Id.addressIdToString id

@@ -3167,6 +3167,15 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.LoadAddressIntoGraph address ->
+                        model
+                            |> loadAddress plugins
+                                { currency = address.currency
+                                , address = address.address
+                                , table = Nothing
+                                , at = Nothing
+                                }
+
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, [] )
 

@@ -7,7 +7,10 @@ import {{package}}.Msg
 import Config.View as View
 import Html.Styled as Html exposing (Html)
 import Model
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address exposing (Address)
+import Model.Node as Node
 import Util.View
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -136,14 +139,14 @@ entityProperties plugins states entityStates vc =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-browser : Plugins -> View.Config -> Plugin.Model.ModelState -> List (Html Graph.Msg)
-browser plugins vc states =
+browser : Plugins -> View.Config -> (Node.Node A.Address E.Entity -> Bool) -> Plugin.Model.ModelState -> List (Html Graph.Msg)
+browser plugins vc hasNode states =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
                 Maybe.map2
                     (\fun state ->
-                        fun vc state
+                        fun vc hasNode state
                     )
                     plugin.browser
                     states.{{name}}

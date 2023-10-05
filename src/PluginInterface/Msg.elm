@@ -47,6 +47,8 @@ type OutMsg msg addressMsg entityMsg
     | ApiRequest (Api.Effect msg)
       -- show dialog
     | ShowDialog (Model.Dialog.Model msg)
+      -- load address into graph
+    | LoadAddressIntoGraph Address
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -105,3 +107,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         ShowDialog dialog ->
             Update.Dialog.mapMsg mapMsg dialog
                 |> ShowDialog
+
+        LoadAddressIntoGraph a ->
+            LoadAddressIntoGraph a

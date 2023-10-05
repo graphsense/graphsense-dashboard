@@ -1,6 +1,6 @@
 module View.Graph.Browser exposing (browseRow, browseValue, browser, frame, properties, propertyBox)
 
-import Api.Data
+import Api.Data exposing (Entity)
 import Config.Graph as Graph
 import Config.View as View
 import Css as CssStyled
@@ -28,6 +28,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Locale as Locale
+import Model.Node as Node
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
@@ -235,7 +236,18 @@ browser plugins states vc gc model =
                     |> List.singleton
 
             Browser.Plugin ->
-                browsePlugin plugins vc states
+                let
+                    hasNode node =
+                        case node of
+                            Node.Address address ->
+                                Layer.getFirstAddress address model.layers
+                                    |> (/=) Nothing
+
+                            Node.Entity entity ->
+                                Layer.getFirstEntity entity model.layers
+                                    |> (/=) Nothing
+                in
+                browsePlugin plugins vc hasNode states
         )
 
 
@@ -1485,9 +1497,9 @@ browseTxAccountTable vc gc tx (TokenTxsTable table) =
     table_ vc cm (TxsAccountTable.config vc coinCode) table
 
 
-browsePlugin : Plugins -> View.Config -> ModelState -> List (Html Msg)
-browsePlugin plugins vc states =
-    Plugin.View.browser plugins vc states
+browsePlugin : Plugins -> View.Config -> (Node.Node A.Address E.Entity -> Bool) -> ModelState -> List (Html Msg)
+browsePlugin plugins vc hasNode states =
+    Plugin.View.browser plugins vc hasNode states
 
 
 rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
