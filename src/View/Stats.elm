@@ -78,7 +78,7 @@ currency vc cs =
                 [ div
                     [ Css.statsTable vc |> css
                     ]
-                    [ Locale.timestamp (s_zone Time.utc vc.locale) cs.timestamp
+                    [ (Locale.timestamp vc.locale cs.timestamp)
                         |> statsRow vc "Last update"
                     , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
