@@ -1539,7 +1539,7 @@ rowsTxUtxo vc gc now tx =
         )
     , Row
         ( "Included in block"
-        , tx |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading
+        , tx |> ifLoaded (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
@@ -1650,7 +1650,7 @@ rowsTxAccount vc gc now tx table coinCode =
         )
     , Row
         ( "Included in block"
-        , tx |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading
+        , tx |> ifLoaded (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
