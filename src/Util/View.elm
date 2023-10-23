@@ -8,6 +8,7 @@ import Css.Browser
 import Css.Graph
 import Css.View as Css
 import FontAwesome
+import Hex
 import Hovercard
 import Html
 import Html.Attributes
@@ -215,3 +216,15 @@ longIdentifier vc address =
         ]
         [ text (truncateLongIdentifier address)
         ]
+
+
+colorToHex : Color.Color -> String
+colorToHex cl =
+    let
+        { red, green, blue } =
+            Color.toRgba cl
+    in
+    List.map (round >> Hex.toString) [ red * 255, green * 255, blue * 255 ]
+        |> List.map (String.padLeft 2 '0')
+        |> (::) "#"
+        |> String.join ""
