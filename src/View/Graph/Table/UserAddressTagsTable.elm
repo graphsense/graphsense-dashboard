@@ -69,11 +69,19 @@ titleAbuse =
 
 config : View.Config -> Graph.Config -> Table.Config Tag.UserTag Msg
 config vc gc =
+    let
+        toMsg data =
+            UserClickedAddressInTable
+                { currency = data.currency
+                , address = data.address
+                }
+    in
     Table.customConfig
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.addressColumn vc titleAddress .address
+            [ toMsg
+                |> T.addressColumn vc titleAddress .address
             , T.stringColumn vc titleCurrency (.currency >> String.toUpper)
             , T.stringColumn vc titleLabel .label
             , T.tickColumn vc titleDefinesEntity .isClusterDefiner

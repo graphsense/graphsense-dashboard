@@ -184,12 +184,17 @@ contextMenuRule vc =
     [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
 
 
-copyableLongIdentifier : View.Config -> String -> Html msg
-copyableLongIdentifier vc identifier =
+copyableLongIdentifier : View.Config -> List (Attribute msg) -> String -> Html msg
+copyableLongIdentifier vc attr identifier =
     span
         [ Css.longIdentifier vc |> css
         ]
         [ text (truncateLongIdentifier identifier)
+            |> List.singleton
+            |> span
+                (title identifier
+                    :: attr
+                )
         , copyIcon vc identifier
         ]
 

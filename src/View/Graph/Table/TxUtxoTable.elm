@@ -58,21 +58,22 @@ config vc isOutgoing coinCode =
                 (columnTitleFromDirection isOutgoing)
                 joinAddresses
                 (\data ->
-                    [ case data.address of
-                        one :: [] ->
-                            span
-                                [ UserClickedAddressInTable
-                                    { address = one
-                                    , currency = coinCode
-                                    }
-                                    |> onClick
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-                                [ copyableLongIdentifier vc one
-                                ]
-
-                        _ ->
-                            copyableLongIdentifier vc (joinAddresses data)
+                    [ joinAddresses data
+                        |> copyableLongIdentifier vc
+                            (data.address
+                                |> List.head
+                                |> Maybe.map
+                                    (\one ->
+                                        [ UserClickedAddressInTable
+                                            { address = one
+                                            , currency = coinCode
+                                            }
+                                            |> onClick
+                                        , css [ Css.cursor Css.pointer ]
+                                        ]
+                                    )
+                                |> Maybe.withDefault []
+                            )
                     ]
                 )
             , T.valueColumn vc (\_ -> coinCode) titleValue .value

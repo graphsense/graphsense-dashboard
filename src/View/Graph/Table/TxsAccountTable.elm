@@ -59,6 +59,13 @@ titleReceivingAddress =
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
 config vc coinCode =
+    let
+        toMsg field data =
+            UserClickedAddressInTable
+                { currency = data.currency
+                , address = field data
+                }
+    in
     Table.customConfig
         { toId = .txHash
         , toMsg = TableNewState
@@ -97,8 +104,10 @@ config vc coinCode =
                    ]
                 ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
                    , T.timestampColumn vc titleTimestamp .timestamp
-                   , T.addressColumn vc titleSendingAddress .fromAddress
-                   , T.addressColumn vc titleReceivingAddress .toAddress
+                   , toMsg .fromAddress
+                        |> T.addressColumn vc titleSendingAddress .fromAddress
+                   , toMsg .toAddress
+                        |> T.addressColumn vc titleReceivingAddress .toAddress
                    , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
                    , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]

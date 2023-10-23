@@ -224,11 +224,21 @@ stringColumn vc name accessor =
         }
 
 
-addressColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
-addressColumn vc name accessor =
+addressColumn : View.Config -> String -> (data -> String) -> (data -> msg) -> Table.Column data msg
+addressColumn vc name accessor onCli =
     Table.veryCustomColumn
         { name = name
-        , viewData = accessor >> (\x -> copyableLongIdentifier vc x) >> List.singleton >> Table.HtmlDetails [ Css.Table.cell vc |> css ]
+        , viewData =
+            \data ->
+                accessor data
+                    |> copyableLongIdentifier vc
+                        [ onClick (onCli data)
+                        , Css.cursor Css.pointer
+                            |> List.singleton
+                            |> css
+                        ]
+                    |> List.singleton
+                    |> Table.HtmlDetails [ Css.Table.cell vc |> css ]
         , sorter = Table.increasingOrDecreasingBy accessor
         }
 

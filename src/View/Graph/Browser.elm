@@ -427,12 +427,10 @@ browseValue vc value =
                 [ text str ]
 
         HashStr str ->
-            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str ]
+            copyableLongIdentifier vc [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ] str
 
         AddressStr str ->
-            div [ css [ CssStyled.minHeight <| CssStyled.em 1 ], title str ]
-                [ copyableLongIdentifier vc str ]
+            copyableLongIdentifier vc [ css [ CssStyled.minHeight <| CssStyled.em 1 ] ] str
 
         Country isocode name ->
             span [ css [ CssStyled.minHeight <| CssStyled.em 1, CssStyled.paddingRight <| CssStyled.em 1 ], title name ]

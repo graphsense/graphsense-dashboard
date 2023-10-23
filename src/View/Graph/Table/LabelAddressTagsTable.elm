@@ -36,7 +36,7 @@ config vc =
                 "Address"
                 .address
                 (\data ->
-                    [ span
+                    [ copyableLongIdentifier vc
                         [ UserClickedAddressInTable
                             { address = data.address
                             , currency = String.toLower data.currency
@@ -44,8 +44,7 @@ config vc =
                             |> onClick
                         , css [ Css.cursor Css.pointer ]
                         ]
-                        [ copyableLongIdentifier vc data.address
-                        ]
+                        data.address
                     ]
                 )
             , T.stringColumn vc "Entity" (.entity >> String.fromInt)

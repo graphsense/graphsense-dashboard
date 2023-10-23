@@ -71,7 +71,7 @@ config vc coinCode entityId entityHasAddress =
                                     { currency = data.currency, address = data.address }
                             )
                         |> Maybe.withDefault none
-                    , span
+                    , copyableLongIdentifier vc
                         (entityId
                             |> Maybe.map
                                 (\id ->
@@ -82,8 +82,7 @@ config vc coinCode entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address
-                        ]
+                        data.address
                     ]
                 )
             , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)

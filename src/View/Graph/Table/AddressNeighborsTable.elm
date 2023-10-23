@@ -97,7 +97,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                                     }
                             )
                         |> Maybe.withDefault none
-                    , span
+                    , copyableLongIdentifier vc
                         (id
                             |> Maybe.map
                                 (\addressId ->
@@ -108,8 +108,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address.address
-                        ]
+                        data.address.address
                     ]
                 )
 

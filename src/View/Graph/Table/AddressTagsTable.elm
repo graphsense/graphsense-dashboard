@@ -52,7 +52,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                     { currency = String.toLower data.currency, address = data.address }
                             )
                         |> Maybe.withDefault none
-                    , span
+                    , copyableLongIdentifier vc
                         (entityId
                             |> Maybe.map
                                 (\id ->
@@ -63,8 +63,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address
-                        ]
+                        data.address
                     ]
                 )
             , T.htmlColumn vc
