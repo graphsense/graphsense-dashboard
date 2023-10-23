@@ -16,6 +16,10 @@ module Update.Graph.Layer exposing
     , removeAddressLink
     , removeEntity
     , removeEntityLink
+    , selectAddress
+    , selectAddressLink
+    , selectEntity
+    , selectEntityLink
     , syncLinks
     , updateAddress
     , updateAddressColor
@@ -1483,3 +1487,23 @@ updateEntityLink ( src, tgt ) update layers =
                         address
     in
     updateEntity src updateLink layers
+
+
+selectAddress : Id.AddressId -> IntDict Layer -> IntDict Layer
+selectAddress id =
+    updateAddress id (\a -> { a | selected = True })
+
+
+selectEntity : Id.EntityId -> IntDict Layer -> IntDict Layer
+selectEntity id =
+    updateEntity id (\a -> { a | selected = True })
+
+
+selectAddressLink : Id.LinkId Id.AddressId -> IntDict Layer -> IntDict Layer
+selectAddressLink id =
+    updateAddressLink id (\a -> { a | selected = True })
+
+
+selectEntityLink : Id.LinkId Id.EntityId -> IntDict Layer -> IntDict Layer
+selectEntityLink id =
+    updateEntityLink id (\a -> { a | selected = True })
