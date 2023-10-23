@@ -2053,7 +2053,7 @@ updateByMsg plugins uc msg model =
                                 :: future
                                 |> History rest
                     }
-                        |> deselect
+                        |> syncSelection
                         |> n
 
                 _ ->
@@ -2065,8 +2065,9 @@ updateByMsg plugins uc msg model =
                     { model
                         | layers = recent
                         , history =
-                            History (model.layers :: past) future
+                            History (deselectLayers model.selected model.layers :: past) future
                     }
+                        |> syncSelection
                         |> n
 
                 _ ->
@@ -2903,7 +2904,7 @@ selectAddress address table model =
             | browser = browser2
             , selected = SelectedAddress address.id
             , selectIfLoaded = Nothing
-            , layers = Layer.updateAddress address.id (\a -> { a | selected = True }) newmodel.layers
+            , layers = Layer.selectAddress address.id newmodel.layers
           }
         , InternalGraphSelectedAddressEffect address.id :: effects1 ++ effects2
         )
@@ -2932,7 +2933,7 @@ selectEntity entity table model =
             , selected = SelectedEntity entity.id
             , selectIfLoaded = Nothing
             , layers =
-                Layer.updateEntity entity.id (\e -> { e | selected = True }) newmodel.layers
+                Layer.selectEntity entity.id newmodel.layers
           }
         , effects1 ++ effects2
         )
@@ -3813,7 +3814,7 @@ selectAddressLink table source link model =
     ( { newmodel
         | browser = browser2
         , selected = SelectedAddresslink linkId
-        , layers = Layer.updateAddressLink linkId (\l -> { l | selected = True }) newmodel.layers
+        , layers = Layer.selectAddressLink linkId newmodel.layers
       }
     , effects
     )
@@ -3843,7 +3844,7 @@ selectEntityLink table source link model =
     ( { newmodel
         | browser = browser2
         , selected = SelectedEntitylink ( source.id, link.node.id )
-        , layers = Layer.updateEntityLink linkId (\l -> { l | selected = True }) newmodel.layers
+        , layers = Layer.selectEntityLink linkId newmodel.layers
       }
     , effects
     )
@@ -3858,3 +3859,34 @@ layerDelta isOutgoing =
          else
             -1
         )
+
+
+syncSelection : Model -> Model
+syncSelection model =
+    case model.selected of
+        SelectedAddress id ->
+            Layer.getAddress id model.layers
+                |> Maybe.map
+                    (\_ -> { model | layers = Layer.selectAddress id model.layers })
+                |> Maybe.withDefault (deselect model)
+
+        SelectedEntity id ->
+            Layer.getEntity id model.layers
+                |> Maybe.map
+                    (\_ -> { model | layers = Layer.selectEntity id model.layers })
+                |> Maybe.withDefault (deselect model)
+
+        SelectedAddresslink id ->
+            Layer.getAddressLink id model.layers
+                |> Maybe.map
+                    (\_ -> { model | layers = Layer.selectAddressLink id model.layers })
+                |> Maybe.withDefault (deselect model)
+
+        SelectedEntitylink id ->
+            Layer.getEntityLink id model.layers
+                |> Maybe.map
+                    (\_ -> { model | layers = Layer.selectEntityLink id model.layers })
+                |> Maybe.withDefault (deselect model)
+
+        SelectedNone ->
+            model
