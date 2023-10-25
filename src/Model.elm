@@ -28,7 +28,7 @@ import Url exposing (Url)
 
 
 type alias Flags =
-    { settings : Json.Encode.Value
+    { localStorage : Json.Encode.Value
     , now : Int
     , width : Int
     , height : Int
