@@ -124,7 +124,7 @@ prepareCSV locModel currency row =
     [ ( n "tx_hash", Util.Csv.string row.txHash )
     , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel row.currency
         ++ [ ( n "currency", Util.Csv.string row.currency )
            , ( n "height", Util.Csv.int row.height )
            , ( n "timestamp", Util.Csv.timestamp locModel row.timestamp )

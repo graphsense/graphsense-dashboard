@@ -1,6 +1,7 @@
 module Util.Csv exposing (..)
 
 import Api.Data
+import Model.Currency exposing (Currency(..))
 import Model.Locale exposing (..)
 import View.Locale exposing (currencyWithoutCode)
 
@@ -42,12 +43,12 @@ prefix key key2 =
 valuesWithBaseCurrencyFloat : String -> Api.Data.Values -> Model -> String -> List ( ( String, List String ), String )
 valuesWithBaseCurrencyFloat key v locModel currency =
     let
-        -- Always export exact values
+        -- Always export exact values and in coin denomination
         nlocModel =
-            { locModel | valueDetail = Exact }
+            { locModel | valueDetail = Exact, currency = Coin }
     in
     ( ( key, [] ), int v.value )
-        :: (( prefix key currency, string (currencyWithoutCode nlocModel currency v) )
+        :: (( prefix key "in_base_currency", string (currencyWithoutCode nlocModel currency v) )
                 :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
            )
 
