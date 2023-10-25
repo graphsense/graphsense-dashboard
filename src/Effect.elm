@@ -63,7 +63,8 @@ perform plugins key statusbarToken apiKey effect =
             Ports.setDirty False
 
         SaveUserSettingsEffect model ->
-            Ports.saveToLocalStorage ( "gs_user_settings", Config.UserSettings.encoder model )
+            Config.UserSettings.encoder model
+                |> Ports.saveToLocalStorage
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff

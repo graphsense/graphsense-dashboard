@@ -2,6 +2,7 @@ module Config.UserSettings exposing (..)
 
 import Config.Graph exposing (AddressLabelType(..), TxLabelType(..))
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
+import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 import Model.Currency exposing (Currency(..))
@@ -116,18 +117,28 @@ stringToEdgeLabel s =
             Value
 
 
+fromString : Decoder a -> Decoder a
+fromString dec =
+    Decode.string
+        |> Decode.andThen
+            (Decode.decodeString dec
+                >> Result.mapError Decode.errorToString
+                >> Json.Decode.Extra.fromResult
+            )
+
+
 decoder : Decoder UserSettings
 decoder =
     Decode.succeed UserSettings
         |> required "selectedLanguage" string
-        |> optional "lightMode" (nullable bool) Nothing
-        |> optional "valueDetail" (nullable (Decode.string |> Decode.map stringToValueDetail)) Nothing
-        |> optional "valueDenomination" (nullable (Decode.string |> Decode.map stringToCurrency)) Nothing
-        |> optional "addressLabel" (nullable (Decode.string |> Decode.map stringToAddressLabel)) Nothing
-        |> optional "edgeLabel" (nullable (Decode.string |> Decode.map stringToEdgeLabel)) Nothing
-        |> optional "showAddressShadowLinks" (nullable bool) Nothing
-        |> optional "showClusterShadowLinks" (nullable bool) Nothing
-        |> optional "showDatesInUserLocale" (nullable bool) Nothing
+        |> optional "lightMode" (nullable bool |> fromString) Nothing
+        |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
+        |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
+        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel |> nullable) Nothing
+        |> optional "edgeLabel" (Decode.string |> Decode.map stringToEdgeLabel |> nullable) Nothing
+        |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
+        |> optional "showClusterShadowLinks" (nullable bool |> fromString) Nothing
+        |> optional "showDatesInUserLocale" (nullable bool |> fromString) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value

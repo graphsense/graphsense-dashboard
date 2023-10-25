@@ -32,6 +32,7 @@
             "elm/url": "1.0.0",
             "elm-community/easing-functions": "2.0.0",
             "elm-community/intdict": "3.0.0",
+            "elm-community/json-extra": "4.3.0",
             "elm-community/list-extra": "8.6.0",
             "elm-community/maybe-extra": "5.3.0",
             "elm-community/string-extra": "4.0.1",

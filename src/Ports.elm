@@ -30,7 +30,7 @@ port newTab : String -> Cmd msg
 port setDirty : Bool -> Cmd msg
 
 
-port saveToLocalStorage : ( String, Value ) -> Cmd msg
+port saveToLocalStorage : Value -> Cmd msg
 
 
 
