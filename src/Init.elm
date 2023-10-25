@@ -20,7 +20,9 @@ init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
 init plugins flags url key =
     let
         settings =
-            Json.Decode.decodeValue Config.UserSettings.decoder flags.settings |> Result.withDefault Config.UserSettings.default
+            flags.localStorage
+                |> Json.Decode.decodeValue Config.UserSettings.decoder
+                |> Result.withDefault Config.UserSettings.default
 
         ( locale, localeEffect ) =
             Locale.init settings
