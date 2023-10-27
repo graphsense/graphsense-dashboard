@@ -1,5 +1,9 @@
 FROM alpine:3.16
-LABEL maintainer="contact@iknaio.com"
+LABEL org.opencontainers.image.title="graphsense-dashboard"
+LABEL org.opencontainers.image.maintainer="contact@iknaio.com"
+LABEL org.opencontainers.image.url="https://www.ikna.io/"
+LABEL org.opencontainers.image.description="GraphSense's Web GUI for interactive cryptocurrency analysis written"
+LABEL org.opencontainers.image.source="https://github.com/graphsense/graphsense-dashboard"
 
 ENV DOCKER_USER=user
 ARG DOCKER_UID=1000

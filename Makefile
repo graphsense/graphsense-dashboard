@@ -26,6 +26,13 @@ serve:
 test:
 	npx elm-test
 
+build:
+	npm run build
+
+
+build-docker:
+	docker build .
+
 format:
 	npx elm-format --yes src
 
