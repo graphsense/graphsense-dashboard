@@ -16,5 +16,5 @@ jobs:
         with:
           node-version: '18.x'
       - run: npm ci
+      - run: cp config/Config.elm.tmp config/Config.elm
       - run: npm run build --if-present
-      # - run: npm test
