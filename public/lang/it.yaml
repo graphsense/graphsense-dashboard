@@ -1,0 +1,360 @@
+address: Indirizzo
+addresses: Indirizzi
+"{0} address": "{0} Indirizzo"
+"{0} addresses": "{0} Indirizzi"
+entity: Entità
+entities: Entità
+transaction: Transazione
+transactions: Transazioni
+label: Identificativo
+labels: Identificativi
+tag: Identificativo
+tags: Identificativi
+address tags: Identificativi dell'indirizzo
+entity tags: Identificativi dell'entità
+block: Blocco
+blocks: Blocchi
+supported currencies: Valute supportate
+ledger statistics: Statistiche del ledger
+last update: Ultimo aggiornamento
+latest block: Ultimo blocco
+"address, transaction, label, block": Indirizzo, transazione, identificativo, blocco
+currency: Cryptoasset
+transfers: Trasferimenti
+withdrawals: Prelievi
+deposits: Depositi
+neighbors: Vicini
+receiving entities: Entità riceventi
+sending entities: Entità mittenti
+receiving entity: Entità ricevente
+sending entity: Entità mittente
+receiving addresses: Indirizzi riceventi
+receiving address: Indirizzo ricevente
+sending addresses: Indirizzi mittenti
+sending address: Indirizzo mittente
+first usage: Primo utilizzo
+last usage: Ultimo utilizzo
+activity period: Periodo di attività
+total received: Totale ricevuto
+"total received {0}": Totale ricevuto {0}
+final balance: Saldo finale
+"final balance {0}": Saldo finale {0}
+entity balance: Saldo dell'entità
+"entity balance {0}": Saldo dell'entità {0}
+address balance: Saldo dell'indirizzo
+"address balance {0}": Saldo dell'indirizzo {0}
+entity received: Ricevuto dall'entità
+"entity received {0}": Ricevuto dall'entità {0}
+address received: Ricevuto dall'indirizzo
+"address received {0}": Ricevuto dall'indirizzo {0}
+category: Categoria
+categories: Categorie
+abuse: Abuso
+abuses: Abusi
+incoming neighbors: Vicini in entrata
+outgoing neighbors: Vicini in uscita
+height: Altezza
+block hash: Hash del blocco
+created: Creato
+no. inputs: Nr. di input
+no. outputs: Nr. di output
+total input: Input totale
+total output: Output totale
+"total input {0}": Input totale {0}
+"total output {0}": Output totale {0}
+year: Anno
+years: Anni
+month: Mese
+months: Mesi
+day: Giorno
+days: Giorni
+hour: Ora
+hours: Ore
+minute: Minuto
+minutes: Minuti
+second: Secondo
+seconds: Secondi
+addresses tagged: Indirizzi identificati
+source: Fonte
+target: Destinatario
+value: Valore
+"value {0}": Valore {0}
+timestamp: Timestamp
+outgoing address: Indirizzo in uscita
+incoming address: Indirizzo in entrata
+outgoing entity: Entità in uscita
+incoming entity: Entità in entrata
+outgoing addresses: Indirizzi in uscita
+incoming addresses: Indirizzi in entrata
+outgoing entities: Entità in uscita
+incoming entities: Entità in entrata
+output address: Indirizzo output
+input address: Indirizzo input
+no. transactions: Nr. di transazioni
+filter table contents: Filtra i contenuti della tabella
+sort/filter disabled: Ordinamento/filtro disattivato
+download table as csv: Scarica la tabella come file CSV
+add all to graph: Aggiungi tutto al grafico
+tagpack: Tagpack
+last modified: Ultima modifica
+active: Attivo
+download tags as json: Scarica gli identificativi come JSON file
+included in block: Incluso nel blocco
+export: Esporta
+graphics (.svg): Grafica (.svg)
+full data: Dati completi
+notes only: Solo le note
+titanium tag sharing schema: Schema di condivisione identificativi TITANIUM
+rest calls: Chiamate REST
+audit log: Audit log
+address label: Identificativo dell'indirizzo
+transaction label: Identificativo della transazione
+language: Lingua
+english: Inglese
+german: Tedesco
+russian: Russo
+import: Importa
+criterion: Criteriio
+depth: Profondità
+by category: Per categoria
+for contained addresses: Per indirizzi contenuti
+for final balance: Per saldo finale
+for total received: Per totale ricevuto
+breadth: Ampiezza
+max. addresses: Max. Indirizzi
+search: Cerca
+save: Salva
+title: Titolo
+investigator: Investigatore
+institution: Istituzione
+summary: Riassunto
+cancel: Annulla
+creator: Autore
+change currency: Cambia valuta
+start from scratch: Ricomincia
+load from file: Carica da file
+undo last graph change: Annulla ultima modifica al grafico
+redo undone graph change: Ripristina ultima modifica al grafico
+configuration options: Opzioni di configurazione
+legend: Legenda
+username: Nome utente
+password: Password
+sign in: Accedi
+signing in: Accesso in corso
+annotate: Annota
+annotate entity: Annota l'entità
+annotate address: Annota l'indirizzo
+remove from graph: Rimuovi dal grafico
+remove: Rimuovi
+remove link: Rimuovi collegamento
+expand: Espandi
+collapse: Riduci
+show address table: Mostra tabella dell'indirizzo
+sort addresses by: Ordina indirizzi per
+no. neighbors: Nr. vicini
+incoming: In entrata
+outgoing: In uscita
+the search: La ricerca
+user-defined labels: Identificativi definiti dall'utente
+hide logs: Nascondi i logs
+show logs: Mostra i logs
+notes: Note
+add tag: Aggiungi identificativo
+search incoming neighbors: Cerca vicini in entrata
+search outgoing neighbors: Cerca vicini in uscita
+nothing to display yet: Ancora nulla da visualizzare
+entity_tooltip: Un'entità comprende uno o più indirizzi
+address_tooltip: Un indirizzo può inviare e ricevere monete
+link_tooltip: Un collegamento indica che sono presenti una o più transazioni tra i nodi. Il flusso di denaro è sempre da sinistra a destra.
+shadow_tooltip: Un collegamento 'shadow' collega indirizzi e entità identici
+"category {0}": Categoria {0}
+searching outgoing: Cerca in uscita
+searching incoming: Cerca in entrata
+for outgoing neighbors: Per vicini in uscita
+for incoming neighbors: Per vicini in entrata
+errors only: Solo errori
+show more: Mostra di più
+loading msg outgoing: Caricamento messaggi in uscita
+loading msg incoming: Carica messaggi in entrata
+saving to file: Salvataggio su file
+go to dashboard: Vai alla Dashboard
+remove tag: Rimuovi identificativo
+estimated value: Valore stimato
+"estimated value {0}": Valore stimato {0}
+reorder to prioritize: Riordina per priorità
+tag coherence: Coerenza dell'identificativo
+unknown: Sconosciuto
+API rate limit exceeded. Please try again later.: Limite API raggiunto. Riprova più tardi.
+legend empty: Legenda vuota
+from: Da
+to: A
+pick a color: Scegli un colore
+start highlighting addresses and entities: Evidenzia indirizzi/entità facendo clic
+api request limit: Limite di richiesta API
+from address: Da indirizzo
+to address: A indirizzo
+tagged addresses: Indirizzi identificati
+please provide an API key: Fornire una chiave API
+invalid key: Chiave non valida
+unlimited: Illimitato
+root address: Indirizzo base
+Root Address: Entità base
+direction: Direzione
+both: Entrambi
+search neighbors: Cerca vicini
+bad status: Errore
+bad url: URL errato
+timeout: Tempo scaduto
+network error: Errore di rete
+server error: Errore del server
+not found: Non trovato
+data error: Errore nei dati
+this table is empty: Questa tabella è vuota
+Do you want to start from scratch?: Iniziare davvero dall'inizio?
+proprietary tag: Identificativi proprietari
+"loading concepts for taxonomy {0}": Caricamento concetti per la tassonomia {0}
+"{1}: searching for {0}": "{1}: Cerca {0}"
+"{1}: loading address {0}": "{1}: Caricamento indirizzo {0}"
+"{1}: loading block {0}": "{1}: Caricamento blocco {0}"
+"{1}: loading transaction {0}": "{1}: Caricamento transazione {0}"
+"{1}: loading entity {0}": "{1}: Caricamento entità {0}"
+"{1}: loading entity for address {0}": "{1}: Caricamento entità per indirizzo {0}"
+"{1}: loading input addresses of transaction {0}": "{1}: Caricamento indirizzi input della transazione {0}"
+"{1}: loading output addresses of transaction {0}": "{1}: Caricamento indirizzi output della transazione {0}"
+"{1}: loading outgoing neighbors of entity {0}": "{1}: Caricamento vicini in uscita dell'entità {0}"
+"{1}: loading incoming neighbors of entity {0}": "{1}: Caricamento vicini in entrata dell'entità {0}"
+"{1}: loading outgoing neighbors of address {0}": "{1}: Caricamento vicini in uscita dell'indirizzo {0}"
+"{1}: loading incoming neighbors of address {0}": "{1}: Caricamento vicini in entrata dell'indirizzo {0}"
+"{1}: loading {0} addresses": "{1}: Caricamento {0} indirizzi"
+"{1}: loading {0} entities": "{1}: Caricamento {0} entità"
+"{1}: loading entities of {0} addresses": "{1}: Caricamento entità di {0} indirizzi"
+"{1}: loading outgoing neighbors of {0} entities": "{1}: Caricamento vicini in uscita di {0} entità"
+"{1}: loading incoming neighbors of {0} entities": "{1}: Caricamento vicini in entrata di {0} entità"
+"{1}: loading outgoing neighbors of {0} addresses": "{1}: Caricamento vicini in uscita di {0} indirizzi"
+"{1}: loading incoming neighbors of {0} addresses": "{1}: Caricamento vicini in entrata di {0} indirizzi"
+"{1}: loading tags of address {0}": "{1}: Caricamento identificativi dell'indirizzo {0}"
+"{1}: loading tags {0} addresses": "{1}: Caricamento identificativi di {0} indirizzi"
+"{1}: loading address tags of entity {0}": "{1}: Caricamento identificativi dell'indirizzo dell'entità {0}"
+"{1}: loading transactions of address {0}": "{1}: Caricamento transazioni dell'indirizzo {0}"
+"{1}: loading transactions of block {0}": "{1}: Caricamento transazioni del blocco {0}"
+"{1}: loading addresses of entity {0}": "{1}: Caricamento indirizzi dell'entità {0}"
+"{1}: loading tags with label {0}": "{1}: Caricamento tags con identificativo {0}"
+"{2}: loading address link transactions between {0} and {1}": "{2}: Caricamento transazioni di collegamento dell'indirizzo tra {0} e {1}"
+"{2}: loading entity link transactions between {0} and {1}": "{2}: Caricamento transazioni di collegamento dell'entità tra {0} e {1}"
+Please try again with a lower depth/breadth setting.: Per favore riprova con un parametro di profondità/ampiezza inferiore.
+defines entity: Definisce l'entità
+delete: Elimina
+address statistics not yet computed: Statistiche dell'indirizzo ancora non completate
+address statistics might be out of date: Le statistiche dell'indirizzo potrebbero non essere aggiornate
+no external transactions: Nessuna transazione esterna
+show shadow links: Mostra collegamenti nascosti
+Timezone: Fuso orario
+User: Utente
+UTC: UTC
+for entities: Per entità
+for addresses: Per indirizzi
+show entity link: Mostra collegamento dell'entità
+hide entity link: Nascondi collegamento dell'entità
+filter table: Filtra tabella
+download table as CSV: Scarica la tabella in formato CSV
+"address transactions of {0} ({1})": Transazioni dell'indirizzo {0} ({1})
+"incoming neighbors of address {0} ({1})": Vicini in entrata dell'indirizzo {0} ({1})
+"outgoing neighbors of address {0} ({1})": Vicini in uscita dell'indirizzo {0} ({1})
+"incoming neighbors of entity {0} ({1})": Vicini in entrata dell'entità {0} ({1})
+"outgoing neighbors of entity {0} ({1})": Vicini in uscita dell'entità {0} ({1})
+"addresses of entity {0} ({1})": Indirizzi dell'entità {0} ({1})
+user address tags: Identificativi dell'indirizzo utente
+"transactions of block {0} ({1})": Transazioni del blocco {0} ({1})
+"transactions between entities {0} and {1} ({2})": Transazioni tra entità {0} e {1} ({2})
+"transactions between addresses {0} and {1} ({2})": Transazioni tra indirizzi {0} e {1} ({2})
+"Incoming values of transaction {0} ({1})": Valori in entrata della transazione {0} ({1})
+"Outgoing values of transaction {0} ({1})": Valori in uscita della transazione {0} ({1})
+"{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)":
+  "{6}: cerca {0} di {1} con {2} (profondità: {3}, ampiezza: {4}, 
+  salta se ci sono più di {5} indirizzi)"
+"Address not found. It is possibly not yet in our database (synced up to block {0}) or has not received any transactions and is therefore not stored in the blockchain.":
+  Indirizzo non trovato. Potrebbe non essere ancora nel database 
+  (sincronizzato al blocco {0}) oppure non ha ancora ricevuto transazioni 
+  e quindi non è archiviato nella blockchain.
+yes: Sì
+no: No
+address not found: Indirizzo non trovato
+addresses not found: Indirizzi non trovati
+"... and {0} more": ... e altri {0}
+there could be various reasons: Potrebbero esserci varie ragioni
+they are possibly not yet in our database: Potrebbero non essere ancora presenti nel nostro database
+it is possibly not yet in our database: Potrebbe non essere ancora presente nel nostro database
+there are no transactions associated with these addresses and they are therefore not found on the blockchain:
+  Non esistono transazioni associate con questi indirizzi 
+  e quindi non sono archiviate nella blockchain
+there are no transactions associated with this address and it is therefore not found on the blockchain.:
+  Non esistono transazioni associate con questo indirizzo 
+  e quindi non sono archiviate nella blockchain
+there are typos: Ci sono errori di battitura
+smart contract: Smart contract
+"token transactions of {0} ({1})": Transazioni con token di {0} ({1})
+loading supported token currencies: Caricamento dei token supportati
+Actor: Attore
+Actors: Attori
+Other Links: Altri collegamenti
+Social: Social media
+Jurisdictions: Giurisdizioni
+list sending entities: Elenca entità mittenti
+list receiving entities: Elenca entità riceventi
+list entity transactions: Elenca transazioni dell'entità
+Any Category: Qualsiasi categoria
+Open Etherscan: Apri Etherscan
+Open Oklink: Apri Oklink
+Open Blockchain.com: Apri Blockchain.com
+Open Blockchair: Apri Blockchair
+Open Dedaub: Apri Dedaub
+Open Palkeo: Apri Palkeo
+Exact: Esatto
+Magnitude: Magnitudine
+Value format: Formato del valore
+Case Management: Gestione del caso
+calculating connections: Calcolo delle connessioni
+pol. case number: Numero del caso pol.
+jud. case number: Numero del caso giud.
+info: Info
+case number preference: Preferenze sul numero del caso
+judicial: Giudiziario
+police: Polizia
+mine: Mio
+list addresses: Elenca indirizzi
+inquiry requested: Indagine richiesta
+case connection: Connessione del caso
+connect case: Connetti il caso
+cases: Casi
+case: Caso
+case connections based on common entity: Connessioni del caso basate su entità comuni
+case connections based on common receiving entity: Connessioni del caso basate su entità riceventi comuni
+connect address to case: Connetti indirizzo al caso
+existing cases: Casi esistenti
+service provider: Fornitore del servizio
+choose service provider: Seleziona fornitore del servizio
+input service provider: Fornitore del servizio input
+please input at least a pol. or jud. case number: Per favore inserisci almeno un numero del caso pol. o giud.
+choose category: Seleziona categoria
+name: Nome
+payment address: Indirizzo di pagamento
+victim address: Indirizzo della vittima
+really trash?: Eliminare per davvero?
+"the first address the victim has sent money to, probably the address of the perpetrator": Il primo indirizzo a cui la vittima ha inviato denaro, probabilmente l'indirizzo dell'esecutore
+an address owned by the victim: Un indirizzo di proprietà dalla vittima
+the exchange service used by the victim: Servizio di scambio usato dalla vittima
+has an inquiry been sent to the owner of this address?: È stata inviata un'indagine al proprietario di questo indirizzo?
+open case: Apri il caso
+group: Raggruppa
+Login for this adress not yet enabled: Login per questo indirizzo non ancora attivato
+Try again: Riprova
+Continue: Continua
+Institutional Login: Login istituzionale
+Graph: Grafico
+Statistics: Statistiche
+Home: Home
+or try these examples: Oppure prova questi esempi
+Start a new investigation: Inizia una nuova investigazione
+or: Oppure
+Load graph from .gs file: Carica grafico da un file .gs
+try an example: Prova un esempio
