@@ -313,44 +313,6 @@ Open Palkeo: Palkeo öffnen
 Exact: Genau
 Magnitude: Größenordnung
 Value format: Wertedarstellung
-Case Management: Case Management
-calculating connections: Verbindungen werden berechnet
-pol. case number: pol. Aktenzeichen
-jud. case number: jus. Aktenzeichen
-info: Info
-case number preference: Anzeige Aktenzeichen
-judicial: justiziell
-police: polizeilich
-mine: meine
-list addresses: Adressen anzeigen
-inquiry requested: Auskunft eingeholt
-case connection: Akteverknüpfung
-connect case: Akte verknüpfen
-cases: Akten
-case: Akte
-case connections based on common entity: Aktverbindungen auf Basis gemeinsamer Entität
-case connections based on common receiving entity: Aktverbindungen auf Basis gemeinsamer abbuchender Entität
-connect address to case: Adresse mit Akte verknüpfen
-existing cases: existierende Akten
-service provider: Service provider
-choose service provider: Service provider wählen
-input service provider: Service provider eingeben
-please input at least a pol. or jud. case number: zumindest ein pol. oder ein jus. Aktenzeichen eingeben
-choose category: Kategorie wählen
-name: Name
-payment address: Ersteinzahlungsadresse
-victim address: Geschädigtenadresse
-really trash?: Wirklich wegwerfen?
-"the first address the victim has sent money to, probably the address of the perpetrator": Die erste Adresse auf die vom Geschädigten eingezahlt wurde
-an address owned by the victim: Adresse die im Besitz des Geschädigten ist
-the exchange service used by the victim: Der Wechseldienst den der Geschädigte verwendet hat
-has an inquiry been sent to the owner of this address?: Wurde beim Besitzer der Adresse eine Auskunft einholt?
-open case: offener Akt
-group: Gruppe
-Login for this adress not yet enabled: Login für diese Adresse noch nicht möglich
-Try again: Erneut versuchen
-Continue: Weiter
-Institutional Login: Login über Institution
 Graph: Graph
 Statistics: Statistiken
 Home: Home
@@ -359,3 +321,10 @@ Start a new investigation: Starte eine neue Nachforschung
 or: oder
 Load graph from .gs file: Eine bestehende .gs Datei laden
 try an example: Beispiele
+import cases: Akte importieren
+choose CSV file: CSV Datei wählen
+import data: Daten importieren
+map columns: Spalten zuordnen
+preview: Vorschau
+import failed: Import fehlgeschlagen
+error: Fehler
