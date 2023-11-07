@@ -321,10 +321,3 @@ Start a new investigation: Starte eine neue Nachforschung
 or: oder
 Load graph from .gs file: Eine bestehende .gs Datei laden
 try an example: Beispiele
-import cases: Akte importieren
-choose CSV file: CSV Datei wählen
-import data: Daten importieren
-map columns: Spalten zuordnen
-preview: Vorschau
-import failed: Import fehlgeschlagen
-error: Fehler

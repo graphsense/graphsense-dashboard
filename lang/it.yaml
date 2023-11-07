@@ -303,44 +303,6 @@ Open Palkeo: apri Palkeo
 Exact: esatto
 Magnitude: magnitudine
 Value format: formato del valore
-Case Management: gestione del caso
-calculating connections: calcolo delle connessioni
-pol. case number: numero del caso pol.
-jud. case number: numero del caso giud.
-info: info
-case number preference: preferenze sul numero del caso
-judicial: giudiziario
-police: polizia
-mine: mio
-list addresses: elenca indirizzi
-inquiry requested: indagine richiesta
-case connection: connessione del caso
-connect case: connetti il caso
-cases: casi
-case: caso
-case connections based on common entity: connessioni del caso basate su entità comuni
-case connections based on common receiving entity: connessioni del caso basate su entità riceventi comuni
-connect address to case: connetti indirizzo al caso
-existing cases: casi esistenti
-service provider: fornitore del servizio
-choose service provider: seleziona fornitore del servizio
-input service provider: fornitore del servizio input
-please input at least a pol. or jud. case number: per favore inserisci almeno un numero del caso pol. o giud.
-choose category: seleziona categoria
-name: nome
-payment address: indirizzo di pagamento
-victim address: indirizzo della vittima
-really trash?: eliminare per davvero?
-"the first address the victim has sent money to, probably the address of the perpetrator": il primo indirizzo a cui la vittima ha inviato denaro, probabilmente l'indirizzo dell'esecutore
-an address owned by the victim: un indirizzo di proprietà dalla vittima
-the exchange service used by the victim: servizio di scambio usato dalla vittima
-has an inquiry been sent to the owner of this address?: È stata inviata un'indagine al proprietario di questo indirizzo?
-open case: apri il caso
-group: raggruppa
-Login for this adress not yet enabled: login per questo indirizzo non ancora attivato
-Try again: riprova
-Continue: continua
-Institutional Login: login istituzionale
 Graph: grafico
 Statistics: statistiche
 Home: home
