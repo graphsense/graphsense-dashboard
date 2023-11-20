@@ -405,13 +405,22 @@ getLabel vc gc currency link =
 
                 Graph.Value ->
                     if currency == "eth" then
+                        let
+                            fiatValue v =
+                                v.fiatValues
+                                    |> List.head
+                                    |> Maybe.map .value
+                                    |> Maybe.withDefault (toFloat v.value)
+                                    |> Debug.log "sortby"
+                        in
                         ( "eth", li.value )
                             :: (li.tokenValues
                                     |> Maybe.map Dict.toList
                                     |> Maybe.withDefault []
                                )
                             |> List.filter (uncurry (filterTxValue gc))
-                            |> List.sortBy (second >> .value)
+                            |> List.sortBy (second >> fiatValue)
+                            |> List.reverse
                             |> List.map (uncurry (Locale.tokenCurrency vc.locale))
                             |> List.Extra.uncons
                             |> Maybe.map
