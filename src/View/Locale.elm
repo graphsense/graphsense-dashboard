@@ -240,7 +240,7 @@ currency =
 
 tokenCurrency : Model -> String -> Api.Data.Values -> String
 tokenCurrency =
-    currencyWithOptions Both
+    currencyWithOptions One
 
 
 currencyWithoutCode : Model -> String -> Api.Data.Values -> String
@@ -251,7 +251,6 @@ currencyWithoutCode =
 type CodeVisibility
     = Hidden
     | One
-    | Both
 
 
 currencyWithOptions : CodeVisibility -> Model -> String -> Api.Data.Values -> String
@@ -277,9 +276,6 @@ fiat model coinCode vis { code, value } =
 
                 One ->
                     " " ++ String.toUpper code
-
-                Both ->
-                    " " ++ String.toUpper code ++ " (" ++ String.toUpper coinCode ++ ")"
            )
 
 

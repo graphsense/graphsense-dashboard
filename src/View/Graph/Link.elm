@@ -8,6 +8,7 @@ import Css.Graph
 import Dict
 import Init.Graph.Id as Id
 import Json.Decode
+import List.Extra
 import Model.Currency as Currency
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
@@ -410,10 +411,21 @@ getLabel vc gc currency link =
                                )
                             |> List.sortBy (second >> .value)
                             |> List.reverse
-                            |> List.head
-                            |> Maybe.withDefault ( "eth", li.value )
-                            |> (\( coinCode, v ) -> Locale.tokenCurrency vc.locale coinCode v)
-                            |> List.singleton
+                            |> List.map (\( coinCode, v ) -> Locale.tokenCurrency vc.locale coinCode v)
+                            |> List.Extra.uncons
+                            |> Maybe.map
+                                (\( fst, rest ) ->
+                                    fst
+                                        ++ (if List.isEmpty rest then
+                                                ""
+
+                                            else
+                                                " +"
+                                                    ++ Locale.interpolated vc.locale "{0} more" [ List.length rest |> String.fromInt ]
+                                           )
+                                        |> List.singleton
+                                )
+                            |> Maybe.withDefault []
 
                     else
                         Locale.currencyWithoutCode vc.locale currency li.value
