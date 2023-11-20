@@ -21,6 +21,7 @@ import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Tuple exposing (second)
 import Util.Graph exposing (decodeCoords)
 import View.Locale as Locale
 
@@ -407,10 +408,12 @@ getLabel vc gc currency link =
                                     |> Maybe.map Dict.toList
                                     |> Maybe.withDefault []
                                )
-                            |> List.map
-                                (\( coinCode, v ) ->
-                                    Locale.tokenCurrency vc.locale coinCode v
-                                )
+                            |> List.sortBy (second >> .value)
+                            |> List.reverse
+                            |> List.head
+                            |> Maybe.withDefault ( "eth", li.value )
+                            |> (\( coinCode, v ) -> Locale.tokenCurrency vc.locale coinCode v)
+                            |> List.singleton
 
                     else
                         Locale.currencyWithoutCode vc.locale currency li.value
