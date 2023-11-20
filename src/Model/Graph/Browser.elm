@@ -61,7 +61,7 @@ type Value msg
     | Uri String String
     | IconLink FontAwesome.Icon String
     | InternalLink String String
-    | EntityId Graph.Config Entity
+    | EntityId Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int

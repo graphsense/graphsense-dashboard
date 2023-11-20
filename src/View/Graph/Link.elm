@@ -1,5 +1,6 @@
 module View.Graph.Link exposing (..)
 
+import Basics.Extra exposing (uncurry)
 import Color
 import Config.Graph as Graph exposing (linkLabelHeight, txMaxWidth)
 import Config.View as View
@@ -23,7 +24,7 @@ import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (second)
-import Util.Graph exposing (decodeCoords)
+import Util.Graph exposing (decodeCoords, filterTxValue)
 import View.Locale as Locale
 
 
@@ -409,9 +410,9 @@ getLabel vc gc currency link =
                                     |> Maybe.map Dict.toList
                                     |> Maybe.withDefault []
                                )
+                            |> List.filter (uncurry (filterTxValue gc))
                             |> List.sortBy (second >> .value)
-                            |> List.reverse
-                            |> List.map (\( coinCode, v ) -> Locale.tokenCurrency vc.locale coinCode v)
+                            |> List.map (uncurry (Locale.tokenCurrency vc.locale))
                             |> List.Extra.uncons
                             |> Maybe.map
                                 (\( fst, rest ) ->

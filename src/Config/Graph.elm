@@ -132,6 +132,7 @@ type alias Config =
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
     , showDatesInUserLocale : Bool
+    , showZeroTransactions : Bool
     }
 
 
@@ -147,4 +148,5 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
     , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
+    , showZeroTransactions = False
     }

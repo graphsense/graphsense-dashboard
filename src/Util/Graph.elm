@@ -1,5 +1,6 @@
 module Util.Graph exposing (..)
 
+import Api.Data
 import Config.Graph as Graph
 import Json.Decode
 import List.Extra
@@ -54,3 +55,12 @@ getAbuse : Graph.Config -> Maybe String -> Maybe String
 getAbuse gc =
     Maybe.andThen (\cat -> List.Extra.find (.id >> (==) cat) gc.abuseConcepts)
         >> Maybe.map .label
+
+
+filterTxValue : Graph.Config -> String -> Api.Data.Values -> Bool
+filterTxValue gc coinCode value =
+    if gc.showZeroTransactions || coinCode /= "eth" then
+        True
+
+    else
+        value.value /= 0
