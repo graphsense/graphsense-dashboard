@@ -9,21 +9,11 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.LabelAddressTagsTable exposing (titleConfidence)
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table Api.Data.AddressTag
-init =
-    Init.Graph.Table.initSorted True "Confidence"
-
-
-filter : String -> Api.Data.AddressTag -> Bool
-filter f a =
-    String.contains f a.address
-        || String.contains f a.label
 
 
 config : View.Config -> Table.Config Api.Data.AddressTag Msg
@@ -82,9 +72,7 @@ config vc =
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
             , T.stringColumn vc "Actor id" (.actor >> Maybe.withDefault "")
-            , T.stringColumn vc
-                "Confidence"
-                (.confidence >> Maybe.withDefault "")
+            , T.stringColumn vc titleConfidence (.confidence >> Maybe.withDefault "")
             , T.htmlColumn vc
                 "TagPack"
                 .tagpackTitle

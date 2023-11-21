@@ -53,3 +53,9 @@ type alias Table a =
     , nextpage : Maybe String
     , searchTerm : Maybe String
     }
+
+
+type alias Filter a =
+    { search : String -> a -> Bool
+    , filter : a -> Bool
+    }

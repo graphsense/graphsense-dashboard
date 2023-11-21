@@ -13,6 +13,7 @@ import Model.Entity as E
 import Model.Graph.Entity
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.EntityNeighborsTable exposing (..)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
@@ -32,56 +33,6 @@ columnTitleFromDirection isOutgoing =
         "Incoming"
     )
         ++ " entity"
-
-
-init : Table Api.Data.NeighborEntity
-init =
-    Init.Graph.Table.initUnsorted
-
-
-filter : String -> Api.Data.NeighborEntity -> Bool
-filter f a =
-    String.contains f (String.fromInt a.entity.entity)
-        || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
-
-
-titleLabels : String
-titleLabels =
-    "Tags"
-
-
-titleEntityBalance : String
-titleEntityBalance =
-    "Entity balance"
-
-
-titleEntityReceived : String
-titleEntityReceived =
-    "Entity received"
-
-
-titleNoAddresses : String
-titleNoAddresses =
-    "No. addresses"
-
-
-titleNoTxs : String
-titleNoTxs =
-    "No. transactions"
-
-
-titleEstimatedValue : String
-titleEstimatedValue =
-    "Estimated value"
-
-
-titleValue : String -> String
-titleValue coinCode =
-    if coinCode == "eth" then
-        "Value"
-
-    else
-        titleEstimatedValue
 
 
 config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborEntity Msg

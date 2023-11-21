@@ -6,19 +6,10 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.LinksTable exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Table
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table String
-init =
-    Init.Graph.Table.initSorted True "url"
-
-
-filter : String -> String -> Bool
-filter f a =
-    String.contains f a
 
 
 config : View.Config -> Table.Config String Msg
@@ -28,7 +19,7 @@ config vc =
         , toMsg = TableNewState
         , columns =
             [ T.htmlColumn vc
-                "Url"
+                titleUrl
                 identity
                 (\data ->
                     [ text data

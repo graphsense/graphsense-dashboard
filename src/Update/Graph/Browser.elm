@@ -2,10 +2,21 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
-import Config.Graph.Table.TxsAccountTable as TxsAccountTable
 import Effect exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
+import Init.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
+import Init.Graph.Table.AddressTagsTable as AddressTagsTable
+import Init.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import Init.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Init.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import Init.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import Init.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import Init.Graph.Table.LinksTable as LinksTable
+import Init.Graph.Table.TxUtxoTable as TxUtxoTable
+import Init.Graph.Table.TxsAccountTable as TxsAccountTable
+import Init.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import Init.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import Log
 import Model.Actor as Act
 import Model.Address as A
@@ -18,6 +29,18 @@ import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
+import Model.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
+import Model.Graph.Table.AddressTagsTable as AddressTagsTable
+import Model.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import Model.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Model.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import Model.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import Model.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import Model.Graph.Table.LinksTable as LinksTable
+import Model.Graph.Table.TxUtxoTable as TxUtxoTable
+import Model.Graph.Table.TxsAccountTable as TxsAccountTable
+import Model.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import Model.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import Model.Graph.Tag as Tag
 import Model.Locale as Locale
 import Model.Tx as T
@@ -168,7 +191,7 @@ showUserTags tags model =
     { model
         | type_ =
             UserAddressTagsTable.init
-                |> appendData Nothing (Debug.todo "") tags
+                |> appendData UserAddressTagsTable.filter tags
                 |> UserTags
         , visible = True
     }
@@ -184,8 +207,9 @@ showLabelAddressTags label data model =
             else
                 { model
                     | type_ =
-                        Label current <|
-                            appendData data.nextPage (Debug.todo "") data.addressTags table
+                        appendData LabelAddressTagsTable.filter data.addressTags table
+                            |> s_nextpage data.nextPage
+                            |> Label current
                 }
 
         _ ->
@@ -200,10 +224,11 @@ showActorTags actorId data model =
                 Just (ActorTagsTable table) ->
                     { model
                         | type_ =
-                            Actor current <|
-                                Just <|
-                                    ActorTagsTable <|
-                                        appendData data.nextPage (Debug.todo "") data.addressTags table
+                            appendData LabelAddressTagsTable.filter data.addressTags table
+                                |> s_nextpage data.nextPage
+                                |> ActorTagsTable
+                                |> Just
+                                |> Actor current
                     }
 
                 _ ->
@@ -579,7 +604,7 @@ changeActorTable route t actor =
                         |> List.map Tuple.first
                         |> List.map addProtocolPrefx
             in
-            ( LinksTable.init |> setData (Debug.todo "") otherUrls |> ActorOtherLinksTable |> Just, [] )
+            ( LinksTable.init |> setData LinksTable.filter otherUrls |> ActorOtherLinksTable |> Just, [] )
 
         _ ->
             createActorTable route t actor.id
@@ -736,7 +761,7 @@ createTxUtxoTable route t currency txHash tx =
 
                 Just inputs ->
                     ( TxUtxoTable.init False
-                        |> appendData Nothing (Debug.todo "") inputs
+                        |> appendData TxUtxoTable.filter inputs
                         |> TxUtxoInputsTable
                         |> Just
                     , []
@@ -763,7 +788,7 @@ createTxUtxoTable route t currency txHash tx =
 
                 Just outputs ->
                     ( TxUtxoTable.init True
-                        |> appendData Nothing (Debug.todo "") outputs
+                        |> appendData TxUtxoTable.filter outputs
                         |> TxUtxoOutputsTable
                         |> Just
                     , []
@@ -945,7 +970,7 @@ showBlockTxsUtxo id data model =
                 { model
                     | type_ =
                         TxsUtxoTable.init
-                            |> appendData Nothing (Debug.todo "") blockTxs
+                            |> appendData TxsUtxoTable.filter blockTxs
                             |> BlockTxsUtxoTable
                             |> Just
                             |> Block loadable
@@ -955,8 +980,8 @@ showBlockTxsUtxo id data model =
             model
 
 
-showBlockTxsAccount : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
-showBlockTxsAccount id data model =
+showBlockTxsAccount : Graph.Config -> { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
+showBlockTxsAccount gc id data model =
     let
         blockTxs =
             data
@@ -979,7 +1004,7 @@ showBlockTxsAccount id data model =
                 { model
                     | type_ =
                         TxsAccountTable.init
-                            |> appendData Nothing (Debug.todo "") blockTxs
+                            |> appendData (TxsAccountTable.filter gc) blockTxs
                             |> BlockTxsAccountTable
                             |> Just
                             |> Block loadable
@@ -1008,7 +1033,7 @@ showTokenTxs gc id data model =
                 { model
                     | type_ =
                         TxsAccountTable.init
-                            |> appendData Nothing (TxsAccountTable.filter gc) data
+                            |> appendData (TxsAccountTable.filter gc) data
                             |> TokenTxsTable
                             |> Just
                             |> TxAccount loadable accountCurrency
@@ -1057,7 +1082,7 @@ updateUserTags tags model =
             { model
                 | type_ =
                     table
-                        |> setData (Debug.todo "") tags
+                        |> setData UserAddressTagsTable.filter tags
                         |> UserTags
             }
 
@@ -1091,13 +1116,14 @@ showAddressTxsUtxo id data model =
                         Address loadable <|
                             case table of
                                 Just (AddressTxsUtxoTable t) ->
-                                    appendData data.nextPage (Debug.todo "") addressTxs t
+                                    appendData AddressTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddressTxsUtxoTable.init
-                                        |> setData (Debug.todo "") addressTxs
+                                        |> setData AddressTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsUtxoTable
                                         |> Just
@@ -1133,13 +1159,14 @@ showAddressTxsAccount gc id data model =
                         Address loadable <|
                             case table of
                                 Just (AddressTxsAccountTable t) ->
-                                    appendData data.nextPage (TxsAccountTable.filter gc) addressTxs t
+                                    appendData (TxsAccountTable.filter gc) addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> appendData Nothing (TxsAccountTable.filter gc) addressTxs
+                                        |> appendData (TxsAccountTable.filter gc) addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsAccountTable
                                         |> Just
@@ -1175,13 +1202,14 @@ showAddresslinkTxsUtxo { currency, source, target } data model =
                         Addresslink src link <|
                             case table of
                                 Just (AddresslinkTxsUtxoTable t) ->
-                                    appendData data.nextPage (Debug.todo "") addressTxs t
+                                    appendData AddresslinkTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddresslinkTxsUtxoTable.init
-                                        |> setData (Debug.todo "") addressTxs
+                                        |> setData AddresslinkTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
@@ -1221,7 +1249,8 @@ showAddresslinkTxsAccount gc { currency, source, target } data model =
                             in
                             case table of
                                 Just (AddresslinkTxsAccountTable t) ->
-                                    appendData data.nextPage filter addressTxs t
+                                    appendData filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
 
@@ -1263,13 +1292,14 @@ showEntitylinkTxsUtxo { currency, source, target } data model =
                         Entitylink src link <|
                             case table of
                                 Just (AddresslinkTxsUtxoTable t) ->
-                                    appendData data.nextPage (Debug.todo "") addressTxs t
+                                    appendData AddresslinkTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddresslinkTxsUtxoTable.init
-                                        |> setData (Debug.todo "") addressTxs
+                                        |> setData AddresslinkTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
@@ -1309,7 +1339,8 @@ showEntitylinkTxsAccount gc { currency, source, target } data model =
                             in
                             case table of
                                 Just (AddresslinkTxsAccountTable t) ->
-                                    appendData data.nextPage filter addressTxs t
+                                    appendData filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
 
@@ -1365,13 +1396,14 @@ showAddressTags id data model =
                                             else
                                                 data.addressTags
                                     in
-                                    appendData data.nextPage (Debug.todo "") addressTags t
+                                    appendData AddressTagsTable.filter addressTags t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> setData (Debug.todo "") (getUserTag loadable ++ data.addressTags)
+                                        |> setData AddressTagsTable.filter (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> AddressTagsTable
                                         |> Just
@@ -1381,8 +1413,8 @@ showAddressTags id data model =
             model
 
 
-showAddressNeighbors : { currency : String, address : String } -> Bool -> Api.Data.NeighborAddresses -> Model -> Model
-showAddressNeighbors id isOutgoing data model =
+showAddressNeighbors : Graph.Config -> { currency : String, address : String } -> Bool -> Api.Data.NeighborAddresses -> Model -> Model
+showAddressNeighbors gc id isOutgoing data model =
     case model.type_ of
         Address loadable table ->
             if matchAddressId id loadable |> not then
@@ -1394,18 +1426,20 @@ showAddressNeighbors id isOutgoing data model =
                         Address loadable <|
                             case ( isOutgoing, table ) of
                                 ( True, Just (AddressOutgoingNeighborsTable t) ) ->
-                                    appendData data.nextPage (Debug.todo "") data.neighbors t
+                                    appendData (AddressNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> AddressOutgoingNeighborsTable
                                         |> Just
 
                                 ( False, Just (AddressIncomingNeighborsTable t) ) ->
-                                    appendData data.nextPage (Debug.todo "") data.neighbors t
+                                    appendData (AddressNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> AddressIncomingNeighborsTable
                                         |> Just
 
                                 _ ->
                                     AddressNeighborsTable.init
-                                        |> setData (Debug.todo "") data.neighbors
+                                        |> setData (AddressNeighborsTable.filter gc) data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
                                                 AddressOutgoingNeighborsTable
@@ -1420,8 +1454,8 @@ showAddressNeighbors id isOutgoing data model =
             model
 
 
-showEntityNeighbors : { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
-showEntityNeighbors id isOutgoing data model =
+showEntityNeighbors : Graph.Config -> { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
+showEntityNeighbors gc id isOutgoing data model =
     case model.type_ of
         Entity loadable table ->
             if matchEntityId id loadable |> not then
@@ -1433,18 +1467,20 @@ showEntityNeighbors id isOutgoing data model =
                         Entity loadable <|
                             case ( isOutgoing, table ) of
                                 ( True, Just (EntityOutgoingNeighborsTable t) ) ->
-                                    appendData data.nextPage (Debug.todo "") data.neighbors t
+                                    appendData (EntityNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> EntityOutgoingNeighborsTable
                                         |> Just
 
                                 ( False, Just (EntityIncomingNeighborsTable t) ) ->
-                                    appendData data.nextPage (Debug.todo "") data.neighbors t
+                                    appendData (EntityNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> EntityIncomingNeighborsTable
                                         |> Just
 
                                 _ ->
                                     EntityNeighborsTable.init
-                                        |> setData (Debug.todo "") data.neighbors
+                                        |> setData (EntityNeighborsTable.filter gc) data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
                                                 EntityOutgoingNeighborsTable
@@ -1472,13 +1508,14 @@ showEntityAddresses id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityAddressesTable t) ->
-                                    appendData data.nextPage (Debug.todo "") data.addresses t
+                                    appendData EntityAddressesTable.filter data.addresses t
+                                        |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
                                         |> Just
 
                                 _ ->
                                     EntityAddressesTable.init
-                                        |> setData (Debug.todo "") data.addresses
+                                        |> setData EntityAddressesTable.filter data.addresses
                                         |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
                                         |> Just
@@ -1514,13 +1551,14 @@ showEntityTxsUtxo id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityTxsUtxoTable t) ->
-                                    appendData data.nextPage (Debug.todo "") addressTxs t
+                                    appendData AddressTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddressTxsUtxoTable.init
-                                        |> setData (Debug.todo "") addressTxs
+                                        |> setData AddressTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> EntityTxsUtxoTable
                                         |> Just
@@ -1556,13 +1594,14 @@ showEntityTxsAccount gc id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityTxsAccountTable t) ->
-                                    appendData data.nextPage (TxsAccountTable.filter gc) addressTxs t
+                                    appendData (TxsAccountTable.filter gc) addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> setData (Debug.todo "") addressTxs
+                                        |> setData (TxsAccountTable.filter gc) addressTxs
                                         |> s_nextpage data.nextPage
                                         |> EntityTxsAccountTable
                                         |> Just
@@ -1612,13 +1651,14 @@ showEntityAddressTags id data model =
                                             else
                                                 data.addressTags
                                     in
-                                    appendData data.nextPage (Debug.todo "") addressTags t
+                                    appendData AddressTagsTable.filter addressTags t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> setData (Debug.todo "") (getUserTag loadable ++ data.addressTags)
+                                        |> setData AddressTagsTable.filter (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> EntityTagsTable
                                         |> Just
@@ -2234,7 +2274,7 @@ showTxUtxoAddresses id isOutgoing data model =
                 { model
                     | type_ =
                         TxUtxoTable.init isOutgoing
-                            |> appendData Nothing (Debug.todo "") data
+                            |> appendData TxUtxoTable.filter data
                             |> (if isOutgoing then
                                     TxUtxoOutputsTable
 
@@ -2313,7 +2353,7 @@ searchTable gc searchTerm model =
                     Address loadable <|
                         case table of
                             Just (AddressTxsUtxoTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddressTxsUtxoTable.filter searchTerm t
                                     |> AddressTxsUtxoTable
                                     |> Just
 
@@ -2323,17 +2363,17 @@ searchTable gc searchTerm model =
                                     |> Just
 
                             Just (AddressTagsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddressTagsTable.filter searchTerm t
                                     |> AddressTagsTable
                                     |> Just
 
                             Just (AddressIncomingNeighborsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (AddressNeighborsTable.filter gc) searchTerm t
                                     |> AddressIncomingNeighborsTable
                                     |> Just
 
                             Just (AddressOutgoingNeighborsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (AddressNeighborsTable.filter gc) searchTerm t
                                     |> AddressOutgoingNeighborsTable
                                     |> Just
 
@@ -2344,12 +2384,12 @@ searchTable gc searchTerm model =
                     Entity loadable <|
                         case table of
                             Just (EntityAddressesTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData EntityAddressesTable.filter searchTerm t
                                     |> EntityAddressesTable
                                     |> Just
 
                             Just (EntityTxsUtxoTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddressTxsUtxoTable.filter searchTerm t
                                     |> EntityTxsUtxoTable
                                     |> Just
 
@@ -2359,17 +2399,17 @@ searchTable gc searchTerm model =
                                     |> Just
 
                             Just (EntityTagsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddressTagsTable.filter searchTerm t
                                     |> EntityTagsTable
                                     |> Just
 
                             Just (EntityIncomingNeighborsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (EntityNeighborsTable.filter gc) searchTerm t
                                     |> EntityIncomingNeighborsTable
                                     |> Just
 
                             Just (EntityOutgoingNeighborsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (EntityNeighborsTable.filter gc) searchTerm t
                                     |> EntityOutgoingNeighborsTable
                                     |> Just
 
@@ -2380,12 +2420,12 @@ searchTable gc searchTerm model =
                     Actor loadable <|
                         case table of
                             Just (ActorTagsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData LabelAddressTagsTable.filter searchTerm t
                                     |> ActorTagsTable
                                     |> Just
 
                             Just (ActorOtherLinksTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData LinksTable.filter searchTerm t
                                     |> ActorOtherLinksTable
                                     |> Just
 
@@ -2396,12 +2436,12 @@ searchTable gc searchTerm model =
                     TxUtxo loadable <|
                         case table of
                             Just (TxUtxoInputsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData TxUtxoTable.filter searchTerm t
                                     |> TxUtxoInputsTable
                                     |> Just
 
                             Just (TxUtxoOutputsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData TxUtxoTable.filter searchTerm t
                                     |> TxUtxoOutputsTable
                                     |> Just
 
@@ -2412,7 +2452,7 @@ searchTable gc searchTerm model =
                     TxAccount loadable accountCurrency <|
                         case table of
                             Just (TokenTxsTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> TokenTxsTable
                                     |> Just
 
@@ -2423,19 +2463,19 @@ searchTable gc searchTerm model =
                     model.type_
 
                 Label label t ->
-                    searchData (Debug.todo "") searchTerm t
+                    searchData LabelAddressTagsTable.filter searchTerm t
                         |> Label label
 
                 Block loadable table ->
                     Block loadable <|
                         case table of
                             Just (BlockTxsUtxoTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData TxsUtxoTable.filter searchTerm t
                                     |> BlockTxsUtxoTable
                                     |> Just
 
                             Just (BlockTxsAccountTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> BlockTxsAccountTable
                                     |> Just
 
@@ -2446,12 +2486,12 @@ searchTable gc searchTerm model =
                     Addresslink src lnk <|
                         case table of
                             Just (AddresslinkTxsUtxoTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddresslinkTxsUtxoTable.filter searchTerm t
                                     |> AddresslinkTxsUtxoTable
                                     |> Just
 
                             Just (AddresslinkTxsAccountTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddresslinkTxsAccountTable
                                     |> Just
 
@@ -2462,12 +2502,12 @@ searchTable gc searchTerm model =
                     Entitylink src lnk <|
                         case table of
                             Just (AddresslinkTxsUtxoTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData AddresslinkTxsUtxoTable.filter searchTerm t
                                     |> AddresslinkTxsUtxoTable
                                     |> Just
 
                             Just (AddresslinkTxsAccountTable t) ->
-                                searchData (Debug.todo "") searchTerm t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddresslinkTxsAccountTable
                                     |> Just
 
@@ -2475,7 +2515,7 @@ searchTable gc searchTerm model =
                                 table
 
                 UserTags t ->
-                    searchData (Debug.todo "") searchTerm t
+                    searchData UserAddressTagsTable.filter searchTerm t
                         |> UserTags
 
                 Plugin ->

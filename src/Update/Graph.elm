@@ -915,7 +915,7 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressNeighborsTable id isOutgoing neighbors ->
             { model
-                | browser = Browser.showAddressNeighbors id isOutgoing neighbors model.browser
+                | browser = Browser.showAddressNeighbors model.config id isOutgoing neighbors model.browser
             }
                 |> n
 
@@ -945,7 +945,7 @@ updateByMsg plugins uc msg model =
 
         BrowserGotEntityNeighborsTable id isOutgoing neighbors ->
             { model
-                | browser = Browser.showEntityNeighbors id isOutgoing neighbors model.browser
+                | browser = Browser.showEntityNeighbors model.config id isOutgoing neighbors model.browser
             }
                 |> n
 
@@ -1124,7 +1124,7 @@ updateByMsg plugins uc msg model =
             { model
                 | browser =
                     if String.toLower id.currency == "eth" then
-                        Browser.showBlockTxsAccount id data model.browser
+                        Browser.showBlockTxsAccount model.config id data model.browser
 
                     else
                         Browser.showBlockTxsUtxo id data model.browser

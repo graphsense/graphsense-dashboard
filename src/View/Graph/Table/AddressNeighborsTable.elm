@@ -11,6 +11,7 @@ import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressNeighborsTable exposing (..)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
@@ -30,51 +31,6 @@ columnTitleFromDirection isOutgoing =
         "Incoming"
     )
         ++ " address"
-
-
-init : Table Api.Data.NeighborAddress
-init =
-    Init.Graph.Table.initUnsorted
-
-
-filter : String -> Api.Data.NeighborAddress -> Bool
-filter f a =
-    String.contains f a.address.address
-        || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
-
-
-titleLabels : String
-titleLabels =
-    "Tags"
-
-
-titleAddressBalance : String
-titleAddressBalance =
-    "Address balance"
-
-
-titleAddressReceived : String
-titleAddressReceived =
-    "Address received"
-
-
-titleNoTxs : String
-titleNoTxs =
-    "No. transactions"
-
-
-titleEstimatedValue : String
-titleEstimatedValue =
-    "Estimated value"
-
-
-titleValue : String -> String
-titleValue coinCode =
-    if coinCode == "eth" then
-        "Value"
-
-    else
-        titleEstimatedValue
 
 
 config : View.Config -> Bool -> String -> Maybe AddressId -> (AddressId -> Bool -> A.Address -> Bool) -> Table.Config Api.Data.NeighborAddress Msg

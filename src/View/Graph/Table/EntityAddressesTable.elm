@@ -10,47 +10,13 @@ import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.EntityAddressesTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table Api.Data.Address
-init =
-    Init.Graph.Table.initUnsorted
-
-
-filter : String -> Api.Data.Address -> Bool
-filter f a =
-    String.contains f a.address
-
-
-titleAddress : String
-titleAddress =
-    "Address"
-
-
-titleFirstUsage : String
-titleFirstUsage =
-    "First usage"
-
-
-titleLastUsage : String
-titleLastUsage =
-    "Last usage"
-
-
-titleFinalBalance : String
-titleFinalBalance =
-    "Balance"
-
-
-titleTotalReceived : String
-titleTotalReceived =
-    "Total received"
 
 
 config : View.Config -> String -> Maybe EntityId -> (EntityId -> A.Address -> Bool) -> Table.Config Api.Data.Address Msg

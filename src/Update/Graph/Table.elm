@@ -1,24 +1,21 @@
 module Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, asCsv, filterData, searchData, setData)
 
-import Config.Graph.Table as Table
 import Csv.Encode
-import Model.Graph.Table exposing (..)
+import Model.Graph.Table as Table exposing (..)
 
 
-appendData : Maybe String -> Table.Config a -> List a -> Table a -> Table a
-appendData nextPage config data table =
+appendData : Table.Filter a -> List a -> Table a -> Table a
+appendData config data table =
     { table
         | data = table.data ++ data
         , filtered =
             table.filtered
                 ++ filterTheData config table data
         , loading = False
-
-        --, nextpage = Debug.todo "remove nextpage"
     }
 
 
-filterTheData : Table.Config a -> Table a -> List a -> List a
+filterTheData : Table.Filter a -> Table a -> List a -> List a
 filterTheData { search, filter } table data =
     let
         d =
@@ -29,7 +26,7 @@ filterTheData { search, filter } table data =
         |> Maybe.withDefault d
 
 
-setData : Table.Config a -> List a -> Table a -> Table a
+setData : Table.Filter a -> List a -> Table a -> Table a
 setData config data table =
     { table
         | data = data
@@ -43,7 +40,7 @@ type UpdateSearchTerm
     | Keep
 
 
-searchData : Table.Config a -> UpdateSearchTerm -> Table a -> Table a
+searchData : Table.Filter a -> UpdateSearchTerm -> Table a -> Table a
 searchData config searchTerm table =
     let
         t =
@@ -60,7 +57,7 @@ searchData config searchTerm table =
     filterData config t
 
 
-filterData : Table.Config a -> Table a -> Table a
+filterData : Table.Filter a -> Table a -> Table a
 filterData config table =
     { table
         | filtered = filterTheData config table table.data

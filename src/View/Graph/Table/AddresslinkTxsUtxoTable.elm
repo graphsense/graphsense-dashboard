@@ -7,6 +7,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
@@ -15,42 +16,6 @@ import Table
 import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table Api.Data.LinkUtxo
-init =
-    Init.Graph.Table.initSorted True titleTimestamp
-
-
-filter : String -> Api.Data.LinkUtxo -> Bool
-filter f a =
-    String.contains f a.txHash
-        || String.contains f (String.fromInt a.height)
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleInputValue : String
-titleInputValue =
-    "Input value"
-
-
-titleOutputValue : String
-titleOutputValue =
-    "Output value"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
 
 
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg

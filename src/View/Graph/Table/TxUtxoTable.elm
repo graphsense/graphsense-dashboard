@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.TxUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
@@ -25,26 +26,6 @@ columnTitleFromDirection isOutgoing =
         "Incoming"
     )
         ++ " address"
-
-
-init : Bool -> Table Api.Data.TxValue
-init =
-    columnTitleFromDirection >> Init.Graph.Table.init
-
-
-filter : String -> Api.Data.TxValue -> Bool
-filter f a =
-    List.any (String.contains f) a.address
-
-
-titleValue : String
-titleValue =
-    "Value"
-
-
-joinAddresses : Api.Data.TxValue -> String
-joinAddresses =
-    .address >> String.join ","
 
 
 config : View.Config -> Bool -> String -> Table.Config Api.Data.TxValue Msg

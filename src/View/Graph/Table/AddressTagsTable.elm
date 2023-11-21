@@ -14,6 +14,7 @@ import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id as Id
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressTagsTable exposing (..)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
@@ -21,17 +22,6 @@ import Util.Graph
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-
-
-init : Table Api.Data.AddressTag
-init =
-    Init.Graph.Table.initUnsorted
-
-
-filter : String -> Api.Data.AddressTag -> Bool
-filter f a =
-    String.contains f a.address
-        || String.contains f a.label
 
 
 config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Maybe Id.EntityId -> (Id.EntityId -> A.Address -> Bool) -> Table.Config Api.Data.AddressTag Msg
