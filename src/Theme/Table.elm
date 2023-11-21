@@ -24,6 +24,7 @@ type alias Table =
     , urlMaxLength : Int
     , emptyHint : List Style
     , tick : List Style
+    , info : Bool -> List Style
     }
 
 
@@ -49,4 +50,5 @@ default =
     , urlMaxLength = 40
     , emptyHint = []
     , tick = []
+    , info = \_ -> []
     }

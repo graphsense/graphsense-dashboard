@@ -381,3 +381,28 @@ tickColumn vc title accessor =
             else
                 []
         )
+
+
+info : View.Config -> T.Table data -> Html msg
+info vc { data, filtered } =
+    let
+        ld =
+            List.length data
+
+        lf =
+            List.length filtered
+    in
+    div
+        [ Css.Table.info vc |> css
+        ]
+        [ text <|
+            if ld /= lf then
+                Locale.interpolated vc.locale
+                    "Showing {0} of {1} items"
+                    [ String.fromInt lf, String.fromInt ld ]
+
+            else
+                Locale.interpolated vc.locale
+                    "{0} items"
+                    [ String.fromInt lf ]
+        ]
