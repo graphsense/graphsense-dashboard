@@ -22,7 +22,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Tag.UserTag
 init =
-    Init.Graph.Table.initSorted True filter "Label"
+    Init.Graph.Table.initSorted True "Label"
         |> s_loading False
 
 

@@ -20,16 +20,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Api.Data.TxAccount
 init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
-
-
-filter : String -> Api.Data.TxAccount -> Bool
-filter f a =
-    String.contains f a.txHash
-        || String.contains f (String.fromInt a.height)
-        || String.contains f a.fromAddress
-        || String.contains f a.toAddress
-        || String.contains (String.toLower f) (String.toLower a.currency)
+    Init.Graph.Table.initSorted True titleTimestamp
 
 
 titleTx : String

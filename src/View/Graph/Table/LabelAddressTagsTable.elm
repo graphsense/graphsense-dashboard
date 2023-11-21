@@ -17,7 +17,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Api.Data.AddressTag
 init =
-    Init.Graph.Table.initSorted True filter "Confidence"
+    Init.Graph.Table.initSorted True "Confidence"
 
 
 filter : String -> Api.Data.AddressTag -> Bool

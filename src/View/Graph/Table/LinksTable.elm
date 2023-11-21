@@ -13,7 +13,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table String
 init =
-    Init.Graph.Table.initSorted True filter "url"
+    Init.Graph.Table.initSorted True "url"
 
 
 filter : String -> String -> Bool

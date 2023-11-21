@@ -19,7 +19,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Api.Data.TxUtxo
 init =
-    Init.Graph.Table.initUnsorted filter
+    Init.Graph.Table.initUnsorted
 
 
 filter : String -> Api.Data.TxUtxo -> Bool

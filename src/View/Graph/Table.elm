@@ -44,7 +44,7 @@ table vc attributes tools config tbl =
                 ++ attributes
             )
             ((Maybe.map2
-                (\_ fm ->
+                (\term fm ->
                     div
                         [ Css.Table.filter vc |> css
                         ]
@@ -55,11 +55,12 @@ table vc attributes tools config tbl =
                             , id "tableFilter"
                             , autocomplete False
                             , spellcheck False
+                            , value term
                             ]
                             []
                         ]
                 )
-                tbl.filter
+                tbl.searchTerm
                 tools.filter
                 |> Maybe.withDefault Util.View.none
              )
@@ -98,7 +99,7 @@ filterTool : View.Config -> T.Table data -> (Maybe String -> msg) -> Html msg
 filterTool vc tbl filterMsg =
     let
         isInactive =
-            tbl.filter == Nothing
+            tbl.searchTerm == Nothing
     in
     FontAwesome.icon FontAwesome.search
         |> Html.Styled.fromUnstyled

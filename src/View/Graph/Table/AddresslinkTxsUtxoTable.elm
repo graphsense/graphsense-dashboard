@@ -19,7 +19,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Api.Data.LinkUtxo
 init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
+    Init.Graph.Table.initSorted True titleTimestamp
 
 
 filter : String -> Api.Data.LinkUtxo -> Bool

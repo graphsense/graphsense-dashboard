@@ -20,7 +20,7 @@ import View.Graph.Table as T exposing (customizations)
 
 init : Table Api.Data.Address
 init =
-    Init.Graph.Table.initUnsorted filter
+    Init.Graph.Table.initUnsorted
 
 
 filter : String -> Api.Data.Address -> Bool

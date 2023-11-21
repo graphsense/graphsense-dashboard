@@ -51,6 +51,5 @@ type alias Table a =
     , loading : Bool
     , state : Table.State
     , nextpage : Maybe String
-    , filter : Maybe String
-    , filterFunction : String -> a -> Bool
+    , searchTerm : Maybe String
     }

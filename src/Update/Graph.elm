@@ -63,6 +63,7 @@ import Update.Graph.Highlighter as Highlighter
 import Update.Graph.History as History
 import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
+import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 import Yaml.Decode
@@ -1053,7 +1054,7 @@ updateByMsg plugins uc msg model =
             { model
                 | browser =
                     if String.toLower id.currency == "eth" then
-                        Browser.showAddressTxsAccount id data model.browser
+                        Browser.showAddressTxsAccount model.config id data model.browser
 
                     else
                         Browser.showAddressTxsUtxo id data model.browser
@@ -1064,7 +1065,7 @@ updateByMsg plugins uc msg model =
             { model
                 | browser =
                     if String.toLower id.currency == "eth" then
-                        Browser.showAddresslinkTxsAccount id data model.browser
+                        Browser.showAddresslinkTxsAccount model.config id data model.browser
 
                     else
                         Browser.showAddresslinkTxsUtxo id data model.browser
@@ -1075,7 +1076,7 @@ updateByMsg plugins uc msg model =
             { model
                 | browser =
                     if String.toLower id.currency == "eth" then
-                        Browser.showEntityTxsAccount id data model.browser
+                        Browser.showEntityTxsAccount model.config id data model.browser
 
                     else
                         Browser.showEntityTxsUtxo id data model.browser
@@ -1086,7 +1087,7 @@ updateByMsg plugins uc msg model =
             { model
                 | browser =
                     if String.toLower id.currency == "eth" then
-                        Browser.showEntitylinkTxsAccount id data model.browser
+                        Browser.showEntitylinkTxsAccount model.config id data model.browser
 
                     else
                         Browser.showEntitylinkTxsUtxo id data model.browser
@@ -1133,7 +1134,7 @@ updateByMsg plugins uc msg model =
         BrowserGotTokenTxs id data ->
             { model
                 | browser =
-                    Browser.showTokenTxs id data model.browser
+                    Browser.showTokenTxs model.config id data model.browser
             }
                 |> n
 
@@ -2081,7 +2082,7 @@ updateByMsg plugins uc msg model =
 
         UserInputsFilterTable input ->
             ( { model
-                | browser = Browser.filterTable input model.browser
+                | browser = Browser.searchTable model.config (Table.Update input) model.browser
               }
             , Dom.focus "tableFilter"
                 |> Task.attempt (\_ -> NoOp)
@@ -2145,6 +2146,18 @@ updateByMsg plugins uc msg model =
                 | config =
                     model.config
                         |> s_showDatesInUserLocale (not model.config.showDatesInUserLocale)
+            }
+                |> n
+
+        UserClickedToggleShowZeroTransactions ->
+            let
+                gc =
+                    model.config
+                        |> s_showZeroTransactions (not model.config.showZeroTransactions)
+            in
+            { model
+                | config = gc
+                , browser = Browser.filterTable gc model.browser
             }
                 |> n
 
