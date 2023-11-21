@@ -3,6 +3,7 @@ module Model.Graph.Table.AddressNeighborsTable exposing (..)
 import Api.Data
 import Config.Graph as Graph
 import Model.Graph.Table as Table
+import Util.Graph as Graph
 
 
 titleLabels : String
@@ -40,12 +41,12 @@ titleValue coinCode =
 
 
 filter : Graph.Config -> Table.Filter Api.Data.NeighborAddress
-filter { showZeroTransactions } =
+filter gc =
     { search =
         \term a ->
             String.contains term a.address.address
                 || (Maybe.map (List.any (String.contains term)) a.labels |> Maybe.withDefault True)
     , filter =
         \a ->
-            showZeroTransactions || a.address.currency /= "eth" || a.value.value /= 0
+            Graph.filterTxValue gc a.address.currency a.value
     }

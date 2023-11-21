@@ -66,6 +66,7 @@ import Update.Graph.Search as Search
 import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Util.Graph
 import Yaml.Decode
 import Yaml.Encode
 
@@ -887,6 +888,7 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
             ( model
             , neighbors.neighbors
+                |> List.filter (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value)
                 |> List.foldl
                     (\neighbor acc ->
                         Dict.update ( neighbor.address.currency, neighbor.address.entity )

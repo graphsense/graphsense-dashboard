@@ -3,6 +3,7 @@ module Model.Graph.Table.EntityNeighborsTable exposing (..)
 import Api.Data
 import Config.Graph as Graph
 import Model.Graph.Table as Table
+import Util.Graph as Graph
 
 
 titleLabels : String
@@ -45,12 +46,12 @@ titleValue coinCode =
 
 
 filter : Graph.Config -> Table.Filter Api.Data.NeighborEntity
-filter { showZeroTransactions } =
+filter gc =
     { search =
         \term a ->
             String.contains term (String.fromInt a.entity.entity)
                 || (Maybe.map (List.any (String.contains term)) a.labels |> Maybe.withDefault True)
     , filter =
         \a ->
-            showZeroTransactions || a.entity.currency /= "eth" || a.value.value /= 0
+            Graph.filterTxValue gc a.entity.currency a.value
     }

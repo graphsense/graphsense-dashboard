@@ -3,6 +3,7 @@ module Model.Graph.Table.TxsAccountTable exposing (..)
 import Api.Data
 import Config.Graph as Graph
 import Model.Graph.Table as Table
+import Util.Graph as Graph
 
 
 titleTx : String
@@ -31,7 +32,7 @@ titleReceivingAddress =
 
 
 filter : Graph.Config -> Table.Filter Api.Data.TxAccount
-filter { showZeroTransactions } =
+filter gc =
     { search =
         \term a ->
             String.contains term a.txHash
@@ -41,5 +42,5 @@ filter { showZeroTransactions } =
                 || String.contains (String.toLower term) (String.toLower a.currency)
     , filter =
         \a ->
-            showZeroTransactions || a.value.value /= 0
+            Graph.filterTxValue gc a.currency a.value
     }

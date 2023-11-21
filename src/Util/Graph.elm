@@ -59,8 +59,4 @@ getAbuse gc =
 
 filterTxValue : Graph.Config -> String -> Api.Data.Values -> Bool
 filterTxValue gc coinCode value =
-    if gc.showZeroTransactions || coinCode /= "eth" then
-        True
-
-    else
-        value.value /= 0
+    gc.showZeroTransactions || coinCode /= "eth" || value.value /= 0
