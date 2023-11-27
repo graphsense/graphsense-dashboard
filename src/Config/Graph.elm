@@ -148,5 +148,5 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
     , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
-    , showZeroTransactions = False
+    , showZeroTransactions = True
     }
