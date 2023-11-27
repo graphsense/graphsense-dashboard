@@ -50,6 +50,7 @@ import Util.View
         , truncateLongIdentifier
         )
 import View.Button exposing (actorLink)
+import View.Graph.Label as Label
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
@@ -588,10 +589,10 @@ browseValue vc gc value =
                 [ 1000 * dur |> Locale.durationToString vc.locale |> text
                 ]
 
-        Value coinCode v ->
+        Value coinMap ->
             span
                 []
-                [ Locale.currency vc.locale [ ( coinCode, v ) ]
+                [ Locale.currency vc.locale coinMap
                     |> text
                 ]
 
@@ -747,7 +748,7 @@ rowsAddress vc now address =
                 , address
                     |> ifLoaded
                         (totalReceivedValues .address
-                            >> MultiValue (loadableAddressCurrency address) len
+                            >> Value
                         )
                     |> elseLoading
                 , Nothing
@@ -757,7 +758,7 @@ rowsAddress vc now address =
                 , address
                     |> ifLoaded
                         (balanceValues .address
-                            >> MultiValue (loadableAddressCurrency address) len
+                            >> Value
                         )
                     |> elseLoading
                 , Nothing
@@ -1146,7 +1147,7 @@ rowsEntity vc gc now ent =
         , ent
             |> ifLoaded
                 (totalReceivedValues .entity
-                    >> MultiValue (loadableEntityCurrency ent) len
+                    >> Value
                 )
             |> elseLoading
         , Nothing
@@ -1156,7 +1157,7 @@ rowsEntity vc gc now ent =
         , ent
             |> ifLoaded
                 (balanceValues .entity
-                    >> MultiValue (loadableEntityCurrency ent) len
+                    >> Value
                 )
             |> elseLoading
         , Nothing
@@ -1573,7 +1574,7 @@ rowsTxUtxo vc gc now tx =
         ( "total input"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.totalInput)
+                (\t -> Value [ ( t.currency, t.totalInput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1581,7 +1582,7 @@ rowsTxUtxo vc gc now tx =
         ( "total output"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.totalOutput)
+                (\t -> Value [ ( t.currency, t.totalOutput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1644,7 +1645,7 @@ rowsTxAccount vc gc now tx table coinCode =
         ( "Value"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.value)
+                (\t -> Value [ ( t.currency, t.value ) ])
             |> elseLoading
         , Nothing
         )
@@ -1695,12 +1696,12 @@ rowsTxAccount vc gc now tx table coinCode =
 
 browseAddresslink : Plugins -> ModelState -> View.Config -> Graph.Config -> Address -> Link Address -> Html Msg
 browseAddresslink plugins states vc gc source link =
-    (rowsAddresslink vc source link |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsAddresslink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
-rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
-rowsAddresslink vc source link =
+rowsAddresslink : View.Config -> Graph.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
+rowsAddresslink vc gc source link =
     let
         currency =
             Id.currency source.id
@@ -1750,18 +1751,18 @@ rowsAddresslink vc source link =
             , active = False
             }
         )
-    , linkValueRow vc currency linkData
+    , linkValueRow vc gc currency linkData
     ]
 
 
 browseEntitylink : Plugins -> ModelState -> View.Config -> Graph.Config -> Entity -> Link Entity -> Html Msg
 browseEntitylink plugins states vc gc source link =
-    (rowsEntitylink vc source link |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsEntitylink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
-rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
-rowsEntitylink vc source link =
+rowsEntitylink : View.Config -> Graph.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
+rowsEntitylink vc gc source link =
     let
         currency =
             Id.currency source.id
@@ -1813,47 +1814,24 @@ rowsEntitylink vc source link =
             , active = False
             }
         )
-    , linkValueRow vc currency linkData
+    , linkValueRow vc gc currency linkData
     ]
 
 
-linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
-linkValueRow vc parentCurrency linkData =
-    if parentCurrency /= "eth" then
-        Row
-            ( "Estimated value"
-            , linkData
-                |> Maybe.map (.value >> Value parentCurrency)
-                |> Maybe.withDefault (String "")
-            , Nothing
-            )
+linkValueRow : View.Config -> Graph.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
+linkValueRow vc gc parentCurrency linkData =
+    Row
+        ( if parentCurrency /= "eth" then
+            "Estimated value"
 
-    else
-        Row
-            ( "Value"
-            , linkData
-                |> Maybe.map
-                    (\v ->
-                        let
-                            vals =
-                                ( parentCurrency, v.value )
-                                    :: (v.tokenValues
-                                            |> Maybe.map Dict.toList
-                                            |> Maybe.withDefault []
-                                       )
-
-                            len =
-                                vals
-                                    |> List.map (\( currency, val ) -> multiValue vc parentCurrency currency val |> String.length)
-                                    |> List.maximum
-                                    |> Maybe.withDefault 0
-                                    |> (+) 2
-                        in
-                        MultiValue parentCurrency len vals
-                    )
-                |> Maybe.withDefault (String "")
-            , Nothing
-            )
+          else
+            "Value"
+        , linkData
+            |> Maybe.map
+                (\ld -> Label.normalizeValues gc parentCurrency ld.value ld.tokenValues |> Value)
+            |> Maybe.withDefault (String "")
+        , Nothing
+        )
 
 
 browseAddresslinkTable : View.Config -> Graph.Config -> String -> AddresslinkTable -> Html Msg

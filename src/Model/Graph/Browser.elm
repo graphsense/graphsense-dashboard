@@ -65,7 +65,7 @@ type Value msg
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int
-    | Value String Api.Data.Values
+    | Value (List ( String, Api.Data.Values ))
     | MultiValue String Int (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Select (List ( String, String )) (String -> msg) String
