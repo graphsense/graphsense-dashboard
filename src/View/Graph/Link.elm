@@ -16,6 +16,7 @@ import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Link as Link exposing (Link)
+import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Regex
@@ -25,6 +26,7 @@ import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (second)
 import Util.Graph exposing (decodeCoords, filterTxValue)
+import View.Graph.Label as Label
 import View.Locale as Locale
 
 
@@ -404,43 +406,16 @@ getLabel vc gc currency link =
                         |> List.singleton
 
                 Graph.Value ->
-                    if currency == "eth" then
-                        let
-                            fiatValue v =
-                                v.fiatValues
-                                    |> List.head
-                                    |> Maybe.map .value
-                                    |> Maybe.withDefault (toFloat v.value)
-                                    |> Debug.log "sortby"
-                        in
-                        ( "eth", li.value )
-                            :: (li.tokenValues
-                                    |> Maybe.map Dict.toList
-                                    |> Maybe.withDefault []
-                               )
-                            |> List.filter (uncurry (filterTxValue gc))
-                            |> List.sortBy (second >> fiatValue)
-                            |> List.reverse
-                            |> List.map (uncurry (Locale.tokenCurrency vc.locale))
-                            |> List.Extra.uncons
-                            |> Maybe.map
-                                (\( fst, rest ) ->
-                                    fst
-                                        ++ (if List.isEmpty rest then
-                                                ""
+                    Label.normalizeValues gc currency li.value li.tokenValues
+                        |> Locale.currency vc.locale
+                        |> (\str ->
+                                if currency /= "eth" then
+                                    "~" ++ str
 
-                                            else
-                                                " +"
-                                                    ++ Locale.interpolated vc.locale "{0} more" [ List.length rest |> String.fromInt ]
-                                           )
-                                        |> List.singleton
-                                )
-                            |> Maybe.withDefault []
-
-                    else
-                        Locale.currencyWithoutCode vc.locale currency li.value
-                            |> (++) "~"
-                            |> List.singleton
+                                else
+                                    str
+                           )
+                        |> List.singleton
 
 
 arrowMarker : View.Config -> Graph.Config -> Color.Color -> Svg Msg

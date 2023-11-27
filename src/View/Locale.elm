@@ -14,10 +14,10 @@ module View.Locale exposing
     , timestamp
     , timestampWithFormat
     , tokenCurrencies
-    , tokenCurrency
     )
 
 import Api.Data
+import Basics.Extra exposing (uncurry)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
@@ -34,6 +34,11 @@ import Model.Locale exposing (..)
 import String.Interpolate
 import Time
 import Tuple exposing (..)
+
+
+type CodeVisibility
+    = Hidden
+    | One
 
 
 fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
@@ -233,42 +238,61 @@ percentage model =
     floatWithFormat model "0[.]00%"
 
 
-currency : Model -> String -> Api.Data.Values -> String
+currencyWithOptions : CodeVisibility -> Model -> List ( String, Api.Data.Values ) -> String
+currencyWithOptions vis model values =
+    let
+        fiatValue v =
+            v.fiatValues
+                |> List.head
+                |> Maybe.map .value
+                |> Maybe.withDefault (toFloat v.value)
+    in
+    case model.currency of
+        Coin ->
+            values
+                |> List.sortBy (second >> fiatValue)
+                |> List.reverse
+                |> List.Extra.uncons
+                |> Maybe.map
+                    (\( fst, rest ) ->
+                        (fst
+                            |> mapSecond .value
+                            |> uncurry (coinWithOptions vis model)
+                        )
+                            ++ (if List.isEmpty rest then
+                                    ""
+
+                                else
+                                    " +"
+                                        ++ interpolated model "{0} more" [ List.length rest |> String.fromInt ]
+                               )
+                    )
+                |> Maybe.withDefault "0"
+
+        Fiat code ->
+            values
+                |> List.filterMap (second >> getFiatValue code)
+                |> List.sum
+                |> fiat model code
+
+
+currency : Model -> List ( String, Api.Data.Values ) -> String
 currency =
     currencyWithOptions One
 
 
-tokenCurrency : Model -> String -> Api.Data.Values -> String
-tokenCurrency =
-    currencyWithOptions One
-
-
-currencyWithoutCode : Model -> String -> Api.Data.Values -> String
+currencyWithoutCode : Model -> List ( String, Api.Data.Values ) -> String
 currencyWithoutCode =
     currencyWithOptions Hidden
 
 
-type CodeVisibility
-    = Hidden
-    | One
+fiat : Model -> String -> Float -> String
+fiat =
+    fiatWithOptions One
 
 
-currencyWithOptions : CodeVisibility -> Model -> String -> Api.Data.Values -> String
-currencyWithOptions vis model coinCode values =
-    case model.currency of
-        Coin ->
-            coin model (vis == Hidden) coinCode values.value
-
-        Fiat code ->
-            values.fiatValues
-                |> List.filter (.code >> String.toLower >> (==) code)
-                |> List.head
-                |> Maybe.map (fiat model coinCode vis)
-                |> Maybe.withDefault ""
-
-
-fiat : Model -> String -> CodeVisibility -> Api.Data.Rate -> String
-fiat model coinCode vis { code, value } =
+fiatWithOptions : CodeVisibility -> Model -> String -> Float -> String
+fiatWithOptions vis model code value =
     float model value
         ++ (case vis of
                 Hidden ->
@@ -279,8 +303,13 @@ fiat model coinCode vis { code, value } =
            )
 
 
-coin : Model -> Bool -> String -> Int -> String
-coin model hideCode code v =
+coin : Model -> String -> Int -> String
+coin =
+    coinWithOptions One
+
+
+coinWithOptions : CodeVisibility -> Model -> String -> Int -> String
+coinWithOptions vis model code v =
     fixpointFactor model.supportedTokens
         |> Dict.get code
         |> Maybe.map
@@ -311,7 +340,7 @@ coin model hideCode code v =
                             "1,000." ++ String.repeat (n + 2) "0"
                 in
                 floatWithFormat model fmt value
-                    ++ (if hideCode then
+                    ++ (if vis == Hidden then
                             ""
 
                         else

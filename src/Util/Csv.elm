@@ -48,7 +48,7 @@ valuesWithBaseCurrencyFloat key v locModel currency =
             { locModel | valueDetail = Exact, currency = Coin }
     in
     ( ( key, [] ), int v.value )
-        :: (( prefix key "in_base_currency", string (currencyWithoutCode nlocModel currency v) )
+        :: (( prefix key "in_base_currency", string (currencyWithoutCode nlocModel [ ( currency, v ) ]) )
                 :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
            )
 

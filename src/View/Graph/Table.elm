@@ -324,8 +324,7 @@ valuesCell vc hideCode coinCode values =
         Locale.currency
     )
         vc.locale
-        coinCode
-        values
+        [ ( coinCode, values ) ]
         |> text
         |> List.singleton
         |> Table.HtmlDetails

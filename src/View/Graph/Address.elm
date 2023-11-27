@@ -162,8 +162,8 @@ getLabel vc gc addr =
                 |> String.left 8
 
         Balance ->
-            addr.address.balance
-                |> Locale.currency vc.locale (Id.currency addr.id)
+            Label.normalizeValues gc (Id.currency addr.id) addr.address.balance addr.address.tokenBalances
+                |> Locale.currency vc.locale
 
         Tag ->
             addr.userTag

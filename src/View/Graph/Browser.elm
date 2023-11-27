@@ -591,7 +591,7 @@ browseValue vc gc value =
         Value coinCode v ->
             span
                 []
-                [ Locale.currency vc.locale coinCode v
+                [ Locale.currency vc.locale [ ( coinCode, v ) ]
                     |> text
                 ]
 
@@ -1869,10 +1869,10 @@ browseAddresslinkTable vc gc coinCode table =
 multiValue : View.Config -> String -> String -> Api.Data.Values -> String
 multiValue vc parentCoin coinCode v =
     if parentCoin == "eth" && vc.locale.currency /= Currency.Coin then
-        Locale.currency vc.locale coinCode v
+        Locale.currency vc.locale [ ( coinCode, v ) ]
 
     else
-        Locale.currencyWithoutCode vc.locale coinCode v
+        Locale.currencyWithoutCode vc.locale [ ( coinCode, v ) ]
 
 
 type alias AddressOrEntity a =
