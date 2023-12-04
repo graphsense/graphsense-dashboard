@@ -358,6 +358,27 @@ createAddressTable route loadable t =
             , []
             )
 
+        ( Route.AddressFinalBalanceAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.address.balance )
+                                :: (a.address.tokenBalances
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> AddressFinalBalanceAllAssetsTable
+                |> Just
+            , []
+            )
+
 
 showAddresslinkTable : Route.AddresslinkTable -> Model -> ( Model, List Effect )
 showAddresslinkTable route model =
@@ -1814,6 +1835,11 @@ tableNewState state model =
                                     |> AddressTotalReceivedAllAssetsTable
                                     |> Just
 
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2038,6 +2064,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                     |> wrap t AddressOutgoingNeighborsTable
 
                             Just (AddressTotalReceivedAllAssetsTable t) ->
+                                ( table, [] )
+
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
                                 ( table, [] )
 
                             Nothing ->
@@ -2464,6 +2493,11 @@ searchTable gc searchTerm model =
                                     |> AddressTotalReceivedAllAssetsTable
                                     |> Just
 
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddressFinalBalanceAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2679,6 +2713,11 @@ tableAsCSV locale gc { type_ } =
                 Just (AddressTotalReceivedAllAssetsTable t) ->
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
+
+                Just (AddressFinalBalanceAllAssetsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
                         |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Nothing ->

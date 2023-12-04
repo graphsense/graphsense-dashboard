@@ -763,7 +763,7 @@ rowsAddress vc now address =
                             >> Value
                         )
                     |> elseLoading
-                , Nothing
+                , mkTableLink "Final balance assets" Route.AddressFinalBalanceAllAssetsTable
                 )
             ]
 
@@ -1376,6 +1376,9 @@ browseAddressTable vc gc neighborLayerHasAddress address table =
             tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
         AddressTotalReceivedAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
+
+        AddressFinalBalanceAllAssetsTable t ->
             tt (AllAssetsTable.config vc) t
 
 

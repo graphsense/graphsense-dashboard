@@ -46,6 +46,7 @@ type AddressTable
     | AddressIncomingNeighborsTable (Table Api.Data.NeighborAddress)
     | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
     | AddressTotalReceivedAllAssetsTable AllAssetsTable
+    | AddressFinalBalanceAllAssetsTable AllAssetsTable
 
 
 type EntityTable

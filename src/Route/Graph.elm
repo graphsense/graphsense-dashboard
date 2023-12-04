@@ -116,6 +116,7 @@ type AddressTable
     | AddressIncomingNeighborsTable
     | AddressOutgoingNeighborsTable
     | AddressTotalReceivedAllAssetsTable
+    | AddressFinalBalanceAllAssetsTable
 
 
 type EntityTable
@@ -164,6 +165,9 @@ addressTableToString t =
         AddressTotalReceivedAllAssetsTable ->
             "total_received"
 
+        AddressFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToAddressTable : String -> Maybe AddressTable
 stringToAddressTable t =
@@ -182,6 +186,9 @@ stringToAddressTable t =
 
         "total_received" ->
             Just AddressTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just AddressFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
