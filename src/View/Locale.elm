@@ -1,5 +1,6 @@
 module View.Locale exposing
     ( currency
+    , currencyAsFloat
     , currencyWithoutCode
     , durationToString
     , httpErrorToString
@@ -14,10 +15,11 @@ module View.Locale exposing
     , timestamp
     , timestampWithFormat
     , tokenCurrencies
-    , tokenCurrency
+    , valuesToFloat
     )
 
 import Api.Data
+import Basics.Extra exposing (uncurry)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
@@ -34,6 +36,11 @@ import Model.Locale exposing (..)
 import String.Interpolate
 import Time
 import Tuple exposing (..)
+
+
+type CodeVisibility
+    = Hidden
+    | One
 
 
 fixpointFactor : Maybe Api.Data.TokenConfigs -> Dict String ( Float, String )
@@ -233,43 +240,79 @@ percentage model =
     floatWithFormat model "0[.]00%"
 
 
-currency : Model -> String -> Api.Data.Values -> String
+bestAssetAsInt : Model -> List ( String, Api.Data.Values ) -> Maybe ( String, Int )
+bestAssetAsInt model =
+    let
+        fiatValue v =
+            v.fiatValues
+                |> List.head
+                |> Maybe.map .value
+                |> Maybe.withDefault (toFloat v.value)
+    in
+    List.sortBy (second >> fiatValue)
+        >> List.reverse
+        >> List.head
+        >> Maybe.map (mapSecond .value)
+
+
+sumFiats : String -> List ( String, Api.Data.Values ) -> Float
+sumFiats fiatCode =
+    List.filterMap (second >> getFiatValue fiatCode)
+        >> List.sum
+
+
+currencyAsFloat : Model -> List ( String, Api.Data.Values ) -> Float
+currencyAsFloat model values =
+    case model.currency of
+        Coin ->
+            bestAssetAsInt model values
+                |> Maybe.map (second >> toFloat)
+                |> Maybe.withDefault 0
+
+        Fiat code ->
+            sumFiats code values
+
+
+currencyWithOptions : CodeVisibility -> Model -> List ( String, Api.Data.Values ) -> String
+currencyWithOptions vis model values =
+    case model.currency of
+        Coin ->
+            bestAssetAsInt model values
+                |> Maybe.map
+                    (\( asset, value ) ->
+                        coinWithOptions vis model asset value
+                            ++ (if List.length values == 1 then
+                                    ""
+
+                                else
+                                    " +"
+                                        ++ (List.length values - 1 |> String.fromInt)
+                               )
+                    )
+                |> Maybe.withDefault "0"
+
+        Fiat code ->
+            sumFiats code values
+                |> fiat model code
+
+
+currency : Model -> List ( String, Api.Data.Values ) -> String
 currency =
     currencyWithOptions One
 
 
-tokenCurrency : Model -> String -> Api.Data.Values -> String
-tokenCurrency =
-    currencyWithOptions Both
-
-
-currencyWithoutCode : Model -> String -> Api.Data.Values -> String
+currencyWithoutCode : Model -> List ( String, Api.Data.Values ) -> String
 currencyWithoutCode =
     currencyWithOptions Hidden
 
 
-type CodeVisibility
-    = Hidden
-    | One
-    | Both
+fiat : Model -> String -> Float -> String
+fiat =
+    fiatWithOptions One
 
 
-currencyWithOptions : CodeVisibility -> Model -> String -> Api.Data.Values -> String
-currencyWithOptions vis model coinCode values =
-    case model.currency of
-        Coin ->
-            coin model (vis == Hidden) coinCode values.value
-
-        Fiat code ->
-            values.fiatValues
-                |> List.filter (.code >> String.toLower >> (==) code)
-                |> List.head
-                |> Maybe.map (fiat model coinCode vis)
-                |> Maybe.withDefault ""
-
-
-fiat : Model -> String -> CodeVisibility -> Api.Data.Rate -> String
-fiat model coinCode vis { code, value } =
+fiatWithOptions : CodeVisibility -> Model -> String -> Float -> String
+fiatWithOptions vis model code value =
     float model value
         ++ (case vis of
                 Hidden ->
@@ -277,28 +320,19 @@ fiat model coinCode vis { code, value } =
 
                 One ->
                     " " ++ String.toUpper code
-
-                Both ->
-                    " " ++ String.toUpper code ++ " (" ++ String.toUpper coinCode ++ ")"
            )
 
 
-coin : Model -> Bool -> String -> Int -> String
-coin model hideCode code v =
-    fixpointFactor model.supportedTokens
-        |> Dict.get code
-        |> Maybe.map
-            (mapFirst
-                (\f ->
-                    if v == 0 then
-                        0
+coin : Model -> String -> Int -> String
+coin =
+    coinWithOptions One
 
-                    else
-                        toFloat v / f
-                )
-            )
+
+coinWithOptions : CodeVisibility -> Model -> String -> Int -> String
+coinWithOptions vis model code v =
+    normalizeCoinValue model code v
         |> Maybe.map
-            (\( value, _ ) ->
+            (\value ->
                 let
                     fmt =
                         if value == 0.0 then
@@ -315,7 +349,7 @@ coin model hideCode code v =
                             "1,000." ++ String.repeat (n + 2) "0"
                 in
                 floatWithFormat model fmt value
-                    ++ (if hideCode then
+                    ++ (if vis == Hidden then
                             ""
 
                         else
@@ -323,6 +357,33 @@ coin model hideCode code v =
                        )
             )
         |> Maybe.withDefault ("unknown currency " ++ code)
+
+
+normalizeCoinValue : Model -> String -> Int -> Maybe Float
+normalizeCoinValue model code v =
+    fixpointFactor model.supportedTokens
+        |> Dict.get (String.toLower code)
+        |> Maybe.map first
+        |> Maybe.map
+            (\f ->
+                if v == 0 then
+                    0
+
+                else
+                    toFloat v / f
+            )
+
+
+valuesToFloat : Model -> String -> Api.Data.Values -> Maybe Float
+valuesToFloat model asset values =
+    case model.currency of
+        Coin ->
+            values.value
+                |> normalizeCoinValue model asset
+
+        Fiat curr ->
+            List.Extra.find (.code >> (==) curr) values.fiatValues
+                |> Maybe.map .value
 
 
 durationToString : Model -> Int -> String

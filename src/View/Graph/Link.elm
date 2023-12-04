@@ -1,5 +1,6 @@
 module View.Graph.Link exposing (..)
 
+import Basics.Extra exposing (uncurry)
 import Color
 import Config.Graph as Graph exposing (linkLabelHeight, txMaxWidth)
 import Config.View as View
@@ -8,12 +9,14 @@ import Css.Graph
 import Dict
 import Init.Graph.Id as Id
 import Json.Decode
+import List.Extra
 import Model.Currency as Currency
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Link as Link exposing (Link)
+import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Regex
@@ -21,7 +24,10 @@ import String.Interpolate
 import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
-import Util.Graph exposing (decodeCoords)
+import Tuple exposing (second)
+import Util.Data as Data
+import Util.Graph exposing (decodeCoords, filterTxValue)
+import View.Graph.Label as Label
 import View.Locale as Locale
 
 
@@ -58,7 +64,7 @@ entityLinkOptions vc gc entity link =
         Entity.getX link.node - Graph.arrowHeight
     , ty =
         Entity.getY link.node + Entity.getHeight link.node / 2
-    , amount = getLinkAmount vc gc link
+    , amount = getLinkAmount vc gc entity.entity.currency link
     , label =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
@@ -85,7 +91,7 @@ addressLinkOptions vc gc address link =
         Address.getX link.node - Graph.arrowHeight
     , ty =
         Address.getY link.node + Address.getHeight link.node / 2
-    , amount = getLinkAmount vc gc link
+    , amount = getLinkAmount vc gc address.address.currency link
     , label =
         getLabel vc gc link.node.address.currency link
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
@@ -371,8 +377,8 @@ drawLabel vc gc x y hovered selected color lbl =
         )
 
 
-getLinkAmount : View.Config -> Graph.Config -> Link node -> Float
-getLinkAmount vc gc link =
+getLinkAmount : View.Config -> Graph.Config -> String -> Link node -> Float
+getLinkAmount vc gc network link =
     case link.link of
         Link.PlaceholderLinkData ->
             0
@@ -384,8 +390,9 @@ getLinkAmount vc gc link =
                         |> toFloat
 
                 Graph.Value ->
-                    Currency.valuesToFloat vc.locale.currency li.value
-                        |> Maybe.withDefault 0
+                    Label.normalizeValues gc network li.value li.tokenValues
+                        |> List.map (second >> Data.averageFiatValue)
+                        |> List.sum
 
 
 getLabel : View.Config -> Graph.Config -> String -> Link node -> List String
@@ -401,21 +408,16 @@ getLabel vc gc currency link =
                         |> List.singleton
 
                 Graph.Value ->
-                    if currency == "eth" then
-                        ( "eth", li.value )
-                            :: (li.tokenValues
-                                    |> Maybe.map Dict.toList
-                                    |> Maybe.withDefault []
-                               )
-                            |> List.map
-                                (\( coinCode, v ) ->
-                                    Locale.tokenCurrency vc.locale coinCode v
-                                )
+                    Label.normalizeValues gc currency li.value li.tokenValues
+                        |> Locale.currency vc.locale
+                        |> (\str ->
+                                if currency /= "eth" then
+                                    "~" ++ str
 
-                    else
-                        Locale.currencyWithoutCode vc.locale currency li.value
-                            |> (++) "~"
-                            |> List.singleton
+                                else
+                                    str
+                           )
+                        |> List.singleton
 
 
 arrowMarker : View.Config -> Graph.Config -> Color.Color -> Svg Msg

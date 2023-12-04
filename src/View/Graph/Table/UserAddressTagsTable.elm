@@ -9,7 +9,8 @@ import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table exposing (Table)
+import Model.Graph.Table exposing (Table, titleAddress, titleCurrency, titleLabel)
+import Model.Graph.Table.UserAddressTagsTable exposing (titleAbuse, titleCategory, titleDefinesEntity, titleSource)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
@@ -18,53 +19,6 @@ import Util.Csv
 import Util.Graph
 import Util.View
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table Tag.UserTag
-init =
-    Init.Graph.Table.initSorted True filter "Label"
-        |> s_loading False
-
-
-filter : String -> Tag.UserTag -> Bool
-filter f a =
-    String.contains f a.address
-        || String.contains f a.label
-
-
-titleAddress : String
-titleAddress =
-    "Address"
-
-
-titleCurrency : String
-titleCurrency =
-    "Currency"
-
-
-titleLabel : String
-titleLabel =
-    "Label"
-
-
-titleDefinesEntity : String
-titleDefinesEntity =
-    "Defines entity"
-
-
-titleSource : String
-titleSource =
-    "Source"
-
-
-titleCategory : String
-titleCategory =
-    "Category"
-
-
-titleAbuse : String
-titleAbuse =
-    "Abuse"
 
 
 config : View.Config -> Graph.Config -> Table.Config Tag.UserTag Msg

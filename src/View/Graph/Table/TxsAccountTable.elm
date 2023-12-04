@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
 import Model.Currency
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.TxsAccountTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
@@ -16,45 +17,6 @@ import Table
 import Util.Csv
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
-
-
-init : Table Api.Data.TxAccount
-init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
-
-
-filter : String -> Api.Data.TxAccount -> Bool
-filter f a =
-    String.contains f a.txHash
-        || String.contains f (String.fromInt a.height)
-        || String.contains f a.fromAddress
-        || String.contains f a.toAddress
-        || String.contains (String.toLower f) (String.toLower a.currency)
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
-
-
-titleSendingAddress : String
-titleSendingAddress =
-    "Sending address"
-
-
-titleReceivingAddress : String
-titleReceivingAddress =
-    "Receiving address"
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg

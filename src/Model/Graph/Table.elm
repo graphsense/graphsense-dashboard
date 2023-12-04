@@ -4,12 +4,49 @@ import Api.Data
 import Table
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleValue : String
+titleValue =
+    "Value"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
+titleAddress : String
+titleAddress =
+    "Address"
+
+
+titleCurrency : String
+titleCurrency =
+    "Currency"
+
+
+titleLabel : String
+titleLabel =
+    "Label"
+
+
 type AddressTable
     = AddressTagsTable (Table Api.Data.AddressTag)
     | AddressTxsUtxoTable (Table Api.Data.AddressTxUtxo)
     | AddressTxsAccountTable (Table Api.Data.TxAccount)
     | AddressIncomingNeighborsTable (Table Api.Data.NeighborAddress)
     | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
+    | AddressTotalReceivedAllAssetsTable AllAssetsTable
+    | AddressFinalBalanceAllAssetsTable AllAssetsTable
 
 
 type EntityTable
@@ -19,6 +56,8 @@ type EntityTable
     | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityAddressesTable (Table Api.Data.Address)
+    | EntityTotalReceivedAllAssetsTable AllAssetsTable
+    | EntityFinalBalanceAllAssetsTable AllAssetsTable
 
 
 type ActorTable
@@ -43,6 +82,11 @@ type BlockTable
 type AddresslinkTable
     = AddresslinkTxsUtxoTable (Table Api.Data.LinkUtxo)
     | AddresslinkTxsAccountTable (Table Api.Data.TxAccount)
+    | AddresslinkAllAssetsTable AllAssetsTable
+
+
+type alias AllAssetsTable =
+    Table ( String, Api.Data.Values )
 
 
 type alias Table a =
@@ -51,6 +95,11 @@ type alias Table a =
     , loading : Bool
     , state : Table.State
     , nextpage : Maybe String
-    , filter : Maybe String
-    , filterFunction : String -> a -> Bool
+    , searchTerm : Maybe String
+    }
+
+
+type alias Filter a =
+    { search : String -> a -> Bool
+    , filter : a -> Bool
     }

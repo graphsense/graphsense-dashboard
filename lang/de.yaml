@@ -37,6 +37,8 @@ last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
 "total received {0}": Eingänge {0}
+total received assets: Eingänge Assets
+final balance assets: Bilanz Assets
 final balance: Bilanz
 "final balance {0}": Bilanz {0}
 entity balance: Bilanz Cluster
@@ -47,6 +49,7 @@ entity received: Eingänge Cluster
 "entity received {0}": Eingänge Cluster {0}
 address received: Eingänge Adresse
 "address received {0}": Eingänge Adresse {0}
+all assets: alle Assets
 category: Kategorie
 categories: Kategorien
 abuse: Missbrauch
@@ -182,6 +185,8 @@ go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
 "estimated value {0}": geschätzter Wert {0}
+estimated total transferred: ungef. transferierter Wert
+total transferred: transferierter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt
@@ -261,13 +266,19 @@ download table as CSV: Tabelle als CSV herunterladen
 "address transactions of {0} ({1})": Transaktionen der Adresse {0} ({1})
 "incoming neighbors of address {0} ({1})": Eingehende Nachbarn der Adresse {0} ({1})
 "outgoing neighbors of address {0} ({1})": Ausgehende Nachbarn der Adresse {0} ({1})
-"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn des Cluster {0} ({1})
-"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn des Cluster {0} ({1})
+"incoming neighbors of entity {0} ({1})": Eingehende Nachbarn des Clusters {0} ({1})
+"outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn des Clusters {0} ({1})
 "addresses of entity {0} ({1})": Adressen des Clusterss {0} ({1})
+"total received assets of address {0} ({1})": Eingänge aller Assets der Adresse {0} ({1})
+"final balance assets of address {0} ({1})": Bilanz aller Assets der Adresse {0} ({1})
+"total received assets of entity {0} ({1})": Eingänge aller Assets des Clusters {0} ({1})
+"final balance assets of entity {0} ({1})": Bilanz aller Assets des Clusters {0} ({1})
 user address tags: Benutzerdefinierte Address-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
 "transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
 "transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
+"total assets between entities {0} and {1} ({2})": Gesamt Assets zwischen Clustern {0} und {1} ({2})
+"total assets between addresses {0} and {1} ({2})": Gesamt Assets zwischen Adressen {0} und {1} ({2})
 "Incoming values of transaction {0} ({1})": Eingangswerte der Transaktion {0} ({1})
 "Outgoing values of transaction {0} ({1})": Ausgangswerte der Transaktion {0} ({1})
 "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)":

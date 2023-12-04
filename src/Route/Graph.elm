@@ -23,6 +23,7 @@ module Route.Graph exposing
     )
 
 import List.Extra
+import Model.Graph.Table exposing (AddressTable(..))
 import Plugin.Model
 import Plugin.Route as Plugin
 import Url
@@ -114,6 +115,8 @@ type AddressTable
     | AddressTxsTable
     | AddressIncomingNeighborsTable
     | AddressOutgoingNeighborsTable
+    | AddressTotalReceivedAllAssetsTable
+    | AddressFinalBalanceAllAssetsTable
 
 
 type EntityTable
@@ -122,6 +125,8 @@ type EntityTable
     | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
+    | EntityTotalReceivedAllAssetsTable
+    | EntityFinalBalanceAllAssetsTable
 
 
 type ActorTable
@@ -141,6 +146,7 @@ type BlockTable
 
 type AddresslinkTable
     = AddresslinkTxsTable
+    | AddresslinkAllAssetsTable
 
 
 addressTableToString : AddressTable -> String
@@ -158,6 +164,12 @@ addressTableToString t =
         AddressOutgoingNeighborsTable ->
             "outgoing"
 
+        AddressTotalReceivedAllAssetsTable ->
+            "total_received"
+
+        AddressFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToAddressTable : String -> Maybe AddressTable
 stringToAddressTable t =
@@ -173,6 +185,12 @@ stringToAddressTable t =
 
         "outgoing" ->
             Just AddressOutgoingNeighborsTable
+
+        "total_received" ->
+            Just AddressTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just AddressFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
@@ -196,6 +214,12 @@ entityTableToString t =
         EntityOutgoingNeighborsTable ->
             "outgoing"
 
+        EntityTotalReceivedAllAssetsTable ->
+            "total_received"
+
+        EntityFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToEntityTable : String -> Maybe EntityTable
 stringToEntityTable t =
@@ -214,6 +238,12 @@ stringToEntityTable t =
 
         "outgoing" ->
             Just EntityOutgoingNeighborsTable
+
+        "total_received" ->
+            Just EntityTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just EntityFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
@@ -294,12 +324,18 @@ addresslinkTableToString t =
         AddresslinkTxsTable ->
             "transactions"
 
+        AddresslinkAllAssetsTable ->
+            "allassets"
+
 
 stringToAddresslinkTable : String -> Maybe AddresslinkTable
 stringToAddresslinkTable t =
     case t of
         "transactions" ->
             Just AddresslinkTxsTable
+
+        "allassets" ->
+            Just AddresslinkAllAssetsTable
 
         _ ->
             Nothing

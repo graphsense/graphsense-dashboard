@@ -4,30 +4,28 @@ import Model.Graph.Table exposing (..)
 import Table
 
 
-init : (String -> a -> Bool) -> String -> Table a
+init : String -> Table a
 init =
     initSorted True
 
 
-initSorted : Bool -> (String -> a -> Bool) -> String -> Table a
-initSorted desc filterFunction col =
+initSorted : Bool -> String -> Table a
+initSorted desc col =
     { data = []
     , filtered = []
     , loading = True
     , state = Table.sortBy col desc
     , nextpage = Nothing
-    , filter = Nothing
-    , filterFunction = filterFunction
+    , searchTerm = Nothing
     }
 
 
-initUnsorted : (String -> a -> Bool) -> Table a
-initUnsorted filterFunction =
+initUnsorted : Table a
+initUnsorted =
     { data = []
     , filtered = []
     , loading = True
     , state = Table.initialSort ""
     , nextpage = Nothing
-    , filter = Nothing
-    , filterFunction = filterFunction
+    , searchTerm = Nothing
     }

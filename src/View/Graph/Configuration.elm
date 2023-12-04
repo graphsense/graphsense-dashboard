@@ -133,6 +133,14 @@ configuration vc config =
                     ]
             ]
         , Dialog.part vc
+            "Show code transactions"
+            [ onOffSwitch vc
+                [ checked config.showZeroTransactions
+                , onClick UserClickedToggleShowZeroTransactions
+                ]
+                ""
+            ]
+        , Dialog.part vc
             "Timezone"
             [ Locale.string vc.locale
                 (if config.showDatesInUserLocale then

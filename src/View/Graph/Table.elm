@@ -1,9 +1,11 @@
 module View.Graph.Table exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Config.View as View
 import Css
 import Css.Table
+import Dict exposing (Dict)
 import FontAwesome
 import Html
 import Html.Attributes as Html
@@ -16,6 +18,7 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
+import View.Graph.Label as Label
 import View.Locale as Locale
 
 
@@ -44,7 +47,7 @@ table vc attributes tools config tbl =
                 ++ attributes
             )
             ((Maybe.map2
-                (\_ fm ->
+                (\term fm ->
                     div
                         [ Css.Table.filter vc |> css
                         ]
@@ -55,11 +58,12 @@ table vc attributes tools config tbl =
                             , id "tableFilter"
                             , autocomplete False
                             , spellcheck False
+                            , value term
                             ]
                             []
                         ]
                 )
-                tbl.filter
+                tbl.searchTerm
                 tools.filter
                 |> Maybe.withDefault Util.View.none
              )
@@ -98,7 +102,7 @@ filterTool : View.Config -> T.Table data -> (Maybe String -> msg) -> Html msg
 filterTool vc tbl filterMsg =
     let
         isInactive =
-            tbl.filter == Nothing
+            tbl.searchTerm == Nothing
     in
     FontAwesome.icon FontAwesome.search
         |> Html.Styled.fromUnstyled
@@ -310,7 +314,29 @@ valueColumnWithOptions hideCode vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
         , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
-        , sorter = Table.decreasingOrIncreasingBy (getValues >> valuesSorter vc)
+        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
+        }
+
+
+valueAndTokensColumnWithOptions : Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> (data -> Maybe (Dict String Api.Data.Values)) -> Table.Column data msg
+valueAndTokensColumnWithOptions hideCode vc getCoinCode name getValues getTokens =
+    let
+        assets data =
+            ( getCoinCode data, getValues data )
+                :: (getTokens data |> Maybe.map Dict.toList |> Maybe.withDefault [])
+    in
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                assets data
+                    |> Locale.currency vc.locale
+                    |> text
+                    |> List.singleton
+                    |> Table.HtmlDetails
+                        [ Css.Table.valuesCell vc False |> css
+                        ]
+        , sorter = Table.decreasingOrIncreasingBy (assets >> Locale.currencyAsFloat vc.locale)
         }
 
 
@@ -323,26 +349,25 @@ valuesCell vc hideCode coinCode values =
         Locale.currency
     )
         vc.locale
-        coinCode
-        values
+        [ ( coinCode, values ) ]
         |> text
         |> List.singleton
         |> Table.HtmlDetails
-            [ valuesCss vc values |> css
+            [ valuesCss vc coinCode values |> css
             ]
 
 
-valuesCss : View.Config -> Api.Data.Values -> List Css.Style
-valuesCss vc values =
-    Currency.valuesToFloat vc.locale.currency values
+valuesCss : View.Config -> String -> Api.Data.Values -> List Css.Style
+valuesCss vc asset values =
+    Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0
         |> (>) 0
         |> Css.Table.valuesCell vc
 
 
-valuesSorter : View.Config -> Api.Data.Values -> Float
-valuesSorter vc values =
-    Currency.valuesToFloat vc.locale.currency values
+valuesSorter : View.Config -> String -> Api.Data.Values -> Float
+valuesSorter vc asset values =
+    Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0
 
 
@@ -380,3 +405,28 @@ tickColumn vc title accessor =
             else
                 []
         )
+
+
+info : View.Config -> T.Table data -> Html msg
+info vc { data, filtered } =
+    let
+        ld =
+            List.length data
+
+        lf =
+            List.length filtered
+    in
+    div
+        [ Css.Table.info vc |> css
+        ]
+        [ text <|
+            if ld /= lf then
+                Locale.interpolated vc.locale
+                    "Showing {0} of {1} items"
+                    [ String.fromInt lf, String.fromInt ld ]
+
+            else
+                Locale.interpolated vc.locale
+                    "{0} items"
+                    [ String.fromInt lf ]
+        ]

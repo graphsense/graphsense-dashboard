@@ -173,3 +173,4 @@ type Msg
     | UserClicksDownloadCSVInTable
     | UserClickedExternalLink String
     | NoOp
+    | UserClickedToggleShowZeroTransactions

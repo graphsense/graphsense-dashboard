@@ -1174,6 +1174,12 @@ theme =
                 |> s_tick
                     [ scaled 1 |> rem |> marginRight
                     ]
+                |> s_info
+                    (\lightmode ->
+                        [ scaled 1 |> rem |> padding
+                        , color_backgroundColorWithLightmode lightmode colors.brandText colors.brandWhite
+                        ]
+                    )
             )
         |> s_contextMenu
             (ContextMenu.default

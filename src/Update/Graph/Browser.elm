@@ -2,9 +2,23 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import Dict
 import Effect exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
+import Init.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
+import Init.Graph.Table.AddressTagsTable as AddressTagsTable
+import Init.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import Init.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Init.Graph.Table.AllAssetsTable as AllAssetsTable
+import Init.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import Init.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import Init.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import Init.Graph.Table.LinksTable as LinksTable
+import Init.Graph.Table.TxUtxoTable as TxUtxoTable
+import Init.Graph.Table.TxsAccountTable as TxsAccountTable
+import Init.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import Init.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import Log
 import Model.Actor as Act
 import Model.Address as A
@@ -15,8 +29,21 @@ import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
-import Model.Graph.Link exposing (Link)
+import Model.Graph.Link as Link exposing (Link, LinkData)
 import Model.Graph.Table exposing (..)
+import Model.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
+import Model.Graph.Table.AddressTagsTable as AddressTagsTable
+import Model.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
+import Model.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Model.Graph.Table.AllAssetsTable as AllAssetsTable
+import Model.Graph.Table.EntityAddressesTable as EntityAddressesTable
+import Model.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
+import Model.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
+import Model.Graph.Table.LinksTable as LinksTable
+import Model.Graph.Table.TxUtxoTable as TxUtxoTable
+import Model.Graph.Table.TxsAccountTable as TxsAccountTable
+import Model.Graph.Table.TxsUtxoTable as TxsUtxoTable
+import Model.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import Model.Graph.Tag as Tag
 import Model.Locale as Locale
 import Model.Tx as T
@@ -25,12 +52,14 @@ import RecordSetter exposing (..)
 import Route.Graph as Route
 import Table
 import Tuple exposing (..)
-import Update.Graph.Table exposing (appendData, applyFilter, setData)
+import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
+import View.Graph.Label as Label
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import View.Graph.Table.AllAssetsTable as AllAssetsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -167,7 +196,7 @@ showUserTags tags model =
     { model
         | type_ =
             UserAddressTagsTable.init
-                |> appendData Nothing tags
+                |> appendData UserAddressTagsTable.filter tags
                 |> UserTags
         , visible = True
     }
@@ -183,8 +212,9 @@ showLabelAddressTags label data model =
             else
                 { model
                     | type_ =
-                        Label current <|
-                            appendData data.nextPage data.addressTags table
+                        appendData LabelAddressTagsTable.filter data.addressTags table
+                            |> s_nextpage data.nextPage
+                            |> Label current
                 }
 
         _ ->
@@ -199,10 +229,11 @@ showActorTags actorId data model =
                 Just (ActorTagsTable table) ->
                     { model
                         | type_ =
-                            Actor current <|
-                                Just <|
-                                    ActorTagsTable <|
-                                        appendData data.nextPage data.addressTags table
+                            appendData LabelAddressTagsTable.filter data.addressTags table
+                                |> s_nextpage data.nextPage
+                                |> ActorTagsTable
+                                |> Just
+                                |> Actor current
                     }
 
                 _ ->
@@ -216,16 +247,7 @@ showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
 showAddressTable route model =
     case model.type_ of
         Address loadable t ->
-            let
-                ( currency, address ) =
-                    case loadable of
-                        Loading curr addr ->
-                            ( curr, addr )
-
-                        Loaded a ->
-                            ( a.address.currency, a.address.address )
-            in
-            createAddressTable route t currency address
+            createAddressTable route loadable t
                 |> mapFirst (Address loadable)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -235,8 +257,17 @@ showAddressTable route model =
             n model
 
 
-createAddressTable : Route.AddressTable -> Maybe AddressTable -> String -> String -> ( Maybe AddressTable, List Effect )
-createAddressTable route t currency address =
+createAddressTable : Route.AddressTable -> Loadable String Address.Address -> Maybe AddressTable -> ( Maybe AddressTable, List Effect )
+createAddressTable route loadable t =
+    let
+        ( currency, address ) =
+            case loadable of
+                Loading curr addr ->
+                    ( curr, addr )
+
+                Loaded a ->
+                    ( a.address.currency, a.address.address )
+    in
     case ( route, t ) of
         ( Route.AddressTagsTable, Just (AddressTagsTable _) ) ->
             n t
@@ -306,6 +337,48 @@ createAddressTable route t currency address =
               ]
             )
 
+        ( Route.AddressTotalReceivedAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.address.totalReceived )
+                                :: (a.address.totalTokensReceived
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> AddressTotalReceivedAllAssetsTable
+                |> Just
+            , []
+            )
+
+        ( Route.AddressFinalBalanceAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.address.balance )
+                                :: (a.address.tokenBalances
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> AddressFinalBalanceAllAssetsTable
+                |> Just
+            , []
+            )
+
 
 showAddresslinkTable : Route.AddresslinkTable -> Model -> ( Model, List Effect )
 showAddresslinkTable route model =
@@ -315,7 +388,7 @@ showAddresslinkTable route model =
                 currency =
                     Id.currency source.id
             in
-            createAddresslinkTable route t currency (Id.addressId source.id) (Id.addressId link.node.id)
+            createAddresslinkTable route t currency (Id.addressId source.id) (Id.addressId link.node.id) link.link
                 |> mapFirst (Addresslink source link)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -333,7 +406,7 @@ showEntitylinkTable route model =
                 currency =
                     Id.currency source.id
             in
-            createEntitylinkTable route t currency (Id.entityId source.id) (Id.entityId link.node.id)
+            createEntitylinkTable route t currency (Id.entityId source.id) (Id.entityId link.node.id) link.link
                 |> mapFirst (Entitylink source link)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -343,8 +416,8 @@ showEntitylinkTable route model =
             n model
 
 
-createAddresslinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> String -> String -> ( Maybe AddresslinkTable, List Effect )
-createAddresslinkTable route t currency source target =
+createAddresslinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> String -> String -> LinkData -> ( Maybe AddresslinkTable, List Effect )
+createAddresslinkTable route t currency source target link =
     case ( route, t ) of
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsUtxoTable _) ) ->
             n t
@@ -352,7 +425,7 @@ createAddresslinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsAccountTable _) ) ->
             n t
 
-        ( Route.AddresslinkTxsTable, Nothing ) ->
+        ( Route.AddresslinkTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getAddresslinkTxsEffect
@@ -375,9 +448,34 @@ createAddresslinkTable route t currency source target =
                   ]
                 )
 
+        ( Route.AddresslinkAllAssetsTable, _ ) ->
+            ( createLinkAllAssetsTable currency link |> Just
+            , []
+            )
 
-createEntitylinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> Int -> Int -> ( Maybe AddresslinkTable, List Effect )
-createEntitylinkTable route t currency source target =
+
+createLinkAllAssetsTable : String -> LinkData -> AddresslinkTable
+createLinkAllAssetsTable currency link =
+    let
+        assets =
+            case link of
+                Link.LinkData { value, tokenValues } ->
+                    ( currency, value )
+                        :: (tokenValues
+                                |> Maybe.map Dict.toList
+                                |> Maybe.withDefault []
+                           )
+
+                Link.PlaceholderLinkData ->
+                    []
+    in
+    AllAssetsTable.init
+        |> appendData AllAssetsTable.filter assets
+        |> AddresslinkAllAssetsTable
+
+
+createEntitylinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> Int -> Int -> LinkData -> ( Maybe AddresslinkTable, List Effect )
+createEntitylinkTable route t currency source target link =
     case ( route, t ) of
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsUtxoTable _) ) ->
             n t
@@ -385,7 +483,7 @@ createEntitylinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsAccountTable _) ) ->
             n t
 
-        ( Route.AddresslinkTxsTable, Nothing ) ->
+        ( Route.AddresslinkTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getEntitylinkTxsEffect
@@ -407,22 +505,18 @@ createEntitylinkTable route t currency source target =
                         Nothing
                   ]
                 )
+
+        ( Route.AddresslinkAllAssetsTable, _ ) ->
+            ( createLinkAllAssetsTable currency link |> Just
+            , []
+            )
 
 
 showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
 showEntityTable route model =
     case model.type_ |> Log.log "showEntityTable" of
         Entity loadable t ->
-            let
-                ( currency, entity ) =
-                    case loadable of
-                        Loading curr e ->
-                            ( curr, e )
-
-                        Loaded a ->
-                            ( a.entity.currency, a.entity.entity )
-            in
-            createEntityTable route t currency entity
+            createEntityTable route loadable t
                 |> Log.log "table"
                 |> mapFirst (Entity loadable)
                 |> mapFirst
@@ -433,8 +527,17 @@ showEntityTable route model =
             n model
 
 
-createEntityTable : Route.EntityTable -> Maybe EntityTable -> String -> Int -> ( Maybe EntityTable, List Effect )
-createEntityTable route t currency entity =
+createEntityTable : Route.EntityTable -> Loadable Int Entity.Entity -> Maybe EntityTable -> ( Maybe EntityTable, List Effect )
+createEntityTable route loadable t =
+    let
+        ( currency, entity ) =
+            case loadable of
+                Loading curr e ->
+                    ( curr, e )
+
+                Loaded a ->
+                    ( a.entity.currency, a.entity.entity )
+    in
     case ( route, t ) of
         ( Route.EntityTagsTable, Just (EntityTagsTable _) ) ->
             n t
@@ -517,6 +620,48 @@ createEntityTable route t currency entity =
               ]
             )
 
+        ( Route.EntityTotalReceivedAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.entity.totalReceived )
+                                :: (a.entity.totalTokensReceived
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> EntityTotalReceivedAllAssetsTable
+                |> Just
+            , []
+            )
+
+        ( Route.EntityFinalBalanceAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.entity.balance )
+                                :: (a.entity.tokenBalances
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> EntityFinalBalanceAllAssetsTable
+                |> Just
+            , []
+            )
+
 
 showActorTable : Route.ActorTable -> Model -> ( Model, List Effect )
 showActorTable route model =
@@ -578,7 +723,7 @@ changeActorTable route t actor =
                         |> List.map Tuple.first
                         |> List.map addProtocolPrefx
             in
-            ( LinksTable.init |> setData otherUrls |> ActorOtherLinksTable |> Just, [] )
+            ( LinksTable.init |> setData LinksTable.filter otherUrls |> ActorOtherLinksTable |> Just, [] )
 
         _ ->
             createActorTable route t actor.id
@@ -735,7 +880,7 @@ createTxUtxoTable route t currency txHash tx =
 
                 Just inputs ->
                     ( TxUtxoTable.init False
-                        |> appendData Nothing inputs
+                        |> appendData TxUtxoTable.filter inputs
                         |> TxUtxoInputsTable
                         |> Just
                     , []
@@ -762,7 +907,7 @@ createTxUtxoTable route t currency txHash tx =
 
                 Just outputs ->
                     ( TxUtxoTable.init True
-                        |> appendData Nothing outputs
+                        |> appendData TxUtxoTable.filter outputs
                         |> TxUtxoOutputsTable
                         |> Just
                     , []
@@ -944,7 +1089,7 @@ showBlockTxsUtxo id data model =
                 { model
                     | type_ =
                         TxsUtxoTable.init
-                            |> appendData Nothing blockTxs
+                            |> appendData TxsUtxoTable.filter blockTxs
                             |> BlockTxsUtxoTable
                             |> Just
                             |> Block loadable
@@ -954,8 +1099,8 @@ showBlockTxsUtxo id data model =
             model
 
 
-showBlockTxsAccount : { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
-showBlockTxsAccount id data model =
+showBlockTxsAccount : Graph.Config -> { currency : String, block : Int } -> List Api.Data.Tx -> Model -> Model
+showBlockTxsAccount gc id data model =
     let
         blockTxs =
             data
@@ -978,7 +1123,7 @@ showBlockTxsAccount id data model =
                 { model
                     | type_ =
                         TxsAccountTable.init
-                            |> appendData Nothing blockTxs
+                            |> appendData (TxsAccountTable.filter gc) blockTxs
                             |> BlockTxsAccountTable
                             |> Just
                             |> Block loadable
@@ -988,8 +1133,8 @@ showBlockTxsAccount id data model =
             model
 
 
-showTokenTxs : T.Tx -> List Api.Data.TxAccount -> Model -> Model
-showTokenTxs id data model =
+showTokenTxs : Graph.Config -> T.Tx -> List Api.Data.TxAccount -> Model -> Model
+showTokenTxs gc id data model =
     case model.type_ of
         TxAccount loadable accountCurrency _ ->
             if
@@ -1007,7 +1152,7 @@ showTokenTxs id data model =
                 { model
                     | type_ =
                         TxsAccountTable.init
-                            |> appendData Nothing data
+                            |> appendData (TxsAccountTable.filter gc) data
                             |> TokenTxsTable
                             |> Just
                             |> TxAccount loadable accountCurrency
@@ -1056,7 +1201,7 @@ updateUserTags tags model =
             { model
                 | type_ =
                     table
-                        |> setData tags
+                        |> setData UserAddressTagsTable.filter tags
                         |> UserTags
             }
 
@@ -1090,13 +1235,14 @@ showAddressTxsUtxo id data model =
                         Address loadable <|
                             case table of
                                 Just (AddressTxsUtxoTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData AddressTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddressTxsUtxoTable.init
-                                        |> s_data addressTxs
+                                        |> setData AddressTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsUtxoTable
                                         |> Just
@@ -1106,8 +1252,8 @@ showAddressTxsUtxo id data model =
             model
 
 
-showAddressTxsAccount : { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
-showAddressTxsAccount id data model =
+showAddressTxsAccount : Graph.Config -> { currency : String, address : String } -> Api.Data.AddressTxs -> Model -> Model
+showAddressTxsAccount gc id data model =
     let
         addressTxs =
             data.addressTxs
@@ -1132,13 +1278,14 @@ showAddressTxsAccount id data model =
                         Address loadable <|
                             case table of
                                 Just (AddressTxsAccountTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData (TxsAccountTable.filter gc) addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> s_data addressTxs
+                                        |> appendData (TxsAccountTable.filter gc) addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddressTxsAccountTable
                                         |> Just
@@ -1174,13 +1321,14 @@ showAddresslinkTxsUtxo { currency, source, target } data model =
                         Addresslink src link <|
                             case table of
                                 Just (AddresslinkTxsUtxoTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData AddresslinkTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddresslinkTxsUtxoTable.init
-                                        |> s_data addressTxs
+                                        |> setData AddresslinkTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
@@ -1190,8 +1338,8 @@ showAddresslinkTxsUtxo { currency, source, target } data model =
             model
 
 
-showAddresslinkTxsAccount : { currency : String, source : String, target : String } -> Api.Data.Links -> Model -> Model
-showAddresslinkTxsAccount { currency, source, target } data model =
+showAddresslinkTxsAccount : Graph.Config -> { currency : String, source : String, target : String } -> Api.Data.Links -> Model -> Model
+showAddresslinkTxsAccount gc { currency, source, target } data model =
     let
         addressTxs =
             data.links
@@ -1214,15 +1362,20 @@ showAddresslinkTxsAccount { currency, source, target } data model =
                 { model
                     | type_ =
                         Addresslink src tgt <|
+                            let
+                                filter =
+                                    TxsAccountTable.filter gc
+                            in
                             case table of
                                 Just (AddresslinkTxsAccountTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> s_data addressTxs
+                                        |> setData filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
@@ -1258,13 +1411,14 @@ showEntitylinkTxsUtxo { currency, source, target } data model =
                         Entitylink src link <|
                             case table of
                                 Just (AddresslinkTxsUtxoTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData AddresslinkTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddresslinkTxsUtxoTable.init
-                                        |> s_data addressTxs
+                                        |> setData AddresslinkTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsUtxoTable
                                         |> Just
@@ -1274,8 +1428,8 @@ showEntitylinkTxsUtxo { currency, source, target } data model =
             model
 
 
-showEntitylinkTxsAccount : { currency : String, source : Int, target : Int } -> Api.Data.Links -> Model -> Model
-showEntitylinkTxsAccount { currency, source, target } data model =
+showEntitylinkTxsAccount : Graph.Config -> { currency : String, source : Int, target : Int } -> Api.Data.Links -> Model -> Model
+showEntitylinkTxsAccount gc { currency, source, target } data model =
     let
         addressTxs =
             data.links
@@ -1298,15 +1452,20 @@ showEntitylinkTxsAccount { currency, source, target } data model =
                 { model
                     | type_ =
                         Entitylink src tgt <|
+                            let
+                                filter =
+                                    TxsAccountTable.filter gc
+                            in
                             case table of
                                 Just (AddresslinkTxsAccountTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> s_data addressTxs
+                                        |> setData filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> AddresslinkTxsAccountTable
                                         |> Just
@@ -1356,13 +1515,14 @@ showAddressTags id data model =
                                             else
                                                 data.addressTags
                                     in
-                                    appendData data.nextPage addressTags t
+                                    appendData AddressTagsTable.filter addressTags t
+                                        |> s_nextpage data.nextPage
                                         |> AddressTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> s_data (getUserTag loadable ++ data.addressTags)
+                                        |> setData AddressTagsTable.filter (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> AddressTagsTable
                                         |> Just
@@ -1372,8 +1532,8 @@ showAddressTags id data model =
             model
 
 
-showAddressNeighbors : { currency : String, address : String } -> Bool -> Api.Data.NeighborAddresses -> Model -> Model
-showAddressNeighbors id isOutgoing data model =
+showAddressNeighbors : Graph.Config -> { currency : String, address : String } -> Bool -> Api.Data.NeighborAddresses -> Model -> Model
+showAddressNeighbors gc id isOutgoing data model =
     case model.type_ of
         Address loadable table ->
             if matchAddressId id loadable |> not then
@@ -1385,18 +1545,20 @@ showAddressNeighbors id isOutgoing data model =
                         Address loadable <|
                             case ( isOutgoing, table ) of
                                 ( True, Just (AddressOutgoingNeighborsTable t) ) ->
-                                    appendData data.nextPage data.neighbors t
+                                    appendData (AddressNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> AddressOutgoingNeighborsTable
                                         |> Just
 
                                 ( False, Just (AddressIncomingNeighborsTable t) ) ->
-                                    appendData data.nextPage data.neighbors t
+                                    appendData (AddressNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> AddressIncomingNeighborsTable
                                         |> Just
 
                                 _ ->
                                     AddressNeighborsTable.init
-                                        |> s_data data.neighbors
+                                        |> setData (AddressNeighborsTable.filter gc) data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
                                                 AddressOutgoingNeighborsTable
@@ -1411,8 +1573,8 @@ showAddressNeighbors id isOutgoing data model =
             model
 
 
-showEntityNeighbors : { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
-showEntityNeighbors id isOutgoing data model =
+showEntityNeighbors : Graph.Config -> { currency : String, entity : Int } -> Bool -> Api.Data.NeighborEntities -> Model -> Model
+showEntityNeighbors gc id isOutgoing data model =
     case model.type_ of
         Entity loadable table ->
             if matchEntityId id loadable |> not then
@@ -1424,18 +1586,20 @@ showEntityNeighbors id isOutgoing data model =
                         Entity loadable <|
                             case ( isOutgoing, table ) of
                                 ( True, Just (EntityOutgoingNeighborsTable t) ) ->
-                                    appendData data.nextPage data.neighbors t
+                                    appendData (EntityNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> EntityOutgoingNeighborsTable
                                         |> Just
 
                                 ( False, Just (EntityIncomingNeighborsTable t) ) ->
-                                    appendData data.nextPage data.neighbors t
+                                    appendData (EntityNeighborsTable.filter gc) data.neighbors t
+                                        |> s_nextpage data.nextPage
                                         |> EntityIncomingNeighborsTable
                                         |> Just
 
                                 _ ->
                                     EntityNeighborsTable.init
-                                        |> s_data data.neighbors
+                                        |> setData (EntityNeighborsTable.filter gc) data.neighbors
                                         |> s_nextpage data.nextPage
                                         |> (if isOutgoing then
                                                 EntityOutgoingNeighborsTable
@@ -1463,13 +1627,14 @@ showEntityAddresses id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityAddressesTable t) ->
-                                    appendData data.nextPage data.addresses t
+                                    appendData EntityAddressesTable.filter data.addresses t
+                                        |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
                                         |> Just
 
                                 _ ->
                                     EntityAddressesTable.init
-                                        |> s_data data.addresses
+                                        |> setData EntityAddressesTable.filter data.addresses
                                         |> s_nextpage data.nextPage
                                         |> EntityAddressesTable
                                         |> Just
@@ -1505,13 +1670,14 @@ showEntityTxsUtxo id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityTxsUtxoTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData AddressTxsUtxoTable.filter addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTxsUtxoTable
                                         |> Just
 
                                 _ ->
                                     AddressTxsUtxoTable.init
-                                        |> s_data addressTxs
+                                        |> setData AddressTxsUtxoTable.filter addressTxs
                                         |> s_nextpage data.nextPage
                                         |> EntityTxsUtxoTable
                                         |> Just
@@ -1521,8 +1687,8 @@ showEntityTxsUtxo id data model =
             model
 
 
-showEntityTxsAccount : { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
-showEntityTxsAccount id data model =
+showEntityTxsAccount : Graph.Config -> { currency : String, entity : Int } -> Api.Data.AddressTxs -> Model -> Model
+showEntityTxsAccount gc id data model =
     let
         addressTxs =
             data.addressTxs
@@ -1547,13 +1713,14 @@ showEntityTxsAccount id data model =
                         Entity loadable <|
                             case table of
                                 Just (EntityTxsAccountTable t) ->
-                                    appendData data.nextPage addressTxs t
+                                    appendData (TxsAccountTable.filter gc) addressTxs t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTxsAccountTable
                                         |> Just
 
                                 _ ->
                                     TxsAccountTable.init
-                                        |> s_data addressTxs
+                                        |> setData (TxsAccountTable.filter gc) addressTxs
                                         |> s_nextpage data.nextPage
                                         |> EntityTxsAccountTable
                                         |> Just
@@ -1603,13 +1770,14 @@ showEntityAddressTags id data model =
                                             else
                                                 data.addressTags
                                     in
-                                    appendData data.nextPage addressTags t
+                                    appendData AddressTagsTable.filter addressTags t
+                                        |> s_nextpage data.nextPage
                                         |> EntityTagsTable
                                         |> Just
 
                                 _ ->
                                     AddressTagsTable.init
-                                        |> s_data (getUserTag loadable ++ data.addressTags)
+                                        |> setData AddressTagsTable.filter (getUserTag loadable ++ data.addressTags)
                                         |> s_nextpage data.nextPage
                                         |> EntityTagsTable
                                         |> Just
@@ -1702,6 +1870,16 @@ tableNewState state model =
                                     |> AddressOutgoingNeighborsTable
                                     |> Just
 
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -1736,6 +1914,16 @@ tableNewState state model =
                             Just (EntityOutgoingNeighborsTable t) ->
                                 { t | state = state }
                                     |> EntityOutgoingNeighborsTable
+                                    |> Just
+
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> EntityTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> EntityTotalReceivedAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -1820,6 +2008,11 @@ tableNewState state model =
                                     |> AddresslinkTxsAccountTable
                                     |> Just
 
+                            Just (AddresslinkAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -1834,6 +2027,11 @@ tableNewState state model =
                             Just (AddresslinkTxsAccountTable t) ->
                                 { t | state = state }
                                     |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -1915,6 +2113,12 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                     |> getAddressNeighborsEffect True
                                     |> wrap t AddressOutgoingNeighborsTable
 
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                ( table, [] )
+
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
+                                ( table, [] )
+
                             Nothing ->
                                 ( table, [] )
                         )
@@ -1951,6 +2155,12 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 loadableEntity loadable
                                     |> getEntityNeighborsEffect True
                                     |> wrap t EntityOutgoingNeighborsTable
+
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                ( table, [] )
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                ( table, [] )
 
                             Nothing ->
                                 ( table, [] )
@@ -2023,6 +2233,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 getAddresslinkTxsEffect id
                                     |> wrap t AddresslinkTxsAccountTable
 
+                            Just (AddresslinkAllAssetsTable t) ->
+                                ( table, [] )
+
                             Nothing ->
                                 ( table, [] )
                         )
@@ -2044,6 +2257,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                             Just (AddresslinkTxsAccountTable t) ->
                                 getEntitylinkTxsEffect id
                                     |> wrap t AddresslinkTxsAccountTable
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                ( table, [] )
 
                             Nothing ->
                                 ( table, [] )
@@ -2225,7 +2441,7 @@ showTxUtxoAddresses id isOutgoing data model =
                 { model
                     | type_ =
                         TxUtxoTable.init isOutgoing
-                            |> appendData Nothing data
+                            |> appendData TxUtxoTable.filter data
                             |> (if isOutgoing then
                                     TxUtxoOutputsTable
 
@@ -2290,8 +2506,13 @@ getTokenTxsEffect { currency, txHash } =
         |> ApiEffect
 
 
-filterTable : Maybe String -> Model -> Model
-filterTable filter model =
+filterTable : Graph.Config -> Model -> Model
+filterTable gc model =
+    searchTable gc Keep model
+
+
+searchTable : Graph.Config -> UpdateSearchTerm -> Model -> Model
+searchTable gc searchTerm model =
     { model
         | type_ =
             case model.type_ of
@@ -2299,28 +2520,38 @@ filterTable filter model =
                     Address loadable <|
                         case table of
                             Just (AddressTxsUtxoTable t) ->
-                                applyFilter filter t
+                                searchData AddressTxsUtxoTable.filter searchTerm t
                                     |> AddressTxsUtxoTable
                                     |> Just
 
                             Just (AddressTxsAccountTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddressTxsAccountTable
                                     |> Just
 
                             Just (AddressTagsTable t) ->
-                                applyFilter filter t
+                                searchData AddressTagsTable.filter searchTerm t
                                     |> AddressTagsTable
                                     |> Just
 
                             Just (AddressIncomingNeighborsTable t) ->
-                                applyFilter filter t
+                                searchData (AddressNeighborsTable.filter gc) searchTerm t
                                     |> AddressIncomingNeighborsTable
                                     |> Just
 
                             Just (AddressOutgoingNeighborsTable t) ->
-                                applyFilter filter t
+                                searchData (AddressNeighborsTable.filter gc) searchTerm t
                                     |> AddressOutgoingNeighborsTable
+                                    |> Just
+
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (AddressFinalBalanceAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddressFinalBalanceAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -2330,33 +2561,43 @@ filterTable filter model =
                     Entity loadable <|
                         case table of
                             Just (EntityAddressesTable t) ->
-                                applyFilter filter t
+                                searchData EntityAddressesTable.filter searchTerm t
                                     |> EntityAddressesTable
                                     |> Just
 
                             Just (EntityTxsUtxoTable t) ->
-                                applyFilter filter t
+                                searchData AddressTxsUtxoTable.filter searchTerm t
                                     |> EntityTxsUtxoTable
                                     |> Just
 
                             Just (EntityTxsAccountTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> EntityTxsAccountTable
                                     |> Just
 
                             Just (EntityTagsTable t) ->
-                                applyFilter filter t
+                                searchData AddressTagsTable.filter searchTerm t
                                     |> EntityTagsTable
                                     |> Just
 
                             Just (EntityIncomingNeighborsTable t) ->
-                                applyFilter filter t
+                                searchData (EntityNeighborsTable.filter gc) searchTerm t
                                     |> EntityIncomingNeighborsTable
                                     |> Just
 
                             Just (EntityOutgoingNeighborsTable t) ->
-                                applyFilter filter t
+                                searchData (EntityNeighborsTable.filter gc) searchTerm t
                                     |> EntityOutgoingNeighborsTable
+                                    |> Just
+
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> EntityTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> EntityFinalBalanceAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -2366,12 +2607,12 @@ filterTable filter model =
                     Actor loadable <|
                         case table of
                             Just (ActorTagsTable t) ->
-                                applyFilter filter t
+                                searchData LabelAddressTagsTable.filter searchTerm t
                                     |> ActorTagsTable
                                     |> Just
 
                             Just (ActorOtherLinksTable t) ->
-                                applyFilter filter t
+                                searchData LinksTable.filter searchTerm t
                                     |> ActorOtherLinksTable
                                     |> Just
 
@@ -2382,12 +2623,12 @@ filterTable filter model =
                     TxUtxo loadable <|
                         case table of
                             Just (TxUtxoInputsTable t) ->
-                                applyFilter filter t
+                                searchData TxUtxoTable.filter searchTerm t
                                     |> TxUtxoInputsTable
                                     |> Just
 
                             Just (TxUtxoOutputsTable t) ->
-                                applyFilter filter t
+                                searchData TxUtxoTable.filter searchTerm t
                                     |> TxUtxoOutputsTable
                                     |> Just
 
@@ -2398,7 +2639,7 @@ filterTable filter model =
                     TxAccount loadable accountCurrency <|
                         case table of
                             Just (TokenTxsTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> TokenTxsTable
                                     |> Just
 
@@ -2409,19 +2650,19 @@ filterTable filter model =
                     model.type_
 
                 Label label t ->
-                    applyFilter filter t
+                    searchData LabelAddressTagsTable.filter searchTerm t
                         |> Label label
 
                 Block loadable table ->
                     Block loadable <|
                         case table of
                             Just (BlockTxsUtxoTable t) ->
-                                applyFilter filter t
+                                searchData TxsUtxoTable.filter searchTerm t
                                     |> BlockTxsUtxoTable
                                     |> Just
 
                             Just (BlockTxsAccountTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> BlockTxsAccountTable
                                     |> Just
 
@@ -2432,13 +2673,18 @@ filterTable filter model =
                     Addresslink src lnk <|
                         case table of
                             Just (AddresslinkTxsUtxoTable t) ->
-                                applyFilter filter t
+                                searchData AddresslinkTxsUtxoTable.filter searchTerm t
                                     |> AddresslinkTxsUtxoTable
                                     |> Just
 
                             Just (AddresslinkTxsAccountTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddresslinkAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -2448,20 +2694,25 @@ filterTable filter model =
                     Entitylink src lnk <|
                         case table of
                             Just (AddresslinkTxsUtxoTable t) ->
-                                applyFilter filter t
+                                searchData AddresslinkTxsUtxoTable.filter searchTerm t
                                     |> AddresslinkTxsUtxoTable
                                     |> Just
 
                             Just (AddresslinkTxsAccountTable t) ->
-                                applyFilter filter t
+                                searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddresslinkAllAssetsTable
                                     |> Just
 
                             Nothing ->
                                 table
 
                 UserTags t ->
-                    applyFilter filter t
+                    searchData UserAddressTagsTable.filter searchTerm t
                         |> UserTags
 
                 Plugin ->
@@ -2525,6 +2776,16 @@ tableAsCSV locale gc { type_ } =
                         |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
                         |> asCsv (AddressNeighborsTable.prepareCSV locale True (loadableAddressCurrency loadable)) t
 
+                Just (AddressTotalReceivedAllAssetsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
+
+                Just (AddressFinalBalanceAllAssetsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
+
                 Nothing ->
                     Nothing
 
@@ -2557,6 +2818,16 @@ tableAsCSV locale gc { type_ } =
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
+
+                Just (EntityTotalReceivedAllAssetsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
+
+                Just (EntityFinalBalanceAllAssetsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Nothing ->
                     Nothing
@@ -2623,21 +2894,25 @@ tableAsCSV locale gc { type_ } =
                 currency =
                     String.toUpper src.address.currency
 
-                title =
+                title prefix =
                     [ src.address.address
                     , lnk.node.address.address
                     , currency
                     ]
-                        |> Locale.interpolated locale "Transactions between addresses {0} and {1} ({2})"
+                        |> Locale.interpolated locale (prefix ++ " between addresses {0} and {1} ({2})")
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    title
+                    title "Transactions"
                         |> asCsv (AddresslinkTxsUtxoTable.prepareCSV locale currency) t
 
                 Just (AddresslinkTxsAccountTable t) ->
-                    title
+                    title "Transactions"
                         |> asCsv (TxsAccountTable.prepareCSV locale currency) t
+
+                Just (AddresslinkAllAssetsTable t) ->
+                    title "Total assets"
+                        |> asCsv (AllAssetsTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing
@@ -2661,6 +2936,10 @@ tableAsCSV locale gc { type_ } =
                 Just (AddresslinkTxsAccountTable t) ->
                     title
                         |> asCsv (TxsAccountTable.prepareCSV locale currency) t
+
+                Just (AddresslinkAllAssetsTable t) ->
+                    title
+                        |> asCsv (AllAssetsTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing

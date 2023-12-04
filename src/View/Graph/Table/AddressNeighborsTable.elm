@@ -11,6 +11,7 @@ import Init.Graph.Table
 import Model.Address as A
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressNeighborsTable exposing (..)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
@@ -30,51 +31,6 @@ columnTitleFromDirection isOutgoing =
         "Incoming"
     )
         ++ " address"
-
-
-init : Table Api.Data.NeighborAddress
-init =
-    Init.Graph.Table.initUnsorted filter
-
-
-filter : String -> Api.Data.NeighborAddress -> Bool
-filter f a =
-    String.contains f a.address.address
-        || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
-
-
-titleLabels : String
-titleLabels =
-    "Tags"
-
-
-titleAddressBalance : String
-titleAddressBalance =
-    "Address balance"
-
-
-titleAddressReceived : String
-titleAddressReceived =
-    "Address received"
-
-
-titleNoTxs : String
-titleNoTxs =
-    "No. transactions"
-
-
-titleEstimatedValue : String
-titleEstimatedValue =
-    "Estimated value"
-
-
-titleValue : String -> String
-titleValue coinCode =
-    if coinCode == "eth" then
-        "Value"
-
-    else
-        titleEstimatedValue
 
 
 config : View.Config -> Bool -> String -> Maybe AddressId -> (AddressId -> Bool -> A.Address -> Bool) -> Table.Config Api.Data.NeighborAddress Msg
@@ -162,51 +118,25 @@ valueColumns :
         }
     -> List (Table.Column Api.Data.NeighborAddress Msg)
 valueColumns vc coinCode tokens getValues =
-    let
-        getCurr c =
-            Maybe.andThen (Dict.get c)
-                >> Maybe.withDefault zero
-
-        ( suffix, valCol ) =
-            if coinCode == "eth" then
-                ( " " ++ String.toUpper coinCode, T.valueColumnWithoutCode )
-
-            else
-                ( "", T.valueColumn )
-    in
-    (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleAddressBalance ++ suffix) getValues.balance
-        :: (tokens
-                |> List.map
-                    (\currency ->
-                        T.valueColumnWithoutCode vc
-                            (\_ -> currency)
-                            (String.toUpper currency)
-                            (.address >> .tokenBalances >> getCurr currency)
-                    )
-           )
-    )
-        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleAddressReceived ++ suffix) getValues.totalReceived
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ " ")
-                                    (.address >> .totalTokensReceived >> getCurr currency)
-                            )
-                   )
-           )
-        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale (titleValue coinCode) ++ suffix) getValues.value
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ "  ")
-                                    (.tokenValues >> getCurr currency)
-                            )
-                   )
-           )
+    [ T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale titleAddressBalance)
+        (.address >> .balance)
+        (.address >> .tokenBalances)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale titleAddressReceived)
+        (.address >> .totalReceived)
+        (.address >> .totalTokensReceived)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale (titleValue coinCode))
+        .value
+        .tokenValues
+    ]
 
 
 reduceLabels : List String -> String

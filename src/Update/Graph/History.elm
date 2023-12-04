@@ -437,3 +437,6 @@ shallPushHistory msg =
 
         UserClickedHighlightColor _ ->
             False
+
+        UserClickedToggleShowZeroTransactions ->
+            False

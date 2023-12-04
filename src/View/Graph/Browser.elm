@@ -1,6 +1,7 @@
 module View.Graph.Browser exposing (browseRow, browseValue, browser, frame, properties, propertyBox)
 
 import Api.Data exposing (Entity)
+import Basics.Extra exposing (uncurry)
 import Config.Graph as Graph
 import Config.View as View
 import Css as CssStyled
@@ -32,6 +33,7 @@ import Model.Node as Node
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
+import RecordSetter exposing (..)
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
@@ -39,7 +41,7 @@ import Time
 import Tuple exposing (..)
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import Util.Flags exposing (getFlagEmoji)
-import Util.Graph
+import Util.Graph exposing (filterTxValue)
 import Util.View
     exposing
         ( copyableLongIdentifier
@@ -49,11 +51,13 @@ import Util.View
         , truncateLongIdentifier
         )
 import View.Button exposing (actorLink)
+import View.Graph.Label as Label
 import View.Graph.Table as Table
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import View.Graph.Table.AllAssetsTable as AllAssetsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -96,7 +100,7 @@ browser plugins states vc gc model =
                 []
 
             Browser.Address loadable table ->
-                browseAddress plugins states vc model.now loadable
+                browseAddress plugins states vc gc model.now loadable
                     :: (table
                             |> Maybe.map
                                 (\t ->
@@ -206,7 +210,7 @@ browser plugins states vc gc model =
                     currency =
                         Id.currency source.id
                 in
-                browseAddresslink plugins states vc source link
+                browseAddresslink plugins states vc gc source link
                     :: (table
                             |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
@@ -218,7 +222,7 @@ browser plugins states vc gc model =
                     currency =
                         Id.currency source.id
                 in
-                browseEntitylink plugins states vc source link
+                browseEntitylink plugins states vc gc source link
                     :: (table
                             |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
@@ -266,8 +270,8 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
-browseRow vc map row =
+browseRow : View.Config -> Graph.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
+browseRow vc gc map row =
     case row of
         Rule ->
             rule vc
@@ -388,7 +392,7 @@ browseRow vc map row =
 
         OptionalRow optionalRow bool ->
             if bool then
-                browseRow vc map optionalRow
+                browseRow vc gc map optionalRow
 
             else
                 span [] []
@@ -406,11 +410,11 @@ tableLink vc link =
         ]
 
 
-browseValue : View.Config -> Value msg -> Html msg
-browseValue vc value =
+browseValue : View.Config -> Graph.Config -> Value msg -> Html msg
+browseValue vc gc value =
     case value of
         Stack values ->
-            ul [] (List.map (\val -> li [] [ browseValue vc val ]) values)
+            ul [] (List.map (\val -> li [] [ browseValue vc gc val ]) values)
 
         Grid width values ->
             let
@@ -418,7 +422,7 @@ browseValue vc value =
                     List.Extra.greedyGroupsOf width values
 
                 viewRow row =
-                    li [] [ List.map (browseValue vc) row |> span [] ]
+                    li [] [ List.map (browseValue vc gc) row |> span [] ]
             in
             ul [] (List.map viewRow gvalues)
 
@@ -479,7 +483,7 @@ browseValue vc value =
                     , onInput msg
                     ]
 
-        EntityId gc entity ->
+        EntityId entity ->
             div
                 []
                 [ Maybe.Extra.orListLazy
@@ -587,15 +591,16 @@ browseValue vc value =
                 [ 1000 * dur |> Locale.durationToString vc.locale |> text
                 ]
 
-        Value coinCode v ->
+        Value coinMap ->
             span
                 []
-                [ Locale.currency vc.locale coinCode v
+                [ Locale.currency vc.locale coinMap
                     |> text
                 ]
 
         MultiValue parentCoin len values ->
             values
+                |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)
                 |> List.map
                     (\( coinCode, v ) ->
                         let
@@ -633,9 +638,9 @@ browseValue vc value =
             Util.View.loadingSpinner vc Css.loadingSpinner
 
 
-browseAddress : Plugins -> ModelState -> View.Config -> Time.Posix -> Loadable String Address -> Html Msg
-browseAddress plugins states vc now address =
-    (rowsAddress vc now address |> properties vc)
+browseAddress : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Address -> Html Msg
+browseAddress plugins states vc gc now address =
+    (rowsAddress vc now address |> properties vc gc)
         ++ [ rule vc ]
         ++ (case address of
                 Loading _ _ ->
@@ -647,9 +652,9 @@ browseAddress plugins states vc now address =
         |> propertyBox vc
 
 
-properties : View.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
-properties vc =
-    List.map (browseRow vc (browseValue vc))
+properties : View.Config -> Graph.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
+properties vc gc =
+    List.map (browseRow vc gc (browseValue vc gc))
 
 
 rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
@@ -745,20 +750,20 @@ rowsAddress vc now address =
                 , address
                     |> ifLoaded
                         (totalReceivedValues .address
-                            >> MultiValue (loadableAddressCurrency address) len
+                            >> Value
                         )
                     |> elseLoading
-                , Nothing
+                , mkTableLink "Total received assets" Route.AddressTotalReceivedAllAssetsTable
                 )
             , Row
                 ( "Final balance"
                 , address
                     |> ifLoaded
                         (balanceValues .address
-                            >> MultiValue (loadableAddressCurrency address) len
+                            >> Value
                         )
                     |> elseLoading
-                , Nothing
+                , mkTableLink "Final balance assets" Route.AddressFinalBalanceAllAssetsTable
                 )
             ]
 
@@ -949,7 +954,7 @@ elseShowCurrency l =
 
 browseEntity : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
 browseEntity plugins states vc gc now entity =
-    (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
+    (rowsEntity vc gc now entity |> List.map (browseRow vc gc (browseValue vc gc)))
         ++ [ rule vc ]
         ++ (case entity of
                 Loading _ _ ->
@@ -963,25 +968,25 @@ browseEntity plugins states vc gc now entity =
 
 browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> Html Msg
 browseActor plugins states vc gc now actor =
-    (rowsActor vc gc now actor |> List.map (browseRow vc (browseValue vc)))
+    (rowsActor vc gc now actor |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
 browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
 browseBlock plugins states vc gc now block =
-    (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
+    (rowsBlock vc gc now block |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
 browseTxUtxo : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
 browseTxUtxo plugins states vc gc now tx =
-    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
 browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> Html Msg
 browseTxAccount plugins states vc gc now tx table coinCode =
-    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc (browseValue vc)))
+    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
@@ -1013,7 +1018,7 @@ rowsEntity vc gc now ent =
     in
     [ RowWithMoreActionsButton
         ( "Entity"
-        , ent |> ifLoaded (EntityId gc) |> elseLoading
+        , ent |> ifLoaded EntityId |> elseLoading
         , case ent of
             Loaded entity ->
                 Just (UserClickedEntityActions entity.id)
@@ -1144,20 +1149,20 @@ rowsEntity vc gc now ent =
         , ent
             |> ifLoaded
                 (totalReceivedValues .entity
-                    >> MultiValue (loadableEntityCurrency ent) len
+                    >> Value
                 )
             |> elseLoading
-        , Nothing
+        , mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
         )
     , Row
         ( "Final balance"
         , ent
             |> ifLoaded
                 (balanceValues .entity
-                    >> MultiValue (loadableEntityCurrency ent) len
+                    >> Value
                 )
             |> elseLoading
-        , Nothing
+        , mkTableLink "Final balance assets" Route.EntityFinalBalanceAllAssetsTable
         )
     ]
 
@@ -1370,6 +1375,12 @@ browseAddressTable vc gc neighborLayerHasAddress address table =
         AddressOutgoingNeighborsTable t ->
             tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
 
+        AddressTotalReceivedAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
+
+        AddressFinalBalanceAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
+
 
 table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg
 table_ vc csvMsg =
@@ -1431,6 +1442,12 @@ browseEntityTable vc gc entityHasAddress neighborLayerHasEntity entity table =
 
         EntityOutgoingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+
+        EntityTotalReceivedAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
+
+        EntityFinalBalanceAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
 
 
 browseActorTable : View.Config -> Graph.Config -> Loadable String Actor -> ActorTable -> Html Msg
@@ -1571,7 +1588,7 @@ rowsTxUtxo vc gc now tx =
         ( "total input"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.totalInput)
+                (\t -> Value [ ( t.currency, t.totalInput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1579,7 +1596,7 @@ rowsTxUtxo vc gc now tx =
         ( "total output"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.totalOutput)
+                (\t -> Value [ ( t.currency, t.totalOutput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1642,7 +1659,7 @@ rowsTxAccount vc gc now tx table coinCode =
         ( "Value"
         , tx
             |> ifLoaded
-                (\t -> Value t.currency t.value)
+                (\t -> Value [ ( t.currency, t.value ) ])
             |> elseLoading
         , Nothing
         )
@@ -1691,14 +1708,14 @@ rowsTxAccount vc gc now tx table coinCode =
            )
 
 
-browseAddresslink : Plugins -> ModelState -> View.Config -> Address -> Link Address -> Html Msg
-browseAddresslink plugins states vc source link =
-    (rowsAddresslink vc source link |> List.map (browseRow vc (browseValue vc)))
+browseAddresslink : Plugins -> ModelState -> View.Config -> Graph.Config -> Address -> Link Address -> Html Msg
+browseAddresslink plugins states vc gc source link =
+    (rowsAddresslink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
-rowsAddresslink : View.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
-rowsAddresslink vc source link =
+rowsAddresslink : View.Config -> Graph.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
+rowsAddresslink vc gc source link =
     let
         currency =
             Id.currency source.id
@@ -1710,6 +1727,15 @@ rowsAddresslink vc source link =
 
                 Link.PlaceholderLinkData ->
                     Nothing
+
+        addresslinkRouteBase =
+            { currency = currency
+            , src = Id.addressId source.id
+            , srcLayer = Id.layer source.id
+            , dst = Id.addressId link.node.id
+            , dstLayer = Id.layer link.node.id
+            , table = Nothing
+            }
     in
     [ Row
         ( "Source"
@@ -1735,31 +1761,38 @@ rowsAddresslink vc source link =
         , Just
             { title = Locale.string vc.locale "Transactions"
             , link =
-                Route.addresslinkRoute
-                    { currency = currency
-                    , src = Id.addressId source.id
-                    , srcLayer = Id.layer source.id
-                    , dst = Id.addressId link.node.id
-                    , dstLayer = Id.layer link.node.id
-                    , table = Just Route.AddresslinkTxsTable
-                    }
+                addresslinkRouteBase
+                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> Route.addresslinkRoute
                     |> Route.graphRoute
                     |> toUrl
             , active = False
             }
         )
-    , linkValueRow vc currency linkData
+    , linkValueRow vc
+        gc
+        currency
+        linkData
+        { title = Locale.string vc.locale "All assets"
+        , link =
+            addresslinkRouteBase
+                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> Route.addresslinkRoute
+                |> Route.graphRoute
+                |> toUrl
+        , active = False
+        }
     ]
 
 
-browseEntitylink : Plugins -> ModelState -> View.Config -> Entity -> Link Entity -> Html Msg
-browseEntitylink plugins states vc source link =
-    (rowsEntitylink vc source link |> List.map (browseRow vc (browseValue vc)))
+browseEntitylink : Plugins -> ModelState -> View.Config -> Graph.Config -> Entity -> Link Entity -> Html Msg
+browseEntitylink plugins states vc gc source link =
+    (rowsEntitylink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
         |> propertyBox vc
 
 
-rowsEntitylink : View.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
-rowsEntitylink vc source link =
+rowsEntitylink : View.Config -> Graph.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
+rowsEntitylink vc gc source link =
     let
         currency =
             Id.currency source.id
@@ -1771,6 +1804,15 @@ rowsEntitylink vc source link =
 
                 Link.PlaceholderLinkData ->
                     Nothing
+
+        entitylinkRouteBase =
+            { currency = currency
+            , src = Id.entityId source.id
+            , srcLayer = Id.layer source.id
+            , dst = Id.entityId link.node.id
+            , dstLayer = Id.layer link.node.id
+            , table = Nothing
+            }
     in
     [ Row
         ( "Source"
@@ -1798,60 +1840,60 @@ rowsEntitylink vc source link =
         , Just
             { title = Locale.string vc.locale "Transactions"
             , link =
-                Route.entitylinkRoute
-                    { currency = currency
-                    , src = Id.entityId source.id
-                    , srcLayer = Id.layer source.id
-                    , dst = Id.entityId link.node.id
-                    , dstLayer = Id.layer link.node.id
-                    , table = Just Route.AddresslinkTxsTable
-                    }
+                entitylinkRouteBase
+                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> Route.entitylinkRoute
                     |> Route.graphRoute
                     |> toUrl
             , active = False
             }
         )
-    , linkValueRow vc currency linkData
+    , linkValueRow vc
+        gc
+        currency
+        linkData
+        { title = Locale.string vc.locale "All assets"
+        , link =
+            entitylinkRouteBase
+                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> Route.entitylinkRoute
+                |> Route.graphRoute
+                |> toUrl
+        , active = False
+        }
     ]
 
 
-linkValueRow : View.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
-linkValueRow vc parentCurrency linkData =
-    if parentCurrency /= "eth" then
-        Row
-            ( "Estimated value"
-            , linkData
-                |> Maybe.map (.value >> Value parentCurrency)
-                |> Maybe.withDefault (String "")
-            , Nothing
-            )
-
-    else
-        Row
-            ( "Value"
-            , linkData
+linkValueRow : View.Config -> Graph.Config -> String -> Maybe Link.LinkActualData -> TableLink -> Row (Value Msg) Coords Msg
+linkValueRow vc gc parentCurrency linkData tableLink_ =
+    let
+        values =
+            linkData
                 |> Maybe.map
-                    (\v ->
-                        let
-                            vals =
-                                ( parentCurrency, v.value )
-                                    :: (v.tokenValues
-                                            |> Maybe.map Dict.toList
-                                            |> Maybe.withDefault []
-                                       )
-
-                            len =
-                                vals
-                                    |> List.map (\( currency, val ) -> multiValue vc parentCurrency currency val |> String.length)
-                                    |> List.maximum
-                                    |> Maybe.withDefault 0
-                                    |> (+) 2
-                        in
-                        MultiValue parentCurrency len vals
+                    (\ld ->
+                        Label.normalizeValues gc parentCurrency ld.value ld.tokenValues
                     )
-                |> Maybe.withDefault (String "")
-            , Nothing
-            )
+    in
+    Row
+        ( if parentCurrency /= "eth" then
+            "Estimated value"
+
+          else
+            "Value"
+        , values
+            |> Maybe.map Value
+            |> Maybe.withDefault (String "")
+        , values
+            |> Maybe.map (List.length >> (<) 1)
+            |> Maybe.andThen
+                (\moreThanOne ->
+                    if moreThanOne then
+                        Just tableLink_
+
+                    else
+                        Nothing
+                )
+        )
 
 
 browseAddresslinkTable : View.Config -> Graph.Config -> String -> AddresslinkTable -> Html Msg
@@ -1863,14 +1905,17 @@ browseAddresslinkTable vc gc coinCode table =
         AddresslinkTxsAccountTable t ->
             table_ vc cm (TxsAccountTable.config vc coinCode) t
 
+        AddresslinkAllAssetsTable t ->
+            table_ vc cm (AllAssetsTable.config vc) t
+
 
 multiValue : View.Config -> String -> String -> Api.Data.Values -> String
 multiValue vc parentCoin coinCode v =
     if parentCoin == "eth" && vc.locale.currency /= Currency.Coin then
-        Locale.currency vc.locale coinCode v
+        Locale.currency vc.locale [ ( coinCode, v ) ]
 
     else
-        Locale.currencyWithoutCode vc.locale coinCode v
+        Locale.currencyWithoutCode vc.locale [ ( coinCode, v ) ]
 
 
 type alias AddressOrEntity a =
