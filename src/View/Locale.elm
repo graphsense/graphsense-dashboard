@@ -286,7 +286,7 @@ currencyWithOptions vis model values =
 
                                 else
                                     " +"
-                                        ++ interpolated model "{0} more" [ List.length values - 1 |> String.fromInt ]
+                                        ++ (List.length values - 1 |> String.fromInt)
                                )
                     )
                 |> Maybe.withDefault "0"
