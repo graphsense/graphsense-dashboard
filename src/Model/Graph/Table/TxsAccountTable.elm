@@ -42,5 +42,5 @@ filter gc =
                 || String.contains (String.toLower term) (String.toLower a.currency)
     , filter =
         \a ->
-            Graph.filterTxValue gc a.currency a.value
+            Graph.filterTxValue gc a.currency a.value Nothing
     }

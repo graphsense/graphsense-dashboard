@@ -888,7 +888,8 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
             ( model
             , neighbors.neighbors
-                |> List.filter (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value)
+                |> List.filter
+                    (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value n.tokenValues)
                 |> List.foldl
                     (\neighbor acc ->
                         Dict.update ( neighbor.address.currency, neighbor.address.entity )

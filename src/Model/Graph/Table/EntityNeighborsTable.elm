@@ -53,5 +53,5 @@ filter gc =
                 || (Maybe.map (List.any (String.contains term)) a.labels |> Maybe.withDefault True)
     , filter =
         \a ->
-            Graph.filterTxValue gc a.entity.currency a.value
+            Graph.filterTxValue gc a.entity.currency a.value a.tokenValues
     }

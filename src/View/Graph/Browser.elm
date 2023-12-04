@@ -598,7 +598,7 @@ browseValue vc gc value =
 
         MultiValue parentCoin len values ->
             values
-                |> List.filter (uncurry (filterTxValue gc))
+                |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)
                 |> List.map
                     (\( coinCode, v ) ->
                         let

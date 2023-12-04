@@ -130,4 +130,4 @@ normalizeValues gc parentCurrency value tokenValues =
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
            )
-        |> List.filter (uncurry (filterTxValue gc))
+        |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)

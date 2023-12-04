@@ -2,6 +2,7 @@ module Util.Graph exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import Dict exposing (Dict)
 import Json.Decode
 import List.Extra
 import Model.Graph.Coords exposing (Coords)
@@ -57,6 +58,13 @@ getAbuse gc =
         >> Maybe.map .label
 
 
-filterTxValue : Graph.Config -> String -> Api.Data.Values -> Bool
-filterTxValue gc coinCode value =
-    gc.showZeroTransactions || coinCode /= "eth" || value.value /= 0
+filterTxValue : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> Bool
+filterTxValue gc coinCode value tokenValues =
+    gc.showZeroTransactions
+        || List.any (.value >> (/=) 0)
+            (tokenValues
+                |> Maybe.map Dict.values
+                |> Maybe.withDefault []
+            )
+        || value.value
+        /= 0
