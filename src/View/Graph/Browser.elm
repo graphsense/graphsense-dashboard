@@ -753,7 +753,7 @@ rowsAddress vc now address =
                             >> Value
                         )
                     |> elseLoading
-                , Nothing
+                , mkTableLink "Total received assets" Route.AddressTotalReceivedAllAssetsTable
                 )
             , Row
                 ( "Final balance"
@@ -1374,6 +1374,9 @@ browseAddressTable vc gc neighborLayerHasAddress address table =
 
         AddressOutgoingNeighborsTable t ->
             tt (AddressNeighborsTable.config vc True coinCode addressId neighborLayerHasAddress) t
+
+        AddressTotalReceivedAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
 
 
 table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg

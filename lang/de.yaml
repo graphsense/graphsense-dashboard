@@ -37,6 +37,7 @@ last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
 "total received {0}": Eingänge {0}
+total received assets: Eingänge Assets
 final balance: Bilanz
 "final balance {0}": Bilanz {0}
 entity balance: Bilanz Cluster
@@ -47,6 +48,7 @@ entity received: Eingänge Cluster
 "entity received {0}": Eingänge Cluster {0}
 address received: Eingänge Adresse
 "address received {0}": Eingänge Adresse {0}
+all assets: alle Assets
 category: Kategorie
 categories: Kategorien
 abuse: Missbrauch
@@ -264,6 +266,7 @@ download table as CSV: Tabelle als CSV herunterladen
 "incoming neighbors of entity {0} ({1})": Eingehende Nachbarn des Cluster {0} ({1})
 "outgoing neighbors of entity {0} ({1})": Ausgehende Nachbarn des Cluster {0} ({1})
 "addresses of entity {0} ({1})": Adressen des Clusterss {0} ({1})
+"total received assets of address {0} ({1})": Gesamt Eingänge der Adresse {0} ({1})
 user address tags: Benutzerdefinierte Address-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
 "transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})

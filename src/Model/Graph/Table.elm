@@ -45,6 +45,7 @@ type AddressTable
     | AddressTxsAccountTable (Table Api.Data.TxAccount)
     | AddressIncomingNeighborsTable (Table Api.Data.NeighborAddress)
     | AddressOutgoingNeighborsTable (Table Api.Data.NeighborAddress)
+    | AddressTotalReceivedAllAssetsTable AllAssetsTable
 
 
 type EntityTable

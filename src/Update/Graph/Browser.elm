@@ -247,16 +247,7 @@ showAddressTable : Route.AddressTable -> Model -> ( Model, List Effect )
 showAddressTable route model =
     case model.type_ of
         Address loadable t ->
-            let
-                ( currency, address ) =
-                    case loadable of
-                        Loading curr addr ->
-                            ( curr, addr )
-
-                        Loaded a ->
-                            ( a.address.currency, a.address.address )
-            in
-            createAddressTable route t currency address
+            createAddressTable route loadable t
                 |> mapFirst (Address loadable)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -266,8 +257,17 @@ showAddressTable route model =
             n model
 
 
-createAddressTable : Route.AddressTable -> Maybe AddressTable -> String -> String -> ( Maybe AddressTable, List Effect )
-createAddressTable route t currency address =
+createAddressTable : Route.AddressTable -> Loadable String Address.Address -> Maybe AddressTable -> ( Maybe AddressTable, List Effect )
+createAddressTable route loadable t =
+    let
+        ( currency, address ) =
+            case loadable of
+                Loading curr addr ->
+                    ( curr, addr )
+
+                Loaded a ->
+                    ( a.address.currency, a.address.address )
+    in
     case ( route, t ) of
         ( Route.AddressTagsTable, Just (AddressTagsTable _) ) ->
             n t
@@ -335,6 +335,27 @@ createAddressTable route t currency address =
                     }
                     Nothing
               ]
+            )
+
+        ( Route.AddressTotalReceivedAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.address.totalReceived )
+                                :: (a.address.totalTokensReceived
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> AddressTotalReceivedAllAssetsTable
+                |> Just
+            , []
             )
 
 
@@ -1788,6 +1809,11 @@ tableNewState state model =
                                     |> AddressOutgoingNeighborsTable
                                     |> Just
 
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2010,6 +2036,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 loadableAddress loadable
                                     |> getAddressNeighborsEffect True
                                     |> wrap t AddressOutgoingNeighborsTable
+
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                ( table, [] )
 
                             Nothing ->
                                 ( table, [] )
@@ -2430,6 +2459,11 @@ searchTable gc searchTerm model =
                                     |> AddressOutgoingNeighborsTable
                                     |> Just
 
+                            Just (AddressTotalReceivedAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddressTotalReceivedAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2641,6 +2675,11 @@ tableAsCSV locale gc { type_ } =
                     loadableAddressToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of address {0} ({1})"
                         |> asCsv (AddressNeighborsTable.prepareCSV locale True (loadableAddressCurrency loadable)) t
+
+                Just (AddressTotalReceivedAllAssetsTable t) ->
+                    loadableAddressToList loadable
+                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableAddressCurrency loadable)) t
 
                 Nothing ->
                     Nothing

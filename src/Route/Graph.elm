@@ -23,6 +23,7 @@ module Route.Graph exposing
     )
 
 import List.Extra
+import Model.Graph.Table exposing (AddressTable(..))
 import Plugin.Model
 import Plugin.Route as Plugin
 import Url
@@ -114,6 +115,7 @@ type AddressTable
     | AddressTxsTable
     | AddressIncomingNeighborsTable
     | AddressOutgoingNeighborsTable
+    | AddressTotalReceivedAllAssetsTable
 
 
 type EntityTable
@@ -159,6 +161,9 @@ addressTableToString t =
         AddressOutgoingNeighborsTable ->
             "outgoing"
 
+        AddressTotalReceivedAllAssetsTable ->
+            "total_received"
+
 
 stringToAddressTable : String -> Maybe AddressTable
 stringToAddressTable t =
@@ -174,6 +179,9 @@ stringToAddressTable t =
 
         "outgoing" ->
             Just AddressOutgoingNeighborsTable
+
+        "total_received" ->
+            Just AddressTotalReceivedAllAssetsTable
 
         _ ->
             Nothing
