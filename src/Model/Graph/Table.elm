@@ -56,6 +56,8 @@ type EntityTable
     | EntityIncomingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityOutgoingNeighborsTable (Table Api.Data.NeighborEntity)
     | EntityAddressesTable (Table Api.Data.Address)
+    | EntityTotalReceivedAllAssetsTable AllAssetsTable
+    | EntityFinalBalanceAllAssetsTable AllAssetsTable
 
 
 type ActorTable

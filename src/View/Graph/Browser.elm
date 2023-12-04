@@ -1152,7 +1152,7 @@ rowsEntity vc gc now ent =
                     >> Value
                 )
             |> elseLoading
-        , Nothing
+        , mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
         )
     , Row
         ( "Final balance"
@@ -1162,7 +1162,7 @@ rowsEntity vc gc now ent =
                     >> Value
                 )
             |> elseLoading
-        , Nothing
+        , mkTableLink "Final balance assets" Route.EntityFinalBalanceAllAssetsTable
         )
     ]
 
@@ -1442,6 +1442,12 @@ browseEntityTable vc gc entityHasAddress neighborLayerHasEntity entity table =
 
         EntityOutgoingNeighborsTable t ->
             tt (EntityNeighborsTable.config vc True coinCode entityId neighborLayerHasEntity) t
+
+        EntityTotalReceivedAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
+
+        EntityFinalBalanceAllAssetsTable t ->
+            tt (AllAssetsTable.config vc) t
 
 
 browseActorTable : View.Config -> Graph.Config -> Loadable String Actor -> ActorTable -> Html Msg

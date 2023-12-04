@@ -518,16 +518,7 @@ showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
 showEntityTable route model =
     case model.type_ |> Log.log "showEntityTable" of
         Entity loadable t ->
-            let
-                ( currency, entity ) =
-                    case loadable of
-                        Loading curr e ->
-                            ( curr, e )
-
-                        Loaded a ->
-                            ( a.entity.currency, a.entity.entity )
-            in
-            createEntityTable route t currency entity
+            createEntityTable route loadable t
                 |> Log.log "table"
                 |> mapFirst (Entity loadable)
                 |> mapFirst
@@ -538,8 +529,17 @@ showEntityTable route model =
             n model
 
 
-createEntityTable : Route.EntityTable -> Maybe EntityTable -> String -> Int -> ( Maybe EntityTable, List Effect )
-createEntityTable route t currency entity =
+createEntityTable : Route.EntityTable -> Loadable Int Entity.Entity -> Maybe EntityTable -> ( Maybe EntityTable, List Effect )
+createEntityTable route loadable t =
+    let
+        ( currency, entity ) =
+            case loadable of
+                Loading curr e ->
+                    ( curr, e )
+
+                Loaded a ->
+                    ( a.entity.currency, a.entity.entity )
+    in
     case ( route, t ) of
         ( Route.EntityTagsTable, Just (EntityTagsTable _) ) ->
             n t
@@ -620,6 +620,48 @@ createEntityTable route t currency entity =
                     }
                     Nothing
               ]
+            )
+
+        ( Route.EntityTotalReceivedAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.entity.totalReceived )
+                                :: (a.entity.totalTokensReceived
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> EntityTotalReceivedAllAssetsTable
+                |> Just
+            , []
+            )
+
+        ( Route.EntityFinalBalanceAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case loadable of
+                        Loaded a ->
+                            ( currency, a.entity.balance )
+                                :: (a.entity.tokenBalances
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        _ ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> EntityFinalBalanceAllAssetsTable
+                |> Just
+            , []
             )
 
 
@@ -1876,6 +1918,16 @@ tableNewState state model =
                                     |> EntityOutgoingNeighborsTable
                                     |> Just
 
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> EntityTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> EntityTotalReceivedAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2105,6 +2157,12 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 loadableEntity loadable
                                     |> getEntityNeighborsEffect True
                                     |> wrap t EntityOutgoingNeighborsTable
+
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                ( table, [] )
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                ( table, [] )
 
                             Nothing ->
                                 ( table, [] )
@@ -2534,6 +2592,16 @@ searchTable gc searchTerm model =
                                     |> EntityOutgoingNeighborsTable
                                     |> Just
 
+                            Just (EntityTotalReceivedAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> EntityTotalReceivedAllAssetsTable
+                                    |> Just
+
+                            Just (EntityFinalBalanceAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> EntityFinalBalanceAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2752,6 +2820,16 @@ tableAsCSV locale gc { type_ } =
                     loadableEntityToList loadable
                         |> Locale.interpolated locale "Outgoing neighbors of entity {0} ({1})"
                         |> asCsv (EntityNeighborsTable.prepareCSV locale True (loadableEntityCurrency loadable)) t
+
+                Just (EntityTotalReceivedAllAssetsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Total received assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
+
+                Just (EntityFinalBalanceAllAssetsTable t) ->
+                    loadableEntityToList loadable
+                        |> Locale.interpolated locale "Final balance assets of address {0} ({1})"
+                        |> asCsv (AllAssetsTable.prepareCSV locale (loadableEntityCurrency loadable)) t
 
                 Nothing ->
                     Nothing

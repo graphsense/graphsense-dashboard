@@ -125,6 +125,8 @@ type EntityTable
     | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
+    | EntityTotalReceivedAllAssetsTable
+    | EntityFinalBalanceAllAssetsTable
 
 
 type ActorTable
@@ -212,6 +214,12 @@ entityTableToString t =
         EntityOutgoingNeighborsTable ->
             "outgoing"
 
+        EntityTotalReceivedAllAssetsTable ->
+            "total_received"
+
+        EntityFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToEntityTable : String -> Maybe EntityTable
 stringToEntityTable t =
@@ -230,6 +238,12 @@ stringToEntityTable t =
 
         "outgoing" ->
             Just EntityOutgoingNeighborsTable
+
+        "total_received" ->
+            Just EntityTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just EntityFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
