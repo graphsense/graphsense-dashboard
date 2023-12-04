@@ -406,7 +406,7 @@ showEntitylinkTable route model =
                 currency =
                     Id.currency source.id
             in
-            createEntitylinkTable route t currency (Id.entityId source.id) (Id.entityId link.node.id)
+            createEntitylinkTable route t currency (Id.entityId source.id) (Id.entityId link.node.id) link.link
                 |> mapFirst (Entitylink source link)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -448,33 +448,34 @@ createAddresslinkTable route t currency source target link =
                   ]
                 )
 
-        ( Route.AddresslinkAllAssetsTable, Just (AddresslinkAllAssetsTable _) ) ->
-            n t
-
         ( Route.AddresslinkAllAssetsTable, _ ) ->
-            let
-                assets =
-                    case link of
-                        Link.LinkData { value, tokenValues } ->
-                            ( currency, value )
-                                :: (tokenValues
-                                        |> Maybe.map Dict.toList
-                                        |> Maybe.withDefault []
-                                   )
-
-                        Link.PlaceholderLinkData ->
-                            []
-            in
-            ( AllAssetsTable.init
-                |> appendData AllAssetsTable.filter assets
-                |> AddresslinkAllAssetsTable
-                |> Just
+            ( createLinkAllAssetsTable currency link |> Just
             , []
             )
 
 
-createEntitylinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> Int -> Int -> ( Maybe AddresslinkTable, List Effect )
-createEntitylinkTable route t currency source target =
+createLinkAllAssetsTable : String -> LinkData -> AddresslinkTable
+createLinkAllAssetsTable currency link =
+    let
+        assets =
+            case link of
+                Link.LinkData { value, tokenValues } ->
+                    ( currency, value )
+                        :: (tokenValues
+                                |> Maybe.map Dict.toList
+                                |> Maybe.withDefault []
+                           )
+
+                Link.PlaceholderLinkData ->
+                    []
+    in
+    AllAssetsTable.init
+        |> appendData AllAssetsTable.filter assets
+        |> AddresslinkAllAssetsTable
+
+
+createEntitylinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> Int -> Int -> LinkData -> ( Maybe AddresslinkTable, List Effect )
+createEntitylinkTable route t currency source target link =
     case ( route, t ) of
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsUtxoTable _) ) ->
             n t
@@ -505,11 +506,8 @@ createEntitylinkTable route t currency source target =
                   ]
                 )
 
-        ( Route.AddresslinkAllAssetsTable, Just (AddresslinkAllAssetsTable _) ) ->
-            n t
-
         ( Route.AddresslinkAllAssetsTable, _ ) ->
-            ( AllAssetsTable.init |> AddresslinkAllAssetsTable |> Just
+            ( createLinkAllAssetsTable currency link |> Just
             , []
             )
 
