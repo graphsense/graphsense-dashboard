@@ -311,7 +311,7 @@ valueColumnWithOptions hideCode vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
         , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
-        , sorter = Table.decreasingOrIncreasingBy (getValues >> valuesSorter vc)
+        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
         }
 
 
@@ -328,21 +328,21 @@ valuesCell vc hideCode coinCode values =
         |> text
         |> List.singleton
         |> Table.HtmlDetails
-            [ valuesCss vc values |> css
+            [ valuesCss vc coinCode values |> css
             ]
 
 
-valuesCss : View.Config -> Api.Data.Values -> List Css.Style
-valuesCss vc values =
-    Currency.valuesToFloat vc.locale.currency values
+valuesCss : View.Config -> String -> Api.Data.Values -> List Css.Style
+valuesCss vc asset values =
+    Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0
         |> (>) 0
         |> Css.Table.valuesCell vc
 
 
-valuesSorter : View.Config -> Api.Data.Values -> Float
-valuesSorter vc values =
-    Currency.valuesToFloat vc.locale.currency values
+valuesSorter : View.Config -> String -> Api.Data.Values -> Float
+valuesSorter vc asset values =
+    Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0
 
 

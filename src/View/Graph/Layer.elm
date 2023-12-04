@@ -119,7 +119,7 @@ calcRange vc gc layer =
                             (\_ link ( mn_, mx_ ) ->
                                 let
                                     a =
-                                        Link.getLinkAmount vc gc link
+                                        Link.getLinkAmount vc gc entity.entity.currency link
                                 in
                                 ( Basics.min mn_ a
                                 , Basics.max mx_ a
@@ -146,7 +146,7 @@ calcAddressRange vc gc layer =
                                             (\_ link ( mn, mx ) ->
                                                 let
                                                     a =
-                                                        Link.getLinkAmount vc gc link
+                                                        Link.getLinkAmount vc gc address.address.currency link
                                                 in
                                                 ( Basics.min mn a
                                                 , Basics.max mx a

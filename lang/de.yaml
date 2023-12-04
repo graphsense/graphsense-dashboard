@@ -268,6 +268,8 @@ user address tags: Benutzerdefinierte Address-Schlagwörter
 "transactions of block {0} ({1})": Transaktionen des Blocks {0} ({1})
 "transactions between entities {0} and {1} ({2})": Transaktionen zwischen Clustern {0} und {1} ({2})
 "transactions between addresses {0} and {1} ({2})": Transaktionen zwischen Adressen {0} und {1} ({2})
+"total assets between entities {0} and {1} ({2})": Gesamt Assets zwischen Clustern {0} und {1} ({2})
+"total assets between addresses {0} and {1} ({2})": Gesamt Assets zwischen Adressen {0} und {1} ({2})
 "Incoming values of transaction {0} ({1})": Eingangswerte der Transaktion {0} ({1})
 "Outgoing values of transaction {0} ({1})": Ausgangswerte der Transaktion {0} ({1})
 "{6}: searching {0} of {1} with {2} (depth: {3}, breadth: {4}, skip if more than {5} addresses)":

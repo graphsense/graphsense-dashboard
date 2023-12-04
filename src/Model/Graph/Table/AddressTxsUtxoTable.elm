@@ -1,28 +1,7 @@
 module Model.Graph.Table.AddressTxsUtxoTable exposing (..)
 
 import Api.Data
-import Config.Graph as Graph
 import Model.Graph.Table as Table
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleValue : String
-titleValue =
-    "Value"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
 
 
 filter : Table.Filter Api.Data.AddressTxUtxo

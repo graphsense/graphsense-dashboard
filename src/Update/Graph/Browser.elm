@@ -2,6 +2,7 @@ module Update.Graph.Browser exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import Dict
 import Effect exposing (n)
 import Effect.Api exposing (Effect(..))
 import Effect.Graph exposing (Effect(..))
@@ -9,6 +10,7 @@ import Init.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import Init.Graph.Table.AddressTagsTable as AddressTagsTable
 import Init.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import Init.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Init.Graph.Table.AllAssetsTable as AllAssetsTable
 import Init.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import Init.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import Init.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -27,12 +29,13 @@ import Model.Graph.Address as Address
 import Model.Graph.Browser exposing (..)
 import Model.Graph.Entity as Entity
 import Model.Graph.Id as Id
-import Model.Graph.Link exposing (Link)
+import Model.Graph.Link as Link exposing (Link, LinkData)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import Model.Graph.Table.AddressTagsTable as AddressTagsTable
 import Model.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import Model.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import Model.Graph.Table.AllAssetsTable as AllAssetsTable
 import Model.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import Model.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import Model.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -51,10 +54,12 @@ import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
+import View.Graph.Label as Label
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import View.Graph.Table.AllAssetsTable as AllAssetsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -341,7 +346,7 @@ showAddresslinkTable route model =
                 currency =
                     Id.currency source.id
             in
-            createAddresslinkTable route t currency (Id.addressId source.id) (Id.addressId link.node.id)
+            createAddresslinkTable route t currency (Id.addressId source.id) (Id.addressId link.node.id) link.link
                 |> mapFirst (Addresslink source link)
                 |> mapFirst
                     (\type_ -> { model | type_ = type_ })
@@ -369,8 +374,8 @@ showEntitylinkTable route model =
             n model
 
 
-createAddresslinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> String -> String -> ( Maybe AddresslinkTable, List Effect )
-createAddresslinkTable route t currency source target =
+createAddresslinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> String -> String -> LinkData -> ( Maybe AddresslinkTable, List Effect )
+createAddresslinkTable route t currency source target link =
     case ( route, t ) of
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsUtxoTable _) ) ->
             n t
@@ -378,7 +383,7 @@ createAddresslinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsAccountTable _) ) ->
             n t
 
-        ( Route.AddresslinkTxsTable, Nothing ) ->
+        ( Route.AddresslinkTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getAddresslinkTxsEffect
@@ -400,6 +405,30 @@ createAddresslinkTable route t currency source target =
                         Nothing
                   ]
                 )
+
+        ( Route.AddresslinkAllAssetsTable, Just (AddresslinkAllAssetsTable _) ) ->
+            n t
+
+        ( Route.AddresslinkAllAssetsTable, _ ) ->
+            let
+                assets =
+                    case link of
+                        Link.LinkData { value, tokenValues } ->
+                            ( currency, value )
+                                :: (tokenValues
+                                        |> Maybe.map Dict.toList
+                                        |> Maybe.withDefault []
+                                   )
+
+                        Link.PlaceholderLinkData ->
+                            []
+            in
+            ( AllAssetsTable.init
+                |> appendData AllAssetsTable.filter assets
+                |> AddresslinkAllAssetsTable
+                |> Just
+            , []
+            )
 
 
 createEntitylinkTable : Route.AddresslinkTable -> Maybe AddresslinkTable -> String -> Int -> Int -> ( Maybe AddresslinkTable, List Effect )
@@ -411,7 +440,7 @@ createEntitylinkTable route t currency source target =
         ( Route.AddresslinkTxsTable, Just (AddresslinkTxsAccountTable _) ) ->
             n t
 
-        ( Route.AddresslinkTxsTable, Nothing ) ->
+        ( Route.AddresslinkTxsTable, _ ) ->
             if String.toLower currency == "eth" then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getEntitylinkTxsEffect
@@ -433,6 +462,14 @@ createEntitylinkTable route t currency source target =
                         Nothing
                   ]
                 )
+
+        ( Route.AddresslinkAllAssetsTable, Just (AddresslinkAllAssetsTable _) ) ->
+            n t
+
+        ( Route.AddresslinkAllAssetsTable, _ ) ->
+            ( AllAssetsTable.init |> AddresslinkAllAssetsTable |> Just
+            , []
+            )
 
 
 showEntityTable : Route.EntityTable -> Model -> ( Model, List Effect )
@@ -1869,6 +1906,11 @@ tableNewState state model =
                                     |> AddresslinkTxsAccountTable
                                     |> Just
 
+                            Just (AddresslinkAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -1883,6 +1925,11 @@ tableNewState state model =
                             Just (AddresslinkTxsAccountTable t) ->
                                 { t | state = state }
                                     |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                { t | state = state }
+                                    |> AddresslinkAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -2072,6 +2119,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                                 getAddresslinkTxsEffect id
                                     |> wrap t AddresslinkTxsAccountTable
 
+                            Just (AddresslinkAllAssetsTable t) ->
+                                ( table, [] )
+
                             Nothing ->
                                 ( table, [] )
                         )
@@ -2093,6 +2143,9 @@ infiniteScroll { scrollTop, contentHeight, containerHeight } model =
                             Just (AddresslinkTxsAccountTable t) ->
                                 getEntitylinkTxsEffect id
                                     |> wrap t AddresslinkTxsAccountTable
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                ( table, [] )
 
                             Nothing ->
                                 ( table, [] )
@@ -2495,6 +2548,11 @@ searchTable gc searchTerm model =
                                     |> AddresslinkTxsAccountTable
                                     |> Just
 
+                            Just (AddresslinkAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddresslinkAllAssetsTable
+                                    |> Just
+
                             Nothing ->
                                 table
 
@@ -2509,6 +2567,11 @@ searchTable gc searchTerm model =
                             Just (AddresslinkTxsAccountTable t) ->
                                 searchData (TxsAccountTable.filter gc) searchTerm t
                                     |> AddresslinkTxsAccountTable
+                                    |> Just
+
+                            Just (AddresslinkAllAssetsTable t) ->
+                                searchData AllAssetsTable.filter searchTerm t
+                                    |> AddresslinkAllAssetsTable
                                     |> Just
 
                             Nothing ->
@@ -2677,21 +2740,25 @@ tableAsCSV locale gc { type_ } =
                 currency =
                     String.toUpper src.address.currency
 
-                title =
+                title prefix =
                     [ src.address.address
                     , lnk.node.address.address
                     , currency
                     ]
-                        |> Locale.interpolated locale "Transactions between addresses {0} and {1} ({2})"
+                        |> Locale.interpolated locale (prefix ++ " between addresses {0} and {1} ({2})")
             in
             case table of
                 Just (AddresslinkTxsUtxoTable t) ->
-                    title
+                    title "Transactions"
                         |> asCsv (AddresslinkTxsUtxoTable.prepareCSV locale currency) t
 
                 Just (AddresslinkTxsAccountTable t) ->
-                    title
+                    title "Transactions"
                         |> asCsv (TxsAccountTable.prepareCSV locale currency) t
+
+                Just (AddresslinkAllAssetsTable t) ->
+                    title "Total assets"
+                        |> asCsv (AllAssetsTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing
@@ -2715,6 +2782,10 @@ tableAsCSV locale gc { type_ } =
                 Just (AddresslinkTxsAccountTable t) ->
                     title
                         |> asCsv (TxsAccountTable.prepareCSV locale currency) t
+
+                Just (AddresslinkAllAssetsTable t) ->
+                    title
+                        |> asCsv (AllAssetsTable.prepareCSV locale currency) t
 
                 Nothing ->
                     Nothing

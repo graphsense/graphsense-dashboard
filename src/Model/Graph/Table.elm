@@ -4,6 +4,41 @@ import Api.Data
 import Table
 
 
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleValue : String
+titleValue =
+    "Value"
+
+
+titleHeight : String
+titleHeight =
+    "Height"
+
+
+titleTimestamp : String
+titleTimestamp =
+    "Timestamp"
+
+
+titleAddress : String
+titleAddress =
+    "Address"
+
+
+titleCurrency : String
+titleCurrency =
+    "Currency"
+
+
+titleLabel : String
+titleLabel =
+    "Label"
+
+
 type AddressTable
     = AddressTagsTable (Table Api.Data.AddressTag)
     | AddressTxsUtxoTable (Table Api.Data.AddressTxUtxo)
@@ -43,6 +78,11 @@ type BlockTable
 type AddresslinkTable
     = AddresslinkTxsUtxoTable (Table Api.Data.LinkUtxo)
     | AddresslinkTxsAccountTable (Table Api.Data.TxAccount)
+    | AddresslinkAllAssetsTable AllAssetsTable
+
+
+type alias AllAssetsTable =
+    Table ( String, Api.Data.Values )
 
 
 type alias Table a =

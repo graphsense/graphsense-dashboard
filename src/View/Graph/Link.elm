@@ -63,7 +63,7 @@ entityLinkOptions vc gc entity link =
         Entity.getX link.node - Graph.arrowHeight
     , ty =
         Entity.getY link.node + Entity.getHeight link.node / 2
-    , amount = getLinkAmount vc gc link
+    , amount = getLinkAmount vc gc entity.entity.currency link
     , label =
         getLabel vc gc link.node.entity.currency link
     , onMouseOver = Id.initLinkId entity.id link.node.id |> UserHoversEntityLink
@@ -90,7 +90,7 @@ addressLinkOptions vc gc address link =
         Address.getX link.node - Graph.arrowHeight
     , ty =
         Address.getY link.node + Address.getHeight link.node / 2
-    , amount = getLinkAmount vc gc link
+    , amount = getLinkAmount vc gc address.address.currency link
     , label =
         getLabel vc gc link.node.address.currency link
     , onMouseOver = Id.initLinkId address.id link.node.id |> UserHoversAddressLink
@@ -376,8 +376,16 @@ drawLabel vc gc x y hovered selected color lbl =
         )
 
 
-getLinkAmount : View.Config -> Graph.Config -> Link node -> Float
-getLinkAmount vc gc link =
+getLinkAmount : View.Config -> Graph.Config -> String -> Link node -> Float
+getLinkAmount vc gc network link =
+    let
+        averageFiatValue { fiatValues } =
+            (fiatValues
+                |> List.map .value
+                |> List.sum
+            )
+                / (toFloat <| List.length fiatValues)
+    in
     case link.link of
         Link.PlaceholderLinkData ->
             0
@@ -389,8 +397,9 @@ getLinkAmount vc gc link =
                         |> toFloat
 
                 Graph.Value ->
-                    Currency.valuesToFloat vc.locale.currency li.value
-                        |> Maybe.withDefault 0
+                    Label.normalizeValues gc network li.value li.tokenValues
+                        |> List.map (second >> averageFiatValue)
+                        |> List.sum
 
 
 getLabel : View.Config -> Graph.Config -> String -> Link node -> List String

@@ -1,8 +1,7 @@
 module Init.Graph.Table.UserAddressTagsTable exposing (..)
 
 import Init.Graph.Table
-import Model.Graph.Table exposing (Table)
-import Model.Graph.Table.UserAddressTagsTable exposing (titleLabel)
+import Model.Graph.Table exposing (Table, titleLabel)
 import Model.Graph.Tag as Tag
 import RecordSetter exposing (..)
 

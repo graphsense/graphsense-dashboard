@@ -141,6 +141,7 @@ type BlockTable
 
 type AddresslinkTable
     = AddresslinkTxsTable
+    | AddresslinkAllAssetsTable
 
 
 addressTableToString : AddressTable -> String
@@ -294,12 +295,18 @@ addresslinkTableToString t =
         AddresslinkTxsTable ->
             "transactions"
 
+        AddresslinkAllAssetsTable ->
+            "allassets"
+
 
 stringToAddresslinkTable : String -> Maybe AddresslinkTable
 stringToAddresslinkTable t =
     case t of
         "transactions" ->
             Just AddresslinkTxsTable
+
+        "allassets" ->
+            Just AddresslinkAllAssetsTable
 
         _ ->
             Nothing

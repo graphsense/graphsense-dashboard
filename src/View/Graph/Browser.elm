@@ -33,6 +33,7 @@ import Model.Node as Node
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View exposing (Plugins)
+import RecordSetter exposing (..)
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
@@ -56,6 +57,7 @@ import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
 import View.Graph.Table.AddressTagsTable as AddressTagsTable
 import View.Graph.Table.AddressTxsUtxoTable as AddressTxsUtxoTable
 import View.Graph.Table.AddresslinkTxsUtxoTable as AddresslinkTxsUtxoTable
+import View.Graph.Table.AllAssetsTable as AllAssetsTable
 import View.Graph.Table.EntityAddressesTable as EntityAddressesTable
 import View.Graph.Table.EntityNeighborsTable as EntityNeighborsTable
 import View.Graph.Table.LabelAddressTagsTable as LabelAddressTagsTable
@@ -1713,6 +1715,15 @@ rowsAddresslink vc gc source link =
 
                 Link.PlaceholderLinkData ->
                     Nothing
+
+        addresslinkRouteBase =
+            { currency = currency
+            , src = Id.addressId source.id
+            , srcLayer = Id.layer source.id
+            , dst = Id.addressId link.node.id
+            , dstLayer = Id.layer link.node.id
+            , table = Nothing
+            }
     in
     [ Row
         ( "Source"
@@ -1738,20 +1749,27 @@ rowsAddresslink vc gc source link =
         , Just
             { title = Locale.string vc.locale "Transactions"
             , link =
-                Route.addresslinkRoute
-                    { currency = currency
-                    , src = Id.addressId source.id
-                    , srcLayer = Id.layer source.id
-                    , dst = Id.addressId link.node.id
-                    , dstLayer = Id.layer link.node.id
-                    , table = Just Route.AddresslinkTxsTable
-                    }
+                addresslinkRouteBase
+                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> Route.addresslinkRoute
                     |> Route.graphRoute
                     |> toUrl
             , active = False
             }
         )
-    , linkValueRow vc gc currency linkData
+    , linkValueRow vc
+        gc
+        currency
+        linkData
+        { title = Locale.string vc.locale "All assets"
+        , link =
+            addresslinkRouteBase
+                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> Route.addresslinkRoute
+                |> Route.graphRoute
+                |> toUrl
+        , active = False
+        }
     ]
 
 
@@ -1774,6 +1792,15 @@ rowsEntitylink vc gc source link =
 
                 Link.PlaceholderLinkData ->
                     Nothing
+
+        entitylinkRouteBase =
+            { currency = currency
+            , src = Id.entityId source.id
+            , srcLayer = Id.layer source.id
+            , dst = Id.entityId link.node.id
+            , dstLayer = Id.layer link.node.id
+            , table = Nothing
+            }
     in
     [ Row
         ( "Source"
@@ -1801,36 +1828,59 @@ rowsEntitylink vc gc source link =
         , Just
             { title = Locale.string vc.locale "Transactions"
             , link =
-                Route.entitylinkRoute
-                    { currency = currency
-                    , src = Id.entityId source.id
-                    , srcLayer = Id.layer source.id
-                    , dst = Id.entityId link.node.id
-                    , dstLayer = Id.layer link.node.id
-                    , table = Just Route.AddresslinkTxsTable
-                    }
+                entitylinkRouteBase
+                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> Route.entitylinkRoute
                     |> Route.graphRoute
                     |> toUrl
             , active = False
             }
         )
-    , linkValueRow vc gc currency linkData
+    , linkValueRow vc
+        gc
+        currency
+        linkData
+        { title = Locale.string vc.locale "All assets"
+        , link =
+            entitylinkRouteBase
+                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> Route.entitylinkRoute
+                |> Route.graphRoute
+                |> toUrl
+        , active = False
+        }
     ]
 
 
-linkValueRow : View.Config -> Graph.Config -> String -> Maybe Link.LinkActualData -> Row (Value Msg) Coords Msg
-linkValueRow vc gc parentCurrency linkData =
+linkValueRow : View.Config -> Graph.Config -> String -> Maybe Link.LinkActualData -> TableLink -> Row (Value Msg) Coords Msg
+linkValueRow vc gc parentCurrency linkData tableLink_ =
+    let
+        values =
+            linkData
+                |> Maybe.map
+                    (\ld ->
+                        Label.normalizeValues gc parentCurrency ld.value ld.tokenValues
+                    )
+    in
     Row
         ( if parentCurrency /= "eth" then
             "Estimated value"
 
           else
             "Value"
-        , linkData
-            |> Maybe.map
-                (\ld -> Label.normalizeValues gc parentCurrency ld.value ld.tokenValues |> Value)
+        , values
+            |> Maybe.map Value
             |> Maybe.withDefault (String "")
-        , Nothing
+        , values
+            |> Maybe.map (List.length >> (<) 1)
+            |> Maybe.andThen
+                (\moreThanOne ->
+                    if moreThanOne then
+                        Just tableLink_
+
+                    else
+                        Nothing
+                )
         )
 
 
@@ -1842,6 +1892,9 @@ browseAddresslinkTable vc gc coinCode table =
 
         AddresslinkTxsAccountTable t ->
             table_ vc cm (TxsAccountTable.config vc coinCode) t
+
+        AddresslinkAllAssetsTable t ->
+            table_ vc cm (AllAssetsTable.config vc) t
 
 
 multiValue : View.Config -> String -> String -> Api.Data.Values -> String

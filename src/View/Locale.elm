@@ -14,6 +14,7 @@ module View.Locale exposing
     , timestamp
     , timestampWithFormat
     , tokenCurrencies
+    , valuesToFloat
     )
 
 import Api.Data
@@ -310,20 +311,9 @@ coin =
 
 coinWithOptions : CodeVisibility -> Model -> String -> Int -> String
 coinWithOptions vis model code v =
-    fixpointFactor model.supportedTokens
-        |> Dict.get code
+    normalizeCoinValue model code v
         |> Maybe.map
-            (mapFirst
-                (\f ->
-                    if v == 0 then
-                        0
-
-                    else
-                        toFloat v / f
-                )
-            )
-        |> Maybe.map
-            (\( value, _ ) ->
+            (\value ->
                 let
                     fmt =
                         if value == 0.0 then
@@ -348,6 +338,33 @@ coinWithOptions vis model code v =
                        )
             )
         |> Maybe.withDefault ("unknown currency " ++ code)
+
+
+normalizeCoinValue : Model -> String -> Int -> Maybe Float
+normalizeCoinValue model code v =
+    fixpointFactor model.supportedTokens
+        |> Dict.get (String.toLower code)
+        |> Maybe.map first
+        |> Maybe.map
+            (\f ->
+                if v == 0 then
+                    0
+
+                else
+                    toFloat v / f
+            )
+
+
+valuesToFloat : Model -> String -> Api.Data.Values -> Maybe Float
+valuesToFloat model asset values =
+    case model.currency of
+        Coin ->
+            values.value
+                |> normalizeCoinValue model asset
+
+        Fiat curr ->
+            List.Extra.find (.code >> (==) curr) values.fiatValues
+                |> Maybe.map .value
 
 
 durationToString : Model -> Int -> String

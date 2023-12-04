@@ -9,8 +9,8 @@ import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table exposing (Table)
-import Model.Graph.Table.UserAddressTagsTable exposing (..)
+import Model.Graph.Table exposing (Table, titleAddress, titleCurrency, titleLabel)
+import Model.Graph.Table.UserAddressTagsTable exposing (titleAbuse, titleCategory, titleDefinesEntity, titleSource)
 import Model.Graph.Tag as Tag
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
