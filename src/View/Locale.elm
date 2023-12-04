@@ -242,7 +242,14 @@ percentage model =
 
 bestAssetAsInt : Model -> List ( String, Api.Data.Values ) -> Maybe ( String, Int )
 bestAssetAsInt model =
-    List.sortBy (mapSecond .value >> uncurry (normalizeCoinValue model) >> Maybe.withDefault 0)
+    let
+        fiatValue v =
+            v.fiatValues
+                |> List.head
+                |> Maybe.map .value
+                |> Maybe.withDefault (toFloat v.value)
+    in
+    List.sortBy (second >> fiatValue)
         >> List.reverse
         >> List.head
         >> Maybe.map (mapSecond .value)
