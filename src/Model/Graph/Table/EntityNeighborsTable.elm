@@ -6,11 +6,6 @@ import Model.Graph.Table as Table
 import Util.Graph as Graph
 
 
-titleLabels : String
-titleLabels =
-    "Tags"
-
-
 titleEntityBalance : String
 titleEntityBalance =
     "Entity balance"
@@ -24,25 +19,6 @@ titleEntityReceived =
 titleNoAddresses : String
 titleNoAddresses =
     "No. addresses"
-
-
-titleNoTxs : String
-titleNoTxs =
-    "No. transactions"
-
-
-titleEstimatedValue : String
-titleEstimatedValue =
-    "Estimated value"
-
-
-titleValue : String -> String
-titleValue coinCode =
-    if coinCode == "eth" then
-        "Value"
-
-    else
-        titleEstimatedValue
 
 
 filter : Graph.Config -> Table.Filter Api.Data.NeighborEntity

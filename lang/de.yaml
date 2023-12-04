@@ -185,6 +185,8 @@ go to dashboard: zum Dashboard
 remove tag: Schlagwort löschen
 estimated value: geschätzter Wert
 "estimated value {0}": geschätzter Wert {0}
+estimated total transferred: ungef. transferierter Wert
+total transferred: transferierter Wert
 reorder to prioritize: Ordnung ändern um zu priorisieren
 tag coherence: Kohärenz der Schlagwörter
 unknown: unbekannt

@@ -13,6 +13,7 @@ import Model.Entity as E
 import Model.Graph.Entity
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressNeighborsTable exposing (titleLabels, titleNoTxs, titleValue)
 import Model.Graph.Table.EntityNeighborsTable exposing (..)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))

@@ -28,13 +28,13 @@ titleNoTxs =
 
 titleEstimatedValue : String
 titleEstimatedValue =
-    "Estimated value"
+    "Estimated total transferred"
 
 
 titleValue : String -> String
 titleValue coinCode =
     if coinCode == "eth" then
-        "Value"
+        "Total transferred"
 
     else
         titleEstimatedValue
