@@ -1,5 +1,6 @@
 module PluginInterface.View exposing (..)
 
+import Config.Graph as Graph
 import Config.View as View
 import Html.Styled exposing (Html)
 import Model.Address as A
@@ -20,14 +21,14 @@ type alias View modelState addressState entityState msg =
     , addressContextMenu : Maybe (View.Config -> Address -> modelState -> addressState -> List (Html msg))
 
     -- additional properties shown in the address's property box
-    , addressProperties : Maybe (View.Config -> modelState -> addressState -> List (Html msg))
+    , addressProperties : Maybe (View.Config -> Graph.Config -> modelState -> addressState -> List (Html msg))
 
     -- additional properties shown in the entity's property box
-    , entityProperties : Maybe (View.Config -> modelState -> entityState -> List (Html msg))
+    , entityProperties : Maybe (View.Config -> Graph.Config -> modelState -> entityState -> List (Html msg))
 
     -- browser contents
     -- functor for checking whether a node is visible in the graph
-    , browser : Maybe (View.Config -> (Node.Node A.Address E.Entity -> Bool) -> modelState -> List (Html msg))
+    , browser : Maybe (View.Config -> Graph.Config -> (Node.Node A.Address E.Entity -> Bool) -> modelState -> List (Html msg))
 
     -- additional stuff for the left part of the graph's navbar
     , graphNavbarLeft : Maybe (View.Config -> modelState -> List (Html msg))

@@ -1,4 +1,4 @@
-module Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, asCsv, filterData, searchData, setData)
+module Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, asCsv, filterData, filterTable, searchData, setData)
 
 import Csv.Encode
 import Model.Graph.Table as Table exposing (..)

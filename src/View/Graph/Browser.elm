@@ -251,7 +251,7 @@ browser plugins states vc gc model =
                                 Layer.getFirstEntity entity model.layers
                                     |> (/=) Nothing
                 in
-                browsePlugin plugins vc hasNode states
+                browsePlugin plugins vc gc hasNode states
         )
 
 
@@ -270,8 +270,8 @@ rule vc =
     hr [ Css.propertyBoxRule vc |> css ] []
 
 
-browseRow : View.Config -> Graph.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
-browseRow vc gc map row =
+browseRow : View.Config -> (r -> Html msg) -> Row r Coords msg -> Html msg
+browseRow vc map row =
     case row of
         Rule ->
             rule vc
@@ -392,7 +392,7 @@ browseRow vc gc map row =
 
         OptionalRow optionalRow bool ->
             if bool then
-                browseRow vc gc map optionalRow
+                browseRow vc map optionalRow
 
             else
                 span [] []
@@ -410,11 +410,11 @@ tableLink vc link =
         ]
 
 
-browseValue : View.Config -> Graph.Config -> Value msg -> Html msg
-browseValue vc gc value =
+browseValue : View.Config -> Value msg -> Html msg
+browseValue vc value =
     case value of
         Stack values ->
-            ul [] (List.map (\val -> li [] [ browseValue vc gc val ]) values)
+            ul [] (List.map (\val -> li [] [ browseValue vc val ]) values)
 
         Grid width values ->
             let
@@ -422,7 +422,7 @@ browseValue vc gc value =
                     List.Extra.greedyGroupsOf width values
 
                 viewRow row =
-                    li [] [ List.map (browseValue vc gc) row |> span [] ]
+                    li [] [ List.map (browseValue vc) row |> span [] ]
             in
             ul [] (List.map viewRow gvalues)
 
@@ -483,7 +483,7 @@ browseValue vc gc value =
                     , onInput msg
                     ]
 
-        EntityId entity ->
+        EntityId gc entity ->
             div
                 []
                 [ Maybe.Extra.orListLazy
@@ -598,7 +598,7 @@ browseValue vc gc value =
                     |> text
                 ]
 
-        MultiValue parentCoin len values ->
+        MultiValue gc parentCoin len values ->
             values
                 |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)
                 |> List.map
@@ -640,21 +640,21 @@ browseValue vc gc value =
 
 browseAddress : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Address -> Html Msg
 browseAddress plugins states vc gc now address =
-    (rowsAddress vc now address |> properties vc gc)
+    (rowsAddress vc now address |> properties vc)
         ++ [ rule vc ]
         ++ (case address of
                 Loading _ _ ->
                     []
 
                 Loaded ad ->
-                    Plugin.View.addressProperties plugins states ad.plugins vc
+                    Plugin.View.addressProperties plugins states ad.plugins vc gc
            )
         |> propertyBox vc
 
 
-properties : View.Config -> Graph.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
-properties vc gc =
-    List.map (browseRow vc gc (browseValue vc gc))
+properties : View.Config -> List (Row (Value msg) Coords msg) -> List (Html msg)
+properties vc =
+    List.map (browseRow vc (browseValue vc))
 
 
 rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
@@ -954,39 +954,39 @@ elseShowCurrency l =
 
 browseEntity : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
 browseEntity plugins states vc gc now entity =
-    (rowsEntity vc gc now entity |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
         ++ (case entity of
                 Loading _ _ ->
                     []
 
                 Loaded en ->
-                    Plugin.View.entityProperties plugins states en.plugins vc
+                    Plugin.View.entityProperties plugins states en.plugins vc gc
            )
         |> propertyBox vc
 
 
 browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> Html Msg
 browseActor plugins states vc gc now actor =
-    (rowsActor vc gc now actor |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsActor vc gc now actor |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
 browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
 browseBlock plugins states vc gc now block =
-    (rowsBlock vc gc now block |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
 browseTxUtxo : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
 browseTxUtxo plugins states vc gc now tx =
-    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
 browseTxAccount : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable ( String, Maybe Int ) Api.Data.TxAccount -> Maybe TxAccountTable -> String -> Html Msg
 browseTxAccount plugins states vc gc now tx table coinCode =
-    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsTxAccount vc gc now tx table coinCode |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
@@ -1018,7 +1018,7 @@ rowsEntity vc gc now ent =
     in
     [ RowWithMoreActionsButton
         ( "Entity"
-        , ent |> ifLoaded EntityId |> elseLoading
+        , ent |> ifLoaded (EntityId gc) |> elseLoading
         , case ent of
             Loaded entity ->
                 Just (UserClickedEntityActions entity.id)
@@ -1512,9 +1512,9 @@ browseTxAccountTable vc gc tx (TokenTxsTable table) =
     table_ vc cm (TxsAccountTable.config vc coinCode) table
 
 
-browsePlugin : Plugins -> View.Config -> (Node.Node A.Address E.Entity -> Bool) -> ModelState -> List (Html Msg)
-browsePlugin plugins vc hasNode states =
-    Plugin.View.browser plugins vc hasNode states
+browsePlugin : Plugins -> View.Config -> Graph.Config -> (Node.Node A.Address E.Entity -> Bool) -> ModelState -> List (Html Msg)
+browsePlugin plugins vc gc hasNode states =
+    Plugin.View.browser plugins vc gc hasNode states
 
 
 rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
@@ -1710,7 +1710,7 @@ rowsTxAccount vc gc now tx table coinCode =
 
 browseAddresslink : Plugins -> ModelState -> View.Config -> Graph.Config -> Address -> Link Address -> Html Msg
 browseAddresslink plugins states vc gc source link =
-    (rowsAddresslink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsAddresslink vc gc source link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
@@ -1787,7 +1787,7 @@ rowsAddresslink vc gc source link =
 
 browseEntitylink : Plugins -> ModelState -> View.Config -> Graph.Config -> Entity -> Link Entity -> Html Msg
 browseEntitylink plugins states vc gc source link =
-    (rowsEntitylink vc gc source link |> List.map (browseRow vc gc (browseValue vc gc)))
+    (rowsEntitylink vc gc source link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 

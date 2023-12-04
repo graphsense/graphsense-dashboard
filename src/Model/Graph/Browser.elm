@@ -61,12 +61,12 @@ type Value msg
     | Uri String String
     | IconLink FontAwesome.Icon String
     | InternalLink String String
-    | EntityId Entity
+    | EntityId Graph.Config Entity
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int
     | Value (List ( String, Api.Data.Values ))
-    | MultiValue String Int (List ( String, Api.Data.Values ))
+    | MultiValue Graph.Config String Int (List ( String, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Select (List ( String, String )) (String -> msg) String
     | Html (Html msg)
