@@ -132,51 +132,25 @@ valueColumns :
         }
     -> List (Table.Column Api.Data.NeighborEntity Msg)
 valueColumns vc coinCode tokens getValues =
-    let
-        getCurr c =
-            Maybe.andThen (Dict.get c)
-                >> Maybe.withDefault zero
-
-        ( suffix, valCol ) =
-            if coinCode == "eth" then
-                ( " " ++ String.toUpper coinCode, T.valueColumnWithoutCode vc (\_ -> coinCode) )
-
-            else
-                ( "", T.valueColumn vc (\_ -> coinCode) )
-    in
-    (valCol (Locale.string vc.locale titleEntityBalance ++ suffix) getValues.balance
-        :: (tokens
-                |> List.map
-                    (\currency ->
-                        T.valueColumnWithoutCode vc
-                            (\_ -> currency)
-                            (String.toUpper currency)
-                            (.entity >> .tokenBalances >> getCurr currency)
-                    )
-           )
-    )
-        ++ (valCol (Locale.string vc.locale titleEntityReceived ++ suffix) getValues.totalReceived
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ " ")
-                                    (.entity >> .totalTokensReceived >> getCurr currency)
-                            )
-                   )
-           )
-        ++ (valCol (Locale.string vc.locale (titleValue coinCode) ++ suffix) getValues.value
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ "  ")
-                                    (.tokenValues >> getCurr currency)
-                            )
-                   )
-           )
+    [ T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale titleEntityBalance)
+        (.entity >> .balance)
+        (.entity >> .tokenBalances)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale titleEntityReceived)
+        (.entity >> .totalReceived)
+        (.entity >> .totalTokensReceived)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode)
+        (Locale.string vc.locale (titleValue coinCode))
+        .value
+        .tokenValues
+    ]
 
 
 zero : Api.Data.Values

@@ -1,5 +1,6 @@
 module View.Locale exposing
     ( currency
+    , currencyAsFloat
     , currencyWithoutCode
     , durationToString
     , httpErrorToString
@@ -239,41 +240,52 @@ percentage model =
     floatWithFormat model "0[.]00%"
 
 
-currencyWithOptions : CodeVisibility -> Model -> List ( String, Api.Data.Values ) -> String
-currencyWithOptions vis model values =
-    let
-        fiatValue v =
-            v.fiatValues
-                |> List.head
-                |> Maybe.map .value
-                |> Maybe.withDefault (toFloat v.value)
-    in
+bestAssetAsInt : Model -> List ( String, Api.Data.Values ) -> Maybe ( String, Int )
+bestAssetAsInt model =
+    List.sortBy (mapSecond .value >> uncurry (normalizeCoinValue model) >> Maybe.withDefault 0)
+        >> List.reverse
+        >> List.head
+        >> Maybe.map (mapSecond .value)
+
+
+sumFiats : String -> List ( String, Api.Data.Values ) -> Float
+sumFiats fiatCode =
+    List.filterMap (second >> getFiatValue fiatCode)
+        >> List.sum
+
+
+currencyAsFloat : Model -> List ( String, Api.Data.Values ) -> Float
+currencyAsFloat model values =
     case model.currency of
         Coin ->
-            values
-                |> List.sortBy (second >> fiatValue)
-                |> List.reverse
-                |> List.Extra.uncons
+            bestAssetAsInt model values
+                |> Maybe.map (second >> toFloat)
+                |> Maybe.withDefault 0
+
+        Fiat code ->
+            sumFiats code values
+
+
+currencyWithOptions : CodeVisibility -> Model -> List ( String, Api.Data.Values ) -> String
+currencyWithOptions vis model values =
+    case model.currency of
+        Coin ->
+            bestAssetAsInt model values
                 |> Maybe.map
-                    (\( fst, rest ) ->
-                        (fst
-                            |> mapSecond .value
-                            |> uncurry (coinWithOptions vis model)
-                        )
-                            ++ (if List.isEmpty rest then
+                    (\( asset, value ) ->
+                        coinWithOptions vis model asset value
+                            ++ (if List.length values == 1 then
                                     ""
 
                                 else
                                     " +"
-                                        ++ interpolated model "{0} more" [ List.length rest |> String.fromInt ]
+                                        ++ interpolated model "{0} more" [ List.length values - 1 |> String.fromInt ]
                                )
                     )
                 |> Maybe.withDefault "0"
 
         Fiat code ->
-            values
-                |> List.filterMap (second >> getFiatValue code)
-                |> List.sum
+            sumFiats code values
                 |> fiat model code
 
 

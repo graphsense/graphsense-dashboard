@@ -1,9 +1,11 @@
 module View.Graph.Table exposing (..)
 
 import Api.Data
+import Config.Graph as Graph
 import Config.View as View
 import Css
 import Css.Table
+import Dict exposing (Dict)
 import FontAwesome
 import Html
 import Html.Attributes as Html
@@ -16,6 +18,7 @@ import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
+import View.Graph.Label as Label
 import View.Locale as Locale
 
 
@@ -312,6 +315,28 @@ valueColumnWithOptions hideCode vc getCoinCode name getValues =
         { name = name
         , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
         , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
+        }
+
+
+valueAndTokensColumnWithOptions : Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> (data -> Maybe (Dict String Api.Data.Values)) -> Table.Column data msg
+valueAndTokensColumnWithOptions hideCode vc getCoinCode name getValues getTokens =
+    let
+        assets data =
+            ( getCoinCode data, getValues data )
+                :: (getTokens data |> Maybe.map Dict.toList |> Maybe.withDefault [])
+    in
+    Table.veryCustomColumn
+        { name = name
+        , viewData =
+            \data ->
+                assets data
+                    |> Locale.currency vc.locale
+                    |> text
+                    |> List.singleton
+                    |> Table.HtmlDetails
+                        [ Css.Table.valuesCell vc False |> css
+                        ]
+        , sorter = Table.decreasingOrIncreasingBy (assets >> Locale.currencyAsFloat vc.locale)
         }
 
 

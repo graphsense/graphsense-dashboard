@@ -25,6 +25,7 @@ import Svg.Styled as S exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (second)
+import Util.Data as Data
 import Util.Graph exposing (decodeCoords, filterTxValue)
 import View.Graph.Label as Label
 import View.Locale as Locale
@@ -378,14 +379,6 @@ drawLabel vc gc x y hovered selected color lbl =
 
 getLinkAmount : View.Config -> Graph.Config -> String -> Link node -> Float
 getLinkAmount vc gc network link =
-    let
-        averageFiatValue { fiatValues } =
-            (fiatValues
-                |> List.map .value
-                |> List.sum
-            )
-                / (toFloat <| List.length fiatValues)
-    in
     case link.link of
         Link.PlaceholderLinkData ->
             0
@@ -398,7 +391,7 @@ getLinkAmount vc gc network link =
 
                 Graph.Value ->
                     Label.normalizeValues gc network li.value li.tokenValues
-                        |> List.map (second >> averageFiatValue)
+                        |> List.map (second >> Data.averageFiatValue)
                         |> List.sum
 
 
