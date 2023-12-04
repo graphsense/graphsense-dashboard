@@ -27,6 +27,7 @@ COPY ./config $WORKDIR/config
 COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
+COPY ./lang $WORKDIR/lang
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
 COPY ./themes $WORKDIR/themes
