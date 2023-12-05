@@ -69,6 +69,7 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
+import Util.Data as Data
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -289,7 +290,7 @@ createAddressTable route loadable t =
             n t
 
         ( Route.AddressTxsTable, _ ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> AddressTxsAccountTable |> Just
                 , [ getAddressTxsEffect
                         { currency = currency
@@ -426,7 +427,7 @@ createAddresslinkTable route t currency source target link =
             n t
 
         ( Route.AddresslinkTxsTable, _ ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getAddresslinkTxsEffect
                         { currency = currency
@@ -484,7 +485,7 @@ createEntitylinkTable route t currency source target link =
             n t
 
         ( Route.AddresslinkTxsTable, _ ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getEntitylinkTxsEffect
                         { currency = currency
@@ -559,7 +560,7 @@ createEntityTable route loadable t =
             n t
 
         ( Route.EntityTxsTable, _ ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> EntityTxsAccountTable |> Just
                 , [ getEntityTxsEffect
                         { currency = currency
@@ -763,7 +764,7 @@ createBlockTable route t currency block =
             n t
 
         ( Route.BlockTxsTable, Nothing ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> BlockTxsAccountTable |> Just
                 , [ getBlockTxsEffect
                         { currency = currency
@@ -814,7 +815,7 @@ createTxAccountTable route t currency txHash =
             n t
 
         ( Route.TokenTxsTable, Nothing ) ->
-            if String.toLower currency == "eth" then
+            if (Data.isAccountLike currency) then
                 ( TxsAccountTable.init |> TokenTxsTable |> Just
                 , [ getTokenTxsEffect
                         { currency = currency

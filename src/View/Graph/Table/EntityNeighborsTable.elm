@@ -23,6 +23,7 @@ import Util.View exposing (none)
 import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
+import Util.Data as Data
 
 
 columnTitleFromDirection : Bool -> String
@@ -108,7 +109,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
             ]
                 ++ valueColumns vc
                     coinCode
-                    (if coinCode == "eth" then
+                    (if Data.isAccountLike coinCode then
                         Locale.tokenCurrencies vc.locale
 
                      else
@@ -169,14 +170,14 @@ prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List (
 prepareCSV locale isOutgoing coinCode row =
     let
         suffix =
-            if coinCode == "eth" then
-                "_eth"
+            if Data.isAccountLike coinCode then
+                "_" ++ coinCode
 
             else
                 ""
 
         estimatedValueTitle =
-            if coinCode == "eth" then
+            if Data.isAccountLike coinCode then
                 "value"
 
             else
@@ -190,7 +191,7 @@ prepareCSV locale isOutgoing coinCode row =
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale coinCode
         ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale coinCode
         ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale coinCode
-        ++ (if coinCode == "eth" then
+        ++ (if Data.isAccountLike coinCode then
                 prepareCsvTokens locale row
 
             else

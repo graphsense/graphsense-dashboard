@@ -67,6 +67,7 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
+import Util.Data as Data
 
 
 cm : Maybe Msg
@@ -605,7 +606,7 @@ browseValue vc value =
                     (\( coinCode, v ) ->
                         let
                             cc =
-                                if parentCoin == "eth" then
+                                if (Data.isAccountLike parentCoin) then
                                     coinCode
 
                                 else
@@ -855,7 +856,7 @@ rowsAddress vc now address =
         , Nothing
         )
     ]
-        ++ (if loadableAddress address |> .currency |> (==) "eth" then
+        ++ (if loadableAddress address |> .currency |> Data.isAccountLike then
                 [ Row
                     ( "Smart contract"
                     , address
@@ -1626,7 +1627,7 @@ rowsTxAccount vc gc now tx table coinCode =
         mkTableLink title tableTag =
             tx
                 |> makeTableLink
-                    (\_ -> "eth")
+                    (\_ -> coinCode)
                     (\d -> ( d.txHash, d.tokenTxId ))
                     (\currency id ->
                         { title = Locale.string vc.locale title
@@ -1688,7 +1689,7 @@ rowsTxAccount vc gc now tx table coinCode =
         , Nothing
         )
     ]
-        ++ (if loadableCurrency tx == "eth" then
+        ++ (if (Data.isAccountLike (loadableCurrency tx)) then
                 [ Row
                     ( "Token transactions"
                     , String <|
@@ -1875,7 +1876,7 @@ linkValueRow vc gc parentCurrency linkData tableLink_ =
                     )
     in
     Row
-        ( if parentCurrency /= "eth" then
+        ( if not (Data.isAccountLike parentCurrency) then
             "Estimated value"
 
           else
@@ -1911,7 +1912,7 @@ browseAddresslinkTable vc gc coinCode table =
 
 multiValue : View.Config -> String -> String -> Api.Data.Values -> String
 multiValue vc parentCoin coinCode v =
-    if parentCoin == "eth" && vc.locale.currency /= Currency.Coin then
+    if Data.isAccountLike parentCoin && vc.locale.currency /= Currency.Coin then
         Locale.currency vc.locale [ ( coinCode, v ) ]
 
     else

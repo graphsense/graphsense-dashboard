@@ -9,6 +9,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Route.Graph as Graph
 import Tuple exposing (pair)
+import Util.Data as Data
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -68,7 +69,7 @@ filterByPrefix input result =
                 (\currency ->
                     let
                         addr =
-                            if String.toLower currency.currency == "eth" then
+                            if Data.isAccountLike (String.toLower currency.currency) then
                                 String.toLower input
 
                             else

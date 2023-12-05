@@ -74,6 +74,7 @@ import Update.Graph.Transform as Transform
 import Util.Graph
 import Yaml.Decode
 import Yaml.Encode
+import Util.Data as Data
 
 
 maxHistory : Int
@@ -1105,7 +1106,7 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
+                    if Data.isAccountLike (String.toLower id.currency) then
                         Browser.showAddressTxsAccount model.config id data model.browser
 
                     else
@@ -1116,7 +1117,7 @@ updateByMsg plugins uc msg model =
         BrowserGotAddresslinkTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
+                    if Data.isAccountLike (String.toLower id.currency) then
                         Browser.showAddresslinkTxsAccount model.config id data model.browser
 
                     else
@@ -1127,7 +1128,7 @@ updateByMsg plugins uc msg model =
         BrowserGotEntityTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
+                    if Data.isAccountLike (String.toLower id.currency) then
                         Browser.showEntityTxsAccount model.config id data model.browser
 
                     else
@@ -1138,7 +1139,7 @@ updateByMsg plugins uc msg model =
         BrowserGotEntitylinkTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
+                    if Data.isAccountLike (String.toLower id.currency) then
                         Browser.showEntitylinkTxsAccount model.config id data model.browser
 
                     else
@@ -1175,7 +1176,7 @@ updateByMsg plugins uc msg model =
         BrowserGotBlockTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
+                    if Data.isAccountLike (String.toLower id.currency) then
                         Browser.showBlockTxsAccount model.config id data model.browser
 
                     else
@@ -2479,14 +2480,14 @@ updateByRoute plugins route model =
         Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if String.toLower currency == "eth" || tokenTxId /= Nothing then
+                    if  Data.isAccountLike (String.toLower currency) || tokenTxId /= Nothing then
                         Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
 
                 ( browser2, effects ) =
-                    if String.toLower currency == "eth" then
+                    if (Data.isAccountLike currency) then
                         table
                             |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
                             |> Maybe.withDefault (n browser)

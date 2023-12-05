@@ -411,7 +411,7 @@ getLabel vc gc currency link =
                     Label.normalizeValues gc currency li.value li.tokenValues
                         |> Locale.currency vc.locale
                         |> (\str ->
-                                if currency /= "eth" then
+                                if not (Data.isAccountLike currency) then
                                     "~" ++ str
 
                                 else

@@ -4,6 +4,7 @@ import Api.Data
 import Config.Graph as Graph
 import Model.Graph.Table as Table
 import Util.Graph as Graph
+import Util.Data as Data
 
 
 titleLabels : String
@@ -33,7 +34,7 @@ titleEstimatedValue =
 
 titleValue : String -> String
 titleValue coinCode =
-    if coinCode == "eth" then
+    if Data.isAccountLike(coinCode) then
         "Total transferred"
 
     else
