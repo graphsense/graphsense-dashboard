@@ -109,7 +109,32 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                 model
 
         added =
-            Layer.addAddress plugins uc newModel.config.colors address newModel.layers
+            -- grab the added entities ...
+            eff
+                |> List.foldl
+                    (\ef entityIds ->
+                        case ef of
+                            InternalGraphAddedEntitiesEffect ids ->
+                                Set.union entityIds ids
+
+                            _ ->
+                                entityIds
+                    )
+                    Set.empty
+                -- ... and add the address to them
+                |> Set.foldl
+                    (\entityId added_ ->
+                        Layer.addAddressAtEntity plugins
+                            uc
+                            entityId
+                            address
+                            added_
+                    )
+                    { colors = newModel.config.colors
+                    , layers = newModel.layers
+                    , new = Set.empty
+                    , repositioned = Set.empty
+                    }
 
         newModel_ =
             { newModel
@@ -323,7 +348,7 @@ updateByMsg plugins uc msg model =
             n model
 
         InternalGraphSelectedAddress id ->
-            loadNextAddress plugins uc model id
+            n model
 
         -- handled upstream
         BrowserGotBrowserElement result ->
