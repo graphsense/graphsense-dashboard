@@ -69,7 +69,7 @@ filterByPrefix input result =
                 (\currency ->
                     let
                         addr =
-                            if Data.isAccountLike (String.toLower currency.currency) then
+                            if String.toLower currency.currency == "eth" then
                                 String.toLower input
 
                             else
