@@ -1106,7 +1106,7 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressTxs id data ->
             { model
                 | browser =
-                    if Data.isAccountLike (String.toLower id.currency) then
+                    if Data.isAccountLike id.currency then
                         Browser.showAddressTxsAccount model.config id data model.browser
 
                     else
@@ -1117,7 +1117,7 @@ updateByMsg plugins uc msg model =
         BrowserGotAddresslinkTxs id data ->
             { model
                 | browser =
-                    if Data.isAccountLike (String.toLower id.currency) then
+                    if Data.isAccountLike id.currency then
                         Browser.showAddresslinkTxsAccount model.config id data model.browser
 
                     else
@@ -1128,7 +1128,7 @@ updateByMsg plugins uc msg model =
         BrowserGotEntityTxs id data ->
             { model
                 | browser =
-                    if Data.isAccountLike (String.toLower id.currency) then
+                    if Data.isAccountLike id.currency then
                         Browser.showEntityTxsAccount model.config id data model.browser
 
                     else
@@ -1139,7 +1139,7 @@ updateByMsg plugins uc msg model =
         BrowserGotEntitylinkTxs id data ->
             { model
                 | browser =
-                    if Data.isAccountLike (String.toLower id.currency) then
+                    if Data.isAccountLike id.currency then
                         Browser.showEntitylinkTxsAccount model.config id data model.browser
 
                     else
@@ -1176,7 +1176,7 @@ updateByMsg plugins uc msg model =
         BrowserGotBlockTxs id data ->
             { model
                 | browser =
-                    if Data.isAccountLike (String.toLower id.currency) then
+                    if Data.isAccountLike id.currency then
                         Browser.showBlockTxsAccount model.config id data model.browser
 
                     else
@@ -2480,7 +2480,7 @@ updateByRoute plugins route model =
         Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if Data.isAccountLike (String.toLower currency) || tokenTxId /= Nothing then
+                    if Data.isAccountLike currency || tokenTxId /= Nothing then
                         Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
