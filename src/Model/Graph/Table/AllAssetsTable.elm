@@ -9,6 +9,6 @@ import Tuple exposing (first)
 filter : Table.Filter ( AssetIdentifier, Api.Data.Values )
 filter =
     { search =
-        \term a -> String.contains term (first a).network || String.contains term (first a).asset
+        \term a -> String.contains term (first a).asset
     , filter = always True
     }
