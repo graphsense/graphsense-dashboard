@@ -36,7 +36,6 @@ import Model.Locale exposing (..)
 import String.Interpolate
 import Time
 import Tuple exposing (..)
-import Model.Currency exposing (AssetIdentifier)
 
 
 type CodeVisibility

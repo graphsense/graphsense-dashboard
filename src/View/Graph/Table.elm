@@ -12,7 +12,7 @@ import Html.Attributes as Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Currency as Currency
+import Model.Currency as Currency exposing (AssetIdentifier, asset, assetFromBase)
 import Model.Graph.Table as T
 import RecordSetter exposing (..)
 import Table
@@ -20,7 +20,6 @@ import Tuple exposing (..)
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
 import View.Graph.Label as Label
 import View.Locale as Locale
-import Model.Currency exposing (AssetIdentifier, assetFromBase, asset)
 
 
 type alias Tools msg =
@@ -314,8 +313,8 @@ valueColumnWithOptions : Bool -> View.Config -> (data -> AssetIdentifier) -> Str
 valueColumnWithOptions hideCode vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> getValues data |> valuesCell vc hideCode ((getCoinCode data))
-        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc ((getCoinCode data)))
+        , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
+        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
         }
 
 
@@ -323,8 +322,8 @@ valueAndTokensColumnWithOptions : Bool -> View.Config -> (data -> String) -> Str
 valueAndTokensColumnWithOptions hideCode vc getCoinCode name getValues getTokens =
     let
         assets data =
-            ( (assetFromBase (getCoinCode data)), getValues data )
-                :: (getTokens data |> Maybe.map (Dict.toList >> List.map (\(k, v) -> ((asset (getCoinCode data) k ), v))) |> Maybe.withDefault [])
+            ( assetFromBase (getCoinCode data), getValues data )
+                :: (getTokens data |> Maybe.map (Dict.toList >> List.map (\( k, v ) -> ( asset (getCoinCode data) k, v ))) |> Maybe.withDefault [])
     in
     Table.veryCustomColumn
         { name = name

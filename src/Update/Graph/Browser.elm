@@ -23,6 +23,7 @@ import Log
 import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
+import Model.Currency exposing (asset, tokensToValue)
 import Model.Entity as E
 import Model.Graph.Actor as Actor
 import Model.Graph.Address as Address
@@ -53,6 +54,7 @@ import Route.Graph as Route
 import Table
 import Tuple exposing (..)
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
+import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import View.Graph.Label as Label
 import View.Graph.Table.AddressNeighborsTable as AddressNeighborsTable
@@ -69,9 +71,6 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import Util.Data as Data
-import Model.Currency exposing (asset)
-import Model.Currency exposing (tokensToValue)
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -292,7 +291,7 @@ createAddressTable route loadable t =
             n t
 
         ( Route.AddressTxsTable, _ ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> AddressTxsAccountTable |> Just
                 , [ getAddressTxsEffect
                         { currency = currency
@@ -349,7 +348,8 @@ createAddressTable route loadable t =
                                 :: (a.address.totalTokensReceived
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   ) |> (tokensToValue a.address.currency )
+                                   )
+                                |> tokensToValue a.address.currency
 
                         _ ->
                             []
@@ -370,7 +370,8 @@ createAddressTable route loadable t =
                                 :: (a.address.tokenBalances
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   ) |> (tokensToValue a.address.currency )
+                                   )
+                                |> tokensToValue a.address.currency
 
                         _ ->
                             []
@@ -429,7 +430,7 @@ createAddresslinkTable route t currency source target link =
             n t
 
         ( Route.AddresslinkTxsTable, _ ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getAddresslinkTxsEffect
                         { currency = currency
@@ -470,7 +471,9 @@ createLinkAllAssetsTable currency link =
                            )
 
                 Link.PlaceholderLinkData ->
-                    []) |> tokensToValue currency
+                    []
+            )
+                |> tokensToValue currency
     in
     AllAssetsTable.init
         |> appendData AllAssetsTable.filter assets
@@ -487,7 +490,7 @@ createEntitylinkTable route t currency source target link =
             n t
 
         ( Route.AddresslinkTxsTable, _ ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> AddresslinkTxsAccountTable |> Just
                 , [ getEntitylinkTxsEffect
                         { currency = currency
@@ -562,7 +565,7 @@ createEntityTable route loadable t =
             n t
 
         ( Route.EntityTxsTable, _ ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> EntityTxsAccountTable |> Just
                 , [ getEntityTxsEffect
                         { currency = currency
@@ -632,7 +635,8 @@ createEntityTable route loadable t =
                                 :: (a.entity.totalTokensReceived
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   ) |> tokensToValue currency
+                                   )
+                                |> tokensToValue currency
 
                         _ ->
                             []
@@ -653,7 +657,8 @@ createEntityTable route loadable t =
                                 :: (a.entity.tokenBalances
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   ) |> tokensToValue currency
+                                   )
+                                |> tokensToValue currency
 
                         _ ->
                             []
@@ -766,7 +771,7 @@ createBlockTable route t currency block =
             n t
 
         ( Route.BlockTxsTable, Nothing ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> BlockTxsAccountTable |> Just
                 , [ getBlockTxsEffect
                         { currency = currency
@@ -817,7 +822,7 @@ createTxAccountTable route t currency txHash =
             n t
 
         ( Route.TokenTxsTable, Nothing ) ->
-            if (Data.isAccountLike currency) then
+            if Data.isAccountLike currency then
                 ( TxsAccountTable.init |> TokenTxsTable |> Just
                 , [ getTokenTxsEffect
                         { currency = currency

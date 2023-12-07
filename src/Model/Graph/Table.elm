@@ -1,8 +1,8 @@
 module Model.Graph.Table exposing (..)
 
 import Api.Data
-import Table
 import Model.Currency exposing (AssetIdentifier)
+import Table
 
 
 titleTx : String

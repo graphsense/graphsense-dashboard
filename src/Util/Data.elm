@@ -13,7 +13,11 @@ averageFiatValue { fiatValues } =
     )
         / (toFloat <| List.length fiatValues)
 
+
 isAccountLike : String -> Bool
-isAccountLike network = let currl = String.toLower network
+isAccountLike network =
+    let
+        currl =
+            String.toLower network
     in
-    (currl == "eth" || currl == "trx")
+    currl == "eth" || currl == "trx"

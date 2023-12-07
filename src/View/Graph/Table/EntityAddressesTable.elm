@@ -8,6 +8,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Address as A
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.EntityAddressesTable exposing (..)
@@ -17,7 +18,6 @@ import Table
 import Util.Csv
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (assetFromBase)
 
 
 config : View.Config -> String -> Maybe EntityId -> (EntityId -> A.Address -> Bool) -> Table.Config Api.Data.Address Msg

@@ -71,10 +71,10 @@ import Update.Graph.Search as Search
 import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Util.Data as Data
 import Util.Graph
 import Yaml.Decode
 import Yaml.Encode
-import Util.Data as Data
 
 
 maxHistory : Int
@@ -2480,14 +2480,14 @@ updateByRoute plugins route model =
         Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if  Data.isAccountLike (String.toLower currency) || tokenTxId /= Nothing then
+                    if Data.isAccountLike (String.toLower currency) || tokenTxId /= Nothing then
                         Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
 
                 ( browser2, effects ) =
-                    if (Data.isAccountLike currency) then
+                    if Data.isAccountLike currency then
                         table
                             |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
                             |> Maybe.withDefault (n browser)

@@ -2,11 +2,10 @@ module Model.Graph.Table.AddressNeighborsTable exposing (..)
 
 import Api.Data
 import Config.Graph as Graph
+import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Graph.Table as Table
-import Util.Graph as Graph
 import Util.Data as Data
-import Model.Currency exposing (assetFromBase)
-import Model.Currency exposing (AssetIdentifier)
+import Util.Graph as Graph
 
 
 titleLabels : String
@@ -36,7 +35,7 @@ titleEstimatedValue =
 
 titleValue : String -> String
 titleValue coinCode =
-    if Data.isAccountLike(coinCode) then
+    if Data.isAccountLike coinCode then
         "Total transferred"
 
     else

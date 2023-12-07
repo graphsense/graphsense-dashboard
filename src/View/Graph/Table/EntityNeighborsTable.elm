@@ -9,6 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Maybe.Extra
+import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Entity as E
 import Model.Graph.Entity
 import Model.Graph.Id exposing (EntityId)
@@ -19,13 +20,11 @@ import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
+import Util.Data as Data
 import Util.View exposing (none)
 import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-import Util.Data as Data
-import Model.Currency exposing (AssetIdentifier)
-import Model.Currency exposing (assetFromBase)
 
 
 columnTitleFromDirection : Bool -> String
@@ -113,6 +112,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                     (assetFromBase coinCode)
                     (if Data.isAccountLike coinCode then
                         Locale.tokenCurrencies coinCode vc.locale
+
                      else
                         []
                     )

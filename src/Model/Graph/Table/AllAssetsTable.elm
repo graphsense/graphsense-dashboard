@@ -1,9 +1,9 @@
 module Model.Graph.Table.AllAssetsTable exposing (..)
 
 import Api.Data
+import Model.Currency exposing (AssetIdentifier)
 import Model.Graph.Table as Table
 import Tuple exposing (first)
-import Model.Currency exposing (AssetIdentifier)
 
 
 filter : Table.Filter ( AssetIdentifier, Api.Data.Values )

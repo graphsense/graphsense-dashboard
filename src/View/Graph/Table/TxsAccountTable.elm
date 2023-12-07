@@ -6,7 +6,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
-import Model.Currency
+import Model.Currency exposing (asset)
 import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.TxsAccountTable exposing (..)
 import Model.Locale
@@ -17,7 +17,6 @@ import Table
 import Util.Csv
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (asset)
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
@@ -61,7 +60,7 @@ config vc coinCode =
                         T.valueColumnWithoutCode
                      )
                         vc
-                        (\(x) -> asset coinCode x.currency )
+                        (\x -> asset coinCode x.currency)
                         "Value"
                         .value
                    ]

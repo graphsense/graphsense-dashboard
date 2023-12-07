@@ -6,6 +6,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
 import Model.Locale
@@ -16,7 +17,6 @@ import Table
 import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (assetFromBase)
 
 
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg

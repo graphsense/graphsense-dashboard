@@ -6,6 +6,7 @@ import Css
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Graph.Table exposing (titleCurrency, titleValue)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
@@ -14,8 +15,6 @@ import Tuple exposing (first, second)
 import Util.Csv
 import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (assetFromBase)
-import Model.Currency exposing (AssetIdentifier)
 
 
 config : View.Config -> Table.Config ( AssetIdentifier, Api.Data.Values ) Msg

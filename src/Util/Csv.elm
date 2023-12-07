@@ -1,9 +1,10 @@
 module Util.Csv exposing (..)
 
 import Api.Data
-import Model.Currency exposing (Currency(..), AssetIdentifier, assetFromBase)
+import Model.Currency exposing (AssetIdentifier, Currency(..), assetFromBase)
 import Model.Locale exposing (..)
 import View.Locale exposing (currencyWithoutCode)
+
 
 int : Int -> String
 int =
@@ -47,7 +48,7 @@ valuesWithBaseCurrencyFloat key v locModel asset =
             { locModel | valueDetail = Exact, currency = Coin }
     in
     ( ( key, [] ), int v.value )
-        :: (( prefix key "in_base_currency", string (currencyWithoutCode nlocModel [ ( (assetFromBase asset), v ) ]) )
+        :: (( prefix key "in_base_currency", string (currencyWithoutCode nlocModel [ ( assetFromBase asset, v ) ]) )
                 :: List.map (\f -> ( prefix key f.code, float f.value )) v.fiatValues
            )
 

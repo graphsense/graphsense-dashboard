@@ -15,9 +15,8 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId)
+import Model.Graph.Id as Id exposing (AddressId, currency)
 import Model.Graph.Layer as Layer exposing (Layer)
-import Model.Graph.Id exposing (currency)
 
 
 type Effect msg
@@ -288,8 +287,9 @@ map mapMsg effect =
                 |> GetConceptsEffect eff
 
         ListSupportedTokensEffect eff m ->
-            m >> mapMsg 
-                |> ListSupportedTokensEffect eff 
+            m
+                >> mapMsg
+                |> ListSupportedTokensEffect eff
 
         GetAddressEffect eff m ->
             m

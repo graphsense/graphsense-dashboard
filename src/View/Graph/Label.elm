@@ -8,6 +8,7 @@ import Css exposing (..)
 import Css.Graph as Css
 import Dict exposing (Dict)
 import List.Extra
+import Model.Currency exposing (AssetIdentifier)
 import Model.Graph
 import Msg.Graph exposing (Msg)
 import String.Extra
@@ -16,7 +17,6 @@ import Svg.Styled.Attributes as Svg exposing (..)
 import Tuple exposing (mapSecond)
 import Util.Graph as Util exposing (filterTxValue)
 import View.Locale as Locale
-import Model.Currency exposing (AssetIdentifier)
 
 
 label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
@@ -126,10 +126,10 @@ split maxLettersPerRow string =
 
 normalizeValues : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> List ( AssetIdentifier, Api.Data.Values )
 normalizeValues gc parentCurrency value tokenValues =
-    ( {network = parentCurrency, asset =parentCurrency} , value )
+    ( { network = parentCurrency, asset = parentCurrency }, value )
         :: (tokenValues
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
-                |> List.map (\(a, v) -> ({network= parentCurrency, asset = a}, v))
+                |> List.map (\( a, v ) -> ( { network = parentCurrency, asset = a }, v ))
            )
         |> List.filter (\( asset, v ) -> filterTxValue gc asset.network v Nothing)

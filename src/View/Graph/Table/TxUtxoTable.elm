@@ -7,6 +7,7 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.TxUtxoTable exposing (..)
 import Model.Locale
@@ -15,7 +16,6 @@ import Table
 import Util.Csv
 import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (assetFromBase)
 
 
 columnTitleFromDirection : Bool -> String
@@ -57,7 +57,7 @@ config vc isOutgoing coinCode =
                             )
                     ]
                 )
-            , T.valueColumn vc (\_ -> assetFromBase(coinCode)) titleValue .value
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleValue .value
             ]
         , customizations = customizations vc
         }

@@ -9,6 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Address as A
+import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Graph.Id exposing (AddressId)
 import Model.Graph.Table exposing (Table)
 import Model.Graph.Table.AddressNeighborsTable exposing (..)
@@ -16,13 +17,11 @@ import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
+import Util.Data as Data
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-import Util.Data as Data
-import Model.Currency exposing (AssetIdentifier)
-import Model.Currency exposing (assetFromBase)
 
 
 columnTitleFromDirection : Bool -> String
@@ -228,7 +227,7 @@ prepareCSV locale isOutgoing network row =
 
 prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
 prepareCsvTokens locale coinCode row =
-    Locale.tokenCurrencies coinCode  locale
+    Locale.tokenCurrencies coinCode locale
         |> List.map
             (\token ->
                 Util.Csv.values ("address_balance_" ++ token)

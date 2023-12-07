@@ -17,7 +17,7 @@ import Json.Decode as JD
 import List.Extra
 import Maybe.Extra
 import Model.Address as A
-import Model.Currency as Currency
+import Model.Currency as Currency exposing (asset, assetFromBase, tokensToValue)
 import Model.Entity as E
 import Model.Graph.Actor exposing (..)
 import Model.Graph.Address exposing (..)
@@ -39,6 +39,7 @@ import Route.Graph as Route
 import Table
 import Time
 import Tuple exposing (..)
+import Util.Data as Data
 import Util.ExternalLinks exposing (addProtocolPrefx, getFontAwesomeIconForUris)
 import Util.Flags exposing (getFlagEmoji)
 import Util.Graph exposing (filterTxValue)
@@ -67,15 +68,12 @@ import View.Graph.Table.TxsAccountTable as TxsAccountTable
 import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
-import Util.Data as Data
-import Model.Currency exposing (asset)
-import Model.Currency exposing (tokensToValue)
-import Model.Currency exposing (assetFromBase)
 
 
 cm : Maybe Msg
 cm =
     Just UserClicksDownloadCSVInTable
+
 
 frame : View.Config -> Bool -> List (Html msg) -> Html msg
 frame vc visible =
@@ -608,7 +606,7 @@ browseValue vc value =
                     (\( coinCode, v ) ->
                         let
                             cc =
-                                if (Data.isAccountLike parentCoin) then
+                                if Data.isAccountLike parentCoin then
                                     coinCode.asset
 
                                 else
@@ -761,8 +759,8 @@ rowsAddress vc now address =
             , Row
                 ( "Final balance"
                 , address
-                    |> ifLoaded 
-                        (balanceValues .address 
+                    |> ifLoaded
+                        (balanceValues .address
                             >> Value
                         )
                     |> elseLoading
@@ -1152,7 +1150,7 @@ rowsEntity vc gc now ent =
         , ent
             |> ifLoaded
                 (totalReceivedValues .entity
-                   >>  Value
+                    >> Value
                 )
             |> elseLoading
         , mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
@@ -1691,7 +1689,7 @@ rowsTxAccount vc gc now tx table coinCode =
         , Nothing
         )
     ]
-        ++ (if (Data.isAccountLike (loadableCurrency tx)) then
+        ++ (if Data.isAccountLike (loadableCurrency tx) then
                 [ Row
                     ( "Token transactions"
                     , String <|
@@ -1953,7 +1951,8 @@ totalReceivedValues accessor a =
         :: ((accessor a).totalTokensReceived
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
-           ) |> tokensToValue (accessor a).currency
+           )
+        |> tokensToValue (accessor a).currency
 
 
 balanceValues : (thing -> AddressOrEntity a) -> thing -> List ( Currency.AssetIdentifier, Api.Data.Values )
@@ -1962,7 +1961,8 @@ balanceValues accessor a =
         :: ((accessor a).tokenBalances
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
-           ) |> tokensToValue (accessor a).currency
+           )
+        |> tokensToValue (accessor a).currency
 
 
 tableSeparator : View.Config -> Html msg

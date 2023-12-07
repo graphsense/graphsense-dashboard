@@ -10,7 +10,7 @@ import Dict
 import Init.Graph.Id as Id
 import Json.Decode
 import List.Extra
-import Model.Currency as Currency
+import Model.Currency as Currency exposing (assetFromBase)
 import Model.Graph exposing (NodeType)
 import Model.Graph.Address as Address exposing (Address)
 import Model.Graph.Coords exposing (Coords)
@@ -29,7 +29,6 @@ import Util.Data as Data
 import Util.Graph exposing (decodeCoords, filterTxValue)
 import View.Graph.Label as Label
 import View.Locale as Locale
-import Model.Currency exposing (assetFromBase)
 
 
 linkPrefix : String

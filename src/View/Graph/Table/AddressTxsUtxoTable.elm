@@ -6,6 +6,7 @@ import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.Table
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Table exposing (Table, titleHeight, titleTimestamp, titleTx, titleValue)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
@@ -15,7 +16,6 @@ import Table
 import Util.Csv
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
-import Model.Currency exposing (assetFromBase)
 
 
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg

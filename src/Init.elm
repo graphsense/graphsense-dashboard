@@ -2,6 +2,7 @@ module Init exposing (init)
 
 import Config exposing (config)
 import Config.UserSettings
+import Dict
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
@@ -13,7 +14,6 @@ import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
-import Dict
 
 
 init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
@@ -64,7 +64,7 @@ init plugins flags url key =
                 |> ApiEffect
            , Effect.Api.ListSupportedTokensEffect "eth" (BrowserGotSupportedTokens "eth")
                 |> ApiEffect
-            , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
+           , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
                 |> ApiEffect
            , PluginEffect cmd
            ]
