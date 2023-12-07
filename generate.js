@@ -72,7 +72,7 @@ const appendLang = (plugin) => {
   fs.readdirSync(pluginLangFolder)
     .map(fileName => {
       let coreLangFilename = path.join(langFolder, fileName)
-      let genLangFilename = path.join(genFolder, langFolder, fileName)
+      let genLangFilename = path.join(genLangFolder, fileName)
       let pluginLangFilename = path.join(pluginLangFolder, fileName)
       if(!fs.existsSync(coreLangFilename)) {
         console.err(`Ignoring ${pluginLangFilename}.`)
