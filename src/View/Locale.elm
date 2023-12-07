@@ -332,9 +332,6 @@ coin =
 
 coinWithOptions : CodeVisibility -> Model -> AssetIdentifier -> Int -> String
 coinWithOptions vis model asset v =
-    let 
-        _ =  Debug.log "test" (asset.network ++ ":" ++ asset.asset)
-    in
     normalizeCoinValue model asset v
         |> Maybe.map
             (\value ->
