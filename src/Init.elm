@@ -13,6 +13,7 @@ import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
+import Dict
 
 
 init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
@@ -51,7 +52,7 @@ init plugins flags url key =
       , height = flags.height
       , error = ""
       , statusbar = Statusbar.init
-      , supportedTokens = Nothing
+      , supportedTokens = Dict.empty
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False
@@ -61,7 +62,9 @@ init plugins flags url key =
                 |> ApiEffect
            , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
                 |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect BrowserGotSupportedTokens
+           , Effect.Api.ListSupportedTokensEffect "eth" (BrowserGotSupportedTokens "eth")
+                |> ApiEffect
+            , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
                 |> ApiEffect
            , PluginEffect cmd
            ]

@@ -47,7 +47,7 @@ type alias Model =
     , currency : Currency
     , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
     , unitToString : Int -> Locale.Durations.Unit -> String
-    , supportedTokens : Maybe Api.Data.TokenConfigs
+    , supportedTokens : Dict String Api.Data.TokenConfigs
     }
 
 

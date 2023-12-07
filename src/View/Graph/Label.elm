@@ -16,6 +16,7 @@ import Svg.Styled.Attributes as Svg exposing (..)
 import Tuple exposing (mapSecond)
 import Util.Graph as Util exposing (filterTxValue)
 import View.Locale as Locale
+import Model.Currency exposing (AssetIdentifier)
 
 
 label : Config -> Graph.Config -> Model.Graph.NodeType -> String -> Svg Msg
@@ -123,11 +124,12 @@ split maxLettersPerRow string =
         |> List.map String.trim
 
 
-normalizeValues : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> List ( String, Api.Data.Values )
+normalizeValues : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> List ( AssetIdentifier, Api.Data.Values )
 normalizeValues gc parentCurrency value tokenValues =
-    ( parentCurrency, value )
+    ( {network = parentCurrency, asset =parentCurrency} , value )
         :: (tokenValues
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
+                |> List.map (\(a, v) -> ({network= parentCurrency, asset = a}, v))
            )
-        |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)
+        |> List.filter (\( asset, v ) -> filterTxValue gc asset.network v Nothing)

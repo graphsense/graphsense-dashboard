@@ -70,6 +70,8 @@ import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
 import Util.Data as Data
+import Model.Currency exposing (asset)
+import Model.Currency exposing (tokensToValue)
 
 
 loadingAddress : { currency : String, address : String } -> Model -> Model
@@ -347,7 +349,7 @@ createAddressTable route loadable t =
                                 :: (a.address.totalTokensReceived
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   )
+                                   ) |> (tokensToValue a.address.currency )
 
                         _ ->
                             []
@@ -368,7 +370,7 @@ createAddressTable route loadable t =
                                 :: (a.address.tokenBalances
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   )
+                                   ) |> (tokensToValue a.address.currency )
 
                         _ ->
                             []
@@ -459,7 +461,7 @@ createLinkAllAssetsTable : String -> LinkData -> AddresslinkTable
 createLinkAllAssetsTable currency link =
     let
         assets =
-            case link of
+            (case link of
                 Link.LinkData { value, tokenValues } ->
                     ( currency, value )
                         :: (tokenValues
@@ -468,7 +470,7 @@ createLinkAllAssetsTable currency link =
                            )
 
                 Link.PlaceholderLinkData ->
-                    []
+                    []) |> tokensToValue currency
     in
     AllAssetsTable.init
         |> appendData AllAssetsTable.filter assets
@@ -630,7 +632,7 @@ createEntityTable route loadable t =
                                 :: (a.entity.totalTokensReceived
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   )
+                                   ) |> tokensToValue currency
 
                         _ ->
                             []
@@ -651,7 +653,7 @@ createEntityTable route loadable t =
                                 :: (a.entity.tokenBalances
                                         |> Maybe.map Dict.toList
                                         |> Maybe.withDefault []
-                                   )
+                                   ) |> tokensToValue currency
 
                         _ ->
                             []

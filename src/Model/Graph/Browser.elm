@@ -9,6 +9,7 @@ import Json.Encode exposing (Value)
 import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
+import Model.Currency exposing (AssetIdentifier)
 import Model.Entity as E
 import Model.Graph.Actor exposing (Actor)
 import Model.Graph.Address exposing (Address)
@@ -65,8 +66,8 @@ type Value msg
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int
-    | Value (List ( String, Api.Data.Values ))
-    | MultiValue Graph.Config String Int (List ( String, Api.Data.Values ))
+    | Value (List ( AssetIdentifier, Api.Data.Values ))
+    | MultiValue Graph.Config String Int (List ( AssetIdentifier, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Select (List ( String, String )) (String -> msg) String
     | Html (Html msg)

@@ -4,6 +4,7 @@ import Api.Data
 import Config.Graph as Graph
 import Model.Graph.Table as Table
 import Util.Graph as Graph
+import Model.Currency exposing (assetFromBase)
 
 
 titleTx : String

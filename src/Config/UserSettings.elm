@@ -19,6 +19,7 @@ type alias UserSettings =
     , showAddressShadowLinks : Maybe Bool
     , showClusterShadowLinks : Maybe Bool
     , showDatesInUserLocale : Maybe Bool
+    , showZeroValueTxs : Maybe Bool
     }
 
 
@@ -139,6 +140,7 @@ decoder =
         |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showClusterShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showDatesInUserLocale" (nullable bool |> fromString) Nothing
+        |> optional "showZeroValueTxs" (nullable bool |> fromString) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value
@@ -153,6 +155,7 @@ encoder settings =
         , ( "showAddressShadowLinks", settings.showAddressShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showClusterShadowLinks", settings.showClusterShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showDatesInUserLocale", settings.showDatesInUserLocale |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "showZeroValueTxs", settings.showZeroValueTxs |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -167,4 +170,5 @@ default =
     , showAddressShadowLinks = Nothing
     , showClusterShadowLinks = Nothing
     , showDatesInUserLocale = Nothing
+    , showZeroValueTxs = Nothing
     }

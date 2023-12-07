@@ -5,6 +5,8 @@ import Config.Graph as Graph
 import Model.Graph.Table as Table
 import Util.Graph as Graph
 import Util.Data as Data
+import Model.Currency exposing (assetFromBase)
+import Model.Currency exposing (AssetIdentifier)
 
 
 titleLabels : String

@@ -36,6 +36,7 @@ import Model.Locale exposing (..)
 import String.Interpolate
 import Time
 import Tuple exposing (..)
+import Model.Currency exposing (AssetIdentifier)
 
 
 type CodeVisibility
@@ -241,7 +242,7 @@ percentage model =
     floatWithFormat model "0[.]00%"
 
 
-bestAssetAsInt : Model -> List ( String, Api.Data.Values ) -> Maybe ( String, Int )
+bestAssetAsInt : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Maybe ( AssetIdentifier, Int )
 bestAssetAsInt model =
     let
         fiatValue v =
@@ -256,13 +257,13 @@ bestAssetAsInt model =
         >> Maybe.map (mapSecond .value)
 
 
-sumFiats : String -> List ( String, Api.Data.Values ) -> Float
+sumFiats : String -> List ( AssetIdentifier, Api.Data.Values ) -> Float
 sumFiats fiatCode =
     List.filterMap (second >> getFiatValue fiatCode)
         >> List.sum
 
 
-currencyAsFloat : Model -> List ( String, Api.Data.Values ) -> Float
+currencyAsFloat : Model -> List ( AssetIdentifier, Api.Data.Values ) -> Float
 currencyAsFloat model values =
     case model.currency of
         Coin ->
@@ -274,7 +275,7 @@ currencyAsFloat model values =
             sumFiats code values
 
 
-currencyWithOptions : CodeVisibility -> Model -> List ( String, Api.Data.Values ) -> String
+currencyWithOptions : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currencyWithOptions vis model values =
     case model.currency of
         Coin ->
@@ -297,12 +298,12 @@ currencyWithOptions vis model values =
                 |> fiat model code
 
 
-currency : Model -> List ( String, Api.Data.Values ) -> String
+currency : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currency =
     currencyWithOptions One
 
 
-currencyWithoutCode : Model -> List ( String, Api.Data.Values ) -> String
+currencyWithoutCode : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currencyWithoutCode =
     currencyWithOptions Hidden
 
@@ -324,14 +325,17 @@ fiatWithOptions vis model code value =
            )
 
 
-coin : Model -> String -> Int -> String
+coin : Model -> AssetIdentifier -> Int -> String
 coin =
     coinWithOptions One
 
 
-coinWithOptions : CodeVisibility -> Model -> String -> Int -> String
-coinWithOptions vis model code v =
-    normalizeCoinValue model code v
+coinWithOptions : CodeVisibility -> Model -> AssetIdentifier -> Int -> String
+coinWithOptions vis model asset v =
+    let 
+        _ =  Debug.log "test" (asset.network ++ ":" ++ asset.asset)
+    in
+    normalizeCoinValue model asset v
         |> Maybe.map
             (\value ->
                 let
@@ -354,16 +358,16 @@ coinWithOptions vis model code v =
                             ""
 
                         else
-                            " " ++ String.toUpper code
+                            " " ++ String.toUpper asset.asset
                        )
             )
-        |> Maybe.withDefault ("unknown currency " ++ code)
+        |> Maybe.withDefault ("unknown currency " ++ asset.asset)
 
 
-normalizeCoinValue : Model -> String -> Int -> Maybe Float
-normalizeCoinValue model code v =
-    fixpointFactor model.supportedTokens
-        |> Dict.get (String.toLower code)
+normalizeCoinValue : Model -> AssetIdentifier -> Int -> Maybe Float
+normalizeCoinValue model asset v =
+    fixpointFactor (Dict.get asset.network model.supportedTokens)
+        |> Dict.get (String.toLower asset.asset)
         |> Maybe.map first
         |> Maybe.map
             (\f ->
@@ -375,7 +379,7 @@ normalizeCoinValue model code v =
             )
 
 
-valuesToFloat : Model -> String -> Api.Data.Values -> Maybe Float
+valuesToFloat : Model -> AssetIdentifier -> Api.Data.Values -> Maybe Float
 valuesToFloat model asset values =
     case model.currency of
         Coin ->
@@ -397,9 +401,9 @@ durationToString { unitToString } dur =
         dur
 
 
-tokenCurrencies : Model -> List String
-tokenCurrencies model =
-    model.supportedTokens
+tokenCurrencies : String -> Model -> List String
+tokenCurrencies network model =
+    Dict.get network model.supportedTokens
         |> Maybe.map (.tokenConfigs >> List.map .ticker)
         |> Maybe.withDefault []
 

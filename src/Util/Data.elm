@@ -2,6 +2,7 @@ module Util.Data exposing (..)
 
 import Api.Data
 import List exposing (length)
+import Model.Currency exposing (AssetIdentifier)
 
 
 averageFiatValue : Api.Data.Values -> Float
@@ -13,6 +14,6 @@ averageFiatValue { fiatValues } =
         / (toFloat <| List.length fiatValues)
 
 isAccountLike : String -> Bool
-isAccountLike curr = let currl = String.toLower curr
+isAccountLike network = let currl = String.toLower network
     in
     (currl == "eth" || currl == "trx")

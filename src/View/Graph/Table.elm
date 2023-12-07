@@ -20,6 +20,7 @@ import Tuple exposing (..)
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
 import View.Graph.Label as Label
 import View.Locale as Locale
+import Model.Currency exposing (AssetIdentifier, assetFromBase, asset)
 
 
 type alias Tools msg =
@@ -299,22 +300,22 @@ maybeIntColumn vc name accessor =
         }
 
 
-valueColumn : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 valueColumn =
     valueColumnWithOptions False
 
 
-valueColumnWithoutCode : View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithoutCode : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 valueColumnWithoutCode =
     valueColumnWithOptions True
 
 
-valueColumnWithOptions : Bool -> View.Config -> (data -> String) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions : Bool -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 valueColumnWithOptions hideCode vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
-        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
+        , viewData = \data -> getValues data |> valuesCell vc hideCode ((getCoinCode data))
+        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc ((getCoinCode data)))
         }
 
 
@@ -322,8 +323,8 @@ valueAndTokensColumnWithOptions : Bool -> View.Config -> (data -> String) -> Str
 valueAndTokensColumnWithOptions hideCode vc getCoinCode name getValues getTokens =
     let
         assets data =
-            ( getCoinCode data, getValues data )
-                :: (getTokens data |> Maybe.map Dict.toList |> Maybe.withDefault [])
+            ( (assetFromBase (getCoinCode data)), getValues data )
+                :: (getTokens data |> Maybe.map (Dict.toList >> List.map (\(k, v) -> ((asset (getCoinCode data) k ), v))) |> Maybe.withDefault [])
     in
     Table.veryCustomColumn
         { name = name
@@ -340,7 +341,7 @@ valueAndTokensColumnWithOptions hideCode vc getCoinCode name getValues getTokens
         }
 
 
-valuesCell : View.Config -> Bool -> String -> Api.Data.Values -> Table.HtmlDetails msg
+valuesCell : View.Config -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
 valuesCell vc hideCode coinCode values =
     (if hideCode then
         Locale.currencyWithoutCode
@@ -357,7 +358,7 @@ valuesCell vc hideCode coinCode values =
             ]
 
 
-valuesCss : View.Config -> String -> Api.Data.Values -> List Css.Style
+valuesCss : View.Config -> AssetIdentifier -> Api.Data.Values -> List Css.Style
 valuesCss vc asset values =
     Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0
@@ -365,7 +366,7 @@ valuesCss vc asset values =
         |> Css.Table.valuesCell vc
 
 
-valuesSorter : View.Config -> String -> Api.Data.Values -> Float
+valuesSorter : View.Config -> AssetIdentifier -> Api.Data.Values -> Float
 valuesSorter vc asset values =
     Locale.valuesToFloat vc.locale asset values
         |> Maybe.withDefault 0

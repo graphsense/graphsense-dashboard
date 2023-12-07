@@ -21,6 +21,8 @@ import View.Button exposing (actorLink)
 import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
 import Util.Data as Data
+import Model.Currency exposing (AssetIdentifier)
+import Model.Currency exposing (assetFromBase)
 
 
 columnTitleFromDirection : Bool -> String
@@ -86,9 +88,9 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
             , T.intColumn vc titleNoTxs .noTxs
             ]
                 ++ valueColumns vc
-                    coinCode
+                    (assetFromBase coinCode)
                     (if Data.isAccountLike coinCode then
-                        Locale.tokenCurrencies vc.locale
+                        Locale.tokenCurrencies coinCode vc.locale
 
                      else
                         []
@@ -110,7 +112,7 @@ zero =
 
 valueColumns :
     View.Config
-    -> String
+    -> AssetIdentifier
     -> List String
     ->
         { balance : Api.Data.NeighborAddress -> Api.Data.Values
@@ -121,20 +123,20 @@ valueColumns :
 valueColumns vc coinCode tokens getValues =
     [ T.valueAndTokensColumnWithOptions True
         vc
-        (\_ -> coinCode)
+        (\_ -> coinCode.network)
         (Locale.string vc.locale titleAddressBalance)
         (.address >> .balance)
         (.address >> .tokenBalances)
     , T.valueAndTokensColumnWithOptions True
         vc
-        (\_ -> coinCode)
+        (\_ -> coinCode.network)
         (Locale.string vc.locale titleAddressReceived)
         (.address >> .totalReceived)
         (.address >> .totalTokensReceived)
     , T.valueAndTokensColumnWithOptions True
         vc
-        (\_ -> coinCode)
-        (Locale.string vc.locale (titleValue coinCode))
+        (\_ -> coinCode.network)
+        (Locale.string vc.locale (titleValue coinCode.network))
         .value
         .tokenValues
     ]
@@ -193,17 +195,17 @@ n s =
 
 
 prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
-prepareCSV locale isOutgoing coinCode row =
+prepareCSV locale isOutgoing network row =
     let
         suffix =
-            if Data.isAccountLike coinCode then
+            if Data.isAccountLike network then
                 "_eth"
 
             else
                 ""
 
         estimatedValueTitle =
-            if Data.isAccountLike coinCode then
+            if Data.isAccountLike network then
                 "value"
 
             else
@@ -213,20 +215,20 @@ prepareCSV locale isOutgoing coinCode row =
     , ( n "labels", row.labels |> Maybe.withDefault [] |> String.join ", " |> Util.Csv.string )
     , ( n "no_txs", Util.Csv.int row.noTxs )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale coinCode
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale coinCode
-        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale coinCode
-        ++ (if coinCode == "eth" then
-                prepareCsvTokens locale row
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_balance" ++ suffix) row.address.totalReceived locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("address_received" ++ suffix) row.address.balance locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale network
+        ++ (if Data.isAccountLike network then
+                prepareCsvTokens locale network row
 
             else
                 []
            )
 
 
-prepareCsvTokens : Locale.Model -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
-prepareCsvTokens locale row =
-    Locale.tokenCurrencies locale
+prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborAddress -> List ( ( String, List String ), String )
+prepareCsvTokens locale coinCode row =
+    Locale.tokenCurrencies coinCode  locale
         |> List.map
             (\token ->
                 Util.Csv.values ("address_balance_" ++ token)

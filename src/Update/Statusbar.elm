@@ -203,8 +203,8 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
-        Api.ListSupportedTokensEffect _ ->
-            ( "loading supported token currencies"
+        Api.ListSupportedTokensEffect currency _ ->
+            ( "loading supported token currencies for " ++ currency
             , []
             )
                 |> Just

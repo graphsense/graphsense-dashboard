@@ -15,6 +15,7 @@ import Table
 import Util.Csv
 import Util.View exposing (copyableLongIdentifier)
 import View.Graph.Table as T exposing (customizations)
+import Model.Currency exposing (assetFromBase)
 
 
 columnTitleFromDirection : Bool -> String
@@ -56,7 +57,7 @@ config vc isOutgoing coinCode =
                             )
                     ]
                 )
-            , T.valueColumn vc (\_ -> coinCode) titleValue .value
+            , T.valueColumn vc (\_ -> assetFromBase(coinCode)) titleValue .value
             ]
         , customizations = customizations vc
         }

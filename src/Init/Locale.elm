@@ -11,6 +11,7 @@ import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
 import Update.Locale exposing (switch)
+import Dict
 
 
 init : UserSettings -> ( Model, List Effect )
@@ -28,7 +29,7 @@ init uc =
       , currency = uc.valueDenomination |> Maybe.withDefault Coin
       , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
       , unitToString = Locale.English.unitToString
-      , supportedTokens = Nothing
+      , supportedTokens = Dict.empty
       }
         |> switch locale
     , [ Effect.Locale.getTranslationEffect locale

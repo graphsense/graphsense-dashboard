@@ -29,6 +29,7 @@ import Util.Data as Data
 import Util.Graph exposing (decodeCoords, filterTxValue)
 import View.Graph.Label as Label
 import View.Locale as Locale
+import Model.Currency exposing (assetFromBase)
 
 
 linkPrefix : String

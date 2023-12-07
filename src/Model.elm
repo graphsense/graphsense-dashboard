@@ -51,7 +51,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
-    , supportedTokens : Maybe Api.Data.TokenConfigs
+    , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , dirty : Bool
     }
@@ -88,7 +88,7 @@ type Msg
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
-    | BrowserGotSupportedTokens Api.Data.TokenConfigs
+    | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | UserClickedStatusbar
     | UserClosesDialog
     | LocaleMsg Msg.Locale.Msg
@@ -158,4 +158,5 @@ userSettingsFromMainModel model =
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
     , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
+    , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     }

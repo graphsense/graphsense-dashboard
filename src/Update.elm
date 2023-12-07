@@ -106,13 +106,13 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotSupportedTokens configs ->
+        BrowserGotSupportedTokens currency configs ->
             let
                 locale =
-                    Locale.supportedTokens configs model.locale
+                    Locale.setSupportedTokens configs currency model.locale
             in
             { model
-                | supportedTokens = Just configs
+                | supportedTokens = Dict.insert currency configs model.supportedTokens
                 , locale = locale
                 , config =
                     model.config
@@ -630,6 +630,16 @@ update plugins uc msg model =
                     ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedShowAddressShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedToggleShowZeroTransactions ->
                     let
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph

@@ -2,6 +2,7 @@ module Model.Graph.Table exposing (..)
 
 import Api.Data
 import Table
+import Model.Currency exposing (AssetIdentifier)
 
 
 titleTx : String
@@ -86,7 +87,7 @@ type AddresslinkTable
 
 
 type alias AllAssetsTable =
-    Table ( String, Api.Data.Values )
+    Table ( AssetIdentifier, Api.Data.Values )
 
 
 type alias Table a =

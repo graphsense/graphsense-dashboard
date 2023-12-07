@@ -150,6 +150,6 @@ changeValueDetail curr model =
     }
 
 
-supportedTokens : Api.Data.TokenConfigs -> Model -> Model
-supportedTokens configs model =
-    { model | supportedTokens = Just configs }
+setSupportedTokens : Api.Data.TokenConfigs -> String -> Model -> Model
+setSupportedTokens configs currency model =
+    { model | supportedTokens = Dict.insert currency configs model.supportedTokens }

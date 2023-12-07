@@ -17,6 +17,7 @@ import Table
 import Util.Csv
 import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
+import Model.Currency exposing (asset)
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
@@ -60,7 +61,7 @@ config vc coinCode =
                         T.valueColumnWithoutCode
                      )
                         vc
-                        .currency
+                        (\(x) -> asset coinCode x.currency )
                         "Value"
                         .value
                    ]

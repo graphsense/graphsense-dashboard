@@ -8,6 +8,7 @@ import List.Extra
 import Model.Graph.Coords exposing (Coords)
 import Svg.Styled as Svg
 import Svg.Styled.Events as Svg
+import Model.Currency exposing (AssetIdentifier)
 
 
 translate : Float -> Float -> String
@@ -59,7 +60,7 @@ getAbuse gc =
 
 
 filterTxValue : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> Bool
-filterTxValue gc coinCode value tokenValues =
+filterTxValue gc network value tokenValues =
     gc.showZeroTransactions
         || List.any (.value >> (/=) 0)
             (tokenValues

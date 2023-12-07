@@ -16,6 +16,7 @@ import Table
 import Util.Csv
 import Util.View
 import View.Graph.Table as T exposing (customizations)
+import Model.Currency exposing (assetFromBase)
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxUtxo Msg
@@ -47,8 +48,8 @@ config vc coinCode =
                 )
             , T.intColumn vc titleNoInputs .noInputs
             , T.intColumn vc titleNoOutputs .noOutputs
-            , T.valueColumn vc (\_ -> coinCode) titleTotalInput .totalInput
-            , T.valueColumn vc (\_ -> coinCode) titleTotalOutput .totalOutput
+            , T.valueColumn vc (\_ -> (assetFromBase coinCode)) titleTotalInput .totalInput
+            , T.valueColumn vc (\_ -> (assetFromBase coinCode)) titleTotalOutput .totalOutput
             ]
         , customizations = customizations vc
         }

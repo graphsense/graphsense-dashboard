@@ -68,12 +68,14 @@ import View.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import View.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import View.Locale as Locale
 import Util.Data as Data
+import Model.Currency exposing (asset)
+import Model.Currency exposing (tokensToValue)
+import Model.Currency exposing (assetFromBase)
 
 
 cm : Maybe Msg
 cm =
     Just UserClicksDownloadCSVInTable
-
 
 frame : View.Config -> Bool -> List (Html msg) -> Html msg
 frame vc visible =
@@ -601,13 +603,13 @@ browseValue vc value =
 
         MultiValue gc parentCoin len values ->
             values
-                |> List.filter (\( c, v ) -> filterTxValue gc c v Nothing)
+                |> List.filter (\( c, v ) -> filterTxValue gc c.network v Nothing)
                 |> List.map
                     (\( coinCode, v ) ->
                         let
                             cc =
                                 if (Data.isAccountLike parentCoin) then
-                                    coinCode
+                                    coinCode.asset
 
                                 else
                                     case vc.locale.currency of
@@ -622,7 +624,7 @@ browseValue vc value =
                                 |> text
                                 |> List.singleton
                                 |> td [ Css.currencyCell vc |> css ]
-                            , multiValue vc parentCoin coinCode v
+                            , multiValue vc (asset parentCoin cc) v
                                 |> text
                                 |> List.singleton
                                 |> td
@@ -759,8 +761,8 @@ rowsAddress vc now address =
             , Row
                 ( "Final balance"
                 , address
-                    |> ifLoaded
-                        (balanceValues .address
+                    |> ifLoaded 
+                        (balanceValues .address 
                             >> Value
                         )
                     |> elseLoading
@@ -1150,7 +1152,7 @@ rowsEntity vc gc now ent =
         , ent
             |> ifLoaded
                 (totalReceivedValues .entity
-                    >> Value
+                   >>  Value
                 )
             |> elseLoading
         , mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
@@ -1589,7 +1591,7 @@ rowsTxUtxo vc gc now tx =
         ( "total input"
         , tx
             |> ifLoaded
-                (\t -> Value [ ( t.currency, t.totalInput ) ])
+                (\t -> Value [ ( assetFromBase t.currency, t.totalInput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1597,7 +1599,7 @@ rowsTxUtxo vc gc now tx =
         ( "total output"
         , tx
             |> ifLoaded
-                (\t -> Value [ ( t.currency, t.totalOutput ) ])
+                (\t -> Value [ ( assetFromBase t.currency, t.totalOutput ) ])
             |> elseLoading
         , Nothing
         )
@@ -1660,7 +1662,7 @@ rowsTxAccount vc gc now tx table coinCode =
         ( "Value"
         , tx
             |> ifLoaded
-                (\t -> Value [ ( t.currency, t.value ) ])
+                (\t -> Value [ ( assetFromBase t.currency, t.value ) ])
             |> elseLoading
         , Nothing
         )
@@ -1910,13 +1912,13 @@ browseAddresslinkTable vc gc coinCode table =
             table_ vc cm (AllAssetsTable.config vc) t
 
 
-multiValue : View.Config -> String -> String -> Api.Data.Values -> String
-multiValue vc parentCoin coinCode v =
-    if Data.isAccountLike parentCoin && vc.locale.currency /= Currency.Coin then
-        Locale.currency vc.locale [ ( coinCode, v ) ]
+multiValue : View.Config -> Currency.AssetIdentifier -> Api.Data.Values -> String
+multiValue vc asset v =
+    if Data.isAccountLike asset.network && vc.locale.currency /= Currency.Coin then
+        Locale.currency vc.locale [ ( asset, v ) ]
 
     else
-        Locale.currencyWithoutCode vc.locale [ ( coinCode, v ) ]
+        Locale.currencyWithoutCode vc.locale [ ( asset, v ) ]
 
 
 type alias AddressOrEntity a =
@@ -1939,28 +1941,28 @@ multiValueMaxLen vc accessor thing =
         Loaded a ->
             totalReceivedValues accessor a
                 ++ balanceValues accessor a
-                |> List.map (\( currency, v ) -> multiValue vc (accessor a).currency currency v |> String.length)
+                |> List.map (\( asset, v ) -> multiValue vc asset v |> String.length)
                 |> List.maximum
                 |> Maybe.withDefault 0
                 |> (+) 2
 
 
-totalReceivedValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
+totalReceivedValues : (thing -> AddressOrEntity a) -> thing -> List ( Currency.AssetIdentifier, Api.Data.Values )
 totalReceivedValues accessor a =
     ( (accessor a).currency, (accessor a).totalReceived )
         :: ((accessor a).totalTokensReceived
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
-           )
+           ) |> tokensToValue (accessor a).currency
 
 
-balanceValues : (thing -> AddressOrEntity a) -> thing -> List ( String, Api.Data.Values )
+balanceValues : (thing -> AddressOrEntity a) -> thing -> List ( Currency.AssetIdentifier, Api.Data.Values )
 balanceValues accessor a =
     ( (accessor a).currency, (accessor a).balance )
         :: ((accessor a).tokenBalances
                 |> Maybe.map Dict.toList
                 |> Maybe.withDefault []
-           )
+           ) |> tokensToValue (accessor a).currency
 
 
 tableSeparator : View.Config -> Html msg
