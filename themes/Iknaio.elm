@@ -296,6 +296,21 @@ theme =
                         , borderRadiusSm
                         ]
                     )
+                |> s_tokenBadgeStyle
+                    (\lightmode ->
+                        [ 
+                        --backgroundColorWithLightmode lightmode colors.brandLightest
+                        borderColorWithLightmode lightmode colors.brandDark
+                        , borderRadius <| px 5
+                        , borderStyle solid
+                        , borderWidth (px 1)
+                        , px 5 |> marginRight
+                        , px 2 |> paddingLeft
+                        , px 2 |> paddingRight
+                        , px 1 |> paddingTop
+                        , px 1 |> paddingBottom
+                        ]
+                    )
                 |> s_currencyHeading
                     (\lightmode ->
                         [ backgroundColorWithLightmode lightmode colors.brandLight

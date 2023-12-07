@@ -1,5 +1,6 @@
 module Css.Stats exposing (..)
 
+import Color exposing (black)
 import Config.View exposing (Config)
 import Css exposing (..)
 
@@ -66,6 +67,20 @@ statsTableCellKey vc =
     [ display tableCell
     ]
         ++ vc.theme.stats.tableCellKey
+
+
+statsBadge : Config -> List Style
+statsBadge vc =
+    [ px 5 |> marginRight
+    , px 2 |> paddingLeft
+    , px 2 |> paddingRight
+    , px 1 |> paddingTop
+    , px 1 |> paddingBottom
+
+    --, px 3 |> borderRadius
+    , textAlign center
+    ]
+        ++ vc.theme.stats.tokenBadgeStyle vc.lightmode
 
 
 currencyBackground : Config -> List Style

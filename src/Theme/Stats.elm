@@ -17,6 +17,7 @@ type alias Stats =
     , currencyBackground : List Style
     , currencyBackgroundPath : List Style
     , loadingSpinner : List Style
+    , tokenBadgeStyle : Bool -> List Style
     }
 
 
@@ -35,4 +36,5 @@ default =
     , currencyBackground = []
     , currencyBackgroundPath = []
     , loadingSpinner = []
+    , tokenBadgeStyle = \_ -> []
     }

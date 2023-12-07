@@ -26,7 +26,7 @@ view plugins vc model =
                 |> main_ vc
 
         Stats ->
-            Stats.stats vc model.stats
+            Stats.stats vc model.stats model.supportedTokens
 
         Graph ->
             Graph.view plugins model.plugins vc model.graph

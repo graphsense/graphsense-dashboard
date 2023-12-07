@@ -4,7 +4,7 @@ import Api.Data
 import Config.View exposing (Config)
 import Css.Stats as Css
 import Css.View
-import Dict
+import Dict exposing (Dict)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Http
@@ -19,8 +19,8 @@ import View.CurrencyMeta exposing (currencies)
 import View.Locale as Locale
 
 
-stats : Config -> WebData Api.Data.Stats -> Html msg
-stats vc sts =
+stats : Config -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
+stats vc sts tokens =
     div
         [ Css.root vc |> css ]
         [ h2
@@ -33,7 +33,7 @@ stats vc sts =
                 { onFailure = statsLoadFailure vc
                 , onNotAsked = text ""
                 , onLoading = statsLoading vc
-                , onSuccess = statsLoaded vc
+                , onSuccess = statsLoaded vc tokens
                 }
         ]
 
@@ -48,16 +48,26 @@ statsLoading vc =
     Util.View.loadingSpinner vc Css.loadingSpinner
 
 
-statsLoaded : Config -> Api.Data.Stats -> Html msg
-statsLoaded vc sts =
+statsLoaded : Config -> Dict String Api.Data.TokenConfigs -> Api.Data.Stats -> Html msg
+statsLoaded vc tokens sts =
     sts.currencies
-        |> List.map (currency vc)
+        |> List.map (\v -> currency vc v (Dict.get v.name tokens))
         |> div
             [ Css.stats vc |> css ]
 
 
-currency : Config -> Api.Data.CurrencyStats -> Html msg
-currency vc cs =
+supportedTokens : Api.Data.TokenConfigs -> List String
+supportedTokens configs =
+    configs.tokenConfigs |> List.map (.ticker >> String.toUpper)
+
+
+supportedTokensRow : Config -> Maybe Api.Data.TokenConfigs -> List (Html msg)
+supportedTokensRow vc tokens =
+    tokens |> Maybe.map (supportedTokens >> statsRowBadge vc "Supported tokens" >> List.singleton) |> Maybe.withDefault []
+
+
+currency : Config -> Api.Data.CurrencyStats -> Maybe Api.Data.TokenConfigs -> Html msg
+currency vc cs tokens =
     div
         [ Css.currency vc |> css
         ]
@@ -78,21 +88,23 @@ currency vc cs =
                 [ div
                     [ Css.statsTable vc |> css
                     ]
-                    [ Locale.timestamp vc.locale cs.timestamp
+                    ([ Locale.timestamp vc.locale cs.timestamp
                         |> statsRow vc "Last update"
-                    , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
+                     , Locale.intWithoutValueDetailFormatting vc.locale (cs.noBlocks - 1)
                         |> statsRow vc "Latest block"
-                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
+                     , Locale.intWithoutValueDetailFormatting vc.locale cs.noTxs
                         |> statsRow vc "Transactions"
-                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
+                     , Locale.intWithoutValueDetailFormatting vc.locale cs.noAddresses
                         |> statsRow vc "Addresses"
-                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
+                     , Locale.intWithoutValueDetailFormatting vc.locale cs.noEntities
                         |> statsRow vc "Entities"
-                    , Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
+                     , Locale.intWithoutValueDetailFormatting vc.locale cs.noLabels
                         |> statsRow vc "Labels"
-                    , taggedAddressesWithPercentage vc cs
+                     , taggedAddressesWithPercentage vc cs
                         |> statsRow vc "Tagged addresses"
-                    ]
+                     ]
+                        ++ supportedTokensRow vc tokens
+                    )
                 ]
             , div
                 [ Css.currencyBackground vc |> css
@@ -133,6 +145,23 @@ statsRow vc label value =
             ]
             [ text value
             ]
+        ]
+
+
+statsRowBadge : Config -> String -> List String -> Html msg
+statsRowBadge vc label values =
+    div
+        [ Css.statsTableRow vc |> css
+        ]
+        [ span
+            [ Css.statsTableCellKey vc |> css
+            ]
+            [ Locale.text vc.locale label
+            ]
+        , span
+            [ Css.statsTableCellValue vc |> css
+            ]
+            (values |> List.map (\x -> span [ Css.statsBadge vc |> css ] [ text x ]))
         ]
 
 
