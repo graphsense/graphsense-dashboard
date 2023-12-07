@@ -174,3 +174,5 @@ type Msg
     | UserClickedExternalLink String
     | NoOp
     | UserClickedToggleShowZeroTransactions
+    | AnimationFrameDeltaForTransform Float
+    | RuntimeDebouncedAddingEntities

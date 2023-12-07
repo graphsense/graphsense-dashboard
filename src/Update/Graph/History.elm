@@ -440,3 +440,9 @@ shallPushHistory msg =
 
         UserClickedToggleShowZeroTransactions ->
             False
+
+        AnimationFrameDeltaForTransform _ ->
+            False
+
+        RuntimeDebouncedAddingEntities ->
+            False

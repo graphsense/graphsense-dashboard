@@ -38,8 +38,10 @@ import Api.Data
 import Color exposing (Color)
 import Config.Graph
     exposing
-        ( entityToAddressesPaddingLeft
+        ( entityOneAddressHeight
+        , entityToAddressesPaddingLeft
         , entityToAddressesPaddingTop
+        , entityTotalWidth
         , entityWidth
         , layerMargin
         , padding
@@ -215,7 +217,7 @@ anchorsToPositions anchors layers =
                             )
                         |> Maybe.withDefault 0
             in
-            IntDict.singleton 0 { x = 0, y = y }
+            IntDict.singleton 0 { x = -(entityTotalWidth / 2), y = y - entityOneAddressHeight / 2 }
 
         Just anchs ->
             anchs

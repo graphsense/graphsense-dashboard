@@ -30,6 +30,11 @@ expandHandleWidth =
     15
 
 
+entityTotalWidth : Float
+entityTotalWidth =
+    2 * expandHandleWidth + entityWidth
+
+
 entityPaddingTop : Float
 entityPaddingTop =
     10
@@ -88,6 +93,11 @@ entityMinHeight =
         / 2
         + addressesCountHeight
         + padding
+
+
+entityOneAddressHeight : Float
+entityOneAddressHeight =
+    entityMinHeight + addressHeight
 
 
 entityToAddressesPaddingTop : Float

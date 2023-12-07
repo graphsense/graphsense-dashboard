@@ -1,9 +1,12 @@
 module Update.Graph exposing (..)
 
 import Api.Data
+import Basics.Extra exposing (flip)
+import Bounce
 import Browser.Dom as Dom
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
+import Css exposing (transformBox)
 import DateFormat
 import Decode.Graph044 as Graph044
 import Decode.Graph045 as Graph045
@@ -41,6 +44,7 @@ import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
+import Model.Graph.Transform as Transform
 import Model.Node as Node
 import Model.Search
 import Msg.Graph as Msg exposing (Msg(..))
@@ -58,6 +62,7 @@ import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
+import Update.Graph.Coords as Coords
 import Update.Graph.Entity as Entity
 import Update.Graph.Highlighter as Highlighter
 import Update.Graph.History as History
@@ -297,17 +302,6 @@ syncBrowser old model =
 
 loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
 loadNextAddress plugins uc model id =
-    let
-        items_out_of_bbox =
-            not (uc.size |> Maybe.map (Layer.isContentWithinViewPort model.layers model.transform) |> Maybe.withDefault True)
-
-        add_fitgraph_on_path =
-            if Adding.isLastPathItem model.adding && items_out_of_bbox then
-                CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x -> x)) |> List.singleton
-
-            else
-                []
-    in
     Adding.getNextFor id model.adding
         |> Maybe.map
             (\nextId ->
@@ -322,9 +316,9 @@ loadNextAddress plugins uc model id =
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
-                    |> (\( m, eff ) -> ( m, eff ++ add_fitgraph_on_path ))
+                    |> (\( m, eff ) -> ( m, eff ))
             )
-        |> Maybe.withDefault ( model, add_fitgraph_on_path )
+        |> Maybe.withDefault (n model)
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -344,8 +338,38 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map (loadNextAddress plugins uc model)
                 |> Maybe.withDefault (n model)
 
-        InternalGraphAddedEntities _ ->
-            n model
+        InternalGraphAddedEntities ids ->
+            let
+                ( transform, eff ) =
+                    Transform.delay ids model.transform
+            in
+            ( model
+                |> s_transform transform
+            , CmdEffect eff
+                |> List.singleton
+            )
+
+        RuntimeDebouncedAddingEntities ->
+            let
+                ( newTransform, isSteady ) =
+                    Transform.pop model.transform
+
+                newModel =
+                    { model
+                        | transform = newTransform
+                    }
+            in
+            if isSteady then
+                model.transform.collectingAddedEntityIds
+                    |> Set.toList
+                    |> List.filterMap (\id -> Layer.getEntity id model.layers)
+                    |> Layer.getBoundingBoxOfEntities
+                    |> Maybe.map (extendTransformWithBoundingBox uc newModel)
+                    |> Maybe.withDefault newModel
+                    |> n
+
+            else
+                n newModel
 
         InternalGraphSelectedAddress id ->
             n model
@@ -2119,38 +2143,9 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedFitGraph ->
-            let
-                marginX =
-                    Config.Graph.entityWidth / 2
-
-                marginY =
-                    Config.Graph.entityMinHeight / 2
-
-                addMargin bbox =
-                    { x = bbox.x - marginX
-                    , y = bbox.y - marginY
-                    , width = bbox.width + marginX * 2
-                    , height = bbox.height + marginY * 2
-                    }
-            in
-            { model
-                | transform =
-                    Layer.getBoundingBox model.layers
-                        |> Maybe.map addMargin
-                        |> Maybe.map2
-                            (Transform.updateByBoundingBox
-                                model.transform
-                            )
-                            (uc.size
-                                |> Maybe.map
-                                    (\{ width, height } ->
-                                        { width = width
-                                        , height = height
-                                        }
-                                    )
-                            )
-                        |> Maybe.withDefault model.transform
-            }
+            Layer.getBoundingBox model.layers
+                |> Maybe.map (updateTransformByBoundingBox uc model)
+                |> Maybe.withDefault model
                 |> n
 
         UserClickedShowEntityShadowLinks ->
@@ -2231,6 +2226,12 @@ updateByMsg plugins uc msg model =
 
         UserClickedExternalLink url ->
             ( model, Ports.newTab url |> CmdEffect |> List.singleton )
+
+        AnimationFrameDeltaForTransform delta ->
+            { model
+                | transform = Transform.transition delta model.transform
+            }
+                |> n
 
         NoOp ->
             n model
@@ -3935,3 +3936,43 @@ syncSelection model =
 
         SelectedNone ->
             model
+
+
+updateTransformByBoundingBox : Update.Config -> Model -> Coords.BBox -> Model
+updateTransformByBoundingBox uc model bbox =
+    { model
+        | transform =
+            uc.size
+                |> Maybe.map
+                    (\{ width, height } ->
+                        { width = width
+                        , height = height
+                        }
+                    )
+                |> Maybe.map
+                    (Coords.addMargin bbox
+                        |> Transform.updateByBoundingBox model.transform
+                    )
+                |> Maybe.withDefault model.transform
+    }
+
+
+extendTransformWithBoundingBox : Update.Config -> Model -> Coords.BBox -> Model
+extendTransformWithBoundingBox uc model bbox =
+    { model
+        | transform =
+            uc.size
+                |> Maybe.map
+                    (\{ width, height } ->
+                        { width = width
+                        , height = height
+                        }
+                    )
+                |> Maybe.map
+                    (\size ->
+                        Transform.getBoundingBox model.transform size
+                            |> Coords.mergeBoundingBoxes (Coords.addMargin bbox)
+                            |> flip (Transform.updateByBoundingBox model.transform) size
+                    )
+                |> Maybe.withDefault model.transform
+    }

@@ -5,6 +5,7 @@ import Json.Decode
 import Model.Graph exposing (Dragging(..), Model)
 import Msg.Graph exposing (Msg(..))
 import Ports
+import Sub.Graph.Transform as Transform
 
 
 subscriptions : Model -> Sub Msg
@@ -30,5 +31,6 @@ subscriptions model =
                         NoOp
                 )
         )
+    , Transform.subscriptions model.transform
     ]
         |> Sub.batch

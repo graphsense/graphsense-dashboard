@@ -12,6 +12,7 @@ import Model.Graph.Coords as Coords
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Link exposing (..)
+import Set exposing (Set)
 import Tuple exposing (..)
 
 
@@ -312,7 +313,13 @@ isContentWithinViewPort layers transform viewport =
 
 getBoundingBox : IntDict Layer -> Maybe Coords.BBox
 getBoundingBox layers =
-    case entities layers of
+    entities layers
+        |> getBoundingBoxOfEntities
+
+
+getBoundingBoxOfEntities : List Entity -> Maybe Coords.BBox
+getBoundingBoxOfEntities ents =
+    case ents of
         [] ->
             Nothing
 

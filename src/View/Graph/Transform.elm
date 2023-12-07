@@ -5,12 +5,15 @@ import Model.Graph.Transform exposing (..)
 
 
 viewBox : { width : Float, height : Float } -> Model -> String
-viewBox { width, height } model =
-    [ model.x + (2 * expandHandleWidth + entityWidth) / 2 - width / 2 * model.z
-    , model.y + (entityMinHeight + addressHeight) / 2 - height / 2 * model.z
-    , max 0 <| width * model.z
-    , max 0 <| height * model.z
-    ]
-        |> List.map String.fromFloat
-        |> List.intersperse " "
-        |> String.concat
+viewBox { width, height } mo =
+    getCurrent mo
+        |> (\model ->
+                [ model.x - width / 2 * model.z
+                , model.y - height / 2 * model.z
+                , max 0 <| width * model.z
+                , max 0 <| height * model.z
+                ]
+                    |> List.map String.fromFloat
+                    |> List.intersperse " "
+                    |> String.concat
+           )
