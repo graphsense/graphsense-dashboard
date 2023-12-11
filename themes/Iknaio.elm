@@ -298,9 +298,8 @@ theme =
                     )
                 |> s_tokenBadgeStyle
                     (\lightmode ->
-                        [ 
-                        --backgroundColorWithLightmode lightmode colors.brandLightest
-                        borderColorWithLightmode lightmode colors.brandDark
+                        [ --backgroundColorWithLightmode lightmode colors.brandLightest
+                          borderColorWithLightmode lightmode colors.brandDark
                         , borderRadius <| px 5
                         , borderStyle solid
                         , borderWidth (px 1)
@@ -977,11 +976,18 @@ theme =
                         ]
                     )
                 |> s_propertyBoxRow
-                    (\lightmode ->
+                    (\lightmode active ->
                         [ hover
                             [ backgroundColorWithLightmode lightmode colors.brandLightest
                             ]
                         ]
+                            ++ (if active then
+                                    [ backgroundColorWithLightmode lightmode colors.brandLightest
+                                    ]
+
+                                else
+                                    []
+                               )
                     )
                 |> s_propertyBoxKey
                     [ fontBold
@@ -1078,7 +1084,7 @@ theme =
                         , borderStyle solid
                         , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
                         , scaled 1 |> rem |> paddingLeft
-                        , scaled 4 |> rem |> marginLeft
+                        , scaled 1 |> rem |> marginLeft
                         ]
                     )
             )

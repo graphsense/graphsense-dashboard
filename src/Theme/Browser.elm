@@ -9,7 +9,7 @@ type alias Browser =
     , propertyBoxRoot : Bool -> List Style
     , propertyBoxTable : List Style
     , propertyBoxNote : Bool -> List Style
-    , propertyBoxRow : Bool -> List Style
+    , propertyBoxRow : Bool -> Bool -> List Style
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
     , propertyBoxValueInner : List Style
@@ -35,7 +35,7 @@ default =
     , propertyBoxRoot = \_ -> []
     , propertyBoxTable = []
     , propertyBoxNote = \_ -> []
-    , propertyBoxRow = \_ -> []
+    , propertyBoxRow = \_ _ -> []
     , propertyBoxKey = []
     , propertyBoxValue = []
     , propertyBoxValueInner = []

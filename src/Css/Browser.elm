@@ -44,11 +44,11 @@ propertyBoxNote vc =
     vc.theme.browser.propertyBoxNote vc.lightmode
 
 
-propertyBoxRow : Config -> List Style
-propertyBoxRow vc =
+propertyBoxRow : Config -> Bool -> List Style
+propertyBoxRow vc active =
     display tableRow
         :: position relative
-        :: vc.theme.browser.propertyBoxRow vc.lightmode
+        :: vc.theme.browser.propertyBoxRow vc.lightmode active
 
 
 propertyBoxKey : Config -> List Style

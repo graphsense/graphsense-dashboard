@@ -9,6 +9,8 @@ import Css.Browser as Css
 import Css.View as CssView
 import Dict
 import FontAwesome
+import FontAwesome.Layers as FontAwesome
+import Html.Attributes
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -101,7 +103,7 @@ browser plugins states vc gc model =
                 []
 
             Browser.Address loadable table ->
-                browseAddress plugins states vc gc model.now loadable
+                browseAddress plugins states vc gc model.now table loadable
                     :: (table
                             |> Maybe.map
                                 (\t ->
@@ -131,7 +133,7 @@ browser plugins states vc gc model =
                        )
 
             Browser.Entity loadable table ->
-                browseEntity plugins states vc gc model.now loadable
+                browseEntity plugins states vc gc model.now table loadable
                     :: (table
                             |> Maybe.map
                                 (\t ->
@@ -172,7 +174,7 @@ browser plugins states vc gc model =
                        )
 
             Browser.Actor loadable table ->
-                browseActor plugins states vc gc model.now loadable
+                browseActor plugins states vc gc model.now table loadable
                     :: (table
                             |> Maybe.map
                                 (\t ->
@@ -183,7 +185,7 @@ browser plugins states vc gc model =
                        )
 
             Browser.Block loadable table ->
-                browseBlock plugins states vc gc model.now loadable
+                browseBlock plugins states vc gc model.now table loadable
                     :: (table
                             |> Maybe.map (browseBlockTable vc gc loadable)
                             |> Maybe.map List.singleton
@@ -191,7 +193,7 @@ browser plugins states vc gc model =
                        )
 
             Browser.TxUtxo loadable table ->
-                browseTxUtxo plugins states vc gc model.now loadable
+                browseTxUtxo plugins states vc gc model.now table loadable
                     :: (table
                             |> Maybe.map (browseTxUtxoTable vc gc loadable)
                             |> Maybe.map List.singleton
@@ -211,7 +213,7 @@ browser plugins states vc gc model =
                     currency =
                         Id.currency source.id
                 in
-                browseAddresslink plugins states vc gc source link
+                browseAddresslink plugins states vc gc source table link
                     :: (table
                             |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
@@ -223,7 +225,7 @@ browser plugins states vc gc model =
                     currency =
                         Id.currency source.id
                 in
-                browseEntitylink plugins states vc gc source link
+                browseEntitylink plugins states vc gc source table link
                     :: (table
                             |> Maybe.map (browseAddresslinkTable vc gc currency)
                             |> Maybe.map List.singleton
@@ -279,7 +281,7 @@ browseRow vc map row =
 
         Image muri ->
             div
-                [ Css.propertyBoxRow vc |> css
+                [ Css.propertyBoxRow vc False |> css
                 ]
                 [ span
                     [ Css.propertyBoxKey vc |> css
@@ -305,7 +307,7 @@ browseRow vc map row =
 
         Note note ->
             div
-                [ Css.propertyBoxRow vc |> css
+                [ Css.propertyBoxRow vc False |> css
                 ]
                 [ span
                     [ Css.propertyBoxKey vc |> css
@@ -326,7 +328,7 @@ browseRow vc map row =
 
         Footnote note ->
             div
-                [ Css.propertyBoxRow vc |> css
+                [ Css.propertyBoxRow vc False |> css
                 ]
                 [ span
                     [ Css.propertyBoxKey vc |> css
@@ -340,7 +342,7 @@ browseRow vc map row =
 
         Row ( key, value, table ) ->
             div
-                [ Css.propertyBoxRow vc |> css
+                [ table |> Maybe.map .active |> Maybe.withDefault False |> Css.propertyBoxRow vc |> css
                 ]
                 [ span
                     [ Css.propertyBoxKey vc |> css
@@ -362,7 +364,7 @@ browseRow vc map row =
 
         RowWithMoreActionsButton ( key, value, msg ) ->
             div
-                [ Css.propertyBoxRow vc |> css
+                [ Css.propertyBoxRow vc False |> css
                 ]
                 [ span
                     [ Css.propertyBoxKey vc |> css
@@ -381,10 +383,11 @@ browseRow vc map row =
                                     div
                                         [ Locale.string vc.locale "more actions" |> title
                                         , on "click" (Util.Graph.decodeCoords Coords |> JD.map vmsg)
-                                        , Css.propertyBoxTableLink vc True |> css
-                                        , CssView.link vc |> css
+                                        , Css.propertyBoxTableLink vc False |> css
                                         ]
-                                        [ FontAwesome.icon FontAwesome.caretSquareDown |> Html.fromUnstyled ]
+                                        [ FontAwesome.IconLayer FontAwesome.caretSquareDown FontAwesome.Solid [] []
+                                            |> propertyBoxButton False
+                                        ]
                                 )
                             |> Maybe.withDefault (div [] [])
                         ]
@@ -406,9 +409,29 @@ tableLink vc link =
         , href link.link
         , title link.title
         ]
-        [ FontAwesome.icon FontAwesome.ellipsisH
-            |> Html.fromUnstyled
+        [ FontAwesome.IconLayer FontAwesome.ellipsisH FontAwesome.Solid [] []
+            |> propertyBoxButton link.active
         ]
+
+
+propertyBoxButton : Bool -> FontAwesome.IconLayer msg -> Html msg
+propertyBoxButton active iconlayer =
+    FontAwesome.layers
+        (iconlayer
+            :: [ FontAwesome.IconLayer FontAwesome.caretRight
+                    FontAwesome.Solid
+                    [ FontAwesome.Pull FontAwesome.Right ]
+                    [ Html.Attributes.style "opacity" <|
+                        if active then
+                            "1"
+
+                        else
+                            "0"
+                    ]
+               ]
+        )
+        []
+        |> Html.fromUnstyled
 
 
 browseValue : View.Config -> Value msg -> Html msg
@@ -639,9 +662,9 @@ browseValue vc value =
             Util.View.loadingSpinner vc Css.loadingSpinner
 
 
-browseAddress : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Address -> Html Msg
-browseAddress plugins states vc gc now address =
-    (rowsAddress vc now address |> properties vc)
+browseAddress : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Maybe AddressTable -> Loadable String Address -> Html Msg
+browseAddress plugins states vc gc now table address =
+    (rowsAddress vc now table address |> properties vc)
         ++ [ rule vc ]
         ++ (case address of
                 Loading _ _ ->
@@ -658,8 +681,8 @@ properties vc =
     List.map (browseRow vc (browseValue vc))
 
 
-rowsAddress : View.Config -> Time.Posix -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
-rowsAddress vc now address =
+rowsAddress : View.Config -> Time.Posix -> Maybe AddressTable -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
+rowsAddress vc now table address =
     let
         mkTableLink title tableTag =
             address
@@ -677,7 +700,7 @@ rowsAddress vc now address =
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToAddressTable table tableTag
                         }
                     )
 
@@ -891,6 +914,184 @@ rowsAddress vc now address =
         ++ statusNote
 
 
+unwrapTableRouteMatch : (table -> route -> Bool) -> Maybe table -> route -> Bool
+unwrapTableRouteMatch match =
+    Maybe.map match
+        >> Maybe.withDefault (always False)
+
+
+matchTableRouteToAddressTable : AddressTable -> Route.AddressTable -> Bool
+matchTableRouteToAddressTable table route =
+    case ( table, route ) of
+        ( AddressTagsTable _, Route.AddressTagsTable ) ->
+            True
+
+        ( AddressTxsUtxoTable _, Route.AddressTxsTable ) ->
+            True
+
+        ( AddressTxsAccountTable _, Route.AddressTxsTable ) ->
+            True
+
+        ( AddressIncomingNeighborsTable _, Route.AddressIncomingNeighborsTable ) ->
+            True
+
+        ( AddressOutgoingNeighborsTable _, Route.AddressOutgoingNeighborsTable ) ->
+            True
+
+        ( AddressTotalReceivedAllAssetsTable _, Route.AddressTotalReceivedAllAssetsTable ) ->
+            True
+
+        ( AddressFinalBalanceAllAssetsTable _, Route.AddressFinalBalanceAllAssetsTable ) ->
+            True
+
+        ( AddressTagsTable _, _ ) ->
+            False
+
+        ( AddressTxsUtxoTable _, _ ) ->
+            False
+
+        ( AddressTxsAccountTable _, _ ) ->
+            False
+
+        ( AddressIncomingNeighborsTable _, _ ) ->
+            False
+
+        ( AddressOutgoingNeighborsTable _, _ ) ->
+            False
+
+        ( AddressTotalReceivedAllAssetsTable _, _ ) ->
+            False
+
+        ( AddressFinalBalanceAllAssetsTable _, _ ) ->
+            False
+
+
+matchTableRouteToEntityTable : EntityTable -> Route.EntityTable -> Bool
+matchTableRouteToEntityTable table route =
+    case ( table, route ) of
+        ( EntityTagsTable _, Route.EntityTagsTable ) ->
+            True
+
+        ( EntityTxsUtxoTable _, Route.EntityTxsTable ) ->
+            True
+
+        ( EntityTxsAccountTable _, Route.EntityTxsTable ) ->
+            True
+
+        ( EntityIncomingNeighborsTable _, Route.EntityIncomingNeighborsTable ) ->
+            True
+
+        ( EntityOutgoingNeighborsTable _, Route.EntityOutgoingNeighborsTable ) ->
+            True
+
+        ( EntityTotalReceivedAllAssetsTable _, Route.EntityTotalReceivedAllAssetsTable ) ->
+            True
+
+        ( EntityFinalBalanceAllAssetsTable _, Route.EntityFinalBalanceAllAssetsTable ) ->
+            True
+
+        ( EntityAddressesTable _, Route.EntityAddressesTable ) ->
+            True
+
+        ( EntityTagsTable _, _ ) ->
+            False
+
+        ( EntityTxsUtxoTable _, _ ) ->
+            False
+
+        ( EntityTxsAccountTable _, _ ) ->
+            False
+
+        ( EntityIncomingNeighborsTable _, _ ) ->
+            False
+
+        ( EntityOutgoingNeighborsTable _, _ ) ->
+            False
+
+        ( EntityTotalReceivedAllAssetsTable _, _ ) ->
+            False
+
+        ( EntityFinalBalanceAllAssetsTable _, _ ) ->
+            False
+
+        ( EntityAddressesTable _, _ ) ->
+            False
+
+
+matchTableRouteToAddresslinkTable : AddresslinkTable -> Route.AddresslinkTable -> Bool
+matchTableRouteToAddresslinkTable table route =
+    case ( table, route ) of
+        ( AddresslinkTxsUtxoTable _, Route.AddresslinkTxsTable ) ->
+            True
+
+        ( AddresslinkTxsAccountTable _, Route.AddresslinkTxsTable ) ->
+            True
+
+        ( AddresslinkAllAssetsTable _, Route.AddresslinkAllAssetsTable ) ->
+            True
+
+        ( AddresslinkTxsUtxoTable _, _ ) ->
+            False
+
+        ( AddresslinkTxsAccountTable _, _ ) ->
+            False
+
+        ( AddresslinkAllAssetsTable _, _ ) ->
+            False
+
+
+matchTableRouteToBlockTable : BlockTable -> Route.BlockTable -> Bool
+matchTableRouteToBlockTable table route =
+    case ( table, route ) of
+        ( BlockTxsUtxoTable _, Route.BlockTxsTable ) ->
+            True
+
+        ( BlockTxsAccountTable _, Route.BlockTxsTable ) ->
+            True
+
+
+matchTableRouteToActorTable : ActorTable -> Route.ActorTable -> Bool
+matchTableRouteToActorTable table route =
+    case ( table, route ) of
+        ( ActorTagsTable _, Route.ActorTagsTable ) ->
+            True
+
+        ( ActorOtherLinksTable _, Route.ActorOtherLinksTable ) ->
+            True
+
+        ( ActorTagsTable _, _ ) ->
+            False
+
+        ( ActorOtherLinksTable _, _ ) ->
+            False
+
+
+matchTableRouteToTxUtxoTable : TxUtxoTable -> Route.TxTable -> Bool
+matchTableRouteToTxUtxoTable table route =
+    case ( table, route ) of
+        ( TxUtxoInputsTable _, Route.TxInputsTable ) ->
+            True
+
+        ( TxUtxoOutputsTable _, Route.TxOutputsTable ) ->
+            True
+
+        ( TxUtxoInputsTable _, _ ) ->
+            False
+
+        ( TxUtxoOutputsTable _, _ ) ->
+            False
+
+
+matchTableRouteToTxAccountTable : TxAccountTable -> Route.TxTable -> Bool
+matchTableRouteToTxAccountTable table route =
+    case ( table, route ) of
+        ( TokenTxsTable _, Route.TokenTxsTable ) ->
+            True
+
+        ( TokenTxsTable _, _ ) ->
+            False
+
+
 makeTableLink : (a -> String) -> (a -> id) -> (String -> id -> TableLink) -> Loadable id a -> Maybe TableLink
 makeTableLink getCurrency getId make l =
     case l of
@@ -953,9 +1154,9 @@ elseShowCurrency l =
             v
 
 
-browseEntity : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> Html Msg
-browseEntity plugins states vc gc now entity =
-    (rowsEntity vc gc now entity |> List.map (browseRow vc (browseValue vc)))
+browseEntity : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Maybe EntityTable -> Loadable Int Entity -> Html Msg
+browseEntity plugins states vc gc now table entity =
+    (rowsEntity vc gc now table entity |> List.map (browseRow vc (browseValue vc)))
         ++ [ rule vc ]
         ++ (case entity of
                 Loading _ _ ->
@@ -967,21 +1168,21 @@ browseEntity plugins states vc gc now entity =
         |> propertyBox vc
 
 
-browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> Html Msg
-browseActor plugins states vc gc now actor =
-    (rowsActor vc gc now actor |> List.map (browseRow vc (browseValue vc)))
+browseActor : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Maybe ActorTable -> Loadable String Actor -> Html Msg
+browseActor plugins states vc gc now table actor =
+    (rowsActor vc gc now table actor |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> Html Msg
-browseBlock plugins states vc gc now block =
-    (rowsBlock vc gc now block |> List.map (browseRow vc (browseValue vc)))
+browseBlock : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Maybe BlockTable -> Loadable Int Api.Data.Block -> Html Msg
+browseBlock plugins states vc gc now table block =
+    (rowsBlock vc gc now table block |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-browseTxUtxo : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> Html Msg
-browseTxUtxo plugins states vc gc now tx =
-    (rowsTxUtxo vc gc now tx |> List.map (browseRow vc (browseValue vc)))
+browseTxUtxo : Plugins -> ModelState -> View.Config -> Graph.Config -> Time.Posix -> Maybe TxUtxoTable -> Loadable String Api.Data.TxUtxo -> Html Msg
+browseTxUtxo plugins states vc gc now table tx =
+    (rowsTxUtxo vc gc now table tx |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
@@ -991,8 +1192,8 @@ browseTxAccount plugins states vc gc now tx table coinCode =
         |> propertyBox vc
 
 
-rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Entity -> List (Row (Value Msg) Coords Msg)
-rowsEntity vc gc now ent =
+rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Maybe EntityTable -> Loadable Int Entity -> List (Row (Value Msg) Coords Msg)
+rowsEntity vc gc now table ent =
     let
         mkTableLink title tableTag =
             ent
@@ -1010,7 +1211,7 @@ rowsEntity vc gc now ent =
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToEntityTable table tableTag
                         }
                     )
 
@@ -1168,8 +1369,8 @@ rowsEntity vc gc now ent =
     ]
 
 
-rowsActor : View.Config -> Graph.Config -> Time.Posix -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
-rowsActor vc gc now actor =
+rowsActor : View.Config -> Graph.Config -> Time.Posix -> Maybe ActorTable -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
+rowsActor vc gc now table actor =
     let
         mkTableLink title tableTag =
             actor
@@ -1182,7 +1383,7 @@ rowsActor vc gc now actor =
                             Route.actorRoute id (Just tableTag)
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToActorTable table tableTag
                         }
                     )
     in
@@ -1294,8 +1495,8 @@ rowsActor vc gc now actor =
     ]
 
 
-rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Loadable Int Api.Data.Block -> List (Row (Value Msg) Coords Msg)
-rowsBlock vc gc now block =
+rowsBlock : View.Config -> Graph.Config -> Time.Posix -> Maybe BlockTable -> Loadable Int Api.Data.Block -> List (Row (Value Msg) Coords Msg)
+rowsBlock vc gc now table block =
     let
         mkTableLink title tableTag =
             block
@@ -1312,7 +1513,7 @@ rowsBlock vc gc now block =
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToBlockTable table tableTag
                         }
                     )
     in
@@ -1518,8 +1719,8 @@ browsePlugin plugins vc gc hasNode states =
     Plugin.View.browser plugins vc gc hasNode states
 
 
-rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
-rowsTxUtxo vc gc now tx =
+rowsTxUtxo : View.Config -> Graph.Config -> Time.Posix -> Maybe TxUtxoTable -> Loadable String Api.Data.TxUtxo -> List (Row (Value Msg) Coords Msg)
+rowsTxUtxo vc gc now table tx =
     let
         mkTableLink title tableTag =
             tx
@@ -1537,7 +1738,7 @@ rowsTxUtxo vc gc now tx =
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToTxUtxoTable table tableTag
                         }
                     )
     in
@@ -1640,7 +1841,7 @@ rowsTxAccount vc gc now tx table coinCode =
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = False
+                        , active = unwrapTableRouteMatch matchTableRouteToTxAccountTable table tableTag
                         }
                     )
     in
@@ -1709,14 +1910,14 @@ rowsTxAccount vc gc now tx table coinCode =
            )
 
 
-browseAddresslink : Plugins -> ModelState -> View.Config -> Graph.Config -> Address -> Link Address -> Html Msg
-browseAddresslink plugins states vc gc source link =
-    (rowsAddresslink vc gc source link |> List.map (browseRow vc (browseValue vc)))
+browseAddresslink : Plugins -> ModelState -> View.Config -> Graph.Config -> Address -> Maybe AddresslinkTable -> Link Address -> Html Msg
+browseAddresslink plugins states vc gc source table link =
+    (rowsAddresslink vc gc source table link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-rowsAddresslink : View.Config -> Graph.Config -> Address -> Link Address -> List (Row (Value Msg) Coords Msg)
-rowsAddresslink vc gc source link =
+rowsAddresslink : View.Config -> Graph.Config -> Address -> Maybe AddresslinkTable -> Link Address -> List (Row (Value Msg) Coords Msg)
+rowsAddresslink vc gc source table link =
     let
         currency =
             Id.currency source.id
@@ -1767,7 +1968,7 @@ rowsAddresslink vc gc source link =
                     |> Route.addresslinkRoute
                     |> Route.graphRoute
                     |> toUrl
-            , active = False
+            , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
             }
         )
     , linkValueRow vc
@@ -1781,19 +1982,19 @@ rowsAddresslink vc gc source link =
                 |> Route.addresslinkRoute
                 |> Route.graphRoute
                 |> toUrl
-        , active = False
+        , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
         }
     ]
 
 
-browseEntitylink : Plugins -> ModelState -> View.Config -> Graph.Config -> Entity -> Link Entity -> Html Msg
-browseEntitylink plugins states vc gc source link =
-    (rowsEntitylink vc gc source link |> List.map (browseRow vc (browseValue vc)))
+browseEntitylink : Plugins -> ModelState -> View.Config -> Graph.Config -> Entity -> Maybe AddresslinkTable -> Link Entity -> Html Msg
+browseEntitylink plugins states vc gc source table link =
+    (rowsEntitylink vc gc source table link |> List.map (browseRow vc (browseValue vc)))
         |> propertyBox vc
 
 
-rowsEntitylink : View.Config -> Graph.Config -> Entity -> Link Entity -> List (Row (Value Msg) Coords Msg)
-rowsEntitylink vc gc source link =
+rowsEntitylink : View.Config -> Graph.Config -> Entity -> Maybe AddresslinkTable -> Link Entity -> List (Row (Value Msg) Coords Msg)
+rowsEntitylink vc gc source table link =
     let
         currency =
             Id.currency source.id
@@ -1846,7 +2047,7 @@ rowsEntitylink vc gc source link =
                     |> Route.entitylinkRoute
                     |> Route.graphRoute
                     |> toUrl
-            , active = False
+            , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
             }
         )
     , linkValueRow vc
@@ -1860,7 +2061,7 @@ rowsEntitylink vc gc source link =
                 |> Route.entitylinkRoute
                 |> Route.graphRoute
                 |> toUrl
-        , active = False
+        , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
         }
     ]
 
