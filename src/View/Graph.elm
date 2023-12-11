@@ -21,6 +21,8 @@ import Model.Graph.Layer as Layer exposing (Layer)
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
+import Route
+import Route.Graph
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -375,6 +377,16 @@ contextMenu plugins states vc model cm =
                 |> optionWithIcon "Annotate address" FontAwesome.userTag
             , UserClickedRemoveAddress address.id
                 |> optionWithIcon "Remove from graph" FontAwesome.eraser
+            , Route.Graph.addressRoute
+                { currency = address.address.currency
+                , address = address.address.address
+                , layer = Nothing
+                , table = Nothing
+                }
+                |> Route.graphRoute
+                |> Route.toUrl
+                |> UserClickedExternalLink
+                |> optionWithIcon "Open in new tab" FontAwesome.externalLinkAlt
             ]
                 ++ contextMenuRule vc
                 ++ addBlockExplorerLinks address.address.currency address.address.address
