@@ -992,7 +992,8 @@ theme =
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
-                    , scaled 1 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingTop
                     , whiteSpace noWrap
                     ]
                 |> s_propertyBoxValue
