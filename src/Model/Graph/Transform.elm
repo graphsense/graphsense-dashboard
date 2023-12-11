@@ -3,6 +3,7 @@ module Model.Graph.Transform exposing (..)
 import Bounce exposing (Bounce)
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
+import Number.Bounded as Bounded exposing (Bounded)
 import RecordSetter exposing (..)
 import Set exposing (Set)
 
@@ -15,7 +16,7 @@ defaultDuration =
 type alias Coords =
     { x : Float
     , y : Float
-    , z : Float
+    , z : Bounded Float
     }
 
 
@@ -42,10 +43,10 @@ getZ : Model -> Float
 getZ model =
     case model.state of
         Transitioning { current } ->
-            current.z
+            Bounded.value current.z
 
         Settled { z } ->
-            z
+            Bounded.value z
 
 
 getCurrent : Model -> Coords
@@ -65,10 +66,14 @@ getBoundingBox model { width, height } =
             getCurrent model
 
         bbwidth =
-            current.z * width
+            current.z
+                |> Bounded.value
+                |> (*) width
 
         bbheight =
-            current.z * height
+            current.z
+                |> Bounded.value
+                |> (*) height
     in
     { x = current.x - bbwidth / 2
     , y = current.y - bbheight / 2
@@ -83,5 +88,5 @@ equals a b =
         == b.x
         && a.y
         == b.y
-        && a.z
-        == b.z
+        && Bounded.value a.z
+        == Bounded.value b.z

@@ -2,6 +2,7 @@ module Init.Graph.Transform exposing (..)
 
 import Bounce
 import Model.Graph.Transform exposing (..)
+import Number.Bounded as Bounded
 import RecordSetter exposing (s_state)
 import Set
 
@@ -14,7 +15,9 @@ init =
         Settled
             { x = 0
             , y = 0
-            , z = 1
+            , z =
+                Bounded.between 0.1 14
+                    |> Bounded.set 1
             }
     }
 

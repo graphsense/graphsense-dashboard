@@ -39,6 +39,7 @@
             "elm-community/string-extra": "4.0.1",
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",
+            "jschomay/elm-bounded-number": "2.1.2",
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "myrho/elm-hovercard": "3.0.0",

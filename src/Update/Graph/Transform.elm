@@ -1,5 +1,6 @@
 module Update.Graph.Transform exposing (delay, pop, transition, update, updateByBoundingBox, vector, wheel)
 
+import Basics.Extra exposing (flip)
 import Bounce
 import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
 import Ease
@@ -8,6 +9,7 @@ import Model.Graph.Coords as Graph exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Transform as Transform exposing (..)
 import Msg.Graph as Graph
+import Number.Bounded as Bounded
 import RecordSetter exposing (..)
 import Set exposing (Set)
 
@@ -38,7 +40,7 @@ add field upd delta model =
                     { t
                         | current =
                             t.current
-                                |> upd (delta * t.current.z + field t.current)
+                                |> upd (delta * Bounded.value t.current.z + field t.current)
                     }
                         |> Transitioning
             }
@@ -47,7 +49,7 @@ add field upd delta model =
             { model
                 | state =
                     t
-                        |> upd (delta * t.z + field t)
+                        |> upd (delta * Bounded.value t.z + field t)
                         |> Settled
             }
 
@@ -76,10 +78,21 @@ wheel { width, height } x y w model =
             y_ / height * z
 
         upd co =
-            co
-                |> s_x (co.x - width * co.z * moveX)
-                |> s_y (co.y - height * co.z * moveY)
-                |> s_z (co.z * (1 + z))
+            let
+                newZ =
+                    Bounded.map ((*) (1 + z)) co.z
+
+                changed =
+                    Bounded.value newZ /= Bounded.value co.z
+            in
+            if changed then
+                co
+                    |> s_x (co.x - width * Bounded.value co.z * moveX)
+                    |> s_y (co.y - height * Bounded.value co.z * moveY)
+                    |> s_z newZ
+
+            else
+                co
     in
     case model.state of
         Transitioning t ->
@@ -107,6 +120,9 @@ vector a b model =
 updateByBoundingBox : Model -> BBox -> { width : Float, height : Float } -> Model
 updateByBoundingBox model bbox { width, height } =
     let
+        current =
+            getCurrent model
+
         coords =
             { x = bbox.x + bbox.width / 2
             , y = bbox.y + bbox.height / 2
@@ -115,9 +131,10 @@ updateByBoundingBox model bbox { width, height } =
                     (bbox.width / width)
                     (bbox.height / height)
                     |> max 1
+                    |> flip Bounded.set current.z
             }
     in
-    if Transform.equals coords <| getCurrent model then
+    if Transform.equals coords current then
         model |> s_state (Settled coords)
 
     else
@@ -167,7 +184,10 @@ transition delta model =
                             , current =
                                 { x = t.from.x + (t.to.x - t.from.x) * prg
                                 , y = t.from.y + (t.to.y - t.from.y) * prg
-                                , z = t.from.z + (t.to.z - t.from.z) * prg
+                                , z =
+                                    Bounded.inc
+                                        ((Bounded.value t.to.z - Bounded.value t.from.z) * prg)
+                                        t.from.z
                                 }
                         }
                             |> Transitioning
