@@ -690,17 +690,26 @@ rowsAddress vc now table address =
                     (.address >> .currency)
                     (.address >> .address)
                     (\currency id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToAddressTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
                             Route.addressRoute
                                 { currency = currency
                                 , address = id
-                                , table = Just tableTag
+                                , table =
+                                    if active then
+                                        Nothing
+
+                                    else
+                                        Just tableTag
                                 , layer = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToAddressTable table tableTag
+                        , active = active
                         }
                     )
 
@@ -1201,17 +1210,26 @@ rowsEntity vc gc now table ent =
                     (.entity >> .currency)
                     (.entity >> .entity)
                     (\currency id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToEntityTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
                             Route.entityRoute
                                 { currency = currency
                                 , entity = id
-                                , table = Just tableTag
+                                , table =
+                                    if active then
+                                        Nothing
+
+                                    else
+                                        Just tableTag
                                 , layer = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToEntityTable table tableTag
+                        , active = active
                         }
                     )
 
@@ -1378,12 +1396,22 @@ rowsActor vc gc now table actor =
                     (\_ -> "")
                     .id
                     (\_ id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToActorTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
-                            Route.actorRoute id (Just tableTag)
+                            Route.actorRoute id
+                                (if active then
+                                    Nothing
+
+                                 else
+                                    Just tableTag
+                                )
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToActorTable table tableTag
+                        , active = active
                         }
                     )
     in
@@ -1504,16 +1532,25 @@ rowsBlock vc gc now table block =
                     .currency
                     .height
                     (\currency id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToBlockTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
                             Route.blockRoute
                                 { currency = currency
                                 , block = id
-                                , table = Just tableTag
+                                , table =
+                                    if active then
+                                        Nothing
+
+                                    else
+                                        Just tableTag
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToBlockTable table tableTag
+                        , active = active
                         }
                     )
     in
@@ -1728,17 +1765,26 @@ rowsTxUtxo vc gc now table tx =
                     .currency
                     .txHash
                     (\currency id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToTxUtxoTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
                             Route.txRoute
                                 { currency = currency
                                 , txHash = id
-                                , table = Just tableTag
+                                , table =
+                                    if active then
+                                        Nothing
+
+                                    else
+                                        Just tableTag
                                 , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToTxUtxoTable table tableTag
+                        , active = active
                         }
                     )
     in
@@ -1831,17 +1877,26 @@ rowsTxAccount vc gc now tx table coinCode =
                     (\_ -> coinCode)
                     (\d -> ( d.txHash, d.tokenTxId ))
                     (\currency id ->
+                        let
+                            active =
+                                unwrapTableRouteMatch matchTableRouteToTxAccountTable table tableTag
+                        in
                         { title = Locale.string vc.locale title
                         , link =
                             Route.txRoute
                                 { currency = currency
                                 , txHash = first id
-                                , table = Just tableTag
+                                , table =
+                                    if active then
+                                        Nothing
+
+                                    else
+                                        Just tableTag
                                 , tokenTxId = Nothing
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
-                        , active = unwrapTableRouteMatch matchTableRouteToTxAccountTable table tableTag
+                        , active = active
                         }
                     )
     in
@@ -1960,29 +2015,49 @@ rowsAddresslink vc gc source table link =
                 (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
-        , Just
+        , let
+            active =
+                unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
+          in
+          Just
             { title = Locale.string vc.locale "Transactions"
             , link =
                 addresslinkRouteBase
-                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> s_table
+                        (if active then
+                            Nothing
+
+                         else
+                            Just Route.AddresslinkTxsTable
+                        )
                     |> Route.addresslinkRoute
                     |> Route.graphRoute
                     |> toUrl
-            , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
+            , active = active
             }
         )
-    , linkValueRow vc
+    , let
+        active =
+            unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
+      in
+      linkValueRow vc
         gc
         currency
         linkData
         { title = Locale.string vc.locale "All assets"
         , link =
             addresslinkRouteBase
-                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> s_table
+                    (if active then
+                        Nothing
+
+                     else
+                        Just Route.AddresslinkAllAssetsTable
+                    )
                 |> Route.addresslinkRoute
                 |> Route.graphRoute
                 |> toUrl
-        , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
+        , active = active
         }
     ]
 
@@ -2039,29 +2114,49 @@ rowsEntitylink vc gc source table link =
                 (.noTxs >> Locale.int vc.locale)
             |> Maybe.withDefault ""
             |> String
-        , Just
+        , let
+            active =
+                unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
+          in
+          Just
             { title = Locale.string vc.locale "Transactions"
             , link =
                 entitylinkRouteBase
-                    |> s_table (Just Route.AddresslinkTxsTable)
+                    |> s_table
+                        (if active then
+                            Nothing
+
+                         else
+                            Just Route.AddresslinkTxsTable
+                        )
                     |> Route.entitylinkRoute
                     |> Route.graphRoute
                     |> toUrl
-            , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkTxsTable
+            , active = active
             }
         )
-    , linkValueRow vc
+    , let
+        active =
+            unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
+      in
+      linkValueRow vc
         gc
         currency
         linkData
         { title = Locale.string vc.locale "All assets"
         , link =
             entitylinkRouteBase
-                |> s_table (Just Route.AddresslinkAllAssetsTable)
+                |> s_table
+                    (if active then
+                        Nothing
+
+                     else
+                        Just Route.AddresslinkAllAssetsTable
+                    )
                 |> Route.entitylinkRoute
                 |> Route.graphRoute
                 |> toUrl
-        , active = unwrapTableRouteMatch matchTableRouteToAddresslinkTable table Route.AddresslinkAllAssetsTable
+        , active = active
         }
     ]
 

@@ -89,12 +89,38 @@ loadingEntity id model =
     }
 
 
-loadingBlock : { currency : String, block : Int } -> Model -> Model
+loadingBlock : { currency : String, block : Int } -> Model -> ( Model, List Effect )
 loadingBlock id model =
-    { model
-        | type_ = Block (Loading id.currency id.block) Nothing
+    let
+        return table =
+            ( Block (Loading id.currency id.block) table
+            , [ BrowserGotBlock
+                    |> GetBlockEffect
+                        { height = id.block
+                        , currency = id.currency
+                        }
+                    |> ApiEffect
+              ]
+            )
+
+        ( type_, eff ) =
+            case model.type_ of
+                Block loadable table ->
+                    if matchBlockId id loadable then
+                        ( model.type_, [] )
+
+                    else
+                        return table
+
+                _ ->
+                    return Nothing
+    in
+    ( { model
+        | type_ = type_
         , visible = True
-    }
+      }
+    , eff
+    )
 
 
 loadingTxAccount : T.TxAccount -> String -> Model -> ( Model, List Effect )
@@ -131,8 +157,8 @@ loadingTxAccount id accountCurrency model =
 loadingTxUtxo : { currency : String, txHash : String } -> Model -> ( Model, List Effect )
 loadingTxUtxo id model =
     let
-        ( type_, eff ) =
-            ( TxUtxo (Loading id.currency id.txHash) Nothing
+        return table =
+            ( TxUtxo (Loading id.currency id.txHash) table
             , [ GetTxEffect
                     { txHash = id.txHash
                     , currency = id.currency
@@ -142,6 +168,18 @@ loadingTxUtxo id model =
                     |> ApiEffect
               ]
             )
+
+        ( type_, eff ) =
+            case model.type_ of
+                TxUtxo loadable table ->
+                    if matchTxId id loadable then
+                        ( model.type_, [] )
+
+                    else
+                        return table
+
+                _ ->
+                    return Nothing
     in
     ( { model
         | type_ = type_
@@ -2965,3 +3003,46 @@ getBrowserElement model =
     ( model
     , [ GetBrowserElementEffect ]
     )
+
+
+hideTable : Model -> Model
+hideTable model =
+    { model
+        | type_ =
+            case model.type_ of
+                Address a _ ->
+                    Address a Nothing
+
+                None ->
+                    None
+
+                Entity a _ ->
+                    Entity a Nothing
+
+                Actor a _ ->
+                    Actor a Nothing
+
+                TxUtxo a _ ->
+                    TxUtxo a Nothing
+
+                TxAccount a b _ ->
+                    TxAccount a b Nothing
+
+                Label a t ->
+                    Label a t
+
+                Block a _ ->
+                    Block a Nothing
+
+                Addresslink a b _ ->
+                    Addresslink a b Nothing
+
+                Entitylink a b _ ->
+                    Entitylink a b Nothing
+
+                UserTags a ->
+                    UserTags a
+
+                Plugin ->
+                    model.type_
+    }

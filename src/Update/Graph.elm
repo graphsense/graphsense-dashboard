@@ -2455,7 +2455,7 @@ updateByRoute plugins route mo =
                             ( browser2, effects ) =
                                 table
                                     |> Maybe.map (\t -> Browser.showEntityTable t browser)
-                                    |> Maybe.withDefault (n browser)
+                                    |> Maybe.withDefault (Browser.hideTable browser |> n)
                         in
                         ( { model
                             | browser = browser2
@@ -2494,12 +2494,12 @@ updateByRoute plugins route mo =
                     if Data.isAccountLike currency then
                         table
                             |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
-                            |> Maybe.withDefault (n browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                     else if tokenTxId == Nothing then
                         table
                             |> Maybe.map (\tb -> Browser.showTxUtxoTable tb browser)
-                            |> Maybe.withDefault (n browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                     else
                         n browser
@@ -2512,25 +2512,19 @@ updateByRoute plugins route mo =
 
         Route.Currency currency (Route.Block b table) ->
             let
-                browser =
+                ( browser1, effects1 ) =
                     Browser.loadingBlock { currency = currency, block = b } model.browser
 
-                ( browser2, effects ) =
+                ( browser2, effects2 ) =
                     table
-                        |> Maybe.map (\tb -> Browser.showBlockTable tb browser)
-                        |> Maybe.withDefault (n browser)
+                        |> Maybe.map (\tb -> Browser.showBlockTable tb browser1)
+                        |> Maybe.withDefault (Browser.hideTable browser1 |> n)
             in
             ( { model
                 | browser = browser2
               }
-            , [ BrowserGotBlock
-                    |> GetBlockEffect
-                        { height = b
-                        , currency = currency
-                        }
-                    |> ApiEffect
-              ]
-                ++ effects
+            , effects1
+                ++ effects2
             )
 
         Route.Currency currency (Route.Addresslink src srcLayer dst dstLayer table) ->
@@ -2937,7 +2931,7 @@ selectAddress address table model =
             ( browser2, effects2 ) =
                 table
                     |> Maybe.map (\t -> Browser.showAddressTable t browser1)
-                    |> Maybe.withDefault (n browser1)
+                    |> Maybe.withDefault (Browser.hideTable browser1 |> n)
 
             newmodel =
                 deselect model
@@ -2965,7 +2959,7 @@ selectEntity entity table model =
             ( browser2, effects2 ) =
                 table
                     |> Maybe.map (\t -> Browser.showEntityTable t browser1)
-                    |> Maybe.withDefault (n browser1)
+                    |> Maybe.withDefault (Browser.hideTable browser1 |> n)
 
             newmodel =
                 deselect model
@@ -3720,7 +3714,7 @@ loadAddress plugins { currency, address, table, at } model =
                         if select then
                             table
                                 |> Maybe.map (\t -> Browser.showAddressTable t browser)
-                                |> Maybe.withDefault (n browser)
+                                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                         else
                             n browser
@@ -3854,7 +3848,7 @@ selectAddressLink table source link model =
         ( browser2, effects ) =
             table
                 |> Maybe.map (\tb -> Browser.showAddresslinkTable tb browser)
-                |> Maybe.withDefault (n browser)
+                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
         linkId =
             ( source.id, link.node.id )
@@ -3884,7 +3878,7 @@ selectEntityLink table source link model =
         ( browser2, effects ) =
             table
                 |> Maybe.map (\tb -> Browser.showEntitylinkTable tb browser)
-                |> Maybe.withDefault (n browser)
+                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
         linkId =
             ( source.id, link.node.id )
