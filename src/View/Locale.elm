@@ -278,19 +278,23 @@ currencyWithOptions : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Dat
 currencyWithOptions vis model values =
     case model.currency of
         Coin ->
-            bestAssetAsInt model values
-                |> Maybe.map
-                    (\( asset, value ) ->
-                        coinWithOptions vis model asset value
-                            ++ (if List.length values == 1 then
-                                    ""
+            if List.all (second >> .value >> (==) 0) values then
+                "0"
 
-                                else
-                                    " +"
-                                        ++ (List.length values - 1 |> String.fromInt)
-                               )
-                    )
-                |> Maybe.withDefault "0"
+            else
+                bestAssetAsInt model values
+                    |> Maybe.map
+                        (\( asset, value ) ->
+                            coinWithOptions vis model asset value
+                                ++ (if List.length values == 1 then
+                                        ""
+
+                                    else
+                                        " +"
+                                            ++ (List.length values - 1 |> String.fromInt)
+                                   )
+                        )
+                    |> Maybe.withDefault "0"
 
         Fiat code ->
             sumFiats code values
