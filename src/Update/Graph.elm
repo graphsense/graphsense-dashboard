@@ -45,6 +45,7 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Graph.Transform as Transform
+import Model.Loadable exposing (Loadable(..))
 import Model.Node as Node
 import Model.Search
 import Msg.Graph as Msg exposing (Msg(..))
@@ -1328,7 +1329,7 @@ updateByMsg plugins uc msg model =
                 | layers = Layer.removeEntity id model.layers
                 , browser =
                     case model.browser.type_ of
-                        Browser.Entity (Browser.Loaded e) _ ->
+                        Browser.Entity (Loaded e) _ ->
                             if e.id == id then
                                 model.browser |> s_visible False |> s_type_ Browser.None
 
@@ -2588,14 +2589,14 @@ updateByRoute plugins route mo =
 
                 ( newbrowser, effectsActor ) =
                     case model.browser.type_ of
-                        Browser.Actor (Browser.Loading currentActorId _) _ ->
+                        Browser.Actor (Loading currentActorId _) _ ->
                             if currentActorId /= actorId then
                                 ( Browser.loadingActor actorId model.browser, getActorAction )
 
                             else
                                 ( Browser.openActor True model.browser, [] )
 
-                        Browser.Actor (Browser.Loaded actor) _ ->
+                        Browser.Actor (Loaded actor) _ ->
                             if actor.id /= actorId then
                                 ( Browser.loadingActor actorId model.browser, getActorAction )
 
@@ -3253,12 +3254,12 @@ refreshBrowserAddress id model =
     { model
         | browser =
             case model.browser.type_ of
-                Browser.Address (Browser.Loaded ad) table ->
+                Browser.Address (Loaded ad) table ->
                     if ad.address.currency == id.currency && ad.address.address == id.address then
                         model.browser
                             |> s_type_
                                 (Layer.getAddress ad.id model.layers
-                                    |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
+                                    |> Maybe.map (\a -> Browser.Address (Loaded a) table)
                                     |> Maybe.withDefault model.browser.type_
                                 )
 
@@ -3282,12 +3283,12 @@ refreshBrowserEntityIf predicate model =
     { model
         | browser =
             case model.browser.type_ of
-                Browser.Entity (Browser.Loaded en) table ->
+                Browser.Entity (Loaded en) table ->
                     if predicate en then
                         model.browser
                             |> s_type_
                                 (Layer.getEntity en.id model.layers
-                                    |> Maybe.map (\e -> Browser.Entity (Browser.Loaded e) table)
+                                    |> Maybe.map (\e -> Browser.Entity (Loaded e) table)
                                     |> Maybe.withDefault model.browser.type_
                                 )
 

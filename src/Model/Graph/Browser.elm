@@ -18,6 +18,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Loadable as Loadable exposing (Loadable(..))
 import Model.Tx as T
 import Time
 
@@ -45,11 +46,6 @@ type Type
     | Entitylink Entity (Link Entity) (Maybe AddresslinkTable)
     | UserTags (Table Tag.UserTag)
     | Plugin
-
-
-type Loadable id thing
-    = Loading String id
-    | Loaded thing
 
 
 type Value msg
@@ -211,50 +207,25 @@ loadableCurrency l =
 
 
 loadableAddressId : Loadable String Address -> String
-loadableAddressId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.address.address
+loadableAddressId =
+    Loadable.id (.address >> .address)
 
 
 loadableActorId : Loadable String Actor -> String
-loadableActorId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.id
+loadableActorId =
+    Loadable.id .id
 
 
 loadableEntityId : Loadable Int Entity -> Int
-loadableEntityId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.entity.entity
+loadableEntityId =
+    Loadable.id (.entity >> .entity)
 
 
 loadableTxId : Loadable String { a | txHash : String } -> String
-loadableTxId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.txHash
+loadableTxId =
+    Loadable.id .txHash
 
 
 loadableBlockId : Loadable Int { a | height : Int } -> Int
-loadableBlockId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.height
+loadableBlockId =
+    Loadable.id .height

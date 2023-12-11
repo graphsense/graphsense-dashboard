@@ -46,6 +46,7 @@ import Model.Graph.Table.TxsAccountTable as TxsAccountTable
 import Model.Graph.Table.TxsUtxoTable as TxsUtxoTable
 import Model.Graph.Table.UserAddressTagsTable as UserAddressTagsTable
 import Model.Graph.Tag as Tag
+import Model.Loadable as Loadable exposing (Loadable(..))
 import Model.Locale as Locale
 import Model.Tx as T
 import Msg.Graph exposing (Msg(..))
@@ -2496,22 +2497,19 @@ showTxUtxoAddresses id isOutgoing data model =
                                )
                             |> Just
                             |> TxUtxo
-                                (case loadable of
-                                    Loaded tx ->
-                                        (if isOutgoing then
+                                (Loadable.map
+                                    (\tx ->
+                                        if isOutgoing then
                                             { tx
                                                 | outputs = Just data
                                             }
 
-                                         else
+                                        else
                                             { tx
                                                 | inputs = Just data
                                             }
-                                        )
-                                            |> Loaded
-
-                                    Loading _ _ ->
-                                        loadable
+                                    )
+                                    loadable
                                 )
                 }
 

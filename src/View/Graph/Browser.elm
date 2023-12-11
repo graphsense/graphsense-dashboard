@@ -30,6 +30,7 @@ import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Table exposing (..)
+import Model.Loadable as Loadable exposing (Loadable(..))
 import Model.Locale as Locale
 import Model.Node as Node
 import Msg.Graph exposing (Msg(..))
@@ -717,7 +718,7 @@ rowsAddress vc now table address =
             [ Row
                 ( "Tags"
                 , address
-                    |> ifLoaded
+                    |> Loadable.map
                         (\a ->
                             (Maybe.map List.length a.tags |> Maybe.withDefault 0)
                                 + (Maybe.map (\_ -> 1) a.userTag |> Maybe.withDefault 0)
@@ -731,7 +732,7 @@ rowsAddress vc now table address =
             , Row
                 ( "Transactions"
                 , address
-                    |> ifLoaded
+                    |> Loadable.map
                         (\a ->
                             Transactions
                                 { noIncomingTxs = a.address.noIncomingTxs
@@ -744,14 +745,14 @@ rowsAddress vc now table address =
             , Row
                 ( "Sending addresses"
                 , address
-                    |> ifLoaded (.address >> .inDegree >> Locale.int vc.locale >> String)
+                    |> Loadable.map (.address >> .inDegree >> Locale.int vc.locale >> String)
                     |> elseLoading
                 , mkTableLink "List sending addresses" Route.AddressIncomingNeighborsTable
                 )
             , Row
                 ( "Receiving addresses"
                 , address
-                    |> ifLoaded (.address >> .outDegree >> Locale.int vc.locale >> String)
+                    |> Loadable.map (.address >> .outDegree >> Locale.int vc.locale >> String)
                     |> elseLoading
                 , mkTableLink "List receiving addresses" Route.AddressOutgoingNeighborsTable
                 )
@@ -761,14 +762,14 @@ rowsAddress vc now table address =
             [ Row
                 ( "Last usage"
                 , address
-                    |> ifLoaded (.address >> .lastTx >> .timestamp >> Usage now)
+                    |> Loadable.map (.address >> .lastTx >> .timestamp >> Usage now)
                     |> elseLoading
                 , Nothing
                 )
             , Row
                 ( "Activity period"
                 , address
-                    |> ifLoaded
+                    |> Loadable.map
                         (\a ->
                             a.address.firstTx.timestamp
                                 - a.address.lastTx.timestamp
@@ -781,7 +782,7 @@ rowsAddress vc now table address =
             , Row
                 ( "Total received"
                 , address
-                    |> ifLoaded
+                    |> Loadable.map
                         (totalReceivedValues .address
                             >> Value
                         )
@@ -791,7 +792,7 @@ rowsAddress vc now table address =
             , Row
                 ( "Final balance"
                 , address
-                    |> ifLoaded
+                    |> Loadable.map
                         (balanceValues .address
                             >> Value
                         )
@@ -849,7 +850,7 @@ rowsAddress vc now table address =
     [ RowWithMoreActionsButton
         ( "Address"
         , address
-            |> ifLoaded (.address >> .address >> AddressStr)
+            |> Loadable.map (.address >> .address >> AddressStr)
             |> elseShowAddress
         , case address of
             Loaded addr ->
@@ -862,7 +863,7 @@ rowsAddress vc now table address =
         (Row
             ( "Actor"
             , address
-                |> ifLoaded
+                |> Loadable.map
                     (.address
                         >> .actors
                         >> Maybe.withDefault []
@@ -883,7 +884,7 @@ rowsAddress vc now table address =
     , Row
         ( "Currency"
         , address
-            |> ifLoaded (.address >> .currency >> String.toUpper >> String)
+            |> Loadable.map (.address >> .currency >> String.toUpper >> String)
             |> elseShowCurrency
         , Nothing
         )
@@ -892,7 +893,7 @@ rowsAddress vc now table address =
                 [ Row
                     ( "Smart contract"
                     , address
-                        |> ifLoaded
+                        |> Loadable.map
                             (\a ->
                                 String <|
                                     if a.address.isContract == Just True then
@@ -914,7 +915,7 @@ rowsAddress vc now table address =
            , Row
                 ( "First usage"
                 , address
-                    |> ifLoaded (.address >> .firstTx >> .timestamp >> Usage now)
+                    |> Loadable.map (.address >> .firstTx >> .timestamp >> Usage now)
                     |> elseLoading
                 , Nothing
                 )
@@ -1113,24 +1114,9 @@ makeTableLink getCurrency getId make l =
                 |> Just
 
 
-ifLoaded : (a -> Value msg) -> Loadable id a -> Loadable id (Value msg)
-ifLoaded toValue l =
-    case l of
-        Loading currency id ->
-            Loading currency id
-
-        Loaded a ->
-            toValue a |> Loaded
-
-
 elseLoading : Loadable id (Value msg) -> Value msg
-elseLoading l =
-    case l of
-        Loading _ _ ->
-            LoadingValue
-
-        Loaded v ->
-            v
+elseLoading =
+    Loadable.withDefault LoadingValue
 
 
 elseShowAddress : Loadable String (Value msg) -> Value msg
@@ -1238,7 +1224,7 @@ rowsEntity vc gc now table ent =
     in
     [ RowWithMoreActionsButton
         ( "Entity"
-        , ent |> ifLoaded (EntityId gc) |> elseLoading
+        , ent |> Loadable.map (EntityId gc) |> elseLoading
         , case ent of
             Loaded entity ->
                 Just (UserClickedEntityActions entity.id)
@@ -1248,7 +1234,7 @@ rowsEntity vc gc now table ent =
         )
     , Row
         ( "Root Address"
-        , ent |> ifLoaded (.entity >> .rootAddress >> AddressStr) |> elseLoading
+        , ent |> Loadable.map (.entity >> .rootAddress >> AddressStr) |> elseLoading
         , Nothing
         )
 
@@ -1256,7 +1242,7 @@ rowsEntity vc gc now table ent =
        (Row
            ( "Actors"
            , ent
-               |> ifLoaded
+               |> Loadable.map
                    (.entity
                        >> .actors
                        >> Maybe.withDefault []
@@ -1284,13 +1270,13 @@ rowsEntity vc gc now table ent =
     -}
     , Row
         ( "Currency"
-        , ent |> ifLoaded (.entity >> .currency >> String.toUpper >> String) |> elseShowCurrency
+        , ent |> Loadable.map (.entity >> .currency >> String.toUpper >> String) |> elseShowCurrency
         , Nothing
         )
     , Row
         ( "Addresses"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (\entity ->
                     Locale.int vc.locale entity.entity.noAddresses
                         |> String
@@ -1301,7 +1287,7 @@ rowsEntity vc gc now table ent =
     , Row
         ( "Address tags"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (\e ->
                     (e.entity
                         |> .noAddressTags
@@ -1317,7 +1303,7 @@ rowsEntity vc gc now table ent =
     , Row
         ( "Transactions"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (\entity ->
                     Transactions
                         { noIncomingTxs = entity.entity.noIncomingTxs
@@ -1330,14 +1316,14 @@ rowsEntity vc gc now table ent =
     , Row
         ( "Sending entities"
         , ent
-            |> ifLoaded (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
+            |> Loadable.map (\entity -> Locale.int vc.locale entity.entity.inDegree |> String)
             |> elseLoading
         , mkTableLink "List sending entities" Route.EntityIncomingNeighborsTable
         )
     , Row
         ( "Receiving entities"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (\entity ->
                     Locale.int vc.locale entity.entity.outDegree
                         |> String
@@ -1348,18 +1334,18 @@ rowsEntity vc gc now table ent =
     , Rule
     , Row
         ( "First usage"
-        , ent |> ifLoaded (\entity -> Usage now entity.entity.firstTx.timestamp) |> elseLoading
+        , ent |> Loadable.map (\entity -> Usage now entity.entity.firstTx.timestamp) |> elseLoading
         , Nothing
         )
     , Row
         ( "Last usage"
-        , ent |> ifLoaded (\entity -> Usage now entity.entity.lastTx.timestamp) |> elseLoading
+        , ent |> Loadable.map (\entity -> Usage now entity.entity.lastTx.timestamp) |> elseLoading
         , Nothing
         )
     , Row
         ( "Activity period"
         , ent
-            |> ifLoaded (\entity -> entity.entity.firstTx.timestamp - entity.entity.lastTx.timestamp |> Duration)
+            |> Loadable.map (\entity -> entity.entity.firstTx.timestamp - entity.entity.lastTx.timestamp |> Duration)
             |> elseLoading
         , Nothing
         )
@@ -1367,22 +1353,42 @@ rowsEntity vc gc now table ent =
     , Row
         ( "Total received"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (totalReceivedValues .entity
                     >> Value
                 )
             |> elseLoading
-        , mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
+        , ent
+            |> Loadable.map
+                (totalReceivedValues .entity
+                    >> List.drop 1
+                    >> List.head
+                    >> Maybe.andThen
+                        (\_ ->
+                            mkTableLink "Total received assets" Route.EntityTotalReceivedAllAssetsTable
+                        )
+                )
+            |> Loadable.withDefault Nothing
         )
     , Row
         ( "Final balance"
         , ent
-            |> ifLoaded
+            |> Loadable.map
                 (balanceValues .entity
                     >> Value
                 )
             |> elseLoading
-        , mkTableLink "Final balance assets" Route.EntityFinalBalanceAllAssetsTable
+        , ent
+            |> Loadable.map
+                (totalReceivedValues .entity
+                    >> List.drop 1
+                    >> List.head
+                    >> Maybe.andThen
+                        (\_ ->
+                            mkTableLink "Final balance assets" Route.EntityFinalBalanceAllAssetsTable
+                        )
+                )
+            |> Loadable.withDefault Nothing
         )
     ]
 
@@ -1424,14 +1430,14 @@ rowsActor vc gc now table actor =
                 Nothing
         )
     , Rule
-    , Row ( "Actor", actor |> ifLoaded (.label >> String) |> elseLoading, Nothing )
+    , Row ( "Actor", actor |> Loadable.map (.label >> String) |> elseLoading, Nothing )
     , Rule
-    , Row ( "Url", actor |> ifLoaded (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
+    , Row ( "Url", actor |> Loadable.map (.uri >> (\x -> Uri x x)) |> elseLoading, Nothing )
     , Rule
     , Row
         ( "Categories"
         , actor
-            |> ifLoaded
+            |> Loadable.map
                 (.categories
                     >> List.map .label
                     >> List.map String
@@ -1445,7 +1451,7 @@ rowsActor vc gc now table actor =
         (Row
             ( "Jurisdictions"
             , actor
-                |> ifLoaded
+                |> Loadable.map
                     (.jurisdictions
                         >> List.map (\x -> Country x.id x.label)
                         >> Grid 3
@@ -1466,7 +1472,7 @@ rowsActor vc gc now table actor =
         (Row
             ( "Social"
             , actor
-                |> ifLoaded
+                |> Loadable.map
                     (getUrisWithoutMain
                         >> getFontAwesomeIconForUris
                         >> List.filter (\( _, icon ) -> icon /= Nothing)
@@ -1494,7 +1500,7 @@ rowsActor vc gc now table actor =
     , Row
         ( "Other Links"
         , actor
-            |> ifLoaded
+            |> Loadable.map
                 ((\_ -> "") >> String)
             |> elseLoading
         , mkTableLink "More links" Route.ActorOtherLinksTable
@@ -1503,7 +1509,7 @@ rowsActor vc gc now table actor =
     , Row
         ( "Tags"
         , actor
-            |> ifLoaded
+            |> Loadable.map
                 (.nrTags
                     >> Maybe.map String.fromInt
                     >> Maybe.withDefault "-"
@@ -1554,31 +1560,31 @@ rowsBlock vc gc now table block =
                         }
                     )
     in
-    [ Row ( "Height", block |> ifLoaded (.height >> Locale.int vc.locale >> String) |> elseLoading, Nothing )
+    [ Row ( "Height", block |> Loadable.map (.height >> Locale.int vc.locale >> String) |> elseLoading, Nothing )
     , Row
         ( "Currency"
         , block
-            |> ifLoaded (.currency >> String.toUpper >> String)
+            |> Loadable.map (.currency >> String.toUpper >> String)
             |> elseShowCurrency
         , Nothing
         )
     , Row
         ( "Transactions"
         , block
-            |> ifLoaded (.noTxs >> Locale.int vc.locale >> String)
+            |> Loadable.map (.noTxs >> Locale.int vc.locale >> String)
             |> elseLoading
         , mkTableLink "List block transactions" Route.BlockTxsTable
         )
     , Row
         ( "Block hash"
         , block
-            |> ifLoaded (.blockHash >> HashStr)
+            |> Loadable.map (.blockHash >> HashStr)
             |> elseLoading
         , Nothing
         )
     , Row
         ( "Created"
-        , block |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , block |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     ]
@@ -1791,7 +1797,7 @@ rowsTxUtxo vc gc now table tx =
     [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> HashStr)
+            |> Loadable.map (.txHash >> HashStr)
             |> elseShowAddress
         , case tx of
             Loaded txi ->
@@ -1802,18 +1808,18 @@ rowsTxUtxo vc gc now table tx =
         )
     , Row
         ( "Included in block"
-        , tx |> ifLoaded (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
         ( "Created"
-        , tx |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
         ( "No. inputs"
         , tx
-            |> ifLoaded
+            |> Loadable.map
                 (.noInputs
                     >> Locale.int vc.locale
                     >> String
@@ -1824,7 +1830,7 @@ rowsTxUtxo vc gc now table tx =
     , Row
         ( "No. outputs"
         , tx
-            |> ifLoaded
+            |> Loadable.map
                 (.noOutputs
                     >> Locale.int vc.locale
                     >> String
@@ -1835,7 +1841,7 @@ rowsTxUtxo vc gc now table tx =
     , Row
         ( "total input"
         , tx
-            |> ifLoaded
+            |> Loadable.map
                 (\t -> Value [ ( assetFromBase t.currency, t.totalInput ) ])
             |> elseLoading
         , Nothing
@@ -1843,7 +1849,7 @@ rowsTxUtxo vc gc now table tx =
     , Row
         ( "total output"
         , tx
-            |> ifLoaded
+            |> Loadable.map
                 (\t -> Value [ ( assetFromBase t.currency, t.totalOutput ) ])
             |> elseLoading
         , Nothing
@@ -1903,7 +1909,7 @@ rowsTxAccount vc gc now tx table coinCode =
     [ RowWithMoreActionsButton
         ( "Transaction"
         , tx
-            |> ifLoaded (.txHash >> HashStr)
+            |> Loadable.map (.txHash >> HashStr)
             |> elseShowTxAccount
         , case tx of
             Loaded txi ->
@@ -1915,32 +1921,32 @@ rowsTxAccount vc gc now tx table coinCode =
     , Row
         ( "Value"
         , tx
-            |> ifLoaded
+            |> Loadable.map
                 (\t -> Value [ ( assetFromBase t.currency, t.value ) ])
             |> elseLoading
         , Nothing
         )
     , Row
         ( "Included in block"
-        , tx |> ifLoaded (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.height >> Locale.intWithoutValueDetailFormatting vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
         ( "Created"
-        , tx |> ifLoaded (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
+        , tx |> Loadable.map (.timestamp >> Locale.timestamp vc.locale >> String) |> elseLoading
         , Nothing
         )
     , Row
         ( "Sending address"
         , tx
-            |> ifLoaded (txLink .fromAddress)
+            |> Loadable.map (txLink .fromAddress)
             |> elseLoading
         , Nothing
         )
     , Row
         ( "Receiving address"
         , tx
-            |> ifLoaded (txLink .toAddress)
+            |> Loadable.map (txLink .toAddress)
             |> elseLoading
         , Nothing
         )
