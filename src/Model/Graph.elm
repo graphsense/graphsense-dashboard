@@ -19,11 +19,13 @@ import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
 import Model.Graph.Transform as Transform
+import Route.Graph
 
 
 type alias Model =
     { config : Config
     , layers : IntDict Layer
+    , route : Route.Graph.Route
     , browser : Browser.Model
     , adding : Adding.Model
     , dragging : Dragging

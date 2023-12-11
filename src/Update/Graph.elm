@@ -518,7 +518,7 @@ updateByMsg plugins uc msg model =
                     Route.addressRoute
                         { currency = Id.currency id
                         , address = Id.addressId id
-                        , table = Nothing
+                        , table = Route.getAddressTable model.route
                         , layer = Id.layer id |> Just
                         }
                         |> NavPushRouteEffect
@@ -575,7 +575,7 @@ updateByMsg plugins uc msg model =
                         , Route.entityRoute
                             { currency = Id.currency id
                             , entity = Id.entityId id
-                            , table = Nothing
+                            , table = Route.getEntityTable model.route
                             , layer = Id.layer id |> Just
                             }
                             |> NavPushRouteEffect
@@ -644,7 +644,7 @@ updateByMsg plugins uc msg model =
                 , srcLayer = first id |> Id.layer
                 , dst = second id |> Id.entityId
                 , dstLayer = second id |> Id.layer
-                , table = Nothing
+                , table = Route.getAddresslinkTable model.route
                 }
                 |> NavPushRouteEffect
                 |> List.singleton
@@ -672,7 +672,7 @@ updateByMsg plugins uc msg model =
                 , srcLayer = first id |> Id.layer
                 , dst = second id |> Id.addressId
                 , dstLayer = second id |> Id.layer
-                , table = Nothing
+                , table = Route.getAddresslinkTable model.route
                 }
                 |> NavPushRouteEffect
                 |> List.singleton
@@ -2407,7 +2407,11 @@ hideContextmenu model =
 
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
-updateByRoute plugins route model =
+updateByRoute plugins route mo =
+    let
+        model =
+            { mo | route = route }
+    in
     case route |> Log.log "route" of
         Route.Root ->
             deselect model

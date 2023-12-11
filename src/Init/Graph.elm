@@ -10,12 +10,14 @@ import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
 import Model.Graph.Tool exposing (Toolbox(..))
+import Route.Graph
 
 
 init : UserSettings -> Int -> Model
 init us now =
     { config = Config.init us.addressLabel us.edgeLabel us.showClusterShadowLinks us.showAddressShadowLinks us.showDatesInUserLocale us.showZeroValueTxs
     , layers = IntDict.empty
+    , route = Route.Graph.rootRoute
     , browser = Browser.init now
     , adding = Adding.init
     , dragging = NoDragging

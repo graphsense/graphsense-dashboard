@@ -14,6 +14,9 @@ module Route.Graph exposing
     , blockRoute
     , entityRoute
     , entitylinkRoute
+    , getAddressTable
+    , getAddresslinkTable
+    , getEntityTable
     , labelRoute
     , parser
     , pluginRoute
@@ -579,3 +582,36 @@ thing =
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddresslinkTable))
             |> map Entitylink
         ]
+
+
+getAddressTable : Route -> Maybe AddressTable
+getAddressTable route =
+    case route of
+        Currency _ (Address _ table _) ->
+            table
+
+        _ ->
+            Nothing
+
+
+getEntityTable : Route -> Maybe EntityTable
+getEntityTable route =
+    case route of
+        Currency _ (Entity _ table _) ->
+            table
+
+        _ ->
+            Nothing
+
+
+getAddresslinkTable : Route -> Maybe AddresslinkTable
+getAddresslinkTable route =
+    case route of
+        Currency _ (Entitylink _ _ _ _ table) ->
+            table
+
+        Currency _ (Addresslink _ _ _ _ table) ->
+            table
+
+        _ ->
+            Nothing
