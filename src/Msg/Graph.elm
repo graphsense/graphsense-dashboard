@@ -131,9 +131,9 @@ type Msg
     | UserSelectsDirection String
     | UserSelectsCriterion String
     | UserSelectsSearchCategory String
-    | UserInputsSearchDepth (Maybe Int)
-    | UserInputsSearchBreadth (Maybe Int)
-    | UserInputsSearchMaxAddresses (Maybe Int)
+    | UserInputsSearchDepth String
+    | UserInputsSearchBreadth String
+    | UserInputsSearchMaxAddresses String
     | UserClicksCloseSearchHovercard
     | UserSubmitsSearchInput
     | BrowserGotEntitySearchResult EntityId Bool (List Api.Data.SearchResultLevel1)

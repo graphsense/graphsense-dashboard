@@ -12,9 +12,9 @@ init categories element entityId =
     , criterion = initCriterion categories
     , id = entityId
     , element = element
-    , depth = 2
-    , breadth = 20
-    , maxAddresses = 100
+    , depth = "2"
+    , breadth = "20"
+    , maxAddresses = "100"
     }
 
 

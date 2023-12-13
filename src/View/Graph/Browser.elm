@@ -685,6 +685,11 @@ properties vc =
 rowsAddress : View.Config -> Time.Posix -> Maybe AddressTable -> Loadable String Address -> List (Row (Value Msg) Coords Msg)
 rowsAddress vc now table address =
     let
+        layer =
+            address
+                |> Loadable.map (.id >> Id.layer >> Just)
+                |> Loadable.withDefault Nothing
+
         mkTableLink title tableTag =
             address
                 |> makeTableLink
@@ -706,7 +711,7 @@ rowsAddress vc now table address =
 
                                     else
                                         Just tableTag
-                                , layer = Nothing
+                                , layer = layer
                                 }
                                 |> Route.graphRoute
                                 |> toUrl
@@ -1190,6 +1195,11 @@ browseTxAccount plugins states vc gc now tx table coinCode =
 rowsEntity : View.Config -> Graph.Config -> Time.Posix -> Maybe EntityTable -> Loadable Int Entity -> List (Row (Value Msg) Coords Msg)
 rowsEntity vc gc now table ent =
     let
+        layer =
+            ent
+                |> Loadable.map (.id >> Id.layer >> Just)
+                |> Loadable.withDefault Nothing
+
         mkTableLink title tableTag =
             ent
                 |> makeTableLink
@@ -1211,7 +1221,7 @@ rowsEntity vc gc now table ent =
 
                                     else
                                         Just tableTag
-                                , layer = Nothing
+                                , layer = layer
                                 }
                                 |> Route.graphRoute
                                 |> toUrl

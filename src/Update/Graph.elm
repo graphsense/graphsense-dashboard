@@ -1739,32 +1739,49 @@ updateByMsg plugins uc msg model =
             updateSearch (Search.selectCategory category) model
 
         UserInputsSearchDepth input ->
-            input
-                |> Maybe.map
-                    (\depth ->
-                        updateSearch (\s -> n { s | depth = depth }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | depth = input
+                        }
+                )
+                model
 
         UserInputsSearchBreadth input ->
-            input
-                |> Maybe.map
-                    (\breadth ->
-                        updateSearch (\s -> n { s | breadth = breadth }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | breadth = input
+                        }
+                )
+                model
 
         UserInputsSearchMaxAddresses input ->
-            input
-                |> Maybe.map
-                    (\maxAddresses ->
-                        updateSearch (\s -> n { s | maxAddresses = maxAddresses }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | maxAddresses = input
+                        }
+                )
+                model
 
         UserSubmitsSearchInput ->
-            updateSearch Search.submit model
-                |> mapFirst (s_search Nothing)
+            model.search
+                |> Maybe.andThen
+                    (\search ->
+                        Maybe.map3
+                            (\depth breadth maxAddresses ->
+                                Search.submit { depth = depth, breadth = breadth, maxAddresses = maxAddresses } search
+                            )
+                            (String.toInt search.depth)
+                            (String.toInt search.breadth)
+                            (String.toInt search.maxAddresses)
+                    )
+                |> Maybe.map (mapFirst (\s -> { model | search = Nothing }))
+                |> Maybe.withDefault (n model)
 
         UserClicksCloseSearchHovercard ->
             { model

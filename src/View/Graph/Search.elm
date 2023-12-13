@@ -4,15 +4,12 @@ import Config.View as View
 import Css.Button
 import Css.Graph as Css
 import Css.View
-import Html.Attributes as HA
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
-import Input.Number
 import Model.Graph.Search exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Plugin.View exposing (Plugins)
-import Tuple2 exposing (uncurry)
 import View.Dialog as Dialog
 import View.Locale as Locale
 
@@ -49,48 +46,38 @@ inputHovercard plugins vc model =
             ]
             [ Dialog.part vc
                 "Depth"
-                [ Input.Number.input
-                    { onInput = UserInputsSearchDepth
-                    , hasFocus = Nothing
-                    , maxValue = Just 4
-                    , minValue = Just 1
-                    , maxLength = Just 1
-                    }
-                    (Css.View.inputRawWithLength vc 5
-                        |> List.map (uncurry HA.style)
-                    )
-                    (Just model.depth)
-                    |> Html.fromUnstyled
+                [ input
+                    [ onInput UserInputsSearchDepth
+                    , Html.Styled.Attributes.max "4"
+                    , Html.Styled.Attributes.min "1"
+                    , Css.View.input vc |> css
+                    , value model.depth
+                    , type_ "number"
+                    ]
+                    []
                 ]
             , Dialog.part vc
                 "Breadth"
-                [ Input.Number.input
-                    { onInput = UserInputsSearchBreadth
-                    , hasFocus = Nothing
-                    , maxValue = Just 100
-                    , minValue = Just 1
-                    , maxLength = Just 3
-                    }
-                    (Css.View.inputRawWithLength vc 6
-                        |> List.map (uncurry HA.style)
-                    )
-                    (Just model.breadth)
-                    |> Html.fromUnstyled
+                [ input
+                    [ onInput UserInputsSearchBreadth
+                    , Html.Styled.Attributes.max "100"
+                    , Html.Styled.Attributes.min "1"
+                    , Css.View.input vc |> css
+                    , value model.breadth
+                    , type_ "number"
+                    ]
+                    []
                 ]
             , Dialog.part vc
                 "Max. addresses"
-                [ Input.Number.input
-                    { onInput = UserInputsSearchMaxAddresses
-                    , hasFocus = Nothing
-                    , maxValue = Nothing
-                    , minValue = Just 1
-                    , maxLength = Nothing
-                    }
-                    (Css.View.inputRawWithLength vc 8
-                        |> List.map (uncurry HA.style)
-                    )
-                    (Just model.maxAddresses)
-                    |> Html.fromUnstyled
+                [ input
+                    [ onInput UserInputsSearchMaxAddresses
+                    , Html.Styled.Attributes.min "1"
+                    , Css.View.input vc |> css
+                    , value model.maxAddresses
+                    , type_ "number"
+                    ]
+                    []
                 ]
             ]
         , input

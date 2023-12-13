@@ -10,9 +10,9 @@ type alias Model =
     , criterion : Criterion
     , id : EntityId
     , element : Dom.Element
-    , depth : Int
-    , breadth : Int
-    , maxAddresses : Int
+    , depth : String
+    , breadth : String
+    , maxAddresses : String
     }
 
 

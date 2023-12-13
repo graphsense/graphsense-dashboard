@@ -16,7 +16,6 @@
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "TSFoster/elm-tuple-extra": "2.0.0",
             "Warry/elm-css-sortable-table": "1.0.0",
-            "abadi199/elm-input-extra": "5.2.6",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
             "avh4/elm-program-test": "3.7.0",
@@ -61,7 +60,6 @@
             "elm-explorations/test": "1.2.2",
             "fredcy/elm-parseint": "2.0.1",
             "hecrj/html-parser": "2.4.0",
-            "jinjor/elm-diff": "1.0.6",
             "mgold/elm-nonempty-list": "4.2.0",
             "myrho/elm-parser-extras": "1.0.1",
             "myrho/elm-round": "1.0.5"
