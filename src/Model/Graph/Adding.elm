@@ -10,7 +10,8 @@ type alias Model =
     { addresses : Dict ( String, String ) AddingAddress
     , entities : Dict ( String, Int ) AddingEntity
     , labels : Set String
-    , path : List Id.AddressId
+    , addressPath : List Id.AddressId
+    , entityPath : List Id.EntityId
     }
 
 

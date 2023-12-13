@@ -62,6 +62,7 @@ type SelectIfLoaded
     = SelectAddress A.Address
     | SelectEntity E.Entity
     | SelectAddresslink (Maybe Route.Graph.AddresslinkTable) A.Address A.Address
+    | SelectEntitylink (Maybe Route.Graph.AddresslinkTable) E.Entity E.Entity
 
 
 type Selected

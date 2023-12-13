@@ -47,13 +47,23 @@ setEntityForAddress { currency, address } data model =
     }
 
 
-setPath : String -> String -> List String -> Model -> Model
-setPath currency fst addresses model =
+setAddressPath : String -> String -> List String -> Model -> Model
+setAddressPath currency fst addresses model =
     { model
-        | path =
+        | addressPath =
             fst
                 :: addresses
                 |> List.indexedMap (\i a -> Id.initAddressId { currency = currency, id = a, layer = i })
+    }
+
+
+setEntityPath : String -> Int -> List Int -> Model -> Model
+setEntityPath currency fst entities model =
+    { model
+        | entityPath =
+            fst
+                :: entities
+                |> List.indexedMap (\i a -> Id.initEntityId { currency = currency, id = a, layer = i })
     }
 
 
@@ -189,9 +199,9 @@ readyEntity { currency, entity } model =
             )
 
 
-getNextFor : Id.AddressId -> Model -> Maybe Id.AddressId
-getNextFor id model =
-    case model.path of
+getNextAddressFor : Id.AddressId -> Model -> Maybe Id.AddressId
+getNextAddressFor id model =
+    case model.addressPath of
         nextId :: rest ->
             if nextId /= id then
                 Nothing
@@ -203,13 +213,29 @@ getNextFor id model =
             Nothing
 
 
-popPath : Model -> Model
-popPath model =
+getNextEntityFor : Id.EntityId -> Model -> Maybe Id.EntityId
+getNextEntityFor id model =
+    case model.entityPath of
+        nextId :: rest ->
+            if nextId /= id then
+                Nothing
+
+            else
+                List.head rest
+
+        [] ->
+            Nothing
+
+
+popAddressPath : Model -> Model
+popAddressPath model =
     { model
-        | path = List.drop 1 model.path
+        | addressPath = List.drop 1 model.addressPath
     }
 
 
-isLastPathItem : Model -> Bool
-isLastPathItem model =
-    List.length model.path == 1
+popEntityPath : Model -> Model
+popEntityPath model =
+    { model
+        | entityPath = List.drop 1 model.entityPath
+    }

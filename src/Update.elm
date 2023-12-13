@@ -514,7 +514,7 @@ update plugins uc msg model =
                 Search.UserPicksCurrency currency ->
                     let
                         ( graph, graphEffects ) =
-                            Graph.loadPath plugins
+                            Graph.loadAddressPath plugins
                                 { currency = currency
                                 , addresses =
                                     Search.query model.search

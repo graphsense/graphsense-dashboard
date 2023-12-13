@@ -304,11 +304,11 @@ syncBrowser old model =
 
 loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
 loadNextAddress plugins uc model id =
-    Adding.getNextFor id model.adding
+    Adding.getNextAddressFor id model.adding
         |> Maybe.map
             (\nextId ->
                 { model
-                    | adding = Adding.popPath model.adding
+                    | adding = Adding.popAddressPath model.adding
                 }
                     |> loadAddress
                         plugins
@@ -320,6 +320,29 @@ loadNextAddress plugins uc model id =
                     |> (\( m, eff ) -> ( m, eff ))
             )
         |> Maybe.withDefault (n model)
+
+
+loadNextEntity : Plugins -> Update.Config -> Model -> Id.EntityId -> ( Model, List Effect )
+loadNextEntity plugins uc model id =
+    Adding.getNextEntityFor id model.adding
+        |> Maybe.map
+            (\nextId ->
+                { model
+                    | adding = Adding.popEntityPath model.adding
+                }
+                    |> loadEntity
+                        plugins
+                        { currency = Id.currency nextId
+                        , entity = Id.entityId nextId
+                        , table = Nothing
+                        , layer = Id.layer nextId |> Just
+                        }
+                    |> (\( m, eff ) -> ( m, eff ))
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                selectEntityLinkIfLoaded model
+            )
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -343,11 +366,17 @@ updateByMsg plugins uc msg model =
             let
                 ( transform, eff ) =
                     Transform.delay ids model.transform
+
+                ( model2, pathEff ) =
+                    Set.toList ids
+                        |> List.head
+                        |> Maybe.map (loadNextEntity plugins uc model)
+                        |> Maybe.withDefault (n model)
             in
-            ( model
+            ( model2
                 |> s_transform transform
             , CmdEffect eff
-                |> List.singleton
+                :: pathEff
             )
 
         RuntimeDebouncedAddingEntities ->
@@ -2447,57 +2476,20 @@ updateByRoute plugins route mo =
         Route.Currency currency (Route.AddressPath ( address, addresses )) ->
             model
                 |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
-                |> loadPath plugins
+                |> loadAddressPath plugins
                     { currency = currency
                     , addresses = address :: addresses
                     }
 
         Route.Currency currency (Route.Entity e table layer) ->
-            layer
-                |> Maybe.andThen
-                    (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = e, layer = l }) model.layers)
-                |> Maybe.Extra.orElseLazy
-                    (\_ -> Layer.getFirstEntity { currency = currency, entity = e } model.layers)
-                |> Maybe.map
-                    (\entity ->
-                        model
-                            |> s_selectIfLoaded (Just (SelectEntity { currency = currency, entity = e }))
-                            |> selectEntity entity table
-                    )
-                |> Maybe.Extra.withDefaultLazy
-                    (\_ ->
-                        let
-                            browser =
-                                Browser.loadingEntity { currency = currency, entity = e } model.browser
-
-                            ( browser2, effects ) =
-                                table
-                                    |> Maybe.map (\t -> Browser.showEntityTable t browser)
-                                    |> Maybe.withDefault (Browser.hideTable browser |> n)
-                        in
-                        ( { model
-                            | browser = browser2
-                            , adding = Adding.loadEntity { currency = currency, entity = e } model.adding
-                            , selectIfLoaded = Just (SelectEntity { currency = currency, entity = e })
-                          }
-                        , [ BrowserGotEntity
-                                |> GetEntityEffect
-                                    { entity = e
-                                    , currency = currency
-                                    }
-                                |> ApiEffect
-                          ]
-                            ++ (getEntityEgonet
-                                    { currency = currency
-                                    , entity = e
-                                    }
-                                    BrowserGotEntityEgonet
-                                    model.layers
-                                    |> List.map ApiEffect
-                               )
-                            ++ effects
-                        )
-                    )
+            model
+                |> s_selectIfLoaded (Just (SelectEntity { currency = currency, entity = e }))
+                |> loadEntity plugins
+                    { currency = currency
+                    , entity = e
+                    , table = table
+                    , layer = layer
+                    }
 
         Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
@@ -2566,7 +2558,7 @@ updateByRoute plugins route mo =
                     (\_ ->
                         model
                             |> s_selectIfLoaded (Just (SelectAddresslink table { currency = currency, address = src } { currency = currency, address = dst }))
-                            |> loadPath plugins
+                            |> loadAddressPath plugins
                                 { currency = currency
                                 , addresses = [ src, dst ]
                                 }
@@ -2590,7 +2582,15 @@ updateByRoute plugins route mo =
                             |> Maybe.map
                                 (\link -> selectEntityLink table source link model)
                     )
-                |> Maybe.withDefault (n model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        model
+                            |> s_selectIfLoaded (Just (SelectEntitylink table { currency = currency, entity = src } { currency = currency, entity = dst }))
+                            |> loadEntityPath plugins
+                                { currency = currency
+                                , entities = [ src, dst ]
+                                }
+                    )
 
         Route.Label l ->
             let
@@ -3652,7 +3652,7 @@ addAddressesAtEntity plugins uc entityId addresses model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-loadPath :
+loadAddressPath :
     Plugins
     ->
         { currency : String
@@ -3660,11 +3660,11 @@ loadPath :
         }
     -> Model
     -> ( Model, List Effect )
-loadPath plugins { currency, addresses } model =
+loadAddressPath plugins { currency, addresses } model =
     case addresses of
         address :: rest ->
             { model
-                | adding = Adding.setPath currency address rest model.adding
+                | adding = Adding.setAddressPath currency address rest model.adding
             }
                 |> loadAddress
                     plugins
@@ -3672,6 +3672,32 @@ loadPath plugins { currency, addresses } model =
                     , address = address
                     , table = Nothing
                     , at = Nothing
+                    }
+
+        [] ->
+            n model
+
+
+loadEntityPath :
+    Plugins
+    ->
+        { currency : String
+        , entities : List Int
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadEntityPath plugins { currency, entities } model =
+    case entities of
+        entity :: rest ->
+            { model
+                | adding = Adding.setEntityPath currency entity rest model.adding
+            }
+                |> loadEntity
+                    plugins
+                    { currency = currency
+                    , entity = entity
+                    , table = Nothing
+                    , layer = Nothing
                     }
 
         [] ->
@@ -3774,6 +3800,61 @@ loadAddress plugins { currency, address, table, at } model =
             )
 
 
+loadEntity :
+    Plugins
+    ->
+        { currency : String
+        , entity : Int
+        , table : Maybe Route.EntityTable
+        , layer : Maybe Int
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadEntity plugins { currency, entity, table, layer } model =
+    layer
+        |> Maybe.andThen
+            (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = entity, layer = l }) model.layers)
+        |> Maybe.Extra.orElseLazy
+            (\_ -> Layer.getFirstEntity { currency = currency, entity = entity } model.layers)
+        |> Maybe.map
+            (\e ->
+                selectEntity e table model
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                let
+                    browser =
+                        Browser.loadingEntity { currency = currency, entity = entity } model.browser
+
+                    ( browser2, effects ) =
+                        table
+                            |> Maybe.map (\t -> Browser.showEntityTable t browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
+                in
+                ( { model
+                    | browser = browser2
+                    , adding = Adding.loadEntity { currency = currency, entity = entity } model.adding
+                  }
+                , [ BrowserGotEntity
+                        |> GetEntityEffect
+                            { entity = entity
+                            , currency = currency
+                            }
+                        |> ApiEffect
+                  ]
+                    ++ (getEntityEgonet
+                            { currency = currency
+                            , entity = entity
+                            }
+                            BrowserGotEntityEgonet
+                            model.layers
+                            |> List.map ApiEffect
+                       )
+                    ++ effects
+                )
+            )
+
+
 normalizeDeserializedEntityTag : List Api.Data.Entity -> DeserializedEntityTag -> Maybe Tag.UserTag
 normalizeDeserializedEntityTag entities entityTag =
     case entityTag of
@@ -3865,7 +3946,6 @@ selectAddressLinkIfLoaded model =
     case model.selectIfLoaded of
         Just (SelectAddresslink table src dst) ->
             Layer.getFirstAddress src model.layers
-                |> Debug.log "getFirstAddress"
                 |> Maybe.andThen
                     (\source ->
                         (case source.links of
@@ -3877,10 +3957,8 @@ selectAddressLinkIfLoaded model =
                                             , currency = dst.currency
                                             , layer = Id.layer source.id + 1
                                             }
-                                            |> Debug.log "t"
                                 in
                                 Dict.get t links
-                                    |> Debug.log "found"
                         )
                             |> Maybe.map
                                 (\link ->
@@ -3923,6 +4001,38 @@ selectAddressLink table source link model =
       }
     , effects
     )
+
+
+selectEntityLinkIfLoaded : Model -> ( Model, List Effect )
+selectEntityLinkIfLoaded model =
+    case model.selectIfLoaded of
+        Just (SelectEntitylink table src dst) ->
+            Layer.getFirstEntity src model.layers
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Entity.Links links ->
+                                let
+                                    t =
+                                        Id.initEntityId
+                                            { id = dst.entity
+                                            , currency = dst.currency
+                                            , layer = Id.layer source.id + 1
+                                            }
+                                in
+                                Dict.get t links
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    model
+                                        |> s_selectIfLoaded Nothing
+                                        |> selectEntityLink table source link
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        _ ->
+            n model
 
 
 selectEntityLink : Maybe Route.AddresslinkTable -> Entity -> Link Entity -> Model -> ( Model, List Effect )
