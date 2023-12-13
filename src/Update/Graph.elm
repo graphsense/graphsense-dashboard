@@ -310,7 +310,6 @@ loadNextAddress plugins uc model id =
                 { model
                     | adding = Adding.popPath model.adding
                 }
-                    |> s_selectIfLoaded (Just (SelectAddress (A.fromId nextId)))
                     |> loadAddress
                         plugins
                         { currency = Id.currency nextId
@@ -910,7 +909,7 @@ updateByMsg plugins uc msg model =
                             |> (\neighs -> addAddressLinks anch isOutgoing neighs mo)
                     )
                     model
-                |> n
+                |> selectAddressLinkIfLoaded
 
         BrowserGotEntityEgonetForAddress address currency _ isOutgoing neighbors ->
             let
@@ -2445,12 +2444,13 @@ updateByRoute plugins route mo =
                     , at = Maybe.map AtLayer layer
                     }
 
-        Route.Currency currency (Route.AddressPath addresses) ->
-            loadPath plugins
-                { currency = currency
-                , addresses = addresses
-                }
-                model
+        Route.Currency currency (Route.AddressPath ( address, addresses )) ->
+            model
+                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
+                |> loadPath plugins
+                    { currency = currency
+                    , addresses = address :: addresses
+                    }
 
         Route.Currency currency (Route.Entity e table layer) ->
             layer
@@ -2562,7 +2562,15 @@ updateByRoute plugins route mo =
                         )
                             |> Maybe.map (\link -> selectAddressLink table source link model)
                     )
-                |> Maybe.withDefault (n model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        model
+                            |> s_selectIfLoaded (Just (SelectAddresslink table { currency = currency, address = src } { currency = currency, address = dst }))
+                            |> loadPath plugins
+                                { currency = currency
+                                , addresses = [ src, dst ]
+                                }
+                    )
 
         Route.Currency currency (Route.Entitylink src srcLayer dst dstLayer table) ->
             let
@@ -3658,7 +3666,6 @@ loadPath plugins { currency, addresses } model =
             { model
                 | adding = Adding.setPath currency address rest model.adding
             }
-                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
                 |> loadAddress
                     plugins
                     { currency = currency
@@ -3851,6 +3858,41 @@ handleNotFound model =
             model.browser
                 |> s_visible False
     }
+
+
+selectAddressLinkIfLoaded : Model -> ( Model, List Effect )
+selectAddressLinkIfLoaded model =
+    case model.selectIfLoaded of
+        Just (SelectAddresslink table src dst) ->
+            Layer.getFirstAddress src model.layers
+                |> Debug.log "getFirstAddress"
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Address.Links links ->
+                                let
+                                    t =
+                                        Id.initAddressId
+                                            { id = dst.address
+                                            , currency = dst.currency
+                                            , layer = Id.layer source.id + 1
+                                            }
+                                            |> Debug.log "t"
+                                in
+                                Dict.get t links
+                                    |> Debug.log "found"
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    model
+                                        |> s_selectIfLoaded Nothing
+                                        |> selectAddressLink table source link
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        _ ->
+            n model
 
 
 selectAddressLink : Maybe Route.AddresslinkTable -> Address -> Link Address -> Model -> ( Model, List Effect )

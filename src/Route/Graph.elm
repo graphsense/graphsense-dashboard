@@ -55,7 +55,7 @@ type Thing
     | Tx String (Maybe TxTable) (Maybe Int)
     | Addresslink String Int String Int (Maybe AddresslinkTable)
     | Entitylink Int Int Int Int (Maybe AddresslinkTable)
-    | AddressPath (List String)
+    | AddressPath ( String, List String )
 
 
 addressSegment : String
@@ -427,10 +427,10 @@ toUrl route =
                 ]
                 query
 
-        Currency curr (AddressPath addresses) ->
+        Currency curr (AddressPath ( address, addresses )) ->
             absolute
                 [ curr
-                , String.join " " addresses
+                , String.join " " <| address :: addresses
                 ]
                 []
 
@@ -542,6 +542,14 @@ encodedString =
     P.custom "ENCODED_STRING" Url.percentDecode
 
 
+parseAddressPath : Parser (( String, List String ) -> a) a
+parseAddressPath =
+    P.custom "ADDRESS_PATH" <|
+        \segment ->
+            String.split "," segment
+                |> List.Extra.uncons
+
+
 thing : Parser (Thing -> a) a
 thing =
     oneOf
@@ -551,8 +559,8 @@ thing =
             |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Address
         , s addresspathSegment
-            |> P.slash encodedString
-            |> map (String.split "," >> AddressPath)
+            |> P.slash parseAddressPath
+            |> map AddressPath
         , s entitySegment
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
