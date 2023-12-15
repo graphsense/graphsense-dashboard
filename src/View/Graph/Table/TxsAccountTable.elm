@@ -24,7 +24,7 @@ config vc coinCode =
     let
         toMsg field data =
             UserClickedAddressInTable
-                { currency = data.currency
+                { currency = coinCode
                 , address = field data
                 }
     in
