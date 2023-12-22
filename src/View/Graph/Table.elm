@@ -73,11 +73,11 @@ table vc attributes tools config tbl =
                         ]
 
                     else if List.isEmpty tbl.data then
-                        [ div
-                            [ Css.Table.emptyHint vc |> css
-                            ]
-                            [ Locale.string vc.locale "This table is empty" |> text
-                            ]
+                        [ tableHint vc "This table is empty"
+                        ]
+
+                    else if List.isEmpty tbl.filtered then
+                        [ tableHint vc "No rows match your filter criteria"
                         ]
 
                     else
@@ -429,4 +429,13 @@ info vc { data, filtered } =
                 Locale.interpolated vc.locale
                     "{0} items"
                     [ String.fromInt lf ]
+        ]
+
+
+tableHint : View.Config -> String -> Html msg
+tableHint vc msg =
+    div
+        [ Css.Table.emptyHint vc |> css
+        ]
+        [ Locale.string vc.locale msg |> text
         ]
