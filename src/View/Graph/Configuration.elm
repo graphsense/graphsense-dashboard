@@ -133,7 +133,7 @@ configuration vc config =
                     ]
             ]
         , Dialog.part vc
-            "Show code transactions"
+            "Show zero value transactions"
             [ onOffSwitch vc
                 [ checked config.showZeroTransactions
                 , onClick UserClickedToggleShowZeroTransactions
