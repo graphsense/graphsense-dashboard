@@ -474,24 +474,24 @@ updateByMsg plugins uc msg model =
         UserPushesLeftMouseButtonOnGraph coords ->
             { model
                 | dragging =
-                    case model.dragging of
-                        NoDragging ->
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
                             Dragging model.transform coords coords
 
-                        x ->
-                            x
+                        _ ->
+                            model.dragging
             }
                 |> n
 
         UserPushesLeftMouseButtonOnEntity id coords ->
             { model
                 | dragging =
-                    case model.dragging of
-                        NoDragging ->
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
                             DraggingNode id coords coords
 
-                        x ->
-                            x
+                        _ ->
+                            model.dragging
             }
                 |> n
 
