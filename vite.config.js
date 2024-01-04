@@ -6,7 +6,7 @@ export default defineConfig({
   server: { host: '0.0.0.0', hmr : { overlay : false } },
   publicDir: "gen/public",
   build: { 
-    outDir: 'build', 
+    outDir: 'dist', 
     minify: 'terser',
     terserOptions: {enclose: true}
   }
