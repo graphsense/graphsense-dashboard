@@ -8,7 +8,7 @@ export default defineConfig({
   build: { 
     outDir: 'dist', 
     minify: 'terser',
-    terserOptions: {enclose: true}
+    terserOptions: {mangle: false}
   }
 
 });
