@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.01.0] - 2024-01-10
+### Added
+- beta support for the tron currency ([382](https://github.com/graphsense/graphsense-dashboard/issues/382))
+- added supported tokens on statistic page ([382](https://github.com/graphsense/graphsense-dashboard/issues/382))
+- added support for missing current exchange rates (for sync states before exchange rates where avail.)
+- Allow for opening a node in new browser tab ([426](https://github.com/graphsense/graphsense-dashboard/issues/426))
+- new setting to filter zero value transactions (often smart contract calls in ethereum)
+- Italian translation
+### Changed
+- improved viewport centering when adding new nodes to the graph ([421](https://github.com/graphsense/graphsense-dashboard/issues/421))
+- keep browser table open when switching nodes ([422](https://github.com/graphsense/graphsense-dashboard/issues/422))
+- improved display for nodes/edges with multi-currency transaction (token transaction) ([377](https://github.com/graphsense/graphsense-dashboard/issues/377))
+### Fixed
+- skip existing entities in path search ([429](https://github.com/graphsense/graphsense-dashboard/issues/429))
+- Language settings get lost after login ([427](https://github.com/graphsense/graphsense-dashboard/issues/427))
+- search parameter editable via keyboard ([428](https://github.com/graphsense/graphsense-dashboard/issues/428))
+- fixed multiline node labels ([416](https://github.com/graphsense/graphsense-dashboard/issues/416))
+
 ## [23.09] - 2023-09-20
 ### Added
 - new more user friendly landing page, statistics is now found in the left menu
