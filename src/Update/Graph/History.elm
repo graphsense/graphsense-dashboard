@@ -1,10 +1,12 @@
 module Update.Graph.History exposing (shallPushHistory)
 
+import Model.Graph exposing (Model)
+import Model.Graph.Highlighter as Highlighter
 import Msg.Graph exposing (Msg(..))
 
 
-shallPushHistory : Msg -> Bool
-shallPushHistory msg =
+shallPushHistory : Msg -> Model -> Bool
+shallPushHistory msg model =
     case msg of
         UserClickedEntityExpandHandle _ _ ->
             True
@@ -52,7 +54,7 @@ shallPushHistory msg =
             False
 
         UserClickedAddress _ ->
-            False
+            Highlighter.getSelectedColor model.highlights /= Nothing
 
         UserRightClickedAddress _ _ ->
             False
@@ -64,7 +66,7 @@ shallPushHistory msg =
             False
 
         UserClickedEntity _ _ ->
-            False
+            Highlighter.getSelectedColor model.highlights /= Nothing
 
         UserRightClickedEntity _ _ ->
             False
@@ -385,7 +387,7 @@ shallPushHistory msg =
             False
 
         UserClickedHighlightTrash _ ->
-            False
+            True
 
         UserInputsHighlightTitle _ _ ->
             False

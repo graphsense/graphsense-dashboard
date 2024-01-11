@@ -3492,7 +3492,7 @@ deserializeByVersion version =
 
 pushHistory : Msg -> Model -> Model
 pushHistory msg model =
-    if History.shallPushHistory msg then
+    if History.shallPushHistory msg model then
         forcePushHistory model
 
     else
