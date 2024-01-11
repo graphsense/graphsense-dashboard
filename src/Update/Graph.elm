@@ -2142,34 +2142,40 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedUndo ->
-            case model.history of
-                History (recent :: rest) future ->
-                    { model
-                        | layers = recent
-                        , history =
-                            deselectLayers model.selected model.layers
-                                :: future
-                                |> History rest
-                    }
-                        |> syncSelection
-                        |> n
-
-                _ ->
-                    n model
+            model.history.past
+                |> List.Extra.uncons
+                |> Maybe.map
+                    (\( recent, rest ) ->
+                        { model
+                            | layers = recent
+                            , history =
+                                { past = rest
+                                , future =
+                                    deselectLayers model.selected model.layers
+                                        :: model.history.future
+                                }
+                        }
+                            |> syncSelection
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserClickedRedo ->
-            case model.history of
-                History past (recent :: future) ->
-                    { model
-                        | layers = recent
-                        , history =
-                            History (deselectLayers model.selected model.layers :: past) future
-                    }
-                        |> syncSelection
-                        |> n
-
-                _ ->
-                    n model
+            model.history.future
+                |> List.Extra.uncons
+                |> Maybe.map
+                    (\( recent, future ) ->
+                        { model
+                            | layers = recent
+                            , history =
+                                { past = deselectLayers model.selected model.layers :: model.history.past
+                                , future = future
+                                }
+                        }
+                            |> syncSelection
+                    )
+                |> Maybe.withDefault model
+                |> n
 
         UserClickedNew ->
             -- handled upstream
@@ -3501,14 +3507,12 @@ pushHistory msg model =
 
 forcePushHistory : Model -> Model
 forcePushHistory model =
-    case model.history of
-        History past _ ->
-            { model
-                | history =
-                    History
-                        (deselectLayers model.selected model.layers :: past)
-                        []
+    { model
+        | history =
+            { past = deselectLayers model.selected model.layers :: model.history.past
+            , future = []
             }
+    }
 
 
 cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
@@ -3527,9 +3531,12 @@ cleanHistory ( model, eff ) =
                     []
     in
     ( if List.isEmpty eff then
-        case model.history of
-            History past future ->
-                { model | history = History (filter past |> List.take maxHistory) future }
+        { model
+            | history =
+                { past = filter model.history.past |> List.take maxHistory
+                , future = model.history.future
+                }
+        }
 
       else
         model

@@ -43,8 +43,10 @@ type alias Model =
     }
 
 
-type History
-    = History (List (IntDict Layer)) (List (IntDict Layer))
+type alias History =
+    { past : List (IntDict Layer)
+    , future : List (IntDict Layer)
+    }
 
 
 type alias ActiveTool =

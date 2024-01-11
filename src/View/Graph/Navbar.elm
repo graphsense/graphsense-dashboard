@@ -7,7 +7,7 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model.Graph exposing (ActiveTool, History(..), Model)
+import Model.Graph exposing (ActiveTool, History, Model)
 import Model.Graph.Browser as Browser
 import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
@@ -93,26 +93,22 @@ navbarRight vc model =
               , msg = \_ -> UserClickedUndo
               , color = Nothing
               , status =
-                    case model.history of
-                        History past _ ->
-                            if List.isEmpty past then
-                                Tool.Disabled
+                    if List.isEmpty model.history.past then
+                        Tool.Disabled
 
-                            else
-                                Tool.Inactive
+                    else
+                        Tool.Inactive
               }
             , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
               , msg = \_ -> UserClickedRedo
               , color = Nothing
               , status =
-                    case model.history of
-                        History _ future ->
-                            if List.isEmpty future then
-                                Tool.Disabled
+                    if List.isEmpty model.history.future then
+                        Tool.Disabled
 
-                            else
-                                Tool.Inactive
+                    else
+                        Tool.Inactive
               }
             , { title = "Center graph"
               , icon = FontAwesome.icon FontAwesome.compress
