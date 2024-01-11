@@ -6,6 +6,7 @@ import Dict
 import Init.Graph.Adding as Adding
 import Init.Graph.Browser as Browser
 import Init.Graph.Highlighter as Highlighter
+import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import IntDict
 import Model.Graph exposing (..)
@@ -32,7 +33,7 @@ init us now =
         , toolbox = Legend []
         }
     , search = Nothing
-    , history = History [] []
+    , history = History.init
     , highlights = Highlighter.init
     , selectIfLoaded = Nothing
     }

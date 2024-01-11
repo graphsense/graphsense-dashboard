@@ -21,6 +21,7 @@ import File
 import File.Select
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Highlighter as Highlighter
+import Init.Graph.History as History
 import Init.Graph.Id as Id
 import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
@@ -3575,7 +3576,7 @@ fromDeserialized deserialized model =
                 | highlights =
                     Highlighter.init
                         |> s_highlights deserialized.highlights
-                , history = History [] []
+                , history = History.init
                 , layers = IntDict.empty
                 , config =
                     model.config

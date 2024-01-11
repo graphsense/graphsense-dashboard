@@ -13,6 +13,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.ContextMenu as ContextMenu
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Highlighter as Highlighter
+import Model.Graph.History as History
 import Model.Graph.Id exposing (AddressId, EntityId, LinkId)
 import Model.Graph.Layer exposing (Layer)
 import Model.Graph.Search as Search
@@ -37,15 +38,9 @@ type alias Model =
     , search : Maybe Search.Model
     , userAddressTags : Dict ( String, String, String ) Tag.UserTag
     , activeTool : ActiveTool
-    , history : History
+    , history : History.Model
     , highlights : Highlighter.Model
     , selectIfLoaded : Maybe SelectIfLoaded
-    }
-
-
-type alias History =
-    { past : List (IntDict Layer)
-    , future : List (IntDict Layer)
     }
 
 
