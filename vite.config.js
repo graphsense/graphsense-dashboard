@@ -7,8 +7,7 @@ export default defineConfig({
   publicDir: "gen/public",
   build: { 
     outDir: 'dist', 
-    minify: 'terser',
-    terserOptions: {mangle: false}
+    minify: 'terser'
   }
 
 });
