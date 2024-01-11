@@ -2,12 +2,13 @@ module Model.Graph.History exposing (..)
 
 import Color exposing (Color)
 import IntDict exposing (IntDict)
+import List.Extra
 import Model.Graph.Layer exposing (Layer)
 
 
 type alias Model =
-    { past : List (IntDict Layer)
-    , future : List (IntDict Layer)
+    { past : List Entry
+    , future : List Entry
     }
 
 
@@ -25,3 +26,13 @@ hasPast { past } =
 hasFuture : Model -> Bool
 hasFuture { future } =
     List.isEmpty future |> not
+
+
+unconsPast : Model -> Maybe ( Entry, List Entry )
+unconsPast { past } =
+    List.Extra.uncons past
+
+
+unconsFuture : Model -> Maybe ( Entry, List Entry )
+unconsFuture { future } =
+    List.Extra.uncons future

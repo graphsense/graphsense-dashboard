@@ -39,6 +39,7 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
+import Model.Graph.History as History
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link exposing (Link)
@@ -75,13 +76,9 @@ import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
 import Util.Data as Data
 import Util.Graph
+import Util.Graph.History as History
 import Yaml.Decode
 import Yaml.Encode
-
-
-maxHistory : Int
-maxHistory =
-    10
 
 
 addAddress :
@@ -2143,40 +2140,10 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedUndo ->
-            model.history.past
-                |> List.Extra.uncons
-                |> Maybe.map
-                    (\( recent, rest ) ->
-                        { model
-                            | layers = recent
-                            , history =
-                                { past = rest
-                                , future =
-                                    deselectLayers model.selected model.layers
-                                        :: model.history.future
-                                }
-                        }
-                            |> syncSelection
-                    )
-                |> Maybe.withDefault model
-                |> n
+            undoRedo History.undo model
 
         UserClickedRedo ->
-            model.history.future
-                |> List.Extra.uncons
-                |> Maybe.map
-                    (\( recent, future ) ->
-                        { model
-                            | layers = recent
-                            , history =
-                                { past = deselectLayers model.selected model.layers :: model.history.past
-                                , future = future
-                                }
-                        }
-                            |> syncSelection
-                    )
-                |> Maybe.withDefault model
-                |> n
+            undoRedo History.redo model
 
         UserClickedNew ->
             -- handled upstream
@@ -3510,9 +3477,8 @@ forcePushHistory : Model -> Model
 forcePushHistory model =
     { model
         | history =
-            { past = deselectLayers model.selected model.layers :: model.history.past
-            , future = []
-            }
+            makeHistoryEntry model
+                |> History.push model.history
     }
 
 
@@ -3533,10 +3499,7 @@ cleanHistory ( model, eff ) =
     in
     ( if List.isEmpty eff then
         { model
-            | history =
-                { past = filter model.history.past |> List.take maxHistory
-                , future = model.history.future
-                }
+            | history = History.prune model.history
         }
 
       else
@@ -4153,3 +4116,29 @@ extendTransformWithBoundingBox uc model bbox =
                     )
                 |> Maybe.withDefault model.transform
     }
+
+
+makeHistoryEntry : Model -> History.Entry
+makeHistoryEntry model =
+    { layers = deselectLayers model.selected model.layers
+    , highlights = model.highlights.highlights
+    }
+
+
+undoRedo : (History.Model -> History.Entry -> Maybe ( History.Model, History.Entry )) -> Model -> ( Model, List Effect )
+undoRedo fun model =
+    makeHistoryEntry model
+        |> fun model.history
+        |> Maybe.map
+            (\( history, entry ) ->
+                { model
+                    | history = history
+                    , layers = entry.layers
+                    , highlights =
+                        model.highlights
+                            |> s_highlights entry.highlights
+                }
+                    |> syncSelection
+            )
+        |> Maybe.withDefault model
+        |> n
