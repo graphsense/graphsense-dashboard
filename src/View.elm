@@ -108,7 +108,7 @@ sidebar plugins vc model =
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
                 , title (Locale.string vc.locale "Graph")
-                , Route.Graph.rootRoute
+                , model.graph.route
                     |> Route.graphRoute
                     |> Route.toUrl
                     |> href
