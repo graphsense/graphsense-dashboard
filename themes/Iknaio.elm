@@ -283,6 +283,12 @@ theme =
                 ]
             )
         |> s_longIdentifier [ fontFamily monospace ]
+        |> s_hint
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.greyDark
+                , scaled 2.7 |> rem |> fontSize
+                ]
+            )
         |> s_stats
             (Stats.default
                 |> s_root

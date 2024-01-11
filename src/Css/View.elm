@@ -191,3 +191,8 @@ copyIcon vc =
 longIdentifier : Config -> List Style
 longIdentifier vc =
     display inlineBlock :: vc.theme.longIdentifier
+
+
+hint : Config -> List Style
+hint vc =
+    vc.theme.hint vc.lightmode
