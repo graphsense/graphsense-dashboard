@@ -384,7 +384,7 @@ shallPushHistory msg model =
             False
 
         UserClickedNew ->
-            False
+            True
 
         UserClickedHighlightTrash _ ->
             True

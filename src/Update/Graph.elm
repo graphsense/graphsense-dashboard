@@ -283,7 +283,6 @@ update plugins uc msg model =
     model
         |> pushHistory msg
         |> updateByMsg plugins uc msg
-        |> cleanHistory
         |> mapFirst (syncBrowser model)
 
 
@@ -2419,11 +2418,14 @@ hideContextmenu model =
 
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
-updateByRoute plugins route mo =
-    let
-        model =
-            { mo | route = route }
-    in
+updateByRoute plugins route model =
+    forcePushHistory model
+        |> s_route route
+        |> updateByRoute_ plugins route
+
+
+updateByRoute_ : Plugins -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute_ plugins route model =
     case route |> Log.log "route" of
         Route.Root ->
             deselect model
@@ -3476,22 +3478,11 @@ forcePushHistory model =
 
 cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
 cleanHistory ( model, eff ) =
-    let
-        filter old =
-            case old of
-                fst :: rest ->
-                    if fst == model.layers then
-                        filter rest
-
-                    else
-                        old
-
-                [] ->
-                    []
-    in
-    ( if List.isEmpty eff then
+    ( if True then
         { model
-            | history = History.prune model.history
+            | history =
+                makeHistoryEntry model
+                    |> History.prune model.history
         }
 
       else

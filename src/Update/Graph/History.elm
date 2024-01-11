@@ -7,7 +7,8 @@ import Model.Graph.History exposing (Entry, Model)
 
 undo : Model -> Entry -> Maybe ( Model, Entry )
 undo model current =
-    model.past
+    prune model current
+        |> .past
         |> List.Extra.uncons
         |> Maybe.map
             (\( recent, past ) ->
@@ -35,15 +36,33 @@ redo model current =
             )
 
 
-prune : Model -> Model
-prune model =
+prune : Model -> Entry -> Model
+prune model current =
+    let
+        filter old =
+            case old of
+                fst :: rest ->
+                    if current == fst then
+                        filter rest
+
+                    else
+                        old
+
+                [] ->
+                    []
+    in
     { model
-        | past = List.take Config.maxLength model.past
+        | past = List.take Config.maxLength <| filter model.past
     }
 
 
 push : Model -> Entry -> Model
 push model entry =
-    { past = entry :: model.past
+    { past =
+        if List.head model.past == Just entry then
+            model.past
+
+        else
+            entry :: model.past
     , future = []
     }
