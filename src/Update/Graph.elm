@@ -40,6 +40,7 @@ import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
 import Model.Graph.History as History
+import Model.Graph.History.Entry as Entry
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link exposing (Link)
@@ -4101,14 +4102,14 @@ extendTransformWithBoundingBox uc model bbox =
     }
 
 
-makeHistoryEntry : Model -> History.Entry
+makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
     { layers = deselectLayers model.selected model.layers
     , highlights = model.highlights.highlights
     }
 
 
-undoRedo : (History.Model -> History.Entry -> Maybe ( History.Model, History.Entry )) -> Model -> ( Model, List Effect )
+undoRedo : (History.Model -> Entry.Model -> Maybe ( History.Model, Entry.Model )) -> Model -> ( Model, List Effect )
 undoRedo fun model =
     makeHistoryEntry model
         |> fun model.history

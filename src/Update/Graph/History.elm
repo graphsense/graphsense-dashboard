@@ -2,10 +2,11 @@ module Update.Graph.History exposing (..)
 
 import Config.Graph.History as Config
 import List.Extra
-import Model.Graph.History exposing (Entry, Model)
+import Model.Graph.History exposing (Model)
+import Model.Graph.History.Entry as Entry
 
 
-undo : Model -> Entry -> Maybe ( Model, Entry )
+undo : Model -> Entry.Model -> Maybe ( Model, Entry.Model )
 undo model current =
     prune model current
         |> .past
@@ -21,7 +22,7 @@ undo model current =
             )
 
 
-redo : Model -> Entry -> Maybe ( Model, Entry )
+redo : Model -> Entry.Model -> Maybe ( Model, Entry.Model )
 redo model current =
     model.future
         |> List.Extra.uncons
@@ -36,7 +37,7 @@ redo model current =
             )
 
 
-prune : Model -> Entry -> Model
+prune : Model -> Entry.Model -> Model
 prune model current =
     let
         filter old =
@@ -56,7 +57,7 @@ prune model current =
     }
 
 
-push : Model -> Entry -> Model
+push : Model -> Entry.Model -> Model
 push model entry =
     { past =
         if List.head model.past == Just entry then

@@ -7,6 +7,7 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
+import Init.Graph.History as History
 import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Browser as Browser
 import Model.Graph.History as History
@@ -15,6 +16,7 @@ import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import Tuple exposing (..)
+import Update.Graph exposing (makeHistoryEntry)
 import View.Graph.Tool as Tool
 
 
@@ -94,7 +96,7 @@ navbarRight vc model =
               , msg = \_ -> UserClickedUndo
               , color = Nothing
               , status =
-                    if History.hasPast model.history then
+                    if hasPast model then
                         Tool.Inactive
 
                     else
@@ -137,3 +139,9 @@ navbarRight vc model =
               }
             ]
         )
+
+
+hasPast : Model -> Bool
+hasPast model =
+    makeHistoryEntry model
+        |> History.hasPast model.history
