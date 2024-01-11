@@ -13,6 +13,7 @@ import Model.Graph.Highlighter exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
 import Util.View
+import View.Locale as Locale
 
 
 tool : View.Config -> Model -> List (Html Msg)
@@ -73,6 +74,7 @@ viewHighlight vc selected i ( title, color ) =
             [ Css.highlightTitle vc |> css
             , type_ "text"
             , value title
+            , Locale.string vc.locale "Add label" |> placeholder
             , onInput (UserInputsHighlightTitle i)
             ]
             []
