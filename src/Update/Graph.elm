@@ -1636,14 +1636,6 @@ updateByMsg plugins uc msg model =
                 , config =
                     model.config
                         |> s_highlighter (highlights.selected /= Nothing)
-                , layers =
-                    Highlighter.getSelectedColor model.highlights
-                        |> Maybe.map
-                            (\before ->
-                                Layer.updateEntityColor before (Just color) model.layers
-                                    |> Layer.updateAddressColor before (Just color)
-                            )
-                        |> Maybe.withDefault model.layers
             }
                 |> n
 

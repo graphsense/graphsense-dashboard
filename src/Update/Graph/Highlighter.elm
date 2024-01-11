@@ -8,19 +8,11 @@ import Tuple exposing (..)
 
 selectColor : Color -> Model -> Model
 selectColor color model =
-    case model.selected of
-        Nothing ->
-            { model
-                | highlights =
-                    ( "", color ) :: model.highlights
-                , selected = Just 0
-            }
-
-        Just i ->
-            { model
-                | highlights =
-                    List.Extra.updateAt i (mapSecond (always color)) model.highlights
-            }
+    { model
+        | highlights =
+            ( "", color ) :: model.highlights
+        , selected = Just 0
+    }
 
 
 removeHighlight : Int -> Model -> Model
