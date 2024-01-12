@@ -1,6 +1,6 @@
 module Config.UserSettings exposing (..)
 
-import Config.Graph exposing (AddressLabelType(..), TxLabelType(..))
+import Config.Graph exposing (AddressLabelType(..), TxLabelType(..), addressLabelToString, stringToAddressLabel)
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (optional, required)
@@ -66,35 +66,6 @@ stringToCurrency s =
             Fiat x
 
 
-addressLabelToString : AddressLabelType -> String
-addressLabelToString c =
-    case c of
-        ID ->
-            "id"
-
-        Balance ->
-            "balance"
-
-        Tag ->
-            "tag"
-
-
-stringToAddressLabel : String -> AddressLabelType
-stringToAddressLabel s =
-    case s of
-        "id" ->
-            ID
-
-        "balance" ->
-            Balance
-
-        "tag" ->
-            Tag
-
-        _ ->
-            ID
-
-
 edgeLabelToString : TxLabelType -> String
 edgeLabelToString c =
     case c of
@@ -135,7 +106,7 @@ decoder =
         |> optional "lightMode" (nullable bool |> fromString) Nothing
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
         |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
-        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel |> nullable) Nothing
+        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel) Nothing
         |> optional "edgeLabel" (Decode.string |> Decode.map stringToEdgeLabel |> nullable) Nothing
         |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showClusterShadowLinks" (nullable bool |> fromString) Nothing

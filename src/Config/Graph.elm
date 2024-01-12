@@ -123,12 +123,48 @@ minGapBetweenLayers =
 type AddressLabelType
     = ID
     | Balance
+    | TotalReceived
     | Tag
 
 
 type TxLabelType
     = NoTxs
     | Value
+
+
+addressLabelToString : AddressLabelType -> String
+addressLabelToString c =
+    case c of
+        ID ->
+            "id"
+
+        Balance ->
+            "balance"
+
+        TotalReceived ->
+            "total received"
+
+        Tag ->
+            "tag"
+
+
+stringToAddressLabel : String -> Maybe AddressLabelType
+stringToAddressLabel s =
+    case s of
+        "id" ->
+            Just ID
+
+        "balance" ->
+            Just Balance
+
+        "tag" ->
+            Just Tag
+
+        "total received" ->
+            Just TotalReceived
+
+        _ ->
+            Nothing
 
 
 type alias Config =

@@ -67,6 +67,13 @@ configuration vc config =
                         |> text
                     ]
                 , option
+                    [ value "total received"
+                    , config.addressLabelType == Graph.TotalReceived |> selected
+                    ]
+                    [ Locale.string vc.locale "Total received"
+                        |> text
+                    ]
+                , option
                     [ value "tag"
                     , config.addressLabelType == Graph.Tag |> selected
                     ]

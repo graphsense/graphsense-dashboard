@@ -1687,18 +1687,8 @@ updateByMsg plugins uc msg model =
                 | config =
                     model.config
                         |> s_addressLabelType
-                            (case at of
-                                "id" ->
-                                    Config.Graph.ID
-
-                                "balance" ->
-                                    Config.Graph.Balance
-
-                                "tag" ->
-                                    Config.Graph.Tag
-
-                                _ ->
-                                    model.config.addressLabelType
+                            (Config.Graph.stringToAddressLabel at
+                                |> Maybe.withDefault model.config.addressLabelType
                             )
             }
                 |> n

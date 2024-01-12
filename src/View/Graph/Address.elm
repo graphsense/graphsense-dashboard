@@ -165,6 +165,12 @@ getLabel vc gc addr =
             Label.normalizeValues gc (Id.currency addr.id) addr.address.balance addr.address.tokenBalances
                 |> Locale.currency vc.locale
 
+        TotalReceived ->
+            Label.normalizeValues gc (Id.currency addr.id) addr.address.totalReceived addr.address.totalTokensReceived
+                |> Debug.log "values"
+                |> Locale.currency vc.locale
+                |> Debug.log "curr"
+
         Tag ->
             addr.userTag
                 |> Maybe.map .label
