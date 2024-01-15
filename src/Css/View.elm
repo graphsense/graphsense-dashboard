@@ -67,6 +67,7 @@ main_ vc =
     [ flexGrow (num 1)
     , displayFlex
     , flexDirection column
+    , position relative
     ]
         ++ vc.theme.main vc.lightmode
 
@@ -82,7 +83,6 @@ contents : Config -> List Style
 contents vc =
     [ flexGrow (num 1)
     , overflow hidden
-    , position relative
     ]
         ++ vc.theme.contents vc.lightmode
 
