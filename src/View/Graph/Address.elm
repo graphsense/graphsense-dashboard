@@ -167,9 +167,7 @@ getLabel vc gc addr =
 
         TotalReceived ->
             Label.normalizeValues gc (Id.currency addr.id) addr.address.totalReceived addr.address.totalTokensReceived
-                |> Debug.log "values"
                 |> Locale.currency vc.locale
-                |> Debug.log "curr"
 
         Tag ->
             addr.userTag
