@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.19
 LABEL org.opencontainers.image.title="graphsense-dashboard"
 LABEL org.opencontainers.image.maintainer="contact@ikna.io"
 LABEL org.opencontainers.image.url="https://www.ikna.io/"
