@@ -495,15 +495,16 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserMovesMouseOnGraph coords ->
-            (case model.dragging of
+            case model.dragging of
                 NoDragging ->
-                    model
+                    n model
 
                 Dragging transform start _ ->
                     { model
                         | transform = Transform.update start coords transform
                         , dragging = Dragging transform start coords
                     }
+                        |> repositionHovercards
 
                 DraggingNode id start _ ->
                     let
@@ -516,26 +517,25 @@ updateByMsg plugins uc msg model =
                         , dragging = DraggingNode id start coords
                     }
                         |> syncLinks (Set.singleton id)
-            )
-                |> n
+                        |> repositionHovercards
 
         UserReleasesMouseButton ->
-            (case model.dragging of
+            case model.dragging of
                 NoDragging ->
-                    model
+                    n model
 
-                Dragging _ _ _ ->
+                Dragging _ start coords ->
                     { model
                         | dragging = NoDragging
                     }
+                        |> repositionHovercards
 
-                DraggingNode id _ _ ->
+                DraggingNode id start coords ->
                     { model
                         | layers = Layer.releaseEntity id model.layers
                         , dragging = NoDragging
                     }
-            )
-                |> n
+                        |> repositionHovercards
 
         UserPressesEscape ->
             deselectHighlighter model |> n
@@ -2209,7 +2209,7 @@ updateByMsg plugins uc msg model =
             { model
                 | transform = Transform.transition delta model.transform
             }
-                |> n
+                |> repositionHovercards
 
         SearchHovercardMsg hm ->
             model.search
@@ -4127,3 +4127,23 @@ undoRedo fun model =
             )
         |> Maybe.withDefault model
         |> n
+
+
+repositionHovercards : Model -> ( Model, List Effect )
+repositionHovercards model =
+    [ repositionHovercardCmd model .tag TagHovercardMsg
+    , repositionHovercardCmd model .search SearchHovercardMsg
+    ]
+        |> List.map CmdEffect
+        |> pair model
+
+
+repositionHovercardCmd : Model -> (Model -> Maybe { a | hovercard : Hovercard.Model }) -> (Hovercard.Msg -> Msg) -> Cmd Msg
+repositionHovercardCmd model field toMsg =
+    field model
+        |> Maybe.map
+            (.hovercard
+                >> Hovercard.getElement
+                >> Cmd.map toMsg
+            )
+        |> Maybe.withDefault Cmd.none
