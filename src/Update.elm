@@ -187,20 +187,24 @@ update plugins uc msg model =
                 _ ->
                     n model
 
-        UserHoversUserIcon id ->
-            let
-                ( hovercard, cmd ) =
-                    Hovercard.init id
-            in
-            ( { model
-                | user =
-                    model.user
-                        |> s_hovercard (Just hovercard)
-              }
-            , Cmd.map UserHovercardMsg cmd
-                |> CmdEffect
-                |> List.singleton
-            )
+        UserClickedUserIcon id ->
+            if model.user.hovercard == Nothing then
+                let
+                    ( hovercard, cmd ) =
+                        Hovercard.init id
+                in
+                ( { model
+                    | user =
+                        model.user
+                            |> s_hovercard (Just hovercard)
+                  }
+                , Cmd.map UserHovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+            else
+                n { model | user = model.user |> s_hovercard Nothing }
 
         UserHovercardMsg hm ->
             model.user.hovercard
@@ -1155,7 +1159,7 @@ handleResponse plugins uc result model =
               }
             , "userTool"
                 |> Task.succeed
-                |> Task.perform UserHoversUserIcon
+                |> Task.perform UserClickedUserIcon
                 |> CmdEffect
                 |> List.singleton
             )

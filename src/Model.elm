@@ -75,7 +75,7 @@ type Msg
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
-    | UserHoversUserIcon String
+    | UserClickedUserIcon String
     | UserLeftUserHovercard
     | UserClickedLayout
     | UserClickedConfirm Msg

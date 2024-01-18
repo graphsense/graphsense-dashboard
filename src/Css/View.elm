@@ -89,7 +89,8 @@ contents vc =
 
 tool : Config -> List Style
 tool vc =
-    vc.theme.tool
+    cursor pointer
+        :: vc.theme.tool
 
 
 hovercard : Config -> List ( String, String )
