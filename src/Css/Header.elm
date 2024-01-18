@@ -2,6 +2,7 @@ module Css.Header exposing (..)
 
 import Config.View exposing (Config)
 import Css exposing (..)
+import Util.Css
 
 
 header : Config -> List Style
@@ -9,7 +10,7 @@ header vc =
     [ displayFlex
     , flexDirection row
     , justifyContent spaceBetween
-    , zIndex <| int 51
+    , zIndex <| int <| Util.Css.zIndexMainValue + 1
     ]
         ++ vc.theme.header vc.lightmode
 

@@ -10,6 +10,7 @@ import Effect.Api
 import Effect.Graph
 import Effect.Locale
 import Effect.Search
+import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
@@ -23,6 +24,7 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
+import Theme.Hovercard exposing (Hovercard)
 import Time
 import Url exposing (Url)
 
@@ -96,6 +98,7 @@ type Msg
     | GraphMsg Msg.Graph.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
+    | UserHovercardMsg Hovercard.Msg
 
 
 type RequestLimit
@@ -111,7 +114,7 @@ showResetCounterAtRemaining =
 type alias UserModel =
     { auth : Auth
     , apiKey : String
-    , hovercardElement : Maybe Browser.Dom.Element
+    , hovercard : Maybe Hovercard.Model
     }
 
 

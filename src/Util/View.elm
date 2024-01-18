@@ -17,6 +17,7 @@ import Html.Styled.Attributes exposing (classList, css, src, title, value)
 import Html.Styled.Events exposing (onClick, stopPropagationOn)
 import Json.Decode
 import Switch
+import Util.Css
 import View.Locale as Locale
 
 
@@ -95,16 +96,15 @@ setAlpha alpha =
         >> Color.fromRgba
 
 
-hovercard : View.Config -> Dom.Element -> List (Html.Html msg) -> List (Html.Styled.Html msg)
+hovercard : View.Config -> Hovercard.Model -> List (Html.Html msg) -> List (Html.Styled.Html msg)
 hovercard vc element =
     Hovercard.hovercard
-        { maxWidth = 300
-        , maxHeight = 500
-        , tickLength = 0
+        { tickLength = 16
+        , zIndex = Util.Css.zIndexMainValue + 1
         , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
         , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
         , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , overflow = "visible"
+        , viewport = vc.size
         }
         element
         (Css.hovercard vc

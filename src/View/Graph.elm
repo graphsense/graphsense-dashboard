@@ -466,7 +466,7 @@ hovercards plugins states vc model =
                     |> Html.Styled.toUnstyled
                     |> List.singleton
                 )
-                    |> hovercard vc tag.hovercardElement
+                    |> hovercard vc tag.hovercard
             )
         |> Maybe.withDefault []
     )
@@ -477,7 +477,7 @@ hovercards plugins states vc model =
                             |> Html.Styled.toUnstyled
                             |> List.singleton
                         )
-                            |> hovercard vc search.element
+                            |> hovercard vc search.hovercard
                     )
                 |> Maybe.withDefault []
            )

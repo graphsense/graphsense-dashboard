@@ -15,6 +15,7 @@ import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import Route
 import Route.Graph
+import Util.Css
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
 import View.Header as Header
@@ -137,12 +138,12 @@ sidebar plugins vc model =
 
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
 hovercards plugins vc model =
-    model.user.hovercardElement
+    model.user.hovercard
         |> Maybe.map
-            (\element ->
+            (\hc ->
                 User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
-                    |> hovercard vc element
+                    |> hovercard { vc | size = Nothing } hc
             )
         |> Maybe.withDefault []
 
@@ -160,17 +161,16 @@ overlay plugins vc model =
     in
     case model.user.auth of
         Unauthorized _ _ ->
-            model.user.hovercardElement
+            model.user.hovercard
                 |> Maybe.map
                     (\element ->
                         Hovercard.hovercard
-                            { maxWidth = 300
-                            , maxHeight = 500
-                            , tickLength = 0
+                            { tickLength = 0
+                            , zIndex = Util.Css.zIndexMainValue + 1
                             , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
                             , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
                             , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-                            , overflow = "visible"
+                            , viewport = Nothing
                             }
                             element
                             (Css.View.hovercard vc

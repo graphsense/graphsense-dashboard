@@ -242,12 +242,6 @@ shallPushHistory msg model =
         TagSearchMsg _ ->
             False
 
-        BrowserGotAddressElementForAnnotate _ _ ->
-            False
-
-        BrowserGotEntityElementForAnnotate _ _ ->
-            False
-
         UserInputsTagSource _ ->
             False
 
@@ -303,9 +297,6 @@ shallPushHistory msg model =
             False
 
         UserClickedSearch _ ->
-            False
-
-        BrowserGotEntityElementForSearch _ _ ->
             False
 
         UserSelectsDirection _ ->
@@ -447,4 +438,10 @@ shallPushHistory msg model =
             False
 
         RuntimeDebouncedAddingEntities ->
+            False
+
+        SearchHovercardMsg _ ->
+            False
+
+        TagHovercardMsg _ ->
             False

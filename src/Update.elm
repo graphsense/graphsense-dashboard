@@ -13,6 +13,7 @@ import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
+import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Search as Search
@@ -187,13 +188,39 @@ update plugins uc msg model =
                     n model
 
         UserHoversUserIcon id ->
-            ( model
-            , GetElementEffect
-                { id = id
-                , msg = BrowserGotElement
-                }
+            let
+                ( hovercard, cmd ) =
+                    Hovercard.init id
+            in
+            ( { model
+                | user =
+                    model.user
+                        |> s_hovercard (Just hovercard)
+              }
+            , Cmd.map UserHovercardMsg cmd
+                |> CmdEffect
                 |> List.singleton
             )
+
+        UserHovercardMsg hm ->
+            model.user.hovercard
+                |> Maybe.map
+                    (\hovercard ->
+                        let
+                            ( hovercard_, cmd ) =
+                                Hovercard.update hm hovercard
+                        in
+                        ( { model
+                            | user =
+                                model.user
+                                    |> s_hovercard (Just hovercard_)
+                          }
+                        , Cmd.map UserHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         UserLeftUserHovercard ->
             { model
@@ -203,7 +230,7 @@ update plugins uc msg model =
                             model.user
 
                         _ ->
-                            model.user |> s_hovercardElement Nothing
+                            model.user |> s_hovercard Nothing
             }
                 |> n
 
@@ -275,12 +302,12 @@ update plugins uc msg model =
                                  else
                                     Unauthorized True []
                                 )
-                            |> s_hovercardElement
+                            |> s_hovercard
                                 (if List.isEmpty effs then
                                     Nothing
 
                                  else
-                                    model.user.hovercardElement
+                                    model.user.hovercard
                                 )
                     , plugins = new
                   }
@@ -288,14 +315,6 @@ update plugins uc msg model =
                     :: effs
                 )
                     |> updateByPluginOutMsg plugins outMsg
-
-        BrowserGotElement result ->
-            { model
-                | user =
-                    model.user
-                        |> s_hovercardElement (Result.toMaybe result)
-            }
-                |> n
 
         BrowserGotContentsElement result ->
             result
@@ -336,7 +355,7 @@ update plugins uc msg model =
                 { model
                     | user =
                         model.user
-                            |> s_hovercardElement Nothing
+                            |> s_hovercard Nothing
                 }
 
         TimeUpdateReset _ ->
@@ -844,6 +863,9 @@ update plugins uc msg model =
         PluginMsg msgValue ->
             updatePlugins plugins msgValue model
 
+        BrowserGotElement _ ->
+            Debug.todo "branch 'BrowserGotElement _' not implemented"
+
 
 updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
 updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
@@ -1115,7 +1137,7 @@ handleResponse plugins uc result model =
                 { model
                     | user =
                         updateRequestLimit headers model.user
-                            |> s_hovercardElement Nothing
+                            |> s_hovercard Nothing
                 }
 
         Err ( BadStatus 401, eff ) ->

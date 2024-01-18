@@ -19,6 +19,7 @@ import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
 import File
 import File.Select
+import Hovercard
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Highlighter as Highlighter
 import Init.Graph.History as History
@@ -1235,54 +1236,36 @@ updateByMsg plugins uc msg model =
             hideContextmenu model
 
         UserClickedAnnotateAddress id ->
-            ( model
-            , Id.addressIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotAddressElementForAnnotate id)
-                |> CmdEffect
-                |> List.singleton
+            let
+                ( tag, cmd ) =
+                    model.layers
+                        |> Layer.getAddress id
+                        |> Maybe.andThen .userTag
+                        |> Tag.initAddressTag id
+            in
+            ( { model
+                | tag =
+                    tag
+                        |> Just
+              }
+            , CmdEffect cmd |> List.singleton
             )
-
-        BrowserGotAddressElementForAnnotate id element ->
-            element
-                |> Result.map
-                    (\el ->
-                        { model
-                            | tag =
-                                model.layers
-                                    |> Layer.getAddress id
-                                    |> Maybe.andThen .userTag
-                                    |> Tag.initAddressTag id el
-                                    |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserClickedAnnotateEntity id ->
-            ( model
-            , Id.entityIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotEntityElementForAnnotate id)
-                |> CmdEffect
-                |> List.singleton
+            let
+                ( tag, cmd ) =
+                    model.layers
+                        |> Layer.getEntity id
+                        |> Maybe.andThen .userTag
+                        |> Tag.initEntityTag id
+            in
+            ( { model
+                | tag =
+                    tag
+                        |> Just
+              }
+            , CmdEffect cmd |> List.singleton
             )
-
-        BrowserGotEntityElementForAnnotate id element ->
-            element
-                |> Result.map
-                    (\el ->
-                        { model
-                            | tag =
-                                model.layers
-                                    |> Layer.getEntity id
-                                    |> Maybe.andThen .userTag
-                                    |> Tag.initEntityTag id el
-                                    |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserInputsTagSource input ->
             model.tag
@@ -1712,24 +1695,16 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedSearch id ->
-            ( model
-            , Id.entityIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotEntityElementForSearch id)
-                |> CmdEffect
+            let
+                ( search, cmd ) =
+                    Search.init model.config.entityConcepts id
+            in
+            ( { model
+                | search = search |> Just
+              }
+            , CmdEffect cmd
                 |> List.singleton
             )
-
-        BrowserGotEntityElementForSearch id result ->
-            result
-                |> Result.map
-                    (\element ->
-                        { model
-                            | search = Search.init model.config.entityConcepts element id |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserSelectsDirection direction ->
             updateSearch (Search.selectDirection direction) model
@@ -2235,6 +2210,42 @@ updateByMsg plugins uc msg model =
                 | transform = Transform.transition delta model.transform
             }
                 |> n
+
+        SearchHovercardMsg hm ->
+            model.search
+                |> Maybe.map
+                    (\s ->
+                        let
+                            ( search, cmd ) =
+                                Hovercard.update hm s.hovercard
+                        in
+                        ( { model
+                            | search = s |> s_hovercard search |> Just
+                          }
+                        , Cmd.map SearchHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
+
+        TagHovercardMsg hm ->
+            model.tag
+                |> Maybe.map
+                    (\s ->
+                        let
+                            ( tag, cmd ) =
+                                Hovercard.update hm s.hovercard
+                        in
+                        ( { model
+                            | tag = s |> s_hovercard tag |> Just
+                          }
+                        , Cmd.map TagHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         NoOp ->
             n model
