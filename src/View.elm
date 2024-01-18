@@ -143,7 +143,7 @@ hovercards plugins vc model =
             (\hc ->
                 User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
-                    |> hovercard { vc | size = Nothing } hc
+                    |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
             )
         |> Maybe.withDefault []
 

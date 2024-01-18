@@ -96,11 +96,11 @@ setAlpha alpha =
         >> Color.fromRgba
 
 
-hovercard : View.Config -> Hovercard.Model -> List (Html.Html msg) -> List (Html.Styled.Html msg)
-hovercard vc element =
+hovercard : View.Config -> Hovercard.Model -> Int -> List (Html.Html msg) -> List (Html.Styled.Html msg)
+hovercard vc element zIndex =
     Hovercard.hovercard
         { tickLength = 16
-        , zIndex = Util.Css.zIndexMainValue + 1
+        , zIndex = zIndex
         , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
         , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
         , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
