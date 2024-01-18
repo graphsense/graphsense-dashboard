@@ -472,6 +472,7 @@ hovercards plugins states vc model =
                     |> List.singleton
                 )
                     |> hovercard vc tag.hovercard zIndex
+                    |> List.singleton
             )
         |> Maybe.withDefault []
     )
@@ -483,6 +484,7 @@ hovercards plugins states vc model =
                             |> List.singleton
                         )
                             |> hovercard vc search.hovercard zIndex
+                            |> List.singleton
                     )
                 |> Maybe.withDefault []
            )

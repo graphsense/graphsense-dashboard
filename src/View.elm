@@ -144,6 +144,7 @@ hovercards plugins vc model =
                 User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
                     |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
+                    |> List.singleton
             )
         |> Maybe.withDefault []
 
@@ -163,21 +164,10 @@ overlay plugins vc model =
         Unauthorized _ _ ->
             model.user.hovercard
                 |> Maybe.map
-                    (\element ->
-                        Hovercard.hovercard
-                            { tickLength = 0
-                            , zIndex = Util.Css.zIndexMainValue + 1
-                            , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-                            , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-                            , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-                            , viewport = Nothing
-                            }
-                            element
-                            (Css.View.hovercard vc
-                                |> List.map (\( k, v ) -> Html.Attributes.style k v)
-                            )
-                            (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
-                            |> Html.Styled.fromUnstyled
+                    (\hc ->
+                        User.hovercard plugins vc model model.user
+                            |> List.map Html.Styled.toUnstyled
+                            |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     )
                 |> Maybe.map (ov NoOp)
                 |> Maybe.withDefault []
