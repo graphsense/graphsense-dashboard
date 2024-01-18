@@ -867,9 +867,6 @@ update plugins uc msg model =
         PluginMsg msgValue ->
             updatePlugins plugins msgValue model
 
-        BrowserGotElement _ ->
-            Debug.todo "branch 'BrowserGotElement _' not implemented"
-
 
 updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
 updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
