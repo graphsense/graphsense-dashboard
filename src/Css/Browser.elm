@@ -8,7 +8,6 @@ root : Config -> Float -> List Style
 root vc width =
     position absolute
         :: height (px 0)
-        :: (zIndex <| int 50)
         :: (maxWidth <| px width)
         :: vc.theme.browser.root
 

@@ -4,6 +4,7 @@ import Api.Data
 import Browser.Dom
 import Color
 import File
+import Hovercard
 import Json.Encode
 import Model.Actor as Act
 import Model.Address as A
@@ -105,8 +106,6 @@ type Msg
     | InternalGraphSelectedAddress AddressId
     | UserScrolledTable Browser.ScrollPos
     | TagSearchMsg Search.Msg
-    | BrowserGotAddressElementForAnnotate AddressId (Result Browser.Dom.Error Browser.Dom.Element)
-    | BrowserGotEntityElementForAnnotate EntityId (Result Browser.Dom.Error Browser.Dom.Element)
     | UserInputsTagSource String
     | UserInputsTagCategory String
     | UserInputsTagAbuse String
@@ -127,7 +126,6 @@ type Msg
     | UserChangesAddressLabelType String
     | UserChangesTxLabelType String
     | UserClickedSearch EntityId
-    | BrowserGotEntityElementForSearch EntityId (Result Browser.Dom.Error Browser.Dom.Element)
     | UserSelectsDirection String
     | UserSelectsCriterion String
     | UserSelectsSearchCategory String
@@ -176,3 +174,5 @@ type Msg
     | UserClickedToggleShowZeroTransactions
     | AnimationFrameDeltaForTransform Float
     | RuntimeDebouncedAddingEntities
+    | SearchHovercardMsg Hovercard.Msg
+    | TagHovercardMsg Hovercard.Msg

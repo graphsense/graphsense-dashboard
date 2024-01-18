@@ -23,13 +23,13 @@ user : Config -> UserModel -> Html Msg
 user vc model =
     div
         [ Css.root vc |> css
+        , Events.stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         ]
         [ Button.tool vc
             { icon = FontAwesome.user
             }
             [ id "userTool"
-            , Events.onMouseOver (UserHoversUserIcon "userTool")
-            , Events.onClick (UserHoversUserIcon "userTool")
+            , Events.onClick (UserClickedUserIcon "userTool")
             ]
         ]
 
@@ -90,14 +90,7 @@ hovercard plugins vc appModel model =
                     []
            )
         |> div
-            [ Events.on "mouseleave"
-                (Json.Decode.oneOf
-                    [ Json.Decode.at [ "relatedTarget" ] (Json.Decode.null False)
-                        |> Json.Decode.map (\_ -> NoOp)
-                    , Json.Decode.succeed UserLeftUserHovercard
-                    ]
-                )
-            , Events.stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
+            [ Events.stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
             , Css.hovercardRoot vc |> css
             ]
         |> List.singleton

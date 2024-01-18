@@ -36,4 +36,5 @@ init us now =
     , history = History.init
     , highlights = Highlighter.init
     , selectIfLoaded = Nothing
+    , hovercard = Nothing
     }

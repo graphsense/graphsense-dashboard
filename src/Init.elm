@@ -45,7 +45,7 @@ init plugins flags url key =
       , user =
             { apiKey = ""
             , auth = Unknown
-            , hovercardElement = Nothing
+            , hovercard = Nothing
             }
       , stats = NotAsked
       , width = flags.width

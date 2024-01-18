@@ -53,6 +53,7 @@ svgRoot : Config -> List Style
 svgRoot vc =
     [ pct 100 |> width
     , property "color" "black"
+    , property "user-select" "none"
     ]
         ++ vc.theme.graph.svgRoot vc.lightmode
 
@@ -215,7 +216,6 @@ searchTextarea vc =
 toolbox : Config -> Bool -> List Style
 toolbox vc visible =
     position absolute
-        :: Util.Css.zIndexMain
         :: vc.theme.graph.toolbox vc.lightmode visible
 
 

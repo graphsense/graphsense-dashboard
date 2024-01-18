@@ -29,6 +29,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Tuple exposing (..)
+import Util.Css
 import Util.ExternalLinks exposing (getBlockExplorerLinks, getBlockExplorerTransactionLinks)
 import Util.Graph as Util
 import Util.View exposing (contextMenuRule, hovercard, none)
@@ -454,6 +455,10 @@ contextMenu plugins states vc model cm =
 
 hovercards : Plugins -> ModelState -> Config -> Model -> List (Html Msg)
 hovercards plugins states vc model =
+    let
+        zIndex =
+            Util.Css.zIndexMainValue - 1
+    in
     (model.tag
         |> Maybe.map
             (\tag ->
@@ -466,7 +471,8 @@ hovercards plugins states vc model =
                     |> Html.Styled.toUnstyled
                     |> List.singleton
                 )
-                    |> hovercard vc tag.hovercardElement
+                    |> hovercard vc tag.hovercard zIndex
+                    |> List.singleton
             )
         |> Maybe.withDefault []
     )
@@ -477,7 +483,8 @@ hovercards plugins states vc model =
                             |> Html.Styled.toUnstyled
                             |> List.singleton
                         )
-                            |> hovercard vc search.element
+                            |> hovercard vc search.hovercard zIndex
+                            |> List.singleton
                     )
                 |> Maybe.withDefault []
            )

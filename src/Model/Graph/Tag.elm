@@ -2,6 +2,7 @@ module Model.Graph.Tag exposing (..)
 
 import Api.Data
 import Browser.Dom as Dom
+import Hovercard
 import Model.Graph.Id exposing (AddressId, EntityId)
 import Model.Node exposing (Node)
 import Model.Search as Search
@@ -10,7 +11,7 @@ import Model.Search as Search
 type alias Model =
     { input : Input
     , existing : Maybe UserTag
-    , hovercardElement : Dom.Element
+    , hovercard : Hovercard.Model
     }
 
 

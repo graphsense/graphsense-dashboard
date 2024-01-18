@@ -5,6 +5,7 @@ import Browser.Dom as Dom
 import Color
 import Config.Graph exposing (Config)
 import Dict exposing (Dict)
+import Hovercard
 import IntDict exposing (IntDict)
 import Model.Address as A
 import Model.Entity as E
@@ -41,6 +42,7 @@ type alias Model =
     , history : History.Model
     , highlights : Highlighter.Model
     , selectIfLoaded : Maybe SelectIfLoaded
+    , hovercard : Maybe Hovercard.Model
     }
 
 
