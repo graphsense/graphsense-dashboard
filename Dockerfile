@@ -42,6 +42,7 @@ RUN npm install
 
 COPY ./docker/docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh 
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
 EXPOSE 8000
