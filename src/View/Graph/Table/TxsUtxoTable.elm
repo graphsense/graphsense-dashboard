@@ -5,10 +5,10 @@ import Config.View as View
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Id exposing (AddressId)
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.TxsUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
@@ -16,43 +16,7 @@ import Route.Graph as Route
 import Table
 import Util.Csv
 import Util.View
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-
-
-init : Table Api.Data.TxUtxo
-init =
-    Init.Graph.Table.initUnsorted filter
-
-
-filter : String -> Api.Data.TxUtxo -> Bool
-filter f a =
-    String.contains f a.txHash
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleNoInputs : String
-titleNoInputs =
-    "No. inputs"
-
-
-titleNoOutputs : String
-titleNoOutputs =
-    "No. outputs"
-
-
-titleTotalInput : String
-titleTotalInput =
-    "Total input"
-
-
-titleTotalOutput : String
-titleTotalOutput =
-    "Total output"
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxUtxo Msg
@@ -84,8 +48,8 @@ config vc coinCode =
                 )
             , T.intColumn vc titleNoInputs .noInputs
             , T.intColumn vc titleNoOutputs .noOutputs
-            , T.valueColumn vc (\_ -> coinCode) titleTotalInput .totalInput
-            , T.valueColumn vc (\_ -> coinCode) titleTotalOutput .totalOutput
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalInput .totalInput
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalOutput .totalOutput
             ]
         , customizations = customizations vc
         }

@@ -1,0 +1,39 @@
+module Model.Graph.Table.TxsUtxoTable exposing (..)
+
+import Api.Data
+import Config.Graph as Graph
+import Model.Graph.Table as Table
+
+
+titleTx : String
+titleTx =
+    "Transaction"
+
+
+titleNoInputs : String
+titleNoInputs =
+    "No. inputs"
+
+
+titleNoOutputs : String
+titleNoOutputs =
+    "No. outputs"
+
+
+titleTotalInput : String
+titleTotalInput =
+    "Total input"
+
+
+titleTotalOutput : String
+titleTotalOutput =
+    "Total output"
+
+
+filter : Table.Filter Api.Data.TxUtxo
+filter =
+    { search =
+        \term a ->
+            String.contains term a.txHash
+    , filter = always True
+    }

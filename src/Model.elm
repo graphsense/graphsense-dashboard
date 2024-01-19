@@ -10,6 +10,7 @@ import Effect.Api
 import Effect.Graph
 import Effect.Locale
 import Effect.Search
+import Hovercard
 import Http
 import Json.Encode
 import Model.Dialog
@@ -23,6 +24,7 @@ import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import RemoteData exposing (WebData)
+import Theme.Hovercard exposing (Hovercard)
 import Time
 import Url exposing (Url)
 
@@ -51,7 +53,7 @@ type alias Model navigationKey =
     , error : String
     , statusbar : Model.Statusbar.Model
     , dialog : Maybe (Model.Dialog.Model Msg)
-    , supportedTokens : Maybe Api.Data.TokenConfigs
+    , supportedTokens : Dict String Api.Data.TokenConfigs
     , plugins : Plugin.ModelState --Dict String Json.Encode.Value
     , dirty : Bool
     }
@@ -73,7 +75,7 @@ type Msg
     | UserSwitchesLocale String
     | UserSubmitsApiKeyForm
     | UserInputsApiKeyForm String
-    | UserHoversUserIcon String
+    | UserClickedUserIcon String
     | UserLeftUserHovercard
     | UserClickedLayout
     | UserClickedConfirm Msg
@@ -82,13 +84,12 @@ type Msg
     | UserClickedLightmode
     | TimeUpdateReset Time.Posix
     | BrowserGotLoggedOut (Result Http.Error ())
-    | BrowserGotElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserGotContentsElement (Result Browser.Dom.Error Browser.Dom.Element)
     | BrowserChangedWindowSize Int Int
     | BrowserGotEntityTaxonomy (List Api.Data.Concept)
     | BrowserGotAbuseTaxonomy (List Api.Data.Concept)
     | BrowserGotElementForPlugin (Result Browser.Dom.Error Browser.Dom.Element -> Plugin.Msg) (Result Browser.Dom.Error Browser.Dom.Element)
-    | BrowserGotSupportedTokens Api.Data.TokenConfigs
+    | BrowserGotSupportedTokens String Api.Data.TokenConfigs
     | UserClickedStatusbar
     | UserClosesDialog
     | LocaleMsg Msg.Locale.Msg
@@ -96,6 +97,7 @@ type Msg
     | GraphMsg Msg.Graph.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
+    | UserHovercardMsg Hovercard.Msg
 
 
 type RequestLimit
@@ -111,7 +113,7 @@ showResetCounterAtRemaining =
 type alias UserModel =
     { auth : Auth
     , apiKey : String
-    , hovercardElement : Maybe Browser.Dom.Element
+    , hovercard : Maybe Hovercard.Model
     }
 
 
@@ -144,8 +146,7 @@ type Effect
 
 
 type Thing
-    = Address Api.Data.Address
-    | Entity Api.Data.Entity
+    = Entity Api.Data.Entity
 
 
 userSettingsFromMainModel : Model key -> UserSettings
@@ -159,4 +160,5 @@ userSettingsFromMainModel model =
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
     , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
+    , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     }

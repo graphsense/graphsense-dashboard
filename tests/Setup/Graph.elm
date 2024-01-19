@@ -1,13 +1,9 @@
 module Setup.Graph exposing (simulateEffects)
 
-import Api
-import Api.Data
 import Effect.Graph exposing (Effect(..))
-import Msg.Graph exposing (Msg(..))
-import ProgramTest exposing (ProgramTest)
+import Msg.Graph exposing (Msg)
+import ProgramTest
 import SimulatedEffect.Cmd
-import SimulatedEffect.Http as Http
-import SimulatedEffect.Task as Task
 
 
 simulateEffects : Effect -> ProgramTest.SimulatedEffect Msg

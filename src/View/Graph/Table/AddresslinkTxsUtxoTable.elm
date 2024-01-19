@@ -5,10 +5,10 @@ import Config.View as View
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Id exposing (AddressId)
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddresslinkTxsUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
@@ -16,44 +16,7 @@ import Route.Graph as Route
 import Table
 import Util.Csv
 import Util.View
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-
-
-init : Table Api.Data.LinkUtxo
-init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
-
-
-filter : String -> Api.Data.LinkUtxo -> Bool
-filter f a =
-    String.contains f a.txHash
-        || String.contains f (String.fromInt a.height)
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleInputValue : String
-titleInputValue =
-    "Input value"
-
-
-titleOutputValue : String
-titleOutputValue =
-    "Output value"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> String -> Table.Config Api.Data.LinkUtxo Msg
@@ -83,8 +46,8 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc (\_ -> coinCode) titleInputValue .inputValue
-            , T.valueColumn vc (\_ -> coinCode) titleOutputValue .outputValue
+            , T.valueColumn vc (\x -> assetFromBase coinCode) titleInputValue .inputValue
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleOutputValue .outputValue
             , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]

@@ -1,7 +1,6 @@
 module Mockup.Stats exposing (..)
 
 import Api.Data
-import Json.Encode exposing (encode)
 
 
 stats : Api.Data.Stats

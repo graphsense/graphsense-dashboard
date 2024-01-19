@@ -9,6 +9,7 @@ import Json.Encode exposing (Value)
 import Model.Actor as Act
 import Model.Address as A
 import Model.Block as B
+import Model.Currency exposing (AssetIdentifier)
 import Model.Entity as E
 import Model.Graph.Actor exposing (Actor)
 import Model.Graph.Address exposing (Address)
@@ -17,6 +18,7 @@ import Model.Graph.Layer as Layer
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Table exposing (..)
 import Model.Graph.Tag as Tag
+import Model.Loadable as Loadable exposing (Loadable(..))
 import Model.Tx as T
 import Time
 
@@ -46,17 +48,12 @@ type Type
     | Plugin
 
 
-type Loadable id thing
-    = Loading String id
-    | Loaded thing
-
-
 type Value msg
     = String String
     | Stack (List (Value msg))
     | Grid Int (List (Value msg))
-    | AddressStr (String -> msg) String
-    | HashStr (String -> msg) String
+    | AddressStr String
+    | HashStr String
     | Country String String
     | Uri String String
     | IconLink FontAwesome.Icon String
@@ -65,8 +62,8 @@ type Value msg
     | Transactions { noIncomingTxs : Int, noOutgoingTxs : Int }
     | Usage Time.Posix Int
     | Duration Int
-    | Value String Api.Data.Values
-    | MultiValue String Int (List ( String, Api.Data.Values ))
+    | Value (List ( AssetIdentifier, Api.Data.Values ))
+    | MultiValue Graph.Config String Int (List ( AssetIdentifier, Api.Data.Values ))
     | Input (String -> msg) msg String
     | Select (List ( String, String )) (String -> msg) String
     | Html (Html msg)
@@ -128,7 +125,7 @@ loadableEntity l =
 loadableActor : Loadable String Actor -> Act.Actor
 loadableActor l =
     case l of
-        Loading curr actorId ->
+        Loading _ actorId ->
             { actorId = actorId }
 
         Loaded a ->
@@ -210,50 +207,25 @@ loadableCurrency l =
 
 
 loadableAddressId : Loadable String Address -> String
-loadableAddressId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.address.address
+loadableAddressId =
+    Loadable.id (.address >> .address)
 
 
 loadableActorId : Loadable String Actor -> String
-loadableActorId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.id
+loadableActorId =
+    Loadable.id .id
 
 
 loadableEntityId : Loadable Int Entity -> Int
-loadableEntityId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.entity.entity
+loadableEntityId =
+    Loadable.id (.entity >> .entity)
 
 
 loadableTxId : Loadable String { a | txHash : String } -> String
-loadableTxId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.txHash
+loadableTxId =
+    Loadable.id .txHash
 
 
 loadableBlockId : Loadable Int { a | height : Int } -> Int
-loadableBlockId l =
-    case l of
-        Loading _ id ->
-            id
-
-        Loaded a ->
-            a.height
+loadableBlockId =
+    Loadable.id .height

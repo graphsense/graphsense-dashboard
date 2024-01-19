@@ -1,16 +1,12 @@
 module View.Graph.Legend exposing (..)
 
-import Color
 import Config.View as View
 import Css
 import Css.Graph as Css
-import Css.View
-import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as Html exposing (..)
-import Html.Styled.Events as Html exposing (..)
-import Json.Decode
+import Html.Styled exposing (..)
+import Html.Styled.Attributes exposing (..)
 import Model.Graph.Legend exposing (..)
-import Msg.Graph exposing (Msg(..))
+import Msg.Graph exposing (Msg)
 import Util.View exposing (toCssColor)
 import View.Locale as Locale
 

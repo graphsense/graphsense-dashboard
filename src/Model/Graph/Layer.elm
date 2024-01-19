@@ -3,17 +3,16 @@ module Model.Graph.Layer exposing (..)
 import Api.Data
 import Config.Graph exposing (entityWidth, expandHandleWidth)
 import Dict exposing (Dict)
-import Init.Graph.Id as Id exposing (..)
+import Init.Graph.Id as Id
 import IntDict exposing (IntDict)
 import List.Extra
-import Maybe.Extra
 import Model.Address as A
 import Model.Graph.Address as Address exposing (..)
 import Model.Graph.Coords as Coords
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
-import Model.Graph.Link as Link exposing (..)
-import Model.Graph.Transform as Transform
+import Model.Graph.Link exposing (..)
+import Set exposing (Set)
 import Tuple exposing (..)
 
 
@@ -314,7 +313,13 @@ isContentWithinViewPort layers transform viewport =
 
 getBoundingBox : IntDict Layer -> Maybe Coords.BBox
 getBoundingBox layers =
-    case entities layers of
+    entities layers
+        |> getBoundingBoxOfEntities
+
+
+getBoundingBoxOfEntities : List Entity -> Maybe Coords.BBox
+getBoundingBoxOfEntities ents =
+    case ents of
         [] ->
             Nothing
 

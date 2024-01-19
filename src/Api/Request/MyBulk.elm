@@ -1,9 +1,6 @@
 module Api.Request.MyBulk exposing (..)
 
 import Api
-import Api.Data
-import Dict
-import Http
 import Json.Decode
 import Json.Encode
 

@@ -18,10 +18,7 @@ module Api.Request.Txs exposing (..)
 
 import Api
 import Api.Data
-import Dict
-import Http
 import Json.Decode
-import Json.Encode
 
 
 type Io
@@ -49,34 +46,41 @@ stringFromIo model =
 makeIoFromString : String -> Maybe Io
 makeIoFromString str =
     case str of
-    "inputs" ->
-        Just IoInputs
+        "inputs" ->
+            Just IoInputs
 
-    "outputs" ->
-        Just IoOutputs
+        "outputs" ->
+            Just IoOutputs
 
-    _ ->
-        Nothing
-
-
+        _ ->
+            Nothing
 
 
-
-
-getTx : (String) -> (String) -> Maybe (Bool) -> Maybe (Int) -> Api.Request Api.Data.Tx
+getTx : String -> String -> Maybe Bool -> Maybe Int -> Api.Request Api.Data.Tx
 getTx currency_path txHash_path includeIo_query tokenTxId_query =
     Api.request
         "GET"
         "/{currency}/txs/{txHash}"
         [ ( "currency", identity currency_path ), ( "txHash", identity txHash_path ) ]
-        [ ( "include_io", Maybe.map ((\val -> if val then "true" else "false")) includeIo_query ), ( "token_tx_id", Maybe.map (String.fromInt) tokenTxId_query ) ]
+        [ ( "include_io"
+          , Maybe.map
+                (\val ->
+                    if val then
+                        "true"
+
+                    else
+                        "false"
+                )
+                includeIo_query
+          )
+        , ( "token_tx_id", Maybe.map String.fromInt tokenTxId_query )
+        ]
         []
         Nothing
         Api.Data.txDecoder
 
 
-
-getTxIo : (String) -> (String) -> (Io) -> Api.Request (List Api.Data.TxValue)
+getTxIo : String -> String -> Io -> Api.Request (List Api.Data.TxValue)
 getTxIo currency_path txHash_path io_path =
     Api.request
         "GET"
@@ -88,8 +92,7 @@ getTxIo currency_path txHash_path io_path =
         (Json.Decode.list Api.Data.txValueDecoder)
 
 
-
-listTokenTxs : (String) -> (String) -> Api.Request (List Api.Data.TxAccount)
+listTokenTxs : String -> String -> Api.Request (List Api.Data.TxAccount)
 listTokenTxs currency_path txHash_path =
     Api.request
         "GET"
@@ -99,4 +102,3 @@ listTokenTxs currency_path txHash_path =
         []
         Nothing
         (Json.Decode.list Api.Data.txAccountDecoder)
-

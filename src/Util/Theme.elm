@@ -4,8 +4,6 @@ import Color
 import Css
 import Css.Transitions
 import Theme.SwitchableColor as Theme
-import Theme.Theme as Theme
-import Tuple exposing (..)
 import Util.View as Util
 
 

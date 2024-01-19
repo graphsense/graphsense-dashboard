@@ -154,13 +154,21 @@ app.ports.pluginsOut.subscribe(packetWithKey => {
   })
 })
 
+class CopyIcon extends HTMLElement {
+  constructor () {
+    super()
+    this.addEventListener('click', (ev) => {
+      ev.stopPropagation()
+      navigator.clipboard.writeText(this.getAttribute('data-value'))
+    })
+  }
+}
+
+if(!customElements.get('copy-icon')) {
+  customElements.define('copy-icon', CopyIcon) 
+}
 
 app.ports.newTab.subscribe( url => window.open(url, '_blank'));
-app.ports.copyToClipboard.subscribe( value => navigator.clipboard.writeText(value).then(function() {
-  console.log('Copied to clipboard: ' + value);
-}, function(err) {
-  console.error('Could not copy to clipboard', err);
-}));
 
 app.ports.setDirty.subscribe(dirty => {
   isDirty = dirty

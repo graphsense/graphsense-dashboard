@@ -3,26 +3,27 @@ module View.Graph.Table.EntityNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
-import Css.View as CssView
 import Dict
-import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Maybe.Extra
+import Model.Currency exposing (AssetIdentifier, assetFromBase)
 import Model.Entity as E
-import Model.Graph.Entity exposing (Entity)
+import Model.Graph.Entity
 import Model.Graph.Id exposing (EntityId)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressNeighborsTable exposing (titleLabels, titleNoTxs, titleValue)
+import Model.Graph.Table.EntityNeighborsTable exposing (..)
 import Model.Locale as Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
+import Util.Data as Data
 import Util.View exposing (none)
 import View.Button exposing (actorLink)
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Graph.Table.AddressNeighborsTable exposing (reduceLabels)
+import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
 
 
@@ -35,56 +36,6 @@ columnTitleFromDirection isOutgoing =
         "Incoming"
     )
         ++ " entity"
-
-
-init : Table Api.Data.NeighborEntity
-init =
-    Init.Graph.Table.initUnsorted filter
-
-
-filter : String -> Api.Data.NeighborEntity -> Bool
-filter f a =
-    String.contains f (String.fromInt a.entity.entity)
-        || (Maybe.map (List.any (String.contains f)) a.labels |> Maybe.withDefault True)
-
-
-titleLabels : String
-titleLabels =
-    "Tags"
-
-
-titleEntityBalance : String
-titleEntityBalance =
-    "Entity balance"
-
-
-titleEntityReceived : String
-titleEntityReceived =
-    "Entity received"
-
-
-titleNoAddresses : String
-titleNoAddresses =
-    "No. addresses"
-
-
-titleNoTxs : String
-titleNoTxs =
-    "No. transactions"
-
-
-titleEstimatedValue : String
-titleEstimatedValue =
-    "Estimated value"
-
-
-titleValue : String -> String
-titleValue coinCode =
-    if coinCode == "eth" then
-        "Value"
-
-    else
-        titleEstimatedValue
 
 
 config : View.Config -> Bool -> String -> Maybe EntityId -> (EntityId -> Bool -> E.Entity -> Bool) -> Table.Config Api.Data.NeighborEntity Msg
@@ -158,9 +109,9 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
             , T.intColumn vc titleNoTxs .noTxs
             ]
                 ++ valueColumns vc
-                    coinCode
-                    (if coinCode == "eth" then
-                        Locale.tokenCurrencies vc.locale
+                    (assetFromBase coinCode)
+                    (if Data.isAccountLike coinCode then
+                        Locale.tokenCurrencies coinCode vc.locale
 
                      else
                         []
@@ -175,7 +126,7 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
 
 valueColumns :
     View.Config
-    -> String
+    -> AssetIdentifier
     -> List String
     ->
         { balance : Api.Data.NeighborEntity -> Api.Data.Values
@@ -184,51 +135,25 @@ valueColumns :
         }
     -> List (Table.Column Api.Data.NeighborEntity Msg)
 valueColumns vc coinCode tokens getValues =
-    let
-        getCurr c =
-            Maybe.andThen (Dict.get c)
-                >> Maybe.withDefault zero
-
-        ( suffix, valCol ) =
-            if coinCode == "eth" then
-                ( " " ++ String.toUpper coinCode, T.valueColumnWithoutCode )
-
-            else
-                ( "", T.valueColumn )
-    in
-    (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleEntityBalance ++ suffix) getValues.balance
-        :: (tokens
-                |> List.map
-                    (\currency ->
-                        T.valueColumnWithoutCode vc
-                            (\_ -> currency)
-                            (String.toUpper currency)
-                            (.entity >> .tokenBalances >> getCurr currency)
-                    )
-           )
-    )
-        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale titleEntityReceived ++ suffix) getValues.totalReceived
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ " ")
-                                    (.entity >> .totalTokensReceived >> getCurr currency)
-                            )
-                   )
-           )
-        ++ (valCol vc (\_ -> coinCode) (Locale.string vc.locale (titleValue coinCode) ++ suffix) getValues.value
-                :: (tokens
-                        |> List.map
-                            (\currency ->
-                                T.valueColumnWithoutCode vc
-                                    (\_ -> currency)
-                                    (String.toUpper currency ++ "  ")
-                                    (.tokenValues >> getCurr currency)
-                            )
-                   )
-           )
+    [ T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode.network)
+        (Locale.string vc.locale titleEntityBalance)
+        (.entity >> .balance)
+        (.entity >> .tokenBalances)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode.network)
+        (Locale.string vc.locale titleEntityReceived)
+        (.entity >> .totalReceived)
+        (.entity >> .totalTokensReceived)
+    , T.valueAndTokensColumnWithOptions True
+        vc
+        (\_ -> coinCode.network)
+        (Locale.string vc.locale (titleValue coinCode.network))
+        .value
+        .tokenValues
+    ]
 
 
 zero : Api.Data.Values
@@ -243,17 +168,17 @@ n s =
 
 
 prepareCSV : Locale.Model -> Bool -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCSV locale isOutgoing coinCode row =
+prepareCSV locale isOutgoing network row =
     let
         suffix =
-            if coinCode == "eth" then
-                "_eth"
+            if Data.isAccountLike network then
+                "_" ++ network
 
             else
                 ""
 
         estimatedValueTitle =
-            if coinCode == "eth" then
+            if Data.isAccountLike network then
                 "value"
 
             else
@@ -264,20 +189,20 @@ prepareCSV locale isOutgoing coinCode row =
     , ( n "no_txs", Util.Csv.int row.noTxs )
     , ( n "no_addresses", Util.Csv.int row.entity.noAddresses )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale coinCode
-        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale coinCode
-        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale coinCode
-        ++ (if coinCode == "eth" then
-                prepareCsvTokens locale row
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_received" ++ suffix) row.entity.totalReceived locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat ("entity_balance" ++ suffix) row.entity.balance locale network
+        ++ Util.Csv.valuesWithBaseCurrencyFloat (estimatedValueTitle ++ suffix) row.value locale network
+        ++ (if Data.isAccountLike network then
+                prepareCsvTokens locale network row
 
             else
                 []
            )
 
 
-prepareCsvTokens : Locale.Model -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
-prepareCsvTokens locale row =
-    Locale.tokenCurrencies locale
+prepareCsvTokens : Locale.Model -> String -> Api.Data.NeighborEntity -> List ( ( String, List String ), String )
+prepareCsvTokens locale coinCode row =
+    Locale.tokenCurrencies coinCode locale
         |> List.map
             (\token ->
                 Util.Csv.values ("entity_balance_" ++ token)

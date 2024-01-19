@@ -1,19 +1,21 @@
-module View.Graph.Label exposing (label, split)
+module View.Graph.Label exposing (label, normalizeValues, split)
 
-import Config.Graph as Graph exposing (addressesCountHeight, labelHeight)
+import Api.Data
+import Basics.Extra exposing (uncurry)
+import Config.Graph as Graph exposing (labelHeight)
 import Config.View exposing (Config)
 import Css exposing (..)
 import Css.Graph as Css
+import Dict exposing (Dict)
 import List.Extra
+import Model.Currency exposing (AssetIdentifier)
 import Model.Graph
-import Msg.Graph exposing (Msg(..))
+import Msg.Graph exposing (Msg)
 import String.Extra
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
-import Svg.Styled.Events exposing (..)
 import Tuple exposing (mapSecond)
-import Util.Graph as Util exposing (translate)
-import Util.View exposing (truncate)
+import Util.Graph as Util exposing (filterTxValue)
 import View.Locale as Locale
 
 
@@ -120,3 +122,14 @@ split maxLettersPerRow string =
             ( "", [] )
         |> (\( current, more ) -> more ++ [ current ])
         |> List.map String.trim
+
+
+normalizeValues : Graph.Config -> String -> Api.Data.Values -> Maybe (Dict String Api.Data.Values) -> List ( AssetIdentifier, Api.Data.Values )
+normalizeValues gc parentCurrency value tokenValues =
+    ( { network = parentCurrency, asset = parentCurrency }, value )
+        :: (tokenValues
+                |> Maybe.map Dict.toList
+                |> Maybe.withDefault []
+                |> List.map (\( a, v ) -> ( { network = parentCurrency, asset = a }, v ))
+           )
+        |> List.filter (\( asset, v ) -> filterTxValue gc asset.network v Nothing)

@@ -8,7 +8,6 @@ root : Config -> Float -> List Style
 root vc width =
     position absolute
         :: height (px 0)
-        :: (zIndex <| int 50)
         :: (maxWidth <| px width)
         :: vc.theme.browser.root
 
@@ -44,11 +43,11 @@ propertyBoxNote vc =
     vc.theme.browser.propertyBoxNote vc.lightmode
 
 
-propertyBoxRow : Config -> List Style
-propertyBoxRow vc =
+propertyBoxRow : Config -> Bool -> List Style
+propertyBoxRow vc active =
     display tableRow
         :: position relative
-        :: vc.theme.browser.propertyBoxRow vc.lightmode
+        :: vc.theme.browser.propertyBoxRow vc.lightmode active
 
 
 propertyBoxKey : Config -> List Style
@@ -122,19 +121,6 @@ propertyBoxTableLink vc active =
         :: paddingLeft (px 5)
         :: borderRight (px 1)
         :: vc.theme.browser.propertyBoxTableLink vc.lightmode active
-
-
-propertyCopyLink : Config -> Bool -> List Style
-propertyCopyLink vc active =
-    position relative
-        :: left (px 5)
-        :: marginRight (px 10)
-        :: vc.theme.browser.copyLink vc.lightmode active
-
-
-propertyLongIdentifier : Config -> List Style
-propertyLongIdentifier vc =
-    display inlineBlock :: vc.theme.browser.longIdentifier
 
 
 loadingSpinner : Config -> List Style

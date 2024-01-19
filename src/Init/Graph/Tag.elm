@@ -1,28 +1,46 @@
 module Init.Graph.Tag exposing (..)
 
 import Browser.Dom as Dom
+import Hovercard
 import Init.Search as Search
 import Model.Graph.Id exposing (..)
 import Model.Graph.Tag exposing (..)
 import Model.Node exposing (Node(..))
 import Model.Search as Search
-import RecordSetter exposing (..)
+import Msg.Graph exposing (Msg(..))
+import Tuple exposing (mapSecond)
 
 
-initAddressTag : AddressId -> Dom.Element -> Maybe UserTag -> Model
-initAddressTag id element existing =
-    { input = initInput (Address id) existing
-    , existing = existing
-    , hovercardElement = element
-    }
+initAddressTag : AddressId -> Maybe UserTag -> ( Model, Cmd Msg )
+initAddressTag id existing =
+    let
+        ( hovercard, cmd ) =
+            addressIdToString id
+                |> Hovercard.init
+                |> mapSecond (Cmd.map TagHovercardMsg)
+    in
+    ( { input = initInput (Address id) existing
+      , existing = existing
+      , hovercard = hovercard
+      }
+    , cmd
+    )
 
 
-initEntityTag : EntityId -> Dom.Element -> Maybe UserTag -> Model
-initEntityTag id element existing =
-    { input = initInput (Entity id) existing
-    , existing = existing
-    , hovercardElement = element
-    }
+initEntityTag : EntityId -> Maybe UserTag -> ( Model, Cmd Msg )
+initEntityTag id existing =
+    let
+        ( hovercard, cmd ) =
+            entityIdToString id
+                |> Hovercard.init
+                |> mapSecond (Cmd.map TagHovercardMsg)
+    in
+    ( { input = initInput (Entity id) existing
+      , existing = existing
+      , hovercard = hovercard
+      }
+    , cmd
+    )
 
 
 initInput : Node AddressId EntityId -> Maybe UserTag -> Input

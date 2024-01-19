@@ -2,7 +2,7 @@ module PluginInterface.Msg exposing (..)
 
 import Api.Data
 import Browser.Dom
-import Effect.Api as Api exposing (..)
+import Effect.Api as Api
 import Json.Encode
 import Model.Address exposing (Address)
 import Model.Dialog
@@ -47,6 +47,8 @@ type OutMsg msg addressMsg entityMsg
     | ApiRequest (Api.Effect msg)
       -- show dialog
     | ShowDialog (Model.Dialog.Model msg)
+      -- load address into graph
+    | LoadAddressIntoGraph Address
 
 
 mapOutMsg : String -> (msgA -> msgB) -> (addressMsgA -> addressMsgB) -> (entityMsgA -> entityMsgB) -> OutMsg msgA addressMsgA entityMsgA -> OutMsg msgB addressMsgB entityMsgB
@@ -105,3 +107,6 @@ mapOutMsg namespace mapMsg mapAddressMsg mapEntityMsg outMsg =
         ShowDialog dialog ->
             Update.Dialog.mapMsg mapMsg dialog
                 |> ShowDialog
+
+        LoadAddressIntoGraph a ->
+            LoadAddressIntoGraph a

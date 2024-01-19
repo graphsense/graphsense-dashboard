@@ -19,9 +19,9 @@ import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
 import Theme.SwitchableColor as Theme
 import Theme.Table as Table
-import Theme.Theme as Theme exposing (Theme, default)
+import Theme.Theme as Theme exposing (Theme)
 import Theme.User as User
-import Tuple exposing (..)
+import Tuple
 import Util.Theme
     exposing
         ( backgroundColorWithLightmode
@@ -33,7 +33,6 @@ import Util.Theme
         , switchColor
         )
 import Util.View exposing (toCssColor)
-import VitePluginHelper
 
 
 type alias Colors =
@@ -272,6 +271,24 @@ theme =
                     [ c ]
                 ]
             )
+        |> s_copyIcon
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.brandBase
+                , hover
+                    [ switchColor lightmode colors.brandBase |> toCssColor |> color
+                    ]
+                , active
+                    [ switchColor lightmode colors.brandDark |> toCssColor |> color
+                    ]
+                ]
+            )
+        |> s_longIdentifier [ fontFamily monospace ]
+        |> s_hint
+            (\lightmode ->
+                [ colorWithLightmode lightmode colors.greyDark
+                , scaled 2.7 |> rem |> fontSize
+                ]
+            )
         |> s_stats
             (Stats.default
                 |> s_root
@@ -283,6 +300,20 @@ theme =
                         [ backgroundColorWithLightmode lightmode colors.greyLight
                         , scaled statsMargin |> rem |> margin
                         , borderRadiusSm
+                        ]
+                    )
+                |> s_tokenBadgeStyle
+                    (\lightmode ->
+                        [ --backgroundColorWithLightmode lightmode colors.brandLightest
+                          borderColorWithLightmode lightmode colors.brandDark
+                        , borderRadius <| px 5
+                        , borderStyle solid
+                        , borderWidth (px 1)
+                        , px 5 |> marginRight
+                        , px 2 |> paddingLeft
+                        , px 2 |> paddingRight
+                        , px 1 |> paddingTop
+                        , px 1 |> paddingBottom
                         ]
                     )
                 |> s_currencyHeading
@@ -380,12 +411,12 @@ theme =
                         ]
                     )
                 |> s_loadBoxText
-                    (\lightmode ->
+                    (\_ ->
                         [ textDecoration none
                         ]
                     )
                 |> s_exampleLinkBox
-                    (\lightmode ->
+                    (\_ ->
                         [ paddingTop <| rem <| scaled 4 ]
                     )
             )
@@ -946,21 +977,29 @@ theme =
                     [ letterSpacingWide
                     ]
                 |> s_propertyBoxNote
-                    (\lightmode ->
+                    (\_ ->
                         [ scaled 1 |> rem |> paddingLeft
                         ]
                     )
                 |> s_propertyBoxRow
-                    (\lightmode ->
+                    (\lightmode active ->
                         [ hover
                             [ backgroundColorWithLightmode lightmode colors.brandLightest
                             ]
                         ]
+                            ++ (if active then
+                                    [ backgroundColorWithLightmode lightmode colors.brandLightest
+                                    ]
+
+                                else
+                                    []
+                               )
                     )
                 |> s_propertyBoxKey
                     [ fontBold
                     , scaled 2 |> rem |> paddingRight
-                    , scaled 1 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingBottom
+                    , scaled 0.5 |> rem |> paddingTop
                     , whiteSpace noWrap
                     ]
                 |> s_propertyBoxValue
@@ -1028,24 +1067,6 @@ theme =
                             ]
                         ]
                     )
-                |> s_copyLink
-                    (\lightmode isActive ->
-                        [ colorWithLightmode lightmode
-                            (if isActive then
-                                colors.brandBase
-
-                             else
-                                colors.brandLight
-                            )
-                        , hover
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        , active
-                            [ switchColor lightmode colors.brandBase |> toCssColor |> color
-                            ]
-                        ]
-                    )
-                |> s_longIdentifier [ fontFamily monospace ]
                 |> s_propertyBoxEntityId
                     (\lightmode ->
                         [ scaled 3 |> rem |> fontSize
@@ -1070,7 +1091,7 @@ theme =
                         , borderStyle solid
                         , switchColor lightmode colors.greyLightest |> toCssColor |> borderColor
                         , scaled 1 |> rem |> paddingLeft
-                        , scaled 4 |> rem |> marginLeft
+                        , scaled 1 |> rem |> marginLeft
                         ]
                     )
             )
@@ -1181,6 +1202,12 @@ theme =
                 |> s_tick
                     [ scaled 1 |> rem |> marginRight
                     ]
+                |> s_info
+                    (\lightmode ->
+                        [ scaled 1 |> rem |> padding
+                        , color_backgroundColorWithLightmode lightmode colors.brandText colors.brandWhite
+                        ]
+                    )
             )
         |> s_contextMenu
             (ContextMenu.default
@@ -1306,11 +1333,6 @@ statsMargin =
     5
 
 
-wFull : Style
-wFull =
-    width <| pct 100
-
-
 paddingY : Length compatibleB unitsB -> Style
 paddingY y =
     batch
@@ -1400,11 +1422,6 @@ spinnerPadding =
 letterSpacingWide : Style
 letterSpacingWide =
     scaled 0.2 |> rem |> letterSpacing
-
-
-entityStrokeDashArray : String
-entityStrokeDashArray =
-    "4 1"
 
 
 nodeStrokeWidth : Float

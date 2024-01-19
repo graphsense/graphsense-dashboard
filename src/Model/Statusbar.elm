@@ -1,8 +1,6 @@
 module Model.Statusbar exposing (..)
 
 import Dict exposing (Dict)
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
 import Http
 
 

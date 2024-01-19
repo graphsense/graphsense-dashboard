@@ -33,7 +33,7 @@ selectCriterion config criterion model =
 selectCategory : String -> Model -> ( Model, List Effect )
 selectCategory category model =
     case model.criterion of
-        Category categories active ->
+        Category categories _ ->
             { model
                 | criterion = Category categories category
             }
@@ -60,8 +60,8 @@ selectDirection direction model =
         |> n
 
 
-submit : Model -> ( Model, List Effect )
-submit model =
+submit : { depth : Int, breadth : Int, maxAddresses : Int } -> Model -> ( Model, List Effect )
+submit { depth, breadth, maxAddresses } model =
     let
         ( key, value ) =
             case model.criterion of
@@ -78,9 +78,9 @@ submit model =
                     , isOutgoing = isOutgoing
                     , key = key
                     , value = value
-                    , depth = model.depth
-                    , breadth = model.breadth
-                    , maxAddresses = model.maxAddresses
+                    , depth = depth
+                    , breadth = breadth
+                    , maxAddresses = maxAddresses
                     }
                 |> ApiEffect
     in

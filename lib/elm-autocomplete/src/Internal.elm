@@ -1,9 +1,5 @@
 module Internal exposing (Choices, KeyDown(..), Msg(..), calculateIndex)
 
-import Bounce
-
-
-
 -- This file is not exposed as a module
 
 
@@ -25,7 +21,6 @@ type alias Choices a =
 type KeyDown
     = ArrowUp
     | ArrowDown
-    | Enter
 
 
 calculateIndex : Int -> Maybe Int -> KeyDown -> Maybe Int
@@ -46,9 +41,6 @@ calculateIndex len currentIndex keyDown =
 
             ( Just i, ArrowDown ) ->
                 Just <| wrapAround len (i + 1)
-
-            ( _, Enter ) ->
-                currentIndex
 
 
 wrapAround : Int -> Int -> Int

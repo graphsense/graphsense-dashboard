@@ -3,10 +3,11 @@ module Init.Locale exposing (init)
 import Config.UserSettings exposing (UserSettings)
 import DateFormat.Language
 import DateFormat.Relative
+import Dict
 import Effect.Locale exposing (Effect(..))
 import Locale.English
 import Model.Currency exposing (..)
-import Model.Locale as Model exposing (..)
+import Model.Locale exposing (..)
 import Msg.Locale exposing (Msg(..))
 import Numeral
 import Time
@@ -28,7 +29,7 @@ init uc =
       , currency = uc.valueDenomination |> Maybe.withDefault Coin
       , relativeTimeOptions = DateFormat.Relative.defaultRelativeOptions
       , unitToString = Locale.English.unitToString
-      , supportedTokens = Nothing
+      , supportedTokens = Dict.empty
       }
         |> switch locale
     , [ Effect.Locale.getTranslationEffect locale

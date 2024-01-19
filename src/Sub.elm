@@ -2,6 +2,7 @@ module Sub exposing (subscriptions)
 
 import Browser.Events
 import Browser.Navigation as Nav
+import Hovercard
 import Model exposing (Model, Msg(..))
 import Plugin.Sub as Plugin
 import Ports
@@ -33,6 +34,9 @@ subscriptions model =
 
         _ ->
             Sub.none
+    , model.user.hovercard
+        |> Maybe.map (Hovercard.subscriptions >> Sub.map UserHovercardMsg)
+        |> Maybe.withDefault Sub.none
     , Plugin.subscriptions Ports.pluginsIn model.plugins
         |> Sub.map PluginMsg
     ]

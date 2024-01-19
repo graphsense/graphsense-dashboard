@@ -67,6 +67,7 @@ main_ vc =
     [ flexGrow (num 1)
     , displayFlex
     , flexDirection column
+    , position relative
     ]
         ++ vc.theme.main vc.lightmode
 
@@ -82,14 +83,14 @@ contents : Config -> List Style
 contents vc =
     [ flexGrow (num 1)
     , overflow hidden
-    , position relative
     ]
         ++ vc.theme.contents vc.lightmode
 
 
 tool : Config -> List Style
 tool vc =
-    vc.theme.tool
+    cursor pointer
+        :: vc.theme.tool
 
 
 hovercard : Config -> List ( String, String )
@@ -177,3 +178,22 @@ switchRoot vc =
 disabled : Config -> List Style
 disabled vc =
     vc.theme.disabled vc.lightmode
+
+
+copyIcon : Config -> List Style
+copyIcon vc =
+    position relative
+        :: cursor pointer
+        :: left (px 5)
+        :: marginRight (px 10)
+        :: vc.theme.copyIcon vc.lightmode
+
+
+longIdentifier : Config -> List Style
+longIdentifier vc =
+    display inlineBlock :: vc.theme.longIdentifier
+
+
+hint : Config -> List Style
+hint vc =
+    vc.theme.hint vc.lightmode

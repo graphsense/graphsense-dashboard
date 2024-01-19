@@ -1,10 +1,8 @@
 module PluginInterface exposing (..)
 
-import Model
 import PluginInterface.Effects
 import PluginInterface.Update
 import PluginInterface.View
-import Svg.Styled exposing (..)
 
 
 type alias PID =

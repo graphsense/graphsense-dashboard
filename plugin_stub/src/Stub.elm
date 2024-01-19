@@ -1,6 +1,10 @@
 module Stub exposing (..)
 
 import PluginInterface
+import PluginInterface.Effects
+import PluginInterface.Update
+import PluginInterface.View
+import RecordSetter exposing (..)
 import Stub.Model
 import Stub.Msg
 
@@ -12,40 +16,40 @@ type alias Plugin =
 plugin : String -> Plugin
 plugin url =
     { view =
-        { addressFlags = Nothing
-        , entityFlags = Nothing
-        , addressContextMenu = Nothing
-        , addressProperties = Nothing
-        , entityProperties = Nothing
-        , browser = Nothing
-        , graphNavbarLeft = Nothing
-        , searchPlaceholder = Nothing
-        , searchResultList = Nothing
-        , sidebar = Nothing
-        , navbar = Nothing
-        , contents = Nothing
-        , hovercards = Nothing
-        , title = Nothing
-        , profile = Nothing
-        }
+        PluginInterface.View.init
+            |> s_addressFlags Nothing
+            |> s_entityFlags Nothing
+            |> s_addressContextMenu Nothing
+            |> s_addressProperties Nothing
+            |> s_entityProperties Nothing
+            |> s_browser Nothing
+            |> s_graphNavbarLeft Nothing
+            |> s_searchPlaceholder Nothing
+            |> s_searchResultList Nothing
+            |> s_sidebar Nothing
+            |> s_navbar Nothing
+            |> s_contents Nothing
+            |> s_hovercards Nothing
+            |> s_title Nothing
+            |> s_profile Nothing
     , update =
-        { update = Nothing
-        , updateAddress = Nothing
-        , updateEntity = Nothing
-        , updateByUrl = Nothing
-        , updateGraphByUrl = Nothing
-        , addressesAdded = Nothing
-        , entitiesAdded = Nothing
-        , updateApiKeyHash = Nothing
-        , updateApiKey = Nothing
-        , init = Just (\_ -> ( (), [], Cmd.none ))
-        , initAddress = Nothing
-        , initEntity = Nothing
-        , clearSearch = Nothing
-        , newGraph = Nothing
-        , logout = Nothing
-        }
+        PluginInterface.Update.init
+            |> s_update Nothing
+            |> s_updateAddress Nothing
+            |> s_updateEntity Nothing
+            |> s_updateByUrl Nothing
+            |> s_updateGraphByUrl Nothing
+            |> s_addressesAdded Nothing
+            |> s_entitiesAdded Nothing
+            |> s_updateApiKeyHash Nothing
+            |> s_updateApiKey Nothing
+            |> s_init (Just (\_ -> ( (), [], Cmd.none )))
+            |> s_initAddress Nothing
+            |> s_initEntity Nothing
+            |> s_clearSearch Nothing
+            |> s_newGraph Nothing
+            |> s_logout Nothing
     , effects =
-        { search = Nothing
-        }
+        PluginInterface.Effects.init
+            |> s_search Nothing
     }

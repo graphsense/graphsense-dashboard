@@ -1,17 +1,17 @@
 module View.Graph.Node exposing (..)
 
-import Config.Graph as Graph exposing (AddressLabelType(..), addressesCountHeight, expandHandleWidth, labelHeight)
+import Config.Graph as Graph exposing (expandHandleWidth)
 import Config.View exposing (Config)
-import Css exposing (fill)
+import Css
 import Css.Graph as Css
 import Json.Decode
-import Model.Graph exposing (NodeType(..))
-import Msg.Graph exposing (Msg(..))
+import Model.Graph exposing (NodeType)
+import Msg.Graph exposing (Msg)
 import String.Interpolate
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
-import Svg.Styled.Events as Events exposing (..)
-import Util.Graph exposing (rotate, translate)
+import Svg.Styled.Events as Events
+import Util.Graph exposing (translate)
 import View.Locale as Locale
 
 

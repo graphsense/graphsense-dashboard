@@ -6,9 +6,7 @@ module Update.Graph.Entity exposing
     , release
     , repositionAddresses
     , repositionAround
-    , translate
     , updateColor
-    , updateEntity
     )
 
 import Api.Data
@@ -25,7 +23,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (..)
 import Model.Graph.Id as Id exposing (..)
 import Model.Graph.Link as Link
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Address as Address
@@ -88,28 +86,6 @@ addAddressToEntity plugins uc colors address entity =
         , colors = newColors
         }
             |> Just
-
-
-updateEntity : EntityId -> (Entity -> ( Entity, a )) -> List Entity -> List Entity -> ( List Entity, Maybe a )
-updateEntity id update entities newEntities =
-    case entities of
-        entity :: rest ->
-            if id == entity.id then
-                let
-                    ( updatedEntity, newA ) =
-                        update entity
-                in
-                ( newEntities
-                    ++ [ updatedEntity ]
-                    ++ rest
-                , Just newA
-                )
-
-            else
-                updateEntity id update rest <| newEntities ++ [ entity ]
-
-        [] ->
-            ( newEntities, Nothing )
 
 
 type alias BoundingBox =
@@ -191,19 +167,6 @@ translate vector entity =
 repositionAround : Entity -> Dict EntityId Entity -> ( Dict EntityId Entity, Set EntityId )
 repositionAround pivot entities =
     let
-        simple e =
-            { id = e.id, y = e.y }
-
-        _ =
-            Log.log2 "repositionAround"
-                { pivot = pivot.id
-                , entities =
-                    Dict.values entities
-                        |> List.map simple
-                , upper = List.map simple upper
-                , lower = List.map simple lower
-                }
-
         sorted =
             Dict.values entities
                 |> List.sortBy Entity.getY
@@ -220,17 +183,6 @@ repositionAround pivot entities =
             case nodes of
                 nearest :: rest ->
                     let
-                        _ =
-                            Log.log2
-                                "repo"
-                                { nearest = nearest.id
-                                , p = p.id
-                                , py = py
-                                , ph = ph
-                                , ny = ny
-                                , nh = nh
-                                }
-
                         py =
                             Entity.getY p
 
@@ -273,10 +225,6 @@ repositionAround pivot entities =
         ++ newLower
         |> List.map (\e -> ( e.id, e ))
         |> (\l ->
-                let
-                    _ =
-                        Log.log2 "new" (List.map first l)
-                in
                 l
            )
         |> Dict.fromList

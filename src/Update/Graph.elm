@@ -1,10 +1,12 @@
 module Update.Graph exposing (..)
 
 import Api.Data
+import Basics.Extra exposing (flip)
+import Bounce
 import Browser.Dom as Dom
-import Color
 import Config.Graph exposing (maxExpandableAddresses, maxExpandableNeighbors)
 import Config.Update as Update
+import Css exposing (transformBox)
 import DateFormat
 import Decode.Graph044 as Graph044
 import Decode.Graph045 as Graph045
@@ -17,8 +19,10 @@ import Effect.Graph exposing (Effect(..))
 import Encode.Graph as Encode
 import File
 import File.Select
+import Hovercard
 import Init.Graph.ContextMenu as ContextMenu
 import Init.Graph.Highlighter as Highlighter
+import Init.Graph.History as History
 import Init.Graph.Id as Id
 import Init.Graph.Search as Search
 import Init.Graph.Tag as Tag
@@ -36,16 +40,19 @@ import Model.Graph.Browser as Browser
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Highlighter as Highlighter
+import Model.Graph.History as History
+import Model.Graph.History.Entry as Entry
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link as Link exposing (Link)
 import Model.Graph.Search as Search
 import Model.Graph.Tag as Tag
 import Model.Graph.Tool as Tool
+import Model.Graph.Transform as Transform
+import Model.Loadable exposing (Loadable(..))
 import Model.Node as Node
 import Model.Search
 import Msg.Graph as Msg exposing (Msg(..))
-import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -60,20 +67,20 @@ import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Color as Color
+import Update.Graph.Coords as Coords
 import Update.Graph.Entity as Entity
 import Update.Graph.Highlighter as Highlighter
 import Update.Graph.History as History
 import Update.Graph.Layer as Layer
 import Update.Graph.Search as Search
+import Update.Graph.Table as Table
 import Update.Graph.Tag as Tag
 import Update.Graph.Transform as Transform
+import Util.Data as Data
+import Util.Graph
+import Util.Graph.History as History
 import Yaml.Decode
 import Yaml.Encode
-
-
-maxHistory : Int
-maxHistory =
-    10
 
 
 addAddress :
@@ -278,7 +285,6 @@ update plugins uc msg model =
     model
         |> pushHistory msg
         |> updateByMsg plugins uc msg
-        |> cleanHistory
         |> mapFirst (syncBrowser model)
 
 
@@ -297,24 +303,12 @@ syncBrowser old model =
 
 loadNextAddress : Plugins -> Update.Config -> Model -> Id.AddressId -> ( Model, List Effect )
 loadNextAddress plugins uc model id =
-    let
-        items_out_of_bbox =
-            not (uc.size |> Maybe.map (Layer.isContentWithinViewPort model.layers model.transform) |> Maybe.withDefault True)
-
-        add_fitgraph_on_path =
-            if Adding.isLastPathItem model.adding && items_out_of_bbox then
-                CmdEffect (Task.succeed Msg.UserClickedFitGraph |> Task.perform (\x -> x)) |> List.singleton
-
-            else
-                []
-    in
-    Adding.getNextFor id model.adding
+    Adding.getNextAddressFor id model.adding
         |> Maybe.map
             (\nextId ->
                 { model
-                    | adding = Adding.popPath model.adding
+                    | adding = Adding.popAddressPath model.adding
                 }
-                    |> s_selectIfLoaded (Just (SelectAddress (A.fromId nextId)))
                     |> loadAddress
                         plugins
                         { currency = Id.currency nextId
@@ -322,9 +316,32 @@ loadNextAddress plugins uc model id =
                         , table = Nothing
                         , at = AtAnchor True id |> Just
                         }
-                    |> (\( m, eff ) -> ( m, eff ++ add_fitgraph_on_path ))
+                    |> (\( m, eff ) -> ( m, eff ))
             )
-        |> Maybe.withDefault ( model, add_fitgraph_on_path )
+        |> Maybe.withDefault (n model)
+
+
+loadNextEntity : Plugins -> Update.Config -> Model -> Id.EntityId -> ( Model, List Effect )
+loadNextEntity plugins uc model id =
+    Adding.getNextEntityFor id model.adding
+        |> Maybe.map
+            (\nextId ->
+                { model
+                    | adding = Adding.popEntityPath model.adding
+                }
+                    |> loadEntity
+                        plugins
+                        { currency = Id.currency nextId
+                        , entity = Id.entityId nextId
+                        , table = Nothing
+                        , layer = Id.layer nextId |> Just
+                        }
+                    |> (\( m, eff ) -> ( m, eff ))
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                selectEntityLinkIfLoaded model
+            )
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -345,7 +362,43 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault (n model)
 
         InternalGraphAddedEntities ids ->
-            n model
+            let
+                ( transform, eff ) =
+                    Transform.delay ids model.transform
+
+                ( model2, pathEff ) =
+                    Set.toList ids
+                        |> List.head
+                        |> Maybe.map (loadNextEntity plugins uc model)
+                        |> Maybe.withDefault (n model)
+            in
+            ( model2
+                |> s_transform transform
+            , CmdEffect eff
+                :: pathEff
+            )
+
+        RuntimeDebouncedAddingEntities ->
+            let
+                ( newTransform, isSteady ) =
+                    Transform.pop model.transform
+
+                newModel =
+                    { model
+                        | transform = newTransform
+                    }
+            in
+            if isSteady then
+                model.transform.collectingAddedEntityIds
+                    |> Set.toList
+                    |> List.filterMap (\id -> Layer.getEntity id model.layers)
+                    |> Layer.getBoundingBoxOfEntities
+                    |> Maybe.map (extendTransformWithBoundingBox uc newModel)
+                    |> Maybe.withDefault newModel
+                    |> n
+
+            else
+                n newModel
 
         InternalGraphSelectedAddress id ->
             n model
@@ -420,37 +473,38 @@ updateByMsg plugins uc msg model =
         UserPushesLeftMouseButtonOnGraph coords ->
             { model
                 | dragging =
-                    case model.dragging of
-                        NoDragging ->
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
                             Dragging model.transform coords coords
 
-                        x ->
-                            x
+                        _ ->
+                            model.dragging
             }
                 |> n
 
         UserPushesLeftMouseButtonOnEntity id coords ->
             { model
                 | dragging =
-                    case model.dragging of
-                        NoDragging ->
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
                             DraggingNode id coords coords
 
-                        x ->
-                            x
+                        _ ->
+                            model.dragging
             }
                 |> n
 
         UserMovesMouseOnGraph coords ->
-            (case model.dragging of
+            case model.dragging of
                 NoDragging ->
-                    model
+                    n model
 
                 Dragging transform start _ ->
                     { model
                         | transform = Transform.update start coords transform
                         , dragging = Dragging transform start coords
                     }
+                        |> repositionHovercards
 
                 DraggingNode id start _ ->
                     let
@@ -463,26 +517,25 @@ updateByMsg plugins uc msg model =
                         , dragging = DraggingNode id start coords
                     }
                         |> syncLinks (Set.singleton id)
-            )
-                |> n
+                        |> repositionHovercards
 
         UserReleasesMouseButton ->
-            (case model.dragging of
+            case model.dragging of
                 NoDragging ->
-                    model
+                    n model
 
-                Dragging _ _ _ ->
+                Dragging _ start coords ->
                     { model
                         | dragging = NoDragging
                     }
+                        |> repositionHovercards
 
-                DraggingNode id _ _ ->
+                DraggingNode id start coords ->
                     { model
                         | layers = Layer.releaseEntity id model.layers
                         , dragging = NoDragging
                     }
-            )
-                |> n
+                        |> repositionHovercards
 
         UserPressesEscape ->
             deselectHighlighter model |> n
@@ -493,7 +546,7 @@ updateByMsg plugins uc msg model =
                     Route.addressRoute
                         { currency = Id.currency id
                         , address = Id.addressId id
-                        , table = Nothing
+                        , table = Route.getAddressTable model.route
                         , layer = Id.layer id |> Just
                         }
                         |> NavPushRouteEffect
@@ -550,7 +603,7 @@ updateByMsg plugins uc msg model =
                         , Route.entityRoute
                             { currency = Id.currency id
                             , entity = Id.entityId id
-                            , table = Nothing
+                            , table = Route.getEntityTable model.route
                             , layer = Id.layer id |> Just
                             }
                             |> NavPushRouteEffect
@@ -619,7 +672,7 @@ updateByMsg plugins uc msg model =
                 , srcLayer = first id |> Id.layer
                 , dst = second id |> Id.entityId
                 , dstLayer = second id |> Id.layer
-                , table = Nothing
+                , table = Route.getAddresslinkTable model.route
                 }
                 |> NavPushRouteEffect
                 |> List.singleton
@@ -647,7 +700,7 @@ updateByMsg plugins uc msg model =
                 , srcLayer = first id |> Id.layer
                 , dst = second id |> Id.addressId
                 , dstLayer = second id |> Id.layer
-                , table = Nothing
+                , table = Route.getAddresslinkTable model.route
                 }
                 |> NavPushRouteEffect
                 |> List.singleton
@@ -884,9 +937,9 @@ updateByMsg plugins uc msg model =
                             |> (\neighs -> addAddressLinks anch isOutgoing neighs mo)
                     )
                     model
-                |> n
+                |> selectAddressLinkIfLoaded
 
-        BrowserGotEntityEgonetForAddress address currency id isOutgoing neighbors ->
+        BrowserGotEntityEgonetForAddress address currency _ isOutgoing neighbors ->
             let
                 e =
                     { currency = currency, address = address }
@@ -913,6 +966,8 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressNeighbors id isOutgoing neighbors ->
             ( model
             , neighbors.neighbors
+                |> List.filter
+                    (\n -> Util.Graph.filterTxValue model.config n.address.currency n.value n.tokenValues)
                 |> List.foldl
                     (\neighbor acc ->
                         Dict.update ( neighbor.address.currency, neighbor.address.entity )
@@ -941,7 +996,7 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressNeighborsTable id isOutgoing neighbors ->
             { model
-                | browser = Browser.showAddressNeighbors id isOutgoing neighbors model.browser
+                | browser = Browser.showAddressNeighbors model.config id isOutgoing neighbors model.browser
             }
                 |> n
 
@@ -971,7 +1026,7 @@ updateByMsg plugins uc msg model =
 
         BrowserGotEntityNeighborsTable id isOutgoing neighbors ->
             { model
-                | browser = Browser.showEntityNeighbors id isOutgoing neighbors model.browser
+                | browser = Browser.showEntityNeighbors model.config id isOutgoing neighbors model.browser
             }
                 |> n
 
@@ -1079,8 +1134,8 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
-                        Browser.showAddressTxsAccount id data model.browser
+                    if Data.isAccountLike id.currency then
+                        Browser.showAddressTxsAccount model.config id data model.browser
 
                     else
                         Browser.showAddressTxsUtxo id data model.browser
@@ -1090,8 +1145,8 @@ updateByMsg plugins uc msg model =
         BrowserGotAddresslinkTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
-                        Browser.showAddresslinkTxsAccount id data model.browser
+                    if Data.isAccountLike id.currency then
+                        Browser.showAddresslinkTxsAccount model.config id data model.browser
 
                     else
                         Browser.showAddresslinkTxsUtxo id data model.browser
@@ -1101,8 +1156,8 @@ updateByMsg plugins uc msg model =
         BrowserGotEntityTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
-                        Browser.showEntityTxsAccount id data model.browser
+                    if Data.isAccountLike id.currency then
+                        Browser.showEntityTxsAccount model.config id data model.browser
 
                     else
                         Browser.showEntityTxsUtxo id data model.browser
@@ -1112,8 +1167,8 @@ updateByMsg plugins uc msg model =
         BrowserGotEntitylinkTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
-                        Browser.showEntitylinkTxsAccount id data model.browser
+                    if Data.isAccountLike id.currency then
+                        Browser.showEntitylinkTxsAccount model.config id data model.browser
 
                     else
                         Browser.showEntitylinkTxsUtxo id data model.browser
@@ -1149,8 +1204,8 @@ updateByMsg plugins uc msg model =
         BrowserGotBlockTxs id data ->
             { model
                 | browser =
-                    if String.toLower id.currency == "eth" then
-                        Browser.showBlockTxsAccount id data model.browser
+                    if Data.isAccountLike id.currency then
+                        Browser.showBlockTxsAccount model.config id data model.browser
 
                     else
                         Browser.showBlockTxsUtxo id data model.browser
@@ -1160,7 +1215,7 @@ updateByMsg plugins uc msg model =
         BrowserGotTokenTxs id data ->
             { model
                 | browser =
-                    Browser.showTokenTxs id data model.browser
+                    Browser.showTokenTxs model.config id data model.browser
             }
                 |> n
 
@@ -1170,7 +1225,7 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        PluginMsg msgValue ->
+        PluginMsg _ ->
             -- handled in src/Update.elm
             n model
 
@@ -1181,54 +1236,36 @@ updateByMsg plugins uc msg model =
             hideContextmenu model
 
         UserClickedAnnotateAddress id ->
-            ( model
-            , Id.addressIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotAddressElementForAnnotate id)
-                |> CmdEffect
-                |> List.singleton
+            let
+                ( tag, cmd ) =
+                    model.layers
+                        |> Layer.getAddress id
+                        |> Maybe.andThen .userTag
+                        |> Tag.initAddressTag id
+            in
+            ( { model
+                | tag =
+                    tag
+                        |> Just
+              }
+            , CmdEffect cmd |> List.singleton
             )
-
-        BrowserGotAddressElementForAnnotate id element ->
-            element
-                |> Result.map
-                    (\el ->
-                        { model
-                            | tag =
-                                model.layers
-                                    |> Layer.getAddress id
-                                    |> Maybe.andThen .userTag
-                                    |> Tag.initAddressTag id el
-                                    |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserClickedAnnotateEntity id ->
-            ( model
-            , Id.entityIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotEntityElementForAnnotate id)
-                |> CmdEffect
-                |> List.singleton
+            let
+                ( tag, cmd ) =
+                    model.layers
+                        |> Layer.getEntity id
+                        |> Maybe.andThen .userTag
+                        |> Tag.initEntityTag id
+            in
+            ( { model
+                | tag =
+                    tag
+                        |> Just
+              }
+            , CmdEffect cmd |> List.singleton
             )
-
-        BrowserGotEntityElementForAnnotate id element ->
-            element
-                |> Result.map
-                    (\el ->
-                        { model
-                            | tag =
-                                model.layers
-                                    |> Layer.getEntity id
-                                    |> Maybe.andThen .userTag
-                                    |> Tag.initEntityTag id el
-                                    |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserInputsTagSource input ->
             model.tag
@@ -1301,7 +1338,7 @@ updateByMsg plugins uc msg model =
                 | layers = Layer.removeEntity id model.layers
                 , browser =
                     case model.browser.type_ of
-                        Browser.Entity (Browser.Loaded e) _ ->
+                        Browser.Entity (Loaded e) _ ->
                             if e.id == id then
                                 model.browser |> s_visible False |> s_type_ Browser.None
 
@@ -1582,14 +1619,6 @@ updateByMsg plugins uc msg model =
                 , config =
                     model.config
                         |> s_highlighter (highlights.selected /= Nothing)
-                , layers =
-                    Highlighter.getSelectedColor model.highlights
-                        |> Maybe.map
-                            (\before ->
-                                Layer.updateEntityColor before (Just color) model.layers
-                                    |> Layer.updateAddressColor before (Just color)
-                            )
-                        |> Maybe.withDefault model.layers
             }
                 |> n
 
@@ -1628,11 +1657,11 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
-        UserChangesCurrency currency ->
+        UserChangesCurrency _ ->
             -- handled upstream
             n model
 
-        UserChangesValueDetail detail ->
+        UserChangesValueDetail _ ->
             -- handled upstream
             n model
 
@@ -1641,18 +1670,8 @@ updateByMsg plugins uc msg model =
                 | config =
                     model.config
                         |> s_addressLabelType
-                            (case at of
-                                "id" ->
-                                    Config.Graph.ID
-
-                                "balance" ->
-                                    Config.Graph.Balance
-
-                                "tag" ->
-                                    Config.Graph.Tag
-
-                                _ ->
-                                    model.config.addressLabelType
+                            (Config.Graph.stringToAddressLabel at
+                                |> Maybe.withDefault model.config.addressLabelType
                             )
             }
                 |> n
@@ -1676,24 +1695,16 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedSearch id ->
-            ( model
-            , Id.entityIdToString id
-                |> Dom.getElement
-                |> Task.attempt (BrowserGotEntityElementForSearch id)
-                |> CmdEffect
+            let
+                ( search, cmd ) =
+                    Search.init model.config.entityConcepts id
+            in
+            ( { model
+                | search = search |> Just
+              }
+            , CmdEffect cmd
                 |> List.singleton
             )
-
-        BrowserGotEntityElementForSearch id result ->
-            result
-                |> Result.map
-                    (\element ->
-                        { model
-                            | search = Search.init model.config.entityConcepts element id |> Just
-                        }
-                    )
-                |> Result.withDefault model
-                |> n
 
         UserSelectsDirection direction ->
             updateSearch (Search.selectDirection direction) model
@@ -1711,32 +1722,49 @@ updateByMsg plugins uc msg model =
             updateSearch (Search.selectCategory category) model
 
         UserInputsSearchDepth input ->
-            input
-                |> Maybe.map
-                    (\depth ->
-                        updateSearch (\s -> n { s | depth = depth }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | depth = input
+                        }
+                )
+                model
 
         UserInputsSearchBreadth input ->
-            input
-                |> Maybe.map
-                    (\breadth ->
-                        updateSearch (\s -> n { s | breadth = breadth }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | breadth = input
+                        }
+                )
+                model
 
         UserInputsSearchMaxAddresses input ->
-            input
-                |> Maybe.map
-                    (\maxAddresses ->
-                        updateSearch (\s -> n { s | maxAddresses = maxAddresses }) model
-                    )
-                |> Maybe.withDefault (n model)
+            updateSearch
+                (\s ->
+                    n
+                        { s
+                            | maxAddresses = input
+                        }
+                )
+                model
 
         UserSubmitsSearchInput ->
-            updateSearch Search.submit model
-                |> mapFirst (s_search Nothing)
+            model.search
+                |> Maybe.andThen
+                    (\search ->
+                        Maybe.map3
+                            (\depth breadth maxAddresses ->
+                                Search.submit { depth = depth, breadth = breadth, maxAddresses = maxAddresses } search
+                            )
+                            (String.toInt search.depth)
+                            (String.toInt search.breadth)
+                            (String.toInt search.maxAddresses)
+                    )
+                |> Maybe.map (mapFirst (\s -> { model | search = Nothing }))
+                |> Maybe.withDefault (n model)
 
         UserClicksCloseSearchHovercard ->
             { model
@@ -1758,11 +1786,11 @@ updateByMsg plugins uc msg model =
                     )
                 |> Maybe.withDefault (n model)
 
-        UserClickedExportGraphics time ->
+        UserClickedExportGraphics _ ->
             -- handled upstream
             n model
 
-        UserClickedExportTagPack time ->
+        UserClickedExportTagPack _ ->
             -- handled upstream
             n model
 
@@ -1787,7 +1815,7 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
-        BrowserReadTagPackFile filename result ->
+        BrowserReadTagPackFile _ _ ->
             -- handled upstream
             n model
 
@@ -1802,7 +1830,7 @@ updateByMsg plugins uc msg model =
             -- handled upstream
             n model
 
-        PortDeserializedGS data ->
+        PortDeserializedGS _ ->
             -- handled upstream
             n model
 
@@ -2052,7 +2080,7 @@ updateByMsg plugins uc msg model =
                     model
                 |> n
 
-        BrowserGotBulkAddressTags currency tags ->
+        BrowserGotBulkAddressTags _ tags ->
             (tags
                 |> List.Extra.groupWhile
                     (\t1 t2 -> t1.currency == t2.currency && t1.address == t2.address)
@@ -2069,34 +2097,10 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserClickedUndo ->
-            case model.history of
-                History (recent :: rest) future ->
-                    { model
-                        | layers = recent
-                        , history =
-                            deselectLayers model.selected model.layers
-                                :: future
-                                |> History rest
-                    }
-                        |> syncSelection
-                        |> n
-
-                _ ->
-                    n model
+            undoRedo History.undo model
 
         UserClickedRedo ->
-            case model.history of
-                History past (recent :: future) ->
-                    { model
-                        | layers = recent
-                        , history =
-                            History (deselectLayers model.selected model.layers :: past) future
-                    }
-                        |> syncSelection
-                        |> n
-
-                _ ->
-                    n model
+            undoRedo History.redo model
 
         UserClickedNew ->
             -- handled upstream
@@ -2108,7 +2112,7 @@ updateByMsg plugins uc msg model =
 
         UserInputsFilterTable input ->
             ( { model
-                | browser = Browser.filterTable input model.browser
+                | browser = Browser.searchTable model.config (Table.Update input) model.browser
               }
             , Dom.focus "tableFilter"
                 |> Task.attempt (\_ -> NoOp)
@@ -2117,38 +2121,9 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedFitGraph ->
-            let
-                marginX =
-                    Config.Graph.entityWidth / 2
-
-                marginY =
-                    Config.Graph.entityMinHeight / 2
-
-                addMargin bbox =
-                    { x = bbox.x - marginX
-                    , y = bbox.y - marginY
-                    , width = bbox.width + marginX * 2
-                    , height = bbox.height + marginY * 2
-                    }
-            in
-            { model
-                | transform =
-                    Layer.getBoundingBox model.layers
-                        |> Maybe.map addMargin
-                        |> Maybe.map2
-                            (Transform.updateByBoundingBox
-                                model.transform
-                            )
-                            (uc.size
-                                |> Maybe.map
-                                    (\{ width, height } ->
-                                        { width = width
-                                        , height = height
-                                        }
-                                    )
-                            )
-                        |> Maybe.withDefault model.transform
-            }
+            Layer.getBoundingBox model.layers
+                |> Maybe.map (updateTransformByBoundingBox uc model)
+                |> Maybe.withDefault model
                 |> n
 
         UserClickedShowEntityShadowLinks ->
@@ -2172,6 +2147,18 @@ updateByMsg plugins uc msg model =
                 | config =
                     model.config
                         |> s_showDatesInUserLocale (not model.config.showDatesInUserLocale)
+            }
+                |> n
+
+        UserClickedToggleShowZeroTransactions ->
+            let
+                gc =
+                    model.config
+                        |> s_showZeroTransactions (not model.config.showZeroTransactions)
+            in
+            { model
+                | config = gc
+                , browser = Browser.filterTable gc model.browser
             }
                 |> n
 
@@ -2218,8 +2205,47 @@ updateByMsg plugins uc msg model =
         UserClickedExternalLink url ->
             ( model, Ports.newTab url |> CmdEffect |> List.singleton )
 
-        UserClickedCopyToClipboard value ->
-            ( model, Ports.copyToClipboard value |> CmdEffect |> List.singleton )
+        AnimationFrameDeltaForTransform delta ->
+            { model
+                | transform = Transform.transition delta model.transform
+            }
+                |> repositionHovercards
+
+        SearchHovercardMsg hm ->
+            model.search
+                |> Maybe.map
+                    (\s ->
+                        let
+                            ( search, cmd ) =
+                                Hovercard.update hm s.hovercard
+                        in
+                        ( { model
+                            | search = s |> s_hovercard search |> Just
+                          }
+                        , Cmd.map SearchHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
+
+        TagHovercardMsg hm ->
+            model.tag
+                |> Maybe.map
+                    (\s ->
+                        let
+                            ( tag, cmd ) =
+                                Hovercard.update hm s.hovercard
+                        in
+                        ( { model
+                            | tag = s |> s_hovercard tag |> Just
+                          }
+                        , Cmd.map TagHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         NoOp ->
             n model
@@ -2395,6 +2421,13 @@ hideContextmenu model =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
+    forcePushHistory model
+        |> s_route route
+        |> updateByRoute_ plugins route
+
+
+updateByRoute_ : Plugins -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute_ plugins route model =
     case route |> Log.log "route" of
         Route.Root ->
             deselect model
@@ -2410,79 +2443,43 @@ updateByRoute plugins route model =
                     , at = Maybe.map AtLayer layer
                     }
 
-        Route.Currency currency (Route.AddressPath addresses) ->
-            loadPath plugins
-                { currency = currency
-                , addresses = addresses
-                }
-                model
+        Route.Currency currency (Route.AddressPath ( address, addresses )) ->
+            model
+                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
+                |> loadAddressPath plugins
+                    { currency = currency
+                    , addresses = address :: addresses
+                    }
 
         Route.Currency currency (Route.Entity e table layer) ->
-            layer
-                |> Maybe.andThen
-                    (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = e, layer = l }) model.layers)
-                |> Maybe.Extra.orElseLazy
-                    (\_ -> Layer.getFirstEntity { currency = currency, entity = e } model.layers)
-                |> Maybe.map
-                    (\entity ->
-                        model
-                            |> s_selectIfLoaded (Just (SelectEntity { currency = currency, entity = e }))
-                            |> selectEntity entity table
-                    )
-                |> Maybe.Extra.withDefaultLazy
-                    (\_ ->
-                        let
-                            browser =
-                                Browser.loadingEntity { currency = currency, entity = e } model.browser
-
-                            ( browser2, effects ) =
-                                table
-                                    |> Maybe.map (\t -> Browser.showEntityTable t browser)
-                                    |> Maybe.withDefault (n browser)
-                        in
-                        ( { model
-                            | browser = browser2
-                            , adding = Adding.loadEntity { currency = currency, entity = e } model.adding
-                            , selectIfLoaded = Just (SelectEntity { currency = currency, entity = e })
-                          }
-                        , [ BrowserGotEntity
-                                |> GetEntityEffect
-                                    { entity = e
-                                    , currency = currency
-                                    }
-                                |> ApiEffect
-                          ]
-                            ++ (getEntityEgonet
-                                    { currency = currency
-                                    , entity = e
-                                    }
-                                    BrowserGotEntityEgonet
-                                    model.layers
-                                    |> List.map ApiEffect
-                               )
-                            ++ effects
-                        )
-                    )
+            model
+                |> s_selectIfLoaded (Just (SelectEntity { currency = currency, entity = e }))
+                |> loadEntity plugins
+                    { currency = currency
+                    , entity = e
+                    , table = table
+                    , layer = layer
+                    }
 
         Route.Currency currency (Route.Tx t table tokenTxId) ->
             let
                 ( browser, effect ) =
-                    if String.toLower currency == "eth" || tokenTxId /= Nothing then
+                    if Data.isAccountLike currency || tokenTxId /= Nothing then
                         Browser.loadingTxAccount { currency = currency, txHash = t, tokenTxId = tokenTxId } currency model.browser
 
                     else
                         Browser.loadingTxUtxo { currency = currency, txHash = t } model.browser
 
                 ( browser2, effects ) =
-                    if String.toLower currency == "eth" then
+                    if Data.isAccountLike currency then
                         table
                             |> Maybe.map (\tb -> Browser.showTxAccountTable tb browser)
-                            |> Maybe.withDefault (n browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                     else if tokenTxId == Nothing then
                         table
                             |> Maybe.map (\tb -> Browser.showTxUtxoTable tb browser)
-                            |> Maybe.withDefault (n browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                     else
                         n browser
@@ -2495,25 +2492,19 @@ updateByRoute plugins route model =
 
         Route.Currency currency (Route.Block b table) ->
             let
-                browser =
+                ( browser1, effects1 ) =
                     Browser.loadingBlock { currency = currency, block = b } model.browser
 
-                ( browser2, effects ) =
+                ( browser2, effects2 ) =
                     table
-                        |> Maybe.map (\tb -> Browser.showBlockTable tb browser)
-                        |> Maybe.withDefault (n browser)
+                        |> Maybe.map (\tb -> Browser.showBlockTable tb browser1)
+                        |> Maybe.withDefault (Browser.hideTable browser1 |> n)
             in
             ( { model
                 | browser = browser2
               }
-            , [ BrowserGotBlock
-                    |> GetBlockEffect
-                        { height = b
-                        , currency = currency
-                        }
-                    |> ApiEffect
-              ]
-                ++ effects
+            , effects1
+                ++ effects2
             )
 
         Route.Currency currency (Route.Addresslink src srcLayer dst dstLayer table) ->
@@ -2533,7 +2524,15 @@ updateByRoute plugins route model =
                         )
                             |> Maybe.map (\link -> selectAddressLink table source link model)
                     )
-                |> Maybe.withDefault (n model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        model
+                            |> s_selectIfLoaded (Just (SelectAddresslink table { currency = currency, address = src } { currency = currency, address = dst }))
+                            |> loadAddressPath plugins
+                                { currency = currency
+                                , addresses = [ src, dst ]
+                                }
+                    )
 
         Route.Currency currency (Route.Entitylink src srcLayer dst dstLayer table) ->
             let
@@ -2553,7 +2552,15 @@ updateByRoute plugins route model =
                             |> Maybe.map
                                 (\link -> selectEntityLink table source link model)
                     )
-                |> Maybe.withDefault (n model)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        model
+                            |> s_selectIfLoaded (Just (SelectEntitylink table { currency = currency, entity = src } { currency = currency, entity = dst }))
+                            |> loadEntityPath plugins
+                                { currency = currency
+                                , entities = [ src, dst ]
+                                }
+                    )
 
         Route.Label l ->
             let
@@ -2577,14 +2584,14 @@ updateByRoute plugins route model =
 
                 ( newbrowser, effectsActor ) =
                     case model.browser.type_ of
-                        Browser.Actor (Browser.Loading currentActorId _) _ ->
+                        Browser.Actor (Loading currentActorId _) _ ->
                             if currentActorId /= actorId then
                                 ( Browser.loadingActor actorId model.browser, getActorAction )
 
                             else
                                 ( Browser.openActor True model.browser, [] )
 
-                        Browser.Actor (Browser.Loaded actor) _ ->
+                        Browser.Actor (Loaded actor) _ ->
                             if actor.id /= actorId then
                                 ( Browser.loadingActor actorId model.browser, getActorAction )
 
@@ -2605,7 +2612,7 @@ updateByRoute plugins route model =
             , effectsActor ++ effectsTagsActor
             )
 
-        Route.Plugin ( pid, value ) ->
+        Route.Plugin _ ->
             n model
 
 
@@ -2920,7 +2927,7 @@ selectAddress address table model =
             ( browser2, effects2 ) =
                 table
                     |> Maybe.map (\t -> Browser.showAddressTable t browser1)
-                    |> Maybe.withDefault (n browser1)
+                    |> Maybe.withDefault (Browser.hideTable browser1 |> n)
 
             newmodel =
                 deselect model
@@ -2948,7 +2955,7 @@ selectEntity entity table model =
             ( browser2, effects2 ) =
                 table
                     |> Maybe.map (\t -> Browser.showEntityTable t browser1)
-                    |> Maybe.withDefault (n browser1)
+                    |> Maybe.withDefault (Browser.hideTable browser1 |> n)
 
             newmodel =
                 deselect model
@@ -3198,22 +3205,31 @@ updateByPluginOutMsg plugins outMsgs model =
                         , eff
                         )
 
+                    PluginInterface.LoadAddressIntoGraph address ->
+                        model
+                            |> loadAddress plugins
+                                { currency = address.currency
+                                , address = address.address
+                                , table = Nothing
+                                , at = Nothing
+                                }
+
                     PluginInterface.GetEntitiesForAddresses _ _ ->
                         ( mo, [] )
 
                     PluginInterface.GetEntities _ _ ->
                         ( mo, [] )
 
-                    PluginInterface.PushUrl url ->
+                    PluginInterface.PushUrl _ ->
                         ( mo, [] )
 
-                    PluginInterface.GetSerialized pmsg ->
+                    PluginInterface.GetSerialized _ ->
                         ( mo, [] )
 
                     PluginInterface.Deserialize _ _ ->
                         ( mo, [] )
 
-                    PluginInterface.GetAddressDomElement id pmsg ->
+                    PluginInterface.GetAddressDomElement _ _ ->
                         ( mo, [] )
 
                     PluginInterface.SendToPort _ ->
@@ -3233,12 +3249,12 @@ refreshBrowserAddress id model =
     { model
         | browser =
             case model.browser.type_ of
-                Browser.Address (Browser.Loaded ad) table ->
+                Browser.Address (Loaded ad) table ->
                     if ad.address.currency == id.currency && ad.address.address == id.address then
                         model.browser
                             |> s_type_
                                 (Layer.getAddress ad.id model.layers
-                                    |> Maybe.map (\a -> Browser.Address (Browser.Loaded a) table)
+                                    |> Maybe.map (\a -> Browser.Address (Loaded a) table)
                                     |> Maybe.withDefault model.browser.type_
                                 )
 
@@ -3262,12 +3278,12 @@ refreshBrowserEntityIf predicate model =
     { model
         | browser =
             case model.browser.type_ of
-                Browser.Entity (Browser.Loaded en) table ->
+                Browser.Entity (Loaded en) table ->
                     if predicate en then
                         model.browser
                             |> s_type_
                                 (Layer.getEntity en.id model.layers
-                                    |> Maybe.map (\e -> Browser.Entity (Browser.Loaded e) table)
+                                    |> Maybe.map (\e -> Browser.Entity (Loaded e) table)
                                     |> Maybe.withDefault model.browser.type_
                                 )
 
@@ -3323,7 +3339,7 @@ makeTagPack model time =
           , model.userAddressTags
                 |> Dict.values
                 |> Yaml.Encode.list
-                    (\{ currency, address, label, source, category, abuse, isClusterDefiner } ->
+                    (\{ currency, address, label, category, abuse, isClusterDefiner } ->
                         Yaml.Encode.record
                             [ ( "currency", Yaml.Encode.string currency )
                             , ( "address", Yaml.Encode.string address )
@@ -3446,7 +3462,7 @@ deserializeByVersion version =
 
 pushHistory : Msg -> Model -> Model
 pushHistory msg model =
-    if History.shallPushHistory msg then
+    if History.shallPushHistory msg model then
         forcePushHistory model
 
     else
@@ -3455,35 +3471,21 @@ pushHistory msg model =
 
 forcePushHistory : Model -> Model
 forcePushHistory model =
-    case model.history of
-        History past future ->
-            { model
-                | history =
-                    History
-                        (deselectLayers model.selected model.layers :: past)
-                        []
-            }
+    { model
+        | history =
+            makeHistoryEntry model
+                |> History.push model.history
+    }
 
 
 cleanHistory : ( Model, List Effect ) -> ( Model, List Effect )
 cleanHistory ( model, eff ) =
-    let
-        filter old =
-            case old of
-                fst :: rest ->
-                    if fst == model.layers then
-                        filter rest
-
-                    else
-                        old
-
-                [] ->
-                    []
-    in
-    ( if List.isEmpty eff then
-        case model.history of
-            History past future ->
-                { model | history = History (filter past |> List.take maxHistory) future }
+    ( if True then
+        { model
+            | history =
+                makeHistoryEntry model
+                    |> History.prune model.history
+        }
 
       else
         model
@@ -3522,7 +3524,7 @@ fromDeserialized deserialized model =
                 | highlights =
                     Highlighter.init
                         |> s_highlights deserialized.highlights
-                , history = History [] []
+                , history = History.init
                 , layers = IntDict.empty
                 , config =
                     model.config
@@ -3606,7 +3608,7 @@ addAddressesAtEntity plugins uc entityId addresses model =
         |> mapSecond ((::) (InternalGraphAddedAddressesEffect added.new))
 
 
-loadPath :
+loadAddressPath :
     Plugins
     ->
         { currency : String
@@ -3614,19 +3616,44 @@ loadPath :
         }
     -> Model
     -> ( Model, List Effect )
-loadPath plugins { currency, addresses } model =
+loadAddressPath plugins { currency, addresses } model =
     case addresses of
         address :: rest ->
             { model
-                | adding = Adding.setPath currency address rest model.adding
+                | adding = Adding.setAddressPath currency address rest model.adding
             }
-                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
                 |> loadAddress
                     plugins
                     { currency = currency
                     , address = address
                     , table = Nothing
                     , at = Nothing
+                    }
+
+        [] ->
+            n model
+
+
+loadEntityPath :
+    Plugins
+    ->
+        { currency : String
+        , entities : List Int
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadEntityPath plugins { currency, entities } model =
+    case entities of
+        entity :: rest ->
+            { model
+                | adding = Adding.setEntityPath currency entity rest model.adding
+            }
+                |> loadEntity
+                    plugins
+                    { currency = currency
+                    , entity = entity
+                    , table = Nothing
+                    , layer = Nothing
                     }
 
         [] ->
@@ -3694,7 +3721,7 @@ loadAddress plugins { currency, address, table, at } model =
                         if select then
                             table
                                 |> Maybe.map (\t -> Browser.showAddressTable t browser)
-                                |> Maybe.withDefault (n browser)
+                                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
                         else
                             n browser
@@ -3724,6 +3751,61 @@ loadAddress plugins { currency, address, table, at } model =
                             }
                         |> ApiEffect
                   ]
+                    ++ effects
+                )
+            )
+
+
+loadEntity :
+    Plugins
+    ->
+        { currency : String
+        , entity : Int
+        , table : Maybe Route.EntityTable
+        , layer : Maybe Int
+        }
+    -> Model
+    -> ( Model, List Effect )
+loadEntity plugins { currency, entity, table, layer } model =
+    layer
+        |> Maybe.andThen
+            (\l -> Layer.getEntity (Id.initEntityId { currency = currency, id = entity, layer = l }) model.layers)
+        |> Maybe.Extra.orElseLazy
+            (\_ -> Layer.getFirstEntity { currency = currency, entity = entity } model.layers)
+        |> Maybe.map
+            (\e ->
+                selectEntity e table model
+            )
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                let
+                    browser =
+                        Browser.loadingEntity { currency = currency, entity = entity } model.browser
+
+                    ( browser2, effects ) =
+                        table
+                            |> Maybe.map (\t -> Browser.showEntityTable t browser)
+                            |> Maybe.withDefault (Browser.hideTable browser |> n)
+                in
+                ( { model
+                    | browser = browser2
+                    , adding = Adding.loadEntity { currency = currency, entity = entity } model.adding
+                  }
+                , [ BrowserGotEntity
+                        |> GetEntityEffect
+                            { entity = entity
+                            , currency = currency
+                            }
+                        |> ApiEffect
+                  ]
+                    ++ (getEntityEgonet
+                            { currency = currency
+                            , entity = entity
+                            }
+                            BrowserGotEntityEgonet
+                            model.layers
+                            |> List.map ApiEffect
+                       )
                     ++ effects
                 )
             )
@@ -3815,6 +3897,38 @@ handleNotFound model =
     }
 
 
+selectAddressLinkIfLoaded : Model -> ( Model, List Effect )
+selectAddressLinkIfLoaded model =
+    case model.selectIfLoaded of
+        Just (SelectAddresslink table src dst) ->
+            Layer.getFirstAddress src model.layers
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Address.Links links ->
+                                let
+                                    t =
+                                        Id.initAddressId
+                                            { id = dst.address
+                                            , currency = dst.currency
+                                            , layer = Id.layer source.id + 1
+                                            }
+                                in
+                                Dict.get t links
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    model
+                                        |> s_selectIfLoaded Nothing
+                                        |> selectAddressLink table source link
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        _ ->
+            n model
+
+
 selectAddressLink : Maybe Route.AddresslinkTable -> Address -> Link Address -> Model -> ( Model, List Effect )
 selectAddressLink table source link model =
     let
@@ -3828,7 +3942,7 @@ selectAddressLink table source link model =
         ( browser2, effects ) =
             table
                 |> Maybe.map (\tb -> Browser.showAddresslinkTable tb browser)
-                |> Maybe.withDefault (n browser)
+                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
         linkId =
             ( source.id, link.node.id )
@@ -3845,6 +3959,38 @@ selectAddressLink table source link model =
     )
 
 
+selectEntityLinkIfLoaded : Model -> ( Model, List Effect )
+selectEntityLinkIfLoaded model =
+    case model.selectIfLoaded of
+        Just (SelectEntitylink table src dst) ->
+            Layer.getFirstEntity src model.layers
+                |> Maybe.andThen
+                    (\source ->
+                        (case source.links of
+                            Entity.Links links ->
+                                let
+                                    t =
+                                        Id.initEntityId
+                                            { id = dst.entity
+                                            , currency = dst.currency
+                                            , layer = Id.layer source.id + 1
+                                            }
+                                in
+                                Dict.get t links
+                        )
+                            |> Maybe.map
+                                (\link ->
+                                    model
+                                        |> s_selectIfLoaded Nothing
+                                        |> selectEntityLink table source link
+                                )
+                    )
+                |> Maybe.withDefault (n model)
+
+        _ ->
+            n model
+
+
 selectEntityLink : Maybe Route.AddresslinkTable -> Entity -> Link Entity -> Model -> ( Model, List Effect )
 selectEntityLink table source link model =
     let
@@ -3858,7 +4004,7 @@ selectEntityLink table source link model =
         ( browser2, effects ) =
             table
                 |> Maybe.map (\tb -> Browser.showEntitylinkTable tb browser)
-                |> Maybe.withDefault (n browser)
+                |> Maybe.withDefault (Browser.hideTable browser |> n)
 
         linkId =
             ( source.id, link.node.id )
@@ -3915,3 +4061,89 @@ syncSelection model =
 
         SelectedNone ->
             model
+
+
+updateTransformByBoundingBox : Update.Config -> Model -> Coords.BBox -> Model
+updateTransformByBoundingBox uc model bbox =
+    { model
+        | transform =
+            uc.size
+                |> Maybe.map
+                    (\{ width, height } ->
+                        { width = width
+                        , height = height
+                        }
+                    )
+                |> Maybe.map
+                    (Coords.addMargin bbox
+                        |> Transform.updateByBoundingBox model.transform
+                    )
+                |> Maybe.withDefault model.transform
+    }
+
+
+extendTransformWithBoundingBox : Update.Config -> Model -> Coords.BBox -> Model
+extendTransformWithBoundingBox uc model bbox =
+    { model
+        | transform =
+            uc.size
+                |> Maybe.map
+                    (\{ width, height } ->
+                        { width = width
+                        , height = height
+                        }
+                    )
+                |> Maybe.map
+                    (\size ->
+                        Transform.getBoundingBox model.transform size
+                            |> Coords.mergeBoundingBoxes (Coords.addMargin bbox)
+                            |> flip (Transform.updateByBoundingBox model.transform) size
+                    )
+                |> Maybe.withDefault model.transform
+    }
+
+
+makeHistoryEntry : Model -> Entry.Model
+makeHistoryEntry model =
+    { layers = deselectLayers model.selected model.layers
+    , highlights = model.highlights.highlights
+    }
+
+
+undoRedo : (History.Model -> Entry.Model -> Maybe ( History.Model, Entry.Model )) -> Model -> ( Model, List Effect )
+undoRedo fun model =
+    makeHistoryEntry model
+        |> fun model.history
+        |> Maybe.map
+            (\( history, entry ) ->
+                { model
+                    | history = history
+                    , layers = entry.layers
+                    , highlights =
+                        model.highlights
+                            |> s_highlights entry.highlights
+                }
+                    |> syncSelection
+            )
+        |> Maybe.withDefault model
+        |> n
+
+
+repositionHovercards : Model -> ( Model, List Effect )
+repositionHovercards model =
+    [ repositionHovercardCmd model .tag TagHovercardMsg
+    , repositionHovercardCmd model .search SearchHovercardMsg
+    ]
+        |> List.map CmdEffect
+        |> pair model
+
+
+repositionHovercardCmd : Model -> (Model -> Maybe { a | hovercard : Hovercard.Model }) -> (Hovercard.Msg -> Msg) -> Cmd Msg
+repositionHovercardCmd model field toMsg =
+    field model
+        |> Maybe.map
+            (.hovercard
+                >> Hovercard.getElement
+                >> Cmd.map toMsg
+            )
+        |> Maybe.withDefault Cmd.none

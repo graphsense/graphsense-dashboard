@@ -17,9 +17,14 @@ const isDir = fileName => {
 
 const pluginsFolder = './plugins'
 const templatesFolder = './plugin_templates'
-const generatedFolder = './gen/plugins'
-const langFolder = 'lang'
+const genFolder = './gen'
+const genPluginsFolder = path.join(genFolder, pluginsFolder)
+const langFolder = './lang'
 const publicFolder = './public'
+const genPublicFolder = path.join(genFolder, publicFolder)
+const genLangFolder = path.join(genFolder, publicFolder, langFolder)
+fse.copySync(publicFolder, genPublicFolder, {recursive: true})
+fse.copySync(langFolder, genLangFolder, {recursive: true})
 
 console.log('Installing plugins:')
 const plugins = fs.readdirSync(pluginsFolder)
@@ -50,10 +55,10 @@ const transform = (folder) => {
       }
       if (path.extname(fileName) !== '.mustache') return
       const file = fs.readFileSync(path.join(templatesFolder, folder, fileName), 'utf8')
-      const newFileName = path.join(generatedFolder, folder, fileName.replace('.mustache', ''))
+      const newFileName = path.join(genPluginsFolder, folder, fileName.replace('.mustache', ''))
       console.log('Generating ', newFileName)
       const gen = mustache.render(file, {plugins})
-      const pf = path.join(generatedFolder, folder)
+      const pf = path.join(genPluginsFolder, folder)
       if(!isDir(pf)) {
         fs.mkdirSync(pf, {recursive: true})
       }
@@ -66,19 +71,17 @@ const appendLang = (plugin) => {
   const pluginLangFolder = path.join(pluginsFolder, plugin, langFolder)
   fs.readdirSync(pluginLangFolder)
     .map(fileName => {
-      let publicLangFilename = path.join(publicFolder, langFolder, fileName)
+      let coreLangFilename = path.join(langFolder, fileName)
+      let genLangFilename = path.join(genLangFolder, fileName)
       let pluginLangFilename = path.join(pluginLangFolder, fileName)
-      if(!fs.existsSync(publicLangFilename)) {
+      if(!fs.existsSync(coreLangFilename)) {
         console.err(`Ignoring ${pluginLangFilename}.`)
         return
       }
-      let file = fs.readFileSync(pluginLangFilename, 'utf8')
-      let pluginStrings = yaml.parse(file)
-      file = fs.readFileSync(publicLangFilename, 'utf8')
-      let strings = yaml.parse(file)
-      strings = {...strings, ...pluginStrings}
-      strings = yaml.stringify(strings)
-      fs.writeFileSync(publicLangFilename, strings, {flag: 'w+'})
+      let strings = fs.readFileSync(genLangFilename, 'utf8')
+      let pluginStrings = fs.readFileSync(pluginLangFilename, 'utf8')
+      strings += pluginStrings
+      fs.writeFileSync(genLangFilename, strings, {flag: 'w+'})
       console.log('Merged', fileName)
     })
 }
@@ -86,7 +89,7 @@ const appendLang = (plugin) => {
 const copyPublic = (plugin) => {
   const pluginPublicFolder = path.join(pluginsFolder, plugin, publicFolder)
   if (!fs.existsSync(pluginPublicFolder)) return
-  fse.copySync(pluginPublicFolder, publicFolder)
+  fse.copySync(pluginPublicFolder, genPublicFolder)
   console.log('Copied public folder', pluginPublicFolder)
 }
 

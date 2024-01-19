@@ -7,15 +7,17 @@ import Css.Graph as Css
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Model.Graph exposing (ActiveTool, History(..), Model)
+import Init.Graph.History as History
+import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Browser as Browser
+import Model.Graph.History as History
 import Model.Graph.Tool as Tool
 import Msg.Graph exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import Tuple exposing (..)
+import Update.Graph exposing (makeHistoryEntry)
 import View.Graph.Tool as Tool
-import View.Locale as Locale
 
 
 navbar : Plugins -> ModelState -> Config -> Model -> Html Msg
@@ -94,26 +96,22 @@ navbarRight vc model =
               , msg = \_ -> UserClickedUndo
               , color = Nothing
               , status =
-                    case model.history of
-                        History past _ ->
-                            if List.isEmpty past then
-                                Tool.Disabled
+                    if hasPast model then
+                        Tool.Inactive
 
-                            else
-                                Tool.Inactive
+                    else
+                        Tool.Disabled
               }
             , { title = "Redo undone graph change"
               , icon = FontAwesome.icon FontAwesome.redo
               , msg = \_ -> UserClickedRedo
               , color = Nothing
               , status =
-                    case model.history of
-                        History _ future ->
-                            if List.isEmpty future then
-                                Tool.Disabled
+                    if History.hasFuture model.history then
+                        Tool.Inactive
 
-                            else
-                                Tool.Inactive
+                    else
+                        Tool.Disabled
               }
             , { title = "Center graph"
               , icon = FontAwesome.icon FontAwesome.compress
@@ -141,3 +139,9 @@ navbarRight vc model =
               }
             ]
         )
+
+
+hasPast : Model -> Bool
+hasPast model =
+    makeHistoryEntry model
+        |> History.hasPast model.history

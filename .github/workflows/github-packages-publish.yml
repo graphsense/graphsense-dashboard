@@ -1,4 +1,4 @@
-name: Docker
+name: Publish to Github Docker Hub
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -6,13 +6,15 @@ name: Docker
 # documentation.
 
 on:
+  # schedule:
+  #   - cron: '38 1 * * *'
   workflow_dispatch:
   push:
-    branches: [ "master", "develop"]
-    # Publish semver tags as releases.
-    # tags: [ 'v*.*.*' ]
-  # pull_request:
     # branches: [ "master" ]
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+  # pull_request:
+  #   branches: [ "master" ]
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -25,7 +27,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
       packages: write

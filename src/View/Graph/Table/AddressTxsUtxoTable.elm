@@ -3,54 +3,19 @@ module View.Graph.Table.AddressTxsUtxoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css.View
-import Csv.Encode
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Id exposing (AddressId)
-import Model.Graph.Table exposing (Table)
+import Model.Currency exposing (assetFromBase)
+import Model.Graph.Table exposing (Table, titleHeight, titleTimestamp, titleTx, titleValue)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Util.Csv
-import Util.View
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-import View.Util exposing (longIdentifier)
-
-
-init : Table Api.Data.AddressTxUtxo
-init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
-
-
-filter : String -> Api.Data.AddressTxUtxo -> Bool
-filter f a =
-    String.contains f (String.fromInt a.height)
-        || String.contains f a.txHash
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleValue : String
-titleValue =
-    "Value"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
+import Util.View exposing (longIdentifier)
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> String -> Table.Config Api.Data.AddressTxUtxo Msg
@@ -79,7 +44,7 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc (\_ -> coinCode) titleValue .value
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleValue .value
             , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
             , T.timestampColumn vc titleTimestamp .timestamp
             ]

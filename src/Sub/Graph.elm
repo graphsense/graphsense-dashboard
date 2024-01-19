@@ -1,10 +1,12 @@
 module Sub.Graph exposing (subscriptions)
 
 import Browser.Events
+import Hovercard
 import Json.Decode
 import Model.Graph exposing (Dragging(..), Model)
 import Msg.Graph exposing (Msg(..))
 import Ports
+import Sub.Graph.Transform as Transform
 
 
 subscriptions : Model -> Sub Msg
@@ -30,5 +32,12 @@ subscriptions model =
                         NoOp
                 )
         )
+    , Transform.subscriptions model.transform
+    , model.tag
+        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map TagHovercardMsg)
+        |> Maybe.withDefault Sub.none
+    , model.search
+        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map SearchHovercardMsg)
+        |> Maybe.withDefault Sub.none
     ]
         |> Sub.batch

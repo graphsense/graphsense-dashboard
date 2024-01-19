@@ -14,8 +14,10 @@ module Route.Graph exposing
     , blockRoute
     , entityRoute
     , entitylinkRoute
+    , getAddressTable
+    , getAddresslinkTable
+    , getEntityTable
     , labelRoute
-    , parse
     , parser
     , pluginRoute
     , rootRoute
@@ -24,10 +26,10 @@ module Route.Graph exposing
     )
 
 import List.Extra
+import Model.Graph.Table exposing (AddressTable(..))
 import Plugin.Model
 import Plugin.Route as Plugin
-import Tuple exposing (..)
-import Url exposing (..)
+import Url
 import Url.Builder as B exposing (..)
 import Util.Url.Parser as P exposing (..)
 import Util.Url.Parser.Query as Q
@@ -53,7 +55,7 @@ type Thing
     | Tx String (Maybe TxTable) (Maybe Int)
     | Addresslink String Int String Int (Maybe AddresslinkTable)
     | Entitylink Int Int Int Int (Maybe AddresslinkTable)
-    | AddressPath (List String)
+    | AddressPath ( String, List String )
 
 
 addressSegment : String
@@ -116,6 +118,8 @@ type AddressTable
     | AddressTxsTable
     | AddressIncomingNeighborsTable
     | AddressOutgoingNeighborsTable
+    | AddressTotalReceivedAllAssetsTable
+    | AddressFinalBalanceAllAssetsTable
 
 
 type EntityTable
@@ -124,6 +128,8 @@ type EntityTable
     | EntityAddressesTable
     | EntityIncomingNeighborsTable
     | EntityOutgoingNeighborsTable
+    | EntityTotalReceivedAllAssetsTable
+    | EntityFinalBalanceAllAssetsTable
 
 
 type ActorTable
@@ -143,6 +149,7 @@ type BlockTable
 
 type AddresslinkTable
     = AddresslinkTxsTable
+    | AddresslinkAllAssetsTable
 
 
 addressTableToString : AddressTable -> String
@@ -160,6 +167,12 @@ addressTableToString t =
         AddressOutgoingNeighborsTable ->
             "outgoing"
 
+        AddressTotalReceivedAllAssetsTable ->
+            "total_received"
+
+        AddressFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToAddressTable : String -> Maybe AddressTable
 stringToAddressTable t =
@@ -175,6 +188,12 @@ stringToAddressTable t =
 
         "outgoing" ->
             Just AddressOutgoingNeighborsTable
+
+        "total_received" ->
+            Just AddressTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just AddressFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
@@ -198,6 +217,12 @@ entityTableToString t =
         EntityOutgoingNeighborsTable ->
             "outgoing"
 
+        EntityTotalReceivedAllAssetsTable ->
+            "total_received"
+
+        EntityFinalBalanceAllAssetsTable ->
+            "final_balance"
+
 
 stringToEntityTable : String -> Maybe EntityTable
 stringToEntityTable t =
@@ -216,6 +241,12 @@ stringToEntityTable t =
 
         "outgoing" ->
             Just EntityOutgoingNeighborsTable
+
+        "total_received" ->
+            Just EntityTotalReceivedAllAssetsTable
+
+        "final_balance" ->
+            Just EntityFinalBalanceAllAssetsTable
 
         _ ->
             Nothing
@@ -296,12 +327,18 @@ addresslinkTableToString t =
         AddresslinkTxsTable ->
             "transactions"
 
+        AddresslinkAllAssetsTable ->
+            "allassets"
+
 
 stringToAddresslinkTable : String -> Maybe AddresslinkTable
 stringToAddresslinkTable t =
     case t of
         "transactions" ->
             Just AddresslinkTxsTable
+
+        "allassets" ->
+            Just AddresslinkAllAssetsTable
 
         _ ->
             Nothing
@@ -390,10 +427,10 @@ toUrl route =
                 ]
                 query
 
-        Currency curr (AddressPath addresses) ->
+        Currency curr (AddressPath ( address, addresses )) ->
             absolute
                 [ curr
-                , String.join " " addresses
+                , String.join " " <| address :: addresses
                 ]
                 []
 
@@ -482,11 +519,6 @@ pluginRoute ( ns, url ) =
         |> Maybe.withDefault Root
 
 
-parse : Config -> Url -> Maybe Route
-parse c =
-    P.parse (parser c)
-
-
 parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
@@ -510,6 +542,14 @@ encodedString =
     P.custom "ENCODED_STRING" Url.percentDecode
 
 
+parseAddressPath : Parser (( String, List String ) -> a) a
+parseAddressPath =
+    P.custom "ADDRESS_PATH" <|
+        \segment ->
+            String.split "," segment
+                |> List.Extra.uncons
+
+
 thing : Parser (Thing -> a) a
 thing =
     oneOf
@@ -519,8 +559,8 @@ thing =
             |> P.slash (P.fragment (Maybe.andThen String.toInt))
             |> map Address
         , s addresspathSegment
-            |> P.slash encodedString
-            |> map (String.split "," >> AddressPath)
+            |> P.slash parseAddressPath
+            |> map AddressPath
         , s entitySegment
             |> P.slash P.int
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToEntityTable))
@@ -550,3 +590,36 @@ thing =
             |> P.questionMark (Q.string tableQuery |> Q.map (Maybe.andThen stringToAddresslinkTable))
             |> map Entitylink
         ]
+
+
+getAddressTable : Route -> Maybe AddressTable
+getAddressTable route =
+    case route of
+        Currency _ (Address _ table _) ->
+            table
+
+        _ ->
+            Nothing
+
+
+getEntityTable : Route -> Maybe EntityTable
+getEntityTable route =
+    case route of
+        Currency _ (Entity _ table _) ->
+            table
+
+        _ ->
+            Nothing
+
+
+getAddresslinkTable : Route -> Maybe AddresslinkTable
+getAddresslinkTable route =
+    case route of
+        Currency _ (Entitylink _ _ _ _ table) ->
+            table
+
+        Currency _ (Addresslink _ _ _ _ table) ->
+            table
+
+        _ ->
+            Nothing

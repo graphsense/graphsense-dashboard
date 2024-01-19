@@ -8,50 +8,16 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
 import Model.Address as A
+import Model.Currency exposing (assetFromBase)
 import Model.Graph.Id exposing (EntityId)
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.EntityAddressesTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Table
 import Util.Csv
-import Util.View exposing (none)
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Util exposing (copyableLongIdentifier)
-
-
-init : Table Api.Data.Address
-init =
-    Init.Graph.Table.initUnsorted filter
-
-
-filter : String -> Api.Data.Address -> Bool
-filter f a =
-    String.contains f a.address
-
-
-titleAddress : String
-titleAddress =
-    "Address"
-
-
-titleFirstUsage : String
-titleFirstUsage =
-    "First usage"
-
-
-titleLastUsage : String
-titleLastUsage =
-    "Last usage"
-
-
-titleFinalBalance : String
-titleFinalBalance =
-    "Balance"
-
-
-titleTotalReceived : String
-titleTotalReceived =
-    "Total received"
+import Util.View exposing (copyableLongIdentifier, none)
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> String -> Maybe EntityId -> (EntityId -> A.Address -> Bool) -> Table.Config Api.Data.Address Msg
@@ -72,7 +38,7 @@ config vc coinCode entityId entityHasAddress =
                                     { currency = data.currency, address = data.address }
                             )
                         |> Maybe.withDefault none
-                    , span
+                    , copyableLongIdentifier vc
                         (entityId
                             |> Maybe.map
                                 (\id ->
@@ -83,14 +49,13 @@ config vc coinCode entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
-                        ]
+                        data.address
                     ]
                 )
             , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
             , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
-            , T.valueColumn vc (\_ -> coinCode) titleFinalBalance .balance
-            , T.valueColumn vc (\_ -> coinCode) titleTotalReceived .totalReceived
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleFinalBalance .balance
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalReceived .totalReceived
             ]
         , customizations = customizations vc
         }

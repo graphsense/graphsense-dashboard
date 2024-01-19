@@ -5,6 +5,7 @@ dist
 tags
 ctags_exclude
 .env
+.env.*
 test/*.gs
 elm-stuff
 .parcel-cache

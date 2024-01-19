@@ -1,16 +1,57 @@
-module Update.Graph.Transform exposing (update, updateByBoundingBox, vector, wheel)
+module Update.Graph.Transform exposing (delay, pop, transition, update, updateByBoundingBox, vector, wheel)
 
+import Basics.Extra exposing (flip)
+import Bounce
 import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
-import Model.Graph.Coords exposing (BBox, Coords)
-import Model.Graph.Transform exposing (..)
+import Ease
+import Init.Graph.Transform exposing (initTransitioning)
+import Model.Graph.Coords as Graph exposing (BBox)
+import Model.Graph.Id as Id
+import Model.Graph.Transform as Transform exposing (..)
+import Msg.Graph as Graph
+import Number.Bounded as Bounded
 import RecordSetter exposing (..)
+import Set exposing (Set)
 
 
-update : Coords -> Coords -> Model -> Model
+update : Graph.Coords -> Graph.Coords -> Model -> Model
 update start current transform =
     transform
-        |> s_x ((start.x - current.x) * transform.z + transform.x)
-        |> s_y ((start.y - current.y) * transform.z + transform.y)
+        |> addX (start.x - current.x)
+        |> addY (start.y - current.y)
+
+
+addX : Float -> Model -> Model
+addX =
+    add .x s_x
+
+
+addY : Float -> Model -> Model
+addY =
+    add .y s_y
+
+
+add : (Transform.Coords -> Float) -> (Float -> Transform.Coords -> Transform.Coords) -> Float -> Model -> Model
+add field upd delta model =
+    case model.state of
+        Transitioning t ->
+            { model
+                | state =
+                    { t
+                        | current =
+                            t.current
+                                |> upd (delta * Bounded.value t.current.z + field t.current)
+                    }
+                        |> Transitioning
+            }
+
+        Settled t ->
+            { model
+                | state =
+                    t
+                        |> upd (delta * Bounded.value t.z + field t)
+                        |> Settled
+            }
 
 
 wheel : { width : Float, height : Float } -> Float -> Float -> Float -> Model -> Model
@@ -35,24 +76,154 @@ wheel { width, height } x y w model =
 
         moveY =
             y_ / height * z
+
+        upd co =
+            let
+                newZ =
+                    Bounded.map ((*) (1 + z)) co.z
+
+                changed =
+                    Bounded.value newZ /= Bounded.value co.z
+            in
+            if changed then
+                co
+                    |> s_x (co.x - width * Bounded.value co.z * moveX)
+                    |> s_y (co.y - height * Bounded.value co.z * moveY)
+                    |> s_z newZ
+
+            else
+                co
     in
+    case model.state of
+        Transitioning t ->
+            { model
+                | state =
+                    { t
+                        | to = upd t.to
+                        , from = t.current
+                    }
+                        |> Transitioning
+            }
+
+        Settled t ->
+            upd t
+                |> initTransitioning False 100 t
+
+
+vector : Graph.Coords -> Graph.Coords -> Model -> Graph.Coords
+vector a b model =
+    { x = (b.x - a.x) * getZ model
+    , y = (b.y - a.y) * getZ model
+    }
+
+
+updateByBoundingBox : Model -> BBox -> { width : Float, height : Float } -> Model
+updateByBoundingBox model bbox { width, height } =
+    let
+        current =
+            getCurrent model
+
+        coords =
+            { x = bbox.x + bbox.width / 2
+            , y = bbox.y + bbox.height / 2
+            , z =
+                max
+                    (bbox.width / width)
+                    (bbox.height / height)
+                    |> max 1
+                    |> flip Bounded.set current.z
+            }
+    in
+    if Transform.equals coords current then
+        model |> s_state (Settled coords)
+
+    else
+        case model.state of
+            Transitioning t ->
+                { model
+                    | state =
+                        t
+                            |> s_to coords
+                            |> s_from t.current
+                            |> s_progress 0
+                            |> Transitioning
+                }
+
+            Settled t ->
+                initTransitioning True defaultDuration t coords
+
+
+transition : Float -> Model -> Model
+transition delta model =
     { model
-        | z = model.z * (1 + z)
-        , x = model.x - width * model.z * moveX
-        , y = model.y - height * model.z * moveY
+        | state =
+            case model.state of
+                Settled _ ->
+                    model.state
+
+                Transitioning t ->
+                    let
+                        progress =
+                            t.progress + delta
+
+                        ease =
+                            if t.withEase then
+                                Ease.outQuad
+
+                            else
+                                identity
+
+                        prg =
+                            progress
+                                / t.duration
+                                |> ease
+                    in
+                    if progress < t.duration then
+                        { t
+                            | progress = progress
+                            , current =
+                                { x = t.from.x + (t.to.x - t.from.x) * prg
+                                , y = t.from.y + (t.to.y - t.from.y) * prg
+                                , z =
+                                    Bounded.inc
+                                        ((Bounded.value t.to.z - Bounded.value t.from.z) * prg)
+                                        t.from.z
+                                }
+                        }
+                            |> Transitioning
+
+                    else
+                        Settled t.to
     }
 
 
-vector : Coords -> Coords -> Model -> Coords
-vector a b { z } =
-    { x = (b.x - a.x) * z
-    , y = (b.y - a.y) * z
-    }
+delay : Set Id.EntityId -> Model -> ( Model, Cmd Graph.Msg )
+delay ids model =
+    ( { model
+        | bounce = Bounce.push model.bounce
+        , collectingAddedEntityIds = Set.union ids model.collectingAddedEntityIds
+      }
+    , Bounce.delay 100 Graph.RuntimeDebouncedAddingEntities
+    )
 
 
-updateByBoundingBox : Model -> { width : Float, height : Float } -> BBox -> Model
-updateByBoundingBox model { width, height } bbox =
-    { x = bbox.x + bbox.width / 2 - (2 * expandHandleWidth + entityWidth) / 2
-    , y = bbox.y + bbox.height / 2 - (entityMinHeight + addressHeight) / 2
-    , z = model.z
-    }
+pop : Model -> ( Model, Bool )
+pop model =
+    let
+        newBounce =
+            Bounce.pop model.bounce
+
+        isSteady =
+            Bounce.steady newBounce
+    in
+    ( { model
+        | bounce = newBounce
+        , collectingAddedEntityIds =
+            if isSteady then
+                Set.empty
+
+            else
+                model.collectingAddedEntityIds
+      }
+    , isSteady
+    )

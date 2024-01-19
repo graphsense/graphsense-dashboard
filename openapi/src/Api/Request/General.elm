@@ -18,11 +18,6 @@ module Api.Request.General exposing (..)
 
 import Api
 import Api.Data
-import Dict
-import Http
-import Json.Decode
-import Json.Encode
-
 
 
 getStatistics : Api.Request Api.Data.Stats
@@ -37,15 +32,13 @@ getStatistics =
         Api.Data.statsDecoder
 
 
-
-search : (String) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.SearchResult
+search : String -> Maybe String -> Maybe Int -> Api.Request Api.Data.SearchResult
 search q_query currency_query limit_query =
     Api.request
         "GET"
         "/search"
         []
-        [ ( "currency", Maybe.map (identity) currency_query ), ( "q", Just <| (identity) q_query ), ( "limit", Maybe.map (String.fromInt) limit_query ) ]
+        [ ( "currency", Maybe.map identity currency_query ), ( "q", Just <| identity q_query ), ( "limit", Maybe.map String.fromInt limit_query ) ]
         []
         Nothing
         Api.Data.searchResultDecoder
-

@@ -9,6 +9,7 @@ root vc =
     displayFlex
         :: flexDirection Css.row
         :: overflowX auto
+        :: position relative
         :: vc.theme.table.root
 
 
@@ -95,3 +96,11 @@ emptyHint vc =
 tick : Config -> List Style
 tick vc =
     display inlineBlock :: vc.theme.table.tick
+
+
+info : Config -> List Style
+info vc =
+    position absolute
+        :: bottom zero
+        :: left zero
+        :: vc.theme.table.info vc.lightmode

@@ -11,29 +11,17 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import List.Extra
 import Model.Address as A
 import Model.Graph.Id as Id
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.AddressTagsTable exposing (..)
 import Msg.Graph exposing (Msg(..))
 import RecordSetter exposing (..)
 import Table
 import Util.Graph
-import Util.View exposing (none, truncate)
-import View.Graph.Table as T exposing (customizations, valueColumn)
+import Util.View exposing (copyableLongIdentifier, none)
+import View.Graph.Table as T exposing (customizations)
 import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
-
-
-init : Table Api.Data.AddressTag
-init =
-    Init.Graph.Table.initUnsorted filter
-
-
-filter : String -> Api.Data.AddressTag -> Bool
-filter f a =
-    String.contains f a.address
-        || String.contains f a.label
 
 
 config : View.Config -> Graph.Config -> Maybe Api.Data.AddressTag -> Maybe Id.EntityId -> (Id.EntityId -> A.Address -> Bool) -> Table.Config Api.Data.AddressTag Msg
@@ -54,7 +42,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                     { currency = String.toLower data.currency, address = data.address }
                             )
                         |> Maybe.withDefault none
-                    , span
+                    , copyableLongIdentifier vc
                         (entityId
                             |> Maybe.map
                                 (\id ->
@@ -65,8 +53,7 @@ config vc gc bestAddressTag entityId entityHasAddress =
                                 )
                             |> Maybe.withDefault []
                         )
-                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
-                        ]
+                        data.address
                     ]
                 )
             , T.htmlColumn vc

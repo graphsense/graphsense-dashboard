@@ -13,6 +13,7 @@ import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import File.Download
+import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
 import Init.Search as Search
@@ -23,7 +24,6 @@ import Log
 import Maybe.Extra
 import Model exposing (..)
 import Model.Dialog as Dialog
-import Model.Graph.Browser as Browser
 import Model.Graph.Coords exposing (BBox)
 import Model.Graph.Id as Id
 import Model.Graph.Layer as Layer
@@ -33,7 +33,6 @@ import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
 import Msg.Search as Search
-import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
 import PluginInterface.Msg as PluginInterface
@@ -49,8 +48,6 @@ import Time
 import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
-import Update.Graph.Browser as Browser
-import Update.Graph.Layer as Layer
 import Update.Locale as Locale
 import Update.Search as Search
 import Update.Statusbar as Statusbar
@@ -110,13 +107,13 @@ update plugins uc msg model =
             }
                 |> n
 
-        BrowserGotSupportedTokens configs ->
+        BrowserGotSupportedTokens currency configs ->
             let
                 locale =
-                    Locale.supportedTokens configs model.locale
+                    Locale.setSupportedTokens configs currency model.locale
             in
             { model
-                | supportedTokens = Just configs
+                | supportedTokens = Dict.insert currency configs model.supportedTokens
                 , locale = locale
                 , config =
                     model.config
@@ -190,14 +187,44 @@ update plugins uc msg model =
                 _ ->
                     n model
 
-        UserHoversUserIcon id ->
-            ( model
-            , GetElementEffect
-                { id = id
-                , msg = BrowserGotElement
-                }
-                |> List.singleton
-            )
+        UserClickedUserIcon id ->
+            if model.user.hovercard == Nothing then
+                let
+                    ( hovercard, cmd ) =
+                        Hovercard.init id
+                in
+                ( { model
+                    | user =
+                        model.user
+                            |> s_hovercard (Just hovercard)
+                  }
+                , Cmd.map UserHovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
+
+            else
+                n { model | user = model.user |> s_hovercard Nothing }
+
+        UserHovercardMsg hm ->
+            model.user.hovercard
+                |> Maybe.map
+                    (\hovercard ->
+                        let
+                            ( hovercard_, cmd ) =
+                                Hovercard.update hm hovercard
+                        in
+                        ( { model
+                            | user =
+                                model.user
+                                    |> s_hovercard (Just hovercard_)
+                          }
+                        , Cmd.map UserHovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         UserLeftUserHovercard ->
             { model
@@ -207,7 +234,7 @@ update plugins uc msg model =
                             model.user
 
                         _ ->
-                            model.user |> s_hovercardElement Nothing
+                            model.user |> s_hovercard Nothing
             }
                 |> n
 
@@ -279,12 +306,12 @@ update plugins uc msg model =
                                  else
                                     Unauthorized True []
                                 )
-                            |> s_hovercardElement
+                            |> s_hovercard
                                 (if List.isEmpty effs then
                                     Nothing
 
                                  else
-                                    model.user.hovercardElement
+                                    model.user.hovercard
                                 )
                     , plugins = new
                   }
@@ -292,14 +319,6 @@ update plugins uc msg model =
                     :: effs
                 )
                     |> updateByPluginOutMsg plugins outMsg
-
-        BrowserGotElement result ->
-            { model
-                | user =
-                    model.user
-                        |> s_hovercardElement (Result.toMaybe result)
-            }
-                |> n
 
         BrowserGotContentsElement result ->
             result
@@ -340,10 +359,10 @@ update plugins uc msg model =
                 { model
                     | user =
                         model.user
-                            |> s_hovercardElement Nothing
+                            |> s_hovercard Nothing
                 }
 
-        TimeUpdateReset time ->
+        TimeUpdateReset _ ->
             { model
                 | user =
                     model.user
@@ -416,7 +435,7 @@ update plugins uc msg model =
             )
                 |> updateByPluginOutMsg plugins outMsg
 
-        BrowserGotLoggedOut result ->
+        BrowserGotLoggedOut _ ->
             ( model
             , [ NavLoadEffect "/" ]
             )
@@ -459,14 +478,11 @@ update plugins uc msg model =
                         query =
                             Search.query model.search
 
-                        multi =
-                            Search.getMulti query
-
                         selectedValue =
                             Search.selectedValue model.search
                                 |> Maybe.Extra.orElse (Search.firstResult model.search)
 
-                        ( search, searchEffects ) =
+                        ( search, _ ) =
                             Search.update m model.search
 
                         m2 =
@@ -521,7 +537,7 @@ update plugins uc msg model =
                 Search.UserPicksCurrency currency ->
                     let
                         ( graph, graphEffects ) =
-                            Graph.loadPath plugins
+                            Graph.loadAddressPath plugins
                                 { currency = currency
                                 , addresses =
                                     Search.query model.search
@@ -637,6 +653,16 @@ update plugins uc msg model =
                     ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
 
                 Graph.UserClickedShowAddressShadowLinks ->
+                    let
+                        ( graph, graphEffects ) =
+                            Graph.update plugins uc m model.graph
+
+                        newModel =
+                            { model | graph = graph }
+                    in
+                    ( newModel, SaveUserSettingsEffect (Model.userSettingsFromMainModel newModel) :: List.map GraphEffect graphEffects )
+
+                Graph.UserClickedToggleShowZeroTransactions ->
                     let
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
@@ -875,6 +901,9 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                     PluginInterface.UpdateEntitiesByRootAddress _ _ ->
                         updateGraphByPluginOutMsg model eff
 
+                    PluginInterface.LoadAddressIntoGraph _ ->
+                        updateGraphByPluginOutMsg model eff
+
                     PluginInterface.GetAddressDomElement id pmsg ->
                         ( mo
                         , Id.addressIdToString id
@@ -1109,7 +1138,7 @@ handleResponse plugins uc result model =
                 { model
                     | user =
                         updateRequestLimit headers model.user
-                            |> s_hovercardElement Nothing
+                            |> s_hovercard Nothing
                 }
 
         Err ( BadStatus 401, eff ) ->
@@ -1118,7 +1147,7 @@ handleResponse plugins uc result model =
                     model.user
                         |> s_auth
                             (case model.user.auth of
-                                Unauthorized loading effs ->
+                                Unauthorized _ effs ->
                                     Unauthorized False <| effs ++ [ eff ]
 
                                 _ ->
@@ -1127,7 +1156,7 @@ handleResponse plugins uc result model =
               }
             , "userTool"
                 |> Task.succeed
-                |> Task.perform UserHoversUserIcon
+                |> Task.perform UserClickedUserIcon
                 |> CmdEffect
                 |> List.singleton
             )
@@ -1240,7 +1269,7 @@ updatePlugins plugins msg model =
 pluginNewGraph : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
 pluginNewGraph plugins ( model, eff ) =
     let
-        ( new, outMsg, cmd ) =
+        ( new, _, cmd ) =
             Plugin.newGraph plugins model.plugins
     in
     ( { model

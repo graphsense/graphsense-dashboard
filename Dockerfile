@@ -1,10 +1,15 @@
-FROM alpine:3.16
-LABEL maintainer="contact@iknaio.com"
+FROM alpine:3.19
+LABEL org.opencontainers.image.title="graphsense-dashboard"
+LABEL org.opencontainers.image.maintainer="contact@ikna.io"
+LABEL org.opencontainers.image.url="https://www.ikna.io/"
+LABEL org.opencontainers.image.description="GraphSense's Web GUI for interactive cryptocurrency analysis written"
+LABEL org.opencontainers.image.source="https://github.com/graphsense/graphsense-dashboard"
 
-ENV DOCKER_USER=user
-ARG DOCKER_UID=1000
+ENV DOCKER_USER=dockeruser
+ENV DOCKER_UID=1000
+ENV REST_URL=http://localhost:9000
 
-RUN addgroup -S $DOCKER_USER && adduser -S $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID
+#RUN addgroup -S $DOCKER_USER && adduser -S $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID
 
 ENV WORKDIR=/app
 
@@ -14,15 +19,15 @@ RUN mkdir $WORKDIR && \
 
 
 WORKDIR $WORKDIR
-COPY ./docker/docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh 
 
 COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
 
 COPY ./config $WORKDIR/config
+RUN cp $WORKDIR/config/Config.elm.tmp $WORKDIR/config/Config.elm
 COPY ./src $WORKDIR/src
 COPY ./openapi $WORKDIR/openapi
 COPY ./public $WORKDIR/public
+COPY ./lang $WORKDIR/lang
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
 COPY ./themes $WORKDIR/themes
@@ -30,14 +35,14 @@ COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
 COPY ./generate.js $WORKDIR/generate.js
 
-RUN chown -R $DOCKER_USER $WORKDIR && \
-    mkdir -p /usr/share/nginx/html /run/nginx && \
-    chown -R $DOCKER_USER /usr/share/nginx/html && \
+RUN mkdir -p /usr/share/nginx/html /run/nginx && \
     rm -f /etc/nginx/http.d/default.conf 
 
-USER $DOCKER_USER
 RUN npm install 
 
+COPY ./docker/docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh 
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
 EXPOSE 8000

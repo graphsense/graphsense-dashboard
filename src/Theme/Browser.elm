@@ -9,7 +9,7 @@ type alias Browser =
     , propertyBoxRoot : Bool -> List Style
     , propertyBoxTable : List Style
     , propertyBoxNote : Bool -> List Style
-    , propertyBoxRow : Bool -> List Style
+    , propertyBoxRow : Bool -> Bool -> List Style
     , propertyBoxKey : List Style
     , propertyBoxValue : List Style
     , propertyBoxValueInner : List Style
@@ -21,11 +21,9 @@ type alias Browser =
     , propertyBoxUsageRelative : List Style
     , propertyBoxActivityPeriod : List Style
     , propertyBoxTableLink : Bool -> Bool -> List Style
-    , copyLink : Bool -> Bool -> List Style
     , loadingSpinner : List Style
     , valueCell : List Style
     , currencyCell : List Style
-    , longIdentifier : List Style
     , tableSeparator : Bool -> List Style
     }
 
@@ -37,7 +35,7 @@ default =
     , propertyBoxRoot = \_ -> []
     , propertyBoxTable = []
     , propertyBoxNote = \_ -> []
-    , propertyBoxRow = \_ -> []
+    , propertyBoxRow = \_ _ -> []
     , propertyBoxKey = []
     , propertyBoxValue = []
     , propertyBoxValueInner = []
@@ -49,10 +47,8 @@ default =
     , propertyBoxUsageRelative = []
     , propertyBoxActivityPeriod = []
     , propertyBoxTableLink = \_ _ -> []
-    , copyLink = \_ _ -> []
     , loadingSpinner = []
     , valueCell = []
     , currencyCell = []
-    , longIdentifier = []
     , tableSeparator = \_ -> []
     }

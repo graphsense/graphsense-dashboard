@@ -2,27 +2,19 @@ module Effect exposing (n, perform)
 
 --import Plugin.Effect
 
-import Api
-import Api.Request.General
-import Bounce
 import Browser.Dom as Dom
 import Browser.Navigation as Nav
-import Config exposing (logoutUrl)
 import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
 import Effect.Search as Search
 import Http
-import Http.Extras
-import Json.Decode
-import Json.Encode
-import Model exposing (Auth(..), Effect(..), Msg(..))
+import Model exposing (Effect(..), Msg(..))
 import Msg.Graph as Graph
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
-import Process
 import Route
 import Task
 

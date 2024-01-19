@@ -5,64 +5,29 @@ import Config.View as View
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
-import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Currency
-import Model.Graph.Id exposing (AddressId)
+import Model.Currency exposing (asset)
 import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.TxsAccountTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
 import Route exposing (toUrl)
 import Route.Graph as Route
 import Table
 import Util.Csv
-import Util.View
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-import View.Util exposing (longIdentifier)
-
-
-init : Table Api.Data.TxAccount
-init =
-    Init.Graph.Table.initSorted True filter titleTimestamp
-
-
-filter : String -> Api.Data.TxAccount -> Bool
-filter f a =
-    String.contains f a.txHash
-        || String.contains f (String.fromInt a.height)
-        || String.contains f a.fromAddress
-        || String.contains f a.toAddress
-        || String.contains (String.toLower f) (String.toLower a.currency)
-
-
-titleTx : String
-titleTx =
-    "Transaction"
-
-
-titleHeight : String
-titleHeight =
-    "Height"
-
-
-titleTimestamp : String
-titleTimestamp =
-    "Timestamp"
-
-
-titleSendingAddress : String
-titleSendingAddress =
-    "Sending address"
-
-
-titleReceivingAddress : String
-titleReceivingAddress =
-    "Receiving address"
+import Util.View exposing (longIdentifier)
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
 config vc coinCode =
+    let
+        toMsg field data =
+            UserClickedAddressInTable
+                { currency = coinCode
+                , address = field data
+                }
+    in
     Table.customConfig
         { toId = .txHash
         , toMsg = TableNewState
@@ -95,14 +60,16 @@ config vc coinCode =
                         T.valueColumnWithoutCode
                      )
                         vc
-                        .currency
+                        (\x -> asset coinCode x.currency)
                         "Value"
                         .value
                    ]
                 ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
                    , T.timestampColumn vc titleTimestamp .timestamp
-                   , T.addressColumn vc titleSendingAddress .fromAddress UserClickedCopyToClipboard
-                   , T.addressColumn vc titleReceivingAddress .toAddress UserClickedCopyToClipboard
+                   , toMsg .fromAddress
+                        |> T.addressColumn vc titleSendingAddress .fromAddress
+                   , toMsg .toAddress
+                        |> T.addressColumn vc titleReceivingAddress .toAddress
                    , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
                    , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
                    ]
@@ -119,7 +86,7 @@ prepareCSV locModel currency row =
     [ ( n "tx_hash", Util.Csv.string row.txHash )
     , ( n "token_tx_id", row.tokenTxId |> Maybe.map Util.Csv.int |> Maybe.withDefault (Util.Csv.string "") )
     ]
-        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel currency
+        ++ Util.Csv.valuesWithBaseCurrencyFloat "value" row.value locModel row.currency
         ++ [ ( n "currency", Util.Csv.string row.currency )
            , ( n "height", Util.Csv.int row.height )
            , ( n "timestamp", Util.Csv.timestamp locModel row.timestamp )

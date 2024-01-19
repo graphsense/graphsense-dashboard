@@ -1,26 +1,21 @@
 module View exposing (view)
 
 import Browser exposing (Document)
-import Browser.Dom as Dom
 import Config.View exposing (Config)
-import Css exposing (..)
-import Css.Media exposing (width)
 import Css.Reset
 import Css.View
 import FontAwesome
 import Hovercard
-import Html
 import Html.Attributes
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (onClick)
-import Maybe.Extra
 import Model exposing (Auth(..), Model, Msg(..), Page(..))
 import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
-import RemoteData
 import Route
 import Route.Graph
+import Util.Css
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
 import View.Header as Header
@@ -114,7 +109,7 @@ sidebar plugins vc model =
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
                 , title (Locale.string vc.locale "Graph")
-                , Route.Graph.rootRoute
+                , model.graph.route
                     |> Route.graphRoute
                     |> Route.toUrl
                     |> href
@@ -143,12 +138,13 @@ sidebar plugins vc model =
 
 hovercards : Plugins -> Config -> Model key -> List (Html Msg)
 hovercards plugins vc model =
-    model.user.hovercardElement
+    model.user.hovercard
         |> Maybe.map
-            (\element ->
+            (\hc ->
                 User.hovercard plugins vc model model.user
                     |> List.map Html.Styled.toUnstyled
-                    |> hovercard vc element
+                    |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
+                    |> List.singleton
             )
         |> Maybe.withDefault []
 
@@ -166,24 +162,12 @@ overlay plugins vc model =
     in
     case model.user.auth of
         Unauthorized _ _ ->
-            model.user.hovercardElement
+            model.user.hovercard
                 |> Maybe.map
-                    (\element ->
-                        Hovercard.hovercard
-                            { maxWidth = 300
-                            , maxHeight = 500
-                            , tickLength = 0
-                            , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-                            , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-                            , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-                            , overflow = "visible"
-                            }
-                            element
-                            (Css.View.hovercard vc
-                                |> List.map (\( k, v ) -> Html.Attributes.style k v)
-                            )
-                            (User.hovercard plugins vc model model.user |> List.map Html.Styled.toUnstyled)
-                            |> Html.Styled.fromUnstyled
+                    (\hc ->
+                        User.hovercard plugins vc model model.user
+                            |> List.map Html.Styled.toUnstyled
+                            |> hovercard { vc | size = Nothing } hc (Util.Css.zIndexMainValue + 1)
                     )
                 |> Maybe.map (ov NoOp)
                 |> Maybe.withDefault []

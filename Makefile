@@ -26,7 +26,16 @@ serve:
 test:
 	npx elm-test
 
+build:
+	npm run build
+
+build-docker:
+	docker build . -t graphsense-dashboard
+
+serve-docker: build-docker
+	docker run -it --network='host' -e REST_URL=http://localhost:9000 localhost/graphsense-dashboard:latest
+
 format:
 	npx elm-format --yes src
 
-.PHONY: openapi serve test format
+.PHONY: openapi serve test format build build-docker serve-docker

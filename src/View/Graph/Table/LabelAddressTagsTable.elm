@@ -8,26 +8,12 @@ import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table as T exposing (Table)
+import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.LabelAddressTagsTable exposing (titleConfidence)
 import Msg.Graph exposing (Msg(..))
-import Route exposing (toUrl)
-import Route.Graph as Route
 import Table
-import Util.View exposing (truncate)
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
-
-
-init : Table Api.Data.AddressTag
-init =
-    Init.Graph.Table.initSorted True filter "Confidence"
-
-
-filter : String -> Api.Data.AddressTag -> Bool
-filter f a =
-    String.contains f a.address
-        || String.contains f a.label
+import Util.View exposing (copyableLongIdentifier)
+import View.Graph.Table as T exposing (customizations)
 
 
 config : View.Config -> Table.Config Api.Data.AddressTag Msg
@@ -40,7 +26,7 @@ config vc =
                 "Address"
                 .address
                 (\data ->
-                    [ span
+                    [ copyableLongIdentifier vc
                         [ UserClickedAddressInTable
                             { address = data.address
                             , currency = String.toLower data.currency
@@ -48,8 +34,7 @@ config vc =
                             |> onClick
                         , css [ Css.cursor Css.pointer ]
                         ]
-                        [ copyableLongIdentifier vc data.address UserClickedCopyToClipboard
-                        ]
+                        data.address
                     ]
                 )
             , T.stringColumn vc "Entity" (.entity >> String.fromInt)
@@ -87,9 +72,7 @@ config vc =
             , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
             , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
             , T.stringColumn vc "Actor id" (.actor >> Maybe.withDefault "")
-            , T.stringColumn vc
-                "Confidence"
-                (.confidence >> Maybe.withDefault "")
+            , T.stringColumn vc titleConfidence (.confidence >> Maybe.withDefault "")
             , T.htmlColumn vc
                 "TagPack"
                 .tagpackTitle

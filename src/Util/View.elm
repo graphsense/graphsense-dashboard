@@ -4,14 +4,21 @@ import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
+import Css.Browser
 import Css.Graph
 import Css.View as Css
+import FontAwesome
+import Hex
 import Hovercard
 import Html
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
-import Html.Styled.Attributes exposing (classList, css, src)
+import Html.Styled.Attributes exposing (classList, css, src, title, value)
+import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Json.Decode
 import Switch
+import Util.Css
+import View.Locale as Locale
 
 
 none : Html msg
@@ -89,23 +96,21 @@ setAlpha alpha =
         >> Color.fromRgba
 
 
-hovercard : View.Config -> Dom.Element -> List (Html.Html msg) -> List (Html.Styled.Html msg)
-hovercard vc element =
-    Hovercard.hovercard
-        { maxWidth = 300
-        , maxHeight = 500
-        , tickLength = 0
+hovercard : View.Config -> Hovercard.Model -> Int -> List (Html.Html msg) -> Html.Styled.Html msg
+hovercard vc element zIndex =
+    Hovercard.view
+        { tickLength = 16
+        , zIndex = zIndex
         , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
         , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
         , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-        , overflow = "visible"
+        , viewport = vc.size
         }
         element
         (Css.hovercard vc
             |> List.map (\( k, v ) -> Html.Attributes.style k v)
         )
         >> Html.Styled.fromUnstyled
-        >> List.singleton
 
 
 switch : View.Config -> List (Attribute msg) -> String -> Html msg
@@ -176,3 +181,54 @@ addDot s =
 contextMenuRule : View.Config -> List (Html msg)
 contextMenuRule vc =
     [ Html.Styled.hr [ Css.Graph.contextMenuRule vc |> css ] [] ]
+
+
+copyableLongIdentifier : View.Config -> List (Attribute msg) -> String -> Html msg
+copyableLongIdentifier vc attr identifier =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifier identifier)
+            |> List.singleton
+            |> span
+                (title identifier
+                    :: attr
+                )
+        , copyIcon vc identifier
+        ]
+
+
+copyIcon : View.Config -> String -> Html msg
+copyIcon vc value =
+    Html.Styled.a
+        [ Css.copyIcon vc |> css
+        , title (Locale.string vc.locale "copy")
+        ]
+        [ Html.Styled.node "copy-icon"
+            [ Html.Styled.Attributes.attribute "data-value" value
+            ]
+            [ FontAwesome.icon FontAwesome.copy
+                |> Html.Styled.fromUnstyled
+            ]
+        ]
+
+
+longIdentifier : View.Config -> String -> Html msg
+longIdentifier vc address =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifier address)
+        ]
+
+
+colorToHex : Color.Color -> String
+colorToHex cl =
+    let
+        { red, green, blue } =
+            Color.toRgba cl
+    in
+    List.map (round >> Hex.toString) [ red * 255, green * 255, blue * 255 ]
+        |> List.map (String.padLeft 2 '0')
+        |> (::) "#"
+        |> String.join ""

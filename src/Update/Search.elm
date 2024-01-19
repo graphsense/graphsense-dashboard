@@ -2,21 +2,14 @@ module Update.Search exposing (clear, maybeTriggerSearch, resultLineToRoute, upd
 
 import Api.Data
 import Autocomplete
-import Bounce
 import Effect exposing (n)
-import Effect.Search as Effect exposing (Effect(..))
+import Effect.Search exposing (Effect(..))
 import Init.Search exposing (init)
-import Maybe.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
-import Process
-import RecordSetter exposing (..)
-import RemoteData exposing (RemoteData(..))
-import Route exposing (toUrl)
 import Route.Graph as Graph
-import Task
 import Tuple exposing (pair)
-import Tuple3
+import Util.Data as Data
 
 
 currencyToResult : String -> Api.Data.SearchResult -> ( String, Int ) -> List ResultLine
@@ -174,7 +167,7 @@ update msg model =
             clear model
                 |> n
 
-        PluginMsg msgValue ->
+        PluginMsg _ ->
             -- handled in src/Update.elm
             n model
 
@@ -291,7 +284,7 @@ resultLineToRoute resultLine =
         Label label ->
             Graph.labelRoute label
 
-        Actor ( id, label ) ->
+        Actor ( id, _ ) ->
             Graph.actorRoute id Nothing
 
 

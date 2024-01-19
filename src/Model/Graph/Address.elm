@@ -6,7 +6,6 @@ import Api.Data
 import Color exposing (Color)
 import Config.Graph exposing (expandHandleWidth)
 import Dict exposing (Dict)
-import Json.Encode
 import List.Extra
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)

@@ -14,7 +14,6 @@ module Update.Graph.Layer exposing
     , releaseEntity
     , removeAddress
     , removeAddressLink
-    , removeAddressLinksTo
     , removeEntity
     , removeEntityLink
     , selectAddress
@@ -39,8 +38,10 @@ import Api.Data
 import Color exposing (Color)
 import Config.Graph
     exposing
-        ( entityToAddressesPaddingLeft
+        ( entityOneAddressHeight
+        , entityToAddressesPaddingLeft
         , entityToAddressesPaddingTop
+        , entityTotalWidth
         , entityWidth
         , layerMargin
         , padding
@@ -61,7 +62,7 @@ import Model.Graph.Entity as Entity exposing (Entity)
 import Model.Graph.Id as Id exposing (AddressId, EntityId)
 import Model.Graph.Layer as Layer exposing (Layer)
 import Model.Graph.Link exposing (..)
-import Plugin.Update as Plugin exposing (Plugins)
+import Plugin.Update exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Tuple3
@@ -216,12 +217,12 @@ anchorsToPositions anchors layers =
                             )
                         |> Maybe.withDefault 0
             in
-            IntDict.singleton 0 { x = 0, y = y }
+            IntDict.singleton 0 { x = -(entityTotalWidth / 2), y = y - entityOneAddressHeight / 2 }
 
         Just anchs ->
             anchs
                 |> IntDict.foldl
-                    (\i ( entity, isOutgoing ) positions ->
+                    (\_ ( entity, isOutgoing ) positions ->
                         let
                             id =
                                 Id.layer entity.id
@@ -319,12 +320,6 @@ addEntityHere plugins uc position entity { layer, colors, new, repositioned } =
 
                 Nothing ->
                     let
-                        leftBound =
-                            Layer.getRightBound layer
-
-                        rightBound =
-                            Layer.getLeftBound layer
-
                         newEnt =
                             Entity.init
                                 plugins
@@ -352,7 +347,7 @@ moveEntity : EntityId -> Coords -> IntDict Layer -> IntDict Layer
 moveEntity id vector layers =
     IntDict.get (Id.layer id) layers
         |> Maybe.map
-            (\layer ->
+            (\_ ->
                 let
                     leftBound =
                         IntDict.get (Id.layer id - 1) layers
@@ -1086,15 +1081,6 @@ deserialize :
         }
 deserialize plugins uc { deserialized, addresses, entities } =
     let
-        entitiesDict : Dict ( String, Int ) Api.Data.Entity
-        entitiesDict =
-            entities
-                |> List.foldl
-                    (\entity ->
-                        Dict.insert ( entity.currency, entity.entity ) entity
-                    )
-                    Dict.empty
-
         addressesDict : Dict ( String, String ) Api.Data.Address
         addressesDict =
             addresses
@@ -1299,7 +1285,7 @@ insertEntityShadowLinksAncestors layerId entity layers =
                 in
                 Dict.get ancestorId layer.entities
                     |> Maybe.map
-                        (\ancestor ->
+                        (\_ ->
                             updateEntity ancestorId
                                 (Entity.insertEntityShadowLink entity)
                                 layers
@@ -1326,7 +1312,7 @@ insertAddressShadowLinksAncestors layerId address layers =
                 in
                 Layer.getAddressOfLayer ancestorId layer
                     |> Maybe.map
-                        (\ancestor ->
+                        (\_ ->
                             updateAddress ancestorId
                                 (Address.insertAddressShadowLink address)
                                 layers

@@ -18,14 +18,9 @@ module Api.Request.Rates exposing (..)
 
 import Api
 import Api.Data
-import Dict
-import Http
-import Json.Decode
-import Json.Encode
 
 
-
-getExchangeRates : (String) -> (Int) -> Api.Request Api.Data.Rates
+getExchangeRates : String -> Int -> Api.Request Api.Data.Rates
 getExchangeRates currency_path height_path =
     Api.request
         "GET"
@@ -35,4 +30,3 @@ getExchangeRates currency_path height_path =
         []
         Nothing
         Api.Data.ratesDecoder
-

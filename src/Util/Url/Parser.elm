@@ -6,7 +6,6 @@ module Util.Url.Parser exposing
     , map
     , oneOf
     , parse
-    , query
     , questionMark
     , remainder
     , s

@@ -2,6 +2,7 @@ module Init exposing (init)
 
 import Config exposing (config)
 import Config.UserSettings
+import Dict
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
@@ -9,7 +10,6 @@ import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Json.Decode
 import Model exposing (..)
-import Model.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RemoteData exposing (RemoteData(..))
 import Update exposing (updateByPluginOutMsg)
@@ -45,14 +45,14 @@ init plugins flags url key =
       , user =
             { apiKey = ""
             , auth = Unknown
-            , hovercardElement = Nothing
+            , hovercard = Nothing
             }
       , stats = NotAsked
       , width = flags.width
       , height = flags.height
       , error = ""
       , statusbar = Statusbar.init
-      , supportedTokens = Nothing
+      , supportedTokens = Dict.empty
       , dialog = Nothing
       , plugins = pluginStates
       , dirty = False
@@ -62,7 +62,9 @@ init plugins flags url key =
                 |> ApiEffect
            , Effect.Api.GetConceptsEffect "abuse" BrowserGotAbuseTaxonomy
                 |> ApiEffect
-           , Effect.Api.ListSupportedTokensEffect BrowserGotSupportedTokens
+           , Effect.Api.ListSupportedTokensEffect "eth" (BrowserGotSupportedTokens "eth")
+                |> ApiEffect
+           , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
                 |> ApiEffect
            , PluginEffect cmd
            ]

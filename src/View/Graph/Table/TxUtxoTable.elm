@@ -3,21 +3,19 @@ module View.Graph.Table.TxUtxoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css
-import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Init.Graph.Table
-import Model.Graph.Table as T exposing (Table)
+import Model.Currency exposing (assetFromBase)
+import Model.Graph.Table exposing (Table)
+import Model.Graph.Table.TxUtxoTable exposing (..)
 import Model.Locale
 import Msg.Graph exposing (Msg(..))
-import Route exposing (toUrl)
-import Route.Graph as Route
 import Table
 import Util.Csv
-import View.Graph.Table as T exposing (customizations, valueColumn)
-import View.Locale as Locale
-import View.Util exposing (copyableLongIdentifier)
+import Util.View exposing (copyableLongIdentifier)
+import View.Graph.Table as T exposing (customizations)
 
 
 columnTitleFromDirection : Bool -> String
@@ -31,27 +29,6 @@ columnTitleFromDirection isOutgoing =
         ++ " address"
 
 
-init : Bool -> Table Api.Data.TxValue
-init =
-    columnTitleFromDirection
-        >> Init.Graph.Table.init filter
-
-
-filter : String -> Api.Data.TxValue -> Bool
-filter f a =
-    List.any (String.contains f) a.address
-
-
-titleValue : String
-titleValue =
-    "Value"
-
-
-joinAddresses : Api.Data.TxValue -> String
-joinAddresses =
-    .address >> String.join ","
-
-
 config : View.Config -> Bool -> String -> Table.Config Api.Data.TxValue Msg
 config vc isOutgoing coinCode =
     Table.customConfig
@@ -62,24 +39,25 @@ config vc isOutgoing coinCode =
                 (columnTitleFromDirection isOutgoing)
                 joinAddresses
                 (\data ->
-                    [ case data.address of
-                        one :: [] ->
-                            span
-                                [ UserClickedAddressInTable
-                                    { address = one
-                                    , currency = coinCode
-                                    }
-                                    |> onClick
-                                , css [ Css.cursor Css.pointer ]
-                                ]
-                                [ copyableLongIdentifier vc one UserClickedCopyToClipboard
-                                ]
-
-                        _ ->
-                            copyableLongIdentifier vc (joinAddresses data) UserClickedCopyToClipboard
+                    [ joinAddresses data
+                        |> copyableLongIdentifier vc
+                            (data.address
+                                |> List.head
+                                |> Maybe.map
+                                    (\one ->
+                                        [ UserClickedAddressInTable
+                                            { address = one
+                                            , currency = coinCode
+                                            }
+                                            |> onClick
+                                        , css [ Css.cursor Css.pointer ]
+                                        ]
+                                    )
+                                |> Maybe.withDefault []
+                            )
                     ]
                 )
-            , T.valueColumn vc (\_ -> coinCode) titleValue .value
+            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleValue .value
             ]
         , customizations = customizations vc
         }

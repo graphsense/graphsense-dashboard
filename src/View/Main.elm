@@ -26,7 +26,7 @@ view plugins vc model =
                 |> main_ vc
 
         Stats ->
-            Stats.stats vc model.stats
+            Stats.stats vc model.stats model.supportedTokens
 
         Graph ->
             Graph.view plugins model.plugins vc model.graph
@@ -55,6 +55,7 @@ main_ : View.Config -> { navbar : List (Html Msg), contents : List (Html Msg) } 
 main_ vc { navbar, contents } =
     div
         [ Css.main_ vc |> css
+        , id "contents"
         ]
         ((if List.isEmpty navbar then
             []
@@ -68,7 +69,6 @@ main_ vc { navbar, contents } =
          )
             ++ [ section
                     [ Css.contents vc |> css
-                    , id "contents"
                     ]
                     contents
                ]

@@ -27,9 +27,6 @@ port pluginsIn : (( String, Value ) -> msg) -> Sub msg
 port newTab : String -> Cmd msg
 
 
-port copyToClipboard : String -> Cmd msg
-
-
 port setDirty : Bool -> Cmd msg
 
 

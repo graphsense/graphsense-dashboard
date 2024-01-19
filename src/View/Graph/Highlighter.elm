@@ -4,6 +4,7 @@ import Color exposing (Color)
 import Config.View as View
 import Css
 import Css.Graph as Css
+import Css.View
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -12,7 +13,8 @@ import Json.Decode
 import Model.Graph.Highlighter exposing (..)
 import Msg.Graph exposing (Msg(..))
 import Tuple exposing (..)
-import Util.View
+import Util.View exposing (none)
+import View.Locale as Locale
 
 
 tool : View.Config -> Model -> List (Html Msg)
@@ -52,6 +54,15 @@ tool vc model =
             (model.highlights
                 |> List.indexedMap (viewHighlight vc model.selected)
             )
+        , if List.isEmpty model.highlights then
+            div
+                [ Css.View.hint vc |> css
+                ]
+                [ Locale.string vc.locale "Pick a color to highlight things" ++ "." |> text
+                ]
+
+          else
+            none
         ]
         |> List.singleton
 
@@ -73,6 +84,7 @@ viewHighlight vc selected i ( title, color ) =
             [ Css.highlightTitle vc |> css
             , type_ "text"
             , value title
+            , Locale.string vc.locale "Add label" |> placeholder
             , onInput (UserInputsHighlightTitle i)
             ]
             []

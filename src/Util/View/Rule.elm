@@ -1,9 +1,8 @@
 module Util.View.Rule exposing (rule)
 
 import Color
-import Config.View as View
 import Css exposing (..)
-import Html.Styled as Html exposing (Attribute, Html, div)
+import Html.Styled exposing (Attribute, Html, div)
 import Html.Styled.Attributes exposing (css)
 import Util.View exposing (toCssColor)
 

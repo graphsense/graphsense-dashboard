@@ -1,8 +1,8 @@
-module View.Button exposing (actorLink, copyLink, tool)
+module View.Button exposing (actorLink, tool)
 
 import Config.View exposing (Config)
 import Css as CssStyled
-import Css.Browser as BCss
+import Css.Browser
 import Css.View as Css
 import FontAwesome
 import Html.Styled exposing (..)
@@ -28,19 +28,6 @@ tool vc { icon } attr =
             ((Css.tool vc |> css)
                 :: attr
             )
-
-
-copyLink : Config -> msg -> Html msg
-copyLink vc cpyMsg =
-    a
-        [ BCss.propertyCopyLink vc True |> css
-        , href "#"
-        , onClick cpyMsg
-        , title (Locale.string vc.locale "copy")
-        ]
-        [ FontAwesome.icon FontAwesome.copy
-            |> Html.Styled.fromUnstyled
-        ]
 
 
 actorLink : Config -> String -> String -> Html msg

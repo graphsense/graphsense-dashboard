@@ -5,9 +5,13 @@ import {{package}}.Model
 import {{package}}.Msg
 {{/plugins}}
 import Config.View as View
+import Config.Graph as Graph
 import Html.Styled as Html exposing (Html)
 import Model
+import Model.Address as A
+import Model.Entity as E
 import Model.Graph.Address exposing (Address)
+import Model.Node as Node
 import Util.View
 import Msg.Graph as Graph
 import Msg.Search as Search
@@ -94,14 +98,14 @@ addressContextMenu plugins states vc address =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> List (Html Graph.Msg)
-addressProperties plugins states addressStates vc =
+addressProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.AddressState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
+addressProperties plugins states addressStates vc gc =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
                 Maybe.map3
                     (\fun ->
-                        fun vc
+                        fun vc gc
                     )
                     plugin.addressProperties
                     states.{{name}}
@@ -115,14 +119,14 @@ addressProperties plugins states addressStates vc =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-entityProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.EntityState -> View.Config -> List (Html Graph.Msg)
-entityProperties plugins states entityStates vc =
+entityProperties : Plugins -> Plugin.Model.ModelState -> Plugin.Model.EntityState -> View.Config -> Graph.Config -> List (Html Graph.Msg)
+entityProperties plugins states entityStates vc gc =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
                 Maybe.map3
                     (\fun ->
-                        fun vc
+                        fun vc gc
                     )
                     plugin.entityProperties
                     states.{{name}}
@@ -136,14 +140,14 @@ entityProperties plugins states entityStates vc =
         |> List.map (Html.map Graph.PluginMsg)
 
 
-browser : Plugins -> View.Config -> Plugin.Model.ModelState -> List (Html Graph.Msg)
-browser plugins vc states =
+browser : Plugins -> View.Config -> Graph.Config -> (Node.Node A.Address E.Entity -> Bool) -> Plugin.Model.ModelState -> List (Html Graph.Msg)
+browser plugins vc gc hasNode states =
     [ {{#plugins}}plugins.{{name}}
         |> Maybe.andThen
             (\plugin ->
                 Maybe.map2
                     (\fun state ->
-                        fun vc state
+                        fun vc gc hasNode state
                     )
                     plugin.browser
                     states.{{name}}

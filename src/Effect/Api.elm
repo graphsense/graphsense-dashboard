@@ -15,7 +15,7 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
-import Model.Graph.Id as Id exposing (AddressId)
+import Model.Graph.Id as Id exposing (AddressId, currency)
 import Model.Graph.Layer as Layer exposing (Layer)
 
 
@@ -28,7 +28,7 @@ type Effect msg
         (Api.Data.SearchResult -> msg)
     | GetStatisticsEffect (Api.Data.Stats -> msg)
     | GetConceptsEffect String (List Api.Data.Concept -> msg)
-    | ListSupportedTokensEffect (Api.Data.TokenConfigs -> msg)
+    | ListSupportedTokensEffect String (Api.Data.TokenConfigs -> msg)
     | GetAddressEffect
         { currency : String
         , address : String
@@ -286,10 +286,10 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetConceptsEffect eff
 
-        ListSupportedTokensEffect m ->
+        ListSupportedTokensEffect eff m ->
             m
                 >> mapMsg
-                |> ListSupportedTokensEffect
+                |> ListSupportedTokensEffect eff
 
         GetAddressEffect eff m ->
             m
@@ -443,11 +443,11 @@ perform apiKey wrapMsg effect =
             Api.Request.Tags.listConcepts taxonomy
                 |> send apiKey wrapMsg effect toMsg
 
-        ListSupportedTokensEffect toMsg ->
-            Api.Request.Tokens.listSupportedTokens "eth"
+        ListSupportedTokensEffect currency toMsg ->
+            Api.Request.Tokens.listSupportedTokens currency
                 |> send apiKey wrapMsg effect toMsg
 
-        GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, includeLabels, nextpage } toMsg ->
+        GetEntityNeighborsEffect { currency, entity, isOutgoing, pagesize, onlyIds, nextpage } toMsg ->
             let
                 direction =
                     isOutgoingToDirection isOutgoing

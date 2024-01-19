@@ -63,7 +63,7 @@ messageFromEffect model effect =
         Model.LocaleEffect (Locale.GetTimezoneEffect _) ->
             Nothing
 
-        Model.SearchEffect (Search.SearchEffect { query }) ->
+        Model.SearchEffect (Search.SearchEffect _) ->
             Nothing
 
         Model.SearchEffect Search.CancelEffect ->
@@ -203,8 +203,8 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
-        Api.ListSupportedTokensEffect _ ->
-            ( "loading supported token currencies"
+        Api.ListSupportedTokensEffect currency _ ->
+            ( "loading supported token currencies for " ++ currency
             , []
             )
                 |> Just

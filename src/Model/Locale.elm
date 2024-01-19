@@ -11,7 +11,7 @@ import Time
 
 locales : List ( String, String )
 locales =
-    [ ( "de", "German" ), ( "en", "English" ) ]
+    [ ( "de", "German" ), ( "en", "English" ), ( "it", "Italiano" ) ]
 
 
 type State
@@ -47,5 +47,13 @@ type alias Model =
     , currency : Currency
     , relativeTimeOptions : DateFormat.Relative.RelativeTimeOptions
     , unitToString : Int -> Locale.Durations.Unit -> String
-    , supportedTokens : Maybe Api.Data.TokenConfigs
+    , supportedTokens : Dict String Api.Data.TokenConfigs
     }
+
+
+getFiatValue : String -> Api.Data.Values -> Maybe Float
+getFiatValue code values =
+    values.fiatValues
+        |> List.filter (.code >> String.toLower >> (==) code)
+        |> List.head
+        |> Maybe.map .value

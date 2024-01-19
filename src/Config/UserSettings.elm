@@ -1,6 +1,6 @@
 module Config.UserSettings exposing (..)
 
-import Config.Graph exposing (AddressLabelType(..), TxLabelType(..))
+import Config.Graph exposing (AddressLabelType(..), TxLabelType(..), addressLabelToString, stringToAddressLabel)
 import Json.Decode as Decode exposing (Decoder, bool, nullable, string)
 import Json.Decode.Extra
 import Json.Decode.Pipeline exposing (optional, required)
@@ -19,6 +19,7 @@ type alias UserSettings =
     , showAddressShadowLinks : Maybe Bool
     , showClusterShadowLinks : Maybe Bool
     , showDatesInUserLocale : Maybe Bool
+    , showZeroValueTxs : Maybe Bool
     }
 
 
@@ -65,35 +66,6 @@ stringToCurrency s =
             Fiat x
 
 
-addressLabelToString : AddressLabelType -> String
-addressLabelToString c =
-    case c of
-        ID ->
-            "id"
-
-        Balance ->
-            "balance"
-
-        Tag ->
-            "tag"
-
-
-stringToAddressLabel : String -> AddressLabelType
-stringToAddressLabel s =
-    case s of
-        "id" ->
-            ID
-
-        "balance" ->
-            Balance
-
-        "tag" ->
-            Tag
-
-        _ ->
-            ID
-
-
 edgeLabelToString : TxLabelType -> String
 edgeLabelToString c =
     case c of
@@ -134,11 +106,12 @@ decoder =
         |> optional "lightMode" (nullable bool |> fromString) Nothing
         |> optional "valueDetail" (Decode.string |> Decode.map stringToValueDetail |> nullable) Nothing
         |> optional "valueDenomination" (Decode.string |> Decode.map stringToCurrency |> nullable) Nothing
-        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel |> nullable) Nothing
+        |> optional "addressLabel" (Decode.string |> Decode.map stringToAddressLabel) Nothing
         |> optional "edgeLabel" (Decode.string |> Decode.map stringToEdgeLabel |> nullable) Nothing
         |> optional "showAddressShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showClusterShadowLinks" (nullable bool |> fromString) Nothing
         |> optional "showDatesInUserLocale" (nullable bool |> fromString) Nothing
+        |> optional "showZeroValueTxs" (nullable bool |> fromString) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value
@@ -153,6 +126,7 @@ encoder settings =
         , ( "showAddressShadowLinks", settings.showAddressShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showClusterShadowLinks", settings.showClusterShadowLinks |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showDatesInUserLocale", settings.showDatesInUserLocale |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "showZeroValueTxs", settings.showZeroValueTxs |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -167,4 +141,5 @@ default =
     , showAddressShadowLinks = Nothing
     , showClusterShadowLinks = Nothing
     , showDatesInUserLocale = Nothing
+    , showZeroValueTxs = Nothing
     }

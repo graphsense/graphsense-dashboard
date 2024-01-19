@@ -9,7 +9,11 @@ import Regex
 blockExplorerLinks : Dict.Dict String (List ( String, String ))
 blockExplorerLinks =
     Dict.fromList
-        [ ( "eth"
+        [ ( "trx"
+          , [ ( "https://tronscan.org/#/address/", "Open Tronscan" )
+            ]
+          )
+        , ( "eth"
           , [ ( "https://etherscan.io/address/", "Open Etherscan" )
             , ( "https://www.oklink.com/eth/address/", "Open Oklink" )
             , ( "https://www.blockchain.com/eth/address/", "Open Blockchain.com" )
@@ -50,6 +54,10 @@ blockExplorerTransactionLinks =
             , ( "https://www.oklink.com/eth/tx/", "Open Oklink" )
             , ( "https://www.blockchain.com/eth/tx/", "Open Blockchain.com" )
             , ( "https://blockchair.com/ethereum/transaction/", "Open Blockchair" )
+            ]
+          )
+        , ( "trx"
+          , [ ( "https://tronscan.org/#/transaction/", "Tronscan" )
             ]
           )
         , ( "btc"

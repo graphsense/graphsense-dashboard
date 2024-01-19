@@ -5,14 +5,10 @@ import Color exposing (Color)
 import Config.Graph
     exposing
         ( addressHeight
-        , addressesCountHeight
         , entityMinHeight
         , entityPaddingTop
         , expandHandleWidth
-        , labelHeight
-        , padding
         )
-import Config.Update exposing (Config)
 import Dict exposing (Dict)
 import List.Extra
 import Maybe.Extra
@@ -20,7 +16,7 @@ import Model.Graph.Address exposing (..)
 import Model.Graph.Id exposing (..)
 import Model.Graph.Link exposing (Link)
 import Model.Graph.Tag as Tag
-import Plugin.Model as Plugin exposing (EntityState)
+import Plugin.Model exposing (EntityState)
 
 
 type alias Entity =

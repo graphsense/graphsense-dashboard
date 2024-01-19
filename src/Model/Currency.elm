@@ -9,14 +9,20 @@ type Currency
     | Fiat String
 
 
-valuesToFloat : Currency -> Api.Data.Values -> Maybe Float
-valuesToFloat currency values =
-    case currency of
-        Coin ->
-            values.value
-                |> toFloat
-                |> Just
+type alias AssetIdentifier =
+    { network : String, asset : String }
 
-        Fiat curr ->
-            List.Extra.find (.code >> (==) curr) values.fiatValues
-                |> Maybe.map .value
+
+assetFromBase : String -> AssetIdentifier
+assetFromBase network =
+    { network = network, asset = network }
+
+
+asset : String -> String -> AssetIdentifier
+asset network assetName =
+    { network = network, asset = assetName }
+
+
+tokensToValue : String -> List ( String, Api.Data.Values ) -> List ( AssetIdentifier, Api.Data.Values )
+tokensToValue curr tokens =
+    tokens |> List.map (\( x, v ) -> ( asset curr x, v ))
