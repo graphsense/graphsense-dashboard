@@ -6,11 +6,10 @@ LABEL org.opencontainers.image.description="GraphSense's Web GUI for interactive
 LABEL org.opencontainers.image.source="https://github.com/graphsense/graphsense-dashboard"
 
 ENV DOCKER_USER=dockeruser
-# override to get 
+ENV DOCKER_UID=1000
 ENV REST_URL=http://localhost:9000
-ARG DOCKER_UID=1000
 
-RUN addgroup -S $DOCKER_USER && adduser -S $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID
+#RUN addgroup -S $DOCKER_USER && adduser -S $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID
 
 ENV WORKDIR=/app
 
@@ -20,8 +19,6 @@ RUN mkdir $WORKDIR && \
 
 
 WORKDIR $WORKDIR
-COPY ./docker/docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh 
 
 COPY ./elm.json.base ./elm-tooling.json ./index.html ./package*.json ./vite.config.js $WORKDIR/
 
@@ -38,16 +35,13 @@ COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
 COPY ./generate.js $WORKDIR/generate.js
 
-RUN chown -R $DOCKER_USER $WORKDIR && \
-    mkdir -p /usr/share/nginx/html /run/nginx && \
-    chown -R $DOCKER_USER /usr/share/nginx/html && \
-    chown -R $DOCKER_USER /var/lib/nginx && \
-    chown -R $DOCKER_USER /var/log/nginx && \
+RUN mkdir -p /usr/share/nginx/html /run/nginx && \
     rm -f /etc/nginx/http.d/default.conf 
 
-USER $DOCKER_USER
 RUN npm install 
 
+COPY ./docker/docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "pid /tmp/nginx.pid;daemon off;"]
 EXPOSE 8000

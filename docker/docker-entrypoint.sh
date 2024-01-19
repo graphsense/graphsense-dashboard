@@ -1,14 +1,16 @@
 #!/bin/ash
 set -e
 
-for plugin in `find ./plugins -mindepth 1 -maxdepth 1 -type d`; do 
-    cd $WORKDIR/$plugin 
-    npm install
-    cd -
-done
+echo $DOCKER_UID
+echo $DOCKER_USER
+addgroup $DOCKER_USER 
+adduser $DOCKER_USER -G $DOCKER_USER -u $DOCKER_UID -D
 
-npm run build && cp -r $WORKDIR/dist/* /usr/share/nginx/html/ 
+chown -R $DOCKER_USER $WORKDIR
+chown -R $DOCKER_USER /usr/share/nginx/html
+chown -R $DOCKER_USER /var/lib/nginx 
+chown -R $DOCKER_USER /var/log/nginx
 
-sed -i "s|http://localhost:9000|$REST_URL|g" /usr/share/nginx/html/assets/index.*.js 
+su $DOCKER_USER
 
 exec "$@"
