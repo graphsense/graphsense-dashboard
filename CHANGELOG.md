@@ -11,15 +11,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow for opening a node in new browser tab ([426](https://github.com/graphsense/graphsense-dashboard/issues/426))
 - new setting to filter zero value transactions (often smart contract calls in ethereum)
 - Italian translation
+- add option to open address in new tab ([426](https://github.com/graphsense/graphsense-dashboard/issues/426))
 ### Changed
 - improved viewport centering when adding new nodes to the graph ([421](https://github.com/graphsense/graphsense-dashboard/issues/421))
 - keep browser table open when switching nodes ([422](https://github.com/graphsense/graphsense-dashboard/issues/422))
 - improved display for nodes/edges with multi-currency transaction (token transaction) ([377](https://github.com/graphsense/graphsense-dashboard/issues/377))
+- improved placing of popup dialogs ([407](https://github.com/graphsense/graphsense-dashboard/issues/407))
+- open user profile on click only (instead of hovering)
+- upgrade docker image to alpine:3.19
+- add new color to highlighter on picking instead of updating existing coloring ([419](https://github.com/graphsense/graphsense-dashboard/issues/419))
 ### Fixed
 - skip existing entities in path search ([429](https://github.com/graphsense/graphsense-dashboard/issues/429))
 - Language settings get lost after login ([427](https://github.com/graphsense/graphsense-dashboard/issues/427))
 - search parameter editable via keyboard ([428](https://github.com/graphsense/graphsense-dashboard/issues/428))
 - fixed multiline node labels ([416](https://github.com/graphsense/graphsense-dashboard/issues/416))
+- fix positioning of contextmenu, ([424](https://github.com/graphsense/graphsense-dashboard/issues/424))
+- add total received address label type in graph configuration ([438](https://github.com/graphsense/graphsense-dashboard/issues/438))
+- add history entries on url change ([431](https://github.com/graphsense/graphsense-dashboard/issues/431))
+- preserve graph url when switching to other tab via sidebar ([403](https://github.com/graphsense/graphsense-dashboard/issues/403))
+- also keep highlight color trashing in history ([434](https://github.com/graphsense/graphsense-dashboard/issues/434))
+- allow changing search params with keyboard ([428](https://github.com/graphsense/graphsense-dashboard/issues/428))
+- preserve propertybox table when switching things ([422](https://github.com/graphsense/graphsense-dashboard/issues/422))
 
 ## [23.09] - 2023-09-20
 ### Added
@@ -29,6 +41,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Api key field is now type password to enhance pw-manager integration [#409](https://github.com/graphsense/graphsense-dashboard/issues/409)
 - Add links to blockexplorer on tx views [#381](https://github.com/graphsense/graphsense-dashboard/issues/381)
 - Added context menu options to property boxes [#353](https://github.com/graphsense/graphsense-dashboard/issues/353)
+
 ### Changes
 - improved handling plugin handling and code generation
 - clear search after item was selected [#410](https://github.com/graphsense/graphsense-dashboard/issues/410)
