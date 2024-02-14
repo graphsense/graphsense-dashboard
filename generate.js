@@ -7,7 +7,7 @@ const { execSync } = require("child_process");
 
 const isDir = fileName => {
   try {
-    return fs.lstatSync(fileName).isDirectory();
+    return fs.lstatSync(fileName).isDirectory() || fs.lstatSync(fileName).isSymbolicLink();
   } catch(e) {
     if (e.code === 'ENOENT') {
       return false
