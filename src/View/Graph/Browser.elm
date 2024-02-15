@@ -848,13 +848,17 @@ rowsAddress vc now table address =
 
                 Loading _ _ ->
                     []
-        betaIndicator =  [
-            OptionalRow (Footnote "BETA")
-            (case address of
-                        Loaded a ->
-                            a.address.currency == "trx"
-                        _ ->
-                            False)]
+
+        betaIndicator =
+            [ OptionalRow (Footnote "BETA")
+                (case address of
+                    Loaded a ->
+                        a.address.currency == "trx"
+
+                    _ ->
+                        False
+                )
+            ]
 
         len =
             multiValueMaxLen vc .address address
@@ -1237,13 +1241,16 @@ rowsEntity vc gc now table ent =
                         }
                     )
 
-        betaIndicator =  [
-            OptionalRow (Footnote "BETA")
-            (case ent of
-                        Loaded e ->
-                            e.entity.currency == "trx"
-                        _ ->
-                            False)]
+        betaIndicator =
+            [ OptionalRow (Footnote "BETA")
+                (case ent of
+                    Loaded e ->
+                        e.entity.currency == "trx"
+
+                    _ ->
+                        False
+                )
+            ]
 
         len =
             multiValueMaxLen vc .entity ent
@@ -1416,7 +1423,8 @@ rowsEntity vc gc now table ent =
                 )
             |> Loadable.withDefault Nothing
         )
-    ] ++ betaIndicator
+    ]
+        ++ betaIndicator
 
 
 rowsActor : View.Config -> Graph.Config -> Time.Posix -> Maybe ActorTable -> Loadable String Actor -> List (Row (Value Msg) Coords Msg)
