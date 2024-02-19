@@ -1,6 +1,7 @@
 module Init exposing (init)
 
 import Config exposing (config)
+import Config.Update as Update
 import Config.UserSettings
 import Dict
 import Effect.Api
@@ -16,8 +17,8 @@ import Update exposing (updateByPluginOutMsg)
 import Url exposing (Url)
 
 
-init : Plugins -> Flags -> Url -> key -> ( Model key, List Effect )
-init plugins flags url key =
+init : Plugins -> Update.Config -> Flags -> Url -> key -> ( Model key, List Effect )
+init plugins uc flags url key =
     let
         settings =
             flags.localStorage
@@ -70,7 +71,7 @@ init plugins flags url key =
            ]
     )
         |> getStatistics
-        |> updateByPluginOutMsg plugins outMsgs
+        |> updateByPluginOutMsg plugins uc outMsgs
 
 
 getStatistics : ( Model key, List Effect ) -> ( Model key, List Effect )

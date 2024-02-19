@@ -4,6 +4,7 @@ module Plugin.Update exposing (..)
 import {{package}}.Model
 import {{package}}.Msg
 {{/plugins}}
+import Config.Update as Update
 import Maybe.Extra
 import Model.Graph.Address as Address
 import Model.Graph.Entity as Entity
@@ -24,8 +25,8 @@ type alias Plugins =
 n m =
   (m, [], Cmd.none)
 
-update : Plugins -> Plugin.Msg.Msg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-update plugins msg state =
+update : Plugins -> Update.Config -> Plugin.Msg.Msg -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+update plugins uc msg state =
     case msg of
         Plugin.Msg.NoOp ->
             ( state, [], Cmd.none ){{#plugins}} 
@@ -36,7 +37,7 @@ update plugins msg state =
                     (\plugin ->
                         Maybe.map2
                             (\upd st ->
-                                upd m st
+                                upd uc m st
                                     |> T3.mapFirst (\s -> { state | {{name}} = Just s })
                                     |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
                                     |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)
@@ -171,8 +172,8 @@ entitiesAdded plugins state ids =
 {{/plugins.length}}
 
 
-updateByUrl : Plugin.Model.PluginType -> Plugins -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
-updateByUrl ns plugins url state =
+updateByUrl : Plugin.Model.PluginType -> Plugins -> Update.Config -> String -> Plugin.Model.ModelState -> ( Plugin.Model.ModelState, List Plugin.Msg.OutMsg, Cmd Plugin.Msg.Msg )
+updateByUrl ns plugins uc url state =
     {{^plugins}}n state{{/plugins}}{{#plugins.length}}case ns of{{#plugins}} 
         Plugin.Model.{{package}} ->
             plugins.{{name}}
@@ -180,7 +181,7 @@ updateByUrl ns plugins url state =
                     (\plugin ->
                         Maybe.map2
                             (\upd st ->
-                                upd url st
+                                upd uc url st
                                     |> T3.mapFirst (\s -> { state | {{name}} = Just s })
                                     |> T3.mapSecond (List.map (PluginInterface.Msg.mapOutMsg "{{name}}" Plugin.Msg.{{package}}Msg Plugin.Msg.{{package}}AddressMsg Plugin.Msg.{{package}}EntityMsg))
                                     |> T3.mapThird (Cmd.map Plugin.Msg.{{package}}Msg)

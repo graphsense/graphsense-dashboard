@@ -16,6 +16,7 @@ import Update.Statusbar as Statusbar
 import View exposing (view)
 
 
+plugins : Plugin.Plugins
 plugins =
     Config.plugins
 
@@ -52,7 +53,7 @@ main =
             \flags url key ->
                 let
                     ( model, effects ) =
-                        init updPlug flags url key
+                        init updPlug uc flags url key
                 in
                 updateByUrl updPlug uc url model
                     |> mapSecond ((++) effects)

@@ -318,7 +318,7 @@ update plugins uc msg model =
                 , PluginEffect cmd
                     :: effs
                 )
-                    |> updateByPluginOutMsg plugins outMsg
+                    |> updateByPluginOutMsg plugins uc outMsg
 
         BrowserGotContentsElement result ->
             result
@@ -433,7 +433,7 @@ update plugins uc msg model =
               , LogoutEffect
               ]
             )
-                |> updateByPluginOutMsg plugins outMsg
+                |> updateByPluginOutMsg plugins uc outMsg
 
         BrowserGotLoggedOut _ ->
             ( model
@@ -441,7 +441,7 @@ update plugins uc msg model =
             )
 
         BrowserGotElementForPlugin pmsg element ->
-            updatePlugins plugins (pmsg element) model
+            updatePlugins plugins uc (pmsg element) model
 
         LocaleMsg m ->
             let
@@ -471,7 +471,7 @@ update plugins uc msg model =
         SearchMsg m ->
             case m of
                 Search.PluginMsg ms ->
-                    updatePlugins plugins ms model
+                    updatePlugins plugins uc ms model
 
                 Search.UserClicksResultLine ->
                     let
@@ -572,7 +572,7 @@ update plugins uc msg model =
         GraphMsg m ->
             case m of
                 Graph.PluginMsg ms ->
-                    updatePlugins plugins ms model
+                    updatePlugins plugins uc ms model
 
                 Graph.InternalGraphAddedAddresses ids ->
                     let
@@ -591,7 +591,7 @@ update plugins uc msg model =
                         :: SetDirtyEffect
                         :: List.map GraphEffect graphEffects
                     )
-                        |> updateByPluginOutMsg plugins outMsg
+                        |> updateByPluginOutMsg plugins uc outMsg
 
                 Graph.InternalGraphAddedEntities ids ->
                     let
@@ -610,7 +610,7 @@ update plugins uc msg model =
                         :: SetDirtyEffect
                         :: List.map GraphEffect graphEffects
                     )
-                        |> updateByPluginOutMsg plugins outMsg
+                        |> updateByPluginOutMsg plugins uc outMsg
 
                 Graph.UserChangesCurrency currency ->
                     let
@@ -865,11 +865,11 @@ update plugins uc msg model =
             update plugins uc ms { model | dialog = Nothing }
 
         PluginMsg msgValue ->
-            updatePlugins plugins msgValue model
+            updatePlugins plugins uc msgValue model
 
 
-updateByPluginOutMsg : Plugins -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
-updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
+updateByPluginOutMsg : Plugins -> Config -> List Plugin.OutMsg -> ( Model key, List Effect ) -> ( Model key, List Effect )
+updateByPluginOutMsg plugins uc outMsgs ( mo, effects ) =
     let
         updateGraphByPluginOutMsg model eff =
             let
@@ -932,14 +932,14 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                             |> (\entities ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update plugins (toMsg entities) model.plugins
+                                            Plugin.update plugins uc (toMsg entities) model.plugins
                                     in
                                     ( { model
                                         | plugins = new
                                       }
                                     , PluginEffect cmd :: eff
                                     )
-                                        |> updateByPluginOutMsg plugins outMsg
+                                        |> updateByPluginOutMsg plugins uc outMsg
                                )
 
                     PluginInterface.GetEntities entities toMsg ->
@@ -951,14 +951,14 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                             |> (\ents ->
                                     let
                                         ( new, outMsg, cmd ) =
-                                            Plugin.update plugins (toMsg ents) model.plugins
+                                            Plugin.update plugins uc (toMsg ents) model.plugins
                                     in
                                     ( { model
                                         | plugins = new
                                       }
                                     , PluginEffect cmd :: eff
                                     )
-                                        |> updateByPluginOutMsg plugins outMsg
+                                        |> updateByPluginOutMsg plugins uc outMsg
                                )
 
                     PluginInterface.GetSerialized toMsg ->
@@ -967,14 +967,14 @@ updateByPluginOutMsg plugins outMsgs ( mo, effects ) =
                                 Graph.serialize model.graph
 
                             ( new, outMsg, cmd ) =
-                                Plugin.update plugins (toMsg serialized) model.plugins
+                                Plugin.update plugins uc (toMsg serialized) model.plugins
                         in
                         ( { model
                             | plugins = new
                           }
                         , PluginEffect cmd :: eff
                         )
-                            |> updateByPluginOutMsg plugins outMsg
+                            |> updateByPluginOutMsg plugins uc outMsg
 
                     PluginInterface.Deserialize filename data ->
                         deserialize filename data model
@@ -1055,7 +1055,7 @@ updateByUrl plugins uc url model =
                                   }
                                 , [ PluginEffect cmd ]
                                 )
-                                    |> updateByPluginOutMsg plugins outMsg
+                                    |> updateByPluginOutMsg plugins uc outMsg
 
                             _ ->
                                 let
@@ -1074,7 +1074,7 @@ updateByUrl plugins uc url model =
                     Route.Plugin ( pluginType, urlValue ) ->
                         let
                             ( new, outMsg, cmd ) =
-                                Plugin.updateByUrl pluginType plugins urlValue model.plugins
+                                Plugin.updateByUrl pluginType plugins uc urlValue model.plugins
                         in
                         ( { model
                             | plugins = new
@@ -1083,7 +1083,7 @@ updateByUrl plugins uc url model =
                           }
                         , [ PluginEffect cmd ]
                         )
-                            |> updateByPluginOutMsg plugins outMsg
+                            |> updateByPluginOutMsg plugins uc outMsg
             )
             (Route.parse routeConfig model.url
                 -- in case url is invalid, assume root url
@@ -1252,18 +1252,18 @@ deserialize filename data model =
             )
 
 
-updatePlugins : Plugins -> Plugin.Msg -> Model key -> ( Model key, List Effect )
-updatePlugins plugins msg model =
+updatePlugins : Plugins -> Config -> Plugin.Msg -> Model key -> ( Model key, List Effect )
+updatePlugins plugins uc msg model =
     let
         ( new, outMsg, cmd ) =
-            Plugin.update plugins msg model.plugins
+            Plugin.update plugins uc msg model.plugins
     in
     ( { model
         | plugins = new
       }
     , [ PluginEffect cmd ]
     )
-        |> updateByPluginOutMsg plugins outMsg
+        |> updateByPluginOutMsg plugins uc outMsg
 
 
 pluginNewGraph : Plugins -> ( Model key, List Effect ) -> ( Model key, List Effect )
