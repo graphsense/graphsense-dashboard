@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, maybeTriggerSearch, resultLineToRoute, update)
+module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, resultLineToRoute, update)
 
 import Api.Data
 import Autocomplete
