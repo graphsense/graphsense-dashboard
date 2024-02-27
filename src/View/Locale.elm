@@ -1,8 +1,13 @@
 module View.Locale exposing
-    ( currency
+    ( coin
+    , coinWithoutCode
+    , currency
     , currencyAsFloat
     , currencyWithoutCode
+    , date
     , durationToString
+    , fiat
+    , fiatWithoutCode
     , httpErrorToString
     , int
     , intWithFormat
@@ -12,6 +17,7 @@ module View.Locale exposing
     , relativeTime
     , string
     , text
+    , time
     , timestamp
     , timestampWithFormat
     , tokenCurrencies
@@ -222,6 +228,56 @@ timestamp model =
     timestampWithFormat format model
 
 
+date : Model -> Int -> String
+date model =
+    let
+        format =
+            case model.locale of
+                "de" ->
+                    [ dayOfMonthFixed
+                    , DateFormat.text "."
+                    , monthFixed
+                    , DateFormat.text "."
+                    , yearNumberLastTwo
+                    ]
+
+                _ ->
+                    [ monthFixed
+                    , DateFormat.text "/"
+                    , dayOfMonthFixed
+                    , DateFormat.text "/"
+                    , yearNumberLastTwo
+                    ]
+    in
+    timestampWithFormat format model
+
+
+time : Model -> Int -> String
+time model =
+    let
+        format =
+            case model.locale of
+                "de" ->
+                    [ hourMilitaryFixed
+                    , DateFormat.text ":"
+                    , minuteFixed
+                    , DateFormat.text ":"
+                    , secondFixed
+                    ]
+
+                _ ->
+                    [ hourFixed
+                    , DateFormat.text ":"
+                    , minuteFixed
+                    , DateFormat.text ":"
+                    , secondFixed
+                    , DateFormat.text " "
+                    , amPmUppercase
+                    ]
+    in
+    timestampWithFormat format model
+
+
 timestampWithFormat : List Token -> Model -> Int -> String
 timestampWithFormat format { locale, timeLang, zone } =
     (*) 1000
@@ -316,6 +372,11 @@ fiat =
     fiatWithOptions One
 
 
+fiatWithoutCode : Model -> String -> Float -> String
+fiatWithoutCode =
+    fiatWithOptions Hidden
+
+
 fiatWithOptions : CodeVisibility -> Model -> String -> Float -> String
 fiatWithOptions vis model code value =
     float model value
@@ -331,6 +392,11 @@ fiatWithOptions vis model code value =
 coin : Model -> AssetIdentifier -> Int -> String
 coin =
     coinWithOptions One
+
+
+coinWithoutCode : Model -> AssetIdentifier -> Int -> String
+coinWithoutCode =
+    coinWithOptions Hidden
 
 
 coinWithOptions : CodeVisibility -> Model -> AssetIdentifier -> Int -> String
