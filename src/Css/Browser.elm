@@ -2,12 +2,14 @@ module Css.Browser exposing (..)
 
 import Config.View exposing (Config)
 import Css exposing (..)
+import Util.Css
 
 
 root : Config -> Float -> List Style
 root vc width =
     position absolute
         :: height (px 0)
+        :: (zIndex <| int <| Util.Css.zIndexMainValue - 1)
         :: (maxWidth <| px width)
         :: vc.theme.browser.root
 

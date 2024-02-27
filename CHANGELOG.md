@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.01.1] - 2024-02-27
+
+### Fixed
+
+- Layering of property box (z-index)
+
 ## [24.01.0] - 2024-01-10
 ### Added
 - beta support for the tron currency ([382](https://github.com/graphsense/graphsense-dashboard/issues/382))
