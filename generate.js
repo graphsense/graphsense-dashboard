@@ -78,9 +78,10 @@ const appendLang = (plugin) => {
         console.err(`Ignoring ${pluginLangFilename}.`)
         return
       }
-      let strings = fs.readFileSync(genLangFilename, 'utf8')
-      let pluginStrings = fs.readFileSync(pluginLangFilename, 'utf8')
-      strings += pluginStrings
+      let strings = yaml.parse(fs.readFileSync(genLangFilename, 'utf8'))
+
+      let pluginStrings = yaml.parse(fs.readFileSync(pluginLangFilename, 'utf8'))
+      strings = yaml.stringify({...strings, ...pluginStrings})
       fs.writeFileSync(genLangFilename, strings, {flag: 'w+'})
       console.log('Merged', fileName)
     })
