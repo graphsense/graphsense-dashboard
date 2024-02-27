@@ -9,6 +9,7 @@ module Route.Graph exposing
     , Thing(..)
     , TxTable(..)
     , actorRoute
+    , addressPathRoute
     , addressRoute
     , addresslinkRoute
     , blockRoute
@@ -111,6 +112,11 @@ tableQuery =
 tokenTxIdQuery : String
 tokenTxIdQuery =
     "token_tx_id"
+
+
+addressPathSeparator : String
+addressPathSeparator =
+    ","
 
 
 type AddressTable
@@ -430,7 +436,8 @@ toUrl route =
         Currency curr (AddressPath ( address, addresses )) ->
             absolute
                 [ curr
-                , String.join " " <| address :: addresses
+                , addresspathSegment
+                , String.join addressPathSeparator <| address :: addresses
                 ]
                 []
 
@@ -501,6 +508,12 @@ entityRoute { currency, entity, layer, table } =
         |> Currency (String.toLower currency)
 
 
+addressPathRoute : String -> ( String, List String ) -> Route
+addressPathRoute currency path =
+    AddressPath path
+        |> Currency currency
+
+
 pluginRoute : ( String, String ) -> Route
 pluginRoute ( ns, url ) =
     ns
@@ -546,7 +559,7 @@ parseAddressPath : Parser (( String, List String ) -> a) a
 parseAddressPath =
     P.custom "ADDRESS_PATH" <|
         \segment ->
-            String.split "," segment
+            String.split addressPathSeparator segment
                 |> List.Extra.uncons
 
 
