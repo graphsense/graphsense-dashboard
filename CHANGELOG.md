@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.02.0] - 2024-02-29
+
+### Added
+- Added address path route functions in `Route.Graph`
+- Added functions for date and time formatting to `View.Locale`
+- Added `Update.Config` parameter to `PluginInterface.Update.update` and `updateByUrl`
+
 ## [24.01.1] - 2024-02-27
 
 ### Fixed
