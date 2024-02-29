@@ -469,7 +469,13 @@ theme =
                     , scaled 1 |> rem |> paddingRight
                     ]
                 |> s_button
-                    []
+                    (\lightmode ->
+                        [ color_backgroundColorWithLightmode lightmode colors.brandDark colors.greyLighter
+                        , property "box-shadow" "none"
+                        , scaled 1 |> rem |> paddingY
+                        , scaled 2 |> rem |> paddingX
+                        ]
+                    )
             )
         |> s_autocomplete
             (Autocomplete.default
@@ -499,11 +505,12 @@ theme =
             (Button.default
                 |> s_button
                     (\lightmode ->
-                        [ fontWeight bold
+                        [ fontWeight normal
                         , textDecoration none
-                        , scaled 1 |> rem |> paddingY
-                        , scaled 2 |> rem |> paddingX
+                        , scaled 2 |> rem |> paddingY
+                        , scaled 5 |> rem |> paddingX
                         , scaled 1 |> rem |> marginX
+                        , shadowSm
                         , borderRadiusSm
                         , border zero
                         , hover
@@ -511,11 +518,22 @@ theme =
                             ]
                         ]
                     )
-                |> s_primary
+                |> s_neutral
                     (\lightmode ->
-                        [ color_backgroundColorWithLightmode lightmode colors.brandDark colors.greyLighter
+                        [ color_backgroundColorWithLightmode lightmode colors.brandText colors.greyLighter
                         , disabled
                             [ colorWithLightmode lightmode colors.brandLight
+                            ]
+                        ]
+                    )
+                |> s_primary
+                    (\lightmode ->
+                        [ color_backgroundColorWithLightmode lightmode colors.brandText colors.brandLight
+                        , disabled
+                            [ color_backgroundColorWithLightmode lightmode colors.grey colors.greyLight
+                            ]
+                        , hover
+                            [ backgroundColorWithLightmode lightmode colors.brandBase
                             ]
                         ]
                     )

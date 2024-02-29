@@ -57,4 +57,4 @@ resultLineIcon vc =
 
 button : Config -> List Style
 button vc =
-    vc.theme.search.button
+    vc.theme.search.button vc.lightmode

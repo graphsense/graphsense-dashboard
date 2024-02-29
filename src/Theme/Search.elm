@@ -13,7 +13,7 @@ type alias Search =
     , resultLine : Bool -> List Style
     , resultLineHighlighted : Bool -> List Style
     , resultLineIcon : List Style
-    , button : List Style
+    , button : Bool -> List Style
     }
 
 
@@ -28,5 +28,5 @@ default =
     , resultLine = \_ -> []
     , resultLineHighlighted = \_ -> []
     , resultLineIcon = []
-    , button = []
+    , button = \_ -> []
     }

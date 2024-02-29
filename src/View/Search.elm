@@ -79,7 +79,7 @@ search plugins vc sc model =
         , if sc.showIcon then
             button
                 [ [ Css.Button.button vc |> Css.batch
-                  , Css.Button.primary vc |> Css.batch
+                  , Css.Button.neutral vc |> Css.batch
                   , Css.button vc |> Css.batch
                   ]
                     |> css

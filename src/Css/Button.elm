@@ -14,6 +14,11 @@ primary vc =
     button vc ++ vc.theme.button.primary vc.lightmode
 
 
+neutral : Config -> List Style
+neutral vc =
+    button vc ++ vc.theme.button.neutral vc.lightmode
+
+
 danger : Config -> List Style
 danger vc =
     button vc ++ vc.theme.button.danger vc.lightmode
