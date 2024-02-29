@@ -81,7 +81,9 @@ navbar vc =
 
 contents : Config -> List Style
 contents vc =
-    [ flexGrow (num 1)
+    [ displayFlex
+    , flexDirection column
+    , flexGrow (num 1)
     , overflow hidden
     ]
         ++ vc.theme.contents vc.lightmode
@@ -197,3 +199,8 @@ longIdentifier vc =
 hint : Config -> List Style
 hint vc =
     vc.theme.hint vc.lightmode
+
+
+textualContents : Config -> List Style
+textualContents vc =
+    vc.theme.textualContents vc.lightmode

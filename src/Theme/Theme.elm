@@ -39,6 +39,7 @@ type alias Theme =
     , main : Bool -> List Style
     , navbar : Bool -> List Style
     , contents : Bool -> List Style
+    , textualContents : Bool -> List Style
     , link : Bool -> List Style
     , iconLink : Bool -> List Style
     , loadingSpinner : List Style
@@ -96,6 +97,7 @@ default =
     , main = \_ -> []
     , navbar = \_ -> []
     , contents = \_ -> []
+    , textualContents = \_ -> []
     , link = \_ -> []
     , iconLink = \_ -> []
     , loadingSpinner = []

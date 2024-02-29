@@ -22,7 +22,7 @@ import View.Locale as Locale
 stats : Config -> WebData Api.Data.Stats -> Dict String Api.Data.TokenConfigs -> Html msg
 stats vc sts tokens =
     div
-        [ Css.root vc |> css ]
+        [ Css.View.textualContents vc |> css ]
         [ h2
             [ Css.View.heading2 vc |> css
             ]

@@ -289,10 +289,12 @@ theme =
                 , scaled 2.7 |> rem |> fontSize
                 ]
             )
+        |> s_textualContents
+            (\_ ->
+                [ scaled 5 |> rem |> padding ]
+            )
         |> s_stats
             (Stats.default
-                |> s_root
-                    [ scaled statsMargin |> rem |> padding ]
                 |> s_stats
                     [ scaled -statsMargin |> rem |> marginLeft ]
                 |> s_currency

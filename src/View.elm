@@ -66,12 +66,7 @@ body plugins vc model =
             [ Css.View.sectionBelowHeader vc |> css
             ]
             [ sidebar plugins vc model
-            , main_
-                [ Css.View.main_ vc |> css
-                , id "main"
-                ]
-                [ Main.view plugins vc model
-                ]
+            , Main.view plugins vc model
             ]
          , footer
             [ Css.View.footer vc |> css

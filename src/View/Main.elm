@@ -53,7 +53,7 @@ view plugins vc model =
 
 main_ : View.Config -> { navbar : List (Html Msg), contents : List (Html Msg) } -> Html Msg
 main_ vc { navbar, contents } =
-    div
+    Html.Styled.main_
         [ Css.main_ vc |> css
         , id "contents"
         ]
