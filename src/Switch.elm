@@ -18,6 +18,7 @@ type alias Config msg units =
     , offStyle : List Style
     , onStyle : List Style
     , knobStyle : List Style
+    , disabledStyle : List Style
     , attributes : List (Attribute msg)
     }
 
@@ -36,6 +37,9 @@ switch width height unit =
         , knobStyle =
             [ backgroundColor <| rgb 255 255 255
             , property "box-shadow" "0 0 0.25em rgba(0,0,0,0.3)"
+            ]
+        , disabledStyle =
+            [ backgroundColor <| rgb 120 120 120
             ]
         , onStyle = []
         , width = width
@@ -123,5 +127,6 @@ toggleCss config =
                             [ left <| calc (pct 100) minus (config.unit config.height)
                             ]
                        ]
+           , disabled <| [ after <| config.disabledStyle ]
            , checked config.onStyle
            ]
