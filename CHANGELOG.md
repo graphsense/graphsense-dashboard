@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.02.1] - 2024-02-29
+
+### Added
+
+- Disabled style for switch knob
+
+### Changed
+
+- Keep custom color on tool icon on hovering
+
 ## [24.02.0] - 2024-02-29
 
 ### Added

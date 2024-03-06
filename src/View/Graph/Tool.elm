@@ -22,7 +22,16 @@ tool : Config -> Tool msg -> Html msg
 tool vc t =
     button
         [ Css.tool vc t.status
-            ++ (t.color |> Maybe.map (toCssColor >> color >> List.singleton) |> Maybe.withDefault [])
+            ++ (t.color
+                    |> Maybe.map toCssColor
+                    |> Maybe.map
+                        (\c ->
+                            [ color c
+                            , Css.hover [ color c ]
+                            ]
+                        )
+                    |> Maybe.withDefault []
+               )
             |> css
         , Locale.string vc.locale t.title |> title
         , onClick (t.msg t.title)
