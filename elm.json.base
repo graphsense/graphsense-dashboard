@@ -50,7 +50,7 @@
             "rtfeldman/elm-css": "16.1.1",
             "rtfeldman/elm-hex": "1.0.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
-            "ryannhg/date-format": "2.3.0"
+            "kokizzu/elm-date-format": "1.0.0"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",
