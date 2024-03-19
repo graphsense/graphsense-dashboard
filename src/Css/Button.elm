@@ -26,4 +26,4 @@ danger vc =
 
 disabled : Config -> List Style
 disabled vc =
-    cursor notAllowed :: vc.theme.button.disabled vc.lightmode
+    button vc ++ [ cursor notAllowed ] ++ vc.theme.button.disabled vc.lightmode

@@ -529,9 +529,6 @@ theme =
                 |> s_primary
                     (\lightmode ->
                         [ color_backgroundColorWithLightmode lightmode colors.brandText colors.brandLight
-                        , disabled
-                            [ color_backgroundColorWithLightmode lightmode colors.grey colors.greyLight
-                            ]
                         , hover
                             [ backgroundColorWithLightmode lightmode colors.brandBase
                             ]
@@ -544,7 +541,10 @@ theme =
                     )
                 |> s_disabled
                     (\lightmode ->
-                        [ colorWithLightmode lightmode colors.brandLight
+                        [ color_backgroundColorWithLightmode lightmode colors.grey colors.greyLight
+                        , hover
+                            [ color_backgroundColorWithLightmode lightmode colors.grey colors.greyLight
+                            ]
                         ]
                     )
             )
