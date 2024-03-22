@@ -339,7 +339,7 @@ addEntityHere plugins uc position entity { layer, colors, new, repositioned } =
         }
     , new = Set.insert newEntity.id new
     , repositioned = Set.union newRepositioned repositioned
-    , colors = Color.update uc colors newEntity.category
+    , colors = Color.updateWithIndex uc colors newEntity.category
     }
 
 

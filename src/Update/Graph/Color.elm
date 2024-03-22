@@ -23,3 +23,25 @@ update { defaultColor, colorScheme } colors category =
                     colors
             )
         |> Maybe.withDefault colors
+
+
+
+-- Additionally, this one receives a categoryToColorIndex dictionary
+-- this way, we can update the colors of the graph based on the category
+-- instead of iterating over all the colors, also it doesnt need the colors dict
+
+
+updateWithIndex : Update.Config -> Dict String Color -> Maybe String -> Dict String Color
+updateWithIndex { defaultColor, colorScheme, categoryToColorIndex } colors category =
+    case category of
+        Just cat ->
+            let
+                color =
+                    Dict.get cat categoryToColorIndex
+                        |> Maybe.andThen (\index -> List.Extra.getAt index colorScheme)
+                        |> Maybe.withDefault defaultColor
+            in
+            Dict.insert cat color colors
+
+        Nothing ->
+            colors

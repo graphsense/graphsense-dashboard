@@ -75,7 +75,7 @@ addAddressToEntity plugins uc colors address entity =
                 Address.init plugins entity address
 
             newColors =
-                Color.update uc colors newAddress.category
+                Color.updateWithIndex uc colors newAddress.category
         in
         { updatedEntity =
             { entity

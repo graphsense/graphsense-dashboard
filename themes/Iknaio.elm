@@ -1,5 +1,6 @@
 module Iknaio exposing (theme)
 
+import Dict exposing (Dict)
 import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
@@ -667,6 +668,35 @@ theme =
                     , rgb255 184 176 172
                     , rgb255 87 120 164
                     ]
+                |> s_categoryToColorIndex
+                    (Dict.fromList
+                        [ ( "exchange", 0 )
+                        , ( "coinjoin", 3 )
+                        , ( "perpetrator", 1)
+                        , ( "defi", 2)
+                        , ( "miner", 4)
+                        , ( "payment_processor", 0)
+                        , ( "user", 5)
+                        , ( "gambling", 6)
+                        , ( "defi_lending", 7)
+                        , ( "market", 8)
+                        , ( "mixing_service", 9)
+                        , ( "defi_dex", 9)
+                        , ( "donation", 9)
+                        , ( "service", 9)
+                        , ( "wallet_service", 9)
+                        , ( "hosting", 9)
+                        , ( "shop", 9)
+                        , ( "entity", 9)
+                        , ( "organization", 9)
+                        , ( "vpn", 9)
+                        , ( "faucet", 9)
+                        , ( "defi_bridge", 9)
+                        , ( "ico_wallet", 9)
+                        , ( "atm", 9)
+                        , ( "mining_service", 9)
+                        ]
+                    )
                 |> (\graph ->
                         s_highlightsColorScheme
                             (graph.colorScheme

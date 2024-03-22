@@ -414,6 +414,7 @@ config : Update.Config
 config =
     { defaultColor = Color.grey
     , colorScheme = [ Color.red, Color.blue, Color.green ]
+    , categoryToColorIndex = Dict.fromList [("exchange", 0)]
     }
 
 

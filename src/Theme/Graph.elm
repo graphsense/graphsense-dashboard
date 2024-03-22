@@ -2,6 +2,7 @@ module Theme.Graph exposing (Graph, default)
 
 import Color exposing (Color)
 import Css exposing (Style)
+import Dict exposing (Dict)
 import Model.Graph exposing (NodeType)
 import Model.Graph.Tool as Tool
 
@@ -41,6 +42,7 @@ type alias Graph =
     , navbarRight : List Style
     , tool : Bool -> Tool.Status -> List Style
     , colorScheme : List Color
+    , categoryToColorIndex : Dict String Int
     , highlightsColorScheme : List Color
     , lightnessFactor :
         Bool
@@ -114,6 +116,7 @@ default =
     , navbarRight = []
     , tool = \_ _ -> []
     , colorScheme = []
+    , categoryToColorIndex = Dict.empty
     , highlightsColorScheme = []
     , lightnessFactor =
         \_ ->

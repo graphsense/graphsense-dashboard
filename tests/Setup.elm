@@ -27,6 +27,7 @@ start locale =
         uc =
             { defaultColor = Theme.default.graph.defaultColor
             , colorScheme = Theme.default.graph.colorScheme
+            , categoryToColorIndex = Theme.default.graph.categoryToColorIndex
             }
 
         plugins =

@@ -1,7 +1,7 @@
 {
   "name": "GraphSense Pathfinder",
   "author": "Iknaio Cryptoasset Analytics",
-  "description": "Web application for the GraphSense Cryptoasset Analyitcs Platform",
+  "description": "Web application for the GraphSense Cryptoasset Analytics Platform",
   "version": "1.1.2",
   "license": "MIT",
   "scripts": {
