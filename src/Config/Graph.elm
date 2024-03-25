@@ -171,7 +171,6 @@ type alias Config =
     { addressLabelType : AddressLabelType
     , txLabelType : TxLabelType
     , maxLettersPerLabelRow : Int
-    , colors : Dict String Color
     , entityConcepts : List Api.Data.Concept
     , abuseConcepts : List Api.Data.Concept
     , highlighter : Bool
@@ -187,7 +186,6 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     { addressLabelType = addressLabelType |> Maybe.withDefault Tag
     , txLabelType = txLabelType |> Maybe.withDefault Value
     , maxLettersPerLabelRow = 18
-    , colors = Dict.empty
     , entityConcepts = []
     , abuseConcepts = []
     , highlighter = False

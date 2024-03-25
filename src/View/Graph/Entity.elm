@@ -56,8 +56,7 @@ entity plugins vc gc ent =
                         ent.userTag
                             |> Maybe.andThen .category
                             |> Maybe.Extra.orElse ent.category
-                            |> Maybe.andThen
-                                (\category -> Dict.get category gc.colors)
+                            |> Maybe.map vc.theme.graph.categoryToColor
                             |> Maybe.withDefault vc.theme.graph.defaultColor
                             |> Color.toHsla
                             |> (\hsl ->

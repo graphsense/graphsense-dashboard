@@ -522,9 +522,9 @@ browseValue vc value =
                                 (\tag ->
                                     span
                                         [ tag.category
-                                            |> Maybe.andThen (\cat -> Dict.get cat gc.colors)
                                             |> Maybe.map
-                                                (toCssColor
+                                                (vc.theme.graph.categoryToColor
+                                                    >> toCssColor
                                                     >> CssStyled.color
                                                     >> List.singleton
                                                 )

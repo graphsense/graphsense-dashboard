@@ -66,7 +66,6 @@ import Tuple exposing (..)
 import Update.Graph.Adding as Adding
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
-import Update.Graph.Color as Color
 import Update.Graph.Coords as Coords
 import Update.Graph.Entity as Entity
 import Update.Graph.Highlighter as Highlighter
@@ -137,8 +136,7 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                             address
                             added_
                     )
-                    { colors = newModel.config.colors
-                    , layers = newModel.layers
+                    { layers = newModel.layers
                     , new = Set.empty
                     , repositioned = Set.empty
                     }
@@ -148,9 +146,6 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                 | layers =
                     added.layers
                         |> addUserTag added.new model.userAddressTags
-                , config =
-                    newModel.config
-                        |> s_colors added.colors
             }
                 |> syncLinks added.repositioned
 
@@ -242,7 +237,7 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
 
                     added =
                         if IntDict.isEmpty outgoingAnchors && IntDict.isEmpty incomingAnchors then
-                            Layer.addEntity plugins uc model.config.colors entity model.layers
+                            Layer.addEntity plugins uc entity model.layers
 
                         else
                             Layer.addEntitiesAt plugins
@@ -251,7 +246,6 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                                 [ entity ]
                                 { layers = model.layers
                                 , new = Set.empty
-                                , colors = model.config.colors
                                 , repositioned = Set.empty
                                 }
                                 |> Layer.addEntitiesAt plugins
@@ -262,9 +256,6 @@ addEntity plugins uc { entity, incoming, outgoing } anchor model =
                     newModel =
                         { model
                             | layers = added.layers
-                            , config =
-                                model.config
-                                    |> s_colors added.colors
                         }
                             |> syncLinks added.repositioned
                             |> addEntityEgonet entity.currency entity.entity True outgoing
@@ -360,6 +351,7 @@ updateByMsg plugins uc msg model =
                 |> List.head
                 |> Maybe.map (loadNextAddress plugins uc model)
                 |> Maybe.withDefault (n model)
+                |> mapFirst (updateLegend uc)
 
         InternalGraphAddedEntities ids ->
             let
@@ -377,6 +369,7 @@ updateByMsg plugins uc msg model =
             , CmdEffect eff
                 :: pathEff
             )
+                |> mapFirst (updateLegend uc)
 
         RuntimeDebouncedAddingEntities ->
             let
@@ -1040,18 +1033,7 @@ updateByMsg plugins uc msg model =
                 |> n
 
         BrowserGotAddressTags id tags ->
-            let
-                colors =
-                    tags.addressTags
-                        |> List.map .category
-                        |> List.foldl
-                            (\category config -> Color.update uc config category)
-                            model.config.colors
-            in
-            { model
-                | config =
-                    model.config |> s_colors colors
-            }
+            model
                 |> updateAddresses id (Address.updateTags tags.addressTags)
                 |> n
 
@@ -1309,7 +1291,7 @@ updateByMsg plugins uc msg model =
         UserClicksDeleteTag ->
             model.tag
                 |> Maybe.andThen .existing
-                |> Maybe.map (\tag -> deleteUserTag tag model)
+                |> Maybe.map (\tag -> deleteUserTag uc tag model)
                 |> Maybe.withDefault model
                 |> n
 
@@ -1400,8 +1382,7 @@ updateByMsg plugins uc msg model =
                         uc
                         entityId
                         address
-                        { colors = model.config.colors
-                        , layers = model.layers
+                        { layers = model.layers
                         , new = Set.empty
                         , repositioned = Set.empty
                         }
@@ -1410,7 +1391,6 @@ updateByMsg plugins uc msg model =
                 | layers =
                     added.layers
                         |> addUserTag added.new model.userAddressTags
-                , config = model.config |> s_colors added.colors
               }
                 |> syncLinks added.repositioned
             , BrowserGotAddressTags
@@ -1460,7 +1440,6 @@ updateByMsg plugins uc msg model =
                                                 entityId
                                                 neighbor.address
                                                 { layers = model.layers
-                                                , colors = model.config.colors
                                                 , new = Set.empty
                                                 , repositioned = Set.empty
                                                 }
@@ -1489,7 +1468,6 @@ updateByMsg plugins uc msg model =
                                                             | layers =
                                                                 added.layers
                                                                     |> addUserTag added.new model.userAddressTags
-                                                            , config = model.config |> s_colors added.colors
                                                           }
                                                             |> addAddressLinks address isOutgoing [ ( neighbor, addedAddress ) ]
                                                             |> syncLinks added.repositioned
@@ -1547,7 +1525,7 @@ updateByMsg plugins uc msg model =
                     getToolElement model id BrowserGotLegendElement
 
         BrowserGotLegendElement result ->
-            makeLegend model
+            makeLegend uc model
                 |> toolElementResultToTool result model
 
         UserClicksConfiguraton id ->
@@ -1967,9 +1945,6 @@ updateByMsg plugins uc msg model =
                                             )
                                             acc.layers
                                     )
-                        , config =
-                            model.config
-                                |> s_colors acc.colors
                     }
                 |> insertEntityShadowLinks acc.newEntityIds
                 |> insertAddressShadowLinks acc.newAddressIds
@@ -2620,7 +2595,7 @@ addAddressNeighborsWithEntity : Plugins -> Update.Config -> ( Address, Entity ) 
 addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgoing ( neighbors, entity ) model =
     let
         acc =
-            Layer.addEntityNeighbors plugins uc anchorEntity isOutgoing model.config.colors [ entity ] model.layers
+            Layer.addEntityNeighbors plugins uc anchorEntity isOutgoing [ entity ] model.layers
     in
     Set.toList acc.new
         |> List.head
@@ -2640,11 +2615,9 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
                                             |> addUserTag added__.new model.userAddressTags
                                     , new = added__.new
                                     , repositioned = added__.repositioned
-                                    , colors = added__.colors
                                     }
                                 )
                                 { layers = acc.layers
-                                , colors = acc.colors
                                 , new = Set.empty
                                 , repositioned = acc.repositioned
                                 }
@@ -2652,9 +2625,6 @@ addAddressNeighborsWithEntity plugins uc ( anchorAddress, anchorEntity ) isOutgo
                 { model =
                     { model
                         | layers = added.layers
-                        , config =
-                            model.config
-                                |> s_colors added.colors
                     }
                 , newAddresses =
                     Set.toList added.new
@@ -2676,7 +2646,7 @@ addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data
 addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     let
         acc =
-            Layer.addEntityNeighbors plugins uc anchor isOutgoing model.config.colors (List.map .entity neighbors) model.layers
+            Layer.addEntityNeighbors plugins uc anchor isOutgoing (List.map .entity neighbors) model.layers
 
         aligned =
             neighbors
@@ -2701,9 +2671,6 @@ addEntityNeighbors plugins uc anchor isOutgoing neighbors model =
     in
     ( { model
         | layers = acc.layers
-        , config =
-            model.config
-                |> s_colors acc.colors
       }
     , aligned
     , acc.repositioned
@@ -3018,10 +2985,6 @@ storeUserTag uc tag model =
 
     else
         let
-            colors =
-                tag.category
-                    |> Color.update uc model.config.colors
-
             flag =
                 if tag.isClusterDefiner then
                     "entity"
@@ -3035,13 +2998,10 @@ storeUserTag uc tag model =
         { model
             | userAddressTags =
                 userAddressTags
-            , config =
-                model.config
-                    |> s_colors colors
             , tag = Nothing
             , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
         }
-            |> updateLegend
+            |> updateLegend uc
             |> updateAddresses { currency = tag.currency, address = tag.address }
                 (\a ->
                     { a
@@ -3064,8 +3024,8 @@ storeUserTag uc tag model =
                 (\a -> { a | userTag = Just tag })
 
 
-deleteUserTag : Tag.UserTag -> Model -> Model
-deleteUserTag tag model =
+deleteUserTag : Update.Config -> Tag.UserTag -> Model -> Model
+deleteUserTag uc tag model =
     let
         flag =
             if tag.isClusterDefiner then
@@ -3083,7 +3043,7 @@ deleteUserTag tag model =
         , tag = Nothing
         , browser = Browser.updateUserTags (Dict.values userAddressTags) model.browser
     }
-        |> updateLegend
+        |> updateLegend uc
         |> updateAddresses { currency = tag.currency, address = tag.address }
             (\a ->
                 { a
@@ -3106,14 +3066,14 @@ deleteUserTag tag model =
             (\a -> { a | userTag = Nothing })
 
 
-updateLegend : Model -> Model
-updateLegend model =
+updateLegend : Update.Config -> Model -> Model
+updateLegend uc model =
     { model
         | activeTool =
             case model.activeTool.toolbox of
                 Tool.Legend _ ->
                     model.activeTool
-                        |> s_toolbox (makeLegend model)
+                        |> s_toolbox (makeLegend uc model)
 
                 _ ->
                     model.activeTool
@@ -3312,16 +3272,28 @@ addUserTag ids userTags layers =
             layers
 
 
-makeLegend : Model -> Tool.Toolbox
-makeLegend model =
-    model.config.colors
-        |> Dict.toList
+makeLegend : Update.Config -> Model -> Tool.Toolbox
+makeLegend uc model =
+    let
+        getCategories a =
+            [ a.category
+            , a.userTag |> Maybe.andThen .category
+            ]
+                |> List.filterMap identity
+    in
+    (Layer.addresses model.layers
+        |> List.map getCategories
+        |> List.concat
+    )
+        ++ (Layer.entities model.layers |> List.map getCategories |> List.concat)
+        |> Set.fromList
+        |> Set.toList
         |> List.filterMap
-            (\( cat, color ) ->
+            (\cat ->
                 List.Extra.find (.id >> (==) cat) model.config.entityConcepts
                     |> Maybe.map
                         (\category ->
-                            { color = color
+                            { color = uc.categoryToColor category.id
                             , title = category.label
                             , uri = category.uri
                             }
@@ -3564,7 +3536,6 @@ addAddressesAtEntity plugins uc entityId addresses model =
                 { layers = model.layers
                 , new = Set.empty
                 , repositioned = Set.empty
-                , colors = model.config.colors
                 }
                 addresses
     in
@@ -3572,9 +3543,6 @@ addAddressesAtEntity plugins uc entityId addresses model =
         | layers =
             added.layers
                 |> addUserTag added.new model.userAddressTags
-        , config =
-            model.config
-                |> s_colors added.colors
       }
         |> syncLinks added.repositioned
     , addresses
