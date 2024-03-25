@@ -36,8 +36,7 @@ main =
 
         uc =
             { defaultColor = config.theme.graph.defaultColor
-            , colorScheme = config.theme.graph.colorScheme
-            , categoryToColorIndex = config.theme.graph.categoryToColorIndex
+            , categoryToColor = config.theme.graph.categoryToColor
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             , locale = Locale.init default |> first
             , size = Nothing

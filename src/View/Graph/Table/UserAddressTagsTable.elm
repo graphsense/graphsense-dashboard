@@ -77,16 +77,13 @@ config vc gc =
                         [ Css.Table.row vc
                             ++ (if data.isClusterDefiner then
                                     data.category
-                                        |> Maybe.andThen
-                                            (\category ->
-                                                Dict.get category gc.colors
-                                                    |> Maybe.map
-                                                        (Util.View.setAlpha 0.7
-                                                            >> Util.View.toCssColor
-                                                            >> Css.backgroundColor
-                                                            >> Css.important
-                                                            >> List.singleton
-                                                        )
+                                        |> Maybe.map
+                                            (vc.theme.graph.categoryToColor
+                                                >> Util.View.setAlpha 0.7
+                                                >> Util.View.toCssColor
+                                                >> Css.backgroundColor
+                                                >> Css.important
+                                                >> List.singleton
                                             )
                                         |> Maybe.withDefault []
 

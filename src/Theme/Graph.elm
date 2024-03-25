@@ -41,8 +41,7 @@ type alias Graph =
     , navbarLeft : List Style
     , navbarRight : List Style
     , tool : Bool -> Tool.Status -> List Style
-    , colorScheme : List Color
-    , categoryToColorIndex : Dict String Int
+    , categoryToColor : String -> Color
     , highlightsColorScheme : List Color
     , lightnessFactor :
         Bool
@@ -115,8 +114,7 @@ default =
     , navbarLeft = []
     , navbarRight = []
     , tool = \_ _ -> []
-    , colorScheme = []
-    , categoryToColorIndex = Dict.empty
+    , categoryToColor = \_ -> Color.white
     , highlightsColorScheme = []
     , lightnessFactor =
         \_ ->

@@ -1,9 +1,10 @@
 module Iknaio exposing (theme)
 
-import Dict exposing (Dict)
 import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
+import Dict exposing (Dict)
+import Iknaio.ColorScheme exposing (..)
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
@@ -656,50 +657,90 @@ theme =
                         , opacity <| num 0.5
                         ]
                     )
-                |> s_colorScheme
-                    [ rgb255 228 148 68
-                    , rgb255 209 97 93
-                    , rgb255 133 182 178
-                    , rgb255 106 159 88
-                    , rgb255 231 202 96
-                    , rgb255 168 124 159
-                    , rgb255 241 162 169
-                    , rgb255 150 118 98
-                    , rgb255 184 176 172
-                    , rgb255 87 120 164
-                    ]
-                |> s_categoryToColorIndex
-                    (Dict.fromList
-                        [ ( "exchange", 0 )
-                        , ( "coinjoin", 3 )
-                        , ( "perpetrator", 1)
-                        , ( "defi", 2)
-                        , ( "miner", 4)
-                        , ( "payment_processor", 0)
-                        , ( "user", 5)
-                        , ( "gambling", 6)
-                        , ( "defi_lending", 7)
-                        , ( "market", 8)
-                        , ( "mixing_service", 9)
-                        , ( "defi_dex", 9)
-                        , ( "donation", 9)
-                        , ( "service", 9)
-                        , ( "wallet_service", 9)
-                        , ( "hosting", 9)
-                        , ( "shop", 9)
-                        , ( "entity", 9)
-                        , ( "organization", 9)
-                        , ( "vpn", 9)
-                        , ( "faucet", 9)
-                        , ( "defi_bridge", 9)
-                        , ( "ico_wallet", 9)
-                        , ( "atm", 9)
-                        , ( "mining_service", 9)
-                        ]
+                |> s_categoryToColor
+                    (\category ->
+                        case category of
+                            "exchange" ->
+                                color0
+
+                            "coinjoin" ->
+                                color3
+
+                            "perpetrator" ->
+                                color1
+
+                            "defi" ->
+                                color2
+
+                            "miner" ->
+                                color4
+
+                            "payment_processor" ->
+                                color0
+
+                            "user" ->
+                                color5
+
+                            "gambling" ->
+                                color6
+
+                            "defi_lending" ->
+                                color7
+
+                            "market" ->
+                                color8
+
+                            "mixing_service" ->
+                                color9
+
+                            "defi_dex" ->
+                                color9
+
+                            "donation" ->
+                                color9
+
+                            "service" ->
+                                color9
+
+                            "wallet_service" ->
+                                color9
+
+                            "hosting" ->
+                                color9
+
+                            "shop" ->
+                                color9
+
+                            "entity" ->
+                                color9
+
+                            "organization" ->
+                                color9
+
+                            "vpn" ->
+                                color9
+
+                            "faucet" ->
+                                color9
+
+                            "defi_bridge" ->
+                                color9
+
+                            "ico_wallet" ->
+                                color9
+
+                            "atm" ->
+                                color9
+
+                            "mining_service" ->
+                                color9
+
+                            _ ->
+                                defaultColor
                     )
                 |> (\graph ->
                         s_highlightsColorScheme
-                            (graph.colorScheme
+                            (colorScheme
                                 |> List.map
                                     (Color.toHsla
                                         >> (\c -> { c | saturation = 1 })
@@ -741,7 +782,7 @@ theme =
                         }
                     )
                 |> s_defaultColor
-                    (rgb255 138 138 138)
+                    defaultColor
                 |> s_tool
                     (\lightmode status ->
                         [ scaled 2 |> rem |> padding

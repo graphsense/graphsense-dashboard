@@ -27,13 +27,11 @@ import Plugin.Update exposing (Plugins)
 import Set exposing (Set)
 import Tuple exposing (..)
 import Update.Graph.Address as Address
-import Update.Graph.Color as Color
 
 
 type alias Acc =
     { entities : Dict EntityId Entity
     , new : Set AddressId
-    , colors : Dict String Color
     , repositioned : Set EntityId
     }
 
@@ -45,7 +43,7 @@ addAddress plugins uc layerId address acc =
             Id.initEntityId { layer = layerId, currency = address.currency, id = address.entity }
     in
     Dict.get entityId acc.entities
-        |> Maybe.andThen (addAddressToEntity plugins uc acc.colors address)
+        |> Maybe.andThen (addAddressToEntity plugins uc address)
         |> Maybe.map
             (\newAcc ->
                 let
@@ -55,7 +53,6 @@ addAddress plugins uc layerId address acc =
                 in
                 { entities = entities
                 , new = Set.insert newAcc.new acc.new
-                , colors = newAcc.colors
                 , repositioned =
                     Set.union repositioned acc.repositioned
                         |> Set.insert newAcc.updatedEntity.id
@@ -64,8 +61,8 @@ addAddress plugins uc layerId address acc =
         |> Maybe.withDefault acc
 
 
-addAddressToEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> Entity -> Maybe { updatedEntity : Entity, new : AddressId, colors : Dict String Color }
-addAddressToEntity plugins uc colors address entity =
+addAddressToEntity : Plugins -> Update.Config -> Api.Data.Address -> Entity -> Maybe { updatedEntity : Entity, new : AddressId }
+addAddressToEntity plugins uc address entity =
     if Dict.member (Id.initAddressId { layer = Id.layer entity.id, id = address.address, currency = address.currency }) entity.addresses then
         Nothing
 
@@ -73,9 +70,6 @@ addAddressToEntity plugins uc colors address entity =
         let
             newAddress =
                 Address.init plugins entity address
-
-            newColors =
-                Color.updateWithIndex uc colors newAddress.category
         in
         { updatedEntity =
             { entity
@@ -83,7 +77,6 @@ addAddressToEntity plugins uc colors address entity =
                     Dict.insert newAddress.id newAddress entity.addresses
             }
         , new = newAddress.id
-        , colors = newColors
         }
             |> Just
 

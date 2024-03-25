@@ -67,7 +67,6 @@ import Set exposing (Set)
 import Tuple exposing (..)
 import Tuple3
 import Update.Graph.Address as Address
-import Update.Graph.Color as Color
 import Update.Graph.Entity as Entity
 
 
@@ -81,28 +80,26 @@ type alias Acc comparable =
     { layers : IntDict Layer
     , new : Set comparable
     , repositioned : Set EntityId
-    , colors : Dict String Color
     }
 
 
 {-| Add an address to every entity node it belongs to
 -}
-addAddress : Plugins -> Update.Config -> Dict String Color -> Api.Data.Address -> IntDict Layer -> Acc AddressId
-addAddress plugins uc colors address layers =
-    addAddressHelp plugins uc address { layers = layers, new = Set.empty, repositioned = Set.empty, colors = colors }
+addAddress : Plugins -> Update.Config -> Api.Data.Address -> IntDict Layer -> Acc AddressId
+addAddress plugins uc address layers =
+    addAddressHelp plugins uc address { layers = layers, new = Set.empty, repositioned = Set.empty }
 
 
 {-| Add an entity to the root of the graph
 -}
-addEntity : Plugins -> Update.Config -> Dict String Color -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addEntity plugins uc colors entity layers =
+addEntity : Plugins -> Update.Config -> Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntity plugins uc entity layers =
     addEntitiesAt plugins
         uc
         (anchorsToPositions Nothing layers)
         [ entity ]
         { layers = layers
         , new = Set.empty
-        , colors = colors
         , repositioned = Set.empty
         }
 
@@ -120,14 +117,12 @@ addAddressAtEntity plugins uc entityId address acc =
                             address
                             { entities = layer.entities
                             , new = acc.new
-                            , colors = acc.colors
                             , repositioned = acc.repositioned
                             }
                 in
                 { layers =
                     IntDict.insert layer.id { layer | entities = accEntity.entities } acc.layers
                 , new = accEntity.new
-                , colors = accEntity.colors
                 , repositioned = accEntity.repositioned
                 }
             )
@@ -136,8 +131,8 @@ addAddressAtEntity plugins uc entityId address acc =
 
 {-| Add neighbors next to an entity. Also insert placeholder links
 -}
-addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> Dict String Color -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
-addEntityNeighbors plugins uc entity isOutgoing colors neighbors layers =
+addEntityNeighbors : Plugins -> Update.Config -> Entity -> Bool -> List Api.Data.Entity -> IntDict Layer -> Acc EntityId
+addEntityNeighbors plugins uc entity isOutgoing neighbors layers =
     let
         added =
             addEntitiesAt plugins
@@ -146,7 +141,6 @@ addEntityNeighbors plugins uc entity isOutgoing colors neighbors layers =
                 neighbors
                 { layers = layers
                 , new = Set.empty
-                , colors = colors
                 , repositioned = Set.empty
                 }
 
@@ -276,7 +270,6 @@ addEntitiesAt plugins uc positions entities acc =
                                         addEntityHere plugins uc position entity
                                     )
                                     { layer = layer
-                                    , colors = acc_.colors
                                     , new = acc_.new
                                     , repositioned = acc_.repositioned
                                     }
@@ -284,7 +277,6 @@ addEntitiesAt plugins uc positions entities acc =
                         in
                         { layers = IntDict.insert layerId accToLayer.layer acc_.layers
                         , new = accToLayer.new
-                        , colors = accToLayer.colors
                         , repositioned = accToLayer.repositioned
                         }
                    )
@@ -295,14 +287,13 @@ addEntitiesAt plugins uc positions entities acc =
 
 type alias AccEntity =
     { layer : Layer
-    , colors : Dict String Color
     , new : Set EntityId
     , repositioned : Set EntityId
     }
 
 
 addEntityHere : Plugins -> Update.Config -> Position -> Api.Data.Entity -> AccEntity -> AccEntity
-addEntityHere plugins uc position entity { layer, colors, new, repositioned } =
+addEntityHere plugins uc position entity { layer, new, repositioned } =
     let
         entityId =
             Id.initEntityId { currency = entity.currency, id = entity.entity, layer = layer.id }
@@ -339,7 +330,6 @@ addEntityHere plugins uc position entity { layer, colors, new, repositioned } =
         }
     , new = Set.insert newEntity.id new
     , repositioned = Set.union newRepositioned repositioned
-    , colors = Color.updateWithIndex uc colors newEntity.category
     }
 
 
@@ -387,14 +377,12 @@ addAddressHelp plugins uc address acc =
                             address
                             { entities = layer.entities
                             , new = acc_.new
-                            , colors = acc_.colors
                             , repositioned = acc_.repositioned
                             }
                 in
                 { layers =
                     IntDict.insert layer.id { layer | entities = accEntity.entities } acc_.layers
                 , new = accEntity.new
-                , colors = accEntity.colors
                 , repositioned = accEntity.repositioned
                 }
             )
@@ -1077,7 +1065,6 @@ deserialize :
         { layers : IntDict Layer
         , newEntityIds : Set EntityId
         , newAddressIds : Set AddressId
-        , colors : Dict String Color
         }
 deserialize plugins uc { deserialized, addresses, entities } =
     let
@@ -1199,7 +1186,6 @@ deserialize plugins uc { deserialized, addresses, entities } =
                                 acc
                     )
                     { layers = IntDict.empty
-                    , colors = Dict.empty
                     , new = Set.empty
                     , repositioned = Set.empty
                     }
@@ -1233,15 +1219,13 @@ deserialize plugins uc { deserialized, addresses, entities } =
                         acc
             )
             { layers = entitiesAdded.layers
-            , colors = entitiesAdded.colors
             , new = Set.empty
             , repositioned = Set.empty
             }
-        |> (\{ layers, colors, new } ->
+        |> (\{ layers, new } ->
                 { layers = layers
                 , newEntityIds = entitiesAdded.new
                 , newAddressIds = new
-                , colors = colors
                 }
            )
 

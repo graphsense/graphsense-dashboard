@@ -8,8 +8,7 @@ import Model.Locale as Locale
 
 type alias Config =
     { defaultColor : Color
-    , colorScheme : List Color
-    , categoryToColorIndex : Dict String Int
+    , categoryToColor : String -> Color
     , highlightsColorScheme : List Color
     , locale : Locale.Model
     , size : Maybe BBox -- position and size of the main pane
