@@ -1247,7 +1247,10 @@ deserialize filename data model =
                 ( graph, graphEffects ) =
                     Graph.fromDeserialized deser model.graph
             in
-            ( { model | graph = graph }
+            ( { model
+                | graph = graph
+                , page = Graph
+              }
             , List.map GraphEffect graphEffects
             )
 
