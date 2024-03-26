@@ -232,3 +232,9 @@ colorToHex cl =
         |> List.map (String.padLeft 2 '0')
         |> (::) "#"
         |> String.join ""
+
+
+frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
+frame vc attr =
+    div
+        ((Css.frame vc |> css) :: attr)

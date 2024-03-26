@@ -201,6 +201,6 @@ hint vc =
     vc.theme.hint vc.lightmode
 
 
-textualContents : Config -> List Style
-textualContents vc =
-    vc.theme.textualContents vc.lightmode
+frame : Config -> List Style
+frame vc =
+    vc.theme.frame vc.lightmode

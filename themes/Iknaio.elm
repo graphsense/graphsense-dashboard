@@ -291,9 +291,16 @@ theme =
                 , scaled 2.7 |> rem |> fontSize
                 ]
             )
-        |> s_textualContents
+        |> s_frame
             (\_ ->
-                [ scaled 5 |> rem |> padding ]
+                let
+                    p =
+                        scaled 5
+                in
+                [ padding (rem p)
+                , calc (pct 100) minus (rem p)
+                    |> width
+                ]
             )
         |> s_stats
             (Stats.default
