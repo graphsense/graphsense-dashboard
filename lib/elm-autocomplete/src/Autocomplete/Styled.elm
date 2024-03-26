@@ -55,6 +55,7 @@ inputEvents mapper =
             mapper
     in
     [ Events.onInput (mapHtml << OnInput)
+    , Events.onBlur (mapHtml <| OnBlur)
     , Events.preventDefaultOn "keydown" <| onKeyDownDecoder mapper
     ]
 

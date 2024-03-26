@@ -9,6 +9,7 @@ type Msg a
     | OnMouseDown Int
     | OnMouseUp Int
     | Debounce
+    | OnBlur
 
 
 type alias Choices a =

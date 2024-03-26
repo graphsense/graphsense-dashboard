@@ -234,6 +234,16 @@ update msg (Autocomplete state) =
             , Bounce.delay 200 Debounce
             )
 
+        OnBlur ->
+            ( Autocomplete
+                { state
+                    | viewStatus = NotFetched
+                    , choices = []
+                }
+            , False
+            , Cmd.none
+            )
+
         Debounce ->
             let
                 debounceState =
@@ -296,7 +306,7 @@ onFetch result (Autocomplete state) =
             Autocomplete { state | viewStatus = Error s }
 
         Ok c ->
-            if c.query == state.query then
+            if c.query == state.query && state.viewStatus == Fetching then
                 Autocomplete
                     { state
                         | choices =
