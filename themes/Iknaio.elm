@@ -515,6 +515,8 @@ theme =
                 |> s_button
                     (\lightmode ->
                         [ fontWeight normal
+                        , fontSize <| rem <| scaled 4
+                        , textAlign center
                         , textDecoration none
                         , scaled 2 |> rem |> paddingY
                         , scaled 5 |> rem |> paddingX
