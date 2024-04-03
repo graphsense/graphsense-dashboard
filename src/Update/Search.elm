@@ -69,11 +69,13 @@ filterByPrefix input result =
                 (\currency ->
                     let
                         addr =
-                            if String.toLower currency.currency == "eth" then
-                                String.toLower input
+                            String.trim
+                                (if String.toLower currency.currency == "eth" then
+                                    String.toLower input
 
-                            else
-                                input
+                                 else
+                                    input
+                                )
                     in
                     { currency
                         | addresses = List.filter (String.startsWith addr) currency.addresses
@@ -103,6 +105,9 @@ update msg model =
             let
                 result =
                     filterByPrefix query res
+
+                _ =
+                    Debug.log "filter" result
 
                 choices =
                     { choices =

@@ -609,9 +609,6 @@ theme =
                 |> s_buttons
                     [ displayFlex
                     , justifyContent spaceBetween
-                    , margin2 zero auto
-                    , px 100 |> minWidth
-                    , pct 50 |> width
                     ]
                 |> s_singleButton
                     [ displayFlex

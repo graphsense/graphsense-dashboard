@@ -224,7 +224,7 @@ resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
             case resultLine of
                 Address _ a ->
                     ( FontAwesome.at
-                    , a
+                    , Util.View.truncate 50 a
                     )
 
                 Tx _ a ->

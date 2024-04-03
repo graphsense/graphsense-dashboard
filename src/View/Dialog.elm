@@ -44,13 +44,13 @@ confirm vc { message, onYes, onNo } =
             [ Css.buttons vc |> css
             ]
             [ button
-                [ Css.Button.primary vc |> css
+                [ (Css.Button.primary vc ++ Css.button vc) |> css
                 , UserClickedConfirm onYes |> onClick
                 ]
                 [ Locale.string vc.locale "Yes" |> text
                 ]
             , button
-                [ Css.Button.primary vc |> css
+                [ (Css.Button.primary vc ++ Css.button vc) |> css
                 , UserClickedConfirm onNo |> onClick
                 ]
                 [ Locale.string vc.locale "No" |> text

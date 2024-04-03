@@ -1956,7 +1956,7 @@ rowsTxAccount vc gc now tx table coinCode =
         ( "Value"
         , tx
             |> Loadable.map
-                (\t -> Value [ ( assetFromBase t.currency, t.value ) ])
+                (\t -> Value [ ( asset coinCode t.currency, t.value ) ])
             |> elseLoading
         , Nothing
         )

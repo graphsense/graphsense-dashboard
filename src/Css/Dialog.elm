@@ -14,6 +14,11 @@ buttons vc =
     vc.theme.dialog.buttons
 
 
+button : Config -> List Style
+button vc =
+    [ px 100 |> minWidth, pct 50 |> width ]
+
+
 singleButton : Config -> List Style
 singleButton vc =
     vc.theme.dialog.singleButton
