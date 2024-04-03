@@ -106,9 +106,6 @@ update msg model =
                 result =
                     filterByPrefix query res
 
-                _ =
-                    Debug.log "filter" result
-
                 choices =
                     { choices =
                         case model.searchType of
