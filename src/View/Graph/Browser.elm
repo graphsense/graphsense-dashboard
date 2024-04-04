@@ -1755,7 +1755,7 @@ browseBlockTable vc gc block table =
             table_ vc cm (TxsUtxoTable.config vc coinCode) t
 
         BlockTxsAccountTable t ->
-            table_ vc cm (TxsAccountTable.config vc coinCode) t
+            table_ vc cm (TxsAccountTable.blockConfig vc coinCode) t
 
 
 browseTxUtxoTable : View.Config -> Graph.Config -> Loadable String Api.Data.TxUtxo -> TxUtxoTable -> Html Msg

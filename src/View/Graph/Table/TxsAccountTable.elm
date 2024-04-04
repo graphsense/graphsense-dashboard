@@ -19,6 +19,61 @@ import Util.View exposing (longIdentifier)
 import View.Graph.Table as T exposing (customizations)
 
 
+blockConfig : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
+blockConfig vc coinCode =
+    let
+        toMsg field data =
+            UserClickedAddressInTable
+                { currency = coinCode
+                , address = field data
+                }
+    in
+    Table.customConfig
+        { toId = .txHash
+        , toMsg = TableNewState
+        , columns =
+            [ T.htmlColumn vc
+                titleTx
+                .txHash
+                (\data ->
+                    longIdentifier vc data.txHash
+                        |> List.singleton
+                        |> a
+                            [ Css.View.link vc |> css
+                            , Route.txRoute
+                                { currency = coinCode
+                                , txHash = data.txHash
+                                , table = Nothing
+                                , tokenTxId = data.tokenTxId
+                                }
+                                |> Route.graphRoute
+                                |> toUrl
+                                |> href
+                            ]
+                        |> List.singleton
+                )
+            ]
+                ++ [ (if vc.locale.currency /= Model.Currency.Coin then
+                        T.valueColumn
+
+                      else
+                        T.valueColumnWithoutCode
+                     )
+                        vc
+                        (\x -> asset coinCode x.currency)
+                        "Value"
+                        .value
+                   ]
+                ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
+                   , toMsg .fromAddress
+                        |> T.addressColumn vc titleSendingAddress .fromAddress
+                   , toMsg .toAddress
+                        |> T.addressColumn vc titleReceivingAddress .toAddress
+                   ]
+        , customizations = customizations vc
+        }
+
+
 config : View.Config -> String -> Table.Config Api.Data.TxAccount Msg
 config vc coinCode =
     let
