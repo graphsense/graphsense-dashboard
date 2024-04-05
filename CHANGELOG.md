@@ -8,10 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Hard-coded color scheme mapping for tag categories.
+- Removed duplicated (static) fields in block transaction table
 
 ### Fixed
 
-- Fixed jumping to grpah after loading gs file from landingpage
+- Fixed jumping to graph after loading gs file from landing-page
+- Fixed button alignment in confirm dialog
+- Fixed search with trailing zero
+- Fixed overlapping addresses in search
 
 ## [24.02.1] - 2024-02-29
 
