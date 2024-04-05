@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.04.0] - 2024-04-05
+
+### Changed
+
+- Hard-coded color scheme mapping for tag categories.
+
+### Fixed
+
+- Fixed jumping to grpah after loading gs file from landingpage
+
 ## [24.02.1] - 2024-02-29
 
 ### Added
