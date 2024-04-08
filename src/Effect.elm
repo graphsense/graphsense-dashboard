@@ -8,6 +8,7 @@ import Config.UserSettings
 import Effect.Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
+import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Msg(..))
@@ -68,6 +69,25 @@ perform plugins key statusbarToken apiKey effect =
 
         ApiEffect eff ->
             Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken) eff
+
+        PathfinderEffect eff ->
+            case eff of
+                Pathfinder.ApiEffect apiEff ->
+                    Effect.Api.map PathfinderMsg apiEff
+                        |> Effect.Api.perform apiKey (BrowserGotResponseWithHeaders statusbarToken)
+
+                Pathfinder.NavPushRouteEffect route ->
+                    Route.pathfinderRoute route
+                        |> Route.toUrl
+                        |> Nav.pushUrl key
+
+                Pathfinder.PluginEffect _ ->
+                    Pathfinder.perform eff
+                        |> Cmd.map PathfinderMsg
+
+                Pathfinder.CmdEffect cmd ->
+                    cmd
+                        |> Cmd.map PathfinderMsg
 
         GraphEffect eff ->
             case eff of

@@ -20,9 +20,9 @@ type alias Coords =
     }
 
 
-type alias Model =
+type alias Model comparable =
     { state : Transition
-    , collectingAddedEntityIds : Set Id.EntityId
+    , collectingAddedEntityIds : Set comparable
     , bounce : Bounce
     }
 
@@ -39,7 +39,7 @@ type Transition
     | Settled Coords
 
 
-getZ : Model -> Float
+getZ : Model comparable -> Float
 getZ model =
     case model.state of
         Transitioning { current } ->
@@ -49,7 +49,7 @@ getZ model =
             Bounded.value z
 
 
-getCurrent : Model -> Coords
+getCurrent : Model comparable -> Coords
 getCurrent model =
     case model.state of
         Transitioning { current } ->
@@ -59,7 +59,7 @@ getCurrent model =
             c
 
 
-getBoundingBox : Model -> { width : Float, height : Float } -> BBox
+getBoundingBox : Model comparable -> { width : Float, height : Float } -> BBox
 getBoundingBox model { width, height } =
     let
         current =

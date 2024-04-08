@@ -9,6 +9,7 @@ import Dict exposing (Dict)
 import Effect.Api
 import Effect.Graph
 import Effect.Locale
+import Effect.Pathfinder
 import Effect.Search
 import Hovercard
 import Http
@@ -16,10 +17,12 @@ import Json.Encode
 import Model.Dialog
 import Model.Graph
 import Model.Locale
+import Model.Pathfinder
 import Model.Search
 import Model.Statusbar
 import Msg.Graph
 import Msg.Locale
+import Msg.Pathfinder
 import Msg.Search
 import Plugin.Model as Plugin
 import Plugin.Msg as Plugin
@@ -46,6 +49,7 @@ type alias Model navigationKey =
     , locale : Model.Locale.Model
     , search : Model.Search.Model
     , graph : Model.Graph.Model
+    , pathfinder : Model.Pathfinder.Model
     , user : UserModel
     , stats : WebData Api.Data.Stats
     , width : Int
@@ -63,6 +67,7 @@ type Page
     = Home
     | Stats
     | Graph
+    | Pathfinder
     | Plugin Plugin.PluginType
 
 
@@ -95,6 +100,7 @@ type Msg
     | LocaleMsg Msg.Locale.Msg
     | SearchMsg Msg.Search.Msg
     | GraphMsg Msg.Graph.Msg
+    | PathfinderMsg Msg.Pathfinder.Msg
     | PluginMsg Plugin.Msg
     | UserClickedExampleSearch String
     | UserHovercardMsg Hovercard.Msg
@@ -135,6 +141,7 @@ type Effect
     | LocaleEffect Effect.Locale.Effect
     | SearchEffect Effect.Search.Effect
     | GraphEffect Effect.Graph.Effect
+    | PathfinderEffect Effect.Pathfinder.Effect
     | ApiEffect (Effect.Api.Effect Msg)
     | PluginEffect (Cmd Plugin.Msg)
     | PortsConsoleEffect String

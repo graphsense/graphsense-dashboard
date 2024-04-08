@@ -49,6 +49,7 @@ import Tuple exposing (..)
 import Update.Dialog as Dialog
 import Update.Graph as Graph
 import Update.Locale as Locale
+import Update.Pathfinder as Pathfinder
 import Update.Search as Search
 import Update.Statusbar as Statusbar
 import Url exposing (Url)
@@ -569,6 +570,15 @@ update plugins uc msg model =
                     , List.map SearchEffect searchEffects
                     )
 
+        PathfinderMsg m ->
+            let
+                ( pathfinder, eff ) =
+                    Pathfinder.update plugins uc m model.pathfinder
+            in
+            ( { model | pathfinder = pathfinder }
+            , List.map PathfinderEffect eff
+            )
+
         GraphMsg m ->
             case m of
                 Graph.PluginMsg ms ->
@@ -1019,7 +1029,7 @@ updateByUrl plugins uc url model =
     Route.parse routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
-                case Log.log "route" route of
+                case Debug.log "route" route of
                     Route.Home ->
                         ( { model
                             | page = Home
@@ -1070,6 +1080,9 @@ updateByUrl plugins uc url model =
                                 , graphEffect
                                     |> List.map GraphEffect
                                 )
+
+                    Route.Pathfinder pfRoute ->
+                        n { model | page = Pathfinder }
 
                     Route.Plugin ( pluginType, urlValue ) ->
                         let

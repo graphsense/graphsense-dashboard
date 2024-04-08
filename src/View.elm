@@ -102,10 +102,10 @@ sidebar plugins vc model =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
-                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Graph")
-                , model.graph.route
-                    |> Route.graphRoute
+                [ model.page == Pathfinder |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Pathfinder")
+                , model.pathfinder.route
+                    |> Route.pathfinderRoute
                     |> Route.toUrl
                     |> href
                 ]

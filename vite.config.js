@@ -3,11 +3,14 @@ import elmPlugin from "vite-plugin-elm";
 
 export default defineConfig({
   plugins: [elmPlugin()],
-  server: { host: '0.0.0.0', hmr : { overlay : false } },
+  server: { 
+    host: '0.0.0.0',
+    hmr : { overlay : false }
+  },
   publicDir: "gen/public",
   build: { 
     outDir: 'dist', 
     minify: 'terser'
-  }
+  },
 
 });

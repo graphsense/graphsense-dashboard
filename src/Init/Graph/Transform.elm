@@ -7,7 +7,7 @@ import RecordSetter exposing (s_state)
 import Set
 
 
-init : Model
+init : Model id
 init =
     { collectingAddedEntityIds = Set.empty
     , bounce = Bounce.init
@@ -22,7 +22,7 @@ init =
     }
 
 
-initTransitioning : Bool -> Float -> Coords -> Coords -> Model
+initTransitioning : Bool -> Float -> Coords -> Coords -> Model id
 initTransitioning withEase duration from to =
     init
         |> s_state

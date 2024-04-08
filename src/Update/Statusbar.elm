@@ -6,6 +6,7 @@ import Dict
 import Effect.Api as Api
 import Effect.Graph as Graph
 import Effect.Locale as Locale
+import Effect.Pathfinder as Pathfinder
 import Effect.Search as Search
 import Http
 import List.Extra
@@ -124,6 +125,18 @@ messageFromEffect model effect =
             Nothing
 
         Model.GraphEffect (Graph.DownloadCSVEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.ApiEffect eff) ->
+            messageFromApiEffect model eff
+
+        Model.PathfinderEffect (Pathfinder.CmdEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.PluginEffect _) ->
+            Nothing
+
+        Model.PathfinderEffect (Pathfinder.NavPushRouteEffect _) ->
             Nothing
 
 

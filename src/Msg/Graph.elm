@@ -25,7 +25,7 @@ import Yaml.Decode
 
 
 type Msg
-    = UserClickedGraph Dragging
+    = UserClickedGraph (Dragging EntityId)
     | UserClickedAddress AddressId
     | UserRightClickedAddress AddressId Coords
     | UserClickedAddressActions AddressId Coords

@@ -8,6 +8,7 @@ import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Init.Graph.History as History
+import Init.Graph.History.Entry as Entry
 import Model.Graph exposing (ActiveTool, Model)
 import Model.Graph.Browser as Browser
 import Model.Graph.History as History
@@ -144,4 +145,4 @@ navbarRight vc model =
 hasPast : Model -> Bool
 hasPast model =
     makeHistoryEntry model
-        |> History.hasPast model.history
+        |> History.hasPast Entry.init model.history

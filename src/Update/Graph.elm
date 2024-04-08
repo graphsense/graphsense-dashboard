@@ -4078,7 +4078,7 @@ makeHistoryEntry model =
     }
 
 
-undoRedo : (History.Model -> Entry.Model -> Maybe ( History.Model, Entry.Model )) -> Model -> ( Model, List Effect )
+undoRedo : (History.Model Entry.Model -> Entry.Model -> Maybe ( History.Model Entry.Model, Entry.Model )) -> Model -> ( Model, List Effect )
 undoRedo fun model =
     makeHistoryEntry model
         |> fun model.history

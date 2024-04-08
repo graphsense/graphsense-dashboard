@@ -5,7 +5,7 @@ import Model.Graph.Transform exposing (..)
 import Number.Bounded as Bounded
 
 
-viewBox : { width : Float, height : Float } -> Model -> String
+viewBox : { width : Float, height : Float } -> Model comparable -> String
 viewBox { width, height } mo =
     getCurrent mo
         |> (\model ->

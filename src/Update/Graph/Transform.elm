@@ -14,24 +14,24 @@ import RecordSetter exposing (..)
 import Set exposing (Set)
 
 
-update : Graph.Coords -> Graph.Coords -> Model -> Model
+update : Graph.Coords -> Graph.Coords -> Model comparable -> Model comparable
 update start current transform =
     transform
         |> addX (start.x - current.x)
         |> addY (start.y - current.y)
 
 
-addX : Float -> Model -> Model
+addX : Float -> Model comparable -> Model comparable
 addX =
     add .x s_x
 
 
-addY : Float -> Model -> Model
+addY : Float -> Model comparable -> Model comparable
 addY =
     add .y s_y
 
 
-add : (Transform.Coords -> Float) -> (Float -> Transform.Coords -> Transform.Coords) -> Float -> Model -> Model
+add : (Transform.Coords -> Float) -> (Float -> Transform.Coords -> Transform.Coords) -> Float -> Model comparable -> Model comparable
 add field upd delta model =
     case model.state of
         Transitioning t ->
@@ -54,7 +54,7 @@ add field upd delta model =
             }
 
 
-wheel : { width : Float, height : Float } -> Float -> Float -> Float -> Model -> Model
+wheel : { width : Float, height : Float } -> Float -> Float -> Float -> Model comparable -> Model comparable
 wheel { width, height } x y w model =
     let
         x_ =
@@ -110,14 +110,14 @@ wheel { width, height } x y w model =
                 |> initTransitioning False 100 t
 
 
-vector : Graph.Coords -> Graph.Coords -> Model -> Graph.Coords
+vector : Graph.Coords -> Graph.Coords -> Model comparable -> Graph.Coords
 vector a b model =
     { x = (b.x - a.x) * getZ model
     , y = (b.y - a.y) * getZ model
     }
 
 
-updateByBoundingBox : Model -> BBox -> { width : Float, height : Float } -> Model
+updateByBoundingBox : Model comparable -> BBox -> { width : Float, height : Float } -> Model comparable
 updateByBoundingBox model bbox { width, height } =
     let
         current =
@@ -153,7 +153,7 @@ updateByBoundingBox model bbox { width, height } =
                 initTransitioning True defaultDuration t coords
 
 
-transition : Float -> Model -> Model
+transition : Float -> Model comparable -> Model comparable
 transition delta model =
     { model
         | state =
@@ -197,7 +197,7 @@ transition delta model =
     }
 
 
-delay : Set Id.EntityId -> Model -> ( Model, Cmd Graph.Msg )
+delay : Set comparable -> Model comparable -> ( Model comparable, Cmd Graph.Msg )
 delay ids model =
     ( { model
         | bounce = Bounce.push model.bounce
@@ -207,7 +207,7 @@ delay ids model =
     )
 
 
-pop : Model -> ( Model, Bool )
+pop : Model comparable -> ( Model comparable, Bool )
 pop model =
     let
         newBounce =

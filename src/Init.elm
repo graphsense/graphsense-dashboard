@@ -7,6 +7,7 @@ import Dict
 import Effect.Api
 import Init.Graph as Graph
 import Init.Locale as Locale
+import Init.Pathfinder as Pathfinder
 import Init.Search as Search
 import Init.Statusbar as Statusbar
 import Json.Decode
@@ -43,6 +44,7 @@ init plugins uc flags url key =
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)
       , graph = Graph.init settings flags.now
+      , pathfinder = Pathfinder.init
       , user =
             { apiKey = ""
             , auth = Unknown

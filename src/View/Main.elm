@@ -9,6 +9,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import Util.View
 import View.Graph as Graph
 import View.Landingpage as Landingpage
+import View.Pathfinder as Pathfinder
 import View.Stats as Stats
 
 
@@ -33,6 +34,15 @@ view plugins vc model =
                 |> (\{ navbar, contents } ->
                         { navbar = List.map (Html.Styled.map GraphMsg) navbar
                         , contents = List.map (Html.Styled.map GraphMsg) contents
+                        }
+                   )
+                |> main_ vc
+
+        Pathfinder ->
+            Pathfinder.view plugins model.plugins vc model.pathfinder
+                |> (\{ navbar, contents } ->
+                        { navbar = List.map (Html.Styled.map PathfinderMsg) navbar
+                        , contents = List.map (Html.Styled.map PathfinderMsg) contents
                         }
                    )
                 |> main_ vc

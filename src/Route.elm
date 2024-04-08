@@ -1,8 +1,18 @@
-module Route exposing (Route(..), graphRoute, homeRoute, parse, pluginRoute, statsRoute, toUrl)
+module Route exposing
+    ( Route(..)
+    , graphRoute
+    , homeRoute
+    , parse
+    , pathfinderRoute
+    , pluginRoute
+    , statsRoute
+    , toUrl
+    )
 
 import Plugin.Model
 import Plugin.Route as Plugin
 import Route.Graph as Graph
+import Route.Pathfinder as Pathfinder
 import Url exposing (..)
 import Url.Builder exposing (..)
 import Util.Url.Parser as P exposing (..)
@@ -15,6 +25,7 @@ type alias Config =
 
 type Route
     = Graph Graph.Route
+    | Pathfinder Pathfinder.Route
     | Home
     | Stats
     | Plugin ( Plugin.Model.PluginType, String )
@@ -23,6 +34,11 @@ type Route
 graphSegment : String
 graphSegment =
     "graph"
+
+
+pathfinderSegment : String
+pathfinderSegment =
+    "pathfinder"
 
 
 statsSegment =
@@ -38,6 +54,7 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
+        , map Pathfinder (s pathfinderSegment |> slash Pathfinder.parser)
         , map Stats (s statsSegment)
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)
@@ -59,6 +76,11 @@ graphRoute =
     Graph
 
 
+pathfinderRoute : Pathfinder.Route -> Route
+pathfinderRoute =
+    Pathfinder
+
+
 pluginRoute : ( String, String ) -> Route
 pluginRoute ( ns, url ) =
     ns
@@ -78,6 +100,9 @@ toUrl route =
     case route of
         Graph graph ->
             absolute [ graphSegment ] [] ++ Graph.toUrl graph
+
+        Pathfinder p ->
+            absolute [ pathfinderSegment ] [] ++ Pathfinder.toUrl p
 
         Stats ->
             absolute [ statsSegment ] []
