@@ -6,13 +6,18 @@ import Model.Graph.Transform as Transform
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
-import Route.Pathfinder
+
+
+
+--import Route.Pathfinder
 
 
 type alias Model =
-    { networks : List Network
-    , route : Route.Pathfinder.Route
+    { network : Maybe Network
+
+    --, route : Route.Pathfinder.Route
     , dragging : Dragging Id
+    , selection : List Id
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
     }

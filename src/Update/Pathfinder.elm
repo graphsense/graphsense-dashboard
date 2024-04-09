@@ -130,7 +130,7 @@ forcePushHistory model =
 
 makeHistoryEntry : Model -> Entry.Model
 makeHistoryEntry model =
-    { networks = model.networks
+    { network = model.network
     }
 
 
@@ -142,7 +142,7 @@ undoRedo fun model =
             (\( history, entry ) ->
                 { model
                     | history = history
-                    , networks = entry.networks
+                    , network = entry.network
                 }
             )
         |> Maybe.withDefault model

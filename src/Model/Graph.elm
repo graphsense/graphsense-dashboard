@@ -84,7 +84,7 @@ type Hovered
 type Dragging id
     = NoDragging
     | Dragging (Transform.Model id) Coords Coords
-    | DraggingNode EntityId Coords Coords
+    | DraggingNode id Coords Coords
 
 
 type alias Deserializing =

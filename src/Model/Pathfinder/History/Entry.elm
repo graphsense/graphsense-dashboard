@@ -4,5 +4,5 @@ import Model.Pathfinder.Network exposing (Network)
 
 
 type alias Model =
-    { networks : List Network
+    { network : Maybe Network
     }

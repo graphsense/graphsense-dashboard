@@ -13,6 +13,7 @@ import Plugin.Model
 import Plugin.Route as Plugin
 import Route.Graph as Graph
 import Route.Pathfinder as Pathfinder
+import Theme.Pathfinder exposing (Pathfinder)
 import Url exposing (..)
 import Url.Builder exposing (..)
 import Util.Url.Parser as P exposing (..)

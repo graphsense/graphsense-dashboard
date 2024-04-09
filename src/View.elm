@@ -15,6 +15,7 @@ import Model.Dialog as Dialog
 import Plugin.View as Plugin exposing (Plugins)
 import Route
 import Route.Graph
+import Route.Pathfinder as Pathfinder
 import Util.Css
 import Util.View exposing (hovercard)
 import View.Dialog as Dialog
@@ -102,10 +103,20 @@ sidebar plugins vc model =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a
+                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
+                , title (Locale.string vc.locale "Graph")
+                , model.graph.route
+                    |> Route.graphRoute
+                    |> Route.toUrl
+                    |> href
+                ]
+         , FontAwesome.icon FontAwesome.networkWired
+            |> Html.Styled.fromUnstyled
+            |> List.singleton
+            |> a
                 [ model.page == Pathfinder |> Css.View.sidebarIcon vc |> css
                 , title (Locale.string vc.locale "Pathfinder")
-                , model.pathfinder.route
-                    |> Route.pathfinderRoute
+                , Route.pathfinderRoute Pathfinder.Root
                     |> Route.toUrl
                     |> href
                 ]

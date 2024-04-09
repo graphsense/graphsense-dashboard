@@ -2,9 +2,11 @@ module View.Pathfinder exposing (view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
+import Css
 import Css.Graph
 import Css.Pathfinder as Css
-import Html.Styled exposing (..)
+import FontAwesome
+import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
@@ -15,6 +17,7 @@ import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
+import Quicklock exposing (plugin)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -40,6 +43,83 @@ graph plugins states vc gc model =
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
     ]
+        ++ [ titleAndSettings plugins states vc gc model
+           , graphTools plugins states vc gc model
+           , propertiesAndSearch plugins states vc gc model
+           ]
+
+
+boxStyle : List Css.Style
+boxStyle =
+    []
+
+
+toolItemStyle : List Css.Style
+toolItemStyle =
+    [ Css.em 2 |> Css.fontSize
+    , Css.px 5 |> Css.marginRight
+    , Css.px 5 |> Css.marginLeft
+    ]
+
+
+titleAndSettingsStyle : List Css.Style
+titleAndSettingsStyle =
+    [ Css.position Css.absolute
+    , Css.px 10 |> Css.left
+    , Css.px 10 |> Css.top
+    ]
+
+
+graphToolsStyle : List Css.Style
+graphToolsStyle =
+    [ Css.position Css.absolute
+    , Css.pct 50 |> Css.left
+    , Css.pct 50 |> Css.right
+    , Css.px 40 |> Css.bottom
+    , Css.px 200 |> Css.minWidth
+    , Css.px 1 |> Css.borderWidth
+    , Css.displayFlex
+    ]
+
+
+propertiesAndSearchStyle : List Css.Style
+propertiesAndSearchStyle =
+    [ Css.position Css.absolute
+    , Css.px 10 |> Css.right
+    , Css.px 10 |> Css.top
+    ]
+        ++ boxStyle
+
+
+titleAndSettings : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+titleAndSettings plugins _ vc gc model =
+    div [ titleAndSettingsStyle |> HA.css ]
+        [ h1 [] [ Html.Styled.text "Pathfinder" ]
+        ]
+
+
+graphTools : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+graphTools plugins _ vc gc model =
+    div
+        [ graphToolsStyle |> HA.css
+        ]
+        [ div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.trash |> Html.fromUnstyled ]
+        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.redo |> Html.fromUnstyled ]
+        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.undo |> Html.fromUnstyled ]
+        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.highlighter |> Html.fromUnstyled ]
+        ]
+
+
+propertiesAndSearch : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+propertiesAndSearch plugins _ vc gc model =
+    div [ propertiesAndSearchStyle |> HA.css ]
+        [ Html.Styled.text "Pathfinder"
+        ]
+
+
+
+--propertyBoxTools : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+--propertyBoxTools = div [boxStyle |> HA.css] [Html.Styled.text "Property box tools"]
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
@@ -83,16 +163,15 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
         )
-        [ Svg.lazy4 networks plugins vc gc model.networks
+        [ model.network |> Maybe.map (Svg.lazy4 networks plugins vc gc) |> Maybe.withDefault (div [] [])
         ]
 
 
-networks : Plugins -> View.Config -> Pathfinder.Config -> List Network -> Svg Msg
-networks plugins vc gc =
-    List.map
-        (\network ->
-            ( "Pathfinder.network." ++ network.name
-            , Svg.lazy4 Network.addresses plugins vc gc network.addresses
-            )
-        )
-        >> Keyed.node "g" []
+networks : Plugins -> View.Config -> Pathfinder.Config -> Network -> Svg Msg
+networks plugins vc gc network =
+    Keyed.node "g"
+        []
+        [ ( "Pathfinder.network." ++ network.name
+          , Svg.lazy4 Network.addresses plugins vc gc network.addresses
+          )
+        ]

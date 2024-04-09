@@ -9,8 +9,10 @@ import Route.Pathfinder as Route
 
 init : Model
 init =
-    { networks = []
-    , route = Route.Root
+    { network = Nothing
+
+    --, route = Route.Root
+    , selection = []
     , dragging = NoDragging
     , transform = Transform.init
     , history = History.init
