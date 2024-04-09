@@ -17,7 +17,6 @@ import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import Quicklock exposing (plugin)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -94,7 +93,7 @@ propertiesAndSearchStyle =
 titleAndSettings : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
 titleAndSettings plugins _ vc gc model =
     div [ titleAndSettingsStyle |> HA.css ]
-        [ h1 [] [ Html.Styled.text "Pathfinder" ]
+        [ h1 [] [ Html.text "Pathfinder" ]
         ]
 
 
@@ -113,7 +112,7 @@ graphTools plugins _ vc gc model =
 propertiesAndSearch : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
 propertiesAndSearch plugins _ vc gc model =
     div [ propertiesAndSearchStyle |> HA.css ]
-        [ Html.Styled.text "Pathfinder"
+        [ Html.text "Pathfinder"
         ]
 
 

@@ -1029,7 +1029,7 @@ updateByUrl plugins uc url model =
     Route.parse routeConfig url
         |> Maybe.map2
             (\oldRoute route ->
-                case Debug.log "route" route of
+                case route of
                     Route.Home ->
                         ( { model
                             | page = Home
