@@ -40,6 +40,11 @@ dummyImageSrc _ =
     "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
 
 
+highlightPrimaryColor : Css.Color
+highlightPrimaryColor =
+    Css.rgb 26 197 176
+
+
 lighterGreyColor : Css.Color
 lighterGreyColor =
     Css.rgb 208 216 220
@@ -210,6 +215,21 @@ propertyBoxDetailsViewContainerStyle _ =
     [ Css.displayFlex, Css.justifyContent Css.left, Css.pct 100 |> Css.width ]
 
 
+kVTableTdStyle : View.Config -> List Css.Style
+kVTableTdStyle _ =
+    [ Css.px 5 |> Css.paddingLeft ]
+
+
+kVTableKeyTdStyle : View.Config -> List Css.Style
+kVTableKeyTdStyle vc =
+    [ Css.px 5 |> Css.paddingTop, Css.px 5 |> Css.paddingBottom, Css.color lightGreyColor ] ++ kVTableTdStyle vc
+
+
+kVTableValueTdStyle : View.Config -> List Css.Style
+kVTableValueTdStyle vc =
+    Css.textAlign Css.right :: kVTableTdStyle vc
+
+
 
 -- Config
 
@@ -238,6 +258,59 @@ graphActionButtons =
 -- Helpers
 
 
+type ValueType
+    = Value Int
+    | Currency Float String
+
+
+type KVTableRow
+    = Row String ValueType
+    | Gap
+
+
+renderKVTable : View.Config -> List KVTableRow -> Html Msg
+renderKVTable vc rows =
+    table [ [ Css.pct 100 |> Css.width ] |> HA.css ] (rows |> List.map (renderKVRow vc))
+
+
+renderKVRow : View.Config -> KVTableRow -> Html Msg
+renderKVRow vc row =
+    case row of
+        Row key value ->
+            tr []
+                [ td [ kVTableKeyTdStyle vc |> HA.css ] [ Html.text (Locale.string vc.locale key) ]
+                , td [ kVTableValueTdStyle vc |> HA.css ] (renderKVTableValue vc value |> List.singleton)
+                , td [ kVTableTdStyle vc |> HA.css ] (renderKVTableValueExtension vc value |> List.singleton)
+                ]
+
+        Gap ->
+            tr []
+                [ td [ kVTableKeyTdStyle vc |> HA.css ] []
+                , td [] []
+                , td [] []
+                ]
+
+
+renderKVTableValue : View.Config -> ValueType -> Html Msg
+renderKVTableValue vc val =
+    case val of
+        Value v ->
+            span [] [ Html.text (String.fromInt v) ]
+
+        Currency v _ ->
+            span [] [ Html.text (String.fromFloat v) ]
+
+
+renderKVTableValueExtension : View.Config -> ValueType -> Html Msg
+renderKVTableValueExtension vc val =
+    case val of
+        Value _ ->
+            none
+
+        Currency _ ticker ->
+            span [] [ Html.text (String.toUpper ticker) ]
+
+
 disableableButton : (Bool -> List Css.Style) -> BtnConfig -> List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
 disableableButton style btn attrs content =
     let
@@ -248,7 +321,7 @@ disableableButton style btn attrs content =
             else
                 [ HA.disabled True ]
     in
-    button (([ style btn.enable |> HA.css ] ++ addattr) ++ attrs) content
+    button (((style btn.enable |> HA.css) :: addattr) ++ attrs) content
 
 
 
@@ -371,6 +444,7 @@ propertyBoxDetailsView plugins ms vc gc model =
             [ itemHeadingAndLabelsView plugins ms vc gc model
             , hr [ [ Css.px 5 |> Css.marginBottom, Css.px 5 |> Css.marginTop ] |> HA.css ] []
             , itemDetailsView plugins ms vc gc model
+            , itemActionsView plugins ms vc gc model
             ]
         ]
 
@@ -389,7 +463,7 @@ itemHeadingAndLabelsView plugins ms vc gc model =
     in
     div []
         [ h1 [ propertyBoxHeading2 vc |> HA.css ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
-        , copyableLongIdentifier vc [] identifier
+        , copyableLongIdentifier vc [ [ Css.color highlightPrimaryColor ] |> HA.css ] identifier
         ]
 
 
@@ -400,8 +474,27 @@ annotationButton vc btn =
 
 itemDetailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 itemDetailsView plugins ms vc gc model =
+    let
+        data =
+            [ Row "Total received" (Currency 1.0 "btc")
+            , Row "Total sent" (Currency 1.0 "btc")
+            , Row "Balance" (Currency 1.0 "btc")
+            , Gap
+            , Row "First usage" (Currency 1.0 "btc")
+            , Row "Last usage" (Currency 1.0 "btc")
+            ]
+    in
     div []
-        []
+        [ renderKVTable vc data
+        ]
+
+
+itemActionsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+itemActionsView plugins ms vc gc model =
+    div []
+        [ button [] [ Html.text "Connect Case" ]
+        , button [] [ Html.text "Actions Case" ]
+        ]
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
