@@ -10,6 +10,9 @@ shallPushHistory msg model =
         UserClickedGraph _ ->
             False
 
+        SearchMsg _ ->
+            False
+
         UserPushesLeftMouseButtonOnGraph _ ->
             False
 

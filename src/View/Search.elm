@@ -41,7 +41,7 @@ search plugins vc sc model =
             Autocomplete.viewState model.autocomplete
     in
     Html.Styled.form
-        [ Css.form vc |> css
+        [ Css.form vc sc.showIcon |> css
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         , onSubmit UserClicksResultLine
         ]

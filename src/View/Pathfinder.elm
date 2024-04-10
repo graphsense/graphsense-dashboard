@@ -27,6 +27,126 @@ import Util.View exposing (none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Network as Network
+import View.Search
+
+
+
+-- Styles
+
+
+lighterGreyColor : Css.Color
+lighterGreyColor =
+    Css.rgb 208 216 220
+
+
+lightGreyColor : Css.Color
+lightGreyColor =
+    Css.rgb 120 144 156
+
+
+defaultBackground : Css.Color
+defaultBackground =
+    Css.rgb 255 255 255
+
+
+boxStyle : List Css.Style
+boxStyle =
+    [ Css.backgroundColor defaultBackground
+    , Css.boxShadow5 (Css.px 1) (Css.px 1) (Css.px 5) (Css.px 1) lighterGreyColor
+    , Css.px 10 |> Css.padding
+    ]
+
+
+searchInputStyle : String -> List Css.Style
+searchInputStyle _ =
+    [ Css.pct 100 |> Css.width
+    , Css.px 20 |> Css.height
+    , Css.display Css.block
+    , Css.color lightGreyColor
+    , Css.border3 (Css.px 2) Css.solid lighterGreyColor
+    , Css.backgroundColor defaultBackground
+    , Css.px 3 |> Css.borderRadius
+    , Css.px 25 |> Css.textIndent
+    ]
+
+
+propertyBoxHeading : List Css.Style
+propertyBoxHeading =
+    [ Css.fontWeight Css.bold
+    , Css.em 1.3 |> Css.fontSize
+    , Css.px 10 |> Css.marginBottom
+    ]
+
+
+toolItemStyle : List Css.Style
+toolItemStyle =
+    [ Css.px 55 |> Css.minWidth
+    , Css.textAlign Css.center
+    ]
+
+
+toolButtonStyle : List Css.Style
+toolButtonStyle =
+    [ Css.textAlign Css.center, Css.cursor Css.pointer ]
+
+
+toolIconStyle : List Css.Style
+toolIconStyle =
+    [ Css.em 1.3 |> Css.fontSize
+    , Css.px 5 |> Css.marginBottom
+    ]
+
+
+topLeftPanelStyle : List Css.Style
+topLeftPanelStyle =
+    [ Css.position Css.absolute
+    , Css.px 10 |> Css.left
+    , Css.px 10 |> Css.top
+    ]
+
+
+graphToolsStyle : List Css.Style
+graphToolsStyle =
+    [ Css.position Css.absolute
+    , Css.pct 50 |> Css.left
+    , Css.px 50 |> Css.bottom
+    , Css.displayFlex
+    , Css.transform (Css.translate (Css.pct -50))
+    ]
+        ++ boxStyle
+
+
+propertiesAndSearchStyle : List Css.Style
+propertiesAndSearchStyle =
+    [ Css.position Css.absolute
+    , Css.px 10 |> Css.right
+    , Css.px 10 |> Css.top
+    ]
+
+
+searchBoxStyle : List Css.Style
+searchBoxStyle =
+    [ Css.px 300 |> Css.minWidth
+    , Css.px 10 |> Css.paddingBottom
+    ]
+        ++ boxStyle
+
+
+propertyBoxStyle : List Css.Style
+propertyBoxStyle =
+    searchBoxStyle
+
+
+graphActionButtonStyle : List Css.Style
+graphActionButtonStyle =
+    [ Css.px 5 |> Css.margin
+    , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
+    , Css.color lightGreyColor
+    , Css.borderColor lighterGreyColor
+    , Css.backgroundColor defaultBackground
+    , Css.border3 (Css.px 1) Css.solid lighterGreyColor
+    , Css.px 3 |> Css.borderRadius
+    ]
 
 
 view : Plugins -> ModelState -> View.Config -> Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
@@ -42,59 +162,24 @@ graph plugins states vc gc model =
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
     ]
-        ++ [ titleAndSettings plugins states vc gc model
+        ++ [ topLeftPanel plugins states vc gc model
            , graphTools plugins states vc gc model
-           , propertiesAndSearch plugins states vc gc model
+           , topRightPanel plugins states vc gc model
            ]
 
 
-boxStyle : List Css.Style
-boxStyle =
-    []
+topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+topLeftPanel plugins ms vc gc model =
+    div [ topLeftPanelStyle |> HA.css ]
+        [ h2 [ vc.theme.heading2 |> HA.css ] [ Html.text "Pathfinder" ]
 
-
-toolItemStyle : List Css.Style
-toolItemStyle =
-    [ Css.em 2 |> Css.fontSize
-    , Css.px 5 |> Css.marginRight
-    , Css.px 5 |> Css.marginLeft
-    ]
-
-
-titleAndSettingsStyle : List Css.Style
-titleAndSettingsStyle =
-    [ Css.position Css.absolute
-    , Css.px 10 |> Css.left
-    , Css.px 10 |> Css.top
-    ]
-
-
-graphToolsStyle : List Css.Style
-graphToolsStyle =
-    [ Css.position Css.absolute
-    , Css.pct 50 |> Css.left
-    , Css.pct 50 |> Css.right
-    , Css.px 40 |> Css.bottom
-    , Css.px 200 |> Css.minWidth
-    , Css.px 1 |> Css.borderWidth
-    , Css.displayFlex
-    ]
-
-
-propertiesAndSearchStyle : List Css.Style
-propertiesAndSearchStyle =
-    [ Css.position Css.absolute
-    , Css.px 10 |> Css.right
-    , Css.px 10 |> Css.top
-    ]
-        ++ boxStyle
-
-
-titleAndSettings : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
-titleAndSettings plugins _ vc gc model =
-    div [ titleAndSettingsStyle |> HA.css ]
-        [ h1 [] [ Html.text "Pathfinder" ]
+        --, settingsView plugins ms vc gc model
         ]
+
+
+settingsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+settingsView plugins _ vc gc model =
+    div [ (boxStyle ++ [ Css.displayFlex, Css.justifyContent Css.flexEnd ]) |> HA.css ] [ Html.text "Display", FontAwesome.icon FontAwesome.chevronDown |> Html.fromUnstyled ]
 
 
 graphTools : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
@@ -102,23 +187,65 @@ graphTools plugins _ vc gc model =
     div
         [ graphToolsStyle |> HA.css
         ]
-        [ div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.trash |> Html.fromUnstyled ]
-        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.redo |> Html.fromUnstyled ]
-        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.undo |> Html.fromUnstyled ]
-        , div [ toolItemStyle |> HA.css ] [ FontAwesome.icon FontAwesome.highlighter |> Html.fromUnstyled ]
+        [ graphToolButton FontAwesome.trash (Locale.string vc.locale "restart")
+        , graphToolButton FontAwesome.redo (Locale.string vc.locale "redo")
+        , graphToolButton FontAwesome.undo (Locale.string vc.locale "undo")
+        , graphToolButton FontAwesome.highlighter (Locale.string vc.locale "highlight")
         ]
 
 
-propertiesAndSearch : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
-propertiesAndSearch plugins _ vc gc model =
+graphToolButton : FontAwesome.Icon -> String -> Svg Msg
+graphToolButton faIcon text =
+    div [ toolItemStyle |> HA.css ]
+        [ Html.a [ toolButtonStyle |> HA.css ]
+            [ div [ toolIconStyle |> HA.css ] [ FontAwesome.icon faIcon |> Html.fromUnstyled ]
+            , Html.text text
+            ]
+        ]
+
+
+topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+topRightPanel plugins ms vc gc model =
     div [ propertiesAndSearchStyle |> HA.css ]
-        [ Html.text "Pathfinder"
+        [ graphActionsView plugins ms vc gc model
+        , searchBoxView plugins ms vc gc model
+        , propertyBoxView plugins ms vc gc model
         ]
 
 
+graphActionsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+graphActionsView plugins _ vc gc model =
+    div [ [ Css.displayFlex, Css.justifyContent Css.flexEnd, Css.px 5 |> Css.margin ] |> HA.css ]
+        [ graphActionButton FontAwesome.arrowUp (Locale.string vc.locale "Import file")
+        , graphActionButton FontAwesome.arrowDown (Locale.string vc.locale "Export graph")
+        ]
 
---propertyBoxTools : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
---propertyBoxTools = div [boxStyle |> HA.css] [Html.Styled.text "Property box tools"]
+
+graphActionButton : FontAwesome.Icon -> String -> Svg Msg
+graphActionButton faIcon text =
+    button [ graphActionButtonStyle |> HA.css ] (iconWithText faIcon text)
+
+
+iconWithText : FontAwesome.Icon -> String -> List (Html Msg)
+iconWithText faIcon text =
+    [ span [ [ Css.px 5 |> Css.paddingRight ] |> HA.css ] [ FontAwesome.icon faIcon |> Html.fromUnstyled ], Html.text text ]
+
+
+searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+searchBoxView plugins _ vc gc model =
+    div
+        [ searchBoxStyle |> HA.css ]
+        [ h3 [ propertyBoxHeading |> HA.css ] [ Html.text (Locale.string vc.locale "Add to graph") ]
+        , View.Search.search plugins vc { css = searchInputStyle, multiline = False, resultsAsLink = True, showIcon = False } model.search |> Html.map SearchMsg
+        ]
+
+
+propertyBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Svg Msg
+propertyBoxView plugins _ vc gc model =
+    div
+        [ propertyBoxStyle |> HA.css ]
+        [ h3 [ propertyBoxHeading |> HA.css ] [ Html.text (Locale.string vc.locale "Add to graph") ]
+        ]
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg

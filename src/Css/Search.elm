@@ -4,10 +4,14 @@ import Config.View exposing (Config)
 import Css exposing (..)
 
 
-form : Config -> List Style
-form vc =
-    displayFlex
-        :: vc.theme.search.form
+form : Config -> Bool -> List Style
+form vc flex =
+    if flex then
+        displayFlex
+            :: vc.theme.search.form
+
+    else
+        vc.theme.search.form
 
 
 frame : Config -> List Style

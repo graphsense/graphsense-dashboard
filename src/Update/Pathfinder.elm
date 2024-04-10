@@ -29,6 +29,9 @@ update plugins uc msg model =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        SearchMsg _ ->
+            n model
+
         PluginMsg _ ->
             -- handled in src/Update.elm
             n model

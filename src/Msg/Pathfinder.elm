@@ -3,6 +3,7 @@ module Msg.Pathfinder exposing (..)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
+import Msg.Search as Search
 import Plugin.Msg as Plugin
 
 
@@ -12,3 +13,4 @@ type Msg
     | UserPushesLeftMouseButtonOnGraph Coords
     | UserMovesMouseOnGraph Coords
     | PluginMsg Plugin.Msg
+    | SearchMsg Search.Msg
