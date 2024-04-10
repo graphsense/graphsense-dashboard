@@ -207,7 +207,7 @@ copyIcon vc value =
         [ Html.Styled.node "copy-icon"
             [ Html.Styled.Attributes.attribute "data-value" value
             ]
-            [ FontAwesome.icon FontAwesome.copy
+            [ FontAwesome.icon FontAwesome.clone
                 |> Html.Styled.fromUnstyled
             ]
         ]

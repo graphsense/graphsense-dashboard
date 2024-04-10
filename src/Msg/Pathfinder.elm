@@ -12,5 +12,13 @@ type Msg
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnGraph Coords
     | UserMovesMouseOnGraph Coords
+    | UserClickedRestart
+    | UserClickedUndo
+    | UserClickedRedo
+    | UserClickedHighlighter
+    | UserClickedExportGraph
+    | UserClickedImportFile
+    | UserClosedPropertyBox
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
+    | NoOp

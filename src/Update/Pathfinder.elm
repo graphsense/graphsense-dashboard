@@ -29,11 +29,36 @@ update plugins uc msg model =
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
+        PluginMsg _ ->
+            -- handled in src/Update.elm
+            n model
+
+        NoOp ->
+            n model
+
+        -- TODO: Implement
         SearchMsg _ ->
             n model
 
-        PluginMsg _ ->
-            -- handled in src/Update.elm
+        UserClosedPropertyBox ->
+            n model
+
+        UserClickedRestart ->
+            n model
+
+        UserClickedUndo ->
+            n model
+
+        UserClickedRedo ->
+            n model
+
+        UserClickedHighlighter ->
+            n model
+
+        UserClickedImportFile ->
+            n model
+
+        UserClickedExportGraph ->
             n model
 
         UserClickedGraph dragging ->

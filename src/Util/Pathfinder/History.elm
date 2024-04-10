@@ -24,3 +24,6 @@ shallPushHistory msg model =
 
         PluginMsg _ ->
             False
+
+        _ ->
+            False
