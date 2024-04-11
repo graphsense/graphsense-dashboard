@@ -18,7 +18,7 @@ type Msg
     | UserClickedHighlighter
     | UserClickedExportGraph
     | UserClickedImportFile
-    | UserClosedPropertyBox
+    | UserClosedDetailsView
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp

@@ -110,7 +110,7 @@ sidebar plugins vc model =
                     |> Route.toUrl
                     |> href
                 ]
-         , FontAwesome.icon FontAwesome.networkWired
+         , FontAwesome.icon FontAwesome.shareAlt
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> a

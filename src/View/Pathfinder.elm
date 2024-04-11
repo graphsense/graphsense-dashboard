@@ -35,6 +35,11 @@ import View.Search
 -- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
 
 
+type ButtonType
+    = Primary
+    | Secondary
+
+
 dummyImageSrc : View.Config -> String
 dummyImageSrc _ =
     "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
@@ -65,11 +70,26 @@ blackColor =
     Css.rgb 0 0 0
 
 
-boxStyle : View.Config -> List Css.Style
-boxStyle _ =
+whiteColor : Css.Color
+whiteColor =
+    Css.rgb 255 255 255
+
+
+greenColor : Css.Color
+greenColor =
+    Css.rgb 141 194 153
+
+
+redColor : Css.Color
+redColor =
+    Css.rgb 194 141 141
+
+
+boxStyle : View.Config -> Maybe Float -> List Css.Style
+boxStyle _ padding =
     [ Css.backgroundColor defaultBackgroundColor
     , Css.boxShadow5 (Css.px 1) (Css.px 1) (Css.px 5) (Css.px 1) lighterGreyColor
-    , Css.px 10 |> Css.padding
+    , Css.px (padding |> Maybe.withDefault 10) |> Css.padding
     ]
 
 
@@ -86,19 +106,30 @@ searchInputStyle _ _ =
     ]
 
 
-propertyBoxHeading : View.Config -> List Css.Style
-propertyBoxHeading _ =
+panelHeadingStyle : View.Config -> List Css.Style
+panelHeadingStyle _ =
     [ Css.fontWeight Css.bold
     , Css.em 1.4 |> Css.fontSize
     , Css.px 10 |> Css.marginBottom
     ]
 
 
-propertyBoxHeading2 : View.Config -> List Css.Style
-propertyBoxHeading2 _ =
+panelHeadingStyle2 : View.Config -> List Css.Style
+panelHeadingStyle2 _ =
     [ Css.fontWeight Css.bold
     , Css.em 1.3 |> Css.fontSize
     , Css.px 10 |> Css.marginBottom
+    ]
+
+
+collapsibleSectionHeadingStyle : View.Config -> List Css.Style
+collapsibleSectionHeadingStyle _ =
+    [ Css.fontWeight Css.bold
+    , Css.em 1.1 |> Css.fontSize
+    , Css.px 10 |> Css.marginBottom
+    , Css.px 10 |> Css.marginTop
+    , Css.borderBottom3 (Css.px 0.3) Css.solid lighterGreyColor
+    , Css.px 30 |> Css.height
     ]
 
 
@@ -142,7 +173,7 @@ graphToolsStyle vc =
     , Css.displayFlex
     , Css.transform (Css.translate (Css.pct -50))
     ]
-        ++ boxStyle vc
+        ++ boxStyle vc Nothing
 
 
 topRightPanelStyle : View.Config -> List Css.Style
@@ -153,17 +184,17 @@ topRightPanelStyle _ =
     ]
 
 
-searchBoxStyle : View.Config -> List Css.Style
-searchBoxStyle vc =
+searchBoxStyle : View.Config -> Maybe Float -> List Css.Style
+searchBoxStyle vc padding =
     [ Css.px 300 |> Css.minWidth
     , Css.px 10 |> Css.marginBottom
     ]
-        ++ boxStyle vc
+        ++ boxStyle vc padding
 
 
-propertyBoxStyle : View.Config -> List Css.Style
-propertyBoxStyle =
-    searchBoxStyle
+detailsViewStyle : View.Config -> List Css.Style
+detailsViewStyle vc =
+    searchBoxStyle vc (Just 0)
 
 
 graphActionsViewStyle : View.Config -> List Css.Style
@@ -172,21 +203,46 @@ graphActionsViewStyle _ =
 
 
 graphActionButtonStyle : View.Config -> Bool -> List Css.Style
-graphActionButtonStyle _ enabled =
+graphActionButtonStyle _ _ =
     [ Css.px 5 |> Css.margin
     , Css.cursor Css.pointer
     , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
     , Css.color lightGreyColor
-    , Css.borderColor lighterGreyColor
     , Css.backgroundColor defaultBackgroundColor
     , Css.border3 (Css.px 1) Css.solid lighterGreyColor
     , Css.px 3 |> Css.borderRadius
     ]
 
 
+detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Css.Style
+detailsActionButtonStyle _ bt _ =
+    case bt of
+        Primary ->
+            [ Css.px 5 |> Css.margin
+            , Css.cursor Css.pointer
+            , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
+            , Css.color whiteColor
+            , Css.fontWeight Css.bold
+            , Css.backgroundColor highlightPrimaryColor
+            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColor
+            , Css.px 3 |> Css.borderRadius
+            ]
+
+        Secondary ->
+            [ Css.px 5 |> Css.margin
+            , Css.cursor Css.pointer
+            , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
+            , Css.color highlightPrimaryColor
+            , Css.fontWeight Css.bold
+            , Css.backgroundColor whiteColor
+            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColor
+            , Css.px 3 |> Css.borderRadius
+            ]
+
+
 searchViewStyle : View.Config -> List Css.Style
 searchViewStyle vc =
-    boxStyle vc ++ [ Css.displayFlex, Css.justifyContent Css.flexEnd ]
+    boxStyle vc Nothing ++ [ Css.displayFlex, Css.justifyContent Css.flexEnd ]
 
 
 searchBoxContainerStyle : View.Config -> List Css.Style
@@ -210,8 +266,8 @@ propertyBoxActorImageStyle _ =
     ]
 
 
-propertyBoxDetailsViewContainerStyle : View.Config -> List Css.Style
-propertyBoxDetailsViewContainerStyle _ =
+detailsViewContainerStyle : View.Config -> List Css.Style
+detailsViewContainerStyle _ =
     [ Css.displayFlex, Css.justifyContent Css.left, Css.pct 100 |> Css.width ]
 
 
@@ -324,6 +380,62 @@ disableableButton style btn attrs content =
     button (((style btn.enable |> HA.css) :: addattr) ++ attrs) content
 
 
+rule : Html Msg
+rule =
+    hr [ [ Css.px 5 |> Css.marginBottom, Css.px 5 |> Css.marginTop ] |> HA.css ] []
+
+
+inIcon : Html Msg
+inIcon =
+    span [ [ Css.color greenColor, Css.ch 0.5 |> Css.paddingRight, Css.ch 0.2 |> Css.paddingLeft ] |> HA.css ] [ FontAwesome.icon FontAwesome.signInAlt |> Html.fromUnstyled ]
+
+
+outIcon : Html Msg
+outIcon =
+    span [ [ Css.color redColor, Css.ch 0.5 |> Css.paddingRight, Css.ch 0.2 |> Css.paddingLeft ] |> HA.css ] [ FontAwesome.icon FontAwesome.signOutAlt |> Html.fromUnstyled ]
+
+
+inOutIndicator : Maybe Int -> Int -> Int -> Html Msg
+inOutIndicator mnr inNr outNr =
+    let
+        prefix =
+            case mnr of
+                Just nr ->
+                    String.join " " [ String.fromInt nr, "(" ]
+
+                Nothing ->
+                    "("
+    in
+    span [ [ Css.ch 0.5 |> Css.paddingLeft ] |> HA.css ] [ Html.text prefix, inIcon, Html.text (String.fromInt inNr), Html.text ",", outIcon, Html.text (String.fromInt outNr), Html.text ")" ]
+
+
+collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Html Msg
+collapsibleSection vc title open indicator content =
+    let
+        icon =
+            if open then
+                FontAwesome.chevronDown
+
+            else
+                FontAwesome.chevronRight
+
+        data =
+            if open then
+                [ content ]
+
+            else
+                []
+    in
+    div []
+        (h3 [ collapsibleSectionHeadingStyle vc |> HA.css ]
+            [ span [ [ Css.ch 1 |> Css.paddingRight, Css.ch 2 |> Css.paddingLeft ] |> HA.css ] [ FontAwesome.icon icon |> Html.fromUnstyled ]
+            , Html.text (Locale.string vc.locale title)
+            , indicator |> Maybe.withDefault none
+            ]
+            :: data
+        )
+
+
 
 -- View
 
@@ -385,7 +497,7 @@ topRightPanel plugins ms vc gc model =
     div [ topRightPanelStyle vc |> HA.css ]
         [ graphActionsView plugins ms vc gc model
         , searchBoxView plugins ms vc gc model
-        , propertyBoxView plugins ms vc gc model
+        , detailsView plugins ms vc gc model
         ]
 
 
@@ -408,8 +520,8 @@ iconWithText _ faIcon text =
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 searchBoxView plugins _ vc gc model =
     div
-        [ searchBoxStyle vc |> HA.css ]
-        [ h3 [ propertyBoxHeading2 vc |> HA.css ] [ Html.text (Locale.string vc.locale "Add to graph") ]
+        [ searchBoxStyle vc Nothing |> HA.css ]
+        [ h3 [ panelHeadingStyle2 vc |> HA.css ] [ Html.text (Locale.string vc.locale "Add to graph") ]
         , div [ searchBoxContainerStyle vc |> HA.css ]
             [ span [ searchBoxIconStyle vc |> HA.css ] [ FontAwesome.icon FontAwesome.search |> Html.fromUnstyled ]
             , View.Search.search plugins vc { css = searchInputStyle vc, multiline = False, resultsAsLink = True, showIcon = False } model.search |> Html.map SearchMsg
@@ -417,18 +529,18 @@ searchBoxView plugins _ vc gc model =
         ]
 
 
-propertyBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-propertyBoxView plugins ms vc gc model =
+detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+detailsView plugins ms vc gc model =
     div
-        [ propertyBoxStyle vc |> HA.css ]
-        [ propertyBoxCloseRow vc
-        , propertyBoxDetailsView plugins ms vc gc model
+        [ detailsViewStyle vc |> HA.css ]
+        [ detailsViewCloseRow vc
+        , detailsContentView plugins ms vc gc model
         ]
 
 
-propertyBoxCloseRow : View.Config -> Html Msg
-propertyBoxCloseRow vc =
-    div [ [ Css.float Css.right ] |> HA.css ] [ closeButton vc UserClosedPropertyBox ]
+detailsViewCloseRow : View.Config -> Html Msg
+detailsViewCloseRow vc =
+    div [ [ Css.float Css.right, Css.margin4 (Css.px 10) (Css.px 10) (Css.px 0) (Css.px 0) ] |> HA.css ] [ closeButton vc UserClosedDetailsView ]
 
 
 closeButton : View.Config -> Msg -> Html Msg
@@ -436,17 +548,41 @@ closeButton vc msg =
     button [ linkButtonStyle vc True |> HA.css, msg |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
 
 
-propertyBoxDetailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-propertyBoxDetailsView plugins ms vc gc model =
-    div [ propertyBoxDetailsViewContainerStyle vc |> HA.css ]
-        [ img [ src (dummyImageSrc vc), propertyBoxActorImageStyle vc |> HA.css ] []
-        , div [ [ Css.pct 100 |> Css.width ] |> HA.css ]
-            [ itemHeadingAndLabelsView plugins ms vc gc model
-            , hr [ [ Css.px 5 |> Css.marginBottom, Css.px 5 |> Css.marginTop ] |> HA.css ] []
-            , itemDetailsView plugins ms vc gc model
-            , itemActionsView plugins ms vc gc model
+detailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+detailsContentView plugins ms vc gc model =
+    div []
+        [ div [ [ Css.px 10 |> Css.marginRight, Css.px 10 |> Css.marginLeft ] |> HA.css ]
+            [ div [ detailsViewContainerStyle vc |> HA.css ]
+                [ img [ src (dummyImageSrc vc), propertyBoxActorImageStyle vc |> HA.css ] []
+                , div [ [ Css.pct 100 |> Css.width ] |> HA.css ]
+                    [ itemHeadingAndLabelsView plugins ms vc gc model
+                    , rule
+                    , itemDetailsView plugins ms vc gc model
+                    , itemActionsView plugins ms vc gc model
+                    ]
+                ]
             ]
+        , transactionTableView plugins ms vc gc model
+        , addressNeighborsTableView plugins ms vc gc model
         ]
+
+
+transactionTableView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+transactionTableView plugins ms vc gc model =
+    let
+        content =
+            div [] [ Html.text "yeeeha" ]
+    in
+    collapsibleSection vc "Transactions" True (Just (inOutIndicator (Just 1) 1 1)) content
+
+
+addressNeighborsTableView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+addressNeighborsTableView plugins ms vc gc model =
+    let
+        content =
+            div [] [ Html.text "yeeeha" ]
+    in
+    collapsibleSection vc "Addresses" False (Just (inOutIndicator (Just 1) 1 1)) content
 
 
 itemHeadingAndLabelsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -462,7 +598,7 @@ itemHeadingAndLabelsView plugins ms vc gc model =
             "bc1qvqxjv6cdf9yxvv5yssujcvt8zu2qfl2nnuuy7d"
     in
     div []
-        [ h1 [ propertyBoxHeading2 vc |> HA.css ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
+        [ h1 [ panelHeadingStyle2 vc |> HA.css ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
         , copyableLongIdentifier vc [ [ Css.color highlightPrimaryColor ] |> HA.css ] identifier
         ]
 
@@ -489,12 +625,18 @@ itemDetailsView plugins ms vc gc model =
         ]
 
 
+detailsActionButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
+detailsActionButton vc btnT btn =
+    disableableButton (detailsActionButtonStyle vc btnT) btn [] [ Html.text (Locale.string vc.locale btn.text) ]
+
+
 itemActionsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 itemActionsView plugins ms vc gc model =
-    div []
-        [ button [] [ Html.text "Connect Case" ]
-        , button [] [ Html.text "Actions Case" ]
-        ]
+    let
+        btns =
+            [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
+    in
+    div [] (btns |> List.map (detailsActionButton vc Primary))
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg

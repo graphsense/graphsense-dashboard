@@ -40,7 +40,7 @@ updateByMsg plugins uc msg model =
         SearchMsg _ ->
             n model
 
-        UserClosedPropertyBox ->
+        UserClosedDetailsView ->
             n model
 
         UserClickedRestart ->
