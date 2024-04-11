@@ -82,6 +82,16 @@ update plugins uc msg model =
             updateByUrl plugins uc url model
 
         BrowserGotStatistics stats ->
+            let
+                pf =
+                    model.pathfinder
+
+                pfs =
+                    pf.search
+
+                up =
+                    { pf | search = { pfs | searchType = Search.initSearchAll (Just stats) } }
+            in
             updateByUrl plugins
                 uc
                 model.url
@@ -92,6 +102,7 @@ update plugins uc msg model =
                         model.search
                             |> s_searchType
                                 (Search.initSearchAll (Just stats))
+                    , pathfinder = up
                 }
 
         BrowserGotEntityTaxonomy concepts ->

@@ -139,6 +139,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.NavPushRouteEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.SearchEffect _) ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

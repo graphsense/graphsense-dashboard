@@ -13,6 +13,7 @@ import Effect.Search as Search
 import Http
 import Model exposing (Effect(..), Msg(..))
 import Msg.Graph as Graph
+import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Effects as Plugin exposing (Plugins)
 import Ports
@@ -88,6 +89,12 @@ perform plugins key statusbarToken apiKey effect =
                 Pathfinder.CmdEffect cmd ->
                     cmd
                         |> Cmd.map PathfinderMsg
+
+                Pathfinder.SearchEffect e ->
+                    handleSearchEffect apiKey
+                        Nothing
+                        (Pathfinder.SearchMsg >> PathfinderMsg)
+                        e
 
         GraphEffect eff ->
             case eff of

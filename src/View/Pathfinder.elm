@@ -415,12 +415,7 @@ inOutIndicator : Maybe Int -> Int -> Int -> Html Msg
 inOutIndicator mnr inNr outNr =
     let
         prefix =
-            case mnr of
-                Just nr ->
-                    String.join " " [ String.fromInt nr, "(" ]
-
-                Nothing ->
-                    "("
+            String.trim (String.join " " [ mnr |> Maybe.map String.fromInt |> Maybe.withDefault "", "(" ])
     in
     span [ [ Css.ch 0.5 |> Css.paddingLeft ] |> HA.css ] [ Html.text prefix, inIcon, Html.text (String.fromInt inNr), Html.text ",", outIcon, Html.text (String.fromInt outNr), Html.text ")" ]
 

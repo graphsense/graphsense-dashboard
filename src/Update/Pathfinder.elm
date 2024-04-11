@@ -2,7 +2,7 @@ module Update.Pathfinder exposing (update)
 
 import Config.Update as Update
 import Effect exposing (n)
-import Effect.Pathfinder exposing (Effect(..))
+import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder
 import Log
 import Model.Graph exposing (Dragging(..))
@@ -11,12 +11,15 @@ import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.History.Entry as Entry
+import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
+import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import Route.Pathfinder as Route
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
+import Update.Search as Search
 import Util.Pathfinder.History as History
 
 
@@ -37,9 +40,21 @@ updateByMsg plugins uc msg model =
         NoOp ->
             n model
 
-        -- TODO: Implement
-        SearchMsg _ ->
-            n model
+        SearchMsg m ->
+            let
+                ( search, eff ) =
+                    case m of
+                        Search.UserClicksResultLine ->
+                            Search.update m model.search
+
+                        _ ->
+                            Search.update m model.search
+            in
+            ( { model
+                | search = search
+              }
+            , List.map Pathfinder.SearchEffect eff
+            )
 
         UserClosedDetailsView ->
             n (closeDetailsView model)
@@ -53,6 +68,7 @@ updateByMsg plugins uc msg model =
         UserClickedRestart ->
             n Init.Pathfinder.init
 
+        -- TODO: Implement
         UserClickedUndo ->
             n model
 

@@ -1,6 +1,7 @@
 module Effect.Pathfinder exposing (..)
 
 import Effect.Api as Api
+import Effect.Search as Search
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Msg as Plugin
 import Route.Pathfinder exposing (Route)
@@ -11,6 +12,7 @@ type Effect
     | PluginEffect (Cmd Plugin.Msg)
     | ApiEffect (Api.Effect Msg)
     | CmdEffect (Cmd Msg)
+    | SearchEffect Search.Effect
 
 
 perform : Effect -> Cmd Msg
@@ -29,4 +31,8 @@ perform eff =
 
         -- managed in Effect.elm
         ApiEffect _ ->
+            Cmd.none
+
+        -- managed in Effect.elm
+        SearchEffect _ ->
             Cmd.none
