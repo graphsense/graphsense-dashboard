@@ -36,10 +36,12 @@ first usage: erste Verwendung
 last usage: letzte Verwendung
 activity period: Nutzungsdauer
 total received: Eingänge
+total sent: Ausgänge
 "total received {0}": Eingänge {0}
 total received assets: Eingänge Assets
 final balance assets: Bilanz Assets
 final balance: Bilanz
+balance: Saldo
 "final balance {0}": Bilanz {0}
 entity balance: Bilanz Cluster
 "entity balance {0}": Bilanz Cluster {0}

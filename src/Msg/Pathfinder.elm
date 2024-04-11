@@ -19,6 +19,8 @@ type Msg
     | UserClickedExportGraph
     | UserClickedImportFile
     | UserClosedDetailsView
+    | UserClickedToggleAddressDetailsTable
+    | UserClickedToggleTransactionDetailsTable
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp

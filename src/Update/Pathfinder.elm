@@ -3,6 +3,7 @@ module Update.Pathfinder exposing (update)
 import Config.Update as Update
 import Effect exposing (n)
 import Effect.Pathfinder exposing (Effect(..))
+import Init.Pathfinder
 import Log
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.History as History
@@ -41,10 +42,16 @@ updateByMsg plugins uc msg model =
             n model
 
         UserClosedDetailsView ->
-            n model
+            n (closeDetailsView model)
+
+        UserClickedToggleAddressDetailsTable ->
+            n (toggleAddressDetailsTable model)
+
+        UserClickedToggleTransactionDetailsTable ->
+            n (toggleTransactionDetailsTable model)
 
         UserClickedRestart ->
-            n model
+            n Init.Pathfinder.init
 
         UserClickedUndo ->
             n model

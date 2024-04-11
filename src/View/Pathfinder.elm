@@ -1,5 +1,6 @@
 module View.Pathfinder exposing (view)
 
+import Api.Data
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -13,10 +14,12 @@ import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Pathfinder exposing (..)
+import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
+import ProgramTest exposing (within)
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -48,6 +51,11 @@ dummyImageSrc _ =
 highlightPrimaryColor : Css.Color
 highlightPrimaryColor =
     Css.rgb 26 197 176
+
+
+highlightPrimaryColorFrosted : Css.Color
+highlightPrimaryColorFrosted =
+    Css.rgb 107 203 186
 
 
 lighterGreyColor : Css.Color
@@ -130,6 +138,7 @@ collapsibleSectionHeadingStyle _ =
     , Css.px 10 |> Css.marginTop
     , Css.borderBottom3 (Css.px 0.3) Css.solid lighterGreyColor
     , Css.px 30 |> Css.height
+    , Css.cursor Css.pointer
     ]
 
 
@@ -220,22 +229,22 @@ detailsActionButtonStyle _ bt _ =
         Primary ->
             [ Css.px 5 |> Css.margin
             , Css.cursor Css.pointer
-            , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
+            , Css.padding4 (Css.px 4) (Css.px 10) (Css.px 4) (Css.px 10)
             , Css.color whiteColor
             , Css.fontWeight Css.bold
-            , Css.backgroundColor highlightPrimaryColor
-            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColor
+            , Css.backgroundColor highlightPrimaryColorFrosted
+            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColorFrosted
             , Css.px 3 |> Css.borderRadius
             ]
 
         Secondary ->
             [ Css.px 5 |> Css.margin
             , Css.cursor Css.pointer
-            , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
-            , Css.color highlightPrimaryColor
+            , Css.padding4 (Css.px 4) (Css.px 10) (Css.px 4) (Css.px 10)
+            , Css.color highlightPrimaryColorFrosted
             , Css.fontWeight Css.bold
             , Css.backgroundColor whiteColor
-            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColor
+            , Css.border3 (Css.px 1) Css.solid highlightPrimaryColorFrosted
             , Css.px 3 |> Css.borderRadius
             ]
 
@@ -255,8 +264,8 @@ searchBoxIconStyle _ =
     [ Css.position Css.absolute, Css.px 7 |> Css.top, Css.px 7 |> Css.left ]
 
 
-propertyBoxActorImageStyle : View.Config -> List Css.Style
-propertyBoxActorImageStyle _ =
+addressDetailsViewActorImageStyle : View.Config -> List Css.Style
+addressDetailsViewActorImageStyle _ =
     [ Css.display Css.block
     , Css.borderRadius (Css.pct 50)
     , Css.height (Css.px 40)
@@ -316,7 +325,8 @@ graphActionButtons =
 
 type ValueType
     = Value Int
-    | Currency Float String
+    | Currency Api.Data.Values String
+    | Timestamp Int
 
 
 type KVTableRow
@@ -354,17 +364,23 @@ renderKVTableValue vc val =
             span [] [ Html.text (String.fromInt v) ]
 
         Currency v _ ->
-            span [] [ Html.text (String.fromFloat v) ]
+            span [] [ Html.text (String.fromInt v.value) ]
+
+        Timestamp ts ->
+            span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
 
 
 renderKVTableValueExtension : View.Config -> ValueType -> Html Msg
-renderKVTableValueExtension vc val =
+renderKVTableValueExtension _ val =
     case val of
         Value _ ->
             none
 
         Currency _ ticker ->
             span [] [ Html.text (String.toUpper ticker) ]
+
+        Timestamp _ ->
+            none
 
 
 disableableButton : (Bool -> List Css.Style) -> BtnConfig -> List (Html.Attribute Msg) -> List (Html Msg) -> Html Msg
@@ -409,8 +425,8 @@ inOutIndicator mnr inNr outNr =
     span [ [ Css.ch 0.5 |> Css.paddingLeft ] |> HA.css ] [ Html.text prefix, inIcon, Html.text (String.fromInt inNr), Html.text ",", outIcon, Html.text (String.fromInt outNr), Html.text ")" ]
 
 
-collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Html Msg
-collapsibleSection vc title open indicator content =
+collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
+collapsibleSection vc title open indicator content action =
     let
         icon =
             if open then
@@ -427,7 +443,7 @@ collapsibleSection vc title open indicator content =
                 []
     in
     div []
-        (h3 [ collapsibleSectionHeadingStyle vc |> HA.css ]
+        (div [ collapsibleSectionHeadingStyle vc |> HA.css, onClick action ]
             [ span [ [ Css.ch 1 |> Css.paddingRight, Css.ch 2 |> Css.paddingLeft ] |> HA.css ] [ FontAwesome.icon icon |> Html.fromUnstyled ]
             , Html.text (Locale.string vc.locale title)
             , indicator |> Maybe.withDefault none
@@ -459,7 +475,7 @@ graph plugins states vc gc model =
 
 
 topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-topLeftPanel plugins ms vc gc model =
+topLeftPanel _ _ vc _ _ =
     div [ topLeftPanelStyle vc |> HA.css ]
         [ h2 [ vc.theme.heading2 |> HA.css ] [ Html.text "Pathfinder" ]
 
@@ -468,12 +484,12 @@ topLeftPanel plugins ms vc gc model =
 
 
 settingsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-settingsView plugins _ vc gc model =
+settingsView _ _ vc _ _ =
     div [ searchViewStyle vc |> HA.css ] [ Html.text "Display", FontAwesome.icon FontAwesome.chevronDown |> Html.fromUnstyled ]
 
 
 graphToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphToolsView plugins _ vc gc model =
+graphToolsView _ _ vc _ _ =
     div
         [ graphToolsStyle vc |> HA.css
         ]
@@ -495,14 +511,14 @@ graphToolButton vc btn =
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 topRightPanel plugins ms vc gc model =
     div [ topRightPanelStyle vc |> HA.css ]
-        [ graphActionsView plugins ms vc gc model
+        [ graphActionsView vc gc model
         , searchBoxView plugins ms vc gc model
         , detailsView plugins ms vc gc model
         ]
 
 
-graphActionsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphActionsView plugins _ vc gc model =
+graphActionsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
+graphActionsView vc _ _ =
     div [ graphActionsViewStyle vc |> HA.css ]
         (graphActionButtons |> List.map (graphActionButton vc))
 
@@ -518,7 +534,7 @@ iconWithText _ faIcon text =
 
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-searchBoxView plugins _ vc gc model =
+searchBoxView plugins _ vc _ model =
     div
         [ searchBoxStyle vc Nothing |> HA.css ]
         [ h3 [ panelHeadingStyle2 vc |> HA.css ] [ Html.text (Locale.string vc.locale "Add to graph") ]
@@ -531,11 +547,20 @@ searchBoxView plugins _ vc gc model =
 
 detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 detailsView plugins ms vc gc model =
-    div
-        [ detailsViewStyle vc |> HA.css ]
-        [ detailsViewCloseRow vc
-        , detailsContentView plugins ms vc gc model
-        ]
+    if isDetailsViewVisible model then
+        div
+            [ detailsViewStyle vc |> HA.css ]
+            [ detailsViewCloseRow vc
+            , case model.view.detailsViewState of
+                Address id config data ->
+                    addressDetailsContentView plugins ms vc gc model id config data
+
+                NoDetails ->
+                    none
+            ]
+
+    else
+        none
 
 
 detailsViewCloseRow : View.Config -> Html Msg
@@ -548,58 +573,116 @@ closeButton vc msg =
     button [ linkButtonStyle vc True |> HA.css, msg |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
 
 
-detailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-detailsContentView plugins ms vc gc model =
+getAddressAnnotationBtns : Api.Data.Address -> List BtnConfig
+getAddressAnnotationBtns data =
+    let
+        hasTags _ =
+            True
+
+        isContract x =
+            not (x.isContract == Nothing)
+    in
+    (if hasTags data then
+        [ BtnConfig FontAwesome.tags "tags" NoOp True ]
+
+     else
+        []
+    )
+        ++ (if isContract data then
+                [ BtnConfig FontAwesome.cog "is contract" NoOp True ]
+
+            else
+                []
+           )
+
+
+getAddressActionBtns : Api.Data.Address -> List BtnConfig
+getAddressActionBtns data =
+    [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
+
+
+addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Maybe Api.Data.Address -> Html Msg
+addressDetailsContentView plugins ms vc gc model id viewState mdata =
+    let
+        addressImg =
+            dummyImageSrc vc
+
+        ( sections, tbls, addressAnnotationBtns ) =
+            case mdata of
+                Nothing ->
+                    ( [], [ span [] [ Html.text "Loading ..." ] ], [] )
+
+                Just data ->
+                    ( [ transactionTableView vc gc id viewState data, addressNeighborsTableView vc gc id viewState data ]
+                    , [ itemDetailsView vc gc id viewState data, itemActionsView vc gc id viewState data (getAddressActionBtns data) ]
+                    , getAddressAnnotationBtns data
+                    )
+    in
     div []
-        [ div [ [ Css.px 10 |> Css.marginRight, Css.px 10 |> Css.marginLeft ] |> HA.css ]
+        ([ div [ [ Css.px 10 |> Css.marginRight, Css.px 10 |> Css.marginLeft ] |> HA.css ]
             [ div [ detailsViewContainerStyle vc |> HA.css ]
-                [ img [ src (dummyImageSrc vc), propertyBoxActorImageStyle vc |> HA.css ] []
+                [ img [ src addressImg, addressDetailsViewActorImageStyle vc |> HA.css ] []
                 , div [ [ Css.pct 100 |> Css.width ] |> HA.css ]
-                    [ itemHeadingAndLabelsView plugins ms vc gc model
-                    , rule
-                    , itemDetailsView plugins ms vc gc model
-                    , itemActionsView plugins ms vc gc model
-                    ]
+                    ([ addressDetailsHeadingView vc gc id (mdata |> Maybe.map .currency) addressAnnotationBtns
+                     , rule
+                     ]
+                        ++ tbls
+                    )
                 ]
             ]
-        , transactionTableView plugins ms vc gc model
-        , addressNeighborsTableView plugins ms vc gc model
-        ]
+         ]
+            ++ sections
+        )
 
 
-transactionTableView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-transactionTableView plugins ms vc gc model =
+transactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+transactionTableView vc gc id viewState data =
+    let
+        content =
+            table [ [ Css.pct 100 |> Css.width ] |> HA.css ]
+                [ tr []
+                    [ th [] [ Html.text "Timestamp" ]
+                    , th [] [ Html.text "Hash" ]
+                    , th [] [ Html.text "Debit/Credit" ]
+                    ]
+                , tr []
+                    [ td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "1" ]
+                    ]
+                , tr []
+                    [ td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "-1" ]
+                    ]
+                , tr []
+                    [ td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "bla" ]
+                    , td [] [ Html.text "2" ]
+                    ]
+                ]
+    in
+    collapsibleSection vc "Transactions" viewState.transactionsTableOpen (Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)) content UserClickedToggleTransactionDetailsTable
+
+
+addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+addressNeighborsTableView vc gc id viewState data =
     let
         content =
             div [] [ Html.text "yeeeha" ]
     in
-    collapsibleSection vc "Transactions" True (Just (inOutIndicator (Just 1) 1 1)) content
+    collapsibleSection vc "Addresses" viewState.addressTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content UserClickedToggleAddressDetailsTable
 
 
-addressNeighborsTableView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-addressNeighborsTableView plugins ms vc gc model =
+addressDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> List BtnConfig -> Html Msg
+addressDetailsHeadingView vc gc id mNetwork annotations =
     let
-        content =
-            div [] [ Html.text "yeeeha" ]
-    in
-    collapsibleSection vc "Addresses" False (Just (inOutIndicator (Just 1) 1 1)) content
-
-
-itemHeadingAndLabelsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-itemHeadingAndLabelsView plugins ms vc gc model =
-    let
-        annotations =
-            [ BtnConfig FontAwesome.tags "tags" NoOp True, BtnConfig FontAwesome.cog "is contract" NoOp True ]
-
         heading =
-            "Bitcoin Address"
-
-        identifier =
-            "bc1qvqxjv6cdf9yxvv5yssujcvt8zu2qfl2nnuuy7d"
+            String.trim (String.join " " [ mNetwork |> Maybe.withDefault "", Locale.string vc.locale "Address" ])
     in
     div []
         [ h1 [ panelHeadingStyle2 vc |> HA.css ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
-        , copyableLongIdentifier vc [ [ Css.color highlightPrimaryColor ] |> HA.css ] identifier
+        , copyableLongIdentifier vc [ [ Css.color highlightPrimaryColor ] |> HA.css ] id
         ]
 
 
@@ -608,21 +691,20 @@ annotationButton vc btn =
     disableableButton (linkButtonStyle vc) btn [] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
 
 
-itemDetailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-itemDetailsView plugins ms vc gc model =
-    let
-        data =
-            [ Row "Total received" (Currency 1.0 "btc")
-            , Row "Total sent" (Currency 1.0 "btc")
-            , Row "Balance" (Currency 1.0 "btc")
-            , Gap
-            , Row "First usage" (Currency 1.0 "btc")
-            , Row "Last usage" (Currency 1.0 "btc")
-            ]
-    in
-    div []
-        [ renderKVTable vc data
-        ]
+apiAddressToRows : Api.Data.Address -> List KVTableRow
+apiAddressToRows address =
+    [ Row "Total received" (Currency address.totalReceived address.currency)
+    , Row "Total sent" (Currency address.totalSpent address.currency)
+    , Row "Balance" (Currency address.balance address.currency)
+    , Gap
+    , Row "First usage" (Timestamp address.firstTx.timestamp)
+    , Row "Last usage" (Timestamp address.lastTx.timestamp)
+    ]
+
+
+itemDetailsView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+itemDetailsView vc gc id viewState addressData =
+    div [ [ Css.paddingBottom (Css.px 10) ] |> HA.css ] [ renderKVTable vc (apiAddressToRows addressData) ]
 
 
 detailsActionButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
@@ -630,13 +712,17 @@ detailsActionButton vc btnT btn =
     disableableButton (detailsActionButtonStyle vc btnT) btn [] [ Html.text (Locale.string vc.locale btn.text) ]
 
 
-itemActionsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-itemActionsView plugins ms vc gc model =
+itemActionsView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> List BtnConfig -> Html Msg
+itemActionsView vc gc id viewState addressData actionButtons =
     let
-        btns =
-            [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
+        btnType i =
+            if i == 0 then
+                Primary
+
+            else
+                Secondary
     in
-    div [] (btns |> List.map (detailsActionButton vc Primary))
+    div [ [ Css.paddingBottom (Css.px 10) ] |> HA.css ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg
