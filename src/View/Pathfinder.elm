@@ -289,11 +289,14 @@ detailsView plugins ms vc gc model =
         div
             [ detailsViewStyle vc |> toAttr ]
             [ detailsViewCloseRow vc
-            , case model.view.detailsViewState of
-                Address id config data ->
-                    addressDetailsContentView plugins ms vc gc model id config data
+            , case ( model.selection, getDetailsViewStateForSelection model ) of
+                ( SelectedAddress id, AddressDetails _ state ) ->
+                    getLoadedAddress model id
+                        |> Maybe.map .data
+                        |> Maybe.map (addressDetailsContentView plugins ms vc gc model id state)
+                        |> Maybe.withDefault none
 
-                NoDetails ->
+                _ ->
                     none
             ]
 
@@ -339,30 +342,27 @@ getAddressActionBtns data =
     [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
 
 
-addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Maybe Api.Data.Address -> Html Msg
-addressDetailsContentView plugins ms vc gc model id viewState mdata =
+addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+addressDetailsContentView plugins ms vc gc model id viewState data =
     let
         addressImg =
             dummyImageSrc vc
 
-        ( sections, tbls, addressAnnotationBtns ) =
-            case mdata of
-                Nothing ->
-                    -- LOADING VIEW
-                    ( [], [ span [] [ Html.text "Loading ..." ] ], [] )
+        sections =
+            [ addressTransactionTableView vc gc id viewState data, addressNeighborsTableView vc gc id viewState data ]
 
-                Just data ->
-                    ( [ addressTransactionTableView vc gc id viewState data, addressNeighborsTableView vc gc id viewState data ]
-                    , [ addressDetailsTableView vc gc id viewState data, addressActionsView vc gc id viewState data (getAddressActionBtns data) ]
-                    , getAddressAnnotationBtns data
-                    )
+        tbls =
+            [ addressDetailsTableView vc gc id viewState data, addressActionsView vc gc id viewState data (getAddressActionBtns data) ]
+
+        addressAnnotationBtns =
+            getAddressAnnotationBtns data
     in
     div []
         ([ div [ addressDetailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
                 [ img [ src addressImg, addressDetailsViewActorImageStyle vc |> toAttr ] []
                 , div [ fullWidth |> toAttr ]
-                    ([ addressDetailsHeadingView vc gc id (mdata |> Maybe.map .currency) addressAnnotationBtns
+                    ([ addressDetailsHeadingView vc gc id (Just data.currency) addressAnnotationBtns
                      , rule
                      ]
                         ++ tbls
@@ -408,7 +408,7 @@ addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDet
 addressNeighborsTableView vc gc id viewState data =
     let
         content =
-            div [] [ Html.text "yeeeha" ]
+            div [] [ Html.text "lorem ipsum ..." ]
     in
     collapsibleSection vc "Addresses" viewState.addressTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content UserClickedToggleAddressDetailsTable
 

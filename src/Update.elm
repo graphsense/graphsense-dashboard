@@ -16,6 +16,7 @@ import File.Download
 import Hovercard
 import Http exposing (Error(..))
 import Init.Graph
+import Init.Pathfinder
 import Init.Search as Search
 import Json.Decode
 import Json.Encode exposing (Value)
@@ -32,6 +33,7 @@ import Model.Search as Search
 import Model.Statusbar as Statusbar
 import Msg.Graph as Graph
 import Msg.Locale as LocaleMsg
+import Msg.Pathfinder as Pathfinder
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Plugin.Update as Plugin exposing (Plugins)
@@ -593,6 +595,9 @@ update plugins uc msg model =
                     ( { model | search = search }
                     , List.map SearchEffect searchEffects
                     )
+
+        PathfinderMsg Pathfinder.UserClickedRestart ->
+            n { model | pathfinder = model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault model.pathfinder }
 
         PathfinderMsg m ->
             let

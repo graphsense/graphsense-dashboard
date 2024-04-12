@@ -1,5 +1,6 @@
 module Update.Pathfinder exposing (update, updateByRoute)
 
+import Api.Data
 import Config.Update as Update
 import Effect exposing (n)
 import Effect.Api as Api
@@ -67,7 +68,14 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotAddress id data ->
-            n model
+            let
+                ( m, e ) =
+                    addAddress plugins
+                        id
+                        data
+                        model
+            in
+            ( selectAddress data m, e )
 
         SearchMsg m ->
             case m of
@@ -101,7 +109,9 @@ updateByMsg plugins uc msg model =
                                 n m2
 
                 _ ->
-                    Search.update m model.search |> Tuple.mapFirst (\s -> s_search s model) |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
+                    Search.update m model.search
+                        |> Tuple.mapFirst (\s -> s_search s model)
+                        |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
 
         UserClosedDetailsView ->
             n (closeDetailsView model)
@@ -113,8 +123,10 @@ updateByMsg plugins uc msg model =
             n (toggleTransactionDetailsTable model)
 
         UserClickedRestart ->
-            n Init.Pathfinder.init
+            -- Handled upstream
+            n model
 
+        --n Init.Pathfinder.init
         -- TODO: Implement
         UserClickedUndo ->
             n model
@@ -181,7 +193,7 @@ updateByMsg plugins uc msg model =
                             Dragging model.transform coords coords
 
                         _ ->
-                            model.dragging
+                            NoDragging
             }
                 |> n
 
@@ -221,23 +233,31 @@ updateByRoute_ plugins route model =
             n model
 
         Route.Network network (Route.Address a) ->
-            addAddress plugins
-                (Id.init network a)
-                model
+            ( model, [ Api.GetAddressEffect { currency = network, address = a } (BrowserGotAddress (Id.init network a)) |> ApiEffect ] )
 
         _ ->
             n model
 
 
-addAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-addAddress plugins id model =
+addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
+addAddress plugins id data model =
     let
         ( nw, eff ) =
-            Network.addAddress plugins id model.network
+            Network.addAddress plugins id data model.network
     in
     ( { model | network = nw }
     , eff
     )
+
+
+selectAddress : Api.Data.Address -> Model -> Model
+selectAddress a =
+    let
+        id =
+            Id.init a.currency a.address
+    in
+    setSelection (SelectedAddress id)
+        >> (setViewState <| setDetailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
 
 
 pushHistory : Msg -> Model -> Model

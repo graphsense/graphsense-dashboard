@@ -6,7 +6,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (DetailsViewState(..), Model)
+import Model.Pathfinder exposing (DetailsViewState(..), Model, Selection(..))
 
 
 dummyAddress : Api.Data.Address
@@ -32,13 +32,13 @@ dummyAddress =
     }
 
 
-init : Model
-init =
+init : Maybe Api.Data.Stats -> Model
+init stats =
     { network = Network.init
-    , selection = []
-    , search = Search.init (Search.initSearchAll Nothing)
+    , selection = NoSelection
+    , search = Search.init (Search.initSearchAll stats)
     , dragging = NoDragging
     , transform = Transform.init
     , history = History.init
-    , view = { detailsViewState = Address ( "btc", "bc1qvqxjv6cdf9yxvv5yssujcvt8zu2qfl2nnuuy7d" ) { addressTableOpen = False, transactionsTableOpen = False } (Just dummyAddress) }
+    , view = { detailsViewState = NoDetails }
     }

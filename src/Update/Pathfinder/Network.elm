@@ -1,5 +1,6 @@
 module Update.Pathfinder.Network exposing (..)
 
+import Api.Data
 import Dict
 import Effect exposing (n)
 import Effect.Pathfinder exposing (Effect(..))
@@ -14,22 +15,22 @@ import Plugin.Update as Plugin exposing (Plugins)
 import Result.Extra
 
 
-addAddress : Plugins -> Id -> Network -> ( Network, List Effect )
-addAddress plugins id model =
+addAddress : Plugins -> Id -> Api.Data.Address -> Network -> ( Network, List Effect )
+addAddress plugins id data model =
     case Dict.get id model.addresses of
         Nothing ->
-            loadAddress plugins id model
+            loadAddress plugins id data model
 
         Just _ ->
             n model
 
 
-loadAddress : Plugins -> Id -> Network -> ( Network, List Effect )
-loadAddress plugins id model =
+loadAddress : Plugins -> Id -> Api.Data.Address -> Network -> ( Network, List Effect )
+loadAddress plugins id data model =
     let
         newAddress =
             findAddressPosition id model
-                |> Result.map (Address.init id)
+                |> Result.map (Address.init id data)
     in
     case newAddress of
         Ok na ->
