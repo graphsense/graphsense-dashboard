@@ -30,6 +30,25 @@ update plugins uc msg model =
         |> updateByMsg plugins uc msg
 
 
+resultLineToRoute : Search.ResultLine -> Route.Route
+resultLineToRoute search =
+    case search of
+        Search.Address net address ->
+            Route.Currency net (Route.Address address)
+
+        Search.Tx net h ->
+            Route.Currency net (Route.Tx h)
+
+        Search.Block net b ->
+            Route.Currency net (Route.Block b)
+
+        Search.Label s ->
+            Route.Label s
+
+        Search.Actor ( s, s2 ) ->
+            Route.Actor s
+
+
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 updateByMsg plugins uc msg model =
     case Log.truncate "msg" msg of
@@ -41,20 +60,46 @@ updateByMsg plugins uc msg model =
             n model
 
         SearchMsg m ->
-            let
-                ( search, eff ) =
-                    case m of
-                        Search.UserClicksResultLine ->
+            case m of
+                Search.UserClicksResultLine ->
+                    let
+                        query =
+                            Search.query model.search
+
+                        selectedValue =
+                            Search.selectedValue model.search
+
+                        ( search, _ ) =
                             Search.update m model.search
 
-                        _ ->
+                        m2 =
+                            { model | search = search }
+                    in
+                    if String.isEmpty query then
+                        n m2
+
+                    else
+                        case selectedValue of
+                            Just value ->
+                                value
+                                    |> resultLineToRoute
+                                    |> NavPushRouteEffect
+                                    |> List.singleton
+                                    |> Tuple.pair m2
+
+                            Nothing ->
+                                n m2
+
+                _ ->
+                    let
+                        ( smn, eff ) =
                             Search.update m model.search
-            in
-            ( { model
-                | search = search
-              }
-            , List.map Pathfinder.SearchEffect eff
-            )
+                    in
+                    ( { model
+                        | search = smn
+                      }
+                    , List.map Pathfinder.SearchEffect eff
+                    )
 
         UserClosedDetailsView ->
             n (closeDetailsView model)
