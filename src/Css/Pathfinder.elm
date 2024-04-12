@@ -3,7 +3,7 @@ module Css.Pathfinder exposing (..)
 import Config.View as View
 import Css exposing (..)
 import Html.Styled
-import Html.Styled.Attributes as HA exposing (..)
+import Html.Styled.Attributes as HA
 
 
 addressRoot : View.Config -> List Style
@@ -20,6 +20,50 @@ toAttr =
     HA.css
 
 
+xsGap =
+    px 1
+
+
+sGap =
+    px 3
+
+
+smGap =
+    px 5
+
+
+mGap =
+    px 5
+
+
+mlGap =
+    px 10
+
+
+all =
+    pct 100
+
+
+half =
+    pct 50
+
+
+no =
+    px 0
+
+
+mText =
+    em 1.1
+
+
+lText =
+    em 1.3
+
+
+xlText =
+    em 1.4
+
+
 
 -- colors
 
@@ -29,54 +73,54 @@ type ButtonType
     | Secondary
 
 
-primaryColor : Css.Color
+primaryColor : Color
 primaryColor =
-    Css.rgb 26 197 176
+    rgb 26 197 176
 
 
-primaryFrostedColor : Css.Color
+primaryFrostedColor : Color
 primaryFrostedColor =
-    Css.rgb 26 197 176
+    rgb 26 197 176
 
 
-lighterGreyColor : Css.Color
+lighterGreyColor : Color
 lighterGreyColor =
-    Css.rgb 208 216 220
+    rgb 208 216 220
 
 
-lightGreyColor : Css.Color
+lightGreyColor : Color
 lightGreyColor =
-    Css.rgb 120 144 156
+    rgb 120 144 156
 
 
-blackColor : Css.Color
+blackColor : Color
 blackColor =
-    Css.rgb 0 0 0
+    rgb 0 0 0
 
 
-whiteColor : Css.Color
+whiteColor : Color
 whiteColor =
-    Css.rgb 255 255 255
+    rgb 255 255 255
 
 
-darkBlue : Css.Color
+darkBlue : Color
 darkBlue =
-    Css.rgb 3 31 53
+    rgb 3 31 53
 
 
-lighterDarkBlue : Css.Color
+lighterDarkBlue : Color
 lighterDarkBlue =
-    Css.rgb 5 50 84
+    rgb 5 50 84
 
 
-greenColor : Css.Color
+greenColor : Color
 greenColor =
-    Css.rgb 141 194 153
+    rgb 141 194 153
 
 
-redColor : Css.Color
+redColor : Color
 redColor =
-    Css.rgb 194 141 141
+    rgb 194 141 141
 
 
 
@@ -84,27 +128,27 @@ redColor =
 -- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
 
 
-alertColor : View.Config -> Css.Color
+alertColor : View.Config -> Color
 alertColor _ =
     redColor
 
 
-successColor : View.Config -> Css.Color
+successColor : View.Config -> Color
 successColor _ =
     greenColor
 
 
-highlightPrimaryColor : View.Config -> Css.Color
+highlightPrimaryColor : View.Config -> Color
 highlightPrimaryColor _ =
     primaryColor
 
 
-highlightPrimaryFrostedColor : View.Config -> Css.Color
+highlightPrimaryFrostedColor : View.Config -> Color
 highlightPrimaryFrostedColor _ =
     primaryFrostedColor
 
 
-boxBorderColor : View.Config -> Css.Color
+boxBorderColor : View.Config -> Color
 boxBorderColor vc =
     if vc.lightmode then
         lighterGreyColor
@@ -113,12 +157,12 @@ boxBorderColor vc =
         blackColor
 
 
-emphTextColor : View.Config -> Css.Color
+emphTextColor : View.Config -> Color
 emphTextColor _ =
     lightGreyColor
 
 
-defaultBackgroundColor : View.Config -> Css.Color
+defaultBackgroundColor : View.Config -> Color
 defaultBackgroundColor vc =
     if vc.lightmode then
         whiteColor
@@ -127,70 +171,70 @@ defaultBackgroundColor vc =
         darkBlue
 
 
-boxStyle : View.Config -> Maybe Float -> List Css.Style
-boxStyle vc padding =
-    [ defaultBackgroundColor vc |> Css.backgroundColor
-    , boxBorderColor vc |> Css.boxShadow5 (Css.px 1) (Css.px 1) (Css.px 5) (Css.px 1)
-    , Css.px (padding |> Maybe.withDefault 10) |> Css.padding
+boxStyle : View.Config -> Maybe Float -> List Style
+boxStyle vc upadding =
+    [ defaultBackgroundColor vc |> backgroundColor
+    , boxBorderColor vc |> boxShadow5 xsGap xsGap mGap xsGap
+    , px (upadding |> Maybe.withDefault 10.0) |> padding
     ]
 
 
-searchInputStyle : View.Config -> String -> List Css.Style
+searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
-    [ Css.pct 100 |> Css.width
-    , Css.px 20 |> Css.height
-    , Css.display Css.block
-    , emphTextColor vc |> Css.color
-    , boxBorderColor vc |> Css.border3 (Css.px 1) Css.solid
-    , defaultBackgroundColor vc |> Css.backgroundColor
-    , Css.px 3 |> Css.borderRadius
-    , Css.px 25 |> Css.textIndent
+    [ all |> width
+    , px 20 |> height
+    , display block
+    , emphTextColor vc |> color
+    , boxBorderColor vc |> border3 (px 1) solid
+    , defaultBackgroundColor vc |> backgroundColor
+    , sGap |> borderRadius
+    , px 25 |> textIndent
     ]
 
 
-panelHeadingStyle : View.Config -> List Css.Style
+panelHeadingStyle : View.Config -> List Style
 panelHeadingStyle _ =
-    [ Css.fontWeight Css.bold
-    , Css.em 1.4 |> Css.fontSize
-    , Css.px 10 |> Css.marginBottom
+    [ fontWeight bold
+    , xlText |> fontSize
+    , mlGap |> marginBottom
     ]
 
 
-panelHeadingStyle2 : View.Config -> List Css.Style
+panelHeadingStyle2 : View.Config -> List Style
 panelHeadingStyle2 _ =
-    [ Css.fontWeight Css.bold
-    , Css.em 1.3 |> Css.fontSize
-    , Css.px 10 |> Css.marginBottom
+    [ fontWeight bold
+    , lText |> fontSize
+    , mlGap |> marginBottom
     ]
 
 
-collapsibleSectionHeadingStyle : View.Config -> List Css.Style
+collapsibleSectionHeadingStyle : View.Config -> List Style
 collapsibleSectionHeadingStyle vc =
-    [ Css.fontWeight Css.bold
-    , Css.em 1.1 |> Css.fontSize
-    , Css.px 10 |> Css.marginBottom
-    , Css.px 10 |> Css.marginTop
-    , boxBorderColor vc |> Css.borderBottom3 (Css.px 0.3) Css.solid
-    , Css.px 30 |> Css.height
-    , Css.cursor Css.pointer
+    [ fontWeight bold
+    , mText |> fontSize
+    , mlGap |> marginBottom
+    , mlGap |> marginTop
+    , boxBorderColor vc |> borderBottom3 (px 0.3) solid
+    , px 30 |> height
+    , cursor pointer
     ]
 
 
-toolItemStyle : View.Config -> List Css.Style
+toolItemStyle : View.Config -> List Style
 toolItemStyle _ =
-    [ Css.px 55 |> Css.minWidth
-    , Css.textAlign Css.center
+    [ px 55 |> minWidth
+    , textAlign center
     ]
 
 
-linkButtonStyle : View.Config -> Bool -> List Css.Style
+linkButtonStyle : View.Config -> Bool -> List Style
 linkButtonStyle vc enabled =
-    [ defaultBackgroundColor vc |> Css.backgroundColor
-    , Css.px 0 |> Css.borderWidth
-    , Css.cursor Css.pointer
-    , Css.px 0 |> Css.padding
-    , Css.px 5 |> Css.paddingLeft
-    , Css.color
+    [ defaultBackgroundColor vc |> backgroundColor
+    , no |> borderWidth
+    , cursor pointer
+    , no |> padding
+    , mGap |> paddingLeft
+    , color
         (if vc.lightmode then
             blackColor
 
@@ -200,208 +244,210 @@ linkButtonStyle vc enabled =
     ]
 
 
-toolButtonStyle : View.Config -> Bool -> List Css.Style
+toolButtonStyle : View.Config -> Bool -> List Style
 toolButtonStyle vc enabled =
-    Css.textAlign Css.center :: linkButtonStyle vc enabled
+    textAlign center :: linkButtonStyle vc enabled
 
 
-toolIconStyle : View.Config -> List Css.Style
+toolIconStyle : View.Config -> List Style
 toolIconStyle _ =
-    [ Css.em 1.3 |> Css.fontSize
-    , Css.px 5 |> Css.marginBottom
+    [ lText |> fontSize
+    , mGap |> marginBottom
     ]
 
 
-topLeftPanelStyle : View.Config -> List Css.Style
+topLeftPanelStyle : View.Config -> List Style
 topLeftPanelStyle _ =
-    [ Css.position Css.absolute
-    , Css.px 10 |> Css.left
-    , Css.px 10 |> Css.top
+    [ position absolute
+    , mlGap |> left
+    , mlGap |> top
     ]
 
 
-graphToolsStyle : View.Config -> List Css.Style
+graphToolsStyle : View.Config -> List Style
 graphToolsStyle vc =
-    [ Css.position Css.absolute
-    , Css.pct 50 |> Css.left
-    , Css.px 50 |> Css.bottom
-    , Css.displayFlex
-    , Css.transform (Css.translate (Css.pct -50))
+    [ position absolute
+    , half |> left
+    , px 50 |> bottom
+    , displayFlex
+    , transform (translate (pct -50))
     ]
         ++ boxStyle vc Nothing
 
 
-topRightPanelStyle : View.Config -> List Css.Style
+topRightPanelStyle : View.Config -> List Style
 topRightPanelStyle _ =
-    [ Css.position Css.absolute
-    , Css.px 10 |> Css.right
-    , Css.px 10 |> Css.top
+    [ position absolute
+    , mlGap |> right
+    , mlGap |> top
     ]
 
 
-searchBoxStyle : View.Config -> Maybe Float -> List Css.Style
+searchBoxStyle : View.Config -> Maybe Float -> List Style
 searchBoxStyle vc padding =
-    [ Css.px 300 |> Css.minWidth
-    , Css.px 10 |> Css.marginBottom
+    [ px 300 |> minWidth
+    , mlGap |> marginBottom
     ]
         ++ boxStyle vc padding
 
 
-detailsViewStyle : View.Config -> List Css.Style
+detailsViewStyle : View.Config -> List Style
 detailsViewStyle vc =
     searchBoxStyle vc (Just 0)
 
 
-graphActionsViewStyle : View.Config -> List Css.Style
+graphActionsViewStyle : View.Config -> List Style
 graphActionsViewStyle _ =
-    [ Css.displayFlex, Css.justifyContent Css.flexEnd, Css.px 5 |> Css.margin ]
+    [ displayFlex, justifyContent flexEnd, mGap |> margin ]
 
 
-graphActionButtonStyle : View.Config -> Bool -> List Css.Style
+graphActionButtonStyle : View.Config -> Bool -> List Style
 graphActionButtonStyle vc _ =
-    [ Css.px 5 |> Css.margin
-    , Css.cursor Css.pointer
-    , Css.padding4 (Css.px 3) (Css.px 10) (Css.px 3) (Css.px 10)
-    , emphTextColor vc |> Css.color
-    , defaultBackgroundColor vc |> Css.backgroundColor
-    , boxBorderColor vc |> Css.border3 (Css.px 1) Css.solid
-    , Css.px 3 |> Css.borderRadius
+    [ mGap |> margin
+    , cursor pointer
+    , padding4 sGap mlGap sGap mlGap
+    , emphTextColor vc |> color
+    , defaultBackgroundColor vc |> backgroundColor
+    , boxBorderColor vc |> border3 xsGap solid
+    , px 3 |> borderRadius
     ]
 
 
-detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Css.Style
+detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Style
 detailsActionButtonStyle vc bt _ =
+    let
+        base =
+            [ mGap |> margin
+            , cursor pointer
+            , padding4 (px 4) mlGap (px 4) mlGap
+            , fontWeight bold
+            , px 3 |> borderRadius
+            ]
+    in
     case bt of
         Primary ->
-            [ Css.px 5 |> Css.margin
-            , Css.cursor Css.pointer
-            , Css.padding4 (Css.px 4) (Css.px 10) (Css.px 4) (Css.px 10)
-            , Css.color whiteColor
-            , Css.fontWeight Css.bold
-            , highlightPrimaryFrostedColor vc |> Css.backgroundColor
-            , highlightPrimaryFrostedColor vc |> Css.border3 (Css.px 1) Css.solid
-            , Css.px 3 |> Css.borderRadius
-            ]
+            base
+                ++ [ color whiteColor
+                   , fontWeight bold
+                   , highlightPrimaryFrostedColor vc |> backgroundColor
+                   , highlightPrimaryFrostedColor vc |> border3 xsGap solid
+                   ]
 
         Secondary ->
-            [ Css.px 5 |> Css.margin
-            , Css.cursor Css.pointer
-            , Css.padding4 (Css.px 4) (Css.px 10) (Css.px 4) (Css.px 10)
-            , highlightPrimaryFrostedColor vc |> Css.color
-            , Css.fontWeight Css.bold
-            , Css.backgroundColor whiteColor
-            , highlightPrimaryFrostedColor vc |> Css.border3 (Css.px 1) Css.solid
-            , Css.px 3 |> Css.borderRadius
-            ]
+            base
+                ++ [ highlightPrimaryFrostedColor vc |> color
+                   , backgroundColor whiteColor
+                   , highlightPrimaryFrostedColor vc |> border3 xsGap solid
+                   ]
 
 
-searchViewStyle : View.Config -> List Css.Style
+searchViewStyle : View.Config -> List Style
 searchViewStyle vc =
-    boxStyle vc Nothing ++ [ Css.displayFlex, Css.justifyContent Css.flexEnd ]
+    boxStyle vc Nothing ++ [ displayFlex, justifyContent flexEnd ]
 
 
-searchBoxContainerStyle : View.Config -> List Css.Style
+searchBoxContainerStyle : View.Config -> List Style
 searchBoxContainerStyle _ =
-    [ Css.position Css.relative ]
+    [ position relative ]
 
 
-searchBoxIconStyle : View.Config -> List Css.Style
+searchBoxIconStyle : View.Config -> List Style
 searchBoxIconStyle _ =
-    [ Css.position Css.absolute, Css.px 7 |> Css.top, Css.px 7 |> Css.left ]
+    [ position absolute, px 7 |> top, px 7 |> left ]
 
 
-addressDetailsViewActorImageStyle : View.Config -> List Css.Style
+addressDetailsViewActorImageStyle : View.Config -> List Style
 addressDetailsViewActorImageStyle vc =
-    [ Css.display Css.block
-    , Css.borderRadius (Css.pct 50)
-    , Css.height (Css.px 40)
-    , Css.width (Css.px 40)
-    , Css.border3 (Css.px 1)
-        Css.solid
+    [ display block
+    , borderRadius (pct 50)
+    , height (px 40)
+    , width (px 40)
+    , border3 xsGap
+        solid
         (if vc.lightmode then
             blackColor
 
          else
             whiteColor
         )
-    , Css.px 5 |> Css.marginRight
+    , mGap |> marginRight
     ]
 
 
-detailsViewContainerStyle : View.Config -> List Css.Style
+detailsViewContainerStyle : View.Config -> List Style
 detailsViewContainerStyle _ =
-    [ Css.displayFlex, Css.justifyContent Css.left, Css.pct 100 |> Css.width ]
+    [ displayFlex, justifyContent left, all |> width ]
 
 
-kVTableTdStyle : View.Config -> List Css.Style
+kVTableTdStyle : View.Config -> List Style
 kVTableTdStyle _ =
-    [ Css.px 5 |> Css.paddingLeft ]
+    [ mGap |> paddingLeft ]
 
 
-kVTableKeyTdStyle : View.Config -> List Css.Style
+kVTableKeyTdStyle : View.Config -> List Style
 kVTableKeyTdStyle vc =
-    [ Css.px 5 |> Css.paddingTop, Css.px 5 |> Css.paddingBottom, emphTextColor vc |> Css.color ] ++ kVTableTdStyle vc
+    [ mGap |> paddingTop, mGap |> paddingBottom, emphTextColor vc |> color ] ++ kVTableTdStyle vc
 
 
-kVTableValueTdStyle : View.Config -> List Css.Style
+kVTableValueTdStyle : View.Config -> List Style
 kVTableValueTdStyle vc =
-    Css.textAlign Css.right :: kVTableTdStyle vc
+    textAlign right :: kVTableTdStyle vc
 
 
-copyableIdentifierStyle : View.Config -> List Css.Style
+copyableIdentifierStyle : View.Config -> List Style
 copyableIdentifierStyle vc =
-    [ highlightPrimaryColor vc |> Css.color ]
+    [ highlightPrimaryColor vc |> color ]
 
 
 
 -- non vc dependent styles
 
 
-ruleStyle : List Css.Style
+ruleStyle : List Style
 ruleStyle =
-    [ Css.px 5 |> Css.marginBottom, Css.px 5 |> Css.marginTop ]
+    [ mGap |> marginBottom, mGap |> marginTop ]
 
 
-inIconStyle : List Css.Style
+inIconStyle : List Style
 inIconStyle =
-    [ Css.color greenColor, Css.ch 0.5 |> Css.paddingRight, Css.ch 0.2 |> Css.paddingLeft ]
+    [ color greenColor, ch 0.5 |> paddingRight, ch 0.2 |> paddingLeft ]
 
 
-outIconStyle : List Css.Style
+outIconStyle : List Style
 outIconStyle =
-    [ Css.color redColor, Css.ch 0.5 |> Css.paddingRight, Css.ch 0.2 |> Css.paddingLeft ]
+    [ color redColor, ch 0.5 |> paddingRight, ch 0.2 |> paddingLeft ]
 
 
-ioOutIndicatorStyle : List Css.Style
+ioOutIndicatorStyle : List Style
 ioOutIndicatorStyle =
-    [ Css.ch 0.5 |> Css.paddingLeft ]
+    [ ch 0.5 |> paddingLeft ]
 
 
-collapsibleSectionIconStyle : List Css.Style
+collapsibleSectionIconStyle : List Style
 collapsibleSectionIconStyle =
-    [ Css.ch 1 |> Css.paddingRight, Css.ch 2 |> Css.paddingLeft ]
+    [ ch 1 |> paddingRight, ch 2 |> paddingLeft ]
 
 
-iconWithTextStyle : List Css.Style
+iconWithTextStyle : List Style
 iconWithTextStyle =
-    [ Css.px 5 |> Css.paddingRight ]
+    [ mGap |> paddingRight ]
 
 
-detailsViewCloseButtonStyle : List Css.Style
+detailsViewCloseButtonStyle : List Style
 detailsViewCloseButtonStyle =
-    [ Css.float Css.right, Css.margin4 (Css.px 10) (Css.px 10) (Css.px 0) (Css.px 0) ]
+    [ float right, margin4 mlGap mlGap no no ]
 
 
-addressDetailsContainerStyle : List Css.Style
+addressDetailsContainerStyle : List Style
 addressDetailsContainerStyle =
-    [ Css.px 10 |> Css.marginRight, Css.px 10 |> Css.marginLeft ]
+    [ mlGap |> marginRight, mlGap |> marginLeft ]
 
 
-smPaddingBottom : List Css.Style
+smPaddingBottom : List Style
 smPaddingBottom =
-    [ Css.paddingBottom (Css.px 10) ]
+    [ paddingBottom mlGap ]
 
 
-fullWidth : List Css.Style
+fullWidth : List Style
 fullWidth =
-    [ Css.pct 100 |> Css.width ]
+    [ all |> width ]
