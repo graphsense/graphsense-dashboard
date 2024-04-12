@@ -470,6 +470,9 @@ theme =
                         , display block
                         , scaled 0.5 |> rem |> paddingY
                         , hover (resultLineHighlighted lightmode)
+                        , overflow hidden
+                        , textOverflow ellipsis
+                        , whiteSpace noWrap
                         ]
                     )
                 |> s_resultLineHighlighted resultLineHighlighted

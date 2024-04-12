@@ -36,7 +36,7 @@ toUrl r =
                 ( itemPath, itemQuery ) =
                     thingToUrl si
             in
-            absolute ([ c ] ++ itemPath) ([] ++ itemQuery)
+            absolute (c :: itemPath) itemQuery
 
 
 thingToUrl : Thing -> ( List String, List QueryParameter )
@@ -52,6 +52,25 @@ thingToUrl t =
             ( [ "block", String.fromInt nr ], [] )
 
 
+
+--parseCurrency : Parser (String -> a) a
+--parseCurrency = P.custom "CURRENCY"
+
+
 parser : Parser (Route -> a) a
 parser =
-    map Root P.top
+    oneOf
+        [ map Currency (P.string |> P.slash thingParser)
+        , map Label (P.s "label" |> P.slash P.string)
+        , map Actor (P.s "actor" |> P.slash P.string)
+        , map Root P.top
+        ]
+
+
+thingParser : Parser (Thing -> a) a
+thingParser =
+    oneOf
+        [ s "address" |> P.slash P.string |> map Address
+        , s "tx" |> P.slash P.string |> map Tx
+        , s "block" |> P.slash P.int |> map Block
+        ]

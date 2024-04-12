@@ -1,5 +1,6 @@
 module Msg.Pathfinder exposing (..)
 
+import Api.Data
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
@@ -21,6 +22,7 @@ type Msg
     | UserClosedDetailsView
     | UserClickedToggleAddressDetailsTable
     | UserClickedToggleTransactionDetailsTable
+    | BrowserGotAddress Id Api.Data.Address
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp

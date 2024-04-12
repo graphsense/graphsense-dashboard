@@ -4,6 +4,7 @@ import Config.View as View
 import Css exposing (..)
 import Html.Styled
 import Html.Styled.Attributes as HA
+import Update.Graph.Transform exposing (wheel)
 
 
 addressRoot : View.Config -> List Style
@@ -80,7 +81,7 @@ primaryColor =
 
 primaryFrostedColor : Color
 primaryFrostedColor =
-    rgb 26 197 176
+    rgb 107 203 186
 
 
 lighterGreyColor : Color
@@ -229,18 +230,30 @@ toolItemStyle _ =
 
 linkButtonStyle : View.Config -> Bool -> List Style
 linkButtonStyle vc enabled =
+    let
+        clr =
+            case ( vc.lightmode, enabled ) of
+                ( True, True ) ->
+                    blackColor
+
+                ( False, True ) ->
+                    whiteColor
+
+                _ ->
+                    lighterGreyColor
+    in
     [ defaultBackgroundColor vc |> backgroundColor
     , no |> borderWidth
-    , cursor pointer
-    , no |> padding
-    , mGap |> paddingLeft
-    , color
-        (if vc.lightmode then
-            blackColor
+    , cursor
+        (if enabled then
+            pointer
 
          else
-            whiteColor
+            notAllowed
         )
+    , no |> padding
+    , mGap |> paddingLeft
+    , clr |> color
     ]
 
 

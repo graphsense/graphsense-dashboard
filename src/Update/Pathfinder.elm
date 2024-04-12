@@ -1,7 +1,8 @@
-module Update.Pathfinder exposing (update)
+module Update.Pathfinder exposing (update, updateByRoute)
 
 import Config.Update as Update
 import Effect exposing (n)
+import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder
 import Log
@@ -15,7 +16,9 @@ import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
+import RecordSetter exposing (..)
 import Route.Pathfinder as Route
+import Tuple
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -45,8 +48,8 @@ resultLineToRoute search =
         Search.Label s ->
             Route.Label s
 
-        Search.Actor ( s, s2 ) ->
-            Route.Actor s
+        Search.Actor ( id, name ) ->
+            Route.Actor id
 
 
 updateByMsg : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -57,6 +60,9 @@ updateByMsg plugins uc msg model =
             n model
 
         NoOp ->
+            n model
+
+        BrowserGotAddress id data ->
             n model
 
         SearchMsg m ->
@@ -91,15 +97,7 @@ updateByMsg plugins uc msg model =
                                 n m2
 
                 _ ->
-                    let
-                        ( smn, eff ) =
-                            Search.update m model.search
-                    in
-                    ( { model
-                        | search = smn
-                      }
-                    , List.map Pathfinder.SearchEffect eff
-                    )
+                    Search.update m model.search |> Tuple.mapFirst (\s -> s_search s model) |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
 
         UserClosedDetailsView ->
             n (closeDetailsView model)
@@ -204,6 +202,22 @@ updateByMsg plugins uc msg model =
                         | dragging = DraggingNode id start coords
                     }
                         |> n
+
+
+updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute plugins route model =
+    forcePushHistory model
+        |> updateByRoute_ plugins route
+
+
+updateByRoute_ : Plugins -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute_ _ route model =
+    case route of
+        Route.Currency net (Route.Address a) ->
+            ( model, [ Api.GetAddressEffect { currency = net, address = a } (BrowserGotAddress a) |> ApiEffect ] )
+
+        _ ->
+            n model
 
 
 pushHistory : Msg -> Model -> Model
