@@ -43,6 +43,7 @@
             "grotsev/elm-debouncer": "1.0.0",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
             "jschomay/elm-bounded-number": "2.1.2",
+            "kokizzu/elm-date-format": "1.0.0",
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "mathiajusth/nonempty-dict": "1.1.1",
@@ -53,8 +54,7 @@
             "noahzgordon/elm-color-extra": "1.0.2",
             "rtfeldman/elm-css": "16.1.1",
             "rtfeldman/elm-hex": "1.0.0",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4",
-            "kokizzu/elm-date-format": "1.0.0"
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",
@@ -65,14 +65,12 @@
             "elm-explorations/test": "1.2.2",
             "fredcy/elm-parseint": "2.0.1",
             "hecrj/html-parser": "2.4.0",
-            "mgold/elm-nonempty-list": "4.2.0",
             "myrho/elm-parser-extras": "1.0.1",
             "myrho/elm-round": "1.0.5"
         }
     },
     "test-dependencies": {
         "direct": {
-            "elm-community/result-extra": "2.4.0",
             "elm-explorations/test": "1.2.2"
         },
         "indirect": {}
