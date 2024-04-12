@@ -15,6 +15,7 @@ import Http
 import IntDict exposing (IntDict)
 import Json.Decode
 import Json.Encode
+import Model.Direction exposing (Direction(..))
 import Model.Graph.Id as Id exposing (AddressId, currency)
 import Model.Graph.Layer as Layer exposing (Layer)
 
@@ -76,6 +77,7 @@ type Effect msg
     | GetAddressTxsEffect
         { currency : String
         , address : String
+        , direction : Maybe Direction
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -136,6 +138,7 @@ type Effect msg
         { currency : String
         , txHash : String
         , tokenTxId : Maybe Int
+        , includeIo : Bool
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -488,8 +491,20 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.getAddressEntity currency address
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressTxs currency address Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+        GetAddressTxsEffect { currency, address, direction, pagesize, nextpage } toMsg ->
+            let
+                dir =
+                    case direction of
+                        Nothing ->
+                            Nothing
+
+                        Just Incoming ->
+                            Just Api.Request.Addresses.DirectionIn
+
+                        Just Outgoing ->
+                            Just Api.Request.Addresses.DirectionOut
+            in
+            Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
@@ -524,8 +539,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Blocks.listBlockTxs currency block
                 |> send apiKey wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash, tokenTxId } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just False) tokenTxId
+        GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
+            Api.Request.Txs.getTx currency txHash (Just includeIo) tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->

@@ -3,14 +3,15 @@ module Model.Pathfinder.Tx exposing (..)
 import Api.Data
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
+import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
+import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Input exposing (Input)
-import Model.Pathfinder.Output exposing (Output)
 import Tuple exposing (first)
+import Util.Pathfinder exposing (getAddress)
 
 
 type alias Tx =
@@ -32,8 +33,8 @@ type alias AccontTx =
 
 
 type alias UtxoTx =
-    { inputs : NonemptyDict Id Input
-    , outputs : NonemptyDict Id Output
+    { inputs : NonemptyDict Id Api.Data.Values
+    , outputs : NonemptyDict Id Api.Data.Values
     }
 
 
@@ -113,13 +114,71 @@ avg field items =
             |> Ok
 
 
-getAddress : Dict Id Address -> Id -> Result Error Address
-getAddress addresses id =
-    Dict.get id addresses
-        |> Maybe.map Ok
-        |> Maybe.withDefault (AddressNotFoundInDict id |> InternalError |> Err)
-
-
 addressToCoords : Address -> Coords
 addressToCoords { x, y } =
     Coords x y
+
+
+fromData : Api.Data.Tx -> Result Error Tx
+fromData data =
+    case data of
+        Api.Data.TxTxAccount t ->
+            let
+                id =
+                    Id.init t.currency t.txHash
+            in
+            Ok
+                { id = id
+                , type_ =
+                    Account
+                        { from = Id.init t.currency t.fromAddress
+                        , to = Id.init t.currency t.toAddress
+                        , value = t.value
+                        }
+                }
+
+        Api.Data.TxTxUtxo t ->
+            let
+                id =
+                    Id.init t.currency t.txHash
+
+                fn direction =
+                    let
+                        field =
+                            case direction of
+                                Incoming ->
+                                    .inputs
+
+                                Outgoing ->
+                                    .outputs
+
+                        toPair : Api.Data.TxValue -> Maybe ( Id, Api.Data.Values )
+                        toPair { address, value } =
+                            -- TODO what to do with multisig?
+                            List.head address
+                                |> Maybe.map (\a -> ( Id.init t.currency a, value ))
+                    in
+                    field t
+                        |> Maybe.map (List.filterMap toPair)
+                        |> Maybe.andThen NList.fromList
+                        |> Maybe.map (NDict.fromNonemptyList >> Ok)
+                        |> Maybe.withDefault (InternalError (TxValuesEmpty direction id) |> Err)
+
+                inputs =
+                    fn Incoming
+
+                outputs =
+                    fn Outgoing
+            in
+            Result.map2
+                (\in_ out ->
+                    { id = id
+                    , type_ =
+                        Utxo
+                            { inputs = in_
+                            , outputs = out
+                            }
+                    }
+                )
+                inputs
+                outputs

@@ -9,6 +9,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Search as Search
+import RecordSetter exposing (s_detailsViewState, s_selection)
 
 
 type alias Model =
@@ -71,26 +72,16 @@ setViewState fn model =
     { model | view = fn model.view }
 
 
-setSelection : Selection -> Model -> Model
-setSelection val model =
-    { model | selection = val }
-
-
-setDetailsViewState : DetailsViewState -> ViewState -> ViewState
-setDetailsViewState val model =
-    { model | detailsViewState = val }
-
-
 closeDetailsView : Model -> Model
 closeDetailsView =
-    (setViewState <| setDetailsViewState NoDetails) >> setSelection NoSelection
+    (setViewState <| s_detailsViewState NoDetails) >> s_selection NoSelection
 
 
 toggleAddressDetailsTable : Model -> Model
 toggleAddressDetailsTable m =
     case m.view.detailsViewState of
         AddressDetails id ad ->
-            (setViewState <| setDetailsViewState (AddressDetails id { ad | addressTableOpen = not ad.addressTableOpen })) m
+            (setViewState <| s_detailsViewState (AddressDetails id { ad | addressTableOpen = not ad.addressTableOpen })) m
 
         _ ->
             m
@@ -100,7 +91,7 @@ toggleTransactionDetailsTable : Model -> Model
 toggleTransactionDetailsTable m =
     case m.view.detailsViewState of
         AddressDetails id ad ->
-            (setViewState <| setDetailsViewState (AddressDetails id { ad | transactionsTableOpen = not ad.transactionsTableOpen })) m
+            (setViewState <| s_detailsViewState (AddressDetails id { ad | transactionsTableOpen = not ad.transactionsTableOpen })) m
 
         _ ->
             m

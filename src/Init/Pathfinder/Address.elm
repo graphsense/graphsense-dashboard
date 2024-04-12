@@ -7,11 +7,11 @@ import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))
 
 
-init : Id -> Api.Data.Address -> Coords -> Address
-init id data { x, y } =
+init : Id -> Coords -> Address
+init id { x, y } =
     { x = x
     , y = y
     , id = id
     , transactions = NotAsked
-    , data = data
+    , data = NotAsked
     }

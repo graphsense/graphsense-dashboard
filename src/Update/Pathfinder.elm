@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (update, updateByRoute)
 
 import Api.Data
 import Config.Update as Update
+import Dict.Nonempty as NDict exposing (NonemptyDict)
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
@@ -9,20 +10,23 @@ import Init.Pathfinder
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Log
+import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
+import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route
-import Tuple
+import Tuple exposing (first)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -67,15 +71,78 @@ updateByMsg plugins uc msg model =
         NoOp ->
             n model
 
-        BrowserGotAddress id data ->
+        BrowserGotNewAddress id data ->
             let
                 ( m, e ) =
-                    addAddress plugins
-                        id
-                        data
-                        model
+                    addAddress plugins id data model
             in
-            ( selectAddress data m, e )
+            ( selectAddress id m, e )
+
+        BrowserGotRecentTx id direction data ->
+            let
+                getHash tx =
+                    case tx of
+                        Api.Data.AddressTxAddressTxUtxo t ->
+                            t.txHash
+
+                        Api.Data.AddressTxTxAccount t ->
+                            t.txHash
+            in
+            ( model
+            , data.addressTxs
+                |> List.head
+                |> Maybe.map getHash
+                |> Maybe.map
+                    (\txHash ->
+                        BrowserGotTxForAddress id direction
+                            |> Api.GetTxEffect
+                                { currency = Id.network id
+                                , txHash = txHash
+                                , includeIo = True
+                                , tokenTxId = Nothing
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                    )
+                |> Maybe.withDefault []
+            )
+
+        BrowserGotTxForAddress id direction data ->
+            case Tx.fromData data of
+                Ok tx ->
+                    let
+                        ( nw, eff ) =
+                            Network.insertTx tx model.network
+                                |> Network.addAddressAt plugins id direction firstAddress
+
+                        firstAddress =
+                            case tx.type_ of
+                                Tx.Utxo t ->
+                                    case direction of
+                                        Incoming ->
+                                            NDict.head t.inputs
+                                                |> first
+
+                                        Outgoing ->
+                                            NDict.head t.outputs
+                                                |> first
+
+                                Tx.Account t ->
+                                    case direction of
+                                        Incoming ->
+                                            t.from
+
+                                        Outgoing ->
+                                            t.to
+                    in
+                    ( { model | network = nw }
+                    , eff
+                    )
+
+                Err err ->
+                    ( model
+                    , [ ErrorEffect err ]
+                    )
 
         SearchMsg m ->
             case m of
@@ -219,6 +286,15 @@ updateByMsg plugins uc msg model =
                     }
                         |> n
 
+        UserClickedAddressExpandHandle id direction ->
+            let
+                ( nw, eff ) =
+                    Network.expandAddress id direction model.network
+            in
+            ( { model | network = nw }
+            , eff
+            )
+
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
@@ -233,31 +309,35 @@ updateByRoute_ plugins route model =
             n model
 
         Route.Network network (Route.Address a) ->
-            ( model, [ Api.GetAddressEffect { currency = network, address = a } (BrowserGotAddress (Id.init network a)) |> ApiEffect ] )
+            addressFromRoute plugins (Id.init network a) model
 
         _ ->
             n model
 
 
-addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
-addAddress plugins id data model =
+addressFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
+addressFromRoute plugins id model =
     let
         ( nw, eff ) =
-            Network.addAddress plugins id data model.network
+            Network.addressFromRoute plugins id model.network
     in
     ( { model | network = nw }
     , eff
     )
 
 
-selectAddress : Api.Data.Address -> Model -> Model
-selectAddress a =
-    let
-        id =
-            Id.init a.currency a.address
-    in
-    setSelection (SelectedAddress id)
-        >> (setViewState <| setDetailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
+addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
+addAddress plugins id data model =
+    { model
+        | network = Network.updateAddress plugins id (s_data (Success data)) model.network
+    }
+        |> n
+
+
+selectAddress : Id -> Model -> Model
+selectAddress id =
+    s_selection (SelectedAddress id)
+        >> (setViewState <| s_detailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
 
 
 pushHistory : Msg -> Model -> Model

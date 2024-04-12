@@ -7,6 +7,7 @@ import Config.View as View
 import Css
 import Css.Graph
 import Css.Pathfinder as Css exposing (..)
+import Css.View
 import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (disabled, id, src)
@@ -20,15 +21,19 @@ import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
+import RemoteData exposing (WebData)
+import Result.Extra
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Util.Graph
+import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
+import View.Pathfinder.Error as Error
 import View.Pathfinder.Network as Network
 import View.Search
 
@@ -291,10 +296,14 @@ detailsView plugins ms vc gc model =
             [ detailsViewCloseRow vc
             , case ( model.selection, getDetailsViewStateForSelection model ) of
                 ( SelectedAddress id, AddressDetails _ state ) ->
-                    getLoadedAddress model id
-                        |> Maybe.map .data
-                        |> Maybe.map (addressDetailsContentView plugins ms vc gc model id state)
-                        |> Maybe.withDefault none
+                    getAddress model.network.addresses id
+                        |> Result.map .data
+                        |> Result.Extra.unpack
+                            (Error.view vc)
+                            (RemoteData.unwrap
+                                (Util.View.loadingSpinner vc Css.View.loadingSpinner)
+                                (addressDetailsContentView plugins ms vc gc model id state)
+                            )
 
                 _ ->
                     none
@@ -349,7 +358,9 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             dummyImageSrc vc
 
         sections =
-            [ addressTransactionTableView vc gc id viewState data, addressNeighborsTableView vc gc id viewState data ]
+            [ addressTransactionTableView vc gc id viewState data
+            , addressNeighborsTableView vc gc id viewState data
+            ]
 
         tbls =
             [ addressDetailsTableView vc gc id viewState data, addressActionsView vc gc id viewState data (getAddressActionBtns data) ]

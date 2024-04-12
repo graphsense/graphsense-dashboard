@@ -129,7 +129,12 @@ loadingTxAccount id accountCurrency model =
     let
         return table =
             ( TxAccount (Loading id.currency ( id.txHash, id.tokenTxId )) accountCurrency table
-            , [ GetTxEffect id
+            , [ GetTxEffect
+                    { txHash = id.txHash
+                    , currency = id.currency
+                    , tokenTxId = id.tokenTxId
+                    , includeIo = False
+                    }
                     (BrowserGotTx accountCurrency)
                     |> ApiEffect
               ]
@@ -164,6 +169,7 @@ loadingTxUtxo id model =
                     { txHash = id.txHash
                     , currency = id.currency
                     , tokenTxId = Nothing
+                    , includeIo = False
                     }
                     (BrowserGotTx id.currency)
                     |> ApiEffect
@@ -2334,6 +2340,7 @@ getAddressTxsEffect { currency, address } nextpage =
     GetAddressTxsEffect
         { currency = currency
         , address = address
+        , direction = Nothing
         , nextpage = nextpage
         , pagesize = 100
         }

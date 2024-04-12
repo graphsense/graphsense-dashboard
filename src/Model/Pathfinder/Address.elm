@@ -11,5 +11,5 @@ type alias Address =
     , y : Float
     , id : Id
     , transactions : WebData (Set String)
-    , data : Api.Data.Address
+    , data : WebData Api.Data.Address
     }

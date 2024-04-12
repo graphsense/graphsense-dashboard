@@ -667,6 +667,7 @@ theme =
             )
         |> s_pathfinder
             (Pathfinder.default
+                |> s_addressRadius 30
                 |> s_address
                     [ DesignToken.init
                         |> DesignToken.token "stroke" addressStroke
