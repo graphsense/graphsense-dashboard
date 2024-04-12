@@ -15,7 +15,7 @@ import Json.Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -421,7 +421,7 @@ addressDetailsHeadingView vc gc id mNetwork annotations =
     in
     div []
         [ h1 [ panelHeadingStyle2 vc |> toAttr ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
-        , copyableLongIdentifier vc [ copyableIdentifierStyle vc |> toAttr ] id
+        , copyableLongIdentifier vc [ copyableIdentifierStyle vc |> toAttr ] (Id.id id)
         ]
 
 

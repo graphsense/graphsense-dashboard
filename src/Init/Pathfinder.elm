@@ -40,5 +40,5 @@ init =
     , dragging = NoDragging
     , transform = Transform.init
     , history = History.init
-    , view = { detailsViewState = Address "bc1qvqxjv6cdf9yxvv5yssujcvt8zu2qfl2nnuuy7d" { addressTableOpen = False, transactionsTableOpen = False } (Just dummyAddress) }
+    , view = { detailsViewState = Address ( "btc", "bc1qvqxjv6cdf9yxvv5yssujcvt8zu2qfl2nnuuy7d" ) { addressTableOpen = False, transactionsTableOpen = False } (Just dummyAddress) }
     }

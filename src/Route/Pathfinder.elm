@@ -1,6 +1,7 @@
 module Route.Pathfinder exposing (..)
 
 import List.Extra
+import Url.Builder exposing (QueryParameter, absolute)
 import Util.Url.Parser as P exposing (..)
 
 
@@ -55,15 +56,10 @@ thingToUrl t =
             ( [ "block", String.fromInt nr ], [] )
 
 
-
---parseCurrency : Parser (String -> a) a
---parseCurrency = P.custom "CURRENCY"
-
-
-parser : Parser (Route -> a) a
-parser =
+parser : Config -> Parser (Route -> a) a
+parser c =
     oneOf
-        [ map Network (P.string |> P.slash thingParser)
+        [ map Network (parseCurrency c |> P.slash thing)
         , map Label (P.s "label" |> P.slash P.string)
         , map Actor (P.s "actor" |> P.slash P.string)
         , map Root P.top
@@ -107,4 +103,3 @@ parseCurrency c =
     P.custom "CURRENCY" <|
         \segment ->
             List.Extra.find ((==) segment) c.networks
-                >>>>>>> c7dd3e9 (pathfinder graph)

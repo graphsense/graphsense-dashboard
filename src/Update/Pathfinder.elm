@@ -41,13 +41,13 @@ resultLineToRoute : Search.ResultLine -> Route.Route
 resultLineToRoute search =
     case search of
         Search.Address net address ->
-            Route.Currency net (Route.Address address)
+            Route.Network net (Route.Address address)
 
         Search.Tx net h ->
-            Route.Currency net (Route.Tx h)
+            Route.Network net (Route.Tx h)
 
         Search.Block net b ->
-            Route.Currency net (Route.Block b)
+            Route.Network net (Route.Block b)
 
         Search.Label s ->
             Route.Label s
@@ -224,6 +224,9 @@ updateByRoute_ plugins route model =
             addAddress plugins
                 (Id.init network a)
                 model
+
+        _ ->
+            n model
 
 
 addAddress : Plugins -> Id -> Model -> ( Model, List Effect )
