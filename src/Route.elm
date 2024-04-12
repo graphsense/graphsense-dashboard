@@ -21,6 +21,7 @@ import Util.Url.Parser as P exposing (..)
 
 type alias Config =
     { graph : Graph.Config
+    , pathfinder : Pathfinder.Config
     }
 
 
@@ -42,6 +43,7 @@ pathfinderSegment =
     "pathfinder"
 
 
+statsSegment : String
 statsSegment =
     "stats"
 
@@ -55,7 +57,7 @@ parser : Config -> Parser (Route -> a) a
 parser c =
     oneOf
         [ map Graph (s graphSegment |> slash (Graph.parser c.graph))
-        , map Pathfinder (s pathfinderSegment |> slash Pathfinder.parser)
+        , map Pathfinder (s pathfinderSegment |> slash (Pathfinder.parser c.pathfinder))
         , map Stats (s statsSegment)
         , map Home top
         , map Plugin (remainder Plugin.parseUrl)

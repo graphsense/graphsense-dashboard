@@ -5,6 +5,8 @@ import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder
+import Init.Pathfinder.Id as Id
+import Init.Pathfinder.Network as Network
 import Log
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.History as History
@@ -12,6 +14,7 @@ import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.History.Entry as Entry
+import Model.Pathfinder.Id exposing (Id)
 import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
 import Msg.Search as Search
@@ -22,6 +25,7 @@ import Tuple
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Network as Network
 import Update.Search as Search
 import Util.Pathfinder.History as History
 
@@ -211,13 +215,26 @@ updateByRoute plugins route model =
 
 
 updateByRoute_ : Plugins -> Route.Route -> Model -> ( Model, List Effect )
-updateByRoute_ _ route model =
-    case route of
-        Route.Currency net (Route.Address a) ->
-            ( model, [ Api.GetAddressEffect { currency = net, address = a } (BrowserGotAddress a) |> ApiEffect ] )
-
-        _ ->
+updateByRoute_ plugins route model =
+    case route |> Log.log "route" of
+        Route.Root ->
             n model
+
+        Route.Network network (Route.Address a) ->
+            addAddress plugins
+                (Id.init network a)
+                model
+
+
+addAddress : Plugins -> Id -> Model -> ( Model, List Effect )
+addAddress plugins id model =
+    let
+        ( nw, eff ) =
+            Network.addAddress plugins id model.network
+    in
+    ( { model | network = nw }
+    , eff
+    )
 
 
 pushHistory : Msg -> Model -> Model

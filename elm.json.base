@@ -7,7 +7,8 @@
         "openapi/src",
         "themes",
         "config",
-        "lib/elm-autocomplete/src"
+        "lib/elm-autocomplete/src",
+        "lib/cistring/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
@@ -36,6 +37,7 @@
             "elm-community/json-extra": "4.3.0",
             "elm-community/list-extra": "8.6.0",
             "elm-community/maybe-extra": "5.3.0",
+            "elm-community/result-extra": "2.4.0",
             "elm-community/string-extra": "4.0.1",
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",
@@ -43,6 +45,8 @@
             "jschomay/elm-bounded-number": "2.1.2",
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
+            "mathiajusth/nonempty-dict": "1.1.1",
+            "mgold/elm-nonempty-list": "4.2.0",
             "myrho/elm-hovercard": "4.0.0",
             "myrho/numeral-elm": "1.0.1",
             "myrho/yaml": "1.0.0",

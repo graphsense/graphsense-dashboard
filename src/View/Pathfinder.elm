@@ -1,6 +1,7 @@
 module View.Pathfinder exposing (view)
 
 import Api.Data
+import CIString
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -504,15 +505,10 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
         )
-        [ model.network |> Maybe.map (Svg.lazy4 networks plugins vc gc) |> Maybe.withDefault (div [] [])
+        [ model.network |> Svg.lazy4 networks plugins vc gc
         ]
 
 
 networks : Plugins -> View.Config -> Pathfinder.Config -> Network -> Svg Msg
 networks plugins vc gc network =
-    Keyed.node "g"
-        []
-        [ ( "Pathfinder.network." ++ network.name
-          , Svg.lazy4 Network.addresses plugins vc gc network.addresses
-          )
-        ]
+    Svg.lazy4 Network.addresses plugins vc gc network.addresses

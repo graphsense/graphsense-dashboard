@@ -11,14 +11,8 @@ import Model.Pathfinder.Network exposing (Network)
 import Model.Search as Search
 
 
-
---import Route.Pathfinder
-
-
 type alias Model =
-    { network : Maybe Network
-
-    --, route : Route.Pathfinder.Route
+    { network : Network
     , dragging : Dragging Id
     , selection : List Id
     , search : Search.Model

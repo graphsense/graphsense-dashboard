@@ -42,6 +42,7 @@ import RecordSetter exposing (..)
 import RemoteData as RD
 import Route
 import Route.Graph
+import Route.Pathfinder
 import Sha256
 import Task
 import Time
@@ -499,6 +500,19 @@ update plugins uc msg model =
 
                         m2 =
                             { model | search = search }
+
+                        resultLineToRoute v =
+                            case ( model.page, v ) of
+                                ( Pathfinder, Search.Address currency address ) ->
+                                    Route.Pathfinder.addressRoute
+                                        { network = currency
+                                        , address = address
+                                        }
+                                        |> Route.pathfinderRoute
+
+                                ( _, s ) ->
+                                    Route.Graph.resultLineToRoute s
+                                        |> Route.graphRoute
                     in
                     if String.isEmpty query then
                         n model
@@ -507,8 +521,7 @@ update plugins uc msg model =
                         case selectedValue of
                             Just value ->
                                 value
-                                    |> Search.resultLineToRoute
-                                    |> Route.graphRoute
+                                    |> resultLineToRoute
                                     |> Route.toUrl
                                     |> NavPushUrlEffect
                                     |> List.singleton
@@ -1034,8 +1047,11 @@ updateByUrl plugins uc url model =
             model.stats
                 |> RD.map (.currencies >> List.map .name)
                 |> RD.withDefault []
-                |> (\c -> { currencies = c })
-                |> (\g -> { graph = g })
+                |> (\c ->
+                        { graph = { currencies = c }
+                        , pathfinder = { networks = c }
+                        }
+                   )
     in
     Route.parse routeConfig url
         |> Maybe.map2

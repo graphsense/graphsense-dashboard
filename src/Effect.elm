@@ -96,6 +96,9 @@ perform plugins key statusbarToken apiKey effect =
                         (Pathfinder.SearchMsg >> PathfinderMsg)
                         e
 
+                Pathfinder.ErrorEffect _ ->
+                    Cmd.none
+
         GraphEffect eff ->
             case eff of
                 Graph.ApiEffect apiEff ->

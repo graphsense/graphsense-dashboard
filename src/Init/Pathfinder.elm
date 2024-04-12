@@ -3,6 +3,7 @@ module Init.Pathfinder exposing (..)
 import Api.Data
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
+import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (DetailsViewState(..), Model)
@@ -33,9 +34,7 @@ dummyAddress =
 
 init : Model
 init =
-    { network = Nothing
-
-    --, route = Route.Root
+    { network = Network.init
     , selection = []
     , search = Search.init (Search.initSearchAll Nothing)
     , dragging = NoDragging

@@ -5,7 +5,7 @@ import Config.View as View
 import Dict exposing (Dict)
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address exposing (Address)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.Model exposing (ModelState)
@@ -22,7 +22,7 @@ addresses : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Sv
 addresses plugins vc gc =
     Dict.foldl
         (\id address svg ->
-            ( id
+            ( Id.toString id
             , Svg.lazy4 Address.view plugins vc gc address
             )
                 :: svg

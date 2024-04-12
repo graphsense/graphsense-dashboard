@@ -142,6 +142,9 @@ messageFromEffect model effect =
         Model.PathfinderEffect (Pathfinder.SearchEffect _) ->
             Nothing
 
+        Model.PathfinderEffect (Pathfinder.ErrorEffect _) ->
+            Nothing
+
 
 isOutgoingToString : Bool -> String
 isOutgoingToString isOutgoing =

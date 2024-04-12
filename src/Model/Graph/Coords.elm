@@ -1,5 +1,7 @@
 module Model.Graph.Coords exposing (..)
 
+import List.Nonempty as NList
+
 
 type alias Coords =
     { x : Float, y : Float }
@@ -31,3 +33,10 @@ relativeToGraph bbox coords =
                 }
             )
         |> Maybe.withDefault coords
+
+
+avg : NList.Nonempty Coords -> Coords
+avg coords =
+    { x = (NList.map .x coords |> NList.toList |> List.sum) / toFloat (NList.length coords)
+    , y = (NList.map .y coords |> NList.toList |> List.sum) / toFloat (NList.length coords)
+    }

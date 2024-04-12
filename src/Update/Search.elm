@@ -1,4 +1,4 @@
-module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, resultLineToRoute, update)
+module Update.Search exposing (clear, filterByPrefix, maybeTriggerSearch, update)
 
 import Api.Data
 import Autocomplete
@@ -255,39 +255,6 @@ maybeTriggerSearch model =
 
     else
         []
-
-
-resultLineToRoute : ResultLine -> Graph.Route
-resultLineToRoute resultLine =
-    case resultLine of
-        Address currency address ->
-            Graph.addressRoute
-                { currency = currency
-                , address = address
-                , table = Nothing
-                , layer = Nothing
-                }
-
-        Tx currency tx ->
-            Graph.txRoute
-                { currency = currency
-                , txHash = tx
-                , table = Nothing
-                , tokenTxId = Nothing
-                }
-
-        Block currency block ->
-            Graph.blockRoute
-                { currency = currency
-                , block = block
-                , table = Nothing
-                }
-
-        Label label ->
-            Graph.labelRoute label
-
-        Actor ( id, _ ) ->
-            Graph.actorRoute id Nothing
 
 
 clear : Model -> Model
