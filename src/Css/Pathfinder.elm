@@ -7,9 +7,9 @@ import Html.Styled.Attributes as HA
 import Update.Graph.Transform exposing (wheel)
 
 
-addressRoot : View.Config -> List Style
-addressRoot vc =
-    vc.theme.pathfinder.addressRoot
+address : View.Config -> List Style
+address vc =
+    vc.theme.pathfinder.address
 
 
 

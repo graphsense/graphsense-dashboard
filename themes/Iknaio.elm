@@ -5,6 +5,8 @@ import Css exposing (..)
 import Css.Transitions
 import Dict exposing (Dict)
 import Iknaio.ColorScheme exposing (..)
+import Iknaio.DesignToken as DesignToken
+import Iknaio.DesignTokens exposing (..)
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
@@ -16,6 +18,7 @@ import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Landingpage as Landingpage
+import Theme.Pathfinder as Pathfinder
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
@@ -35,6 +38,11 @@ import Util.Theme
         , switchColor
         )
 import Util.View exposing (toCssColor)
+
+
+duration : Int
+duration =
+    500
 
 
 type alias Colors =
@@ -104,6 +112,7 @@ theme =
                 [ colorWithLightmode lightmode colors.brandText
                 , fontFamilies fontFam
                 , scaled 3.5 |> rem |> fontSize
+                , DesignToken.variables lightmode designTokens
                 ]
             )
         |> s_header
@@ -655,6 +664,16 @@ theme =
                         , cursor pointer
                         ]
                     )
+            )
+        |> s_pathfinder
+            (Pathfinder.default
+                |> s_address
+                    [ DesignToken.init
+                        |> DesignToken.token "stroke" addressStroke
+                        |> DesignToken.token "fill" addressFill
+                        |> DesignToken.withDuration duration
+                        |> DesignToken.css
+                    ]
             )
         |> s_graph
             (Graph.default

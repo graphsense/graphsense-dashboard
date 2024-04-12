@@ -5,12 +5,12 @@ import Css exposing (Style)
 
 type alias Pathfinder =
     { root : List Style
-    , addressRoot : List Style
+    , address : List Style
     }
 
 
 default : Pathfinder
 default =
     { root = []
-    , addressRoot = []
+    , address = []
     }

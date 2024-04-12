@@ -2,6 +2,7 @@ module View.Pathfinder.Address exposing (view)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
+import Css.Pathfinder as Css
 import Model.Pathfinder.Address as Address exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
@@ -18,5 +19,6 @@ view plugins vc gc address =
         [ x <| String.fromFloat address.x
         , y <| String.fromFloat address.y
         , r <| String.fromFloat Pathfinder.addressRadius
+        , Css.address vc |> css
         ]
         []
