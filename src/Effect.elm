@@ -1,4 +1,4 @@
-module Effect exposing (n, and, perform)
+module Effect exposing (and, n, perform)
 
 --import Plugin.Effect
 

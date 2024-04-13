@@ -1,6 +1,7 @@
 module Model.Pathfinder exposing (..)
 
-import Dict
+import Api.Data exposing (Actor)
+import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
@@ -14,6 +15,7 @@ import RecordSetter exposing (s_detailsViewState, s_selection)
 
 type alias Model =
     { network : Network
+    , actors : Dict String Actor
     , dragging : Dragging Id
     , selection : Selection
     , search : Search.Model

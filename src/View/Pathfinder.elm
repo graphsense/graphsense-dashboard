@@ -1,7 +1,7 @@
 module View.Pathfinder exposing (view)
 
 import Api.Data
-import CIString
+import Browser.Events exposing (Visibility(..))
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -13,6 +13,7 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (disabled, id, src)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
+import Model.Currency exposing (assetFromBase)
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Pathfinder exposing (..)
@@ -26,7 +27,6 @@ import Result.Extra
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
-import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
@@ -111,8 +111,8 @@ renderKVTableValue vc val =
         Value v ->
             span [] [ Html.text (String.fromInt v) ]
 
-        Currency v _ ->
-            span [] [ Html.text (String.fromInt v.value) ]
+        Currency v ticker ->
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value) ]
 
         Timestamp ts ->
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
