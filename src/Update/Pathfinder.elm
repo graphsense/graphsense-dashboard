@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (update, updateByRoute)
 
 import Api.Data
 import Config.Update as Update
+import Dict
 import Dict.Nonempty as NDict exposing (NonemptyDict)
 import Effect exposing (n)
 import Effect.Api as Api
@@ -71,12 +72,15 @@ updateByMsg plugins uc msg model =
         NoOp ->
             n model
 
+        BrowserGotActor id data ->
+            n { model | actors = Dict.insert id data model.actors }
+
         BrowserGotNewAddress id data ->
             let
                 ( m, e ) =
                     addAddress plugins id data model
             in
-            ( selectAddress id m, e )
+            ( selectAddress id m, e ++ fetchActorsForAddress data model.actors )
 
         BrowserGotRecentTx id direction data ->
             let
@@ -377,3 +381,16 @@ undoRedo fun model =
             )
         |> Maybe.withDefault model
         |> n
+
+
+fetchActor : String -> Effect
+fetchActor id =
+    BrowserGotActor id |> Api.GetActorEffect { actorId = id } |> ApiEffect
+
+
+fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect
+fetchActorsForAddress d existing =
+    d.actors
+        |> Maybe.map (List.filter (\l -> not (Dict.member l.id existing)))
+        |> Maybe.map (List.map (.id >> fetchActor))
+        |> Maybe.withDefault []

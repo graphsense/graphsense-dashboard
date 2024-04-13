@@ -8,6 +8,7 @@ import Css
 import Css.Graph
 import Css.Pathfinder as Css exposing (..)
 import Css.View
+import Dict
 import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (disabled, id, src)
@@ -28,6 +29,7 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
+import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (copyableLongIdentifier, none)
@@ -323,11 +325,11 @@ closeButton vc msg =
     button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
 
 
-getAddressAnnotationBtns : Api.Data.Address -> List BtnConfig
-getAddressAnnotationBtns data =
+getAddressAnnotationBtns : Api.Data.Address -> Maybe Api.Data.Actor -> List BtnConfig
+getAddressAnnotationBtns data actor =
     let
         hasTags _ =
-            True
+            not (actor == Nothing)
 
         isContract x =
             not (x.isContract == Nothing)
@@ -344,6 +346,7 @@ getAddressAnnotationBtns data =
             else
                 []
            )
+        ++ (actor |> Maybe.map (\_ -> [ BtnConfig FontAwesome.user "is contract" NoOp True ]) |> Maybe.withDefault [])
 
 
 getAddressActionBtns : Api.Data.Address -> List BtnConfig
@@ -354,8 +357,17 @@ getAddressActionBtns data =
 addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
 addressDetailsContentView plugins ms vc gc model id viewState data =
     let
+        actor_id =
+            data.actors |> Maybe.andThen (List.head >> Maybe.map .id)
+
+        actor =
+            actor_id |> Maybe.andThen (\i -> Dict.get i model.actors)
+
         addressImg =
-            dummyImageSrc vc
+            actor |> Maybe.andThen .context |> Maybe.andThen (.images >> List.head) |> Maybe.map addProtocolPrefx |> Maybe.withDefault (dummyImageSrc vc)
+
+        actor_text =
+            actor |> Maybe.map .label |> Maybe.withDefault ""
 
         sections =
             [ addressTransactionTableView vc gc id viewState data
@@ -366,12 +378,12 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             [ addressDetailsTableView vc gc id viewState data, addressActionsView vc gc id viewState data (getAddressActionBtns data) ]
 
         addressAnnotationBtns =
-            getAddressAnnotationBtns data
+            getAddressAnnotationBtns data actor
     in
     div []
         ([ div [ addressDetailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
-                [ img [ src addressImg, addressDetailsViewActorImageStyle vc |> toAttr ] []
+                [ img [ src addressImg, HA.alt actor_text, HA.title actor_text, addressDetailsViewActorImageStyle vc |> toAttr ] []
                 , div [ fullWidth |> toAttr ]
                     ([ addressDetailsHeadingView vc gc id (Just data.currency) addressAnnotationBtns
                      , rule
