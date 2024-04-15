@@ -4,7 +4,7 @@ import Api.Data
 import Config.Update as Update
 import Dict
 import Dict.Nonempty as NDict exposing (NonemptyDict)
-import Effect exposing (n)
+import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder
@@ -13,6 +13,7 @@ import Init.Pathfinder.Network as Network
 import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
+import Model.Graph.Coords exposing (Coords)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
@@ -26,13 +27,15 @@ import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
+import Result.Extra
 import Route.Pathfinder as Route
-import Tuple exposing (first)
+import Tuple exposing (first, mapFirst, pair)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Network as Network
 import Update.Search as Search
+import Util.Pathfinder exposing (getAddress)
 import Util.Pathfinder.History as History
 
 
@@ -112,41 +115,7 @@ updateByMsg plugins uc msg model =
             )
 
         BrowserGotTxForAddress id direction data ->
-            case Tx.fromData data of
-                Ok tx ->
-                    let
-                        ( nw, eff ) =
-                            Network.insertTx tx model.network
-                                |> Network.addAddressAt plugins id direction firstAddress
-
-                        firstAddress =
-                            case tx.type_ of
-                                Tx.Utxo t ->
-                                    case direction of
-                                        Incoming ->
-                                            NDict.head t.inputs
-                                                |> first
-
-                                        Outgoing ->
-                                            NDict.head t.outputs
-                                                |> first
-
-                                Tx.Account t ->
-                                    case direction of
-                                        Incoming ->
-                                            t.from
-
-                                        Outgoing ->
-                                            t.to
-                    in
-                    ( { model | network = nw }
-                    , eff
-                    )
-
-                Err err ->
-                    ( model
-                    , [ ErrorEffect err ]
-                    )
+            browserGotTxForAddress plugins uc id direction data model
 
         SearchMsg m ->
             case m of
@@ -394,3 +363,43 @@ fetchActorsForAddress d existing =
         |> Maybe.map (List.filter (\l -> not (Dict.member l.id existing)))
         |> Maybe.map (List.map (.id >> fetchActor))
         |> Maybe.withDefault []
+
+
+browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
+browserGotTxForAddress plugins uc id direction data model =
+    getAddress model.network.addresses id
+        |> Result.map (\{ x, y } -> Coords x y)
+        |> Result.andThen (Tx.fromData data direction)
+        |> Result.map
+            (\tx ->
+                let
+                    ( nw, eff ) =
+                        Network.addAddressAt plugins id direction firstAddress model.network
+                            |> and (Network.insertTx tx)
+
+                    firstAddress =
+                        case tx.type_ of
+                            Tx.Utxo t ->
+                                case direction of
+                                    Incoming ->
+                                        NDict.head t.inputs
+                                            |> first
+
+                                    Outgoing ->
+                                        NDict.head t.outputs
+                                            |> first
+
+                            Tx.Account t ->
+                                case direction of
+                                    Incoming ->
+                                        t.from
+
+                                    Outgoing ->
+                                        t.to
+                in
+                ( { model | network = nw }
+                , eff
+                )
+            )
+        |> Result.Extra.extract
+            (ErrorEffect >> List.singleton >> pair model)

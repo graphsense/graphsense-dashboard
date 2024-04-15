@@ -14,3 +14,13 @@ toString dir =
 
         Outgoing ->
             "outgoing"
+
+
+signOffsetByDirection : Direction -> Float -> Float
+signOffsetByDirection direction offset =
+    case direction of
+        Incoming ->
+            -offset
+
+        Outgoing ->
+            offset

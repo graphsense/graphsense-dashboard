@@ -20,4 +20,5 @@ init stats =
     , transform = Transform.init
     , history = History.init
     , view = { detailsViewState = NoDetails }
+    , config = {}
     }

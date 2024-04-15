@@ -12,3 +12,4 @@ type Error
 type InternalError
     = AddressNotFoundInDict Id
     | TxValuesEmpty Direction Id
+    | NoTxInputsOutputsFoundInDict Id

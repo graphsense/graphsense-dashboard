@@ -5,6 +5,7 @@ import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))
+import Set
 
 
 init : Id -> Coords -> Address
@@ -12,6 +13,7 @@ init id { x, y } =
     { x = x
     , y = y
     , id = id
-    , transactions = NotAsked
+    , incomingTxs = Set.empty
+    , outgoingTxs = Set.empty
     , data = NotAsked
     }

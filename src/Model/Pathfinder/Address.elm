@@ -10,6 +10,7 @@ type alias Address =
     { x : Float
     , y : Float
     , id : Id
-    , transactions : WebData (Set String)
+    , incomingTxs : Set Id
+    , outgoingTxs : Set Id
     , data : WebData Api.Data.Address
     }

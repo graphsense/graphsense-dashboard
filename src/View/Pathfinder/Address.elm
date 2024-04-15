@@ -11,6 +11,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
+import Set
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -29,7 +30,7 @@ view _ vc _ address =
     , label vc address
     ]
         |> g
-            [ translate (address.x * unit * 2) (address.y * unit * 2)
+            [ translate (address.x * unit) (address.y * unit)
                 |> transform
             , Css.address vc |> css
             ]
@@ -57,14 +58,14 @@ handles vc address =
                 |> Maybe.map ((<) 0)
                 |> Maybe.withDefault False
     in
-    (if nonZero .noIncomingTxs then
+    (if nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs then
         [ handle vc address.id Incoming
         ]
 
      else
         []
     )
-        ++ (if nonZero .noOutgoingTxs then
+        ++ (if nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs then
                 [ handle vc address.id Outgoing
                 ]
 

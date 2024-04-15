@@ -204,7 +204,7 @@ collapsibleSection vc title open indicator content action =
 view : Plugins -> ModelState -> View.Config -> Model -> { navbar : List (Html Msg), contents : List (Html Msg) }
 view plugins states vc model =
     { navbar = []
-    , contents = graph plugins states vc {} model
+    , contents = graph plugins states vc model.config model
     }
 
 
@@ -528,10 +528,7 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
         )
-        [ model.network |> Svg.lazy4 networks plugins vc gc
+        [ Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
+        , Svg.lazy4 Network.txs plugins vc gc model.network.txs
+        , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         ]
-
-
-networks : Plugins -> View.Config -> Pathfinder.Config -> Network -> Svg Msg
-networks plugins vc gc network =
-    Svg.lazy4 Network.addresses plugins vc gc network.addresses

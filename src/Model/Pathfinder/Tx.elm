@@ -1,11 +1,12 @@
 module Model.Pathfinder.Tx exposing (..)
 
 import Api.Data
+import Config.Pathfinder exposing (addressOffset)
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
 import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
-import Model.Direction exposing (Direction(..))
+import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
@@ -33,7 +34,9 @@ type alias AccontTx =
 
 
 type alias UtxoTx =
-    { inputs : NonemptyDict Id Api.Data.Values
+    { x : Float
+    , y : Float
+    , inputs : NonemptyDict Id Api.Data.Values
     , outputs : NonemptyDict Id Api.Data.Values
     }
 
@@ -63,8 +66,8 @@ hasInput id tx =
             NDict.get id inputs /= Nothing
 
 
-calcCoords : Dict Id Address -> Tx -> Result Error Coords
-calcCoords addresses tx =
+getAddressesForTx : Dict Id Address -> Tx -> Result Error (NList.Nonempty Address)
+getAddressesForTx addresses tx =
     (case tx.type_ of
         Account { from, to } ->
             NList.singleton from
@@ -74,26 +77,52 @@ calcCoords addresses tx =
             (NDict.toNonemptyList inputs |> NList.map first)
                 |> NList.append (NDict.toNonemptyList outputs |> NList.map first)
     )
-        |> (\list ->
-                List.foldl
-                    (\address ->
-                        Result.andThen
-                            (\r ->
-                                getAddress addresses address
-                                    |> Result.map NList.singleton
-                                    |> Result.map (NList.append r)
-                            )
-                    )
-                    (NList.head list
-                        |> getAddress addresses
-                        |> Result.map NList.singleton
-                    )
-                    (NList.tail list)
-           )
-        |> Result.map
-            (NList.map addressToCoords
-                >> Coords.avg
+        |> NList.map
+            (getAddress addresses >> Result.toMaybe)
+        |> NList.foldl
+            (\a list ->
+                a
+                    |> Maybe.map (\aa -> aa :: list)
+                    |> Maybe.withDefault list
             )
+            []
+        {-
+           |> (\list ->
+                   List.foldl
+                       (\address ->
+                           Result.andThen
+                               (\r ->
+                                   getAddress addresses address
+                                       |> Result.map NList.singleton
+                                       |> Result.map (NList.append r)
+                               )
+                       )
+                       (NList.head list
+                           |> getAddress addresses
+                           |> Result.map NList.singleton
+                       )
+                       (NList.tail list)
+              )
+        -}
+        |> NList.fromList
+        |> Maybe.map Ok
+        |> Maybe.withDefault (Err (NoTxInputsOutputsFoundInDict tx.id |> InternalError))
+
+
+calcCoords : NList.Nonempty Address -> Coords
+calcCoords =
+    NList.map addressToCoords >> Coords.avg
+
+
+getCoords : Tx -> Maybe Coords
+getCoords tx =
+    case tx.type_ of
+        Utxo { x, y } ->
+            Coords x y
+                |> Just
+
+        Account _ ->
+            Nothing
 
 
 avg : (Address -> Float) -> List Address -> Result Error Float
@@ -119,8 +148,8 @@ addressToCoords { x, y } =
     Coords x y
 
 
-fromData : Api.Data.Tx -> Result Error Tx
-fromData data =
+fromData : Api.Data.Tx -> Direction -> Coords -> Result Error Tx
+fromData data direction anchor =
     case data of
         Api.Data.TxTxAccount t ->
             let
@@ -142,10 +171,10 @@ fromData data =
                 id =
                     Id.init t.currency t.txHash
 
-                fn direction =
+                fn dir =
                     let
                         field =
-                            case direction of
+                            case dir of
                                 Incoming ->
                                     .inputs
 
@@ -169,13 +198,20 @@ fromData data =
 
                 outputs =
                     fn Outgoing
+
+                offset =
+                    addressOffset
+                        / 2
+                        |> Direction.signOffsetByDirection direction
             in
             Result.map2
                 (\in_ out ->
                     { id = id
                     , type_ =
                         Utxo
-                            { inputs = in_
+                            { x = anchor.x + offset
+                            , y = anchor.y
+                            , inputs = in_
                             , outputs = out
                             }
                     }

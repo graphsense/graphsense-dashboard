@@ -668,6 +668,7 @@ theme =
         |> s_pathfinder
             (Pathfinder.default
                 |> s_addressRadius 30
+                |> s_txRadius 5
                 |> s_address
                     [ DesignToken.init
                         |> DesignToken.token "stroke" addressStrokeColor
@@ -679,6 +680,19 @@ theme =
                     [ DesignToken.init
                         |> DesignToken.token "fill" addressFontColor
                         |> DesignToken.token "font-weight" addressFontWeight
+                        |> DesignToken.css
+                    ]
+                |> s_tx
+                    [ DesignToken.init
+                        |> DesignToken.token "stroke" txStrokeColor
+                        |> DesignToken.token "fill" txFillColor
+                        |> DesignToken.withDuration duration
+                        |> DesignToken.css
+                    ]
+                |> s_edgeUtxo
+                    [ DesignToken.init
+                        |> DesignToken.token "stroke" edgeUtxoStrokeColor
+                        |> DesignToken.withDuration duration
                         |> DesignToken.css
                     ]
             )

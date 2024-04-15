@@ -1,9 +1,9 @@
 module Config.Pathfinder exposing (..)
 
 
-addressRadius : Float
-addressRadius =
-    50
+addressOffset : Float
+addressOffset =
+    8
 
 
 type alias Config =

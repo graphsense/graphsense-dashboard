@@ -22,6 +22,17 @@ addressLabel vc =
     vc.theme.pathfinder.addressLabel
 
 
+tx : View.Config -> List Style
+tx vc =
+    vc.theme.pathfinder.tx
+
+
+edgeUtxo : View.Config -> List Style
+edgeUtxo vc =
+    property "fill" "none"
+        :: vc.theme.pathfinder.edgeUtxo
+
+
 
 -- helpers
 

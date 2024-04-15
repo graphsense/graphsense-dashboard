@@ -1,6 +1,7 @@
 module Model.Pathfinder exposing (..)
 
 import Api.Data exposing (Actor)
+import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
@@ -22,6 +23,7 @@ type alias Model =
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
     , view : ViewState
+    , config : Config
     }
 
 

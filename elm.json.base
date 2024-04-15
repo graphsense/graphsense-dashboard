@@ -15,6 +15,7 @@
         "direct": {
             "BrianHicks/elm-csv": "3.0.3",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
+            "Spaxe/svg-pathd": "3.0.2",
             "TSFoster/elm-tuple-extra": "2.0.0",
             "Warry/elm-css-sortable-table": "1.0.0",
             "arturopala/elm-monocle": "2.2.0",

@@ -13,6 +13,21 @@ addressFillColor =
     DesignToken "address-fill-color" "white" "black"
 
 
+txStrokeColor : DesignToken
+txStrokeColor =
+    DesignToken "tx-stroke-color" "white" "black"
+
+
+txFillColor : DesignToken
+txFillColor =
+    DesignToken "tx-fill-color" "black" "white"
+
+
+edgeUtxoStrokeColor : DesignToken
+edgeUtxoStrokeColor =
+    DesignToken "edge-utxo-stroke-color" "black" "white"
+
+
 addressFontColor : DesignToken
 addressFontColor =
     DesignToken "address-font-color" "black" "white"
@@ -35,4 +50,7 @@ designTokens =
     , addressFontColor
     , addressFontWeight
     , addressSpacingToLabel
+    , txFillColor
+    , txStrokeColor
+    , edgeUtxoStrokeColor
     ]
