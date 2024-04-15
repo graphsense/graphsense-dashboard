@@ -670,9 +670,15 @@ theme =
                 |> s_addressRadius 30
                 |> s_address
                     [ DesignToken.init
-                        |> DesignToken.token "stroke" addressStroke
-                        |> DesignToken.token "fill" addressFill
+                        |> DesignToken.token "stroke" addressStrokeColor
+                        |> DesignToken.token "fill" addressFillColor
                         |> DesignToken.withDuration duration
+                        |> DesignToken.css
+                    ]
+                |> s_addressLabel
+                    [ DesignToken.init
+                        |> DesignToken.token "fill" addressFontColor
+                        |> DesignToken.token "font-weight" addressFontWeight
                         |> DesignToken.css
                     ]
             )

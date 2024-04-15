@@ -7,7 +7,7 @@ import Css.Pathfinder as Css
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (..)
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
@@ -15,6 +15,7 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Util.Graph exposing (translate)
+import Util.View exposing (truncateLongIdentifier)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
@@ -25,6 +26,7 @@ view _ vc _ address =
     in
     [ body vc
     , handles vc address
+    , label vc address
     ]
         |> g
             [ translate (address.x * unit * 2) (address.y * unit * 2)
@@ -122,6 +124,33 @@ handle vc id direction =
             , Json.Decode.succeed ( NoOp, True )
                 |> stopPropagationOn "mousedown"
             , Css.addressHandle vc |> css
+            ]
+
+
+label : View.Config -> Address -> Svg Msg
+label vc { id } =
+    let
+        tx =
+            0
+
+        ty =
+            vc.theme.pathfinder.addressRadius
+                + vc.theme.pathfinder.addressSpacingToLabel
+    in
+    id
+        |> Id.id
+        |> truncateLongIdentifier
+        |> text
+        |> List.singleton
+        |> tspan
+            [ alignmentBaseline "hanging"
+            ]
+        |> List.singleton
+        |> text_
+            [ tx |> String.fromFloat |> x
+            , ty |> String.fromFloat |> y
+            , textAnchor "middle"
+            , Css.addressLabel vc |> css
             ]
 
 

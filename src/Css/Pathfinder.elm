@@ -17,6 +17,11 @@ addressHandle vc =
     vc.theme.pathfinder.addressHandle
 
 
+addressLabel : View.Config -> List Style
+addressLabel vc =
+    vc.theme.pathfinder.addressLabel
+
+
 
 -- helpers
 
