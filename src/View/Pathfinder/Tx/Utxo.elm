@@ -1,5 +1,6 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
+import Api.Data
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -18,9 +19,10 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (first)
+import Tuple exposing (first, pair)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
+import View.Locale as Locale
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
@@ -54,6 +56,53 @@ body vc =
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> UtxoTx -> Svg Msg
 edge plugins vc gc addresses tx =
     let
+        toValues =
+            NDict.toList
+                >> List.filterMap
+                    (\( id, values ) ->
+                        getAddress addresses id
+                            |> Result.toMaybe
+                            |> Maybe.map (pair values)
+                    )
+    in
+    (tx.outputs
+        |> toValues
+        |> List.map
+            (\( values, address ) ->
+                ( Id.toString address.id
+                , Svg.lazy7 outPath
+                    vc
+                    gc
+                    values
+                    tx.x
+                    tx.y
+                    address.x
+                    address.y
+                )
+            )
+    )
+        ++ (tx.inputs
+                |> toValues
+                |> List.map
+                    (\( values, address ) ->
+                        ( Id.toString address.id
+                        , Svg.lazy7 inPath
+                            vc
+                            gc
+                            values
+                            tx.x
+                            tx.y
+                            address.x
+                            address.y
+                        )
+                    )
+           )
+        |> Keyed.node "g" []
+
+
+outPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Svg Msg
+outPath vc gc value tx ty ax ay =
+    let
         unit =
             View.getUnit vc
 
@@ -62,49 +111,69 @@ edge plugins vc gc addresses tx =
 
         txRad =
             vc.theme.pathfinder.txRadius
+
+        x1 =
+            tx * unit + txRad
+
+        y1 =
+            ty * unit
+
+        x2 =
+            ax * unit - rad
+
+        y2 =
+            ay * unit
     in
-    (tx.outputs
-        |> NDict.toList
-        |> List.filterMap (first >> getAddress addresses >> Result.toMaybe)
-        |> List.map
-            (\address ->
-                ( Id.toString address.id
-                , Svg.lazy7 path
-                    vc
-                    gc
-                    True
-                    (tx.x * unit + txRad)
-                    (tx.y * unit)
-                    (address.x * unit - rad)
-                    (address.y * unit)
-                )
-            )
-    )
-        ++ (tx.inputs
-                |> NDict.toList
-                |> List.filterMap (first >> getAddress addresses >> Result.toMaybe)
-                |> List.map
-                    (\address ->
-                        ( Id.toString address.id
-                        , Svg.lazy7 path
-                            vc
-                            gc
-                            False
-                            (address.x * unit + rad)
-                            (address.y * unit)
-                            (tx.x * unit - txRad)
-                            (tx.y * unit)
-                        )
-                    )
-           )
-        |> Keyed.node "g" []
+    path vc gc value True x1 y1 x2 y2
 
 
-path : View.Config -> Pathfinder.Config -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-path vc gc withArrow x1 y1 x2 y2 =
+inPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Svg Msg
+inPath vc gc value tx ty ax ay =
+    let
+        unit =
+            View.getUnit vc
+
+        rad =
+            vc.theme.pathfinder.addressRadius
+
+        txRad =
+            vc.theme.pathfinder.txRadius
+
+        x1 =
+            ax * unit + rad
+
+        y1 =
+            ay * unit
+
+        x2 =
+            tx * unit - txRad
+
+        y2 =
+            ty * unit
+    in
+    path vc gc value False x1 y1 x2 y2
+
+
+valueToLabel : View.Config -> Api.Data.Values -> String
+valueToLabel vc value =
+    Locale.currency vc.locale [ ( { network = "btc", asset = "btc" }, value ) ]
+
+
+path : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
+path vc gc value withArrow x1 y1 x2 y2 =
     let
         dx =
             x2 - x1
+
+        label =
+            valueToLabel vc value
+
+        ( lx, ly, ta ) =
+            if withArrow then
+                ( x2, y2, "end" )
+
+            else
+                ( x1, y1, "start" )
     in
     [ Svg.path
         [ d <|
@@ -137,5 +206,12 @@ path vc gc withArrow x1 y1 x2 y2 =
 
       else
         text ""
+    , text_
+        [ x <| String.fromFloat lx
+        , y <| String.fromFloat ly
+        , textAnchor ta
+        ]
+        [ text label
+        ]
     ]
         |> g []
