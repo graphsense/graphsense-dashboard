@@ -38,3 +38,14 @@ encoder address =
         [ ( "currency", Json.Encode.string address.currency )
         , ( "address", Json.Encode.string address.address )
         ]
+
+
+equals : Address -> Address -> Bool
+equals a b =
+    let
+        fn x =
+            x.currency
+                ++ x.address
+                |> String.toLower
+    in
+    fn a == fn b
