@@ -33,6 +33,10 @@ edgeUtxo vc =
         :: vc.theme.pathfinder.edgeUtxo
 
 
+edgeLabel : View.Config -> List Style
+edgeLabel vc =
+    vc.theme.pathfinder.edgeLabel
+
 
 -- helpers
 

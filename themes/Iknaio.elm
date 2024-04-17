@@ -695,6 +695,12 @@ theme =
                         |> DesignToken.withDuration duration
                         |> DesignToken.css
                     ]
+                |> s_edgeLabel
+                    [ DesignToken.init
+                        |> DesignToken.token "fill" edgeLabelFontColor
+                        |> DesignToken.token "font-weight" edgeLabelFontWeight
+                        |> DesignToken.css
+                    ]
             )
         |> s_graph
             (Graph.default

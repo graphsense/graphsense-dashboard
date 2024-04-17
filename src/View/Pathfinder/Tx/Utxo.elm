@@ -179,7 +179,7 @@ path vc gc value withArrow x1 y1 x2 y2 =
         [ d <|
             pathD
                 [ M ( x1, y1 )
-                , ( x1 + dx * vc.theme.pathfinder.txEdgeCurvedEnd, y2 )
+                , ( x1 + dx * vc.theme.pathfinder.edgeCurvedEnd, y2 )
                     |> C
                         ( x1, y2 )
                         ( x1, y2 )
@@ -207,9 +207,19 @@ path vc gc value withArrow x1 y1 x2 y2 =
       else
         text ""
     , text_
-        [ x <| String.fromFloat lx
-        , y <| String.fromFloat ly
+        [ x <|
+            String.fromFloat <|
+                (+) lx <|
+                    vc.theme.pathfinder.edgeLabelPadding
+                        * (if withArrow then
+                            -1
+
+                           else
+                            1
+                          )
+        , y <| String.fromFloat <| ly - vc.theme.pathfinder.edgeLabelPadding
         , textAnchor ta
+        , Css.edgeLabel vc |> css
         ]
         [ text label
         ]

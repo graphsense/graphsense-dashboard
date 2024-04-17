@@ -91,7 +91,7 @@ findFreePosition model =
                     max y a.y
                 )
                 -1
-            |> (+) 1
+            |> (+) 2
     }
 
 

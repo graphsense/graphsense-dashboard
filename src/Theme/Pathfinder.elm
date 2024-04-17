@@ -12,7 +12,9 @@ type alias Pathfinder =
     , addressSpacingToLabel : Float
     , tx : List Style
     , txRadius : Float
-    , txEdgeCurvedEnd : Float
+    , edgeCurvedEnd : Float
+    , edgeLabelPadding : Float
+    , edgeLabel : List Style
     , edgeUtxo : List Style
     , arrowLength : Float
     }
@@ -28,7 +30,9 @@ default =
     , addressSpacingToLabel = 5
     , tx = []
     , txRadius = 3
-    , txEdgeCurvedEnd = 0.25
+    , edgeCurvedEnd = 0.25
+    , edgeLabelPadding = 5
+    , edgeLabel = []
     , edgeUtxo = []
     , arrowLength = 5
     }

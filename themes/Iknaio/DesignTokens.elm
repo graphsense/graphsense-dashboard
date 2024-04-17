@@ -43,6 +43,16 @@ addressSpacingToLabel =
     DesignToken "address-spacing-to-label" "5" "5"
 
 
+edgeLabelFontColor : DesignToken
+edgeLabelFontColor =
+    DesignToken "edge-label-font-color" "black" "white"
+
+
+edgeLabelFontWeight : DesignToken
+edgeLabelFontWeight =
+    DesignToken "edge-label-font-weight" "100" "100"
+
+
 designTokens : List DesignToken
 designTokens =
     [ addressStrokeColor
@@ -53,4 +63,6 @@ designTokens =
     , txFillColor
     , txStrokeColor
     , edgeUtxoStrokeColor
+    , edgeLabelFontColor
+    , edgeLabelFontWeight
     ]
