@@ -87,3 +87,12 @@ getSourceId =
 getTargetId : LinkId a -> a
 getTargetId =
     second
+
+
+addressIdsEqual : AddressId -> AddressId -> Bool
+addressIdsEqual a b =
+    let
+        fn =
+            addressIdToString >> String.toLower
+    in
+    fn a == fn b

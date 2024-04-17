@@ -1003,10 +1003,10 @@ showAddress address model =
                 case model.type_ of
                     Address loadable table ->
                         if
-                            loadableAddressId loadable
-                                == address.address.address
-                                && loadableAddressCurrency loadable
-                                == address.address.currency
+                            A.Address
+                                (loadableAddressCurrency loadable)
+                                (loadableAddressId loadable)
+                                |> A.equals (A.Address address.address.currency address.address.address)
                         then
                             table
 
@@ -1213,7 +1213,7 @@ updateAddress : A.Address -> (Address.Address -> Address.Address) -> Model -> Mo
 updateAddress { currency, address } update model =
     case model.type_ of
         Address (Loaded a) table ->
-            if a.address.currency == currency && a.address.address == address then
+            if A.Address a.address.currency a.address.address |> A.equals (A.Address currency address) then
                 { model
                     | type_ = Address (update a |> Loaded) table
                 }
@@ -1835,13 +1835,15 @@ showEntityAddressTags id data model =
 
 
 matchAddressId : { currency : String, address : String } -> Loadable String Address.Address -> Bool
-matchAddressId { currency, address } loadable =
+matchAddressId addr loadable =
     case loadable of
         Loading c id ->
-            c == currency && id == address
+            A.Address c id
+                |> A.equals addr
 
         Loaded a ->
-            a.address.currency == currency && a.address.address == address
+            A.Address a.address.currency a.address.address
+                |> A.equals addr
 
 
 matchEntityId : { currency : String, entity : Int } -> Loadable Int Entity.Entity -> Bool
