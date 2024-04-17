@@ -203,7 +203,7 @@ getNextAddressFor : Id.AddressId -> Model -> Maybe Id.AddressId
 getNextAddressFor id model =
     case model.addressPath of
         nextId :: rest ->
-            if nextId /= id then
+            if Id.addressIdsEqual nextId id |> not then
                 Nothing
 
             else
