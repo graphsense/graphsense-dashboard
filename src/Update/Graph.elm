@@ -63,7 +63,7 @@ import Set exposing (Set)
 import Task
 import Time
 import Tuple exposing (..)
-import Update.Graph.Adding as Adding
+import Update.Graph.Adding as Adding exposing (normalizeEth)
 import Update.Graph.Address as Address
 import Update.Graph.Browser as Browser
 import Update.Graph.Coords as Coords
@@ -2419,11 +2419,15 @@ updateByRoute_ plugins route model =
                     }
 
         Route.Currency currency (Route.AddressPath ( address, addresses )) ->
+            let
+                a =
+                    normalizeEth currency address
+            in
             model
-                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = address }))
+                |> s_selectIfLoaded (Just (SelectAddress { currency = currency, address = a }))
                 |> loadAddressPath plugins
                     { currency = currency
-                    , addresses = address :: addresses
+                    , addresses = address :: List.map (normalizeEth currency) addresses
                     }
 
         Route.Currency currency (Route.Entity e table layer) ->
