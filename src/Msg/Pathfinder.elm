@@ -14,6 +14,7 @@ type Msg
     | UserWheeledOnGraph Float Float Float
     | UserPushesLeftMouseButtonOnGraph Coords
     | UserMovesMouseOnGraph Coords
+    | UserReleasesMouseButton
     | UserClickedRestart
     | UserClickedUndo
     | UserClickedRedo
@@ -23,6 +24,7 @@ type Msg
     | UserClosedDetailsView
     | UserClickedToggleAddressDetailsTable
     | UserClickedToggleTransactionDetailsTable
+    | AnimationFrameDeltaForTransform Float
     | BrowserGotNewAddress Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id

@@ -206,6 +206,24 @@ updateByMsg plugins uc msg model =
             else
                 n model
 
+        UserReleasesMouseButton ->
+            case model.dragging of
+                NoDragging ->
+                    n model
+
+                Dragging _ start coords ->
+                    n
+                        { model
+                            | dragging = NoDragging
+                        }
+
+                DraggingNode id start coords ->
+                    n
+                        { model
+                            | network = Debug.todo "release node"
+                            , dragging = NoDragging
+                        }
+
         UserWheeledOnGraph x y z ->
             uc.size
                 |> Maybe.map
@@ -258,6 +276,12 @@ updateByMsg plugins uc msg model =
                         | dragging = DraggingNode id start coords
                     }
                         |> n
+
+        AnimationFrameDeltaForTransform delta ->
+            n
+                { model
+                    | transform = Transform.transition delta model.transform
+                }
 
         UserClickedAddressExpandHandle id direction ->
             let
