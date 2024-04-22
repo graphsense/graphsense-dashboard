@@ -25,6 +25,7 @@ type Msg
     | UserClickedToggleTransactionDetailsTable
     | BrowserGotNewAddress Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
+    | UserClickedAddress Id
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp

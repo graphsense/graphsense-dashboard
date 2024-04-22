@@ -33,6 +33,7 @@ view _ vc _ address =
             [ translate (address.x * unit) (address.y * unit)
                 |> transform
             , Css.address vc |> css
+            , UserClickedAddress address.id |> onClick
             ]
 
 

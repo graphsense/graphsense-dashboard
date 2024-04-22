@@ -29,7 +29,7 @@ import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Route.Pathfinder as Route
-import Tuple exposing (first, mapFirst, pair)
+import Tuple exposing (first, mapFirst, pair, second)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -268,6 +268,10 @@ updateByMsg plugins uc msg model =
             , eff
             )
 
+        UserClickedAddress id ->
+            selectAddress id model
+                |> n
+
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
@@ -377,17 +381,23 @@ browserGotTxForAddress plugins uc id direction data model =
                         Network.addAddressAt plugins id direction firstAddress model.network
                             |> and (Network.insertTx tx)
 
+                    getBiggest io =
+                        NDict.toList io
+                            |> List.sortBy (second >> .value)
+                            |> List.reverse
+                            |> List.head
+                            |> Maybe.withDefault (NDict.head io)
+                            |> first
+
                     firstAddress =
                         case tx.type_ of
                             Tx.Utxo t ->
                                 case direction of
                                     Incoming ->
-                                        NDict.head t.inputs
-                                            |> first
+                                        getBiggest t.inputs
 
                                     Outgoing ->
-                                        NDict.head t.outputs
-                                            |> first
+                                        getBiggest t.outputs
 
                             Tx.Account t ->
                                 case direction of
