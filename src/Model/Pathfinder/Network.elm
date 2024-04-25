@@ -1,6 +1,7 @@
 module Model.Pathfinder.Network exposing (..)
 
 import Dict exposing (Dict)
+import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)

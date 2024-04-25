@@ -30,6 +30,7 @@ import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Route.Pathfinder as Route
 import Tuple exposing (first, mapFirst, pair, second)
+import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Transform as Transform
@@ -78,12 +79,11 @@ updateByMsg plugins uc msg model =
         BrowserGotActor id data ->
             n { model | actors = Dict.insert id data model.actors }
 
-        BrowserGotNewAddress id data ->
-            let
-                ( m, e ) =
-                    addAddress plugins id data model
-            in
-            ( selectAddress id m, e ++ fetchActorsForAddress data model.actors )
+        BrowserGotAddressData id data ->
+            model
+                |> s_network (Network.updateAddress id (s_data (Success data)) model.network)
+                |> selectAddress id
+                |> pairTo (fetchActorsForAddress data model.actors)
 
         BrowserGotRecentTx id direction data ->
             let
@@ -284,17 +284,28 @@ updateByMsg plugins uc msg model =
                 }
 
         UserClickedAddressExpandHandle id direction ->
-            let
-                ( nw, eff ) =
-                    Network.expandAddress id direction model.network
-            in
-            ( { model | network = nw }
-            , eff
+            ( model
+            , BrowserGotRecentTx id direction
+                |> Api.GetAddressTxsEffect
+                    { currency = Id.network id
+                    , address = Id.id id
+                    , direction = Just direction
+                    , pagesize = 1
+                    , nextpage = Nothing
+                    }
+                |> ApiEffect
+                |> List.singleton
             )
 
         UserClickedAddress id ->
-            selectAddress id model
-                |> n
+            ( selectAddress id model
+            , Route.addressRoute
+                { network = Id.network id
+                , address = Id.id id
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
 
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
@@ -319,18 +330,25 @@ updateByRoute_ plugins route model =
 addressFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
 addressFromRoute plugins id model =
     let
-        ( nw, eff ) =
-            Network.addressFromRoute plugins id model.network
+        nw =
+            Network.addAddress id model.network
+                |> Network.updateAddress id (s_data Loading)
     in
     ( { model | network = nw }
-    , eff
+    , BrowserGotAddressData id
+        |> Api.GetAddressEffect
+            { currency = Id.network id
+            , address = Id.id id
+            }
+        |> ApiEffect
+        |> List.singleton
     )
 
 
 addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
 addAddress plugins id data model =
     { model
-        | network = Network.updateAddress plugins id (s_data (Success data)) model.network
+        | network = Network.updateAddress id (s_data (Success data)) model.network
     }
         |> n
 
@@ -394,16 +412,16 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress plugins uc id direction data model =
+browserGotTxForAddress _ _ id direction data model =
     getAddress model.network.addresses id
         |> Result.map (\{ x, y } -> Coords x y)
         |> Result.andThen (Tx.fromData data direction)
         |> Result.map
             (\tx ->
                 let
-                    ( nw, eff ) =
-                        Network.addAddressAt plugins id direction firstAddress model.network
-                            |> and (Network.insertTx tx)
+                    nw =
+                        Network.addTx tx model.network
+                            |> Network.addAddress firstAddress
 
                     getBiggest io =
                         NDict.toList io
@@ -432,7 +450,7 @@ browserGotTxForAddress plugins uc id direction data model =
                                         t.to
                 in
                 ( { model | network = nw }
-                , eff
+                , []
                 )
             )
         |> Result.Extra.extract

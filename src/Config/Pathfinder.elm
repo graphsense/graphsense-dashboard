@@ -1,9 +1,14 @@
 module Config.Pathfinder exposing (..)
 
 
-addressOffset : Float
-addressOffset =
+addressXOffset : Float
+addressXOffset =
     8
+
+
+addressYOffset : Float
+addressYOffset =
+    2
 
 
 type alias Config =

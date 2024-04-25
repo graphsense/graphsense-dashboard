@@ -1,19 +1,21 @@
-module Update.Pathfinder.Network exposing (..)
+module Update.Pathfinder.Network exposing (addAddress, addTx, updateAddress)
 
-import Config.Pathfinder exposing (addressOffset)
+import Config.Pathfinder exposing (addressXOffset, addressYOffset)
 import Dict
+import Dict.Nonempty as NDict
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
-import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id.Address as Address
+import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
@@ -22,40 +24,104 @@ import RecordSetter exposing (s_data, s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Set
-import Tuple exposing (pair)
-import Util.Pathfinder exposing (getAddress)
+import Tuple exposing (first, pair, second)
 
 
-addressFromRoute : Plugins -> Id -> Network -> ( Network, List Effect )
-addressFromRoute plugins id model =
+addAddress : Id -> Network -> Network
+addAddress id model =
     case Dict.get id model.addresses of
         Nothing ->
-            findAddressPosition id model
-                |> Maybe.Extra.withDefaultLazy (\_ -> findFreePosition model)
-                |> (\c -> loadAddress plugins c id model)
+            case findAddressPosition id model of
+                NextToTx tx ->
+                    case tx.type_ of
+                        Tx.Utxo t ->
+                            placeAddressNextToUtxoTx t id model
+
+                        Tx.Account t ->
+                            placeAddressNextToAccountTx t id model
+
+                InBetween coords ->
+                    placeAddressInBetween coords id model
+
+                Outside coords ->
+                    placeAddress coords id model
 
         Just _ ->
-            Debug.todo "address already in graph"
+            model
 
 
-addAddressAt : Plugins -> Id -> Direction -> Id -> Network -> ( Network, List Effect )
-addAddressAt plugins at direction id model =
-    case getAddress model.addresses at of
-        Ok anchor ->
-            let
-                offset =
-                    Direction.signOffsetByDirection direction addressOffset
-            in
-            loadAddress plugins { x = anchor.x + offset, y = anchor.y } id model
-
-        Err err ->
-            ( model
-            , [ ErrorEffect err ]
-            )
+placeAddressNextToAccountTx : Tx.AccontTx -> Id -> Network -> Network
+placeAddressNextToAccountTx arg1 arg2 arg3 =
+    Debug.todo "TODO"
 
 
-updateAddress : Plugins -> Id -> (Address -> Address) -> Network -> Network
-updateAddress _ id update model =
+placeAddressNextToUtxoTx : Tx.UtxoTx -> Id -> Network -> Network
+placeAddressNextToUtxoTx tx id model =
+    let
+        toSiblings io =
+            io
+                |> NDict.toList
+                |> List.filterMap (first >> (\a -> Dict.get a model.addresses))
+
+        ( direction, siblings ) =
+            if NDict.get id tx.outputs /= Nothing then
+                ( Outgoing, toSiblings tx.outputs )
+
+            else
+                ( Incoming, toSiblings tx.inputs )
+
+        coords =
+            { x = tx.x + Direction.signOffsetByDirection direction addressXOffset
+            , y =
+                getMaxAddressY siblings
+                    |> Maybe.withDefault tx.y
+            }
+    in
+    placeAddressInBetween coords id model
+
+
+placeAddressInBetween : Coords -> Id -> Network -> Network
+placeAddressInBetween coords id model =
+    let
+        ( above, below ) =
+            model.addresses
+                |> Dict.values
+                |> List.partition
+                    (\a -> a.y <= coords.y)
+
+        diff y =
+            y - coords.y
+
+        add d addr =
+            { addr | y = addr.y + d }
+
+        moveAddresses subset addresses =
+            Maybe.map diff
+                >> Maybe.map
+                    (\d -> List.map (add d) subset)
+                >> Maybe.map
+                    (List.foldl (\a -> Dict.insert a.id a) addresses)
+                >> Maybe.withDefault addresses
+
+        newAddresses =
+            getMaxAddressY above
+                |> moveAddresses above model.addresses
+                |> (\addresses ->
+                        getMinAddressY below
+                            |> moveAddresses below addresses
+                   )
+    in
+    { model | addresses = newAddresses }
+        |> placeAddress coords id
+
+
+placeAddress : Coords -> Id -> Network -> Network
+placeAddress coords id model =
+    { model | addresses = Dict.insert id (Address.init id coords) model.addresses }
+
+
+updateAddress : Id -> (Address -> Address) -> Network -> Network
+updateAddress id update model =
     { model | addresses = Dict.update id (Maybe.map update) model.addresses }
 
 
@@ -70,7 +136,7 @@ loadAddress _ coords id model =
     ( { model
         | addresses = Dict.insert id na model.addresses
       }
-    , BrowserGotNewAddress id
+    , BrowserGotAddressData id
         |> Api.GetAddressEffect
             { currency = Id.network id
             , address = Id.id id
@@ -86,41 +152,58 @@ findFreePosition model =
     , y =
         model.addresses
             |> Dict.values
-            |> List.foldl
-                (\a y ->
-                    max y a.y
-                )
-                -1
-            |> (+) 2
+            |> getMinAddressY
+            |> Maybe.map ((+) addressYOffset)
+            |> Maybe.withDefault 0
     }
 
 
-findAddressPosition : Id -> Network -> Maybe Coords
+getMaxAddressY : List Address -> Maybe Float
+getMaxAddressY =
+    List.map .y
+        >> List.maximum
+
+
+getMinAddressY : List Address -> Maybe Float
+getMinAddressY =
+    List.map .y
+        >> List.minimum
+
+
+type Position
+    = NextToTx Tx.Tx
+    | InBetween Coords
+    | Outside Coords
+
+
+findAddressPosition : Id -> Network -> Position
 findAddressPosition id network =
     listTxsForAddress network id
-        |> List.filterMap Tx.getCoords
         |> NList.fromList
-        |> Maybe.map Coords.avg
+        |> Maybe.andThen
+            (\list ->
+                if NList.length list == 1 then
+                    NList.head list
+                        |> NextToTx
+                        |> Just
+
+                else
+                    list
+                        |> NList.foldl
+                            (\tx lst ->
+                                Tx.getCoords tx
+                                    |> Maybe.map (\t -> t :: lst)
+                                    |> Maybe.withDefault lst
+                            )
+                            []
+                        |> NList.fromList
+                        |> Maybe.map (Coords.avg >> InBetween)
+            )
+        |> Maybe.withDefault (findFreePosition network |> Outside)
 
 
-expandAddress : Id -> Direction -> Network -> ( Network, List Effect )
-expandAddress id direction network =
-    ( network
-    , BrowserGotRecentTx id direction
-        |> Api.GetAddressTxsEffect
-            { currency = Id.network id
-            , address = Id.id id
-            , direction = Just direction
-            , pagesize = 1
-            , nextpage = Nothing
-            }
-        |> ApiEffect
-        |> List.singleton
-    )
-
-
-insertTx : Tx.Tx -> Network -> ( Network, List Effect )
-insertTx tx network =
+addTx : Tx.Tx -> Network -> Network
+addTx tx network =
     let
         upd addr =
             let
@@ -138,26 +221,17 @@ insertTx tx network =
                 set (Set.insert tx.id <| get addr) addr
     in
     getAddressesForTx network.addresses tx
-        |> Result.map
-            (NList.foldl
-                (\a nw ->
-                    { nw
-                        | addresses =
-                            Dict.update a.id
-                                (Maybe.map
-                                    upd
-                                )
-                                nw.addresses
-                    }
-                )
-                network
+        |> List.foldl
+            (\a nw ->
+                { nw
+                    | addresses =
+                        Dict.update a.id
+                            (Maybe.map
+                                upd
+                            )
+                            nw.addresses
+                }
             )
-        |> Result.map
-            (\nw ->
-                ( { nw
-                    | txs = Dict.insert tx.id tx network.txs
-                  }
-                , []
-                )
-            )
-        |> Result.Extra.extract (ErrorEffect >> List.singleton >> pair network)
+            { network
+                | txs = Dict.insert tx.id tx network.txs
+            }

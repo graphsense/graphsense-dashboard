@@ -1,7 +1,7 @@
 module Model.Pathfinder.Tx exposing (..)
 
 import Api.Data
-import Config.Pathfinder exposing (addressOffset)
+import Config.Pathfinder exposing (addressXOffset)
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
 import Init.Pathfinder.Id as Id
@@ -66,47 +66,17 @@ hasInput id tx =
             NDict.get id inputs /= Nothing
 
 
-getAddressesForTx : Dict Id Address -> Tx -> Result Error (NList.Nonempty Address)
+getAddressesForTx : Dict Id Address -> Tx -> List Address
 getAddressesForTx addresses tx =
     (case tx.type_ of
         Account { from, to } ->
-            NList.singleton from
-                |> NList.append (NList.singleton to)
+            [ from, to ]
 
         Utxo { inputs, outputs } ->
-            (NDict.toNonemptyList inputs |> NList.map first)
-                |> NList.append (NDict.toNonemptyList outputs |> NList.map first)
+            (NDict.toList inputs |> List.map first) ++ (NDict.toList outputs |> List.map first)
     )
-        |> NList.map
+        |> List.filterMap
             (getAddress addresses >> Result.toMaybe)
-        |> NList.foldl
-            (\a list ->
-                a
-                    |> Maybe.map (\aa -> aa :: list)
-                    |> Maybe.withDefault list
-            )
-            []
-        {-
-           |> (\list ->
-                   List.foldl
-                       (\address ->
-                           Result.andThen
-                               (\r ->
-                                   getAddress addresses address
-                                       |> Result.map NList.singleton
-                                       |> Result.map (NList.append r)
-                               )
-                       )
-                       (NList.head list
-                           |> getAddress addresses
-                           |> Result.map NList.singleton
-                       )
-                       (NList.tail list)
-              )
-        -}
-        |> NList.fromList
-        |> Maybe.map Ok
-        |> Maybe.withDefault (Err (NoTxInputsOutputsFoundInDict tx.id |> InternalError))
 
 
 calcCoords : NList.Nonempty Address -> Coords
@@ -200,7 +170,7 @@ fromData data direction anchor =
                     fn Outgoing
 
                 offset =
-                    addressOffset
+                    addressXOffset
                         / 2
                         |> Direction.signOffsetByDirection direction
             in

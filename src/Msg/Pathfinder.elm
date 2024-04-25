@@ -25,7 +25,7 @@ type Msg
     | UserClickedToggleAddressDetailsTable
     | UserClickedToggleTransactionDetailsTable
     | AnimationFrameDeltaForTransform Float
-    | BrowserGotNewAddress Id Api.Data.Address
+    | BrowserGotAddressData Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
     | PluginMsg Plugin.Msg
