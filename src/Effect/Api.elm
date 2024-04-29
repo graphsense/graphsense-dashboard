@@ -76,6 +76,7 @@ type Effect msg
     | GetAddressTxsEffect
         { currency : String
         , address : String
+        , isOutgoing : Maybe Bool
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -136,6 +137,7 @@ type Effect msg
         { currency : String
         , txHash : String
         , tokenTxId : Maybe Int
+        , includeIo : Maybe Bool
         }
         (Api.Data.Tx -> msg)
     | GetTxUtxoAddressesEffect
@@ -488,8 +490,12 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.getAddressEntity currency address
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressTxs currency address Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+        GetAddressTxsEffect { currency, address, isOutgoing, pagesize, nextpage } toMsg ->
+            let
+                direction =
+                    Maybe.map isOutgoingToAddressDirection isOutgoing
+            in
+            Api.Request.Addresses.listAddressTxs currency address direction Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
@@ -524,8 +530,8 @@ perform apiKey wrapMsg effect =
             Api.Request.Blocks.listBlockTxs currency block
                 |> send apiKey wrapMsg effect toMsg
 
-        GetTxEffect { currency, txHash, tokenTxId } toMsg ->
-            Api.Request.Txs.getTx currency txHash (Just False) tokenTxId
+        GetTxEffect { currency, txHash, tokenTxId, includeIo } toMsg ->
+            Api.Request.Txs.getTx currency txHash includeIo tokenTxId
                 |> send apiKey wrapMsg effect toMsg
 
         GetTxUtxoAddressesEffect { currency, txHash, isOutgoing } toMsg ->
@@ -702,6 +708,16 @@ isOutgoingToDirection isOutgoing =
 
         False ->
             Api.Request.Entities.DirectionIn
+
+
+isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction
+isOutgoingToAddressDirection isOutgoing =
+    case isOutgoing of
+        True ->
+            Api.Request.Addresses.DirectionOut
+
+        False ->
+            Api.Request.Addresses.DirectionIn
 
 
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
