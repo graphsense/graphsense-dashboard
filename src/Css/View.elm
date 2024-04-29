@@ -204,3 +204,8 @@ hint vc =
 frame : Config -> List Style
 frame vc =
     vc.theme.frame vc.lightmode
+
+
+box : Config -> List Style
+box vc =
+    vc.theme.box vc.lightmode

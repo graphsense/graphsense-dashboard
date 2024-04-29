@@ -302,6 +302,12 @@ theme =
                     |> width
                 ]
             )
+        |> s_box
+            (\lightmode ->
+                [ scaled 7 |> rem |> padding
+                , backgroundColorWithLightmode lightmode colors.white
+                ]
+            )
         |> s_stats
             (Stats.default
                 |> s_stats
