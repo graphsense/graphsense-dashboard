@@ -3,13 +3,14 @@ module Internal exposing (Choices, KeyDown(..), Msg(..), calculateIndex)
 -- This file is not exposed as a module
 
 
-type Msg a
+type Msg
     = OnInput String
     | OnKeyDown KeyDown
     | OnMouseDown Int
     | OnMouseUp Int
     | Debounce
     | OnBlur
+    | OnFocus
 
 
 type alias Choices a =
