@@ -564,6 +564,11 @@ theme =
                             ]
                         ]
                     )
+                |> s_iconButton
+                    (\lightmode ->
+                        [ width <| px 16
+                        ]
+                    )
             )
         |> s_hovercard
             (\lightmode ->
