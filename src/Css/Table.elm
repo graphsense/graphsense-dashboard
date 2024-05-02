@@ -1,6 +1,6 @@
 module Css.Table exposing (..)
 
-import Config.View exposing (Config)
+import Config.View as View exposing (Config)
 import Css exposing (..)
 
 
@@ -104,3 +104,48 @@ info vc =
         :: bottom zero
         :: left zero
         :: vc.theme.table.info vc.lightmode
+
+
+type alias Styles =
+    { root : View.Config -> List Style
+    , tableRoot : View.Config -> List Style
+    , filter : View.Config -> List Style
+    , filterInput : View.Config -> List Style
+    , loadingSpinner : View.Config -> List Style
+    , sidebar : View.Config -> List Style
+    , sidebarIcon : View.Config -> Bool -> List Style
+    , table : View.Config -> List Style
+    , row : View.Config -> List Style
+    , headRow : View.Config -> List Style
+    , cell : View.Config -> List Style
+    , headCellSortable : View.Config -> List Style
+    , headCell : View.Config -> List Style
+    , numberCell : View.Config -> List Style
+    , valuesCell : View.Config -> Bool -> List Style
+    , tick : View.Config -> List Style
+    , info : View.Config -> List Style
+    , emptyHint : View.Config -> List Style
+    }
+
+
+styles : Styles
+styles =
+    { root = root
+    , tableRoot = tableRoot
+    , filter = filter
+    , filterInput = filterInput
+    , loadingSpinner = loadingSpinner
+    , sidebar = sidebar
+    , sidebarIcon = sidebarIcon
+    , table = table
+    , row = row
+    , headRow = headRow
+    , cell = cell
+    , headCellSortable = headCellSortable
+    , headCell = headCell
+    , numberCell = numberCell
+    , valuesCell = valuesCell
+    , tick = tick
+    , info = info
+    , emptyHint = emptyHint
+    }

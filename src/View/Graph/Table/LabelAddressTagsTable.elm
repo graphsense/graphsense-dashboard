@@ -3,6 +3,7 @@ module View.Graph.Table.LabelAddressTagsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css
+import Css.Table exposing (styles)
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -22,7 +23,8 @@ config vc =
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 "Address"
                 .address
                 (\data ->
@@ -37,10 +39,11 @@ config vc =
                         data.address
                     ]
                 )
-            , T.stringColumn vc "Entity" (.entity >> String.fromInt)
-            , T.stringColumn vc "Currency" (.currency >> String.toUpper)
-            , T.stringColumn vc "Label" .label
-            , T.htmlColumn vc
+            , T.stringColumn styles vc "Entity" (.entity >> String.fromInt)
+            , T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
+            , T.stringColumn styles vc "Label" .label
+            , T.htmlColumn styles
+                vc
                 "Source"
                 (.source >> Maybe.withDefault "")
                 (\data ->
@@ -69,11 +72,12 @@ config vc =
                         text truncated
                     ]
                 )
-            , T.stringColumn vc "Category" (.category >> Maybe.withDefault "")
-            , T.stringColumn vc "Abuse" (.abuse >> Maybe.withDefault "")
-            , T.stringColumn vc "Actor id" (.actor >> Maybe.withDefault "")
-            , T.stringColumn vc titleConfidence (.confidence >> Maybe.withDefault "")
-            , T.htmlColumn vc
+            , T.stringColumn styles vc "Category" (.category >> Maybe.withDefault "")
+            , T.stringColumn styles vc "Abuse" (.abuse >> Maybe.withDefault "")
+            , T.stringColumn styles vc "Actor id" (.actor >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleConfidence (.confidence >> Maybe.withDefault "")
+            , T.htmlColumn styles
+                vc
                 "TagPack"
                 .tagpackTitle
                 (\data ->
@@ -94,7 +98,7 @@ config vc =
                         text data.tagpackTitle
                     ]
                 )
-            , T.stringColumn vc "Creator" .tagpackCreator
+            , T.stringColumn styles vc "Creator" .tagpackCreator
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }

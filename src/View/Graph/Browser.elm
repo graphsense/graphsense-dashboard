@@ -6,6 +6,7 @@ import Config.Graph as Graph
 import Config.View as View
 import Css as CssStyled
 import Css.Browser as Css
+import Css.Table exposing (styles)
 import Css.View as CssView
 import Dict
 import FontAwesome
@@ -1663,7 +1664,8 @@ browseAddressTable vc gc neighborLayerHasAddress address table =
 
 table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg
 table_ vc csvMsg =
-    Table.table vc
+    Table.table styles
+        vc
         [ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
         ]
         { filter = Just UserInputsFilterTable

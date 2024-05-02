@@ -3,6 +3,7 @@ module View.Graph.Table.TxUtxoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css
+import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -35,7 +36,8 @@ config vc isOutgoing coinCode =
         { toId = \data -> String.join "," data.address ++ String.fromInt data.value.value
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 (columnTitleFromDirection isOutgoing)
                 joinAddresses
                 (\data ->
@@ -57,9 +59,9 @@ config vc isOutgoing coinCode =
                             )
                     ]
                 )
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleValue .value
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleValue .value
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 
