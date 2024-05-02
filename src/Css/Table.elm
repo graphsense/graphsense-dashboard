@@ -58,7 +58,7 @@ headRow vc =
     vc.theme.table.headRow
 
 
-headCellSortable : Config -> List ( String, String )
+headCellSortable : Config -> List Style
 headCellSortable vc =
     vc.theme.table.headCellSortable
 

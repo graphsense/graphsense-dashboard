@@ -1264,7 +1264,7 @@ theme =
                     , fontBold
                     ]
                 |> s_headCellSortable
-                    [ ( "cursor", "pointer" )
+                    [ cursor pointer
                     ]
                 |> s_maxHeight 300
                 |> s_rowHeight

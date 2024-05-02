@@ -152,10 +152,10 @@ simpleTheadHelp vc ( name, status, click ) =
     let
         n =
             Locale.string vc.locale name
-                |> Html.text
+                |> text
 
         withCss =
-            pair (List.map (\( a, b ) -> Html.style a b) (Css.Table.headCellSortable vc))
+            pair [ Css.Table.headCellSortable vc |> css ]
 
         ( attr, content ) =
             case status of
@@ -164,40 +164,44 @@ simpleTheadHelp vc ( name, status, click ) =
 
                 Table.Sortable selected ->
                     [ n
-                    , Html.text " "
+                    , text " "
                     , if selected then
                         FontAwesome.sortUp
                             |> FontAwesome.icon
+                            |> Html.Styled.fromUnstyled
 
                       else
                         FontAwesome.sortDown
                             |> FontAwesome.icon
+                            |> Html.Styled.fromUnstyled
                     ]
                         |> withCss
 
                 Table.Reversible Nothing ->
                     [ n
-                    , Html.text " "
+                    , text " "
                     , FontAwesome.sort
                         |> FontAwesome.icon
+                        |> Html.Styled.fromUnstyled
                     ]
                         |> withCss
 
                 Table.Reversible (Just isReversed) ->
                     [ n
-                    , Html.text " "
+                    , text " "
                     , if isReversed then
                         FontAwesome.sortUp
                             |> FontAwesome.icon
+                            |> Html.Styled.fromUnstyled
 
                       else
                         FontAwesome.sortDown
                             |> FontAwesome.icon
+                            |> Html.Styled.fromUnstyled
                     ]
                         |> withCss
     in
-    Html.div attr content
-        |> Html.Styled.fromUnstyled
+    div attr content
         |> List.singleton
         |> th
             [ click
