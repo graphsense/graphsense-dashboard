@@ -7,7 +7,8 @@
         "openapi/src",
         "themes",
         "config",
-        "lib/elm-autocomplete/src"
+        "lib/elm-autocomplete/src",
+        "lib/elm-css-sortable-table/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {
@@ -15,7 +16,6 @@
             "BrianHicks/elm-csv": "3.0.3",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "TSFoster/elm-tuple-extra": "2.0.0",
-            "Warry/elm-css-sortable-table": "1.0.0",
             "arturopala/elm-monocle": "2.2.0",
             "avh4/elm-color": "1.0.0",
             "avh4/elm-program-test": "3.7.0",
@@ -41,16 +41,16 @@
             "grotsev/elm-debouncer": "1.0.0",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
             "jschomay/elm-bounded-number": "2.1.2",
+            "kokizzu/elm-date-format": "1.0.0",
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "myrho/elm-hovercard": "4.0.0",
             "myrho/numeral-elm": "1.0.1",
             "myrho/yaml": "1.0.0",
             "noahzgordon/elm-color-extra": "1.0.2",
-            "rtfeldman/elm-css": "16.1.1",
+            "rtfeldman/elm-css": "18.0.0",
             "rtfeldman/elm-hex": "1.0.0",
-            "rtfeldman/elm-iso8601-date-strings": "1.1.4",
-            "kokizzu/elm-date-format": "1.0.0"
+            "rtfeldman/elm-iso8601-date-strings": "1.1.4"
         },
         "indirect": {
             "avh4/elm-fifo": "1.0.4",
@@ -63,7 +63,8 @@
             "hecrj/html-parser": "2.4.0",
             "mgold/elm-nonempty-list": "4.2.0",
             "myrho/elm-parser-extras": "1.0.1",
-            "myrho/elm-round": "1.0.5"
+            "myrho/elm-round": "1.0.5",
+            "robinheghan/murmur3": "1.0.0"
         }
     },
     "test-dependencies": {
