@@ -128,6 +128,7 @@ theme =
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
             , scaled 1 |> rem |> paddingTop
+            , marginBottom <| rem <| 1
             ]
         |> s_paragraph
             [ scaled 2 |> rem |> marginBottom
