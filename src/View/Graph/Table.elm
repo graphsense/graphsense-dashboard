@@ -14,6 +14,7 @@ import Model.Graph.Table as T
 import RecordSetter exposing (..)
 import Table
 import Tuple exposing (..)
+import Tuple3
 import Util.View exposing (copyableLongIdentifier, loadingSpinner, none)
 import View.Locale as Locale
 
@@ -130,17 +131,17 @@ customizations : Styles -> View.Config -> Table.Customizations data msg
 customizations styles vc =
     Table.defaultCustomizations
         |> s_tableAttrs [ styles.table vc |> css ]
-        |> s_thead (simpleThead styles vc)
+        |> s_thead (List.map (Tuple3.mapThird List.singleton) >> simpleThead styles vc)
         |> s_rowAttrs (\_ -> [ styles.row vc |> css ])
 
 
-simpleThead : Styles -> View.Config -> List ( String, Table.Status, Attribute msg ) -> Table.HtmlDetails msg
+simpleThead : Styles -> View.Config -> List ( String, Table.Status, List (Attribute msg) ) -> Table.HtmlDetails msg
 simpleThead styles vc headers =
     Table.HtmlDetails [ styles.headRow vc |> css ] (List.map (simpleTheadHelp styles vc) headers)
 
 
-simpleTheadHelp : Styles -> View.Config -> ( String, Table.Status, Attribute msg ) -> Html msg
-simpleTheadHelp styles vc ( name, status, click ) =
+simpleTheadHelp : Styles -> View.Config -> ( String, Table.Status, List (Attribute msg) ) -> Html msg
+simpleTheadHelp styles vc ( name, status, attrs ) =
     let
         n =
             Locale.string vc.locale name
@@ -196,18 +197,16 @@ simpleTheadHelp styles vc ( name, status, click ) =
     div attr content
         |> List.singleton
         |> th
-            [ click
-            , styles.headCell vc |> css
-            ]
+            ((styles.headCell vc |> css) :: attrs)
 
 
 htmlColumn : Styles -> View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
 htmlColumn styles vc name accessor html =
-    htmlColumnWithSorter styles (Table.increasingOrDecreasingBy accessor) vc name accessor html
+    htmlColumnWithSorter (Table.increasingOrDecreasingBy accessor) styles vc name accessor html
 
 
-htmlColumnWithSorter : Styles -> Table.Sorter data -> View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
-htmlColumnWithSorter styles sorter vc name _ html =
+htmlColumnWithSorter : Table.Sorter data -> Styles -> View.Config -> String -> (data -> comparable) -> (data -> List (Html msg)) -> Table.Column data msg
+htmlColumnWithSorter sorter styles vc name _ html =
     Table.veryCustomColumn
         { name = name
         , viewData = html >> Table.HtmlDetails [ styles.cell vc |> css ]
