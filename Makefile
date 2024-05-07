@@ -2,6 +2,10 @@ include .env
 
 API_ELM=openapi/src/Api.elm
 
+install:
+	pip install pre-commit
+	pre-commit install
+
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
