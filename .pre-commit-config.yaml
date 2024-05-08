@@ -8,3 +8,4 @@ repos:
     entry: pre_commit_hooks/set_version.sh
     language: script
     always_run: true
+    stages: [pre-push]
