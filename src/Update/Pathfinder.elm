@@ -10,6 +10,7 @@ import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
+import Init.Pathfinder.Table.TransactionTable
 import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
@@ -21,6 +22,7 @@ import Model.Pathfinder exposing (..)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network
+import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
@@ -34,6 +36,7 @@ import Tuple exposing (first, mapFirst, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
+import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Network as Network
 import Update.Search as Search
@@ -118,6 +121,27 @@ updateByMsg plugins uc msg model =
         BrowserGotTxForAddress id direction data ->
             browserGotTxForAddress plugins uc id direction data model
 
+        BrowserGotTxsForAddressDetails idRequest txs ->
+            case model.view.detailsViewState of
+                AddressDetails id ad ->
+                    let
+                        adNew =
+                            AddressDetails id
+                                { ad
+                                    | txs =
+                                        appendData TransactionTable.filter txs.addressTxs ad.txs
+                                            |> s_nextpage txs.nextPage
+                                }
+                    in
+                    if idRequest == id then
+                        n ((setViewState <| s_detailsViewState adNew) model)
+
+                    else
+                        n model
+
+                _ ->
+                    n model
+
         SearchMsg m ->
             case m of
                 Search.UserClicksResultLine ->
@@ -161,7 +185,32 @@ updateByMsg plugins uc msg model =
             n (toggleAddressDetailsTable model)
 
         UserClickedToggleTransactionDetailsTable ->
-            n (toggleTransactionDetailsTable model)
+            case model.view.detailsViewState of
+                AddressDetails id ad ->
+                    let
+                        m =
+                            (setViewState <| s_detailsViewState (AddressDetails id { ad | transactionsTableOpen = not ad.transactionsTableOpen })) model
+
+                        eff =
+                            if List.isEmpty ad.txs.data || not (ad.txs.nextpage == Nothing) then
+                                BrowserGotTxsForAddressDetails id
+                                    |> Api.GetAddressTxsEffect
+                                        { currency = Id.network id
+                                        , address = Id.id id
+                                        , direction = Nothing
+                                        , pagesize = 10
+                                        , nextpage = ad.txs.nextpage
+                                        }
+                                    |> ApiEffect
+                                    |> List.singleton
+
+                            else
+                                []
+                    in
+                    ( m, eff )
+
+                _ ->
+                    n model
 
         UserClickedRestart ->
             -- Handled upstream
@@ -359,7 +408,7 @@ selectAddress id model =
     let
         m1 =
             (s_selection (SelectedAddress id)
-                >> (setViewState <| s_detailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
+                >> (setViewState <| s_detailsViewState (AddressDetails id addressDetailsViewStateDefault))
             )
                 model
     in

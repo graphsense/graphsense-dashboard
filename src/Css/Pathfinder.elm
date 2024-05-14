@@ -90,6 +90,10 @@ no =
     px 0
 
 
+sText =
+    em 0.8
+
+
 mText =
     em 1.1
 
@@ -168,7 +172,6 @@ redColor =
 
 
 -- Styles
--- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
 
 
 alertColor : View.Config -> Color

@@ -17,6 +17,7 @@ import Json.Decode
 import Model.Currency exposing (assetFromBase)
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Table exposing (Table)
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -29,14 +30,17 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
+import Table
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (copyableLongIdentifier, none)
+import View.Graph.Table as Table
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Error as Error
 import View.Pathfinder.Network as Network
+import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Search
 
 
@@ -77,6 +81,10 @@ type ValueType
 type KVTableRow
     = Row String ValueType
     | Gap
+
+
+
+-- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
 
 
 dummyImageSrc : View.Config -> String
@@ -332,10 +340,10 @@ getAddressAnnotationBtns data actor =
             not (actor == Nothing)
 
         isContract x =
-            not (x.isContract == Nothing)
+            x.isContract |> Maybe.withDefault False
     in
     (if hasTags data then
-        [ BtnConfig FontAwesome.tags "tags" NoOp True ]
+        [ BtnConfig FontAwesome.tags "has tags" NoOp True ]
 
      else
         []
@@ -346,7 +354,7 @@ getAddressAnnotationBtns data actor =
             else
                 []
            )
-        ++ (actor |> Maybe.map (\_ -> [ BtnConfig FontAwesome.user "is contract" NoOp True ]) |> Maybe.withDefault [])
+        ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
 
 
 getAddressActionBtns : Api.Data.Address -> List BtnConfig
@@ -381,7 +389,7 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             getAddressAnnotationBtns data actor
     in
     div []
-        ([ div [ addressDetailsContainerStyle |> toAttr ]
+        (div [ addressDetailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
                 [ img [ src addressImg, HA.alt actor_text, HA.title actor_text, addressDetailsViewActorImageStyle vc |> toAttr ] []
                 , div [ fullWidth |> toAttr ]
@@ -392,8 +400,7 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
                     )
                 ]
             ]
-         ]
-            ++ sections
+            :: sections
         )
 
 
@@ -401,28 +408,7 @@ addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressD
 addressTransactionTableView vc gc id viewState data =
     let
         content =
-            table [ fullWidth |> toAttr ]
-                [ tr []
-                    [ th [] [ Html.text "Timestamp" ]
-                    , th [] [ Html.text "Hash" ]
-                    , th [] [ Html.text "Debit/Credit" ]
-                    ]
-                , tr []
-                    [ td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "1" ]
-                    ]
-                , tr []
-                    [ td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "-1" ]
-                    ]
-                , tr []
-                    [ td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "bla" ]
-                    , td [] [ Html.text "2" ]
-                    ]
-                ]
+            table_ vc Nothing (TransactionTable.config vc) viewState.txs
     in
     collapsibleSection vc "Transactions" viewState.transactionsTableOpen (Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)) content UserClickedToggleTransactionDetailsTable
 
@@ -433,7 +419,7 @@ addressNeighborsTableView vc gc id viewState data =
         content =
             div [] [ Html.text "lorem ipsum ..." ]
     in
-    collapsibleSection vc "Addresses" viewState.addressTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content UserClickedToggleAddressDetailsTable
+    collapsibleSection vc "Neighbors" viewState.addressTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content UserClickedToggleAddressDetailsTable
 
 
 addressDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> List BtnConfig -> Html Msg
@@ -450,7 +436,7 @@ addressDetailsHeadingView vc gc id mNetwork annotations =
 
 annotationButton : View.Config -> BtnConfig -> Html Msg
 annotationButton vc btn =
-    disableableButton (linkButtonStyle vc) btn [] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+    disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
 
 
 apiAddressToRows : Api.Data.Address -> List KVTableRow
@@ -532,3 +518,13 @@ graphSvg plugins _ vc gc model bbox =
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         ]
+
+
+table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg
+table_ vc csvMsg =
+    Table.table vc
+        --[ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
+        []
+        { filter = Nothing
+        , csv = csvMsg
+        }

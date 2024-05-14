@@ -3,8 +3,10 @@ module Model.Pathfinder exposing (..)
 import Api.Data exposing (Actor)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
+import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
+import Model.Graph.Table exposing (Table)
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.History.Entry as Entry
@@ -35,7 +37,16 @@ type alias ViewState =
 type alias AddressDetailsViewState =
     { addressTableOpen : Bool
     , transactionsTableOpen : Bool
+    , txs : Table Api.Data.AddressTx
+
+    --, neighbors : Maybe (Table Api.Data.NeighborAddress)
+    --, clusterAddresses: Maybe (Table Api.Data.Address)
     }
+
+
+addressDetailsViewStateDefault : AddressDetailsViewState
+addressDetailsViewStateDefault =
+    { addressTableOpen = False, transactionsTableOpen = False, txs = TransactionTable.init }
 
 
 type Selection
@@ -60,7 +71,7 @@ getDetailsViewStateForSelection model =
             AddressDetails id c
 
         ( SelectedAddress id, _ ) ->
-            AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }
+            AddressDetails id addressDetailsViewStateDefault
 
         ( NoSelection, _ ) ->
             NoDetails
