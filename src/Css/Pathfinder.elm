@@ -12,6 +12,17 @@ address vc =
     vc.theme.pathfinder.address
 
 
+addressBody : View.Config -> Bool -> List Css.Style
+addressBody vc selected =
+    cursor move
+        :: (if selected then
+                [ primaryColorSelection |> Css.fill ]
+
+            else
+                []
+           )
+
+
 addressHandle : View.Config -> List Style
 addressHandle vc =
     vc.theme.pathfinder.addressHandle
@@ -36,6 +47,7 @@ edgeUtxo vc =
 edgeLabel : View.Config -> List Style
 edgeLabel vc =
     vc.theme.pathfinder.edgeLabel
+
 
 
 -- helpers
@@ -97,6 +109,11 @@ xlText =
 type ButtonType
     = Primary
     | Secondary
+
+
+primaryColorSelection : Color
+primaryColorSelection =
+    rgb 178 226 217
 
 
 primaryColor : Color

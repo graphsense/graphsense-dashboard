@@ -20,6 +20,7 @@ import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (Msg(..))
@@ -354,9 +355,15 @@ addAddress plugins id data model =
 
 
 selectAddress : Id -> Model -> Model
-selectAddress id =
-    s_selection (SelectedAddress id)
-        >> (setViewState <| s_detailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
+selectAddress id model =
+    let
+        m1 =
+            (s_selection (SelectedAddress id)
+                >> (setViewState <| s_detailsViewState (AddressDetails id { addressTableOpen = False, transactionsTableOpen = False }))
+            )
+                model
+    in
+    { m1 | network = Model.Pathfinder.Network.selectAddress (Model.Pathfinder.Network.unSelectAll m1.network) id }
 
 
 pushHistory : Msg -> Model -> Model

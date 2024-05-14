@@ -3,7 +3,7 @@ module View.Pathfinder.Address exposing (view)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Css.Pathfinder as Css
+import Css.Pathfinder as Css exposing (lText)
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (..)
@@ -25,7 +25,7 @@ view _ vc _ address =
         unit =
             View.getUnit vc
     in
-    [ body vc
+    [ body vc address
     , handles vc address
     , label vc address
     ]
@@ -37,12 +37,13 @@ view _ vc _ address =
             ]
 
 
-body : View.Config -> Svg Msg
-body vc =
+body : View.Config -> Address -> Svg Msg
+body vc address =
     circle
         [ cx "0"
         , cy "0"
         , r <| String.fromFloat vc.theme.pathfinder.addressRadius
+        , Css.addressBody vc address.selected |> css
         ]
         []
 
@@ -73,7 +74,31 @@ handles vc address =
             else
                 []
            )
+        ++ (if address.selected then
+                [ selectedAnnotation vc ]
+
+            else
+                []
+           )
         |> g []
+
+
+blackArrowDown : Svg Msg
+blackArrowDown =
+    polygon [ "0,10 -5,0 5,0" |> points, [ Css.property "fill" "black" ] |> css ] []
+
+
+selectedAnnotation : View.Config -> Svg Msg
+selectedAnnotation vc =
+    let
+        unit =
+            View.getUnit vc
+    in
+    g
+        [ translate 0 (-unit / 1.3)
+            |> transform
+        ]
+        [ blackArrowDown ]
 
 
 handle : View.Config -> Id -> Direction -> Svg Msg

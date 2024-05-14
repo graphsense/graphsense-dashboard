@@ -13,4 +13,5 @@ type alias Address =
     , incomingTxs : Set Id
     , outgoingTxs : Set Id
     , data : WebData Api.Data.Address
+    , selected : Bool
     }
