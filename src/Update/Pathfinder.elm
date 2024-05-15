@@ -228,7 +228,11 @@ updateByMsg plugins uc msg model =
                                             else
                                                 ( [], False )
                                     in
-                                    ( ad |> setter ((PT.incPage >> PT.setLoading loading) tbl), eff )
+                                    if loading then
+                                        ( ad |> setter ((PT.incPage >> PT.setLoading loading) tbl), eff )
+
+                                    else
+                                        n ad
 
                                 UserClickedPreviousPageNeighborsTable dir ->
                                     let
@@ -280,7 +284,11 @@ updateByMsg plugins uc msg model =
                                             else
                                                 ( [], False )
                                     in
-                                    ( { ad | txs = (PT.incPage >> PT.setLoading loading) ad.txs }, eff )
+                                    if loading then
+                                        ( { ad | txs = (PT.incPage >> PT.setLoading loading) ad.txs }, eff )
+
+                                    else
+                                        n ad
 
                                 UserClickedPreviousPageTransactionTable ->
                                     ( { ad | txs = PT.decPage ad.txs }, [] )

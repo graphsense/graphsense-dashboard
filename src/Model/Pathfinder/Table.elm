@@ -24,7 +24,15 @@ incPage pt =
 
 decPage : PagedTable d -> PagedTable d
 decPage pt =
-    { pt | currentPage = pt.currentPage - 1 }
+    let
+        nextpage =
+            pt.currentPage - 1
+    in
+    if nextpage >= 1 then
+        { pt | currentPage = pt.currentPage - 1 }
+
+    else
+        pt
 
 
 setLoading : Bool -> PagedTable d -> PagedTable d
