@@ -3,15 +3,16 @@ module Model.Pathfinder exposing (..)
 import Api.Data exposing (Actor)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
+import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
-import Model.Graph.Table exposing (Table)
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
+import Model.Pathfinder.Table exposing (PagedTable)
 import Model.Search as Search
 import RecordSetter exposing (s_detailsViewState, s_selection)
 
@@ -35,18 +36,24 @@ type alias ViewState =
 
 
 type alias AddressDetailsViewState =
-    { addressTableOpen : Bool
+    { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
-    , txs : Table Api.Data.AddressTx
+    , txs : PagedTable Api.Data.AddressTx
+    , neighborsIncoming : PagedTable Api.Data.NeighborAddress
+    , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
 
-    --, neighbors : Maybe (Table Api.Data.NeighborAddress)
     --, clusterAddresses: Maybe (Table Api.Data.Address)
     }
 
 
-addressDetailsViewStateDefault : AddressDetailsViewState
-addressDetailsViewStateDefault =
-    { addressTableOpen = False, transactionsTableOpen = False, txs = TransactionTable.init }
+addressDetailsViewStateDefault : Maybe Int -> Maybe Int -> Maybe Int -> AddressDetailsViewState
+addressDetailsViewStateDefault nrTransactions inDegree outDegree =
+    { neighborsTableOpen = False
+    , transactionsTableOpen = False
+    , txs = TransactionTable.init nrTransactions
+    , neighborsOutgoing = NeighborsTable.init outDegree
+    , neighborsIncoming = NeighborsTable.init inDegree
+    }
 
 
 type Selection
@@ -64,6 +71,24 @@ getLoadedAddress m id =
     Dict.get id m.network.addresses
 
 
+getAddressDetailsViewStateDefaultForAddress : Id -> Model -> AddressDetailsViewState
+getAddressDetailsViewStateDefaultForAddress id model =
+    let
+        maddress =
+            Dict.get id model.network.addresses
+
+        nrTxs =
+            maddress |> Maybe.andThen Address.getNrTxs
+
+        indegree =
+            maddress |> Maybe.andThen Address.getInDegree
+
+        outdegree =
+            maddress |> Maybe.andThen Address.getOutDegree
+    in
+    addressDetailsViewStateDefault nrTxs indegree outdegree
+
+
 getDetailsViewStateForSelection : Model -> DetailsViewState
 getDetailsViewStateForSelection model =
     case ( model.selection, model.view.detailsViewState ) of
@@ -71,7 +96,7 @@ getDetailsViewStateForSelection model =
             AddressDetails id c
 
         ( SelectedAddress id, _ ) ->
-            AddressDetails id addressDetailsViewStateDefault
+            AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)
 
         ( NoSelection, _ ) ->
             NoDetails
@@ -90,23 +115,3 @@ setViewState fn model =
 closeDetailsView : Model -> Model
 closeDetailsView =
     (setViewState <| s_detailsViewState NoDetails) >> s_selection NoSelection
-
-
-toggleAddressDetailsTable : Model -> Model
-toggleAddressDetailsTable m =
-    case m.view.detailsViewState of
-        AddressDetails id ad ->
-            (setViewState <| s_detailsViewState (AddressDetails id { ad | addressTableOpen = not ad.addressTableOpen })) m
-
-        _ ->
-            m
-
-
-toggleTransactionDetailsTable : Model -> Model
-toggleTransactionDetailsTable m =
-    case m.view.detailsViewState of
-        AddressDetails id ad ->
-            (setViewState <| s_detailsViewState (AddressDetails id { ad | transactionsTableOpen = not ad.transactionsTableOpen })) m
-
-        _ ->
-            m

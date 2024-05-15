@@ -22,8 +22,7 @@ type Msg
     | UserClickedExportGraph
     | UserClickedImportFile
     | UserClosedDetailsView
-    | UserClickedToggleAddressDetailsTable
-    | UserClickedToggleTransactionDetailsTable
+    | AddressDetailsMsg AddressDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | BrowserGotAddressData Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
@@ -33,5 +32,15 @@ type Msg
     | NoOp
     | BrowserGotRecentTx Id Direction Api.Data.AddressTxs
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
-    | BrowserGotTxsForAddressDetails Id Api.Data.AddressTxs
     | BrowserGotActor String Api.Data.Actor
+
+
+type AddressDetailsMsg
+    = UserClickedToggleNeighborsTable
+    | UserClickedToggleTransactionTable
+    | UserClickedNextPageTransactionTable
+    | UserClickedPreviousPageTransactionTable
+    | UserClickedNextPageNeighborsTable Direction
+    | UserClickedPreviousPageNeighborsTable Direction
+    | GotTxsForAddressDetails Id Api.Data.AddressTxs
+    | GotNeighborsForAddressDetails Id Direction Api.Data.NeighborAddresses

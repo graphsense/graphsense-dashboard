@@ -2,12 +2,12 @@ module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
-import Model.Currency exposing (assetFromBase)
-import Model.Graph.Table exposing (Table)
+import Model.Currency exposing (asset)
 import Model.Locale
+import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Table
-import View.Graph.Table as T exposing (customizations)
+import View.Graph.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
@@ -30,20 +30,21 @@ getId =
     .txHash
 
 
-config : View.Config -> Table.Config Api.Data.AddressTx Msg
-config vc =
+config : View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
+config vc network isCheckedFn =
     Table.customConfig
         { toId = toGerneric >> getId
-        , toMsg = \x -> NoOp
+        , toMsg = \_ -> NoOp
         , columns =
-            [ PT.timestampDateMultiRowColumn vc
+            [ PT.checkboxColumn vc "" (toGerneric >> (\x -> isCheckedFn ( network, x.txHash ))) (\_ -> NoOp)
+            , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
                 (toGerneric >> .timestamp)
             , PT.txColumn vc
                 "Hash"
                 (toGerneric >> .txHash)
-            , T.valueColumn vc
-                (toGerneric >> .asset >> assetFromBase)
+            , PT.debitCreditColumn vc
+                (toGerneric >> .asset >> asset network)
                 "Debit/Credit"
                 (toGerneric >> .value)
             ]
@@ -52,5 +53,5 @@ config vc =
 
 
 prepareCSV : Model.Locale.Model -> String -> Api.Data.AddressTx -> List ( ( String, List String ), String )
-prepareCSV locModel currency row =
+prepareCSV _ _ _ =
     []

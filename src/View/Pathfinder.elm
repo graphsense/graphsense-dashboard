@@ -11,20 +11,19 @@ import Css.View
 import Dict
 import FontAwesome
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as HA exposing (disabled, id, src)
+import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
 import Model.Currency exposing (assetFromBase)
+import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
-import Model.Graph.Table exposing (Table)
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network exposing (Network)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (AddressDetailsMsg(..), Msg(..))
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RemoteData exposing (WebData)
+import RemoteData
 import Result.Extra
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
@@ -35,11 +34,13 @@ import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (copyableLongIdentifier, none)
-import View.Graph.Table as Table
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Error as Error
+import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
+import View.Pathfinder.Table as Table
+import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Search
 
@@ -157,16 +158,6 @@ disableableButton style btn attrs content =
 rule : Html Msg
 rule =
     hr [ ruleStyle |> toAttr ] []
-
-
-inIcon : Html Msg
-inIcon =
-    span [ inIconStyle |> toAttr ] [ FontAwesome.icon FontAwesome.signInAlt |> Html.fromUnstyled ]
-
-
-outIcon : Html Msg
-outIcon =
-    span [ outIconStyle |> toAttr ] [ FontAwesome.icon FontAwesome.signOutAlt |> Html.fromUnstyled ]
 
 
 inOutIndicator : Maybe Int -> Int -> Int -> Html Msg
@@ -377,8 +368,11 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
         actor_text =
             actor |> Maybe.map .label |> Maybe.withDefault ""
 
+        txOnGraphFn =
+            \txId -> Dict.member txId model.network.txs
+
         sections =
-            [ addressTransactionTableView vc gc id viewState data
+            [ addressTransactionTableView vc gc id viewState txOnGraphFn data
             , addressNeighborsTableView vc gc id viewState data
             ]
 
@@ -404,22 +398,54 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
         )
 
 
-addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
-addressTransactionTableView vc gc id viewState data =
+addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> (Id -> Bool) -> Api.Data.Address -> Html Msg
+addressTransactionTableView vc gc id viewState txOnGraphFn data =
     let
+        toolsConfig =
+            { filter = Nothing, csv = Nothing }
+
+        attributes =
+            []
+
+        prevMsg =
+            \_ -> AddressDetailsMsg UserClickedPreviousPageTransactionTable
+
+        nextMsg =
+            \_ -> AddressDetailsMsg UserClickedNextPageTransactionTable
+
         content =
-            table_ vc Nothing (TransactionTable.config vc) viewState.txs
+            Table.pagedTableView vc attributes toolsConfig (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
     in
-    collapsibleSection vc "Transactions" viewState.transactionsTableOpen (Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)) content UserClickedToggleTransactionDetailsTable
+    collapsibleSection vc "Transactions" viewState.transactionsTableOpen (Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)) content (AddressDetailsMsg UserClickedToggleTransactionTable)
 
 
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
 addressNeighborsTableView vc gc id viewState data =
     let
+        toolsConfig =
+            { filter = Nothing, csv = Nothing }
+
+        attributes =
+            []
+
+        prevMsg =
+            \dir _ -> AddressDetailsMsg (UserClickedPreviousPageNeighborsTable dir)
+
+        nextMsg =
+            \dir _ -> AddressDetailsMsg (UserClickedNextPageNeighborsTable dir)
+
+        tblCfg =
+            NeighborsTable.config vc data.currency
+
         content =
-            div [] [ Html.text "lorem ipsum ..." ]
+            div []
+                [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
+                , Table.pagedTableView vc attributes toolsConfig tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
+                , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
+                , Table.pagedTableView vc attributes toolsConfig tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
+                ]
     in
-    collapsibleSection vc "Neighbors" viewState.addressTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content UserClickedToggleAddressDetailsTable
+    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content (AddressDetailsMsg UserClickedToggleNeighborsTable)
 
 
 addressDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> List BtnConfig -> Html Msg
@@ -518,13 +544,3 @@ graphSvg plugins _ vc gc model bbox =
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         ]
-
-
-table_ : View.Config -> Maybe Msg -> Table.Config data Msg -> Table data -> Html Msg
-table_ vc csvMsg =
-    Table.table vc
-        --[ stopPropagationOn "scroll" (JD.map (\pos -> ( UserScrolledTable pos, True )) decodeScrollPos)
-        []
-        { filter = Nothing
-        , csv = csvMsg
-        }

@@ -3,40 +3,42 @@ module Update.Pathfinder exposing (update, updateByRoute)
 import Api.Data
 import Config.Update as Update
 import Dict
-import Dict.Nonempty as NDict exposing (NonemptyDict)
+import Dict.Nonempty as NDict
 import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
-import Init.Pathfinder
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
-import Init.Pathfinder.Table.TransactionTable
 import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Graph.History as History
+import Model.Graph.Table as GT
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
+import Model.Pathfinder.Address as Address
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network
+import Model.Pathfinder.Table as PT
+import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
-import Msg.Pathfinder as Msg exposing (Msg(..))
+import Msg.Pathfinder as Msg exposing (AddressDetailsMsg(..), Msg(..))
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Route.Pathfinder as Route
-import Tuple exposing (first, mapFirst, pair, second)
+import Tuple exposing (first, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
-import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData, searchData, setData)
+import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Network as Network
 import Update.Search as Search
@@ -121,27 +123,6 @@ updateByMsg plugins uc msg model =
         BrowserGotTxForAddress id direction data ->
             browserGotTxForAddress plugins uc id direction data model
 
-        BrowserGotTxsForAddressDetails idRequest txs ->
-            case model.view.detailsViewState of
-                AddressDetails id ad ->
-                    let
-                        adNew =
-                            AddressDetails id
-                                { ad
-                                    | txs =
-                                        appendData TransactionTable.filter txs.addressTxs ad.txs
-                                            |> s_nextpage txs.nextPage
-                                }
-                    in
-                    if idRequest == id then
-                        n ((setViewState <| s_detailsViewState adNew) model)
-
-                    else
-                        n model
-
-                _ ->
-                    n model
-
         SearchMsg m ->
             case m of
                 Search.UserClicksResultLine ->
@@ -181,35 +162,162 @@ updateByMsg plugins uc msg model =
         UserClosedDetailsView ->
             n (closeDetailsView model)
 
-        UserClickedToggleAddressDetailsTable ->
-            n (toggleAddressDetailsTable model)
-
-        UserClickedToggleTransactionDetailsTable ->
+        AddressDetailsMsg subm ->
             case model.view.detailsViewState of
                 AddressDetails id ad ->
                     let
-                        m =
-                            (setViewState <| s_detailsViewState (AddressDetails id { ad | transactionsTableOpen = not ad.transactionsTableOpen })) model
+                        ( addressViewDetails, e ) =
+                            case subm of
+                                UserClickedToggleNeighborsTable ->
+                                    let
+                                        tables =
+                                            [ ( ad.neighborsIncoming, Incoming ), ( ad.neighborsOutgoing, Outgoing ) ]
 
-                        eff =
-                            if List.isEmpty ad.txs.data || not (ad.txs.nextpage == Nothing) then
-                                BrowserGotTxsForAddressDetails id
-                                    |> Api.GetAddressTxsEffect
-                                        { currency = Id.network id
-                                        , address = Id.id id
-                                        , direction = Nothing
-                                        , pagesize = 10
-                                        , nextpage = ad.txs.nextpage
-                                        }
-                                    |> ApiEffect
-                                    |> List.singleton
+                                        fetchFirstPageFn =
+                                            \( tbl, dir ) ->
+                                                if List.isEmpty tbl.t.data then
+                                                    Just
+                                                        ((GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
+                                                            |> Api.GetAddressNeighborsEffect
+                                                                { currency = Id.network id
+                                                                , address = Id.id id
+                                                                , includeLabels = True
+                                                                , onlyIds = Nothing
+                                                                , isOutgoing = dir == Outgoing
+                                                                , pagesize = tbl.itemsPerPage
+                                                                , nextpage = tbl.t.nextpage
+                                                                }
+                                                            |> ApiEffect
+                                                        )
 
-                            else
-                                []
+                                                else
+                                                    Nothing
+
+                                        eff =
+                                            List.filterMap fetchFirstPageFn tables
+                                    in
+                                    ( { ad | neighborsTableOpen = not ad.neighborsTableOpen }, eff )
+
+                                UserClickedNextPageNeighborsTable dir ->
+                                    let
+                                        ( tbl, setter ) =
+                                            case dir of
+                                                Incoming ->
+                                                    ( ad.neighborsIncoming, s_neighborsIncoming )
+
+                                                Outgoing ->
+                                                    ( ad.neighborsOutgoing, s_neighborsOutgoing )
+
+                                        ( eff, loading ) =
+                                            if not (tbl.t.nextpage == Nothing) then
+                                                ( (GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
+                                                    |> Api.GetAddressNeighborsEffect
+                                                        { currency = Id.network id
+                                                        , address = Id.id id
+                                                        , includeLabels = True
+                                                        , onlyIds = Nothing
+                                                        , isOutgoing = dir == Outgoing
+                                                        , pagesize = tbl.itemsPerPage
+                                                        , nextpage = tbl.t.nextpage
+                                                        }
+                                                    |> ApiEffect
+                                                    |> List.singleton
+                                                , True
+                                                )
+
+                                            else
+                                                ( [], False )
+                                    in
+                                    ( ad |> setter ((PT.incPage >> PT.setLoading loading) tbl), eff )
+
+                                UserClickedPreviousPageNeighborsTable dir ->
+                                    let
+                                        ( tbl, setter ) =
+                                            case dir of
+                                                Incoming ->
+                                                    ( ad.neighborsIncoming, s_neighborsIncoming )
+
+                                                Outgoing ->
+                                                    ( ad.neighborsOutgoing, s_neighborsOutgoing )
+                                    in
+                                    ( ad |> setter (PT.decPage tbl), [] )
+
+                                GotNeighborsForAddressDetails requestId dir neighbors ->
+                                    if requestId == id then
+                                        n
+                                            (case dir of
+                                                Incoming ->
+                                                    { ad
+                                                        | neighborsIncoming = appendPagedTableData ad.neighborsIncoming NeighborsTable.filter neighbors.nextPage neighbors.neighbors
+                                                    }
+
+                                                Outgoing ->
+                                                    { ad
+                                                        | neighborsOutgoing = appendPagedTableData ad.neighborsOutgoing NeighborsTable.filter neighbors.nextPage neighbors.neighbors
+                                                    }
+                                            )
+
+                                    else
+                                        n ad
+
+                                UserClickedNextPageTransactionTable ->
+                                    let
+                                        ( eff, loading ) =
+                                            if not (ad.txs.t.nextpage == Nothing) then
+                                                ( (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                                                    |> Api.GetAddressTxsEffect
+                                                        { currency = Id.network id
+                                                        , address = Id.id id
+                                                        , direction = Nothing
+                                                        , pagesize = ad.txs.itemsPerPage
+                                                        , nextpage = ad.txs.t.nextpage
+                                                        }
+                                                    |> ApiEffect
+                                                    |> List.singleton
+                                                , True
+                                                )
+
+                                            else
+                                                ( [], False )
+                                    in
+                                    ( { ad | txs = (PT.incPage >> PT.setLoading loading) ad.txs }, eff )
+
+                                UserClickedPreviousPageTransactionTable ->
+                                    ( { ad | txs = PT.decPage ad.txs }, [] )
+
+                                UserClickedToggleTransactionTable ->
+                                    let
+                                        eff =
+                                            if List.isEmpty ad.txs.t.data then
+                                                (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                                                    |> Api.GetAddressTxsEffect
+                                                        { currency = Id.network id
+                                                        , address = Id.id id
+                                                        , direction = Nothing
+                                                        , pagesize = ad.txs.itemsPerPage
+                                                        , nextpage = ad.txs.t.nextpage
+                                                        }
+                                                    |> ApiEffect
+                                                    |> List.singleton
+
+                                            else
+                                                []
+                                    in
+                                    ( { ad | transactionsTableOpen = not ad.transactionsTableOpen }, eff )
+
+                                GotTxsForAddressDetails responseId txs ->
+                                    if responseId == id then
+                                        n
+                                            { ad
+                                                | txs = appendPagedTableData ad.txs TransactionTable.filter txs.nextPage txs.addressTxs
+                                            }
+
+                                    else
+                                        n ad
                     in
-                    ( m, eff )
+                    ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, e )
 
-                _ ->
+                NoDetails ->
                     n model
 
         UserClickedRestart ->
@@ -408,7 +516,7 @@ selectAddress id model =
     let
         m1 =
             (s_selection (SelectedAddress id)
-                >> (setViewState <| s_detailsViewState (AddressDetails id addressDetailsViewStateDefault))
+                >> (setViewState <| s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)))
             )
                 model
     in
@@ -511,3 +619,13 @@ browserGotTxForAddress _ _ id direction data model =
             )
         |> Result.Extra.extract
             (ErrorEffect >> List.singleton >> pair model)
+
+
+appendPagedTableData : PT.PagedTable p -> GT.Filter p -> Maybe String -> List p -> PT.PagedTable p
+appendPagedTableData pt f nextPage data =
+    { pt
+        | t =
+            appendData f data pt.t
+                |> s_nextpage nextPage
+                |> s_loading False
+    }

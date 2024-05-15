@@ -298,6 +298,7 @@ linkButtonStyle vc enabled =
         )
     , no |> padding
     , mGap |> paddingLeft
+    , mGap |> paddingRight
     , clr |> color
     ]
 
@@ -430,6 +431,11 @@ addressDetailsViewActorImageStyle vc =
         )
     , mGap |> marginRight
     ]
+
+
+centerContent : List Style
+centerContent =
+    [ displayFlex, flexDirection column, alignItems center ]
 
 
 detailsViewContainerStyle : View.Config -> List Style

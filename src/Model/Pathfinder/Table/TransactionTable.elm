@@ -1,7 +1,6 @@
 module Model.Pathfinder.Table.TransactionTable exposing (..)
 
 import Api.Data
-import Config.Graph as Graph
 import Model.Graph.Table as Table
 
 
