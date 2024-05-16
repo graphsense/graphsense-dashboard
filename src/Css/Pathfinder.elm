@@ -14,7 +14,7 @@ address vc =
 
 addressBody : View.Config -> Bool -> List Css.Style
 addressBody vc selected =
-    cursor move
+    cursor grab
         :: (if selected then
                 [ primaryColorSelection |> Css.fill ]
 

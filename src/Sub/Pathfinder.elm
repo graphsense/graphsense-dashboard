@@ -50,7 +50,7 @@ subscriptions model =
             Sub.none
 
         _ ->
-            Browser.Events.onMouseUp (Json.Decode.succeed UserReleasesMouseButton)
+            Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
