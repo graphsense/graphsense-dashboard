@@ -67,6 +67,14 @@ search plugins vc sc model =
                                     |> placeholder
                                     |> List.singleton
 
+                            SearchAddressAndTx _ ->
+                                [ "Address", "transaction" ]
+                                    |> List.map (Locale.string vc.locale)
+                                    |> (\st -> st ++ Plugin.searchPlaceholder plugins vc)
+                                    |> String.join ", "
+                                    |> placeholder
+                                    |> List.singleton
+
                             SearchTagsOnly ->
                                 [ Locale.string vc.locale "Label"
                                     |> placeholder
@@ -204,6 +212,9 @@ resultList plugins vc sc { autocomplete, searchType } =
         SearchTagsOnly ->
             [ labelBadge ]
                 |> List.filterMap badgeToResult
+
+        SearchAddressAndTx _ ->
+            currencyBadges |> List.filterMap badgeToResult
 
         SearchAll _ ->
             currencyBadges

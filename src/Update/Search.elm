@@ -27,6 +27,19 @@ currencyToResult query found ( currency, latestBlock ) =
         ++ blocksToResult query currency latestBlock
 
 
+currencyToResultWithoutBlock : String -> Api.Data.SearchResult -> String -> List ResultLine
+currencyToResultWithoutBlock query found currency =
+    found.currencies
+        |> List.filter (.currency >> (==) currency)
+        |> List.head
+        |> Maybe.map
+            (\{ addresses, txs } ->
+                List.map (Address currency) addresses
+                    ++ List.map (Tx currency) txs
+            )
+        |> Maybe.withDefault []
+
+
 blocksToResult : String -> String -> Int -> List ResultLine
 blocksToResult input currency latestBlock =
     String.toInt input
@@ -114,6 +127,9 @@ update msg model =
                                     ++ actorResultLines result
                                     ++ labelResultLines result
 
+                            SearchAddressAndTx conf ->
+                                List.map (currencyToResultWithoutBlock query result) conf.currencies |> List.concat
+
                             SearchTagsOnly ->
                                 labelResultLines result
                     , query = query
@@ -143,6 +159,10 @@ update msg model =
                         hide model
                             |> n
 
+                SearchAddressAndTx _ ->
+                    hide model
+                        |> n
+
                 SearchTagsOnly ->
                     hide model
                         |> n
@@ -156,6 +176,9 @@ update msg model =
                             SearchAll sa ->
                                 { sa | pickingCurrency = False }
                                     |> SearchAll
+
+                            SearchAddressAndTx x ->
+                                SearchAddressAndTx x
 
                             SearchTagsOnly ->
                                 SearchTagsOnly
@@ -187,6 +210,9 @@ update msg model =
                             latestBlocks
                                 |> List.map (\( curr, lb ) -> blocksToResult query curr lb)
                                 |> List.concat
+
+                        SearchAddressAndTx _ ->
+                            []
 
                         SearchTagsOnly ->
                             []
@@ -240,6 +266,9 @@ maybeTriggerSearch model =
             case model.searchType of
                 SearchAll { pickingCurrency } ->
                     pickingCurrency
+
+                SearchAddressAndTx _ ->
+                    False
 
                 SearchTagsOnly ->
                     False

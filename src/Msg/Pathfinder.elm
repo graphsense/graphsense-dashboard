@@ -35,6 +35,7 @@ type Msg
     | BrowserGotRecentTx Id Direction Api.Data.AddressTxs
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
+    | BrowserGotTx Id Api.Data.Tx
 
 
 type AddressDetailsMsg

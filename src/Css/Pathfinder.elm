@@ -507,8 +507,8 @@ detailsViewCloseButtonStyle =
     [ float right, margin4 mlGap mlGap no no ]
 
 
-addressDetailsContainerStyle : List Style
-addressDetailsContainerStyle =
+detailsContainerStyle : List Style
+detailsContainerStyle =
     [ mlGap |> marginRight, mlGap |> marginLeft ]
 
 

@@ -18,6 +18,8 @@ import Util.Pathfinder exposing (getAddress)
 type alias Tx =
     { id : Id
     , type_ : TxType
+    , raw : Api.Data.Tx
+    , visible : Bool
     }
 
 
@@ -118,8 +120,18 @@ addressToCoords { x, y } =
     Coords x y
 
 
-fromData : Api.Data.Tx -> Direction -> Coords -> Result Error Tx
-fromData data direction anchor =
+fromDataInvisible : Api.Data.Tx -> Result Error Tx
+fromDataInvisible =
+    fromData False Outgoing { x = 0, y = 0 }
+
+
+fromDataVisible : Direction -> Coords -> Api.Data.Tx -> Result Error Tx
+fromDataVisible =
+    fromData True
+
+
+fromData : Bool -> Direction -> Coords -> Api.Data.Tx -> Result Error Tx
+fromData visible direction anchor data =
     case data of
         Api.Data.TxTxAccount t ->
             let
@@ -134,6 +146,8 @@ fromData data direction anchor =
                         , to = Id.init t.currency t.toAddress
                         , value = t.value
                         }
+                , visible = visible
+                , raw = data
                 }
 
         Api.Data.TxTxUtxo t ->
@@ -184,6 +198,8 @@ fromData data direction anchor =
                             , inputs = in_
                             , outputs = out
                             }
+                    , visible = visible
+                    , raw = data
                     }
                 )
                 inputs

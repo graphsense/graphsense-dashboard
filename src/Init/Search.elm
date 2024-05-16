@@ -19,3 +19,10 @@ initSearchAll stats =
         { latestBlocks = Maybe.map getLatestBlocks stats |> Maybe.withDefault []
         , pickingCurrency = False
         }
+
+
+initSearchAddressAndTxs : List String -> SearchType
+initSearchAddressAndTxs currencies =
+    SearchAddressAndTx
+        { currencies = currencies
+        }

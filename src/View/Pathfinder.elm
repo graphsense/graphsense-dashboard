@@ -308,6 +308,11 @@ detailsView plugins ms vc gc model =
                                 (addressDetailsContentView plugins ms vc gc model id state)
                             )
 
+                ( SelectedTx id, TxDetails ) ->
+                    Dict.get id model.network.txs
+                        |> Maybe.map (\x -> txDetailsContentView plugins ms vc gc model id x.raw)
+                        |> Maybe.withDefault (Util.View.loadingSpinner vc Css.View.loadingSpinner)
+
                 _ ->
                     none
             ]
@@ -355,6 +360,40 @@ getAddressActionBtns data =
     [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
 
 
+txDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> Api.Data.Tx -> Html Msg
+txDetailsContentView plugins ms vc gc model id data =
+    let
+        content =
+            case data of
+                Api.Data.TxTxAccount tx ->
+                    [ longIdentDetailsHeadingView vc gc id (Just tx.currency) "Transaction" []
+                    , rule
+                    , accountTxDetailsContentView vc tx
+                    ]
+
+                Api.Data.TxTxUtxo tx ->
+                    [ longIdentDetailsHeadingView vc gc id (Just tx.currency) "Transaction" []
+                    , rule
+                    , utxoTxDetailsContentView vc tx
+                    ]
+    in
+    div [ detailsContainerStyle |> toAttr ]
+        [ div [ detailsViewContainerStyle vc |> toAttr ]
+            [ div [ fullWidth |> toAttr ] content
+            ]
+        ]
+
+
+utxoTxDetailsContentView : View.Config -> Api.Data.TxUtxo -> Html Msg
+utxoTxDetailsContentView vc data =
+    div [] [ Html.text "I am a UTXO TX" ]
+
+
+accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
+accountTxDetailsContentView vc data =
+    div [] [ Html.text "I am a Account TX" ]
+
+
 addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
 addressDetailsContentView plugins ms vc gc model id viewState data =
     let
@@ -385,11 +424,11 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             getAddressAnnotationBtns data actor
     in
     div []
-        (div [ addressDetailsContainerStyle |> toAttr ]
+        (div [ detailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
                 [ img [ src addressImg, HA.alt actor_text, HA.title actor_text, addressDetailsViewActorImageStyle vc |> toAttr ] []
                 , div [ fullWidth |> toAttr ]
-                    ([ addressDetailsHeadingView vc gc id (Just data.currency) addressAnnotationBtns
+                    ([ longIdentDetailsHeadingView vc gc id (Just data.currency) "Address" addressAnnotationBtns
                      , rule
                      ]
                         ++ tbls
@@ -450,11 +489,11 @@ addressNeighborsTableView vc gc id viewState data =
     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content (AddressDetailsMsg UserClickedToggleNeighborsTable)
 
 
-addressDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> List BtnConfig -> Html Msg
-addressDetailsHeadingView vc gc id mNetwork annotations =
+longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> String -> List BtnConfig -> Html Msg
+longIdentDetailsHeadingView vc gc id mNetwork typeName annotations =
     let
         heading =
-            String.trim (String.join " " [ mNetwork |> Maybe.withDefault "", Locale.string vc.locale "Address" ])
+            String.trim (String.join " " [ mNetwork |> Maybe.withDefault "", Locale.string vc.locale typeName ])
     in
     div []
         [ h1 [ panelHeadingStyle2 vc |> toAttr ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))

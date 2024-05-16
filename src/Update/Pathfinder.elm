@@ -339,6 +339,9 @@ updateByMsg plugins uc msg model =
                     in
                     ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, e )
 
+                TxDetails ->
+                    n model
+
                 NoDetails ->
                     n model
 
@@ -495,6 +498,15 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        BrowserGotTx id tx ->
+            let
+                nw =
+                    Tx.fromDataInvisible tx
+                        |> Result.map (\txint -> Network.addTx txint model.network)
+                        |> Result.withDefault model.network
+            in
+            ( { model | network = nw } |> selectTransation id, [] )
+
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
@@ -510,6 +522,9 @@ updateByRoute_ plugins route model =
 
         Route.Network network (Route.Address a) ->
             addressFromRoute plugins (Id.init network a) model
+
+        Route.Network network (Route.Tx a) ->
+            txFromRoute plugins (Id.init network a) model
 
         _ ->
             n model
@@ -533,12 +548,35 @@ addressFromRoute plugins id model =
     )
 
 
+txFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
+txFromRoute plugins id model =
+    ( model
+    , BrowserGotTx id
+        |> Api.GetTxEffect
+            { currency = Id.network id
+            , txHash = Id.id id
+            , includeIo = True
+            , tokenTxId = Nothing
+            }
+        |> ApiEffect
+        |> List.singleton
+    )
+
+
 addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
 addAddress plugins id data model =
     { model
         | network = Network.updateAddress id (s_data (Success data)) model.network
     }
         |> n
+
+
+selectTransation : Id -> Model -> Model
+selectTransation id model =
+    (s_selection (SelectedTx id)
+        >> (setViewState <| s_detailsViewState TxDetails)
+    )
+        model
 
 
 selectAddress : Id -> Model -> Model
@@ -609,7 +647,7 @@ browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data
 browserGotTxForAddress _ _ id direction data model =
     getAddress model.network.addresses id
         |> Result.map (\{ x, y } -> Coords x y)
-        |> Result.andThen (Tx.fromData data direction)
+        |> Result.andThen (\c -> Tx.fromDataVisible direction c data)
         |> Result.map
             (\tx ->
                 let

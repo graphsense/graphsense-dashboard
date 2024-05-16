@@ -11,11 +11,11 @@ import Model.Pathfinder exposing (DetailsViewState(..), Model, PointerTool(..), 
 
 
 init : Maybe Api.Data.Stats -> Model
-init stats =
+init _ =
     { network = Network.init
     , actors = Dict.empty
     , selection = NoSelection
-    , search = Search.init (Search.initSearchAll stats)
+    , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "zec", "ltc" ])
     , dragging = NoDragging
     , transform = Transform.init
     , history = History.init

@@ -25,6 +25,7 @@ type SearchType
         { latestBlocks : List ( String, Int )
         , pickingCurrency : Bool
         }
+    | SearchAddressAndTx { currencies : List String }
     | SearchTagsOnly
 
 
@@ -91,6 +92,9 @@ setIsPickingCurrency model =
                 SearchAll sa ->
                     { sa | pickingCurrency = True }
                         |> SearchAll
+
+                SearchAddressAndTx x ->
+                    SearchAddressAndTx x
 
                 SearchTagsOnly ->
                     SearchTagsOnly

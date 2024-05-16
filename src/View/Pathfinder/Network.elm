@@ -32,8 +32,12 @@ addresses plugins vc gc =
 
 
 txs : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Tx -> Svg Msg
-txs plugins vc gc =
-    Dict.foldl
+txs plugins vc gc d =
+    let
+        vis =
+            Dict.filter (\_ v -> v.visible) d
+    in
+    (Dict.foldl
         (\id tx svg ->
             ( Id.toString id
             , Svg.lazy4 Tx.view plugins vc gc tx
@@ -42,13 +46,21 @@ txs plugins vc gc =
         )
         []
         >> Keyed.node "g" []
+    )
+        vis
 
 
 edges : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Dict Id Tx -> Svg Msg
-edges plugins vc gc addrs =
-    Dict.foldl
+edges plugins vc gc addrs dtxs =
+    let
+        vis =
+            Dict.filter (\_ v -> v.visible) dtxs
+    in
+    (Dict.foldl
         (\_ tx svg ->
             Tx.edge plugins vc gc addrs tx :: svg
         )
         []
         >> Keyed.node "g" []
+    )
+        vis

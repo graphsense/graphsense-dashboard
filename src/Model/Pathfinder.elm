@@ -64,12 +64,14 @@ addressDetailsViewStateDefault nrTransactions inDegree outDegree =
 
 type Selection
     = SelectedAddress Id
+    | SelectedTx Id
     | NoSelection
 
 
 type DetailsViewState
     = NoDetails
     | AddressDetails Id AddressDetailsViewState
+    | TxDetails
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
@@ -103,6 +105,9 @@ getDetailsViewStateForSelection model =
 
         ( SelectedAddress id, _ ) ->
             AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)
+
+        ( SelectedTx _, _ ) ->
+            TxDetails
 
         ( NoSelection, _ ) ->
             NoDetails
