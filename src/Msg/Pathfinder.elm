@@ -22,6 +22,8 @@ type Msg
     | UserClickedExportGraph
     | UserClickedImportFile
     | UserClosedDetailsView
+    | UserPressedCtrlKey
+    | UserReleasedCtrlKey
     | AddressDetailsMsg AddressDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | BrowserGotAddressData Id Api.Data.Address

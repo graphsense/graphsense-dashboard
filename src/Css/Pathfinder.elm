@@ -23,6 +23,11 @@ addressBody vc selected =
            )
 
 
+graphSelectionStyle : View.Config -> List Css.Style
+graphSelectionStyle vc =
+    [ primaryColorSelection |> Css.fill, highlightPrimaryFrostedColor vc |> border3 xsGap solid ]
+
+
 addressHandle : View.Config -> List Style
 addressHandle vc =
     vc.theme.pathfinder.addressHandle

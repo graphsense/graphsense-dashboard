@@ -12,7 +12,7 @@ import Init.Pathfinder.Network as Network
 import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords, relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Table as GT
 import Model.Graph.Transform as Transform
@@ -84,6 +84,20 @@ updateByMsg plugins uc msg model =
 
         BrowserGotActor id data ->
             n { model | actors = Dict.insert id data model.actors }
+
+        UserPressedCtrlKey ->
+            let
+                vs =
+                    model.view
+            in
+            ( model |> s_view { vs | pointerTool = Select }, [] )
+
+        UserReleasedCtrlKey ->
+            let
+                vs =
+                    model.view
+            in
+            ( model |> s_view { vs | pointerTool = Drag }, [] )
 
         BrowserGotAddressData id data ->
             model
@@ -414,7 +428,7 @@ updateByMsg plugins uc msg model =
                 | dragging =
                     case ( model.dragging, model.transform.state ) of
                         ( NoDragging, Transform.Settled _ ) ->
-                            Dragging model.transform coords coords
+                            Dragging model.transform (relativeToGraphZero uc.size coords) (relativeToGraphZero uc.size coords)
 
                         _ ->
                             NoDragging
@@ -427,19 +441,27 @@ updateByMsg plugins uc msg model =
                     n model
 
                 Dragging transform start _ ->
-                    { model
-                        | transform = Transform.update start coords transform
-                        , dragging = Dragging transform start coords
-                    }
+                    (case model.view.pointerTool of
+                        Drag ->
+                            { model
+                                | transform = Transform.update start (relativeToGraphZero uc.size coords) transform
+                                , dragging = Dragging transform start (relativeToGraphZero uc.size coords)
+                            }
+
+                        Select ->
+                            { model
+                                | dragging = Dragging transform start (relativeToGraphZero uc.size coords)
+                            }
+                    )
                         |> n
 
                 DraggingNode id start _ ->
                     let
                         vector =
-                            Transform.vector start coords model.transform
+                            Transform.vector start (relativeToGraphZero uc.size coords) model.transform
                     in
                     { model
-                        | dragging = DraggingNode id start coords
+                        | dragging = DraggingNode id start (relativeToGraphZero uc.size coords)
                     }
                         |> n
 

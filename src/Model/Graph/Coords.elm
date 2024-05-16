@@ -35,6 +35,18 @@ relativeToGraph bbox coords =
         |> Maybe.withDefault coords
 
 
+relativeToGraphZero : Maybe BBox -> Coords -> Coords
+relativeToGraphZero bbox coords =
+    bbox
+        |> Maybe.map
+            (\{ x, y, width, height } ->
+                { x = coords.x - x - (width / 2)
+                , y = coords.y - y - (height / 2)
+                }
+            )
+        |> Maybe.withDefault coords
+
+
 avg : NList.Nonempty Coords -> Coords
 avg coords =
     { x = (NList.map .x coords |> NList.toList |> List.sum) / toFloat (NList.length coords)

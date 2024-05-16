@@ -18,9 +18,11 @@ import Model.Currency exposing (assetFromBase)
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (AddressDetailsMsg(..), Msg(..))
+import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
@@ -504,11 +506,25 @@ graphSvg plugins _ vc gc model bbox =
     let
         dim =
             { width = bbox.width, height = bbox.height }
+
+        pointer =
+            case ( model.dragging, model.view.pointerTool ) of
+                ( Dragging _ _ _, Drag ) ->
+                    Css.grabbing
+
+                ( _, Select ) ->
+                    Css.crosshair
+
+                _ ->
+                    Css.grab
+
+        pointerStyle =
+            [ Css.cursor pointer ]
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
          , Transform.viewBox dim model.transform |> viewBox
-         , Css.Graph.svgRoot vc |> SA.css
+         , (Css.Graph.svgRoot vc ++ pointerStyle) |> SA.css
          , UserClickedGraph model.dragging
             |> onClick
          , SA.id "graph"
@@ -543,4 +559,45 @@ graphSvg plugins _ vc gc model bbox =
         [ Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
+        , drawDragSelector vc model
+
+        -- , rect [ fill "black", width "1", height "1", x "0", y "0" ] [] -- Mark zero point in coordinate system
         ]
+
+
+drawDragSelector : View.Config -> Model -> Svg Msg
+drawDragSelector vc m =
+    case ( m.dragging, m.view.pointerTool ) of
+        ( Dragging tm start now, Select ) ->
+            let
+                crd =
+                    case tm.state of
+                        Settled c ->
+                            c
+
+                        Transitioning v ->
+                            v.from
+
+                z =
+                    value crd.z
+
+                xn =
+                    Basics.min start.x now.x * z + crd.x
+
+                yn =
+                    Basics.min start.y now.y * z + crd.y
+
+                widthn =
+                    abs (start.x - now.x) * z
+
+                heightn =
+                    abs (start.y - now.y) * z
+
+                pos =
+                    Util.Graph.translate xn yn |> transform
+            in
+            rect [ Css.graphSelectionStyle vc |> css, pos, width (String.fromFloat widthn), height (String.fromFloat heightn), opacity "0.3" ]
+                []
+
+        _ ->
+            rect [ x "0", y "0", width "0", height "0" ] []

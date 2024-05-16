@@ -32,7 +32,13 @@ type alias Model =
 
 type alias ViewState =
     { detailsViewState : DetailsViewState
+    , pointerTool : PointerTool
     }
+
+
+type PointerTool
+    = Drag
+    | Select
 
 
 type alias AddressDetailsViewState =

@@ -7,7 +7,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (DetailsViewState(..), Model, Selection(..))
+import Model.Pathfinder exposing (DetailsViewState(..), Model, PointerTool(..), Selection(..))
 
 
 init : Maybe Api.Data.Stats -> Model
@@ -19,6 +19,6 @@ init stats =
     , dragging = NoDragging
     , transform = Transform.init
     , history = History.init
-    , view = { detailsViewState = NoDetails }
+    , view = { detailsViewState = NoDetails, pointerTool = Drag }
     , config = {}
     }
