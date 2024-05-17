@@ -4,6 +4,7 @@ import Api.Data
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder exposing (PointerTool)
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Search as Search
 import Plugin.Msg as Plugin
@@ -25,6 +26,7 @@ type Msg
     | UserPressedCtrlKey
     | UserReleasedCtrlKey
     | AddressDetailsMsg AddressDetailsMsg
+    | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | BrowserGotAddressData Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
@@ -36,6 +38,11 @@ type Msg
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx Id Api.Data.Tx
+    | ChangedDisplaySettingsMsg DisplaySettingsMsg
+
+
+type DisplaySettingsMsg
+    = ChangePointerTool PointerTool
 
 
 type AddressDetailsMsg
@@ -47,3 +54,7 @@ type AddressDetailsMsg
     | UserClickedPreviousPageNeighborsTable Direction
     | GotTxsForAddressDetails Id Api.Data.AddressTxs
     | GotNeighborsForAddressDetails Id Direction Api.Data.NeighborAddresses
+
+
+type TxDetailsMsg
+    = UserClickedToggleIOTable

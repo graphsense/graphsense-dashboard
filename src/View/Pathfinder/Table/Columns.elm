@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, timestampDateMultiRowColumn, txColumn)
+module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, timestampDateMultiRowColumn, txColumn, valueColumn)
 
 import Api.Data
 import Config.View as View
@@ -9,7 +9,7 @@ import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier)
 import Table
-import Util.View exposing (longIdentifier)
+import Util.View exposing (copyableLongIdentifier, none)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 
@@ -54,7 +54,7 @@ txColumn vc name accessor =
         , viewData =
             \data ->
                 accessor data
-                    |> longIdentifier vc
+                    |> copyableLongIdentifier vc []
                     |> List.singleton
                     |> Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
 
@@ -78,22 +78,27 @@ checkboxColumn _ name isChecked clickMsg =
 
 debitCreditColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 debitCreditColumn =
-    valueColumnWithOptions False
+    valueColumnWithOptions False False
 
 
-valueColumnWithOptions : Bool -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithOptions hideCode vc getCoinCode name getValues =
+valueColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumn =
+    valueColumnWithOptions True True
+
+
+valueColumnWithOptions : Bool -> Bool -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions hideCode hideFlowIndicator vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> getValues data |> valuesCell vc hideCode (getCoinCode data)
+        , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator (getCoinCode data)
 
         -- , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
         , sorter = Table.unsortable
         }
 
 
-valuesCell : View.Config -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell vc hideCode coinCode values =
+valuesCell : View.Config -> Bool -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
+valuesCell vc hideCode hideFlowIndicator coinCode values =
     let
         value =
             (if hideCode then
@@ -112,4 +117,11 @@ valuesCell vc hideCode coinCode values =
             else
                 inIcon
     in
-    Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ] [ flowIndicator, text value ]
+    Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+        [ if hideFlowIndicator then
+            none
+
+          else
+            flowIndicator
+        , text value
+        ]

@@ -21,7 +21,7 @@ import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Msg.Pathfinder exposing (AddressDetailsMsg(..), Msg(..))
+import Msg.Pathfinder exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
@@ -32,6 +32,7 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
+import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
@@ -42,6 +43,7 @@ import View.Pathfinder.Error as Error
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.Table as Table
+import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Search
@@ -76,9 +78,13 @@ graphActionButtons =
 
 
 type ValueType
-    = Value Int
+    = ValueInt Int
+    | Text String
     | Currency Api.Data.Values String
+    | CurrencyWithCode Api.Data.Values String
+    | InOut (Maybe Int) Int Int
     | Timestamp Int
+    | CopyIdent String
 
 
 type KVTableRow
@@ -106,8 +112,8 @@ renderKVRow vc row =
         Row key value ->
             tr []
                 [ td [ kVTableKeyTdStyle vc |> toAttr ] [ Html.text (Locale.string vc.locale key) ]
-                , td [ kVTableValueTdStyle vc |> toAttr ] (renderKVTableValue vc value |> List.singleton)
-                , td [ kVTableTdStyle vc |> toAttr ] (renderKVTableValueExtension vc value |> List.singleton)
+                , td [ kVTableValueTdStyle vc |> toAttr ] (renderValueTypeValue vc value |> List.singleton)
+                , td [ kVTableTdStyle vc |> toAttr ] (renderValueTypeExtension vc value |> List.singleton)
                 ]
 
         Gap ->
@@ -118,29 +124,38 @@ renderKVRow vc row =
                 ]
 
 
-renderKVTableValue : View.Config -> ValueType -> Html Msg
-renderKVTableValue vc val =
+renderValueTypeValue : View.Config -> ValueType -> Html Msg
+renderValueTypeValue vc val =
     case val of
-        Value v ->
+        ValueInt v ->
             span [] [ Html.text (String.fromInt v) ]
+
+        InOut total inv outv ->
+            inOutIndicator total inv outv
+
+        Text txt ->
+            span [] [ Html.text txt ]
 
         Currency v ticker ->
             span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value) ]
+
+        CurrencyWithCode v ticker ->
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
+
+        CopyIdent ident ->
+            Util.View.copyableLongIdentifier vc [] ident
 
         Timestamp ts ->
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
 
 
-renderKVTableValueExtension : View.Config -> ValueType -> Html Msg
-renderKVTableValueExtension _ val =
+renderValueTypeExtension : View.Config -> ValueType -> Html Msg
+renderValueTypeExtension _ val =
     case val of
-        Value _ ->
-            none
-
         Currency _ ticker ->
             span [] [ Html.text (String.toUpper ticker) ]
 
-        Timestamp _ ->
+        _ ->
             none
 
 
@@ -214,24 +229,31 @@ graph plugins states vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
-    , topLeftPanel plugins states vc gc model
+    , topLeftPanel vc gc model
     , graphToolsView plugins states vc gc model
     , topRightPanel plugins states vc gc model
     ]
 
 
-topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-topLeftPanel _ _ vc _ _ =
+topLeftPanel : View.Config -> Pathfinder.Config -> Model -> Html Msg
+topLeftPanel vc gc model =
     div [ topLeftPanelStyle vc |> toAttr ]
         [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
-
-        --, settingsView plugins ms vc gc model
+        , settingsView vc gc model
         ]
 
 
-settingsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-settingsView _ _ vc _ _ =
-    div [ searchViewStyle vc |> toAttr ] [ Html.text "Display", FontAwesome.icon FontAwesome.chevronDown |> Html.fromUnstyled ]
+settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
+settingsView vc _ m =
+    div [ searchViewStyle vc |> toAttr ]
+        [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Display") ]
+        , case m.view.pointerTool of
+            Drag ->
+                Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
+
+            Select ->
+                Util.View.switch vc [ HA.checked False, onClick (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) ] "Select"
+        ]
 
 
 graphToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -259,7 +281,7 @@ topRightPanel plugins ms vc gc model =
     div [ topRightPanelStyle vc |> toAttr ]
         [ graphActionsView vc gc model
         , searchBoxView plugins ms vc gc model
-        , detailsView plugins ms vc gc model
+        , detailsView vc gc model
         ]
 
 
@@ -291,8 +313,8 @@ searchBoxView plugins _ vc _ model =
         ]
 
 
-detailsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-detailsView plugins ms vc gc model =
+detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
+detailsView vc gc model =
     if isDetailsViewVisible model then
         div
             [ detailsViewStyle vc |> toAttr ]
@@ -305,12 +327,12 @@ detailsView plugins ms vc gc model =
                             (Error.view vc)
                             (RemoteData.unwrap
                                 (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                                (addressDetailsContentView plugins ms vc gc model id state)
+                                (addressDetailsContentView vc gc model id state)
                             )
 
-                ( SelectedTx id, TxDetails ) ->
+                ( SelectedTx id, TxDetails _ state ) ->
                     Dict.get id model.network.txs
-                        |> Maybe.map (\x -> txDetailsContentView plugins ms vc gc model id x.raw)
+                        |> Maybe.map (\x -> txDetailsContentView vc gc model id state x.raw)
                         |> Maybe.withDefault (Util.View.loadingSpinner vc Css.View.loadingSpinner)
 
                 _ ->
@@ -360,33 +382,66 @@ getAddressActionBtns data =
     [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
 
 
-txDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> Api.Data.Tx -> Html Msg
-txDetailsContentView plugins ms vc gc model id data =
+txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Api.Data.Tx -> Html Msg
+txDetailsContentView vc gc model id viewState data =
     let
-        content =
+        header =
+            [ longIdentDetailsHeadingView vc gc id "Transaction" []
+            , rule
+            ]
+
+        ( detailsTblBody, sections ) =
             case data of
                 Api.Data.TxTxAccount tx ->
-                    [ longIdentDetailsHeadingView vc gc id (Just tx.currency) "Transaction" []
-                    , rule
-                    , accountTxDetailsContentView vc tx
-                    ]
+                    ( [ accountTxDetailsContentView vc tx ]
+                    , [ none ]
+                    )
 
                 Api.Data.TxTxUtxo tx ->
-                    [ longIdentDetailsHeadingView vc gc id (Just tx.currency) "Transaction" []
-                    , rule
-                    , utxoTxDetailsContentView vc tx
-                    ]
+                    ( [ utxoTxDetailsContentView vc tx ]
+                    , [ utxoTxDetailsSectionsView vc viewState tx ]
+                    )
     in
-    div [ detailsContainerStyle |> toAttr ]
-        [ div [ detailsViewContainerStyle vc |> toAttr ]
-            [ div [ fullWidth |> toAttr ] content
+    div []
+        (div [ detailsContainerStyle |> toAttr ]
+            [ div [ detailsViewContainerStyle vc |> toAttr ]
+                [ div [ fullWidth |> toAttr ] (header ++ detailsTblBody)
+                ]
             ]
-        ]
+            :: sections
+        )
 
 
 utxoTxDetailsContentView : View.Config -> Api.Data.TxUtxo -> Html Msg
 utxoTxDetailsContentView vc data =
-    div [] [ Html.text "I am a UTXO TX" ]
+    let
+        actionBtns =
+            [ BtnConfig FontAwesome.tags "Do it" NoOp True ]
+
+        tbls =
+            [ detailsFactTableView vc (apiUtxoTxToRows data), detailsActionsView vc actionBtns ]
+    in
+    div [] tbls
+
+
+ioTableView : View.Config -> String -> List Api.Data.TxValue -> Html Msg
+ioTableView vc currency data =
+    Table.rawTableView vc [] (IoTable.config vc currency) "Value" data
+
+
+utxoTxDetailsSectionsView : View.Config -> TxDetailsViewState -> Api.Data.TxUtxo -> Html Msg
+utxoTxDetailsSectionsView vc viewState data =
+    let
+        combinedData =
+            (data.inputs |> Maybe.withDefault []) ++ (data.outputs |> Maybe.withDefault [] |> List.map negateTxValue)
+
+        content =
+            ioTableView vc data.currency combinedData
+
+        ioIndicatorState =
+            Just (inOutIndicator Nothing data.noInputs data.noOutputs)
+    in
+    collapsibleSection vc "In- and Outputs" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
 
 accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
@@ -394,8 +449,8 @@ accountTxDetailsContentView vc data =
     div [] [ Html.text "I am a Account TX" ]
 
 
-addressDetailsContentView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
-addressDetailsContentView plugins ms vc gc model id viewState data =
+addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+addressDetailsContentView vc gc model id viewState data =
     let
         actor_id =
             data.actors |> Maybe.andThen (List.head >> Maybe.map .id)
@@ -418,7 +473,7 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             ]
 
         tbls =
-            [ addressDetailsTableView vc gc id viewState data, addressActionsView vc gc id viewState data (getAddressActionBtns data) ]
+            [ detailsFactTableView vc (apiAddressToRows data), detailsActionsView vc (getAddressActionBtns data) ]
 
         addressAnnotationBtns =
             getAddressAnnotationBtns data actor
@@ -428,7 +483,7 @@ addressDetailsContentView plugins ms vc gc model id viewState data =
             [ div [ detailsViewContainerStyle vc |> toAttr ]
                 [ img [ src addressImg, HA.alt actor_text, HA.title actor_text, addressDetailsViewActorImageStyle vc |> toAttr ] []
                 , div [ fullWidth |> toAttr ]
-                    ([ longIdentDetailsHeadingView vc gc id (Just data.currency) "Address" addressAnnotationBtns
+                    ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
                      , rule
                      ]
                         ++ tbls
@@ -456,8 +511,11 @@ addressTransactionTableView vc gc id viewState txOnGraphFn data =
 
         content =
             Table.pagedTableView vc attributes toolsConfig (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
+
+        ioIndicatorState =
+            Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
     in
-    collapsibleSection vc "Transactions" viewState.transactionsTableOpen (Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)) content (AddressDetailsMsg UserClickedToggleTransactionTable)
+    collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg UserClickedToggleTransactionTable)
 
 
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
@@ -485,15 +543,21 @@ addressNeighborsTableView vc gc id viewState data =
                 , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
                 , Table.pagedTableView vc attributes toolsConfig tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
                 ]
+
+        ioIndicatorState =
+            Just (inOutIndicator Nothing data.inDegree data.outDegree)
     in
-    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen (Just (inOutIndicator Nothing data.inDegree data.outDegree)) content (AddressDetailsMsg UserClickedToggleNeighborsTable)
+    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg UserClickedToggleNeighborsTable)
 
 
-longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> Maybe String -> String -> List BtnConfig -> Html Msg
-longIdentDetailsHeadingView vc gc id mNetwork typeName annotations =
+longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> String -> List BtnConfig -> Html Msg
+longIdentDetailsHeadingView vc gc id typeName annotations =
     let
+        mNetwork =
+            Id.network id
+
         heading =
-            String.trim (String.join " " [ mNetwork |> Maybe.withDefault "", Locale.string vc.locale typeName ])
+            String.trim (String.join " " [ mNetwork, Locale.string vc.locale typeName ])
     in
     div []
         [ h1 [ panelHeadingStyle2 vc |> toAttr ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
@@ -517,9 +581,18 @@ apiAddressToRows address =
     ]
 
 
-addressDetailsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
-addressDetailsTableView vc gc id viewState addressData =
-    div [ smPaddingBottom |> toAttr ] [ renderKVTable vc (apiAddressToRows addressData) ]
+apiUtxoTxToRows : Api.Data.TxUtxo -> List KVTableRow
+apiUtxoTxToRows tx =
+    [ Row "Timstamp" (Timestamp tx.timestamp)
+    , Gap
+    , Row "Total Input" (Currency tx.totalInput tx.currency)
+    , Row "Total Output" (Currency tx.totalOutput tx.currency)
+    ]
+
+
+detailsFactTableView : View.Config -> List KVTableRow -> Html Msg
+detailsFactTableView vc rows =
+    div [ smPaddingBottom |> toAttr ] [ renderKVTable vc rows ]
 
 
 detailsActionButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
@@ -527,8 +600,8 @@ detailsActionButton vc btnT btn =
     disableableButton (detailsActionButtonStyle vc btnT) btn [] [ Html.text (Locale.string vc.locale btn.text) ]
 
 
-addressActionsView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> List BtnConfig -> Html Msg
-addressActionsView vc gc id viewState addressData actionButtons =
+detailsActionsView : View.Config -> List BtnConfig -> Html Msg
+detailsActionsView vc actionButtons =
     let
         btnType i =
             if i == 0 then

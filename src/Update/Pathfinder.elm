@@ -27,7 +27,7 @@ import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
-import Msg.Pathfinder as Msg exposing (AddressDetailsMsg(..), Msg(..))
+import Msg.Pathfinder as Msg exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
@@ -175,6 +175,20 @@ updateByMsg plugins uc msg model =
 
         UserClosedDetailsView ->
             n (closeDetailsView model)
+
+        TxDetailsMsg submsg ->
+            case model.view.detailsViewState of
+                TxDetails id txViewState ->
+                    let
+                        nVs =
+                            case submsg of
+                                UserClickedToggleIOTable ->
+                                    { txViewState | ioTableOpen = not txViewState.ioTableOpen }
+                    in
+                    ( (setViewState <| s_detailsViewState (TxDetails id nVs)) model, [] )
+
+                _ ->
+                    n model
 
         AddressDetailsMsg subm ->
             case model.view.detailsViewState of
@@ -339,7 +353,7 @@ updateByMsg plugins uc msg model =
                     in
                     ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, e )
 
-                TxDetails ->
+                TxDetails _ _ ->
                     n model
 
                 NoDetails ->
@@ -507,6 +521,15 @@ updateByMsg plugins uc msg model =
             in
             ( { model | network = nw } |> selectTransation id, [] )
 
+        ChangedDisplaySettingsMsg submsg ->
+            case submsg of
+                ChangePointerTool tool ->
+                    let
+                        vs =
+                            model.view
+                    in
+                    ( { model | view = { vs | pointerTool = tool } }, [] )
+
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
@@ -574,7 +597,7 @@ addAddress plugins id data model =
 selectTransation : Id -> Model -> Model
 selectTransation id model =
     (s_selection (SelectedTx id)
-        >> (setViewState <| s_detailsViewState TxDetails)
+        >> (setViewState <| s_detailsViewState (TxDetails id getTxDetailsDefaultState))
     )
         model
 

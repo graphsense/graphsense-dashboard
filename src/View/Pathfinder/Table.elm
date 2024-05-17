@@ -1,4 +1,4 @@
-module View.Pathfinder.Table exposing (pagedTableView)
+module View.Pathfinder.Table exposing (pagedTableView, rawTableView)
 
 import Config.View as View
 import Css.Pathfinder exposing (centerContent, linkButtonStyle, toAttr)
@@ -23,6 +23,14 @@ pageIndicatorView pt =
             (pt.currentPage |> String.fromInt) ++ " of " ++ (PT.nrPages pt |> Maybe.map String.fromInt |> Maybe.withDefault "?")
     in
     span [] [ text pageText ]
+
+
+rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
+rawTableView vc attributes config sortColumn data =
+    div [ Css.Table.root vc |> css ]
+        [ div attributes
+            [ Table.view config (Table.initialSort sortColumn) data ]
+        ]
 
 
 pagedTableView : View.Config -> List (Attribute msg) -> Tools msg -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> Html msg

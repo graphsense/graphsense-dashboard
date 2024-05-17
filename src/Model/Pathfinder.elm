@@ -41,15 +41,30 @@ type PointerTool
     | Select
 
 
+type DetailsViewState
+    = NoDetails
+    | AddressDetails Id AddressDetailsViewState
+    | TxDetails Id TxDetailsViewState
+
+
+type alias TxDetailsViewState =
+    { ioTableOpen : Bool
+    }
+
+
 type alias AddressDetailsViewState =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
     , txs : PagedTable Api.Data.AddressTx
     , neighborsIncoming : PagedTable Api.Data.NeighborAddress
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
-
-    --, clusterAddresses: Maybe (Table Api.Data.Address)
     }
+
+
+type Selection
+    = SelectedAddress Id
+    | SelectedTx Id
+    | NoSelection
 
 
 addressDetailsViewStateDefault : Maybe Int -> Maybe Int -> Maybe Int -> AddressDetailsViewState
@@ -62,16 +77,9 @@ addressDetailsViewStateDefault nrTransactions inDegree outDegree =
     }
 
 
-type Selection
-    = SelectedAddress Id
-    | SelectedTx Id
-    | NoSelection
-
-
-type DetailsViewState
-    = NoDetails
-    | AddressDetails Id AddressDetailsViewState
-    | TxDetails
+getTxDetailsDefaultState : TxDetailsViewState
+getTxDetailsDefaultState =
+    { ioTableOpen = False }
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
@@ -106,8 +114,11 @@ getDetailsViewStateForSelection model =
         ( SelectedAddress id, _ ) ->
             AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)
 
-        ( SelectedTx _, _ ) ->
-            TxDetails
+        ( SelectedTx _, TxDetails id x ) ->
+            TxDetails id x
+
+        ( SelectedTx id, _ ) ->
+            TxDetails id getTxDetailsDefaultState
 
         ( NoSelection, _ ) ->
             NoDetails

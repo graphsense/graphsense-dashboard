@@ -83,6 +83,10 @@ mlGap =
     px 10
 
 
+lGap =
+    px 20
+
+
 all =
     pct 100
 
@@ -407,7 +411,7 @@ detailsActionButtonStyle vc bt _ =
 
 searchViewStyle : View.Config -> List Style
 searchViewStyle vc =
-    boxStyle vc Nothing ++ [ displayFlex, justifyContent flexEnd ]
+    boxStyle vc Nothing ++ [ lGap |> marginTop ]
 
 
 searchBoxContainerStyle : View.Config -> List Style
