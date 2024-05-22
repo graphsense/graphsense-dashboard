@@ -24,3 +24,4 @@ gen/*
 # ignore elm.json for it's generated at build time from elm.json.base via generate.js
 elm.json
 .idea
+.vscode/
