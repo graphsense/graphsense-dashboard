@@ -6,6 +6,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
 import Sub.Graph.Transform as Transform
+import Time
 
 
 keyDecoder : (String -> Msg) -> Decode.Decoder Msg
@@ -55,5 +56,6 @@ subscriptions model =
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
+    , Time.every 1000 Tick
     ]
         |> Sub.batch

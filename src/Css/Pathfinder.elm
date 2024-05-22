@@ -381,6 +381,33 @@ graphActionButtonStyle vc _ =
     ]
 
 
+dateTimeRangeBoxStyle : View.Config -> List Style
+dateTimeRangeBoxStyle vc =
+    [ margin4 mGap mGap mlGap mGap
+    , padding4 zero mGap zero mGap
+    , emphTextColor vc |> color
+    , defaultBackgroundColor vc |> backgroundColor
+    , boxBorderColor vc |> border3 xsGap solid
+    , px 3 |> borderRadius
+    , displayFlex
+    , alignItems center
+    , justifyContent spaceBetween
+    ]
+
+
+dateTimeRangeHighlightedDateStyle : View.Config -> List Style
+dateTimeRangeHighlightedDateStyle vc =
+    -- [ padding4 zero mGap  zero mGap
+    [ primaryFrostedColor |> color
+    ]
+
+
+dateTimeRangeFilterButtonStyle : View.Config -> List Style
+dateTimeRangeFilterButtonStyle vc =
+    [ alignItems flexEnd
+    ]
+
+
 detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Style
 detailsActionButtonStyle vc bt _ =
     let
@@ -519,6 +546,11 @@ detailsContainerStyle =
 smPaddingBottom : List Style
 smPaddingBottom =
     [ paddingBottom mlGap ]
+
+
+smPaddingRight : List Style
+smPaddingRight =
+    [ paddingRight smGap ]
 
 
 fullWidth : List Style

@@ -5,6 +5,7 @@ module View.Locale exposing
     , currencyAsFloat
     , currencyWithoutCode
     , date
+    , durationPosix
     , durationToString
     , fiat
     , fiatWithoutCode
@@ -14,6 +15,7 @@ module View.Locale exposing
     , intWithoutValueDetailFormatting
     , interpolated
     , percentage
+    , posixDate
     , relativeTime
     , string
     , text
@@ -42,7 +44,7 @@ import Locale.Durations
 import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import String.Interpolate
-import Time
+import Time exposing (Posix)
 import Tuple exposing (..)
 
 
@@ -196,6 +198,11 @@ intWithFormat model format =
     toFloat >> floatWithFormat model format
 
 
+posixDate : Model -> Posix -> String
+posixDate m d =
+    timestampDateUniform m (Time.posixToMillis d // 1000)
+
+
 timestamp : Model -> Int -> String
 timestamp model =
     let
@@ -309,7 +316,7 @@ time model =
 
 
 timestampWithFormat : List Token -> Model -> Int -> String
-timestampWithFormat format { locale, timeLang, zone } =
+timestampWithFormat format { timeLang, zone } =
     (*) 1000
         >> Time.millisToPosix
         >> formatWithLanguage timeLang format zone
@@ -488,10 +495,20 @@ valuesToFloat model asset values =
 
 
 durationToString : Model -> Int -> String
-durationToString { unitToString } dur =
+durationToString m dur =
+    durationToStringWithPrecision m 3 dur
+
+
+durationPosix : Model -> Int -> Posix -> Posix -> String
+durationPosix m prec start end =
+    durationToStringWithPrecision m prec (Time.posixToMillis end - Time.posixToMillis start)
+
+
+durationToStringWithPrecision : Model -> Int -> Int -> String
+durationToStringWithPrecision { unitToString } prec dur =
     Locale.Durations.durationToString
         { unitToString = unitToString
-        , precision = 3
+        , precision = prec
         , separator = " "
         }
         dur

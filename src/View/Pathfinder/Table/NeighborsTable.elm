@@ -6,7 +6,7 @@ import Model.Currency exposing (asset)
 import Model.Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Table
-import View.Graph.Table exposing (customizations)
+import View.Pathfinder.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
 

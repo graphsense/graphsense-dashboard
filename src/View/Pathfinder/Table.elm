@@ -1,19 +1,28 @@
-module View.Pathfinder.Table exposing (pagedTableView, rawTableView)
+module View.Pathfinder.Table exposing (customizations, pagedTableView, rawTableView)
 
 import Config.View as View
-import Css.Pathfinder exposing (centerContent, linkButtonStyle, toAttr)
+import Css.Pathfinder exposing (centerContent, fullWidth, linkButtonStyle, toAttr)
 import Css.Table exposing (loadingSpinner)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Pathfinder.Table as PT exposing (PagedTable)
+import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Table
 import Util.View
-import View.Graph.Table exposing (Tools, tableHint)
+import View.Graph.Table exposing (simpleThead, tableHint)
 
 
 type alias PagingMsg data msg =
     PagedTable data -> msg
+
+
+customizations : View.Config -> Table.Customizations data msg
+customizations vc =
+    Table.defaultCustomizations
+        |> s_tableAttrs [ fullWidth ++ Css.Table.table vc |> css ]
+        |> s_thead (simpleThead vc)
+        |> s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
 
 
 pageIndicatorView : PagedTable data -> Html msg
@@ -27,14 +36,14 @@ pageIndicatorView pt =
 
 rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
 rawTableView vc attributes config sortColumn data =
-    div [ Css.Table.root vc |> css ]
+    div []
         [ div attributes
             [ Table.view config (Table.initialSort sortColumn) data ]
         ]
 
 
-pagedTableView : View.Config -> List (Attribute msg) -> Tools msg -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> Html msg
-pagedTableView vc attributes _ config tblPaged prevMsg nextMsg =
+pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> PagedTable data -> PagingMsg data msg -> PagingMsg data msg -> Html msg
+pagedTableView vc attributes config tblPaged prevMsg nextMsg =
     let
         tbl =
             tblPaged.t
@@ -46,8 +55,7 @@ pagedTableView vc attributes _ config tblPaged prevMsg nextMsg =
             PT.getPage tblPaged
     in
     div
-        [ Css.Table.root vc |> css
-        ]
+        []
         [ div
             attributes
             (Table.view config tbl.state filteredData

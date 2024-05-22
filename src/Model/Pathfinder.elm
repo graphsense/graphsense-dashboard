@@ -3,6 +3,7 @@ module Model.Pathfinder exposing (..)
 import Api.Data exposing (Actor)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
+import DurationDatePicker
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Graph exposing (Dragging)
@@ -13,8 +14,11 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Table exposing (PagedTable)
+import Model.Pathfinder.Tools exposing (PointerTool)
 import Model.Search as Search
+import Msg.Pathfinder exposing (Msg)
 import RecordSetter exposing (s_detailsViewState, s_selection)
+import Time exposing (Posix)
 
 
 type alias Model =
@@ -27,6 +31,10 @@ type alias Model =
     , history : History.Model Entry.Model
     , view : ViewState
     , config : Config
+    , dateRangePicker : DurationDatePicker.DatePicker Msg
+    , fromDate : Maybe Posix
+    , toDate : Maybe Posix
+    , currentTime : Posix
     }
 
 
@@ -34,11 +42,6 @@ type alias ViewState =
     { detailsViewState : DetailsViewState
     , pointerTool : PointerTool
     }
-
-
-type PointerTool
-    = Drag
-    | Select
 
 
 type DetailsViewState

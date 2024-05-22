@@ -4,6 +4,7 @@ import Api.Data
 import Config.Update as Update
 import Dict
 import Dict.Nonempty as NDict
+import DurationDatePicker
 import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
@@ -19,12 +20,14 @@ import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address
+import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network
 import Model.Pathfinder.Table as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
+import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
@@ -515,9 +518,13 @@ updateByMsg plugins uc msg model =
         BrowserGotTx id tx ->
             let
                 nw =
-                    Tx.fromDataInvisible tx
-                        |> Result.map (\txint -> Network.addTx txint model.network)
-                        |> Result.withDefault model.network
+                    if Dict.member id model.network.txs then
+                        model.network
+
+                    else
+                        Tx.fromDataInvisible tx
+                            |> Result.map (\txint -> Network.addTx txint model.network)
+                            |> Result.withDefault model.network
             in
             ( { model | network = nw } |> selectTransation id, [] )
 
@@ -529,6 +536,25 @@ updateByMsg plugins uc msg model =
                             model.view
                     in
                     ( { model | view = { vs | pointerTool = tool } }, [] )
+
+        UpdateDateRangePicker subMsg ->
+            let
+                ( newPicker, maybeRuntime ) =
+                    DurationDatePicker.update (userDefinedRangeDatePickerSettings uc.locale model.currentTime) subMsg model.dateRangePicker
+
+                ( startTime, endTime ) =
+                    Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.fromDate, model.toDate )
+            in
+            n { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }
+
+        OpenDateRangePicker ->
+            n { model | dateRangePicker = DurationDatePicker.openPicker (userDefinedRangeDatePickerSettings uc.locale model.currentTime) model.currentTime model.fromDate model.toDate model.dateRangePicker }
+
+        CloseDateRangePicker ->
+            n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
+
+        Tick time ->
+            n { model | currentTime = time }
 
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )

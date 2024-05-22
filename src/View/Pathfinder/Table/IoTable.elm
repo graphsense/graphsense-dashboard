@@ -5,7 +5,7 @@ import Config.View as View
 import Model.Currency exposing (assetFromBase)
 import Msg.Pathfinder exposing (Msg(..))
 import Table
-import View.Graph.Table exposing (customizations)
+import View.Pathfinder.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
 

@@ -586,7 +586,11 @@ update plugins uc msg model =
                     )
 
         PathfinderMsg Pathfinder.UserClickedRestart ->
-            n { model | pathfinder = model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault model.pathfinder }
+            let
+                ( m, cmd ) =
+                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
+            in
+            ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
 
         PathfinderMsg m ->
             let

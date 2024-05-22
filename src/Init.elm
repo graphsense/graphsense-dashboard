@@ -31,6 +31,9 @@ init plugins uc flags url key =
 
         ( pluginStates, outMsgs, cmd ) =
             Plugin.init plugins flags.pluginFlags
+
+        ( pathfinderState, pathfinderCmd ) =
+            Pathfinder.init Nothing
     in
     ( { url = url
       , key = key
@@ -44,7 +47,7 @@ init plugins uc flags url key =
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)
       , graph = Graph.init settings flags.now
-      , pathfinder = Pathfinder.init Nothing
+      , pathfinder = pathfinderState
       , user =
             { apiKey = ""
             , auth = Unknown
@@ -70,6 +73,7 @@ init plugins uc flags url key =
            , Effect.Api.ListSupportedTokensEffect "trx" (BrowserGotSupportedTokens "trx")
                 |> ApiEffect
            , PluginEffect cmd
+           , CmdEffect (pathfinderCmd |> Cmd.map PathfinderMsg)
            ]
     )
         |> getStatistics

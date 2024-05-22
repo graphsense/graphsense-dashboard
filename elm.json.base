@@ -13,6 +13,10 @@
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
+            "elm-community/html-extra": "3.4.0",
+            "justinmimbs/date": "4.1.0",
+            "justinmimbs/time-extra": "1.2.0",
+            "mercurymedia/elm-datetime-picker": "8.0.1",
             "BrianHicks/elm-csv": "3.0.3",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "Spaxe/svg-pathd": "3.0.2",

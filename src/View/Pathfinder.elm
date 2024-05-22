@@ -9,7 +9,9 @@ import Css.Graph
 import Css.Pathfinder as Css exposing (..)
 import Css.View
 import Dict
+import DurationDatePicker as DatePicker
 import FontAwesome
+import Html as HtmlDefault
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
@@ -20,7 +22,9 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
+import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
@@ -32,6 +36,7 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
+import Time
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
@@ -468,7 +473,7 @@ addressDetailsContentView vc gc model id viewState data =
             \txId -> Dict.member txId model.network.txs
 
         sections =
-            [ addressTransactionTableView vc gc id viewState txOnGraphFn data
+            [ addressTransactionTableView vc gc id viewState txOnGraphFn model data
             , addressNeighborsTableView vc gc id viewState data
             ]
 
@@ -494,12 +499,9 @@ addressDetailsContentView vc gc model id viewState data =
         )
 
 
-addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> (Id -> Bool) -> Api.Data.Address -> Html Msg
-addressTransactionTableView vc gc id viewState txOnGraphFn data =
+addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> (Id -> Bool) -> Model -> Api.Data.Address -> Html Msg
+addressTransactionTableView vc gc id viewState txOnGraphFn m data =
     let
-        toolsConfig =
-            { filter = Nothing, csv = Nothing }
-
         attributes =
             []
 
@@ -510,7 +512,42 @@ addressTransactionTableView vc gc id viewState txOnGraphFn data =
             \_ -> AddressDetailsMsg UserClickedNextPageTransactionTable
 
         content =
-            Table.pagedTableView vc attributes toolsConfig (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
+            div []
+                (if DatePicker.isOpen m.dateRangePicker then
+                    [ secondaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
+                    , DatePicker.view (userDefinedRangeDatePickerSettings vc.locale m.currentTime) m.dateRangePicker |> Html.fromUnstyled
+                    ]
+
+                 else
+                    let
+                        startP =
+                            m.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
+
+                        endP =
+                            m.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
+
+                        selectedDuration =
+                            Locale.durationPosix vc.locale 1 startP endP
+
+                        startS =
+                            Locale.posixDate vc.locale startP
+
+                        endS =
+                            Locale.posixDate vc.locale endP
+                    in
+                    [ div []
+                        [ div [ dateTimeRangeBoxStyle vc |> toAttr ]
+                            [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
+                            , span [] [ Html.text selectedDuration ]
+                            , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
+                            , span [] [ Html.text (Locale.string vc.locale "to") ]
+                            , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
+                            , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" OpenDateRangePicker True) ]
+                            ]
+                        , Table.pagedTableView vc attributes (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
+                        ]
+                    ]
+                )
 
         ioIndicatorState =
             Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
@@ -521,9 +558,6 @@ addressTransactionTableView vc gc id viewState txOnGraphFn data =
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
 addressNeighborsTableView vc gc id viewState data =
     let
-        toolsConfig =
-            { filter = Nothing, csv = Nothing }
-
         attributes =
             []
 
@@ -539,9 +573,9 @@ addressNeighborsTableView vc gc id viewState data =
         content =
             div []
                 [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
-                , Table.pagedTableView vc attributes toolsConfig tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
+                , Table.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
                 , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
-                , Table.pagedTableView vc attributes toolsConfig tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
+                , Table.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
                 ]
 
         ioIndicatorState =
@@ -593,6 +627,34 @@ apiUtxoTxToRows tx =
 detailsFactTableView : View.Config -> List KVTableRow -> Html Msg
 detailsFactTableView vc rows =
     div [ smPaddingBottom |> toAttr ] [ renderKVTable vc rows ]
+
+
+primaryButton : View.Config -> BtnConfig -> Html Msg
+primaryButton vc btn =
+    optionalTextButton vc Primary btn
+
+
+secondaryButton : View.Config -> BtnConfig -> Html Msg
+secondaryButton vc btn =
+    optionalTextButton vc Secondary btn
+
+
+optionalTextButton : View.Config -> ButtonType -> BtnConfig -> Html Msg
+optionalTextButton vc bt btn =
+    let
+        ( iconattr, content ) =
+            if String.isEmpty btn.text then
+                ( [], [] )
+
+            else
+                ( [ smPaddingRight |> toAttr ], [ Html.text (Locale.string vc.locale btn.text) ] )
+    in
+    disableableButton (detailsActionButtonStyle vc bt)
+        btn
+        []
+        (span iconattr [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+            :: content
+        )
 
 
 detailsActionButton : View.Config -> ButtonType -> BtnConfig -> Html Msg

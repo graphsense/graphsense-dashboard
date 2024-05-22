@@ -1,13 +1,15 @@
 module Msg.Pathfinder exposing (..)
 
 import Api.Data
+import DurationDatePicker as DatePicker
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder exposing (PointerTool)
 import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Tools exposing (PointerTool)
 import Msg.Search as Search
 import Plugin.Msg as Plugin
+import Time exposing (Posix)
 
 
 type Msg
@@ -39,6 +41,10 @@ type Msg
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx Id Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
+    | UpdateDateRangePicker DatePicker.Msg
+    | OpenDateRangePicker
+    | CloseDateRangePicker
+    | Tick Posix
 
 
 type DisplaySettingsMsg
