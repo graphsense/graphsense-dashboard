@@ -35,17 +35,25 @@ suite =
             \_ ->
                 Network.addAddress Id.address2 Data.oneAddress
                     |> equal Data.twoIndependentAddresses
-        , test "addTx 1" <|
+        , test "add outgoing Tx 1" <|
             \_ ->
                 Network.addTx Id.tx1 Api.tx1 Data.oneAddress
-                    |> equal Data.oneAddressWithTx
-        , test "addTx 1 again" <|
+                    |> equal Data.oneAddressWithOutgoingTx
+        , test "add outgoing Tx 1 again" <|
             \_ ->
-                Network.addTx Id.tx1 Api.tx1 Data.oneAddressWithTx
-                    |> equal Data.oneAddressWithTx
+                Network.addTx Id.tx1 Api.tx1 Data.oneAddressWithOutgoingTx
+                    |> equal Data.oneAddressWithOutgoingTx
+        , test "add incoming Tx 1" <|
+            \_ ->
+                Network.addTx Id.tx2 Api.tx2 Data.oneAddress
+                    |> equal Data.oneAddressWithIncomingTx
+        , test "add incoming after outgoing Tx 1" <|
+            \_ ->
+                Network.addTx Id.tx2 Api.tx2 Data.oneAddressWithOutgoingTx
+                    |> equal Data.oneAddressWithTwoTxs
         , test "addAddress 3" <|
             \_ ->
-                Network.addAddress Id.address3 Data.oneAddressWithTx
+                Network.addAddress Id.address3 Data.oneAddressWithOutgoingTx
                     |> equal Data.twoConnectedAddresses
         , test "addAddress 3 again" <|
             \_ ->

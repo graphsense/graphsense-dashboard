@@ -27,7 +27,15 @@ address5 : Id
 address5 =
     ( "btc", "a5678901" )
 
+address6 : Id
+address6 =
+    ( "btc", "a6789012" )
 
 tx1 : Id
 tx1 =
     ( "btc", "d1234567" )
+
+
+tx2 : Id
+tx2 =
+    ( "btc", "d2345678" )

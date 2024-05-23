@@ -23,3 +23,17 @@ tx1 =
             }
     , raw = Api.tx1
     }
+
+
+tx2 : Tx.Tx
+tx2 =
+    { id = Id.tx2
+    , type_ =
+        Tx.Utxo
+            { x = -nodeXOffset
+            , y = 0
+            , outputs = NDict.singleton Id.address1 Api.values
+            , inputs = NDict.singleton Id.address6 Api.values
+            }
+    , raw = Api.tx2
+    }

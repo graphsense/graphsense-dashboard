@@ -25,8 +25,8 @@ oneAddress =
     }
 
 
-oneAddressWithTx : Network
-oneAddressWithTx =
+oneAddressWithOutgoingTx : Network
+oneAddressWithOutgoingTx =
     { oneAddress
         | txs = Dict.fromList [ ( Id.tx1, Tx.tx1 ) ]
         , addresses =
@@ -40,6 +40,41 @@ oneAddressWithTx =
                 )
                 oneAddress.addresses
     }
+
+
+oneAddressWithIncomingTx : Network
+oneAddressWithIncomingTx =
+    { oneAddress
+        | txs = Dict.fromList [ ( Id.tx2, Tx.tx2 ) ]
+        , addresses =
+            Dict.update Id.address1
+                (Maybe.map
+                    (\address ->
+                        { address
+                            | incomingTxs = Set.fromList [ Id.tx2 ]
+                        }
+                    )
+                )
+                oneAddress.addresses
+    }
+
+
+oneAddressWithTwoTxs : Network
+oneAddressWithTwoTxs =
+    { oneAddress
+        | txs = Dict.fromList [ ( Id.tx1, Tx.tx1 ), ( Id.tx2, Tx.tx2 ) ]
+        , addresses = 
+            Dict.update Id.address1
+                (Maybe.map
+                    (\address ->
+                        { address
+                            | outgoingTxs = Set.fromList [ Id.tx1 ]
+                            , incomingTxs = Set.fromList [ Id.tx2 ]
+                        }
+                    )
+                )
+                oneAddress.addresses
+                }
 
 
 twoIndependentAddresses : Network
@@ -56,8 +91,8 @@ twoConnectedAddresses =
             Address.address3
                 |> s_incomingTxs (Set.insert Id.tx1 Address.address3.incomingTxs)
     in
-    { oneAddressWithTx
-        | addresses = Dict.insert Id.address3 address3 oneAddressWithTx.addresses
+    { oneAddressWithOutgoingTx
+        | addresses = Dict.insert Id.address3 address3 oneAddressWithOutgoingTx.addresses
     }
 
 
@@ -71,6 +106,7 @@ one2TwoAddresses =
     { twoConnectedAddresses
         | addresses = Dict.insert Id.address4 address4 twoConnectedAddresses.addresses
     }
+
 
 one2ThreeAddresses : Network
 one2ThreeAddresses =

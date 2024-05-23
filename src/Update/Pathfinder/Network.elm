@@ -264,9 +264,9 @@ addTx id tx network =
                 let
                     coords =
                         findUtxoTxCoords t network
+                            |> Debug.log "coords"
                 in
                 fromTxUtxoData t coords
-                    |> Debug.log "fromTxUtxoData"
                     |> Maybe.map
                         (insertTx (freeSpaceAroundCoords coords network))
                     |> Maybe.withDefault network
@@ -410,19 +410,23 @@ findUtxoTxCoordsNextToAddress model direction address =
                 |> Set.toList
                 |> List.filterMap
                     (\a ->
-                        Dict.get a model.txs
-                            |> Maybe.andThen Tx.getUtxoTx
+                        if a == address.id then
+                            Nothing
+
+                        else
+                            Dict.get a model.txs
+                                |> Maybe.andThen Tx.getUtxoTx
                     )
 
         siblings =
             case direction of
                 Outgoing ->
-                    toSiblings address.incomingTxs
+                    toSiblings address.outgoingTxs
 
                 Incoming ->
-                    toSiblings address.outgoingTxs
+                    toSiblings address.incomingTxs
     in
-    { x = address.x + Direction.signOffsetByDirection (Debug.log "irection" direction) nodeXOffset
+    { x = address.x + Direction.signOffsetByDirection direction nodeXOffset
     , y =
         getMaxY siblings
             |> Maybe.map ((+) nodeYOffset)
