@@ -19,7 +19,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (first, pair)
+import Tuple exposing (first, pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
@@ -64,9 +64,26 @@ edge plugins vc gc addresses tx =
                             |> Result.toMaybe
                             |> Maybe.map (pair values)
                     )
+
+        outputValues =
+            tx.outputs
+                |> toValues
+
+        inputValues =
+            tx.inputs
+                |> toValues
+
+        filterUnspentOutputs =
+            List.filter
+                (\( _, address ) ->
+                    inputValues
+                        |> List.map (second >> .id)
+                        |> List.any ((==) address.id)
+                        |> not
+                )
     in
-    (tx.outputs
-        |> toValues
+    (outputValues
+        |> filterUnspentOutputs
         |> List.map
             (\( values, address ) ->
                 ( Id.toString address.id
@@ -81,8 +98,7 @@ edge plugins vc gc addresses tx =
                 )
             )
     )
-        ++ (tx.inputs
-                |> toValues
+        ++ (inputValues
                 |> List.map
                     (\( values, address ) ->
                         ( Id.toString address.id
@@ -170,7 +186,6 @@ path vc gc value withArrow x1 y1 x2 y2 =
 
         label =
             valueToLabel vc value
-
     in
     [ Svg.path
         [ d <|
