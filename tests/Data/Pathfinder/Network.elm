@@ -1,6 +1,5 @@
 module Data.Pathfinder.Network exposing (..)
 
-import Config.Pathfinder exposing (nodeYOffset)
 import Data.Pathfinder.Address as Address
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Tx as Tx

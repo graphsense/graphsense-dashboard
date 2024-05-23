@@ -165,25 +165,21 @@ path vc gc value withArrow x1 y1 x2 y2 =
         dx =
             x2 - x1
 
+        dy =
+            y2 - y1
+
         label =
             valueToLabel vc value
 
-        ( lx, ly, ta ) =
-            if withArrow then
-                ( x2, y2, "end" )
-
-            else
-                ( x1, y1, "start" )
     in
     [ Svg.path
         [ d <|
             pathD
                 [ M ( x1, y1 )
-                , ( x1 + dx * vc.theme.pathfinder.edgeCurvedEnd, y2 )
+                , ( x2, y2 )
                     |> C
-                        ( x1, y2 )
-                        ( x1, y2 )
-                , L ( x2, y2 )
+                        ( x1, y2 - dy / 2 )
+                        ( x1 + dx / 2, y2 )
                 ]
         , Css.edgeUtxo vc |> css
         ]
@@ -207,18 +203,9 @@ path vc gc value withArrow x1 y1 x2 y2 =
       else
         text ""
     , text_
-        [ x <|
-            String.fromFloat <|
-                (+) lx <|
-                    vc.theme.pathfinder.edgeLabelPadding
-                        * (if withArrow then
-                            -1
-
-                           else
-                            1
-                          )
-        , y <| String.fromFloat <| ly - vc.theme.pathfinder.edgeLabelPadding
-        , textAnchor ta
+        [ x1 + dx / 2 |> String.fromFloat |> x
+        , y1 + dy / 2 |> String.fromFloat |> y
+        , textAnchor "middle"
         , Css.edgeLabel vc |> css
         ]
         [ text label
