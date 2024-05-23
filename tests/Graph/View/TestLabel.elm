@@ -9,7 +9,7 @@ data : List ( String, List String )
 data =
     [ ( "a label", [ "a label" ] )
     , ( "a label long", [ "a label", "long" ] )
-    , ( "inter archive", [ "inter", "archive" ] )
+    , ( "inter archive", [ "inter ar", "chive" ] )
     , ( "alabellong", [ "alabello", "ng" ] )
     , ( "alabellong space", [ "alabello", "ng space" ] )
     , ( "a label that is way too long", [ "a label", "that is", "way too", "long" ] )
