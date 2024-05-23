@@ -306,6 +306,9 @@ updateByMsg plugins uc msg model =
                                                         , direction = Nothing
                                                         , pagesize = ad.txs.itemsPerPage
                                                         , nextpage = ad.txs.t.nextpage
+                                                        , order = Nothing
+                                                        , minHeight = Nothing
+                                                        , maxHeight = Nothing
                                                         }
                                                     |> ApiEffect
                                                     |> List.singleton
@@ -335,6 +338,9 @@ updateByMsg plugins uc msg model =
                                                         , direction = Nothing
                                                         , pagesize = ad.txs.itemsPerPage
                                                         , nextpage = ad.txs.t.nextpage
+                                                        , order = Nothing
+                                                        , minHeight = Nothing
+                                                        , maxHeight = Nothing
                                                         }
                                                     |> ApiEffect
                                                     |> List.singleton
@@ -500,6 +506,9 @@ updateByMsg plugins uc msg model =
                     , direction = Just direction
                     , pagesize = 1
                     , nextpage = Nothing
+                    , order = Nothing
+                    , minHeight = Nothing
+                    , maxHeight = Nothing
                     }
                 |> ApiEffect
                 |> List.singleton

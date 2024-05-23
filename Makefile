@@ -1,6 +1,7 @@
 include .env
 
 API_ELM=openapi/src/Api.elm
+REST_URL?=https://app.ikna.io
 
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)

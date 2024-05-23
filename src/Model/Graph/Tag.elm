@@ -53,4 +53,5 @@ userTagToApiTag { currency, address, entity } isClusterDefiner tag =
     , tagpackTitle = ""
     , tagpackUri = Nothing
     , actor = Nothing
+    , concepts = Nothing
     }

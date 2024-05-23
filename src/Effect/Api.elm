@@ -78,6 +78,9 @@ type Effect msg
         { currency : String
         , address : String
         , direction : Maybe Direction
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Addresses.Order_
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -157,6 +160,9 @@ type Effect msg
         { currency : String
         , source : String
         , target : String
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Addresses.Order_
         , nextpage : Maybe String
         , pagesize : Int
         }
@@ -165,6 +171,9 @@ type Effect msg
         { currency : String
         , source : Int
         , target : Int
+        , minHeight : Maybe Int
+        , maxHeight : Maybe Int
+        , order : Maybe Api.Request.Entities.Order_
         , nextpage : Maybe String
         , pagesize : Int
         }
@@ -491,7 +500,7 @@ perform apiKey wrapMsg effect =
             Api.Request.Addresses.getAddressEntity currency address
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressTxsEffect { currency, address, direction, pagesize, nextpage } toMsg ->
+        GetAddressTxsEffect { currency, address, direction, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
             let
                 dir =
                     case direction of
@@ -504,15 +513,16 @@ perform apiKey wrapMsg effect =
                         Just Outgoing ->
                             Just Api.Request.Addresses.DirectionOut
             in
-            Api.Request.Addresses.listAddressTxs currency address dir Nothing Nothing Nothing nextpage (Just pagesize)
+            -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
+            Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddresslinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listAddressLinks currency source target nextpage (Just pagesize)
+        GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
+            Api.Request.Addresses.listAddressLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetEntitylinkTxsEffect { currency, source, target, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityLinks currency source target nextpage (Just pagesize)
+        GetEntitylinkTxsEffect { currency, source, target, minHeight, maxHeight, pagesize, nextpage, order } toMsg ->
+            Api.Request.Entities.listEntityLinks currency source target minHeight maxHeight order nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage } toMsg ->
@@ -532,7 +542,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityTxsEffect { currency, entity, pagesize, nextpage } toMsg ->
-            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing nextpage (Just pagesize)
+            Api.Request.Entities.listEntityTxs currency entity Nothing Nothing Nothing Nothing Nothing nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
         GetBlockTxsEffect { currency, block } toMsg ->

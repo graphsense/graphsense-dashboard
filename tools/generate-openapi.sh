@@ -29,7 +29,10 @@ docker run --rm \
     --additional-properties=generateAliasAsModel=false \
     -t /templates 
 rm $temp $temp2
-
+echo "Doing some custom search and replace in Data.elm"
 sed -i 's/"txType"/"tx_type"/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/Addressstatus/AddressStatus/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/addressstatus/addressStatus/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/Json.Decode.dict tagCloudEntryDecodertagCloudEntryDecoder/Json.Decode.dict tagCloudEntryDecoder/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/tx_hash/txHash/' "${dir}/../openapi/src/Api/Request/Txs.elm"
 printf "\n\nvaluesDecodervaluesDecoder = valuesDecoder" >> "${dir}/../openapi/src/Api/Data.elm"

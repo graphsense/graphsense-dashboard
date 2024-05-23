@@ -2343,6 +2343,9 @@ getAddressTxsEffect { currency, address } nextpage =
         , direction = Nothing
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotAddressTxs { currency = currency, address = address })
         |> ApiEffect
@@ -2356,6 +2359,9 @@ getAddresslinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotAddresslinkTxs id)
         |> ApiEffect
@@ -2369,6 +2375,9 @@ getEntitylinkTxsEffect id nextpage =
         , target = id.target
         , nextpage = nextpage
         , pagesize = 100
+        , order = Nothing
+        , minHeight = Nothing
+        , maxHeight = Nothing
         }
         (BrowserGotEntitylinkTxs id)
         |> ApiEffect
