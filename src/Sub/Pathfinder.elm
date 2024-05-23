@@ -56,6 +56,6 @@ subscriptions model =
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
-    , Time.every 1000 Tick
+    , Time.every 60000 Tick
     ]
         |> Sub.batch
