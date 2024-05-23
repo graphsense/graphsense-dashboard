@@ -1,7 +1,7 @@
 module Model.Pathfinder.Tx exposing (..)
 
 import Api.Data
-import Config.Pathfinder exposing (addressXOffset)
+import Config.Pathfinder exposing (nodeXOffset)
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
 import Init.Pathfinder.Id as Id
@@ -19,7 +19,6 @@ type alias Tx =
     { id : Id
     , type_ : TxType
     , raw : Api.Data.Tx
-    , visible : Bool
     }
 
 
@@ -120,87 +119,26 @@ addressToCoords { x, y } =
     Coords x y
 
 
-fromDataInvisible : Api.Data.Tx -> Result Error Tx
-fromDataInvisible =
-    fromData False Outgoing { x = 0, y = 0 }
+getUtxoTx : Tx -> Maybe UtxoTx
+getUtxoTx { type_ } =
+    case type_ of
+        Utxo t ->
+            Just t
+
+        Account _ ->
+            Nothing
 
 
-fromDataVisible : Direction -> Coords -> Api.Data.Tx -> Result Error Tx
-fromDataVisible =
-    fromData True
+
+{-
+   fromDataInvisible : Api.Data.Tx -> Result Error Tx
+   fromDataInvisible =
+       fromData False Outgoing { x = 0, y = 0 }
 
 
-fromData : Bool -> Direction -> Coords -> Api.Data.Tx -> Result Error Tx
-fromData visible direction anchor data =
-    case data of
-        Api.Data.TxTxAccount t ->
-            let
-                id =
-                    Id.init t.currency t.txHash
-            in
-            Ok
-                { id = id
-                , type_ =
-                    Account
-                        { from = Id.init t.currency t.fromAddress
-                        , to = Id.init t.currency t.toAddress
-                        , value = t.value
-                        }
-                , visible = visible
-                , raw = data
-                }
+   fromDataVisible : Direction -> Coords -> Api.Data.Tx -> Result Error Tx
+   fromDataVisible =
+       fromData True
 
-        Api.Data.TxTxUtxo t ->
-            let
-                id =
-                    Id.init t.currency t.txHash
 
-                fn dir =
-                    let
-                        field =
-                            case dir of
-                                Incoming ->
-                                    .inputs
-
-                                Outgoing ->
-                                    .outputs
-
-                        toPair : Api.Data.TxValue -> Maybe ( Id, Api.Data.Values )
-                        toPair { address, value } =
-                            -- TODO what to do with multisig?
-                            List.head address
-                                |> Maybe.map (\a -> ( Id.init t.currency a, value ))
-                    in
-                    field t
-                        |> Maybe.map (List.filterMap toPair)
-                        |> Maybe.andThen NList.fromList
-                        |> Maybe.map (NDict.fromNonemptyList >> Ok)
-                        |> Maybe.withDefault (InternalError (TxValuesEmpty direction id) |> Err)
-
-                inputs =
-                    fn Incoming
-
-                outputs =
-                    fn Outgoing
-
-                offset =
-                    addressXOffset
-                        / 2
-                        |> Direction.signOffsetByDirection direction
-            in
-            Result.map2
-                (\in_ out ->
-                    { id = id
-                    , type_ =
-                        Utxo
-                            { x = anchor.x + offset
-                            , y = anchor.y
-                            , inputs = in_
-                            , outputs = out
-                            }
-                    , visible = visible
-                    , raw = data
-                    }
-                )
-                inputs
-                outputs
+-}

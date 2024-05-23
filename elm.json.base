@@ -8,7 +8,8 @@
         "themes",
         "config",
         "lib/elm-autocomplete/src",
-        "lib/cistring/src"
+        "lib/cistring/src",
+        "../figma-elm-css/generated/src"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

@@ -13,11 +13,21 @@ type alias Network =
     }
 
 
-listTxsForAddress : Network -> Id -> List Tx
+listTxsForAddress : Network -> Id -> List ( Direction, Tx )
 listTxsForAddress network id =
     network.txs
         |> Dict.values
-        |> List.filter (Tx.hasAddress id)
+        |> List.filterMap
+            (\tx ->
+                if Tx.hasInput id tx then
+                    Just ( Incoming, tx )
+
+                else if Tx.hasOutput id tx then
+                    Just ( Outgoing, tx )
+
+                else
+                    Nothing
+            )
 
 
 selectAddress : Network -> Id -> Network

@@ -1,13 +1,18 @@
 module Config.Pathfinder exposing (..)
 
 
-addressXOffset : Float
-addressXOffset =
-    8
+addressRadius : Float
+addressRadius =
+    1
 
 
-addressYOffset : Float
-addressYOffset =
+nodeXOffset : Float
+nodeXOffset =
+    4
+
+
+nodeYOffset : Float
+nodeYOffset =
     2
 
 

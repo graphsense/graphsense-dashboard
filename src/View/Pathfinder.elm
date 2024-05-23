@@ -2,6 +2,7 @@ module View.Pathfinder exposing (view)
 
 import Api.Data
 import Browser.Events exposing (Visibility(..))
+import Components
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -664,15 +665,21 @@ detailsActionButton vc btnT btn =
 
 detailsActionsView : View.Config -> List BtnConfig -> Html Msg
 detailsActionsView vc actionButtons =
-    let
-        btnType i =
-            if i == 0 then
-                Primary
+    Components.buttonMediumContainedPrimary [] []
 
-            else
-                Secondary
-    in
-    div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
+
+
+{-
+   let
+       btnType i =
+           if i == 0 then
+               Primary
+
+           else
+               Secondary
+   in
+   div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
+-}
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg

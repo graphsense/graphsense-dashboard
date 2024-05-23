@@ -4,11 +4,15 @@ import Api exposing (Request)
 import Api.Request.Addresses
 import Api.Request.Entities
 import Api.Request.General
+import Config.UserSettings as UserSettings
 import Dict
 import Effect.Graph as Graph
 import Effect.Search as Search
 import Init exposing (init)
-import Model exposing (Effect(..), Model, Msg(..))
+import Init.Locale as Locale
+import Json.Encode
+import Model exposing (Effect(..), Flags, Model, Msg(..))
+import Plugin
 import ProgramTest exposing (ProgramTest)
 import Result.Extra
 import Setup.Graph as Graph
@@ -16,6 +20,7 @@ import Setup.Locale as Locale
 import Setup.Search as Search
 import SimulatedEffect.Cmd
 import Theme.Theme as Theme
+import Tuple exposing (first)
 import Update exposing (update)
 import Util.Debug
 import View exposing (view)
@@ -24,29 +29,42 @@ import View exposing (view)
 start : String -> ProgramTest (Model ()) Msg (List Effect)
 start locale =
     let
+        size =
+            Just { x = 0, y = 0, width = width, height = height }
+
         uc =
             { defaultColor = Theme.default.graph.defaultColor
-            , colorScheme = Theme.default.graph.colorScheme
-            , categoryToColorIndex = Theme.default.graph.categoryToColorIndex
+            , categoryToColor = \_ -> Theme.default.graph.defaultColor
+            , highlightsColorScheme = []
+            , locale = Locale.init UserSettings.default |> first
+            , size = size
             }
-
-        plugins =
-            Dict.empty
 
         initialPath =
             "/"
 
+        width =
+            1200
+
+        height =
+            800
+
+        flags : Flags
         flags =
-            { locale = locale
-            , height = 800
-            , width = 1200
+            { localStorage = Json.Encode.null
             , now = 0
+            , height = height
+            , width = width
+            , pluginFlags = {}
             }
+
+        plugins =
+            Plugin.empty
     in
     ProgramTest.createApplication
         { onUrlChange = BrowserChangedUrl
         , onUrlRequest = UserRequestsUrl
-        , init = init plugins
+        , init = init plugins uc
         , update = Util.Debug.addDebugToUpdate (update plugins uc)
         , view =
             \model ->
@@ -58,6 +76,8 @@ start locale =
                     plugins
                     { theme = Theme.default
                     , locale = model.locale
+                    , lightmode = True
+                    , size = size
                     }
                     model
         }

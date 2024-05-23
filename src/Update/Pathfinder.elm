@@ -527,13 +527,7 @@ updateByMsg plugins uc msg model =
         BrowserGotTx id tx ->
             let
                 nw =
-                    if Dict.member id model.network.txs then
-                        model.network
-
-                    else
-                        Tx.fromDataInvisible tx
-                            |> Result.map (\txint -> Network.addTx txint model.network)
-                            |> Result.withDefault model.network
+                    Network.addTx id tx model.network
             in
             ( { model | network = nw } |> selectTransation id, [] )
 
@@ -750,49 +744,47 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress _ _ id direction data model =
-    getAddress model.network.addresses id
-        |> Result.map (\{ x, y } -> Coords x y)
-        |> Result.andThen (\c -> Tx.fromDataVisible direction c data)
-        |> Result.map
-            (\tx ->
-                let
-                    nw =
-                        Network.addTx tx model.network
-                            |> Network.addAddress firstAddress
+browserGotTxForAddress _ _ id direction tx model =
+    let
+        nw =
+            Network.addTx id tx model.network
 
-                    getBiggest io =
-                        NDict.toList io
-                            |> List.sortBy (second >> .value)
-                            |> List.reverse
-                            |> List.head
-                            |> Maybe.withDefault (NDict.head io)
-                            |> first
+        getBiggest io =
+            Maybe.withDefault [] io
+                |> List.sortBy (.value >> .value)
+                |> List.reverse
+                |> List.head
+                |> Maybe.map .address
+                |> Maybe.andThen List.head
 
-                    firstAddress =
-                        case tx.type_ of
-                            Tx.Utxo t ->
-                                case direction of
-                                    Incoming ->
-                                        getBiggest t.inputs
+        -- TODO what if multisig?
+        firstAddress =
+            case tx of
+                Api.Data.TxTxUtxo t ->
+                    case direction of
+                        Incoming ->
+                            getBiggest t.inputs
 
-                                    Outgoing ->
-                                        getBiggest t.outputs
+                        Outgoing ->
+                            getBiggest t.outputs
 
-                            Tx.Account t ->
-                                case direction of
-                                    Incoming ->
-                                        t.from
+                Api.Data.TxTxAccount t ->
+                    case direction of
+                        Incoming ->
+                            Just t.fromAddress
 
-                                    Outgoing ->
-                                        t.to
-                in
-                ( { model | network = nw }
-                , []
-                )
-            )
-        |> Result.Extra.extract
-            (ErrorEffect >> List.singleton >> pair model)
+                        Outgoing ->
+                            Just t.toAddress
+    in
+    ( { model
+        | network =
+            firstAddress
+                |> Maybe.map
+                    (\a -> Network.addAddress (Id.init (Id.network id) a) nw)
+                |> Maybe.withDefault nw
+      }
+    , []
+    )
 
 
 appendPagedTableData : PT.PagedTable p -> GT.Filter p -> Maybe String -> List p -> PT.PagedTable p

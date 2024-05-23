@@ -25,7 +25,7 @@ serve:
 	npm run dev
 
 test:
-	npx elm-test
+	npx elm-test-rs
 
 build:
 	npm run build
