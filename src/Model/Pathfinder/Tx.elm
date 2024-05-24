@@ -129,16 +129,3 @@ getUtxoTx { type_ } =
             Nothing
 
 
-
-{-
-   fromDataInvisible : Api.Data.Tx -> Result Error Tx
-   fromDataInvisible =
-       fromData False Outgoing { x = 0, y = 0 }
-
-
-   fromDataVisible : Direction -> Coords -> Api.Data.Tx -> Result Error Tx
-   fromDataVisible =
-       fromData True
-
-
--}

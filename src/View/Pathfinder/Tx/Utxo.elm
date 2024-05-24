@@ -71,17 +71,8 @@ edge plugins vc gc addresses tx =
             tx.inputs
                 |> toValues
 
-        filterUnspentOutputs =
-            List.filter
-                (\( _, address ) ->
-                    inputValues
-                        |> List.map (second >> .id)
-                        |> List.any ((==) address.id)
-                        |> not
-                )
     in
     (outputValues
-        |> filterUnspentOutputs
         |> List.map
             (\( values, address ) ->
                 ( Id.toString address.id
@@ -216,8 +207,8 @@ path vc gc value withArrow x1 y1 x2 y2 =
       else
         text ""
     , text_
-        [ x1 + dx / 2 |> String.fromFloat |> x
-        , y1 + dy / 2 |> String.fromFloat |> y
+        [ x1 + dx * 0.5 |> String.fromFloat |> x
+        , y1 + dy * 0.8 |> String.fromFloat |> y
         , textAnchor "middle"
         , Css.edgeLabel vc |> css
         ]

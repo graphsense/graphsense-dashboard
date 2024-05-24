@@ -1,6 +1,6 @@
 module Data.Pathfinder.Tx exposing (..)
 
-import Config.Pathfinder exposing (nodeXOffset)
+import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Dict.Nonempty as NDict
@@ -36,4 +36,18 @@ tx2 =
             , inputs = NDict.singleton Id.address6 Api.values
             }
     , raw = Api.tx2
+    }
+
+
+tx3 : Tx.Tx
+tx3 =
+    { id = Id.tx3
+    , type_ =
+        Tx.Utxo
+            { x = nodeXOffset
+            , y = 3 * nodeYOffset
+            , outputs = NDict.singleton Id.address7 Api.values
+            , inputs = NDict.singleton Id.address1 Api.values
+            }
+    , raw = Api.tx3
     }

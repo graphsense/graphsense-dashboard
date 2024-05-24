@@ -40,14 +40,16 @@ addAddress id model =
             |> placeAddress coords id
 
 
+toAddresses : Network -> NDict.NonemptyDict Id b -> List Address
+toAddresses model io =
+    io
+        |> NDict.toList
+        |> List.filterMap (first >> (\a -> Dict.get a model.addresses))
+
+
 findAddressCoordsNextToTx : Network -> Direction -> Tx -> Maybe Coords
 findAddressCoordsNextToTx model direction tx =
     let
-        toAddresses io =
-            io
-                |> NDict.toList
-                |> List.filterMap (first >> (\a -> Dict.get a model.addresses))
-
         siblings =
             case ( direction, tx.type_ ) of
                 ( Outgoing, Tx.Utxo t ) ->
@@ -82,7 +84,7 @@ findAddressCoordsNextToTx model direction tx =
                 { x = x + Direction.signOffsetByDirection direction nodeXOffset
                 , y =
                     sibs
-                        |> toAddresses
+                        |> toAddresses model
                         |> getMaxY
                         |> Maybe.map ((+) nodeYOffset)
                         |> Maybe.withDefault y
@@ -102,23 +104,26 @@ freeSpaceAroundCoords coords model =
                     (\a -> a.y < coords.y)
 
         diff y =
-            coords.y - y
+            abs (coords.y - y)
+                - nodeYOffset
+                |> min 0
+                |> Debug.log "diff"
 
         add d addr =
-            { addr | y = addr.y + (d - nodeYOffset) }
+            { addr | y = addr.y + d }
 
-        moveThings subset =
+        moveThings s subset =
             Maybe.map diff
                 >> Maybe.map
-                    (\d -> List.map (add d) subset)
+                    (\d -> List.map (add <| d * s) subset)
                 >> Maybe.withDefault subset
 
         newAddresses =
             (getMaxY above
-                |> moveThings above
+                |> moveThings 1 above
             )
                 ++ (getMinY below
-                        |> moveThings below
+                        |> moveThings -1 below
                    )
                 |> List.foldl (\a -> Dict.insert a.id a) model.addresses
 
@@ -142,8 +147,8 @@ freeSpaceAroundCoords coords model =
                     (\a -> a.y <= coords.y)
 
         newTxs =
-            (getMaxY txsAbove |> moveThings txsAbove)
-                ++ (getMinY txsBelow |> moveThings txsBelow)
+            (getMaxY txsAbove |> moveThings 1 txsAbove)
+                ++ (getMinY txsBelow |> moveThings -1 txsBelow)
                 |> List.foldl
                     (\t ->
                         Dict.update t.id
@@ -249,8 +254,16 @@ findAddressCoords id network =
         |> Maybe.withDefault (findFreeCoords network)
 
 
-addTx : Id -> Api.Data.Tx -> Network -> Network
-addTx id tx network =
+addTx : Api.Data.Tx -> Network -> Network
+addTx tx network =
+    let
+        id =
+            case tx of
+                Api.Data.TxTxAccount t ->
+                    Id.init t.currency t.txHash
+                Api.Data.TxTxUtxo t ->
+                    Id.init t.currency t.txHash
+    in
     if Dict.member id network.txs then
         network
 
@@ -349,17 +362,25 @@ fromTxUtxoData tx coords =
             field tx
                 |> Maybe.map (List.filterMap toPair)
                 |> Maybe.andThen NList.fromList
-                |> Maybe.map NDict.fromNonemptyList
     in
     Maybe.map2
         (\in_ out ->
             { id = id
             , type_ =
+                let
+                    inputs =
+                        NDict.fromNonemptyList in_
+                in
                 Tx.Utxo
                     { x = coords.x
                     , y = coords.y
-                    , inputs = in_
-                    , outputs = out
+                    , inputs = inputs
+                    , outputs =
+                        out
+                            |> NList.filter
+                                (\( o, _ ) -> NDict.get o inputs == Nothing)
+                                (NList.head out)
+                            |> NDict.fromNonemptyList
                     }
             , raw = Api.Data.TxTxUtxo tx
             }
@@ -371,19 +392,35 @@ fromTxUtxoData tx coords =
 findUtxoTxCoords : Api.Data.TxUtxo -> Network -> Coords
 findUtxoTxCoords tx network =
     let
-        normalizeAddresses direction =
+        toSet =
             Maybe.withDefault []
                 >> List.map .address
                 >> List.concat
                 -- TODO what to do with multisig? Fine to concat?
+                >> Set.fromList
+
+        normalizeAddresses direction =
+            Set.toList
                 >> List.filterMap
                     (\a ->
                         Dict.get (Id.init tx.currency a) network.addresses
                     )
                 >> List.map (pair direction)
+
+        inputSet =
+            tx.inputs
+                |> toSet
+                |> Debug.log "inputSet"
+
+        outputSet =
+            tx.outputs
+                |> toSet
+                |> Set.filter
+                    (\o -> Set.member o inputSet |> not)
+                |> Debug.log "outputSet"
     in
-    (tx.inputs |> normalizeAddresses Outgoing)
-        ++ (tx.outputs |> normalizeAddresses Incoming)
+    normalizeAddresses Outgoing inputSet
+        ++ normalizeAddresses Incoming outputSet
         |> NList.fromList
         |> Maybe.map
             (\list ->
@@ -416,7 +453,18 @@ findUtxoTxCoordsNextToAddress model direction address =
                         else
                             Dict.get a model.txs
                                 |> Maybe.andThen Tx.getUtxoTx
+                                |> Maybe.map
+                                    (\tx ->
+                                        toAddresses model <|
+                                            case direction of
+                                                Outgoing ->
+                                                    tx.outputs
+
+                                                Incoming ->
+                                                    tx.inputs
+                                    )
                     )
+                |> List.concat
 
         siblings =
             case direction of
@@ -426,9 +474,10 @@ findUtxoTxCoordsNextToAddress model direction address =
                 Incoming ->
                     toSiblings address.incomingTxs
     in
-    { x = address.x + Direction.signOffsetByDirection direction nodeXOffset
+    { x = (Debug.log "findNextto address" address).x + Direction.signOffsetByDirection direction nodeXOffset
     , y =
         getMaxY siblings
+            |> Debug.log "getMaxY"
             |> Maybe.map ((+) nodeYOffset)
             |> Maybe.withDefault address.y
     }

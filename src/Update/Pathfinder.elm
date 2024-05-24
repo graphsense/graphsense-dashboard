@@ -107,7 +107,7 @@ updateByMsg plugins uc msg model =
                 |> s_network (Network.updateAddress id (s_data (Success data)) model.network)
                 |> pairTo (fetchActorsForAddress data model.actors)
 
-        BrowserGotRecentTx id direction data ->
+        BrowserGotRecentTx addressId direction data ->
             let
                 getHash tx =
                     case tx of
@@ -123,9 +123,9 @@ updateByMsg plugins uc msg model =
                 |> Maybe.map getHash
                 |> Maybe.map
                     (\txHash ->
-                        BrowserGotTxForAddress id direction
+                        BrowserGotTxForAddress addressId direction
                             |> Api.GetTxEffect
-                                { currency = Id.network id
+                                { currency = Id.network addressId
                                 , txHash = txHash
                                 , includeIo = True
                                 , tokenTxId = Nothing
@@ -136,8 +136,8 @@ updateByMsg plugins uc msg model =
                 |> Maybe.withDefault []
             )
 
-        BrowserGotTxForAddress id direction data ->
-            browserGotTxForAddress plugins uc id direction data model
+        BrowserGotTxForAddress addressId direction data ->
+            browserGotTxForAddress plugins uc addressId direction data model
 
         SearchMsg m ->
             case m of
@@ -547,7 +547,7 @@ updateByMsg plugins uc msg model =
                         id =
                             Id.init t.currency t.txHash
                       in
-                      BrowserGotTx id
+                      BrowserGotTx 
                         |> Api.GetTxEffect
                             { currency = Id.network id
                             , txHash = Id.id id
@@ -558,10 +558,10 @@ updateByMsg plugins uc msg model =
                         |> List.singleton
                     )
 
-        BrowserGotTx id tx ->
+        BrowserGotTx tx ->
             let
                 nw =
-                    Network.addTx id tx model.network
+                    Network.addTx tx model.network
             in
             ( { model | network = nw } |> checkSelection, [] )
 
@@ -695,7 +695,7 @@ loadAddress _ id model =
 loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
 loadTx _ id model =
     ( model
-    , BrowserGotTx id
+    , BrowserGotTx
         |> Api.GetTxEffect
             { currency = Id.network id
             , txHash = Id.id id
@@ -788,15 +788,19 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress plugins _ id direction tx model =
+browserGotTxForAddress plugins _ addressId direction tx model =
     let
         newmodel =
             { model
-                | network = Network.addTx id tx model.network
+                | network = Network.addTx tx model.network
             }
+
+        address =
+            Id.id addressId
 
         getBiggest io =
             Maybe.withDefault [] io
+                |> List.filter (.address >> List.all ((/=) address))
                 |> List.sortBy (.value >> .value)
                 |> List.reverse
                 |> List.head
@@ -825,7 +829,7 @@ browserGotTxForAddress plugins _ id direction tx model =
     firstAddress
         |> Maybe.map
             (\a ->
-                loadAddress plugins (Id.init (Id.network id) a) newmodel
+                loadAddress plugins (Id.init (Id.network addressId) a) newmodel
             )
         |> Maybe.withDefault (n newmodel)
 

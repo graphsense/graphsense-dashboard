@@ -7,7 +7,7 @@ import Dict
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Network as Init
 import Model.Pathfinder.Network exposing (Network)
-import RecordSetter exposing (s_incomingTxs)
+import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import Set
 
 
@@ -117,4 +117,21 @@ one2ThreeAddresses =
     in
     { one2TwoAddresses
         | addresses = Dict.insert Id.address5 address5 one2TwoAddresses.addresses
+    }
+
+
+one2TwoTxs2ThreeAddresses : Network
+one2TwoTxs2ThreeAddresses =
+    { one2ThreeAddresses
+        | addresses =
+            Dict.update Id.address1
+                (Maybe.map
+                    (\address ->
+                        { address
+                            | outgoingTxs = Set.insert Id.tx3 address.outgoingTxs
+                        }
+                    )
+                )
+                one2ThreeAddresses.addresses
+        , txs = Dict.insert Id.tx3 Tx.tx3 one2ThreeAddresses.txs
     }
