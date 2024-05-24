@@ -22,10 +22,10 @@ config vc network =
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.addressColumn vc
-            { label = "Address"
+                { label = "Address"
                 , accessor = getAddress
                 , onClick = Nothing
-        }
+                }
             ]
         , customizations = customizations vc
         }

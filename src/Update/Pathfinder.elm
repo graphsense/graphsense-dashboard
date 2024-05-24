@@ -37,7 +37,7 @@ import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Route.Pathfinder as Route
-import Tuple exposing (first, pair, second)
+import Tuple exposing (first, mapFirst, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
@@ -105,7 +105,6 @@ updateByMsg plugins uc msg model =
         BrowserGotAddressData id data ->
             model
                 |> s_network (Network.updateAddress id (s_data (Success data)) model.network)
-                |> selectAddress id
                 |> pairTo (fetchActorsForAddress data model.actors)
 
         BrowserGotRecentTx id direction data ->
@@ -524,6 +523,9 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedAddressCheckboxInTable id ->
+            loadAddress plugins id model
+
         UserClickedTx id ->
             ( model
             , Route.txRoute
@@ -542,9 +544,10 @@ updateByMsg plugins uc msg model =
                 Api.Data.AddressTxAddressTxUtxo t ->
                     ( model
                     , let
-                        id = Id.init t.currency t.txHash
+                        id =
+                            Id.init t.currency t.txHash
                       in
-                        BrowserGotTx id
+                      BrowserGotTx id
                         |> Api.GetTxEffect
                             { currency = Id.network id
                             , txHash = Id.id id
@@ -553,7 +556,7 @@ updateByMsg plugins uc msg model =
                             }
                         |> ApiEffect
                         |> List.singleton
-                        )
+                    )
 
         BrowserGotTx id tx ->
             let
@@ -652,17 +655,27 @@ updateByRoute_ plugins route model =
             n model
 
         Route.Network network (Route.Address a) ->
-            addressFromRoute plugins (Id.init network a) model
+            let
+                id =
+                    Id.init network a
+            in
+            loadAddress plugins id model
+                |> mapFirst (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
-            txFromRoute plugins (Id.init network a) model
+            let
+                id =
+                    Id.init network a
+            in
+            loadTx plugins id model
+                |> mapFirst (selectTx id)
 
         _ ->
             n model
 
 
-addressFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
-addressFromRoute _ id model =
+loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
+loadAddress _ id model =
     let
         nw =
             Network.addAddress id model.network
@@ -679,10 +692,9 @@ addressFromRoute _ id model =
     )
 
 
-txFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
-txFromRoute _ id model =
+loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
+loadTx _ id model =
     ( model
-        |> selectTx id
     , BrowserGotTx id
         |> Api.GetTxEffect
             { currency = Id.network id
@@ -709,14 +721,18 @@ selectTx id model =
 
 selectAddress : Id -> Model -> Model
 selectAddress id model =
-    let
-        m1 =
-            (s_selection (SelectedAddress id)
-                >> (setViewState <| s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)))
-            )
-                model
-    in
-    { m1 | network = Network.selectAddress (Network.unSelectAll m1.network) id }
+    if Network.hasAddress id model.network then
+        let
+            m1 =
+                (s_selection (SelectedAddress id)
+                    >> (setViewState <| s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)))
+                )
+                    model
+        in
+        { m1 | network = Network.selectAddress (Network.unSelectAll m1.network) id }
+
+    else
+        s_selection (WillSelectAddress id) model
 
 
 pushHistory : Msg -> Model -> Model
@@ -830,6 +846,9 @@ checkSelection model =
     case model.selection of
         WillSelectTx id ->
             selectTx id model
+
+        WillSelectAddress id ->
+            selectAddress id model
 
         _ ->
             model

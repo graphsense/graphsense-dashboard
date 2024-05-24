@@ -82,14 +82,25 @@ txColumn vc { label, accessor, onClick } =
         }
 
 
-checkboxColumn : View.Config -> String -> (data -> Bool) -> (data -> msg) -> Table.Column data msg
-checkboxColumn _ name isChecked clickMsg =
+type alias CheckboxColumnConfig data msg =
+    { isChecked : data -> Bool
+    , onClick : data -> msg
+    }
+
+
+checkboxColumn : View.Config -> CheckboxColumnConfig data msg -> Table.Column data msg
+checkboxColumn _ { isChecked, onClick } =
     Table.veryCustomColumn
-        { name = name
+        { name = ""
         , viewData =
             \data ->
                 Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
-                    [ input [ type_ "checkbox", onClick (clickMsg data), checked (isChecked data) ] []
+                    [ input
+                        [ type_ "checkbox"
+                        , onClick data |> Html.Styled.Events.onClick
+                        , isChecked data |> checked
+                        ]
+                        []
                     ]
         , sorter = Table.unsortable
         }

@@ -68,6 +68,7 @@ type Selection
     = SelectedAddress Id
     | SelectedTx Id
     | WillSelectTx Id
+    | WillSelectAddress Id
     | NoSelection
 
 
@@ -124,7 +125,10 @@ getDetailsViewStateForSelection model =
         ( SelectedTx id, _ ) ->
             TxDetails id getTxDetailsDefaultState
 
-        ( WillSelectTx _, details) ->
+        ( WillSelectTx _, details ) ->
+            details
+
+        ( WillSelectAddress _, details ) ->
             details
 
         ( NoSelection, _ ) ->

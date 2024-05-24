@@ -1,6 +1,7 @@
 module View.Pathfinder exposing (view)
 
 import Api.Data
+import Basics.Extra exposing (flip)
 import Browser.Events exposing (Visibility(..))
 import Components
 import Config.Pathfinder as Pathfinder
@@ -25,6 +26,7 @@ import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
 import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Number.Bounded exposing (value)
@@ -32,6 +34,7 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
 import Result.Extra
+import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -405,7 +408,7 @@ txDetailsContentView vc gc model id viewState data =
 
                 Api.Data.TxTxUtxo tx ->
                     ( [ utxoTxDetailsContentView vc tx ]
-                    , [ utxoTxDetailsSectionsView vc viewState tx ]
+                    , [ utxoTxDetailsSectionsView vc model.network viewState tx ]
                     )
     in
     div []
@@ -430,19 +433,23 @@ utxoTxDetailsContentView vc data =
     div [] tbls
 
 
-ioTableView : View.Config -> String -> List Api.Data.TxValue -> Html Msg
-ioTableView vc currency data =
-    Table.rawTableView vc [] (IoTable.config vc currency) "Value" data
+ioTableView : View.Config -> Network -> String -> List Api.Data.TxValue -> Html Msg
+ioTableView vc network currency data =
+    let
+        isCheckedFn =
+            flip Network.hasAddress network
+    in
+    Table.rawTableView vc [] (IoTable.config vc currency isCheckedFn) "Value" data
 
 
-utxoTxDetailsSectionsView : View.Config -> TxDetailsViewState -> Api.Data.TxUtxo -> Html Msg
-utxoTxDetailsSectionsView vc viewState data =
+utxoTxDetailsSectionsView : View.Config -> Network -> TxDetailsViewState -> Api.Data.TxUtxo -> Html Msg
+utxoTxDetailsSectionsView vc network viewState data =
     let
         combinedData =
             (data.inputs |> Maybe.withDefault []) ++ (data.outputs |> Maybe.withDefault [] |> List.map negateTxValue)
 
         content =
-            ioTableView vc data.currency combinedData
+            ioTableView vc network data.currency combinedData
 
         ioIndicatorState =
             Just (inOutIndicator Nothing data.noInputs data.noOutputs)

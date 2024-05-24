@@ -43,9 +43,9 @@ config vc network isCheckedFn =
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.checkboxColumn vc
-                ""
-                (toGerneric >> getId >> isCheckedFn)
-                UserClickedTxCheckboxInTable
+                { isChecked = toGerneric >> getId >> isCheckedFn
+                , onClick = UserClickedTxCheckboxInTable
+                }
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
                 (toGerneric >> .timestamp)
