@@ -788,10 +788,12 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress _ _ id direction tx model =
+browserGotTxForAddress plugins _ id direction tx model =
     let
-        nw =
-            Network.addTx id tx model.network
+        newmodel =
+            { model
+                | network = Network.addTx id tx model.network
+            }
 
         getBiggest io =
             Maybe.withDefault [] io
@@ -820,15 +822,12 @@ browserGotTxForAddress _ _ id direction tx model =
                         Outgoing ->
                             Just t.toAddress
     in
-    ( { model
-        | network =
-            firstAddress
-                |> Maybe.map
-                    (\a -> Network.addAddress (Id.init (Id.network id) a) nw)
-                |> Maybe.withDefault nw
-      }
-    , []
-    )
+    firstAddress
+        |> Maybe.map
+            (\a ->
+                loadAddress plugins (Id.init (Id.network id) a) newmodel
+            )
+        |> Maybe.withDefault (n newmodel)
 
 
 appendPagedTableData : PT.PagedTable p -> GT.Filter p -> Maybe String -> List p -> PT.PagedTable p
