@@ -4,12 +4,13 @@ import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS
+import Html.Events
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier)
 import Table
-import Util.View exposing (copyableLongIdentifier, none)
+import Util.View exposing (copyableLongIdentifier, nona, none)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 
@@ -42,21 +43,39 @@ timestampDateMultiRowColumn vc name accessor =
         }
 
 
-addressColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
+type alias ColumnConfig data msg =
+    { label : String
+    , accessor : data -> String
+    , onClick : Maybe (data -> msg)
+    }
+
+
+addressColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
 addressColumn =
     txColumn
 
 
-txColumn : View.Config -> String -> (data -> String) -> Table.Column data msg
-txColumn vc name accessor =
+txColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
+txColumn vc { label, accessor, onClick } =
     Table.veryCustomColumn
-        { name = name
+        { name = label
         , viewData =
             \data ->
                 accessor data
                     |> copyableLongIdentifier vc []
                     |> List.singleton
-                    |> Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+                    |> Table.HtmlDetails
+                        (([ PCSS.mGap |> Css.padding ] |> css)
+                            :: (onClick
+                                    |> Maybe.map
+                                        (\cl ->
+                                            [ cl data |> Html.Styled.Events.onClick
+                                            , css [ Css.cursor Css.pointer ]
+                                            ]
+                                        )
+                                    |> Maybe.withDefault []
+                               )
+                        )
 
         -- , sorter = Table.increasingOrDecreasingBy accessor
         , sorter = Table.unsortable

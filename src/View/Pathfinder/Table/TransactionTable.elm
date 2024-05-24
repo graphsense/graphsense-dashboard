@@ -2,9 +2,10 @@ module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
+import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Locale
-import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Table
 import View.Pathfinder.Table exposing (customizations)
@@ -12,40 +13,47 @@ import View.Pathfinder.Table.Columns as PT
 
 
 type alias GenericTx =
-    { txHash : String, timestamp : Int, value : Api.Data.Values, asset : String }
+    { currency : String
+    , txHash : String
+    , timestamp : Int
+    , value : Api.Data.Values
+    , asset : String
+    }
 
 
 toGerneric : Api.Data.AddressTx -> GenericTx
 toGerneric x =
     case x of
         Api.Data.AddressTxAddressTxUtxo y ->
-            GenericTx y.txHash y.timestamp y.value y.currency
+            GenericTx y.currency y.txHash y.timestamp y.value y.currency
 
         Api.Data.AddressTxTxAccount y ->
-            GenericTx y.txHash y.timestamp y.value y.currency
+            GenericTx y.currency y.txHash y.timestamp y.value y.currency
 
 
-getId : GenericTx -> String
-getId =
-    .txHash
+getId : GenericTx -> Id
+getId { currency, txHash } =
+    Id.init currency txHash
 
 
 config : View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
 config vc network isCheckedFn =
     Table.customConfig
-        { toId = toGerneric >> getId
+        { toId = toGerneric >> getId >> Id.toString
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.checkboxColumn vc
                 ""
-                (toGerneric >> (\x -> isCheckedFn ( network, x.txHash )))
+                (toGerneric >> getId >> isCheckedFn)
                 UserClickedTxCheckboxInTable
             , PT.timestampDateMultiRowColumn vc
                 "Timestamp"
                 (toGerneric >> .timestamp)
             , PT.txColumn vc
-                "Hash"
-                (toGerneric >> .txHash)
+                { label = "Hash"
+                , accessor = toGerneric >> .txHash
+                , onClick = Just (toGerneric >> getId >> UserClickedTx)
+                }
             , PT.debitCreditColumn vc
                 (toGerneric >> .asset >> asset network)
                 "Debit/Credit"

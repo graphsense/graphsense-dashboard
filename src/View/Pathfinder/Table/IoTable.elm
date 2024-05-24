@@ -16,8 +16,10 @@ config vc network =
         , toMsg = \_ -> NoOp
         , columns =
             [ PT.addressColumn vc
-                "Address"
-                (.address >> String.join ",")
+                { label = "Address"
+                , accessor = .address >> String.join ","
+                , onClick = Nothing
+                }
             , PT.debitCreditColumn vc
                 (\_ -> assetFromBase network)
                 "Value"
