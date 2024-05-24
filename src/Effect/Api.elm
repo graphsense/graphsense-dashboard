@@ -10,6 +10,7 @@ import Api.Request.MyBulk
 import Api.Request.Tags
 import Api.Request.Tokens
 import Api.Request.Txs
+import Api.Time exposing (Posix)
 import Dict exposing (Dict)
 import Http
 import IntDict exposing (IntDict)
@@ -49,6 +50,11 @@ type Effect msg
         , height : Int
         }
         (Api.Data.Block -> msg)
+    | GetBlockByDateEffect
+        { currency : String
+        , datetime : Posix
+        }
+        (Api.Data.BlockAtDate -> msg)
     | GetEntityForAddressEffect
         { currency : String
         , address : String
@@ -323,6 +329,11 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetBlockEffect eff
 
+        GetBlockByDateEffect eff m ->
+            m
+                >> mapMsg
+                |> GetBlockByDateEffect eff
+
         GetEntityForAddressEffect eff m ->
             m
                 >> mapMsg
@@ -494,6 +505,10 @@ perform apiKey wrapMsg effect =
 
         GetBlockEffect { currency, height } toMsg ->
             Api.Request.Blocks.getBlock currency height
+                |> send apiKey wrapMsg effect toMsg
+
+        GetBlockByDateEffect { currency, datetime } toMsg ->
+            Api.Request.Blocks.getBlockByDate currency datetime
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityForAddressEffect { currency, address } toMsg ->

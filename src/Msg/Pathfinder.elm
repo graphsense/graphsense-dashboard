@@ -45,6 +45,8 @@ type Msg
     | OpenDateRangePicker
     | CloseDateRangePicker
     | Tick Posix
+    | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
+    | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
 
 
 type DisplaySettingsMsg

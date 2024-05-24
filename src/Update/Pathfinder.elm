@@ -546,6 +546,12 @@ updateByMsg plugins uc msg model =
                     in
                     ( { model | view = { vs | pointerTool = tool } }, [] )
 
+        BrowserGotFromDateBlock dt blockAt ->
+            n model
+
+        BrowserGotToDateBlock dt blockAt ->
+            n model
+
         UpdateDateRangePicker subMsg ->
             let
                 ( newPicker, maybeRuntime ) =
@@ -553,8 +559,50 @@ updateByMsg plugins uc msg model =
 
                 ( startTime, endTime ) =
                     Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.fromDate, model.toDate )
+
+                eff =
+                    case model.view.detailsViewState of
+                        AddressDetails id _ ->
+                            let
+                                startEff =
+                                    case startTime of
+                                        Just st ->
+                                            BrowserGotFromDateBlock st
+                                                |> Api.GetBlockByDateEffect
+                                                    { currency = Id.network id
+                                                    , datetime = st
+                                                    }
+                                                |> ApiEffect
+                                                |> List.singleton
+
+                                        _ ->
+                                            []
+
+                                endEff =
+                                    case endTime of
+                                        Just et ->
+                                            BrowserGotToDateBlock et
+                                                |> Api.GetBlockByDateEffect
+                                                    { currency = Id.network id
+                                                    , datetime = et
+                                                    }
+                                                |> ApiEffect
+                                                |> List.singleton
+
+                                        _ ->
+                                            []
+                            in
+                            startEff ++ endEff
+
+                        _ ->
+                            []
             in
-            n { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }
+            case maybeRuntime of
+                Just _ ->
+                    ( { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }, eff )
+
+                _ ->
+                    n { model | dateRangePicker = newPicker }
 
         OpenDateRangePicker ->
             n { model | dateRangePicker = DurationDatePicker.openPicker (userDefinedRangeDatePickerSettings uc.locale model.currentTime) model.currentTime model.fromDate model.toDate model.dateRangePicker }

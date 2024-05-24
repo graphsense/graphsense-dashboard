@@ -234,6 +234,9 @@ messageFromApiEffect model effect =
         Api.GetStatisticsEffect _ ->
             Nothing
 
+        Api.GetBlockByDateEffect _ _ ->
+            Nothing
+
         Api.SearchEntityNeighborsEffect e _ ->
             ( searchNeighborsKey
             , [ case e.isOutgoing of
