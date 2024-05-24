@@ -3,7 +3,6 @@ module View.Pathfinder exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Events exposing (Visibility(..))
-import Components
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -672,11 +671,6 @@ detailsActionButton vc btnT btn =
 
 detailsActionsView : View.Config -> List BtnConfig -> Html Msg
 detailsActionsView vc actionButtons =
-    Components.buttonMediumContainedPrimary [] []
-
-
-
-{-
    let
        btnType i =
            if i == 0 then
@@ -686,7 +680,6 @@ detailsActionsView vc actionButtons =
                Secondary
    in
    div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
--}
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg

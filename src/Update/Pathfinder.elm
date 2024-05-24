@@ -425,7 +425,7 @@ updateByMsg plugins uc msg model =
                 DraggingNode id start coords ->
                     n
                         { model
-                            | network = Debug.todo "release node"
+                            | network = model.network
                             , dragging = NoDragging
                         }
 
@@ -547,7 +547,7 @@ updateByMsg plugins uc msg model =
                         id =
                             Id.init t.currency t.txHash
                       in
-                      BrowserGotTx 
+                      BrowserGotTx
                         |> Api.GetTxEffect
                             { currency = Id.network id
                             , txHash = Id.id id

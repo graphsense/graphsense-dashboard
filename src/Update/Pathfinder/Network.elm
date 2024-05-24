@@ -107,7 +107,6 @@ freeSpaceAroundCoords coords model =
             abs (coords.y - y)
                 - nodeYOffset
                 |> min 0
-                |> Debug.log "diff"
 
         add d addr =
             { addr | y = addr.y + d }
@@ -261,6 +260,7 @@ addTx tx network =
             case tx of
                 Api.Data.TxTxAccount t ->
                     Id.init t.currency t.txHash
+
                 Api.Data.TxTxUtxo t ->
                     Id.init t.currency t.txHash
     in
@@ -277,7 +277,6 @@ addTx tx network =
                 let
                     coords =
                         findUtxoTxCoords t network
-                            |> Debug.log "coords"
                 in
                 fromTxUtxoData t coords
                     |> Maybe.map
@@ -410,14 +409,12 @@ findUtxoTxCoords tx network =
         inputSet =
             tx.inputs
                 |> toSet
-                |> Debug.log "inputSet"
 
         outputSet =
             tx.outputs
                 |> toSet
                 |> Set.filter
                     (\o -> Set.member o inputSet |> not)
-                |> Debug.log "outputSet"
     in
     normalizeAddresses Outgoing inputSet
         ++ normalizeAddresses Incoming outputSet
@@ -474,10 +471,9 @@ findUtxoTxCoordsNextToAddress model direction address =
                 Incoming ->
                     toSiblings address.incomingTxs
     in
-    { x = (Debug.log "findNextto address" address).x + Direction.signOffsetByDirection direction nodeXOffset
+    { x = address.x + Direction.signOffsetByDirection direction nodeXOffset
     , y =
         getMaxY siblings
-            |> Debug.log "getMaxY"
             |> Maybe.map ((+) nodeYOffset)
             |> Maybe.withDefault address.y
     }

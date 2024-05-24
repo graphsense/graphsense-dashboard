@@ -34,5 +34,5 @@ edge plugins vc gc addresses tx =
             Utxo.edge plugins vc gc addresses t
 
         Account _ ->
-            Debug.todo "account not impl"
+            g [] []
     )
