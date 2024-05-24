@@ -9,18 +9,17 @@ import Update.Graph.Transform exposing (wheel)
 
 address : View.Config -> List Style
 address vc =
-    vc.theme.pathfinder.address
+    cursor pointer
+        :: vc.theme.pathfinder.address
 
 
 addressBody : View.Config -> Bool -> List Css.Style
 addressBody vc selected =
-    cursor grab
-        :: (if selected then
-                [ primaryColorSelection |> Css.fill ]
+    if selected then
+        [ primaryColorSelection |> Css.fill ]
 
-            else
-                []
-           )
+    else
+        []
 
 
 graphSelectionStyle : View.Config -> List Css.Style
@@ -40,7 +39,8 @@ addressLabel vc =
 
 tx : View.Config -> List Style
 tx vc =
-    vc.theme.pathfinder.tx
+    cursor pointer
+        :: vc.theme.pathfinder.tx
 
 
 edgeUtxo : View.Config -> List Style

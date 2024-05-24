@@ -98,6 +98,11 @@ addressRoute { network, address } =
     Address address |> Network network
 
 
+txRoute : { network : String, txHash : String } -> Route
+txRoute { network, txHash } =
+    Tx txHash |> Network network
+
+
 parseCurrency : Config -> Parser (String -> a) a
 parseCurrency c =
     P.custom "CURRENCY" <|

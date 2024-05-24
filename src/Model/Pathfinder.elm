@@ -67,6 +67,7 @@ type alias AddressDetailsViewState =
 type Selection
     = SelectedAddress Id
     | SelectedTx Id
+    | WillSelectTx Id
     | NoSelection
 
 
@@ -117,11 +118,14 @@ getDetailsViewStateForSelection model =
         ( SelectedAddress id, _ ) ->
             AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)
 
-        ( SelectedTx _, TxDetails id x ) ->
-            TxDetails id x
+        ( SelectedTx _, TxDetails id c ) ->
+            TxDetails id c
 
         ( SelectedTx id, _ ) ->
             TxDetails id getTxDetailsDefaultState
+
+        ( WillSelectTx _, details) ->
+            details
 
         ( NoSelection, _ ) ->
             NoDetails

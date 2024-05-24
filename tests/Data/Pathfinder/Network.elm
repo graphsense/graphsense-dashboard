@@ -63,7 +63,7 @@ oneAddressWithTwoTxs : Network
 oneAddressWithTwoTxs =
     { oneAddress
         | txs = Dict.fromList [ ( Id.tx1, Tx.tx1 ), ( Id.tx2, Tx.tx2 ) ]
-        , addresses = 
+        , addresses =
             Dict.update Id.address1
                 (Maybe.map
                     (\address ->
@@ -74,7 +74,7 @@ oneAddressWithTwoTxs =
                     )
                 )
                 oneAddress.addresses
-                }
+    }
 
 
 twoIndependentAddresses : Network

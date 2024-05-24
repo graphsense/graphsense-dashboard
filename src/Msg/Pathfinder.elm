@@ -47,6 +47,8 @@ type Msg
     | Tick Posix
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
+    | UserClickedTx Id
+    | UserClickedTxCheckboxInTable Api.Data.AddressTx
 
 
 type DisplaySettingsMsg

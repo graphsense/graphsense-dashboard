@@ -13,6 +13,14 @@ type alias Network =
     }
 
 
+hasTx : Id -> Network -> Bool
+hasTx id network =
+    Dict.member id network.txs
+
+hasAddress : Id -> Network -> Bool
+hasAddress id network =
+    Dict.member id network.addresses
+
 listTxsForAddress : Network -> Id -> List ( Direction, Tx )
 listTxsForAddress network id =
     network.txs

@@ -23,7 +23,7 @@ import Model.Pathfinder.Address as Address
 import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Network
+import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Table as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
@@ -515,7 +515,7 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedAddress id ->
-            ( selectAddress id model
+            ( model
             , Route.addressRoute
                 { network = Id.network id
                 , address = Id.id id
@@ -524,12 +524,43 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserClickedTx id ->
+            ( model
+            , Route.txRoute
+                { network = Id.network id
+                , txHash = Id.id id
+                }
+                |> NavPushRouteEffect
+                |> List.singleton
+            )
+
+        UserClickedTxCheckboxInTable tx ->
+            case tx of
+                Api.Data.AddressTxTxAccount _ ->
+                    n model
+
+                Api.Data.AddressTxAddressTxUtxo t ->
+                    ( model
+                    , let
+                        id = Id.init t.currency t.txHash
+                      in
+                        BrowserGotTx id
+                        |> Api.GetTxEffect
+                            { currency = Id.network id
+                            , txHash = Id.id id
+                            , includeIo = True
+                            , tokenTxId = Nothing
+                            }
+                        |> ApiEffect
+                        |> List.singleton
+                        )
+
         BrowserGotTx id tx ->
             let
                 nw =
                     Network.addTx id tx model.network
             in
-            ( { model | network = nw } |> selectTransation id, [] )
+            ( { model | network = nw } |> checkSelection, [] )
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -631,7 +662,7 @@ updateByRoute_ plugins route model =
 
 
 addressFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
-addressFromRoute plugins id model =
+addressFromRoute _ id model =
     let
         nw =
             Network.addAddress id model.network
@@ -649,8 +680,9 @@ addressFromRoute plugins id model =
 
 
 txFromRoute : Plugins -> Id -> Model -> ( Model, List Effect )
-txFromRoute plugins id model =
+txFromRoute _ id model =
     ( model
+        |> selectTx id
     , BrowserGotTx id
         |> Api.GetTxEffect
             { currency = Id.network id
@@ -663,20 +695,16 @@ txFromRoute plugins id model =
     )
 
 
-addAddress : Plugins -> Id -> Api.Data.Address -> Model -> ( Model, List Effect )
-addAddress plugins id data model =
-    { model
-        | network = Network.updateAddress id (s_data (Success data)) model.network
-    }
-        |> n
+selectTx : Id -> Model -> Model
+selectTx id model =
+    if Network.hasTx id model.network then
+        (s_selection (SelectedTx id)
+            >> (setViewState <| s_detailsViewState (TxDetails id getTxDetailsDefaultState))
+        )
+            model
 
-
-selectTransation : Id -> Model -> Model
-selectTransation id model =
-    (s_selection (SelectedTx id)
-        >> (setViewState <| s_detailsViewState (TxDetails id getTxDetailsDefaultState))
-    )
-        model
+    else
+        s_selection (WillSelectTx id) model
 
 
 selectAddress : Id -> Model -> Model
@@ -688,7 +716,7 @@ selectAddress id model =
             )
                 model
     in
-    { m1 | network = Model.Pathfinder.Network.selectAddress (Model.Pathfinder.Network.unSelectAll m1.network) id }
+    { m1 | network = Network.selectAddress (Network.unSelectAll m1.network) id }
 
 
 pushHistory : Msg -> Model -> Model
@@ -795,3 +823,13 @@ appendPagedTableData pt f nextPage data =
                 |> s_nextpage nextPage
                 |> s_loading False
     }
+
+
+checkSelection : Model -> Model
+checkSelection model =
+    case model.selection of
+        WillSelectTx id ->
+            selectTx id model
+
+        _ ->
+            model

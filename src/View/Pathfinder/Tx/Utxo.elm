@@ -28,9 +28,6 @@ import View.Locale as Locale
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
 view _ vc _ id tx =
     let
-        _ =
-            Debug.log "Utxo.view" id
-
         unit =
             View.getUnit vc
     in
@@ -40,6 +37,7 @@ view _ vc _ id tx =
             [ translate (tx.x * unit) (tx.y * unit)
                 |> transform
             , Css.tx vc |> css
+            , UserClickedTx id |> onClick
             ]
 
 
