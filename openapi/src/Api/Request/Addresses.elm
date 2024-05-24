@@ -24,39 +24,7 @@ import Json.Decode
 import Json.Encode
 
 
-type Order_
-    = Order_Asc
-    | Order_Desc
 
-
-orderVariants : List Order_
-orderVariants =
-    [ Order_Asc
-    , Order_Desc
-    ]
-
-
-stringFromOrder_ : Order_ -> String
-stringFromOrder_ model =
-    case model of
-        Order_Asc ->
-            "asc"
-
-        Order_Desc ->
-            "desc"
-
-
-makeOrder_FromString : String -> Maybe Order_
-makeOrder_FromString str =
-    case str of
-    "asc" ->
-        Just Order_Asc
-
-    "desc" ->
-        Just Order_Desc
-
-    _ ->
-        Nothing
 
 
 
@@ -95,6 +63,48 @@ makeDirectionFromString str =
 
     _ ->
         Nothing
+
+
+
+
+
+type Order_
+    = Order_Asc
+    | Order_Desc
+
+
+orderVariants : List Order_
+orderVariants =
+    [ Order_Asc
+    , Order_Desc
+    ]
+
+
+stringFromOrder_ : Order_ -> String
+stringFromOrder_ model =
+    case model of
+        Order_Asc ->
+            "asc"
+
+        Order_Desc ->
+            "desc"
+
+
+makeOrder_FromString : String -> Maybe Order_
+makeOrder_FromString str =
+    case str of
+    "asc" ->
+        Just Order_Asc
+
+    "desc" ->
+        Just Order_Desc
+
+    _ ->
+        Nothing
+
+
+
+
 
 
 getAddress : (String) -> (String) -> Api.Request Api.Data.Address
