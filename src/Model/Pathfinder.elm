@@ -19,6 +19,8 @@ import Model.Search as Search
 import Msg.Pathfinder exposing (Msg)
 import RecordSetter exposing (s_detailsViewState, s_selection)
 import Time exposing (Posix)
+import Model.Pathfinder.Address exposing (getNrTxs)
+import RecordSetter exposing (s_outDegree)
 
 
 type alias Model =
@@ -59,6 +61,8 @@ type alias AddressDetailsViewState =
     { neighborsTableOpen : Bool
     , transactionsTableOpen : Bool
     , txs : PagedTable Api.Data.AddressTx
+    , txMinBlock: Maybe Int
+    , txMaxBlock: Maybe Int
     , neighborsIncoming : PagedTable Api.Data.NeighborAddress
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
     }
@@ -77,6 +81,8 @@ addressDetailsViewStateDefault nrTransactions inDegree outDegree =
     { neighborsTableOpen = False
     , transactionsTableOpen = False
     , txs = TransactionTable.init nrTransactions
+    , txMinBlock = Nothing
+    , txMaxBlock = Nothing
     , neighborsOutgoing = NeighborsTable.init outDegree
     , neighborsIncoming = NeighborsTable.init inDegree
     }
@@ -92,22 +98,31 @@ getLoadedAddress m id =
     Dict.get id m.network.addresses
 
 
+getAddressDetailStats: Id -> Model -> Maybe AddressDetailsViewState -> {nrTxs: Maybe Int, nrIncomeingNeighbors : Maybe Int, nrOutgoingNeighbors: Maybe Int }
+getAddressDetailStats id model madvs = 
+    let
+            maddress =
+                Dict.get id model.network.addresses
+
+            nrTxs = case madvs of 
+                Just advs -> case (advs.txMinBlock, advs.txMaxBlock) of
+                            (Just _, Just _) -> Nothing
+                            _ -> maddress |> Maybe.andThen Address.getNrTxs
+                _ -> Nothing
+
+            indegree =
+                maddress |> Maybe.andThen Address.getInDegree
+
+            outdegree =
+                maddress |> Maybe.andThen Address.getOutDegree
+        in
+            {nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree}
 getAddressDetailsViewStateDefaultForAddress : Id -> Model -> AddressDetailsViewState
 getAddressDetailsViewStateDefaultForAddress id model =
     let
-        maddress =
-            Dict.get id model.network.addresses
-
-        nrTxs =
-            maddress |> Maybe.andThen Address.getNrTxs
-
-        indegree =
-            maddress |> Maybe.andThen Address.getInDegree
-
-        outdegree =
-            maddress |> Maybe.andThen Address.getOutDegree
+        stats = getAddressDetailStats id model Nothing
     in
-    addressDetailsViewStateDefault nrTxs indegree outdegree
+    addressDetailsViewStateDefault stats.nrTxs stats.nrIncomeingNeighbors stats.nrOutgoingNeighbors
 
 
 getDetailsViewStateForSelection : Model -> DetailsViewState
@@ -115,16 +130,17 @@ getDetailsViewStateForSelection model =
     case ( model.selection, model.view.detailsViewState ) of
         ( SelectedAddress _, AddressDetails id c ) ->
             let
-                maddress =
-                    Dict.get id model.network.addresses
-
-                nrTxs =
-                    maddress |> Maybe.andThen Address.getNrTxs
+                stats = getAddressDetailStats id model (Just c)
 
                 txsNew =
                     c.txs
+                nIn = c.neighborsIncoming
+                nOut = c.neighborsOutgoing
             in
-            AddressDetails id { c | txs = { txsNew | nrItems = nrTxs } }
+            AddressDetails id { c | 
+                                txs = { txsNew | nrItems = stats.nrTxs}
+                                , neighborsIncoming = {nIn | nrItems = stats.nrIncomeingNeighbors}
+                                , neighborsOutgoing = {nOut | nrItems = stats.nrOutgoingNeighbors} } 
 
         ( SelectedAddress id, _ ) ->
             AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)

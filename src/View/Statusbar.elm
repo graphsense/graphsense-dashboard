@@ -37,8 +37,7 @@ view vc model =
                 |> List.head
                 |> Maybe.map (message vc)
                 |> Maybe.withDefault none
-            , "v"
-                ++ version
+            , version
                 |> text
                 |> List.singleton
                 |> span []
