@@ -385,9 +385,9 @@ getAddressAnnotationBtns data actor =
         ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
 
 
-getAddressActionBtns : Api.Data.Address -> List BtnConfig
-getAddressActionBtns data =
-    [ BtnConfig FontAwesome.tags "Connect case" NoOp True, BtnConfig FontAwesome.cog "Actions" NoOp True ]
+getAddressActionBtns : id -> Api.Data.Address -> List BtnConfig
+getAddressActionBtns id data =
+    [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Api.Data.Tx -> Html Msg
@@ -485,7 +485,7 @@ addressDetailsContentView vc gc model id viewState data =
             ]
 
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows data), detailsActionsView vc (getAddressActionBtns data) ]
+            [ detailsFactTableView vc (apiAddressToRows data), detailsActionsView vc (getAddressActionBtns id data) ]
 
         addressAnnotationBtns =
             getAddressAnnotationBtns data actor
@@ -521,7 +521,10 @@ addressTransactionTableView vc gc id viewState txOnGraphFn m data =
         content =
             div []
                 (if DatePicker.isOpen m.dateRangePicker then
-                    [ secondaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
+                    [ div []
+                        [ primaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
+                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset" ResetDateRangePicker True)
+                        ]
                     , DatePicker.view (userDefinedRangeDatePickerSettings vc.locale m.currentTime) m.dateRangePicker |> Html.fromUnstyled
                     ]
 
@@ -671,15 +674,15 @@ detailsActionButton vc btnT btn =
 
 detailsActionsView : View.Config -> List BtnConfig -> Html Msg
 detailsActionsView vc actionButtons =
-   let
-       btnType i =
-           if i == 0 then
-               Primary
+    let
+        btnType i =
+            if i == 0 then
+                Primary
 
-           else
-               Secondary
-   in
-   div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
+            else
+                Secondary
+    in
+    div [ smPaddingBottom |> toAttr ] (actionButtons |> List.indexedMap (\i itm -> detailsActionButton vc (btnType i) itm))
 
 
 graphSvg : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> BBox -> Svg Msg

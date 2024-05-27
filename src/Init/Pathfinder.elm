@@ -11,6 +11,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (DetailsViewState(..), Model, Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
+import Task
 import Time
 
 
@@ -30,5 +31,5 @@ init _ =
       , fromDate = Nothing
       , currentTime = Time.millisToPosix 0
       }
-    , Cmd.none
+    , Task.perform Tick Time.now
     )

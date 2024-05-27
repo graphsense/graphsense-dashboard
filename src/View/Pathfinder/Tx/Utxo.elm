@@ -70,7 +70,6 @@ edge plugins vc gc addresses tx =
         inputValues =
             tx.inputs
                 |> toValues
-
     in
     (outputValues
         |> List.map

@@ -638,6 +638,9 @@ updateByMsg plugins uc msg model =
         CloseDateRangePicker ->
             n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
 
+        ResetDateRangePicker ->
+            n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }
+
         Tick time ->
             n { model | currentTime = time }
 

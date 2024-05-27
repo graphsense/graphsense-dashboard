@@ -114,7 +114,17 @@ getDetailsViewStateForSelection : Model -> DetailsViewState
 getDetailsViewStateForSelection model =
     case ( model.selection, model.view.detailsViewState ) of
         ( SelectedAddress _, AddressDetails id c ) ->
-            AddressDetails id c
+            let
+                maddress =
+                    Dict.get id model.network.addresses
+
+                nrTxs =
+                    maddress |> Maybe.andThen Address.getNrTxs
+
+                txsNew =
+                    c.txs
+            in
+            AddressDetails id { c | txs = { txsNew | nrItems = nrTxs } }
 
         ( SelectedAddress id, _ ) ->
             AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)

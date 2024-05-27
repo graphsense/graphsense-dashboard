@@ -127,5 +127,3 @@ getUtxoTx { type_ } =
 
         Account _ ->
             Nothing
-
-
