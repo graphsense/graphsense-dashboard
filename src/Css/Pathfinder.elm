@@ -22,6 +22,11 @@ addressBody vc selected =
         []
 
 
+ioTableStyle : View.Config -> List Css.Style
+ioTableStyle _ =
+    [ maxHeight (ex 40), display block, overflowY scroll ]
+
+
 graphSelectionStyle : View.Config -> List Css.Style
 graphSelectionStyle vc =
     [ primaryColorSelection |> Css.fill, highlightPrimaryFrostedColor vc |> border3 xsGap solid ]

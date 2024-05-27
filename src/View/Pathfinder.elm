@@ -529,7 +529,7 @@ addressTransactionTableView vc gc id viewState txOnGraphFn m data =
                 (if DatePicker.isOpen m.dateRangePicker then
                     [ div []
                         [ primaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
-                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset" ResetDateRangePicker True)
+                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" ResetDateRangePicker True)
                         ]
                     , DatePicker.view (pathfinderRangeDatePickerSettings vc.locale minDate maxDate) m.dateRangePicker |> Html.fromUnstyled
                     ]

@@ -2,6 +2,7 @@ module View.Pathfinder.Table.IoTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css.Pathfinder as Css
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Id exposing (Id)
@@ -9,6 +10,15 @@ import Msg.Pathfinder exposing (Msg(..))
 import Table
 import View.Pathfinder.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
+
+
+customizationsIO : View.Config -> Table.Customizations data msg
+customizationsIO vc =
+    let
+        tc =
+            customizations vc
+    in
+    { tc | tableAttrs = tc.tableAttrs ++ [ Css.ioTableStyle vc |> Css.toAttr ] }
 
 
 config : View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.TxValue Msg
@@ -41,5 +51,5 @@ config vc network isCheckedFn =
                 "Value"
                 .value
             ]
-        , customizations = customizations vc
+        , customizations = customizationsIO vc
         }

@@ -12,9 +12,9 @@ isDateBefore x datetime =
     Time.posixToMillis x > Time.posixToMillis datetime
 
 
-isDateAfter : Posix -> Posix -> Bool
-isDateAfter x datetime =
-    Time.posixToMillis x <= Time.posixToMillis datetime
+toDate : Zone -> Posix -> Posix
+toDate z x =
+    Time.floor Day z x
 
 
 pathfinderRangeDatePickerSettings : Model.Locale.Model -> Posix -> Posix -> Settings
@@ -24,7 +24,10 @@ pathfinderRangeDatePickerSettings localeModel min max =
             defaultSettings localeModel.zone
     in
     { defaults
-        | isDayDisabled = \clientZone datetime -> isDateBefore (Time.floor Day clientZone datetime) max || isDateAfter (Time.floor Day clientZone datetime) min
+        | isDayDisabled =
+            \clientZone datetime ->
+                isDateBefore (toDate clientZone datetime) (toDate clientZone max)
+                    || isDateBefore (toDate clientZone min) (toDate clientZone datetime)
         , focusedDate = Just max
         , dateStringFn = \_ pos -> (pos |> Time.posixToMillis) |> (\x -> x // 1000) |> Locale.timestampDateUniform localeModel
         , timePickerVisibility = NeverVisible
