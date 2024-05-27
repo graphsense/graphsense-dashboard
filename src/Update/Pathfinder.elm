@@ -10,8 +10,8 @@ import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
-import Log
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (Coords, relativeToGraphZero)
@@ -21,7 +21,7 @@ import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address
-import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
+import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
@@ -38,6 +38,8 @@ import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Result.Extra
 import Route.Pathfinder as Route
+import Svg.Attributes exposing (x)
+import Time exposing (Posix)
 import Tuple exposing (first, mapFirst, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
@@ -48,12 +50,12 @@ import Update.Pathfinder.Network as Network
 import Update.Search as Search
 import Util.Pathfinder exposing (getAddress)
 import Util.Pathfinder.History as History
-import Svg.Attributes exposing (x)
 
-type SetOrNoSet x = Set x
-                    | NoSet
-                    | Reset
 
+type SetOrNoSet x
+    = Set x
+    | NoSet
+    | Reset
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -581,14 +583,19 @@ updateByMsg plugins uc msg model =
                     in
                     ( { model | view = { vs | pointerTool = tool } }, [] )
 
-        BrowserGotFromDateBlock dt blockAt -> updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
-            
-        BrowserGotToDateBlock dt blockAt -> updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
+        BrowserGotFromDateBlock dt blockAt ->
+            updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
+
+        BrowserGotToDateBlock dt blockAt ->
+            updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
 
         UpdateDateRangePicker subMsg ->
             let
+                ( mindate, maxdate ) =
+                    getMinAndMaxSelectableDateFromModel model
+
                 ( newPicker, maybeRuntime ) =
-                    DurationDatePicker.update (userDefinedRangeDatePickerSettings uc.locale model.currentTime) subMsg model.dateRangePicker
+                    DurationDatePicker.update (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) subMsg model.dateRangePicker
 
                 ( startTime, endTime ) =
                     Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.fromDate, model.toDate )
@@ -638,79 +645,124 @@ updateByMsg plugins uc msg model =
                     n { model | dateRangePicker = newPicker }
 
         OpenDateRangePicker ->
-            n { model | dateRangePicker = DurationDatePicker.openPicker (userDefinedRangeDatePickerSettings uc.locale model.currentTime) model.currentTime model.fromDate model.toDate model.dateRangePicker }
+            let
+                ( mindate, maxdate ) =
+                    getMinAndMaxSelectableDateFromModel model
+            in
+            n { model | dateRangePicker = DurationDatePicker.openPicker (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) maxdate model.fromDate model.toDate model.dateRangePicker }
 
         CloseDateRangePicker ->
             n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
 
         ResetDateRangePicker ->
             let
-                (m2, eff) = updateDatePickerRangeBlockRange model Reset Reset
-
+                ( m2, eff ) =
+                    updateDatePickerRangeBlockRange model Reset Reset
             in
-            ({ m2 | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }, eff)
+            ( { m2 | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }, eff )
 
         Tick time ->
             n { model | currentTime = time }
 
-updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> (Model, List Effect)
-updateDatePickerRangeBlockRange model txMinBlock txMaxBlock = 
-            let
-               
-                (m2, eff) = case model.view.detailsViewState of 
-                    AddressDetails id ad -> 
-                        let
-                            txmin = case txMinBlock of
-                                    Reset -> Nothing
-                                    NoSet -> ad.txMinBlock
-                                    Set x -> Just x
-                            txmax = case txMaxBlock of
-                                    Reset -> Nothing
-                                    NoSet -> ad.txMaxBlock
-                                    Set x -> Just x
 
-                            effects =case (txmin, txmax) of
-                                (Just min, Just max) -> 
-                                                        (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                                            |> Api.GetAddressTxsEffect
-                                                                { currency = Id.network id
-                                                                , address = Id.id id
-                                                                , direction = Nothing
-                                                                , pagesize = ad.txs.itemsPerPage
-                                                                , nextpage = Nothing
-                                                                , order = Nothing
-                                                                , minHeight =  Just min
-                                                                , maxHeight = Just max
-                                                                }
-                                                            |> ApiEffect
-                                                            |> List.singleton
-                                (Nothing, Nothing) -> (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                                            |> Api.GetAddressTxsEffect
-                                                                { currency = Id.network id
-                                                                , address = Id.id id
-                                                                , direction = Nothing
-                                                                , pagesize = ad.txs.itemsPerPage
-                                                                , nextpage = Nothing
-                                                                , order = Nothing
-                                                                , minHeight =  Nothing
-                                                                , maxHeight = Nothing
-                                                                }
-                                                            |> ApiEffect
-                                                            |> List.singleton
-                                _ -> []
+getMinAndMaxSelectableDateFromModel : Model -> ( Posix, Posix )
+getMinAndMaxSelectableDateFromModel model =
+    let
+        default =
+            ( Time.millisToPosix 0, model.currentTime )
+    in
+    case model.view.detailsViewState of
+        AddressDetails id c ->
+            Dict.get id model.network.addresses
+                |> Maybe.andThen Address.getActivityRange
+                |> Maybe.withDefault default
 
-                            txsnew = case (txmin, txmax) of
-                                (Just min, Just max) -> TransactionTable.init Nothing
-                                (Nothing, Nothing) -> TransactionTable.init Nothing
-                                _ -> ad.txs
-                        in
-                        ((setViewState <| s_detailsViewState (AddressDetails id {ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew})) model, effects)
-                    _ ->  n model
+        _ ->
+            default
 
-                
 
-            in
-                (m2, eff)
+updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
+    let
+        ( m2, eff ) =
+            case model.view.detailsViewState of
+                AddressDetails id ad ->
+                    let
+                        txmin =
+                            case txMinBlock of
+                                Reset ->
+                                    Nothing
+
+                                NoSet ->
+                                    ad.txMinBlock
+
+                                Set x ->
+                                    Just x
+
+                        txmax =
+                            case txMaxBlock of
+                                Reset ->
+                                    Nothing
+
+                                NoSet ->
+                                    ad.txMaxBlock
+
+                                Set x ->
+                                    Just x
+
+                        effects =
+                            case ( txmin, txmax ) of
+                                ( Just min, Just max ) ->
+                                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                                        |> Api.GetAddressTxsEffect
+                                            { currency = Id.network id
+                                            , address = Id.id id
+                                            , direction = Nothing
+                                            , pagesize = ad.txs.itemsPerPage
+                                            , nextpage = Nothing
+                                            , order = Nothing
+                                            , minHeight = Just min
+                                            , maxHeight = Just max
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                ( Nothing, Nothing ) ->
+                                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                                        |> Api.GetAddressTxsEffect
+                                            { currency = Id.network id
+                                            , address = Id.id id
+                                            , direction = Nothing
+                                            , pagesize = ad.txs.itemsPerPage
+                                            , nextpage = Nothing
+                                            , order = Nothing
+                                            , minHeight = Nothing
+                                            , maxHeight = Nothing
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                _ ->
+                                    []
+
+                        txsnew =
+                            case ( txmin, txmax ) of
+                                ( Just min, Just max ) ->
+                                    TransactionTable.init Nothing
+
+                                ( Nothing, Nothing ) ->
+                                    TransactionTable.init Nothing
+
+                                _ ->
+                                    ad.txs
+                    in
+                    ( (setViewState <| s_detailsViewState (AddressDetails id { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew })) model, effects )
+
+                _ ->
+                    n model
+    in
+    ( m2, eff )
+
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =

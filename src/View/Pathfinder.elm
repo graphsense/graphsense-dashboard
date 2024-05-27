@@ -23,7 +23,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.DatePicker exposing (userDefinedRangeDatePickerSettings)
+import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
@@ -518,6 +518,12 @@ addressTransactionTableView vc gc id viewState txOnGraphFn m data =
         nextMsg =
             \_ -> AddressDetailsMsg UserClickedNextPageTransactionTable
 
+        minDate =
+            Time.millisToPosix (data.firstTx.timestamp * 1000)
+
+        maxDate =
+            Time.millisToPosix (data.lastTx.timestamp * 1000)
+
         content =
             div []
                 (if DatePicker.isOpen m.dateRangePicker then
@@ -525,7 +531,7 @@ addressTransactionTableView vc gc id viewState txOnGraphFn m data =
                         [ primaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
                         , secondaryButton vc (BtnConfig FontAwesome.times "Reset" ResetDateRangePicker True)
                         ]
-                    , DatePicker.view (userDefinedRangeDatePickerSettings vc.locale m.currentTime) m.dateRangePicker |> Html.fromUnstyled
+                    , DatePicker.view (pathfinderRangeDatePickerSettings vc.locale minDate maxDate) m.dateRangePicker |> Html.fromUnstyled
                     ]
 
                  else

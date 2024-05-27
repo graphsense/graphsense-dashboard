@@ -4,6 +4,7 @@ import Api.Data
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
+import Time exposing (Posix)
 
 
 type alias Address =
@@ -42,6 +43,16 @@ getOutDegree a =
     case a.data of
         Success x ->
             Just x.outDegree
+
+        _ ->
+            Nothing
+
+
+getActivityRange : Address -> Maybe ( Posix, Posix )
+getActivityRange a =
+    case a.data of
+        Success x ->
+            Just ( Time.millisToPosix (x.firstTx.timestamp * 1000), Time.millisToPosix (x.lastTx.timestamp * 1000) )
 
         _ ->
             Nothing
