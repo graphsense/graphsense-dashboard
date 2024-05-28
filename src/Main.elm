@@ -4,6 +4,7 @@ import Browser
 import Browser.Navigation as Nav
 import Config exposing (config)
 import Config.UserSettings exposing (default)
+import Config.View as View
 import Effect exposing (perform)
 import Init exposing (init)
 import Init.Locale as Locale
@@ -40,6 +41,7 @@ main =
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             , locale = Locale.init default |> first
             , size = Nothing
+            , unit = 0
             }
 
         updPlug =
@@ -64,6 +66,7 @@ main =
                     { uc
                         | locale = model.config.locale
                         , size = model.config.size
+                        , unit = View.getUnit model.config
                     }
                     msg
                     model

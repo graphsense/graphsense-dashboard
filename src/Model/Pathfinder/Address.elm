@@ -10,6 +10,8 @@ import Time exposing (Posix)
 type alias Address =
     { x : Float
     , y : Float
+    , dx : Float
+    , dy : Float
     , id : Id
     , incomingTxs : Set Id
     , outgoingTxs : Set Id

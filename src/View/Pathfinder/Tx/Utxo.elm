@@ -81,8 +81,8 @@ edge plugins vc gc addresses tx =
                     values
                     tx.x
                     tx.y
-                    address.x
-                    address.y
+                    (address.x + address.dx)
+                    (address.y + address.dy)
                 )
             )
     )
@@ -96,8 +96,8 @@ edge plugins vc gc addresses tx =
                             values
                             tx.x
                             tx.y
-                            address.x
-                            address.y
+                            (address.x + address.dx)
+                            (address.y + address.dy)
                         )
                     )
            )

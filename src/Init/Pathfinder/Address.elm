@@ -12,6 +12,8 @@ init : Id -> Coords -> Address
 init id { x, y } =
     { x = x
     , y = y
+    , dx = 0
+    , dy = 0
     , id = id
     , incomingTxs = Set.empty
     , outgoingTxs = Set.empty

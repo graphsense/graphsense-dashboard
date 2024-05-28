@@ -12,4 +12,5 @@ type alias Config =
     , highlightsColorScheme : List Color
     , locale : Locale.Model
     , size : Maybe BBox -- position and size of the main pane
+    , unit : Float
     }

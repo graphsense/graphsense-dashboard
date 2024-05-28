@@ -30,10 +30,12 @@ view _ vc _ address =
     , label vc address
     ]
         |> g
-            [ translate (address.x * unit) (address.y * unit)
+            [ translate ((address.x + address.dx) * unit) ((address.y + address.dy) * unit)
                 |> transform
             , Css.address vc |> css
             , UserClickedAddress address.id |> onClick
+            , UserPushesLeftMouseButtonOnAddress address.id
+                |> Util.Graph.mousedown
             ]
 
 

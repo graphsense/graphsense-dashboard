@@ -46,6 +46,7 @@ import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 import Update.Graph.Transform as Transform
+import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Network as Network
 import Update.Search as Search
 import Util.Pathfinder exposing (getAddress)
@@ -434,7 +435,7 @@ updateByMsg plugins uc msg model =
                 DraggingNode id start coords ->
                     n
                         { model
-                            | network = model.network
+                            | network = Network.updateAddress id Address.release model.network
                             , dragging = NoDragging
                         }
 
@@ -469,6 +470,18 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserPushesLeftMouseButtonOnAddress id coords ->
+            { model
+                | dragging =
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
+                            DraggingNode id coords coords
+
+                        _ ->
+                            model.dragging
+            }
+                |> n
+
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
@@ -492,10 +505,17 @@ updateByMsg plugins uc msg model =
                 DraggingNode id start _ ->
                     let
                         vector =
-                            Transform.vector start (relativeToGraphZero uc.size coords) model.transform
+                            Transform.vector start coords model.transform
+
+                        vectorRel =
+                            { x = vector.x / uc.unit
+                            , y = vector.y / uc.unit
+                            }
                     in
                     { model
-                        | dragging = DraggingNode id start (relativeToGraphZero uc.size coords)
+                        | network =
+                            Network.updateAddress id (Address.move vectorRel) model.network
+                        , dragging = DraggingNode id start coords
                     }
                         |> n
 
