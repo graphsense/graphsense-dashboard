@@ -166,24 +166,76 @@ valueToLabel vc value =
 path : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
 path vc gc value withArrow x1 y1 x2 y2 =
     let
-        dx =
-            x2 - x1
+        ( dx, dy ) =
+            ( x2 - x1
+            , y2 - y1
+            )
 
-        dy =
-            y2 - y1
+        ( nodes, lx, ly ) =
+            if dx > 0 then
+                let
+                    ( mx, my ) =
+                        ( x1 + dx / 2
+                        , y1 + dy / 2
+                        )
+                in
+                ( [ ( x2, y2 )
+                        |> C
+                            ( mx, y1 )
+                            ( mx, y2 )
+                  ]
+                , mx
+                , my
+                )
+
+            else
+                let
+                    ( mx, my ) =
+                        ( x1 + dx / 2
+                        , y1 + Basics.max (dy / 2) vc.theme.pathfinder.addressRadius
+                        )
+
+                    ( c1x, c1y ) =
+                        ( x1 + (mx - x1 |> abs) / 2
+                        , my
+                        )
+
+                    ( c2x, c2y ) =
+                        ( mx
+                            - (mx - x1)
+                            / 2
+                        , my
+                        )
+                in
+                ( [ ( mx, my )
+                        |> C
+                            ( c1x, c1y )
+                            ( c2x, c2y )
+                  , ( x2, y2 )
+                        |> S
+                            ( x2 - (x2 - mx |> abs) / 2
+                            , y2 - (y2 - my) / 2
+                            )
+                  ]
+                , mx
+                , my
+                )
 
         label =
             valueToLabel vc value
+
+        maxi b a =
+            if a < 0 then
+                Basics.min a (negate b)
+
+            else
+                Basics.max a b
     in
     [ Svg.path
-        [ d <|
-            pathD
-                [ M ( x1, y1 )
-                , ( x2, y2 )
-                    |> C
-                        ( x1, y2 - dy / 2 )
-                        ( x1 + dx / 2, y2 )
-                ]
+        [ nodes
+            |> (::) (M ( x1, y1 ))
+            |> pathD
+            |> d
         , Css.edgeUtxo vc |> css
         ]
         []
@@ -206,8 +258,8 @@ path vc gc value withArrow x1 y1 x2 y2 =
       else
         text ""
     , text_
-        [ x1 + dx * 0.5 |> String.fromFloat |> x
-        , y1 + dy * 0.8 |> String.fromFloat |> y
+        [ lx |> String.fromFloat |> x
+        , ly |> String.fromFloat |> y
         , textAnchor "middle"
         , Css.edgeLabel vc |> css
         ]
