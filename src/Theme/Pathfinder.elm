@@ -1,5 +1,6 @@
 module Theme.Pathfinder exposing (Pathfinder, default)
 
+import Color exposing (Color)
 import Css exposing (Style)
 
 
@@ -17,6 +18,9 @@ type alias Pathfinder =
     , edgeLabel : List Style
     , edgeUtxo : List Style
     , arrowLength : Float
+    , edgeColor : String
+    , outEdgeColor : String
+    , inEdgeColor : String
     }
 
 
@@ -35,4 +39,7 @@ default =
     , edgeLabel = []
     , edgeUtxo = []
     , arrowLength = 5
+    , edgeColor = "black"
+    , outEdgeColor = "black"
+    , inEdgeColor = "black"
     }

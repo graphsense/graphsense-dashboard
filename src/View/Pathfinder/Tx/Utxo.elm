@@ -117,18 +117,34 @@ outPath vc gc value tx ty ax ay =
             vc.theme.pathfinder.txRadius
 
         x1 =
-            tx * unit + txRad
+            tx
+                * unit
+                + txRad
+                * (if ax < tx then
+                    -1
+
+                   else
+                    1
+                  )
 
         y1 =
             ty * unit
 
         x2 =
-            ax * unit - rad
+            ax
+                * unit
+                - rad
+                * (if ax < tx then
+                    -1
+
+                   else
+                    1
+                  )
 
         y2 =
             ay * unit
     in
-    path vc gc value True x1 y1 x2 y2
+    coloredPath vc gc value True x1 y1 x2 y2
 
 
 inPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Svg Msg
@@ -144,18 +160,34 @@ inPath vc gc value tx ty ax ay =
             vc.theme.pathfinder.txRadius
 
         x1 =
-            ax * unit + rad
+            ax
+                * unit
+                + rad
+                * (if tx < ax then
+                    -1
+
+                   else
+                    1
+                  )
 
         y1 =
             ay * unit
 
         x2 =
-            tx * unit - txRad
+            tx
+                * unit
+                - txRad
+                * (if tx < ax then
+                    -1
+
+                   else
+                    1
+                  )
 
         y2 =
             ty * unit
     in
-    path vc gc value False x1 y1 x2 y2
+    coloredPath vc gc value False x1 y1 x2 y2
 
 
 valueToLabel : View.Config -> Api.Data.Values -> String
@@ -163,8 +195,121 @@ valueToLabel vc value =
     Locale.currency vc.locale [ ( { network = "btc", asset = "btc" }, value ) ]
 
 
-path : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-path vc gc value withArrow x1 y1 x2 y2 =
+coloredPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
+coloredPath vc gc value outgoing x1 y1 x2_ y2_ =
+    let
+        x2 =
+            if x1 == x2_ then
+                x2_ + 0.01
+
+            else
+                x2_
+
+        y2 =
+            if y1 == y2_ then
+                y2_ + 0.01
+
+            else
+                y2_
+
+        ( dx, dy ) =
+            ( x2 - x1
+            , y2 - y1
+            )
+
+        ( nodes, lx, ly ) =
+            let
+                ( mx, my ) =
+                    ( x1 + dx / 2
+                    , y1 + dy / 2
+                    )
+            in
+            ( [ ( x2, y2 )
+                    |> C
+                        ( mx, y1 )
+                        ( mx, y2 )
+              ]
+            , mx
+            , my
+            )
+
+        label =
+            valueToLabel vc value
+    in
+    [ Svg.path
+        [ nodes
+            |> (::) (M ( x1, y1 ))
+            |> pathD
+            |> d
+        , css
+            [ Css.property "stroke" <|
+                "url(#"
+                    ++ (case ( outgoing, dx > 0 ) of
+                            ( True, True ) ->
+                                "outEdge"
+
+                            ( True, False ) ->
+                                "outEdgeBack"
+
+                            ( False, True ) ->
+                                "inEdge"
+
+                            ( False, False ) ->
+                                "inEdgeBack"
+                       )
+                    ++ ")"
+            , Css.property "fill" "none"
+            ]
+        ]
+        []
+    , if outgoing then
+        let
+            arrowLength =
+                vc.theme.pathfinder.arrowLength
+        in
+        Svg.path
+            [ d <|
+                pathD
+                    [ M ( x2 - arrowLength, y2 - arrowLength )
+                    , l ( arrowLength, arrowLength )
+                    , l ( -arrowLength, arrowLength )
+                    ]
+            , "rotate("
+                ++ ([ if dx < 0 then
+                        "180"
+
+                      else
+                        "0"
+                    , String.fromFloat x2
+                    , String.fromFloat y2
+                    ]
+                        |> String.join ","
+                   )
+                ++ ")"
+                |> transform
+            , css
+                (Css.edgeUtxo vc
+                    ++ [ Css.property "stroke" vc.theme.pathfinder.outEdgeColor ]
+                )
+            ]
+            []
+
+      else
+        text ""
+    , text_
+        [ lx |> String.fromFloat |> x
+        , ly |> String.fromFloat |> y
+        , textAnchor "middle"
+        , Css.edgeLabel vc |> css
+        ]
+        [ text label
+        ]
+    ]
+        |> g []
+
+
+bendedPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
+bendedPath vc gc value withArrow x1 y1 x2 y2 =
     let
         ( dx, dy ) =
             ( x2 - x1
@@ -223,13 +368,6 @@ path vc gc value withArrow x1 y1 x2 y2 =
 
         label =
             valueToLabel vc value
-
-        maxi b a =
-            if a < 0 then
-                Basics.min a (negate b)
-
-            else
-                Basics.max a b
     in
     [ Svg.path
         [ nodes

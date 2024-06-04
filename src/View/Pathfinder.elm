@@ -44,7 +44,7 @@ import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
-import Util.View exposing (copyableLongIdentifier, none)
+import Util.View exposing (colorToHex, copyableLongIdentifier, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Error as Error
@@ -710,6 +710,23 @@ graphSvg plugins _ vc gc model bbox =
 
         pointerStyle =
             [ Css.cursor pointer ]
+
+        gradient name from to =
+            linearGradient
+                [ SA.id name
+                ]
+                [ stop
+                    [ from
+                        |> SA.stopColor
+                    ]
+                    []
+                , stop
+                    [ SA.offset "100%"
+                    , to
+                        |> SA.stopColor
+                    ]
+                    []
+                ]
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -746,7 +763,14 @@ graphSvg plugins _ vc gc model bbox =
                     []
                )
         )
-        [ Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
+        [ defs
+            []
+            [ gradient "outEdge" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.outEdgeColor
+            , gradient "inEdge" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.edgeColor
+            , gradient "outEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.edgeColor
+            , gradient "inEdgeBack" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.inEdgeColor
+            ]
+        , Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model

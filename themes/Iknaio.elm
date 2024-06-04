@@ -689,9 +689,13 @@ theme =
                         |> DesignToken.withDuration duration
                         |> DesignToken.css
                     ]
+                |> s_edgeColor (DesignToken.toVariable edgeUtxoStrokeColor)
+                |> s_outEdgeColor (DesignToken.toVariable edgeUtxoOutStrokeColor)
+                |> s_inEdgeColor (DesignToken.toVariable edgeUtxoInStrokeColor)
                 |> s_edgeUtxo
                     [ DesignToken.init
                         |> DesignToken.token "stroke" edgeUtxoStrokeColor
+                        |> DesignToken.token "stroke-width" edgeUtxoStrokeWidth
                         |> DesignToken.withDuration duration
                         |> DesignToken.css
                     ]

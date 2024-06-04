@@ -6,15 +6,19 @@ import Dict exposing (Dict)
 import Tuple exposing (first)
 
 
+type Variable
+    = Variable String String
+
+
 type alias DesignToken =
     { name : String
-    , light : String
-    , dark : String
+    , light : Variable
+    , dark : Variable
     }
 
 
 variables : Bool -> List DesignToken -> Css.Style
-variables lightmode =
+variables lightmode tokens =
     let
         mode =
             if lightmode then
@@ -22,9 +26,26 @@ variables lightmode =
 
             else
                 .dark
+
+        fold : Variable -> Dict String String -> Dict String String
+        fold (Variable name value) =
+            Dict.insert name value
+
+        variables_ =
+            tokens
+                |> List.map mode
+                |> List.foldl fold Dict.empty
+                |> Dict.toList
+                |> List.map (\( name, value ) -> property ("--" ++ name) value)
     in
-    List.map (\dt -> mode dt |> property ("--" ++ dt.name))
-        >> Css.batch
+    variables_
+        ++ List.map (\dt -> mode dt |> variableReference |> property ("--" ++ dt.name)) tokens
+        |> Css.batch
+
+
+variableReference : Variable -> String
+variableReference (Variable name _) =
+    "var(--" ++ name ++ ")"
 
 
 type alias Style =
@@ -79,7 +100,12 @@ css s =
 
 toProperty : String -> DesignToken -> Css.Style
 toProperty name dt =
+    toVariable dt
+        |> property name
+
+
+toVariable : DesignToken -> String
+toVariable dt =
     "var(--"
         ++ dt.name
         ++ ")"
-        |> property name
