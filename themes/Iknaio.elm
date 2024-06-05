@@ -128,6 +128,7 @@ theme =
             , scaled 6 |> rem |> fontSize
             , fontWeight bold
             , scaled 1 |> rem |> paddingTop
+            , marginBottom <| rem <| 1
             ]
         |> s_paragraph
             [ scaled 2 |> rem |> marginBottom
@@ -300,6 +301,12 @@ theme =
                 [ padding (rem p)
                 , calc (pct 100) minus (rem p)
                     |> width
+                ]
+            )
+        |> s_box
+            (\lightmode ->
+                [ scaled 7 |> rem |> padding
+                , backgroundColorWithLightmode lightmode colors.white
                 ]
             )
         |> s_stats
@@ -556,6 +563,11 @@ theme =
                         , hover
                             [ color_backgroundColorWithLightmode lightmode colors.grey colors.greyLight
                             ]
+                        ]
+                    )
+                |> s_iconButton
+                    (\lightmode ->
+                        [ width <| px 16
                         ]
                     )
             )
@@ -1253,7 +1265,7 @@ theme =
                     , fontBold
                     ]
                 |> s_headCellSortable
-                    [ ( "cursor", "pointer" )
+                    [ cursor pointer
                     ]
                 |> s_maxHeight 300
                 |> s_rowHeight

@@ -3,6 +3,7 @@ module View.Graph.Table.AllAssetsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css
+import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -23,10 +24,10 @@ config vc =
         { toId = first >> .asset
         , toMsg = TableNewState
         , columns =
-            [ T.stringColumn vc titleCurrency (first >> .asset >> String.toUpper)
-            , T.valueColumnWithoutCode vc first titleValue second
+            [ T.stringColumn styles vc titleCurrency (first >> .asset >> String.toUpper)
+            , T.valueColumnWithoutCode styles vc first titleValue second
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 

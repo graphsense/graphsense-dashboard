@@ -2,6 +2,7 @@ module View.Graph.Table.AddressTxsUtxoTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css.Table exposing (styles)
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -24,7 +25,8 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 titleTx
                 .txHash
                 (\data ->
@@ -44,11 +46,11 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleValue .value
-            , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
-            , T.timestampColumn vc titleTimestamp .timestamp
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleValue .value
+            , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
+            , T.timestampColumn styles vc titleTimestamp .timestamp
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 

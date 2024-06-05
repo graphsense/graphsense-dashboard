@@ -71,6 +71,7 @@ type alias Theme =
     , copyIcon : Bool -> List Style
     , longIdentifier : List Style
     , hint : Bool -> List Style
+    , box : Bool -> List Style
     }
 
 
@@ -129,4 +130,5 @@ default =
     , copyIcon = \_ -> []
     , longIdentifier = []
     , hint = \_ -> []
+    , box = \_ -> []
     }

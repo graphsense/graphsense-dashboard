@@ -84,8 +84,17 @@ contents vc =
     [ displayFlex
     , flexDirection column
     , flexGrow (num 1)
-    , overflow hidden
+    , overflow auto
     ]
+        ++ (vc.size
+                |> Maybe.map
+                    (\{ height } ->
+                        px height
+                            |> maxHeight
+                            |> List.singleton
+                    )
+                |> Maybe.withDefault []
+           )
         ++ vc.theme.contents vc.lightmode
 
 
@@ -204,3 +213,8 @@ hint vc =
 frame : Config -> List Style
 frame vc =
     vc.theme.frame vc.lightmode
+
+
+box : Config -> List Style
+box vc =
+    vc.theme.box vc.lightmode

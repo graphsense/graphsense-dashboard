@@ -199,11 +199,18 @@ copyableLongIdentifier vc attr identifier =
 
 
 copyIcon : View.Config -> String -> Html msg
-copyIcon vc value =
+copyIcon =
+    copyIconWithAttr []
+
+
+copyIconWithAttr : List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttr attr vc value =
     Html.Styled.a
-        [ Css.copyIcon vc |> css
-        , title (Locale.string vc.locale "copy")
-        ]
+        ([ Css.copyIcon vc |> css
+         , title (Locale.string vc.locale "copy")
+         ]
+            ++ attr
+        )
         [ Html.Styled.node "copy-icon"
             [ Html.Styled.Attributes.attribute "data-value" value
             ]

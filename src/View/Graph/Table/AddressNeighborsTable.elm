@@ -3,6 +3,7 @@ module View.Graph.Table.AddressNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Css.Table exposing (styles)
 import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -41,14 +42,16 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
         { toId = .address >> .address
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 (columnTitleFromDirection isOutgoing)
                 (.address >> .address)
                 (\data ->
                     [ id
                         |> Maybe.map
                             (\aid ->
-                                T.tickIf vc
+                                T.tickIf styles
+                                    vc
                                     (neighborLayerHasAddress aid isOutgoing)
                                     { currency = data.address.currency
                                     , address = data.address.address
@@ -71,7 +74,8 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                 )
 
             {- , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels) -}
-            , T.htmlColumn vc
+            , T.htmlColumn styles
+                vc
                 titleLabels
                 (.labels >> Maybe.withDefault [] >> reduceLabels)
                 (\data ->
@@ -84,7 +88,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                         Nothing ->
                             [ span [] [ text (data.labels |> Maybe.withDefault [] |> reduceLabels) ] ]
                 )
-            , T.intColumn vc titleNoTxs .noTxs
+            , T.intColumn styles vc titleNoTxs .noTxs
             ]
                 ++ valueColumns vc
                     (assetFromBase coinCode)
@@ -98,7 +102,7 @@ config vc isOutgoing coinCode id neighborLayerHasAddress =
                     , totalReceived = .address >> .totalReceived
                     , value = .value
                     }
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 
@@ -120,19 +124,22 @@ valueColumns :
         }
     -> List (Table.Column Api.Data.NeighborAddress Msg)
 valueColumns vc coinCode tokens getValues =
-    [ T.valueAndTokensColumnWithOptions True
+    [ T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale titleAddressBalance)
         (.address >> .balance)
         (.address >> .tokenBalances)
-    , T.valueAndTokensColumnWithOptions True
+    , T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale titleAddressReceived)
         (.address >> .totalReceived)
         (.address >> .totalTokensReceived)
-    , T.valueAndTokensColumnWithOptions True
+    , T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale (titleValue coinCode.network))
