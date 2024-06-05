@@ -14,5 +14,5 @@ type Msg
     | UserPicksCurrency String
     | UserClickedCloseCurrencyPicker
     | PluginMsg Plugin.Msg.Msg
-    | AutocompleteMsg (Autocomplete.Msg ResultLine)
+    | AutocompleteMsg Autocomplete.Msg
     | NoOp

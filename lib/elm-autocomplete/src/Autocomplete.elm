@@ -3,7 +3,7 @@ module Autocomplete exposing
     , init, update
     , selectedValue
     , viewState, query, choices
-    , onFetch, setChoices, setQuery, setSelectedIndex, setStatus
+    , enoughCharacters, inFocus, onFetch, setChoices, setQuery, setSelectedIndex, setStatus
     )
 
 {-| Autocomplete contains the main logic to handle auto-complete.
@@ -46,8 +46,8 @@ type Autocomplete a
 
 {-| Opaque type of Autocomplete internal msg
 -}
-type alias Msg a =
-    Internal.Msg a
+type alias Msg =
+    Internal.Msg
 
 
 {-| Record to hold the query and choices for your fetcher function.
@@ -112,6 +112,7 @@ type alias State a =
     , mouseDownIndex : Maybe Int
     , debounceState : Bounce.Bounce
     , minQueryLength : Int
+    , inFocus : Bool
     }
 
 
@@ -198,6 +199,7 @@ init minQueryLength initChoices =
         , mouseDownIndex = Nothing
         , debounceState = Bounce.init
         , minQueryLength = minQueryLength
+        , inFocus = False
         }
 
 
@@ -220,7 +222,7 @@ init minQueryLength initChoices =
     -- ...
 
 -}
-update : Msg a -> Autocomplete a -> ( Autocomplete a, Bool, Cmd (Msg a) )
+update : Msg -> Autocomplete a -> ( Autocomplete a, Bool, Cmd (Msg) )
 update msg (Autocomplete state) =
     case msg of
         OnInput q ->
@@ -229,17 +231,20 @@ update msg (Autocomplete state) =
                     | query = q
                     , debounceState = Bounce.push state.debounceState
                     , selectedIndex = Nothing
+                    , inFocus = True
                 }
             , False
             , Bounce.delay 200 Debounce
             )
 
         OnBlur ->
-            ( Autocomplete
-                { state
-                    | viewStatus = NotFetched
-                    , choices = []
-                }
+            ( Autocomplete { state | inFocus = False }
+            , False
+            , Cmd.none
+            )
+
+        OnFocus ->
+            ( Autocomplete { state | inFocus = True }
             , False
             , Cmd.none
             )
@@ -388,3 +393,13 @@ setStatus : ViewStatus -> Autocomplete a -> Autocomplete a
 setStatus st (Autocomplete s) =
     { s | viewStatus = st }
         |> Autocomplete
+
+
+inFocus : Autocomplete a -> Bool
+inFocus (Autocomplete s) =
+    s.inFocus
+
+
+enoughCharacters : Autocomplete s -> Bool
+enoughCharacters (Autocomplete s) =
+    String.length s.query >= s.minQueryLength

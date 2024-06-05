@@ -3,7 +3,7 @@ module View.Graph.Table.UserAddressTagsTable exposing (..)
 import Config.Graph as Graph
 import Config.View as View
 import Css
-import Css.Table
+import Css.Table exposing (styles)
 import Css.View
 import Dict
 import Html.Styled exposing (..)
@@ -35,11 +35,12 @@ config vc gc =
         , toMsg = TableNewState
         , columns =
             [ toMsg
-                |> T.addressColumn vc titleAddress .address
-            , T.stringColumn vc titleCurrency (.currency >> String.toUpper)
-            , T.stringColumn vc titleLabel .label
-            , T.tickColumn vc titleDefinesEntity .isClusterDefiner
-            , T.htmlColumn vc
+                |> T.addressColumn styles vc titleAddress .address
+            , T.stringColumn styles vc titleCurrency (.currency >> String.toUpper)
+            , T.stringColumn styles vc titleLabel .label
+            , T.tickColumn styles vc titleDefinesEntity .isClusterDefiner
+            , T.htmlColumn styles
+                vc
                 titleSource
                 .source
                 (\data ->
@@ -67,11 +68,11 @@ config vc gc =
                         text truncated
                     ]
                 )
-            , T.stringColumn vc titleCategory (.category >> Util.Graph.getCategory gc >> Maybe.withDefault "")
-            , T.stringColumn vc titleAbuse (.abuse >> Util.Graph.getAbuse gc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleCategory (.category >> Util.Graph.getCategory gc >> Maybe.withDefault "")
+            , T.stringColumn styles vc titleAbuse (.abuse >> Util.Graph.getAbuse gc >> Maybe.withDefault "")
             ]
         , customizations =
-            customizations vc
+            customizations styles vc
                 |> s_rowAttrs
                     (\data ->
                         [ Css.Table.row vc

@@ -2,6 +2,7 @@ module View.Graph.Table.TxsUtxoTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css.Table exposing (styles)
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -25,7 +26,7 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles vc
                 titleTx
                 .txHash
                 (\data ->
@@ -46,12 +47,12 @@ config vc coinCode =
                             ]
                         |> List.singleton
                 )
-            , T.intColumn vc titleNoInputs .noInputs
-            , T.intColumn vc titleNoOutputs .noOutputs
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalInput .totalInput
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalOutput .totalOutput
+            , T.intColumn styles vc titleNoInputs .noInputs
+            , T.intColumn styles vc titleNoOutputs .noOutputs
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleTotalInput .totalInput
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleTotalOutput .totalOutput
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 

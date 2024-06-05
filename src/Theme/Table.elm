@@ -16,7 +16,7 @@ type alias Table =
     , row : Bool -> List Style
     , maxHeight : Float
     , rowHeight : Float
-    , headCellSortable : List ( String, String )
+    , headCellSortable : List Style
     , cell : List Style
     , numberCell : List Style
     , valuesCell : Bool -> Bool -> List Style

@@ -33,22 +33,22 @@ type alias Events msg =
 
 {-| Map Autocomplete Msg into your app's msg and also the msg to send when user selects a choice
 -}
-type alias EventMapper a msg =
+type alias EventMapper msg =
     { onSelect : msg
-    , mapHtml : Msg a -> msg
+    , mapHtml : Msg -> msg
     }
 
 
 {-| Returns the events to be attached for input and every autocomplete choice
 -}
-events : EventMapper a msg -> Events msg
+events : EventMapper msg -> Events msg
 events mapper =
     { inputEvents = inputEvents mapper
     , choiceEvents = choiceEvents mapper
     }
 
 
-inputEvents : EventMapper a msg -> List (Attribute msg)
+inputEvents : EventMapper msg -> List (Attribute msg)
 inputEvents mapper =
     let
         { mapHtml } =
@@ -56,11 +56,12 @@ inputEvents mapper =
     in
     [ Events.onInput (mapHtml << OnInput)
     , Events.onBlur (mapHtml <| OnBlur)
+    , Events.onFocus (mapHtml <| OnFocus)
     , Events.preventDefaultOn "keydown" <| onKeyDownDecoder mapper
     ]
 
 
-choiceEvents : EventMapper a msg -> Int -> List (Attribute msg)
+choiceEvents : EventMapper msg -> Int -> List (Attribute msg)
 choiceEvents mapper index =
     let
         { onSelect, mapHtml } =
@@ -77,7 +78,7 @@ choiceEvents mapper index =
     ]
 
 
-onKeyDownDecoder : EventMapper a msg -> JD.Decoder ( msg, Bool )
+onKeyDownDecoder : EventMapper msg -> JD.Decoder ( msg, Bool )
 onKeyDownDecoder mapper =
     let
         { onSelect, mapHtml } =

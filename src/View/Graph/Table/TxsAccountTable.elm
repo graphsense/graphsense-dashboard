@@ -2,6 +2,7 @@ module View.Graph.Table.TxsAccountTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css.Table exposing (styles)
 import Css.View
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -32,7 +33,8 @@ blockConfig vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 titleTx
                 .txHash
                 (\data ->
@@ -59,18 +61,19 @@ blockConfig vc coinCode =
                       else
                         T.valueColumnWithoutCode
                      )
+                        styles
                         vc
                         (\x -> asset coinCode x.currency)
                         "Value"
                         .value
                    ]
-                ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
+                ++ [ T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
                    , toMsg .fromAddress
-                        |> T.addressColumn vc titleSendingAddress .fromAddress
+                        |> T.addressColumn styles vc titleSendingAddress .fromAddress
                    , toMsg .toAddress
-                        |> T.addressColumn vc titleReceivingAddress .toAddress
+                        |> T.addressColumn styles vc titleReceivingAddress .toAddress
                    ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 
@@ -87,7 +90,8 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 titleTx
                 .txHash
                 (\data ->
@@ -114,21 +118,22 @@ config vc coinCode =
                       else
                         T.valueColumnWithoutCode
                      )
+                        styles
                         vc
                         (\x -> asset coinCode x.currency)
                         "Value"
                         .value
                    ]
-                ++ [ T.stringColumn vc "Currency" (.currency >> String.toUpper)
-                   , T.timestampColumn vc titleTimestamp .timestamp
+                ++ [ T.stringColumn styles vc "Currency" (.currency >> String.toUpper)
+                   , T.timestampColumn styles vc titleTimestamp .timestamp
                    , toMsg .fromAddress
-                        |> T.addressColumn vc titleSendingAddress .fromAddress
+                        |> T.addressColumn styles vc titleSendingAddress .fromAddress
                    , toMsg .toAddress
-                        |> T.addressColumn vc titleReceivingAddress .toAddress
-                   , T.intColumnWithoutValueDetailFormatting vc titleHeight .height
-                   , T.maybeIntColumn vc "Token Tx Id" .tokenTxId
+                        |> T.addressColumn styles vc titleReceivingAddress .toAddress
+                   , T.intColumnWithoutValueDetailFormatting styles vc titleHeight .height
+                   , T.maybeIntColumn styles vc "Token Tx Id" .tokenTxId
                    ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 

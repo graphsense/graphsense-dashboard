@@ -124,7 +124,7 @@ meyerV2 =
             , section
             ]
             [ display block ]
-        , body [ lineHeight (int 1) ]
+        , body [ lineHeight (num 1) ]
         , each [ ol, ul ] [ listStyle none ]
         , each [ blockquote, q ] [ property "quotes" "none" ]
         , each [ blockquote, q ]

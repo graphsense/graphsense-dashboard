@@ -1,5 +1,6 @@
 module View.Graph.Table.EntityAddressesTable exposing (..)
 
+import Css.Table exposing (styles)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
@@ -26,14 +27,14 @@ config vc coinCode entityId entityHasAddress =
         { toId = .address
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles vc
                 titleAddress
                 .address
                 (\data ->
                     [ entityId
                         |> Maybe.map
                             (\id ->
-                                T.tickIf vc
+                                T.tickIf styles vc
                                     (entityHasAddress id)
                                     { currency = data.currency, address = data.address }
                             )
@@ -52,12 +53,12 @@ config vc coinCode entityId entityHasAddress =
                         data.address
                     ]
                 )
-            , T.timestampColumn vc titleFirstUsage (.firstTx >> .timestamp)
-            , T.timestampColumn vc titleLastUsage (.lastTx >> .timestamp)
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleFinalBalance .balance
-            , T.valueColumn vc (\_ -> assetFromBase coinCode) titleTotalReceived .totalReceived
+            , T.timestampColumn styles vc titleFirstUsage (.firstTx >> .timestamp)
+            , T.timestampColumn styles vc titleLastUsage (.lastTx >> .timestamp)
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleFinalBalance .balance
+            , T.valueColumn styles vc (\_ -> assetFromBase coinCode) titleTotalReceived .totalReceived
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 

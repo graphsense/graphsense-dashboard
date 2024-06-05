@@ -4,7 +4,7 @@ import Api.Data
 import Config.Graph as Graph
 import Config.View as View
 import Css
-import Css.Table
+import Css.Table exposing (styles)
 import Css.View
 import Dict
 import Html.Styled exposing (..)
@@ -30,14 +30,16 @@ config vc gc bestAddressTag entityId entityHasAddress =
         { toId = \data -> data.currency ++ data.address ++ data.label
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 "Address"
                 .address
                 (\data ->
                     [ entityId
                         |> Maybe.map
                             (\id ->
-                                T.tickIf vc
+                                T.tickIf styles
+                                    vc
                                     (entityHasAddress id)
                                     { currency = String.toLower data.currency, address = data.address }
                             )
@@ -56,7 +58,8 @@ config vc gc bestAddressTag entityId entityHasAddress =
                         data.address
                     ]
                 )
-            , T.htmlColumn vc
+            , T.htmlColumn styles
+                vc
                 "Label"
                 .label
                 (\{ label, tagpackIsPublic } ->
@@ -74,7 +77,8 @@ config vc gc bestAddressTag entityId entityHasAddress =
                     else
                         [ text label ]
                 )
-            , T.htmlColumn vc
+            , T.htmlColumn styles
+                vc
                 "Source"
                 (.source >> Maybe.withDefault "")
                 (\data ->
@@ -103,22 +107,26 @@ config vc gc bestAddressTag entityId entityHasAddress =
                         text truncated
                     ]
                 )
-            , T.stringColumn vc
+            , T.stringColumn styles
+                vc
                 "Category"
                 (.category
                     >> Util.Graph.getCategory gc
                     >> Maybe.withDefault ""
                 )
-            , T.stringColumn vc
+            , T.stringColumn styles
+                vc
                 "Abuse"
                 (.abuse
                     >> Util.Graph.getAbuse gc
                     >> Maybe.withDefault ""
                 )
-            , T.stringColumn vc
+            , T.stringColumn styles
+                vc
                 "Confidence"
                 (.confidence >> Maybe.withDefault "")
-            , T.htmlColumn vc
+            , T.htmlColumn styles
+                vc
                 "TagPack"
                 .tagpackTitle
                 (\data ->
@@ -139,10 +147,10 @@ config vc gc bestAddressTag entityId entityHasAddress =
                         text data.tagpackTitle
                     ]
                 )
-            , T.stringColumn vc "Creator" .tagpackCreator
+            , T.stringColumn styles vc "Creator" .tagpackCreator
             ]
         , customizations =
-            customizations vc
+            customizations styles vc
                 |> s_rowAttrs
                     (\data ->
                         [ Css.Table.row vc

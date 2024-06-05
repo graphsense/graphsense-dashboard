@@ -46,6 +46,7 @@ resultGroupList vc =
 resultLine : Config -> List Style
 resultLine vc =
     cursor pointer
+        :: overflowX hidden
         :: vc.theme.search.resultLine vc.lightmode
 
 

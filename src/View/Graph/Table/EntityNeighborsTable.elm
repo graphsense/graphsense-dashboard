@@ -3,6 +3,7 @@ module View.Graph.Table.EntityNeighborsTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Css.Table exposing (Styles, styles)
 import Dict
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -44,14 +45,16 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
         { toId = .entity >> .entity >> String.fromInt
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn vc
+            [ T.htmlColumn styles
+                vc
                 (columnTitleFromDirection isOutgoing)
                 (.entity >> .entity >> String.fromInt)
                 (\data ->
                     [ id
                         |> Maybe.map
                             (\eid ->
-                                T.tickIf vc
+                                T.tickIf styles
+                                    vc
                                     (neighborLayerHasEntity eid isOutgoing)
                                     { currency = data.entity.currency
                                     , entity = data.entity.entity
@@ -77,7 +80,8 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                 )
 
             {- , T.stringColumn vc titleLabels (.labels >> Maybe.withDefault [] >> reduceLabels) -}
-            , T.htmlColumn vc
+            , T.htmlColumn styles
+                vc
                 titleLabels
                 (\data ->
                     data.entity
@@ -105,10 +109,11 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                                 ]
                             ]
                 )
-            , T.intColumn vc titleNoAddresses (.entity >> .noAddresses)
-            , T.intColumn vc titleNoTxs .noTxs
+            , T.intColumn styles vc titleNoAddresses (.entity >> .noAddresses)
+            , T.intColumn styles vc titleNoTxs .noTxs
             ]
-                ++ valueColumns vc
+                ++ valueColumns styles
+                    vc
                     (assetFromBase coinCode)
                     (if Data.isAccountLike coinCode then
                         Locale.tokenCurrencies coinCode vc.locale
@@ -120,12 +125,13 @@ config vc isOutgoing coinCode id neighborLayerHasEntity =
                     , totalReceived = .entity >> .totalReceived
                     , value = .value
                     }
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }
 
 
 valueColumns :
-    View.Config
+    Styles
+    -> View.Config
     -> AssetIdentifier
     -> List String
     ->
@@ -134,20 +140,23 @@ valueColumns :
         , value : Api.Data.NeighborEntity -> Api.Data.Values
         }
     -> List (Table.Column Api.Data.NeighborEntity Msg)
-valueColumns vc coinCode tokens getValues =
-    [ T.valueAndTokensColumnWithOptions True
+valueColumns styles vc coinCode tokens getValues =
+    [ T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale titleEntityBalance)
         (.entity >> .balance)
         (.entity >> .tokenBalances)
-    , T.valueAndTokensColumnWithOptions True
+    , T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale titleEntityReceived)
         (.entity >> .totalReceived)
         (.entity >> .totalTokensReceived)
-    , T.valueAndTokensColumnWithOptions True
+    , T.valueAndTokensColumnWithOptions styles
+        True
         vc
         (\_ -> coinCode.network)
         (Locale.string vc.locale (titleValue coinCode.network))

@@ -9,6 +9,7 @@ type alias Button =
     , primary : Bool -> List Style
     , danger : Bool -> List Style
     , disabled : Bool -> List Style
+    , iconButton : Bool -> List Style
     }
 
 
@@ -19,4 +20,5 @@ default =
     , primary = \_ -> []
     , danger = \_ -> []
     , disabled = \_ -> []
+    , iconButton = \_ -> []
     }

@@ -744,6 +744,16 @@ isOutgoingToDirection isOutgoing =
             Api.Request.Entities.DirectionIn
 
 
+isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction
+isOutgoingToAddressDirection isOutgoing =
+    case isOutgoing of
+        True ->
+            Api.Request.Addresses.DirectionOut
+
+        False ->
+            Api.Request.Addresses.DirectionIn
+
+
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)
 listWithMaybes decoder =
     Json.Decode.list (Json.Decode.maybe decoder)
