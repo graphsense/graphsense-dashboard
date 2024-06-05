@@ -259,6 +259,7 @@ coloredPath vc gc value outgoing x1 y1 x2_ y2_ =
                        )
                     ++ ")"
             , Css.property "fill" "none"
+            , Css.property "stroke-width" "2px"
             ]
         ]
         []

@@ -721,7 +721,7 @@ graphSvg plugins _ vc gc model bbox =
                     ]
                     []
                 , stop
-                    [ SA.offset "100%"
+                    [ SA.offset "70%"
                     , to
                         |> SA.stopColor
                     ]

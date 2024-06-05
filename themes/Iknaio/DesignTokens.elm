@@ -15,12 +15,17 @@ white =
 
 red : Variable
 red =
-    Variable "red" "rgb(194, 141, 141)"
+    Variable "red" "#ed3c10"
 
 
 green : Variable
 green =
-    Variable "green" "rgb(18, 152, 136)"
+    Variable "green" "#8dc299"
+
+
+gred : Variable
+gred =
+    Variable "gred" "#ab9671"
 
 
 gutter : Variable
@@ -60,7 +65,7 @@ txFillColor =
 
 edgeUtxoStrokeColor : DesignToken
 edgeUtxoStrokeColor =
-    DesignToken "edge-utxo-stroke-color" black white
+    DesignToken "edge-utxo-stroke-color" gred gred
 
 
 edgeUtxoStrokeWidth : DesignToken
