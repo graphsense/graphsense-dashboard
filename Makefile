@@ -7,6 +7,10 @@ install:
 	pip install pre-commit
 	pre-commit install
 
+install:
+	pip install pre-commit
+	pre-commit install
+
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
