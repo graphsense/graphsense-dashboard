@@ -43,7 +43,7 @@ type Request a =
 
 baseUrl : String
 baseUrl =
-    "http://172.22.240.6:7777"
+    "http://localhost:9000"
 
 
 noExternalTransactions : String

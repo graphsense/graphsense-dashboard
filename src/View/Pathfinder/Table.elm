@@ -9,9 +9,9 @@ import Html.Styled.Events exposing (..)
 import Model.Pathfinder.Table as PT exposing (PagedTable)
 import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Table
+import Tuple3
 import Util.View
 import View.Graph.Table exposing (simpleThead, tableHint)
-import Tuple3
 
 
 type alias PagingMsg data msg =
