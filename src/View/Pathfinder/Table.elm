@@ -2,7 +2,7 @@ module View.Pathfinder.Table exposing (customizations, pagedTableView, rawTableV
 
 import Config.View as View
 import Css.Pathfinder exposing (centerContent, fullWidth, linkButtonStyle, toAttr)
-import Css.Table exposing (loadingSpinner)
+import Css.Table exposing (loadingSpinner, styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -11,6 +11,7 @@ import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Table
 import Util.View
 import View.Graph.Table exposing (simpleThead, tableHint)
+import Tuple3
 
 
 type alias PagingMsg data msg =
@@ -21,7 +22,7 @@ customizations : View.Config -> Table.Customizations data msg
 customizations vc =
     Table.defaultCustomizations
         |> s_tableAttrs [ fullWidth ++ Css.Table.table vc |> css ]
-        |> s_thead (simpleThead vc)
+        |> s_thead (List.map (Tuple3.mapThird List.singleton) >> simpleThead styles vc)
         |> s_rowAttrs (\_ -> [ Css.Table.row vc |> css ])
 
 
@@ -64,11 +65,11 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
                         ]
 
                     else if List.isEmpty tbl.data then
-                        [ tableHint vc "No records found"
+                        [ tableHint styles vc "No records found"
                         ]
 
                     else if List.isEmpty filteredData then
-                        [ tableHint vc "No rows match your filter criteria"
+                        [ tableHint styles vc "No rows match your filter criteria"
                         ]
 
                     else
