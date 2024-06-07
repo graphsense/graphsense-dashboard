@@ -156,6 +156,18 @@ type Effect msg
         , isOutgoing : Bool
         }
         (List Api.Data.TxValue -> msg)
+    | ListSpendingTxRefsEffect
+        { currency : String
+        , txHash : String
+        , index : Maybe Int
+        }
+        (List Api.Data.TxRef -> msg)
+    | ListSpentInTxRefsEffect
+        { currency : String
+        , txHash : String
+        , index : Maybe Int
+        }
+        (List Api.Data.TxRef -> msg)
     | ListAddressTagsEffect
         { label : String
         , nextpage : Maybe String
@@ -399,6 +411,16 @@ map mapMsg effect =
                 >> mapMsg
                 |> GetTxUtxoAddressesEffect eff
 
+        ListSpendingTxRefsEffect eff m ->
+            m
+                >> mapMsg
+                |> ListSpendingTxRefsEffect eff
+
+        ListSpentInTxRefsEffect eff m ->
+            m
+                >> mapMsg
+                |> ListSpentInTxRefsEffect eff
+
         ListAddressTagsEffect eff m ->
             m
                 >> mapMsg
@@ -530,6 +552,14 @@ perform apiKey wrapMsg effect =
             in
             -- currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query
             Api.Request.Addresses.listAddressTxs currency address dir minHeight maxHeight order Nothing nextpage (Just pagesize)
+                |> send apiKey wrapMsg effect toMsg
+
+        ListSpendingTxRefsEffect { currency, txHash, index } toMsg ->
+            Api.Request.Txs.getSpendingTxs currency txHash index
+                |> send apiKey wrapMsg effect toMsg
+
+        ListSpentInTxRefsEffect { currency, txHash, index } toMsg ->
+            Api.Request.Txs.getSpentInTxs currency txHash index
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddresslinkTxsEffect { currency, source, target, minHeight, maxHeight, order, pagesize, nextpage } toMsg ->
@@ -736,22 +766,20 @@ send apiKey wrapMsg effect toMsg =
 
 isOutgoingToDirection : Bool -> Api.Request.Entities.Direction
 isOutgoingToDirection isOutgoing =
-    case isOutgoing of
-        True ->
-            Api.Request.Entities.DirectionOut
+    if isOutgoing then
+        Api.Request.Entities.DirectionOut
 
-        False ->
-            Api.Request.Entities.DirectionIn
+    else
+        Api.Request.Entities.DirectionIn
 
 
 isOutgoingToAddressDirection : Bool -> Api.Request.Addresses.Direction
 isOutgoingToAddressDirection isOutgoing =
-    case isOutgoing of
-        True ->
-            Api.Request.Addresses.DirectionOut
+    if isOutgoing then
+        Api.Request.Addresses.DirectionOut
 
-        False ->
-            Api.Request.Addresses.DirectionIn
+    else
+        Api.Request.Addresses.DirectionIn
 
 
 listWithMaybes : Json.Decode.Decoder a -> Json.Decode.Decoder (List a)

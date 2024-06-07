@@ -37,7 +37,6 @@ type Msg
     | PluginMsg Plugin.Msg
     | SearchMsg Search.Msg
     | NoOp
-    | BrowserGotRecentTx Id Direction Api.Data.AddressTxs
     | BrowserGotTxForAddress Id Direction Api.Data.Tx
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx Api.Data.Tx
@@ -52,6 +51,8 @@ type Msg
     | UserClickedTx Id
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAddressCheckboxInTable Id
+    | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
+    | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg
 
 
 type DisplaySettingsMsg
@@ -71,3 +72,18 @@ type AddressDetailsMsg
 
 type TxDetailsMsg
     = UserClickedToggleIOTable
+
+
+type alias WorkflowNextTxContext =
+    { addressId : Id
+    , direction : Direction
+    }
+
+
+type WorkflowNextUtxoTxMsg
+    = BrowserGotReferencedTxs (List Api.Data.TxRef)
+
+
+type WorkflowNextTxByTimeMsg
+    = BrowserGotBlockHeight Api.Data.BlockAtDate
+    | BrowserGotRecentTx Api.Data.AddressTxs

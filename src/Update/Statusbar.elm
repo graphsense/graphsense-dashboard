@@ -329,6 +329,22 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.ListSpendingTxRefsEffect e _ ->
+            ( "{1}: loading transactions which {0} is spending"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
+        Api.ListSpentInTxRefsEffect e _ ->
+            ( "{1}: loading transactions where {0} got spent"
+            , [ e.txHash
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.GetAddressNeighborsEffect e _ ->
             ( "{1}: loading " ++ isOutgoingToString e.isOutgoing ++ " neighbors of address {0}"
             , [ e.address

@@ -331,8 +331,8 @@ fromTxAccountData tx =
             { from = Id.init tx.currency tx.fromAddress
             , to = Id.init tx.currency tx.toAddress
             , value = tx.value
+            , raw = tx
             }
-    , raw = Api.Data.TxTxAccount tx
     }
 
 
@@ -380,8 +380,8 @@ fromTxUtxoData tx coords =
                                 (\( o, _ ) -> NDict.get o inputs == Nothing)
                                 (NList.head out)
                             |> NDict.fromNonemptyList
+                    , raw = tx
                     }
-            , raw = Api.Data.TxTxUtxo tx
             }
         )
         (fn Incoming)

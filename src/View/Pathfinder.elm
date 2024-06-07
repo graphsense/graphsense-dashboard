@@ -27,6 +27,7 @@ import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Msg.Pathfinder exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
@@ -340,7 +341,7 @@ detailsView vc gc model =
 
                 ( SelectedTx id, TxDetails _ state ) ->
                     Dict.get id model.network.txs
-                        |> Maybe.map (\x -> txDetailsContentView vc gc model id state x.raw)
+                        |> Maybe.map (\x -> txDetailsContentView vc gc model id state x)
                         |> Maybe.withDefault (Util.View.loadingSpinner vc Css.View.loadingSpinner)
 
                 _ ->
@@ -390,7 +391,7 @@ getAddressActionBtns id data =
     [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
 
 
-txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Api.Data.Tx -> Html Msg
+txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Tx -> Html Msg
 txDetailsContentView vc gc model id viewState data =
     let
         header =
@@ -399,15 +400,15 @@ txDetailsContentView vc gc model id viewState data =
             ]
 
         ( detailsTblBody, sections ) =
-            case data of
-                Api.Data.TxTxAccount tx ->
-                    ( [ accountTxDetailsContentView vc tx ]
+            case data.type_ of
+                Tx.Account tx ->
+                    ( [ accountTxDetailsContentView vc tx.raw ]
                     , [ none ]
                     )
 
-                Api.Data.TxTxUtxo tx ->
-                    ( [ utxoTxDetailsContentView vc tx ]
-                    , [ utxoTxDetailsSectionsView vc model.network viewState tx ]
+                Tx.Utxo tx ->
+                    ( [ utxoTxDetailsContentView vc tx.raw ]
+                    , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw ]
                     )
     in
     div []

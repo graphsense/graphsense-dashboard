@@ -1,12 +1,10 @@
 module Model.Pathfinder.Tx exposing (..)
 
 import Api.Data
-import Config.Pathfinder exposing (nodeXOffset)
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
-import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
-import Model.Direction as Direction exposing (Direction(..))
+import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
@@ -18,7 +16,6 @@ import Util.Pathfinder exposing (getAddress)
 type alias Tx =
     { id : Id
     , type_ : TxType
-    , raw : Api.Data.Tx
     }
 
 
@@ -31,6 +28,7 @@ type alias AccontTx =
     { from : Id
     , to : Id
     , value : Api.Data.Values
+    , raw : Api.Data.TxAccount
     }
 
 
@@ -39,6 +37,7 @@ type alias UtxoTx =
     , y : Float
     , inputs : NonemptyDict Id Api.Data.Values
     , outputs : NonemptyDict Id Api.Data.Values
+    , raw : Api.Data.TxUtxo
     }
 
 
@@ -127,3 +126,13 @@ getUtxoTx { type_ } =
 
         Account _ ->
             Nothing
+
+
+getRawTimestamp : Tx -> Int
+getRawTimestamp tx =
+    case tx.type_ of
+        Account t ->
+            t.raw.timestamp
+
+        Utxo t ->
+            t.raw.timestamp

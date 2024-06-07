@@ -3,18 +3,18 @@ module Update.Pathfinder exposing (update, updateByRoute)
 import Api.Data
 import Config.Update as Update
 import Dict
-import Dict.Nonempty as NDict
 import DurationDatePicker
-import Effect exposing (and, n)
+import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import List.Extra
 import Log
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (Coords, relativeToGraphZero)
+import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Table as GT
 import Model.Graph.Transform as Transform
@@ -31,16 +31,24 @@ import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
-import Msg.Pathfinder as Msg exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder as Msg
+    exposing
+        ( AddressDetailsMsg(..)
+        , DisplaySettingsMsg(..)
+        , Msg(..)
+        , TxDetailsMsg(..)
+        , WorkflowNextTxByTimeMsg(..)
+        , WorkflowNextUtxoTxMsg(..)
+        )
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
-import Result.Extra
 import Route.Pathfinder as Route
+import Set
 import Svg.Attributes exposing (x)
 import Time exposing (Posix)
-import Tuple exposing (first, mapFirst, pair, second)
+import Tuple exposing (mapFirst)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
@@ -48,8 +56,9 @@ import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Network as Network
+import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
+import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
-import Util.Pathfinder exposing (getAddress)
 import Util.Pathfinder.History as History
 
 
@@ -81,7 +90,7 @@ resultLineToRoute search =
         Search.Label s ->
             Route.Label s
 
-        Search.Actor ( id, name ) ->
+        Search.Actor ( id, _ ) ->
             Route.Actor id
 
 
@@ -116,35 +125,6 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network (Network.updateAddress id (s_data (Success data)) model.network)
                 |> pairTo (fetchActorsForAddress data model.actors)
-
-        BrowserGotRecentTx addressId direction data ->
-            let
-                getHash tx =
-                    case tx of
-                        Api.Data.AddressTxAddressTxUtxo t ->
-                            t.txHash
-
-                        Api.Data.AddressTxTxAccount t ->
-                            t.txHash
-            in
-            ( model
-            , data.addressTxs
-                |> List.head
-                |> Maybe.map getHash
-                |> Maybe.map
-                    (\txHash ->
-                        BrowserGotTxForAddress addressId direction
-                            |> Api.GetTxEffect
-                                { currency = Id.network addressId
-                                , txHash = txHash
-                                , includeIo = True
-                                , tokenTxId = Nothing
-                                }
-                            |> ApiEffect
-                            |> List.singleton
-                    )
-                |> Maybe.withDefault []
-            )
 
         BrowserGotTxForAddress addressId direction data ->
             browserGotTxForAddress plugins uc addressId direction data model
@@ -527,19 +507,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedAddressExpandHandle id direction ->
             ( model
-            , BrowserGotRecentTx id direction
-                |> Api.GetAddressTxsEffect
-                    { currency = Id.network id
-                    , address = Id.id id
-                    , direction = Just direction
-                    , pagesize = 1
-                    , nextpage = Nothing
-                    , order = Nothing
-                    , minHeight = Nothing
-                    , maxHeight = Nothing
-                    }
-                |> ApiEffect
-                |> List.singleton
+            , getNextTxEffects model id direction
             )
 
         UserClickedAddress id ->
@@ -603,10 +571,10 @@ updateByMsg plugins uc msg model =
                     in
                     ( { model | view = { vs | pointerTool = tool } }, [] )
 
-        BrowserGotFromDateBlock dt blockAt ->
+        BrowserGotFromDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
 
-        BrowserGotToDateBlock dt blockAt ->
+        BrowserGotToDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
 
         UpdateDateRangePicker subMsg ->
@@ -684,6 +652,95 @@ updateByMsg plugins uc msg model =
         Tick time ->
             n { model | currentTime = time }
 
+        WorkflowNextUtxoTx context wm ->
+            WorkflowNextUtxoTx.update context wm model
+
+        WorkflowNextTxByTime context wm ->
+            WorkflowNextTxByTime.update context wm model
+
+
+getNextTxEffects : Model -> Id -> Direction -> List Effect
+getNextTxEffects model addressId direction =
+    let
+        getTxSet =
+            case direction of
+                Incoming ->
+                    .outgoingTxs
+
+                Outgoing ->
+                    .incomingTxs
+
+        context =
+            { addressId = addressId
+            , direction = direction
+            }
+    in
+    Dict.get addressId model.network.addresses
+        |> Maybe.map
+            (\address ->
+                getTxSet address
+                    |> Set.toList
+                    |> List.filterMap (\txId -> Dict.get txId model.network.txs)
+                    |> List.sortBy Tx.getRawTimestamp
+                    |> List.Extra.last
+                    |> Maybe.map
+                        (\tx ->
+                            case tx.type_ of
+                                Tx.Account t ->
+                                    BrowserGotBlockHeight
+                                        >> WorkflowNextTxByTime context
+                                        |> Api.GetBlockByDateEffect
+                                            { currency = t.raw.currency
+                                            , datetime =
+                                                t.raw.timestamp
+                                                    |> (*) 1000
+                                                    |> Time.millisToPosix
+                                            }
+
+                                Tx.Utxo t ->
+                                    let
+                                        ( listLinkedTxRefs, getIo ) =
+                                            case direction of
+                                                Incoming ->
+                                                    ( Api.ListSpendingTxRefsEffect, .inputs )
+
+                                                Outgoing ->
+                                                    ( Api.ListSpentInTxRefsEffect, .outputs )
+
+                                        index =
+                                            getIo t.raw
+                                                |> Maybe.andThen
+                                                    (List.Extra.findIndex
+                                                        (.address >> List.any ((==) (Id.id addressId)))
+                                                    )
+                                    in
+                                    BrowserGotReferencedTxs
+                                        >> WorkflowNextUtxoTx context
+                                        |> listLinkedTxRefs
+                                            { currency = t.raw.currency
+                                            , txHash = t.raw.txHash
+                                            , index = index
+                                            }
+                        )
+                    |> Maybe.withDefault
+                        (BrowserGotRecentTx
+                            >> WorkflowNextTxByTime context
+                            |> Api.GetAddressTxsEffect
+                                { currency = Id.network addressId
+                                , address = Id.id addressId
+                                , direction = Just direction
+                                , pagesize = 1
+                                , nextpage = Nothing
+                                , order = Nothing
+                                , minHeight = Nothing
+                                , maxHeight = Nothing
+                                }
+                        )
+                    |> List.singleton
+            )
+        |> Maybe.withDefault []
+        |> List.map ApiEffect
+
 
 getMinAndMaxSelectableDateFromModel : Model -> ( Posix, Posix )
 getMinAndMaxSelectableDateFromModel model =
@@ -692,7 +749,7 @@ getMinAndMaxSelectableDateFromModel model =
             ( Time.millisToPosix 0, model.currentTime )
     in
     case model.view.detailsViewState of
-        AddressDetails id c ->
+        AddressDetails id _ ->
             Dict.get id model.network.addresses
                 |> Maybe.andThen Address.getActivityRange
                 |> Maybe.withDefault default
@@ -767,7 +824,7 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
 
                         txsnew =
                             case ( txmin, txmax ) of
-                                ( Just min, Just max ) ->
+                                ( Just _, Just _ ) ->
                                     TransactionTable.init Nothing
 
                                 ( Nothing, Nothing ) ->
