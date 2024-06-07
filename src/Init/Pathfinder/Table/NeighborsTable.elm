@@ -12,7 +12,7 @@ init nrItems =
         m =
             Init.Graph.Table.initUnsorted
     in
-    { t = m
+    { table = m
     , nrItems = nrItems
     , currentPage = 1
     , itemsPerPage = 5

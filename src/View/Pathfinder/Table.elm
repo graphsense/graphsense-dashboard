@@ -47,7 +47,7 @@ pagedTableView : View.Config -> List (Attribute msg) -> Table.Config data msg ->
 pagedTableView vc attributes config tblPaged prevMsg nextMsg =
     let
         tbl =
-            tblPaged.t
+            tblPaged.table
 
         max_page =
             PT.nrPages tblPaged

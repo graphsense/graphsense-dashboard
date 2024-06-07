@@ -5,7 +5,7 @@ import RecordSetter exposing (s_loading)
 
 
 type alias PagedTable d =
-    { t : Table d
+    { table : Table d
     , nrItems : Maybe Int
     , currentPage : Int
     , itemsPerPage : Int
@@ -39,9 +39,9 @@ setLoading : Bool -> PagedTable d -> PagedTable d
 setLoading l pt =
     let
         t =
-            pt.t
+            pt.table
     in
-    { pt | t = t |> s_loading l }
+    { pt | table = t |> s_loading l }
 
 
 getPage : PagedTable d -> List d
@@ -50,4 +50,4 @@ getPage pt =
         drp =
             (pt.currentPage - 1) * pt.itemsPerPage
     in
-    (List.drop drp >> List.take pt.itemsPerPage) pt.t.filtered
+    (List.drop drp >> List.take pt.itemsPerPage) pt.table.filtered

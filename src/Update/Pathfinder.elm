@@ -16,7 +16,6 @@ import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
-import Model.Graph.Table as GT
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
@@ -25,8 +24,6 @@ import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table as PT
-import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
@@ -52,10 +49,12 @@ import Tuple exposing (mapFirst)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
-import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
+import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.Address as Address
+import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.Network as Network
+import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
@@ -172,12 +171,10 @@ updateByMsg plugins uc msg model =
             case model.view.detailsViewState of
                 TxDetails id txViewState ->
                     let
-                        nVs =
-                            case submsg of
-                                UserClickedToggleIOTable ->
-                                    { txViewState | ioTableOpen = not txViewState.ioTableOpen }
+                        ( nVs, eff ) =
+                            TxDetails.update submsg txViewState
                     in
-                    ( (setViewState <| s_detailsViewState (TxDetails id nVs)) model, [] )
+                    ( (setViewState <| s_detailsViewState (TxDetails id nVs)) model, eff )
 
                 _ ->
                     n model
@@ -186,170 +183,10 @@ updateByMsg plugins uc msg model =
             case model.view.detailsViewState of
                 AddressDetails id ad ->
                     let
-                        ( addressViewDetails, e ) =
-                            case subm of
-                                UserClickedToggleNeighborsTable ->
-                                    let
-                                        tables =
-                                            [ ( ad.neighborsIncoming, Incoming ), ( ad.neighborsOutgoing, Outgoing ) ]
-
-                                        fetchFirstPageFn =
-                                            \( tbl, dir ) ->
-                                                if List.isEmpty tbl.t.data then
-                                                    Just
-                                                        ((GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
-                                                            |> Api.GetAddressNeighborsEffect
-                                                                { currency = Id.network id
-                                                                , address = Id.id id
-                                                                , includeLabels = True
-                                                                , onlyIds = Nothing
-                                                                , isOutgoing = dir == Outgoing
-                                                                , pagesize = tbl.itemsPerPage
-                                                                , nextpage = tbl.t.nextpage
-                                                                }
-                                                            |> ApiEffect
-                                                        )
-
-                                                else
-                                                    Nothing
-
-                                        eff =
-                                            List.filterMap fetchFirstPageFn tables
-                                    in
-                                    ( { ad | neighborsTableOpen = not ad.neighborsTableOpen }, eff )
-
-                                UserClickedNextPageNeighborsTable dir ->
-                                    let
-                                        ( tbl, setter ) =
-                                            case dir of
-                                                Incoming ->
-                                                    ( ad.neighborsIncoming, s_neighborsIncoming )
-
-                                                Outgoing ->
-                                                    ( ad.neighborsOutgoing, s_neighborsOutgoing )
-
-                                        ( eff, loading ) =
-                                            if not (tbl.t.nextpage == Nothing) then
-                                                ( (GotNeighborsForAddressDetails id dir >> AddressDetailsMsg)
-                                                    |> Api.GetAddressNeighborsEffect
-                                                        { currency = Id.network id
-                                                        , address = Id.id id
-                                                        , includeLabels = True
-                                                        , onlyIds = Nothing
-                                                        , isOutgoing = dir == Outgoing
-                                                        , pagesize = tbl.itemsPerPage
-                                                        , nextpage = tbl.t.nextpage
-                                                        }
-                                                    |> ApiEffect
-                                                    |> List.singleton
-                                                , True
-                                                )
-
-                                            else
-                                                ( [], False )
-                                    in
-                                    if loading then
-                                        ( ad |> setter ((PT.incPage >> PT.setLoading loading) tbl), eff )
-
-                                    else
-                                        n ad
-
-                                UserClickedPreviousPageNeighborsTable dir ->
-                                    let
-                                        ( tbl, setter ) =
-                                            case dir of
-                                                Incoming ->
-                                                    ( ad.neighborsIncoming, s_neighborsIncoming )
-
-                                                Outgoing ->
-                                                    ( ad.neighborsOutgoing, s_neighborsOutgoing )
-                                    in
-                                    ( ad |> setter (PT.decPage tbl), [] )
-
-                                GotNeighborsForAddressDetails requestId dir neighbors ->
-                                    if requestId == id then
-                                        n
-                                            (case dir of
-                                                Incoming ->
-                                                    { ad
-                                                        | neighborsIncoming = appendPagedTableData ad.neighborsIncoming NeighborsTable.filter neighbors.nextPage neighbors.neighbors
-                                                    }
-
-                                                Outgoing ->
-                                                    { ad
-                                                        | neighborsOutgoing = appendPagedTableData ad.neighborsOutgoing NeighborsTable.filter neighbors.nextPage neighbors.neighbors
-                                                    }
-                                            )
-
-                                    else
-                                        n ad
-
-                                UserClickedNextPageTransactionTable ->
-                                    let
-                                        ( eff, loading ) =
-                                            if not (ad.txs.t.nextpage == Nothing) then
-                                                ( (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                                    |> Api.GetAddressTxsEffect
-                                                        { currency = Id.network id
-                                                        , address = Id.id id
-                                                        , direction = Nothing
-                                                        , pagesize = ad.txs.itemsPerPage
-                                                        , nextpage = ad.txs.t.nextpage
-                                                        , order = Nothing
-                                                        , minHeight = ad.txMinBlock
-                                                        , maxHeight = ad.txMaxBlock
-                                                        }
-                                                    |> ApiEffect
-                                                    |> List.singleton
-                                                , True
-                                                )
-
-                                            else
-                                                ( [], False )
-                                    in
-                                    if loading then
-                                        ( { ad | txs = (PT.incPage >> PT.setLoading loading) ad.txs }, eff )
-
-                                    else
-                                        n ad
-
-                                UserClickedPreviousPageTransactionTable ->
-                                    ( { ad | txs = PT.decPage ad.txs }, [] )
-
-                                UserClickedToggleTransactionTable ->
-                                    let
-                                        eff =
-                                            if List.isEmpty ad.txs.t.data then
-                                                (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                                    |> Api.GetAddressTxsEffect
-                                                        { currency = Id.network id
-                                                        , address = Id.id id
-                                                        , direction = Nothing
-                                                        , pagesize = ad.txs.itemsPerPage
-                                                        , nextpage = ad.txs.t.nextpage
-                                                        , order = Nothing
-                                                        , minHeight = Nothing
-                                                        , maxHeight = Nothing
-                                                        }
-                                                    |> ApiEffect
-                                                    |> List.singleton
-
-                                            else
-                                                []
-                                    in
-                                    ( { ad | transactionsTableOpen = not ad.transactionsTableOpen }, eff )
-
-                                GotTxsForAddressDetails responseId txs ->
-                                    if responseId == id then
-                                        n
-                                            { ad
-                                                | txs = appendPagedTableData ad.txs TransactionTable.filter txs.nextPage txs.addressTxs
-                                            }
-
-                                    else
-                                        n ad
+                        ( addressViewDetails, eff ) =
+                            AddressDetails.update subm id ad
                     in
-                    ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, e )
+                    ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, eff )
 
                 TxDetails _ _ ->
                     n model
@@ -506,8 +343,15 @@ updateByMsg plugins uc msg model =
                 }
 
         UserClickedAddressExpandHandle id direction ->
-            ( model
-            , getNextTxEffects model id direction
+            let
+                ( newmodel, eff ) =
+                    model
+                        |> selectAddress id
+                        |> openAddressTransactionsTable
+            in
+            ( newmodel
+            , getNextTxEffects newmodel id direction
+                ++ eff
             )
 
         UserClickedAddress id ->
@@ -1033,16 +877,6 @@ browserGotTxForAddress plugins _ addressId direction tx model =
         |> Maybe.withDefault (n newmodel)
 
 
-appendPagedTableData : PT.PagedTable p -> GT.Filter p -> Maybe String -> List p -> PT.PagedTable p
-appendPagedTableData pt f nextPage data =
-    { pt
-        | t =
-            appendData f data pt.t
-                |> s_nextpage nextPage
-                |> s_loading False
-    }
-
-
 checkSelection : Model -> Model
 checkSelection model =
     case model.selection of
@@ -1054,3 +888,21 @@ checkSelection model =
 
         _ ->
             model
+
+
+openAddressTransactionsTable : Model -> ( Model, List Effect )
+openAddressTransactionsTable model =
+    case model.view.detailsViewState of
+        AddressDetails id ad ->
+            let
+                ( new, eff ) =
+                    AddressDetails.showTransactionsTable id ad True
+            in
+            ( { model
+                | view = s_detailsViewState (AddressDetails id new) model.view
+              }
+            , eff
+            )
+
+        _ ->
+            n model
