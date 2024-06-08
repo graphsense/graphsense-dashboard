@@ -1,12 +1,10 @@
-module Update.Graph.Transform exposing (delay, pop, transition, update, updateByBoundingBox, vector, wheel)
+module Update.Graph.Transform exposing (delay, pop, transition, update, updateByBoundingBox, vector, wheel, move)
 
 import Basics.Extra exposing (flip)
 import Bounce
-import Config.Graph exposing (addressHeight, entityMinHeight, entityWidth, expandHandleWidth)
 import Ease
 import Init.Graph.Transform exposing (initTransitioning)
 import Model.Graph.Coords as Graph exposing (BBox)
-import Model.Graph.Id as Id
 import Model.Graph.Transform as Transform exposing (..)
 import Msg.Graph as Graph
 import Number.Bounded as Bounded
@@ -138,19 +136,24 @@ updateByBoundingBox model bbox { width, height } =
         model |> s_state (Settled coords)
 
     else
-        case model.state of
-            Transitioning t ->
-                { model
-                    | state =
-                        t
-                            |> s_to coords
-                            |> s_from t.current
-                            |> s_progress 0
-                            |> Transitioning
-                }
+        move coords model
 
-            Settled t ->
-                initTransitioning True defaultDuration t coords
+
+move : Coords -> Model comparable -> Model comparable
+move coords model =
+    case model.state of
+        Transitioning t ->
+            { model
+                | state =
+                    t
+                        |> s_to coords
+                        |> s_from t.current
+                        |> s_progress 0
+                        |> Transitioning
+            }
+
+        Settled t ->
+            initTransitioning True defaultDuration t coords
 
 
 transition : Float -> Model comparable -> Model comparable

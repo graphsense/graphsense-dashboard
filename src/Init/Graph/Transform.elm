@@ -5,6 +5,7 @@ import Model.Graph.Transform exposing (..)
 import Number.Bounded as Bounded
 import RecordSetter exposing (s_state)
 import Set
+import Number.Bounded exposing (Bounded)
 
 
 init : Model id
@@ -15,11 +16,16 @@ init =
         Settled
             { x = 0
             , y = 0
-            , z =
-                Bounded.between 0.1 14
-                    |> Bounded.set 1
+            , z = initZ
             }
     }
+
+
+initZ : Bounded Float
+initZ =
+
+                Bounded.between 0.1 14
+                    |> Bounded.set 1
 
 
 initTransitioning : Bool -> Float -> Coords -> Coords -> Model id

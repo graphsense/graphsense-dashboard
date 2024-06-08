@@ -7,6 +7,7 @@ import DurationDatePicker
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
+import Init.Graph.Transform as Transform
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
@@ -404,7 +405,11 @@ updateByMsg plugins uc msg model =
                 nw =
                     Network.addTx tx model.network
             in
-            ( { model | network = nw } |> checkSelection, [] )
+            { model
+                | network = nw
+            }
+                |> checkSelection
+                |> n
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -831,11 +836,33 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress plugins _ addressId direction tx model =
+browserGotTxForAddress plugins uc addressId direction tx model =
     let
+        network =
+            Network.addTx tx model.network
+
+        transform =
+            case tx of
+                Api.Data.TxTxUtxo t ->
+                    Dict.get (Id.init t.currency t.txHash) network.txs
+                        |> Maybe.andThen Tx.getUtxoTx
+                        |> Maybe.map
+                            (\t_ ->
+                                Transform.move
+                                    { x = t_.x * uc.unit
+                                    , y = t_.y * uc.unit
+                                    , z = Transform.initZ
+                                    }
+                                    model.transform
+                            )
+
+                Api.Data.TxTxAccount _ ->
+                    Nothing
+
         newmodel =
             { model
-                | network = Network.addTx tx model.network
+                | network = network
+                , transform = Maybe.withDefault model.transform transform
             }
 
         address =

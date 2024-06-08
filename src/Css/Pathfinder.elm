@@ -355,13 +355,20 @@ topRightPanelStyle _ =
     , mlGap |> top
     ]
 
+        
+
 
 searchBoxStyle : View.Config -> Maybe Float -> List Style
 searchBoxStyle vc padding =
-    [ px 300 |> minWidth
+    [ px searchBoxMinWidth |> minWidth
     , mlGap |> marginBottom
     ]
         ++ boxStyle vc padding
+
+
+searchBoxMinWidth : Float
+searchBoxMinWidth =
+    300
 
 
 detailsViewStyle : View.Config -> List Style

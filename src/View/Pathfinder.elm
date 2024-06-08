@@ -41,6 +41,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
 import Time
+import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
@@ -731,7 +732,10 @@ graphSvg plugins _ vc gc model bbox =
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
-         , Transform.viewBox dim model.transform |> viewBox
+         , model.transform
+            |> Transform.update { x = 0, y = 0 } { x = -searchBoxMinWidth / 2, y = 0 }
+            |> Transform.viewBox dim
+            |> viewBox
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> SA.css
          , UserClickedGraph model.dragging
             |> onClick

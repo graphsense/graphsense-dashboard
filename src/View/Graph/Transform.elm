@@ -19,6 +19,5 @@ viewBox { width, height } mo =
                 , max 0 <| height * z
                 ]
                     |> List.map String.fromFloat
-                    |> List.intersperse " "
-                    |> String.concat
+                    |> String.join " "
            )
