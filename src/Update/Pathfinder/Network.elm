@@ -1,7 +1,7 @@
 module Update.Pathfinder.Network exposing (addAddress, addTx, updateAddress)
 
 import Api.Data
-import Basics.Extra exposing (uncurry)
+import Basics.Extra exposing (flip, uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
 import Dict.Nonempty as NDict
@@ -18,12 +18,13 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
 import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (Io, Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
+import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_type_, s_visible)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
+import Update.Pathfinder.Tx as Tx
 
 
 addAddress : Id -> Network -> Network
@@ -40,11 +41,10 @@ addAddress id model =
             |> placeAddress coords id
 
 
-toAddresses : Network -> NDict.NonemptyDict Id b -> List Address
+toAddresses : Network -> List Id -> List Address
 toAddresses model io =
     io
-        |> NDict.toList
-        |> List.filterMap (first >> (\a -> Dict.get a model.addresses))
+        |> List.filterMap (\a -> Dict.get a model.addresses)
 
 
 findAddressCoordsNextToTx : Network -> Direction -> Tx -> Maybe Coords
@@ -53,16 +53,28 @@ findAddressCoordsNextToTx model direction tx =
         siblings =
             case ( direction, tx.type_ ) of
                 ( Outgoing, Tx.Utxo t ) ->
-                    Just ( t.outputs, t.x, t.y )
+                    Just
+                        ( t.outputs
+                            |> NDict.toList
+                            |> List.map first
+                        , t.x
+                        , t.y
+                        )
 
                 ( Incoming, Tx.Utxo t ) ->
-                    Just ( t.inputs, t.x, t.y )
+                    Just
+                        ( t.inputs
+                            |> NDict.toList
+                            |> List.map first
+                        , t.x
+                        , t.y
+                        )
 
                 ( Outgoing, Tx.Account t ) ->
                     Dict.get t.from model.addresses
                         |> Maybe.map
                             (\a ->
-                                ( NDict.singleton t.from t.value
+                                ( [ t.from ]
                                 , a.x
                                 , a.y
                                 )
@@ -72,7 +84,7 @@ findAddressCoordsNextToTx model direction tx =
                     Dict.get t.from model.addresses
                         |> Maybe.map
                             (\a ->
-                                ( NDict.singleton t.to t.value
+                                ( [ t.to ]
                                 , a.x
                                 , a.y
                                 )
@@ -173,11 +185,11 @@ freeSpaceAroundCoords coords model =
 placeAddress : Coords -> Id -> Network -> Network
 placeAddress coords id model =
     let
-        address =
+        ( address, newTxs ) =
             listTxsForAddress model id
                 |> List.foldl
-                    (\( direction, tx ) addr ->
-                        case direction of
+                    (\( direction, tx ) ( addr, txs ) ->
+                        ( case direction of
                             Incoming ->
                                 { addr
                                     | outgoingTxs = Set.insert tx.id addr.outgoingTxs
@@ -187,10 +199,23 @@ placeAddress coords id model =
                                 { addr
                                     | incomingTxs = Set.insert tx.id addr.incomingTxs
                                 }
+                        , Dict.update tx.id
+                            (Maybe.map
+                                (Tx.updateUtxo
+                                    (Tx.updateUtxoIo direction addr.id (s_visible True))
+                                )
+                            )
+                            txs
+                        )
                     )
-                    (Address.init id coords)
+                    ( Address.init id coords
+                    , model.txs
+                    )
     in
-    { model | addresses = Dict.insert id address model.addresses }
+    { model
+        | addresses = Dict.insert id address model.addresses
+        , txs = newTxs
+    }
 
 
 updateAddress : Id -> (Address -> Address) -> Network -> Network
@@ -287,31 +312,32 @@ addTx tx network =
 insertTx : Network -> Tx -> Network
 insertTx network tx =
     let
-        upd addr =
+        upd dir addr =
             let
                 ( get, set ) =
-                    if Tx.hasOutput addr.id tx then
-                        ( .incomingTxs, s_incomingTxs )
+                    case dir of
+                        Outgoing ->
+                            ( .incomingTxs, s_incomingTxs )
 
-                    else
-                        ( .outgoingTxs, s_outgoingTxs )
+                        Incoming ->
+                            ( .outgoingTxs, s_outgoingTxs )
             in
             if Set.member tx.id <| get addr then
                 addr
 
             else
                 set (Set.insert tx.id <| get addr) addr
+
+        updTx dir a =
+            Tx.updateUtxo
+                (Tx.updateUtxoIo dir a.id (s_visible True))
     in
     getAddressesForTx network.addresses tx
         |> List.foldl
-            (\a nw ->
+            (\( dir, a ) nw ->
                 { nw
-                    | addresses =
-                        Dict.update a.id
-                            (Maybe.map
-                                upd
-                            )
-                            nw.addresses
+                    | addresses = Dict.update a.id (Maybe.map (upd dir)) nw.addresses
+                    , txs = Dict.update tx.id (Maybe.map (updTx dir a)) nw.txs
                 }
             )
             { network
@@ -352,11 +378,11 @@ fromTxUtxoData tx coords =
                         Outgoing ->
                             .outputs
 
-                toPair : Api.Data.TxValue -> Maybe ( Id, Api.Data.Values )
+                toPair : Api.Data.TxValue -> Maybe ( Id, Io )
                 toPair { address, value } =
                     -- TODO what to do with multisig?
                     List.head address
-                        |> Maybe.map (\a -> ( Id.init tx.currency a, value ))
+                        |> Maybe.map (\a -> ( Id.init tx.currency a, Io value False ))
             in
             field tx
                 |> Maybe.map (List.filterMap toPair)
@@ -452,13 +478,16 @@ findUtxoTxCoordsNextToAddress model direction address =
                                 |> Maybe.andThen Tx.getUtxoTx
                                 |> Maybe.map
                                     (\tx ->
-                                        toAddresses model <|
-                                            case direction of
-                                                Outgoing ->
-                                                    tx.outputs
+                                        (case direction of
+                                            Outgoing ->
+                                                tx.outputs
 
-                                                Incoming ->
-                                                    tx.inputs
+                                            Incoming ->
+                                                tx.inputs
+                                        )
+                                            |> NDict.toList
+                                            |> List.map first
+                                            |> toAddresses model
                                     )
                     )
                 |> List.concat

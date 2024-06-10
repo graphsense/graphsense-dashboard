@@ -9,7 +9,7 @@ import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id exposing (Id)
-import Tuple exposing (first)
+import Tuple exposing (first, pair)
 import Util.Pathfinder exposing (getAddress)
 
 
@@ -35,9 +35,15 @@ type alias AccontTx =
 type alias UtxoTx =
     { x : Float
     , y : Float
-    , inputs : NonemptyDict Id Api.Data.Values
-    , outputs : NonemptyDict Id Api.Data.Values
+    , inputs : NonemptyDict Id Io
+    , outputs : NonemptyDict Id Io
     , raw : Api.Data.TxUtxo
+    }
+
+
+type alias Io =
+    { values : Api.Data.Values
+    , visible : Bool
     }
 
 
@@ -66,17 +72,28 @@ hasInput id tx =
             NDict.get id inputs /= Nothing
 
 
-getAddressesForTx : Dict Id Address -> Tx -> List Address
+getAddressesForTx : Dict Id Address -> Tx -> List ( Direction, Address )
 getAddressesForTx addresses tx =
     (case tx.type_ of
         Account { from, to } ->
-            [ from, to ]
+            [ ( Incoming, from ), ( Outgoing, to ) ]
 
         Utxo { inputs, outputs } ->
-            (NDict.toList inputs |> List.map first) ++ (NDict.toList outputs |> List.map first)
+            (NDict.toList inputs
+                |> List.map first
+                |> List.map (pair Incoming)
+            )
+                ++ (NDict.toList outputs
+                        |> List.map first
+                        |> List.map (pair Outgoing)
+                   )
     )
         |> List.filterMap
-            (getAddress addresses >> Result.toMaybe)
+            (\( dir, a ) ->
+                getAddress addresses a
+                    |> Result.toMaybe
+                    |> Maybe.map (pair dir)
+            )
 
 
 calcCoords : NList.Nonempty Address -> Coords

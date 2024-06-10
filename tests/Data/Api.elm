@@ -12,7 +12,7 @@ values =
     }
 
 
-tx1 : Api.Data.Tx
+tx1 : Api.Data.TxUtxo
 tx1 =
     let
         outputs =
@@ -25,23 +25,22 @@ tx1 =
             [ { address = [ Id.address1 |> Id.id ], value = values }
             ]
     in
-    Api.Data.TxTxUtxo
-        { coinbase = False
-        , currency = Id.network Id.tx1
-        , height = 1
-        , inputs = Just inputs
-        , noInputs = List.length inputs
-        , noOutputs = List.length outputs
-        , outputs = Just outputs
-        , timestamp = 0
-        , totalInput = values
-        , totalOutput = values
-        , txHash = Id.id Id.tx1
-        , txType = "utxo"
-        }
+    { coinbase = False
+    , currency = Id.network Id.tx1
+    , height = 1
+    , inputs = Just inputs
+    , noInputs = List.length inputs
+    , noOutputs = List.length outputs
+    , outputs = Just outputs
+    , timestamp = 0
+    , totalInput = values
+    , totalOutput = values
+    , txHash = Id.id Id.tx1
+    , txType = "utxo"
+    }
 
 
-tx2 : Api.Data.Tx
+tx2 : Api.Data.TxUtxo
 tx2 =
     let
         inputs =
@@ -52,23 +51,22 @@ tx2 =
             [ { address = [ Id.address1 |> Id.id ], value = values }
             ]
     in
-    Api.Data.TxTxUtxo
-        { coinbase = False
-        , currency = Id.network Id.tx2
-        , height = 1
-        , inputs = Just inputs
-        , noInputs = List.length inputs
-        , noOutputs = List.length outputs
-        , outputs = Just outputs
-        , timestamp = 0
-        , totalInput = values
-        , totalOutput = values
-        , txHash = Id.id Id.tx2
-        , txType = "utxo"
-        }
+    { coinbase = False
+    , currency = Id.network Id.tx2
+    , height = 1
+    , inputs = Just inputs
+    , noInputs = List.length inputs
+    , noOutputs = List.length outputs
+    , outputs = Just outputs
+    , timestamp = 0
+    , totalInput = values
+    , totalOutput = values
+    , txHash = Id.id Id.tx2
+    , txType = "utxo"
+    }
 
 
-tx3 : Api.Data.Tx
+tx3 : Api.Data.TxUtxo
 tx3 =
     let
         inputs =
@@ -79,17 +77,16 @@ tx3 =
             [ { address = [ Id.address7 |> Id.id ], value = values }
             ]
     in
-    Api.Data.TxTxUtxo
-        { coinbase = False
-        , currency = Id.network Id.tx3
-        , height = 1
-        , inputs = Just inputs
-        , noInputs = List.length inputs
-        , noOutputs = List.length outputs
-        , outputs = Just outputs
-        , timestamp = 0
-        , totalInput = values
-        , totalOutput = values
-        , txHash = Id.id Id.tx3
-        , txType = "utxo"
-        }
+    { coinbase = False
+    , currency = Id.network Id.tx3
+    , height = 1
+    , inputs = Just inputs
+    , noInputs = List.length inputs
+    , noOutputs = List.length outputs
+    , outputs = Just outputs
+    , timestamp = 0
+    , totalInput = values
+    , totalOutput = values
+    , txHash = Id.id Id.tx3
+    , txType = "utxo"
+    }

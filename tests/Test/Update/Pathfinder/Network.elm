@@ -9,6 +9,7 @@ import RecordSetter exposing (..)
 import Test exposing (..)
 import Tuple exposing (..)
 import Update.Pathfinder.Network as Network
+import Api.Data
 
 
 equal : Network -> Network -> Expectation
@@ -37,19 +38,19 @@ suite =
                     |> equal Data.twoIndependentAddresses
         , test "add outgoing Tx 1" <|
             \_ ->
-                Network.addTx Api.tx1 Data.oneAddress
+                Network.addTx (Api.Data.TxTxUtxo Api.tx1) Data.oneAddress
                     |> equal Data.oneAddressWithOutgoingTx
         , test "add outgoing Tx 1 again" <|
             \_ ->
-                Network.addTx Api.tx1 Data.oneAddressWithOutgoingTx
+                Network.addTx (Api.Data.TxTxUtxo Api.tx1) Data.oneAddressWithOutgoingTx
                     |> equal Data.oneAddressWithOutgoingTx
         , test "add incoming Tx 1" <|
             \_ ->
-                Network.addTx Api.tx2 Data.oneAddress
+                Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddress
                     |> equal Data.oneAddressWithIncomingTx
         , test "add incoming after outgoing Tx 1" <|
             \_ ->
-                Network.addTx Api.tx2 Data.oneAddressWithOutgoingTx
+                Network.addTx (Api.Data.TxTxUtxo Api.tx2) Data.oneAddressWithOutgoingTx
                     |> equal Data.oneAddressWithTwoTxs
         , test "addAddress 3" <|
             \_ ->
@@ -77,6 +78,6 @@ suite =
                     |> equal Data.one2ThreeAddresses
         , test "addTx 2" <|
             \_ ->
-                Network.addTx Api.tx3 Data.one2ThreeAddresses
+                Network.addTx (Api.Data.TxTxUtxo Api.tx3) Data.one2ThreeAddresses
                     |> equal Data.one2TwoTxs2ThreeAddresses
         ]

@@ -19,7 +19,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Tuple exposing (first, pair, second)
+import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
@@ -30,15 +30,64 @@ view _ vc _ id tx =
     let
         unit =
             View.getUnit vc
+
+        anyIsNotVisible =
+            NDict.toList
+                >> List.any (second >> .visible >> not)
     in
-    [ body vc
-    ]
+    body vc
+        :: (if anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs then
+                [ moreIndicator vc
+                ]
+
+            else
+                []
+           )
         |> g
             [ translate (tx.x * unit) (tx.y * unit)
                 |> transform
             , Css.tx vc |> css
             , UserClickedTx id |> onClick
             ]
+
+
+moreIndicator : View.Config -> Svg Msg
+moreIndicator vc =
+    let
+        dot attrs =
+            circle
+                (attrs
+                    ++ [ vc.theme.pathfinder.txRadius
+                            / 3
+                            |> String.fromFloat
+                            |> r
+                       ]
+                )
+                []
+    in
+    g
+        [ translate 0 (vc.theme.pathfinder.txRadius * 1.5)
+            |> transform
+        ]
+        [ dot
+            [ cx "0"
+            , cy "0"
+            ]
+        , dot
+            [ cy "0"
+            , vc.theme.pathfinder.txRadius
+                / 1.5
+                |> String.fromFloat
+                |> cx
+            ]
+        , dot
+            [ cy "0"
+            , -vc.theme.pathfinder.txRadius
+                / 1.5
+                |> String.fromFloat
+                |> cx
+            ]
+        ]
 
 
 body : View.Config -> Svg Msg
@@ -52,12 +101,12 @@ body vc =
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> UtxoTx -> Svg Msg
-edge plugins vc gc addresses tx =
+edge _ vc gc addresses tx =
     let
         toValues =
             NDict.toList
                 >> List.filterMap
-                    (\( id, values ) ->
+                    (\( id, { values } ) ->
                         getAddress addresses id
                             |> Result.toMaybe
                             |> Maybe.map (pair values)
@@ -196,7 +245,7 @@ valueToLabel vc value =
 
 
 coloredPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-coloredPath vc gc value outgoing x1 y1 x2_ y2_ =
+coloredPath vc _ value outgoing x1 y1 x2_ y2_ =
     let
         x2 =
             if x1 == x2_ then
@@ -310,7 +359,7 @@ coloredPath vc gc value outgoing x1 y1 x2_ y2_ =
 
 
 bendedPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-bendedPath vc gc value withArrow x1 y1 x2 y2 =
+bendedPath vc _ value withArrow x1 y1 x2 y2 =
     let
         ( dx, dy ) =
             ( x2 - x1

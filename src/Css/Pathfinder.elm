@@ -355,8 +355,6 @@ topRightPanelStyle _ =
     , mlGap |> top
     ]
 
-        
-
 
 searchBoxStyle : View.Config -> Maybe Float -> List Style
 searchBoxStyle vc padding =

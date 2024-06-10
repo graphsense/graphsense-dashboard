@@ -5,7 +5,7 @@ import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Dict.Nonempty as NDict
 import Model.Pathfinder.Id as Id
-import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.Tx as Tx exposing (Io)
 
 
 tx1 : Tx.Tx
@@ -15,13 +15,13 @@ tx1 =
         Tx.Utxo
             { x = nodeXOffset
             , y = 0
-            , inputs = NDict.singleton Id.address1 Api.values
+            , inputs = NDict.singleton Id.address1 (Io Api.values False)
             , outputs =
-                NDict.singleton Id.address3 Api.values
-                    |> NDict.insert Id.address4 Api.values
-                    |> NDict.insert Id.address5 Api.values
+                NDict.singleton Id.address3 (Io Api.values False)
+                    |> NDict.insert Id.address4 (Io Api.values False)
+                    |> NDict.insert Id.address5 (Io Api.values False)
+            , raw = Api.tx1
             }
-    , raw = Api.tx1
     }
 
 
@@ -32,10 +32,10 @@ tx2 =
         Tx.Utxo
             { x = -nodeXOffset
             , y = 0
-            , outputs = NDict.singleton Id.address1 Api.values
-            , inputs = NDict.singleton Id.address6 Api.values
+            , outputs = NDict.singleton Id.address1 <| Io Api.values False
+            , inputs = NDict.singleton Id.address6 <| Io Api.values False
+            , raw = Api.tx2
             }
-    , raw = Api.tx2
     }
 
 
@@ -46,8 +46,8 @@ tx3 =
         Tx.Utxo
             { x = nodeXOffset
             , y = 3 * nodeYOffset
-            , outputs = NDict.singleton Id.address7 Api.values
-            , inputs = NDict.singleton Id.address1 Api.values
+            , outputs = NDict.singleton Id.address7 <| Io Api.values False
+            , inputs = NDict.singleton Id.address1 <| Io Api.values False
+            , raw = Api.tx3
             }
-    , raw = Api.tx3
     }
