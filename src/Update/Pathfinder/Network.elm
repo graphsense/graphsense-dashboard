@@ -1,7 +1,8 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, updateAddress)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress)
 
+import Animation as A exposing (Animation)
 import Api.Data
-import Basics.Extra exposing (flip, uncurry)
+import Basics.Extra exposing (uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
 import Dict.Nonempty as NDict
@@ -20,7 +21,7 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Io, Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_type_, s_visible)
+import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_visible)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
@@ -58,7 +59,7 @@ findAddressCoordsNextToTx model direction tx =
                             |> NDict.toList
                             |> List.map first
                         , t.x
-                        , t.y
+                        , A.getTo t.y
                         )
 
                 ( Incoming, Tx.Utxo t ) ->
@@ -67,7 +68,7 @@ findAddressCoordsNextToTx model direction tx =
                             |> NDict.toList
                             |> List.map first
                         , t.x
-                        , t.y
+                        , A.getTo t.y
                         )
 
                 ( Outgoing, Tx.Account t ) ->
@@ -76,7 +77,7 @@ findAddressCoordsNextToTx model direction tx =
                             (\a ->
                                 ( [ t.from ]
                                 , a.x
-                                , a.y
+                                , A.getTo a.y
                                 )
                             )
 
@@ -86,7 +87,7 @@ findAddressCoordsNextToTx model direction tx =
                             (\a ->
                                 ( [ t.to ]
                                 , a.x
-                                , a.y
+                                , A.getTo a.y
                                 )
                             )
     in
@@ -113,29 +114,56 @@ freeSpaceAroundCoords coords model =
                 |> List.filter
                     (\a -> a.x > coords.x - 1 && a.x < coords.x + 1)
                 |> List.partition
-                    (\a -> a.y < coords.y)
+                    (\a -> A.getTo a.y < coords.y)
 
         diff y =
-            abs (coords.y - y)
-                - nodeYOffset
-                |> min 0
+            let
+                d =
+                    abs (coords.y - y)
+                        - nodeYOffset
+            in
+            if d < 0 then
+                Just d
+
+            else
+                Nothing
 
         add d addr =
-            { addr | y = addr.y + d }
+            let
+                y =
+                    A.getTo addr.y
+            in
+            --if A.isDone addr.clock addr.y then
+            { addr
+                | y =
+                    A.animation 0
+                        |> A.from y
+                        |> A.to (y + d)
+                        |> A.duration 500
+                , clock = 0
+            }
 
+        {- else
+           { addr
+               | y =
+                   A.retarget addr.clock (y + d) addr.y
+        -}
         moveThings s subset =
-            Maybe.map diff
+            Maybe.andThen diff
                 >> Maybe.map
                     (\d -> List.map (add <| d * s) subset)
-                >> Maybe.withDefault subset
+                >> Maybe.withDefault []
 
-        newAddresses =
+        movedAddresses =
             (getMaxY above
                 |> moveThings 1 above
             )
                 ++ (getMinY below
                         |> moveThings -1 below
                    )
+
+        newAddresses =
+            movedAddresses
                 |> List.foldl (\a -> Dict.insert a.id a) model.addresses
 
         ( txsAbove, txsBelow ) =
@@ -146,7 +174,7 @@ freeSpaceAroundCoords coords model =
                         case tx.type_ of
                             Tx.Utxo t ->
                                 if t.x > coords.x - 1 && t.x < coords.x + 1 then
-                                    Just { id = tx.id, x = t.x, y = t.y }
+                                    Just { id = tx.id, x = t.x, y = t.y, clock = t.clock }
 
                                 else
                                     Nothing
@@ -155,22 +183,25 @@ freeSpaceAroundCoords coords model =
                                 Nothing
                     )
                 |> List.partition
-                    (\a -> a.y <= coords.y)
+                    (\a -> A.getTo a.y <= coords.y)
 
-        newTxs =
+        movedTxs =
             (getMaxY txsAbove |> moveThings 1 txsAbove)
                 ++ (getMinY txsBelow |> moveThings -1 txsBelow)
+
+        newTxs =
+            movedTxs
                 |> List.foldl
                     (\t ->
                         Dict.update t.id
                             (Maybe.map
-                                (\tx ->
-                                    case tx.type_ of
-                                        Tx.Utxo utxo ->
-                                            { tx | type_ = Tx.Utxo { utxo | y = t.y } }
-
-                                        Tx.Account _ ->
-                                            tx
+                                (Tx.updateUtxo
+                                    (\utxo ->
+                                        { utxo
+                                            | y = t.y
+                                            , clock = t.clock
+                                        }
+                                    )
                                 )
                             )
                     )
@@ -179,6 +210,16 @@ freeSpaceAroundCoords coords model =
     { model
         | addresses = newAddresses
         , txs = newTxs
+        , animatedAddresses =
+            movedAddresses
+                |> List.map .id
+                |> Set.fromList
+                |> Set.union model.animatedAddresses
+        , animatedTxs =
+            movedTxs
+                |> List.map .id
+                |> Set.fromList
+                |> Set.union model.animatedTxs
     }
 
 
@@ -211,11 +252,27 @@ placeAddress coords id model =
                     ( Address.init id coords
                     , model.txs
                     )
+
+        animAddress =
+            if hasAnimations model then
+                { address | opacity = opacityAnimation }
+
+            else
+                address
     in
     { model
-        | addresses = Dict.insert id address model.addresses
+        | addresses = Dict.insert id animAddress model.addresses
         , txs = newTxs
+        , animatedAddresses = Set.insert id model.animatedAddresses
     }
+
+
+opacityAnimation : Animation
+opacityAnimation =
+    A.animation 0
+        |> A.from 0
+        |> A.to 1
+        |> A.duration 500
 
 
 updateAddress : Id -> (Address -> Address) -> Network -> Network
@@ -241,15 +298,15 @@ findFreeCoords model =
     }
 
 
-getMaxY : List { a | y : Float } -> Maybe Float
+getMaxY : List { a | y : Animation } -> Maybe Float
 getMaxY =
-    List.map .y
+    List.map (.y >> A.getTo)
         >> List.maximum
 
 
-getMinY : List { a | y : Float } -> Maybe Float
+getMinY : List { a | y : Animation } -> Maybe Float
 getMinY =
-    List.map .y
+    List.map (.y >> A.getTo)
         >> List.minimum
 
 
@@ -305,7 +362,28 @@ addTx tx network =
                 in
                 fromTxUtxoData t coords
                     |> Maybe.map
-                        (insertTx (freeSpaceAroundCoords coords network))
+                        (\tx_ ->
+                            let
+                                newNetwork =
+                                    freeSpaceAroundCoords coords network
+                            in
+                            Tx.updateUtxo
+                                (\utxo ->
+                                    if hasAnimations newNetwork then
+                                        utxo
+
+                                    else
+                                        { utxo
+                                            | opacity = opacityAnimation
+                                            , clock = 0
+                                        }
+                                )
+                                tx_
+                                |> insertTx
+                                    { newNetwork
+                                        | animatedTxs = Set.insert id newNetwork.animatedTxs
+                                    }
+                        )
                     |> Maybe.withDefault network
 
 
@@ -398,7 +476,9 @@ fromTxUtxoData tx coords =
                 in
                 Tx.Utxo
                     { x = coords.x
-                    , y = coords.y
+                    , y = A.static coords.y
+                    , opacity = A.static 1
+                    , clock = 0
                     , inputs = inputs
                     , outputs =
                         out
@@ -455,7 +535,7 @@ findUtxoTxCoords tx network =
                     list
                         |> NList.map
                             (\( _, address ) ->
-                                Coords address.x address.y
+                                Coords address.x <| A.getTo address.y
                             )
                         |> Coords.avg
             )
@@ -504,5 +584,90 @@ findUtxoTxCoordsNextToAddress model direction address =
     , y =
         getMaxY siblings
             |> Maybe.map ((+) nodeYOffset)
-            |> Maybe.withDefault address.y
+            |> Maybe.withDefault (A.getTo address.y)
     }
+
+
+animateAddresses : Float -> Network -> Network
+animateAddresses delta model =
+    model.animatedAddresses
+        |> Set.foldl
+            (\id network ->
+                Dict.get id network.addresses
+                    |> Maybe.map
+                        (\addr ->
+                            let
+                                clock =
+                                    addr.clock + delta
+                            in
+                            { network
+                                | addresses =
+                                    Dict.insert id
+                                        { addr
+                                            | clock = clock
+                                            , opacity =
+                                                if A.isDone clock addr.opacity then
+                                                    A.static 1
+
+                                                else
+                                                    addr.opacity
+                                        }
+                                        network.addresses
+                                , animatedAddresses =
+                                    if A.isDone clock addr.y && A.isDone clock addr.opacity then
+                                        Set.remove id network.animatedAddresses
+
+                                    else
+                                        network.animatedAddresses
+                            }
+                        )
+                    |> Maybe.withDefault network
+            )
+            model
+
+
+animateTxs : Float -> Network -> Network
+animateTxs delta model =
+    model.animatedTxs
+        |> Set.foldl
+            (\id network ->
+                Dict.get id network.txs
+                    |> Maybe.map
+                        (\tx ->
+                            case tx.type_ of
+                                Tx.Account _ ->
+                                    network
+
+                                Tx.Utxo t ->
+                                    let
+                                        clock =
+                                            t.clock + delta
+                                    in
+                                    { network
+                                        | txs =
+                                            Dict.insert id
+                                                { tx
+                                                    | type_ =
+                                                        { t
+                                                            | clock = clock
+                                                            , opacity =
+                                                                if A.isDone clock t.opacity then
+                                                                    A.static 1
+
+                                                                else
+                                                                    t.opacity
+                                                        }
+                                                            |> Tx.Utxo
+                                                }
+                                                network.txs
+                                        , animatedTxs =
+                                            if A.isDone clock t.y && A.isDone clock t.opacity then
+                                                Set.remove id network.animatedTxs
+
+                                            else
+                                                network.animatedTxs
+                                    }
+                        )
+                    |> Maybe.withDefault network
+            )
+            model

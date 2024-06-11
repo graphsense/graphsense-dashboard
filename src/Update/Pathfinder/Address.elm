@@ -1,5 +1,6 @@
 module Update.Pathfinder.Address exposing (move, release)
 
+import Animation
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Address exposing (..)
 
@@ -16,7 +17,10 @@ release : Address -> Address
 release address =
     { address
         | x = address.x + address.dx
-        , y = address.y + address.dy
+        , y =
+            Animation.getTo address.y
+                + address.dy
+                |> Animation.static
         , dx = 0
         , dy = 0
     }

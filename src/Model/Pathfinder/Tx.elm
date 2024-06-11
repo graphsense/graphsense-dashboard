@@ -1,5 +1,6 @@
 module Model.Pathfinder.Tx exposing (..)
 
+import Animation exposing (Animation, Clock)
 import Api.Data
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict exposing (NonemptyDict)
@@ -34,7 +35,9 @@ type alias AccontTx =
 
 type alias UtxoTx =
     { x : Float
-    , y : Float
+    , y : Animation
+    , clock : Clock
+    , opacity : Animation
     , inputs : NonemptyDict Id Io
     , outputs : NonemptyDict Id Io
     , raw : Api.Data.TxUtxo
@@ -104,8 +107,8 @@ calcCoords =
 getCoords : Tx -> Maybe Coords
 getCoords tx =
     case tx.type_ of
-        Utxo { x, y } ->
-            Coords x y
+        Utxo { x, y, clock } ->
+            Coords x (Animation.animate clock y)
                 |> Just
 
         Account _ ->
@@ -132,7 +135,8 @@ avg field items =
 
 addressToCoords : Address -> Coords
 addressToCoords { x, y } =
-    Coords x y
+    Animation.getTo y
+        |> Coords x
 
 
 getUtxoTx : Tx -> Maybe UtxoTx

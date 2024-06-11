@@ -1,5 +1,6 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
+import Animation as A exposing (Clock)
 import Api.Data
 import Config.Pathfinder as Pathfinder
 import Config.View as View
@@ -44,8 +45,11 @@ view _ vc _ id tx =
                 []
            )
         |> g
-            [ translate (tx.x * unit) (tx.y * unit)
+            [ translate (tx.x * unit) (A.animate tx.clock tx.y * unit)
                 |> transform
+            , A.animate tx.clock tx.opacity
+                |> String.fromFloat
+                |> opacity
             , Css.tx vc |> css
             , UserClickedTx id |> onClick
             ]
@@ -126,12 +130,12 @@ edge _ vc gc addresses tx =
                 ( Id.toString address.id
                 , Svg.lazy7 outPath
                     vc
-                    gc
                     values
                     tx.x
-                    tx.y
+                    (A.animate tx.clock tx.y)
                     (address.x + address.dx)
-                    (address.y + address.dy)
+                    (A.animate address.clock address.y + address.dy)
+                    (A.animate address.clock address.opacity)
                 )
             )
     )
@@ -141,20 +145,21 @@ edge _ vc gc addresses tx =
                         ( Id.toString address.id
                         , Svg.lazy7 inPath
                             vc
-                            gc
                             values
                             tx.x
-                            tx.y
+                            (A.animate tx.clock tx.y)
                             (address.x + address.dx)
-                            (address.y + address.dy)
+                            (A.animate address.clock address.y + address.dy)
+                            (A.animate tx.clock tx.opacity)
                         )
                     )
            )
-        |> Keyed.node "g" []
+        |> Keyed.node "g"
+            []
 
 
-outPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Svg Msg
-outPath vc gc value tx ty ax ay =
+outPath : View.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPath vc value tx ty ax ay opacity_ =
     let
         unit =
             View.getUnit vc
@@ -193,11 +198,11 @@ outPath vc gc value tx ty ax ay =
         y2 =
             ay * unit
     in
-    coloredPath vc gc value True x1 y1 x2 y2
+    coloredPath vc value True x1 y1 x2 y2 opacity_
 
 
-inPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Svg Msg
-inPath vc gc value tx ty ax ay =
+inPath : View.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPath vc value tx ty ax ay opacity_ =
     let
         unit =
             View.getUnit vc
@@ -236,7 +241,7 @@ inPath vc gc value tx ty ax ay =
         y2 =
             ty * unit
     in
-    coloredPath vc gc value False x1 y1 x2 y2
+    coloredPath vc value False x1 y1 x2 y2 opacity_
 
 
 valueToLabel : View.Config -> Api.Data.Values -> String
@@ -244,8 +249,8 @@ valueToLabel vc value =
     Locale.currency vc.locale [ ( { network = "btc", asset = "btc" }, value ) ]
 
 
-coloredPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-coloredPath vc _ value outgoing x1 y1 x2_ y2_ =
+coloredPath : View.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+coloredPath vc value outgoing x1 y1 x2_ y2_ opacity_ =
     let
         x2 =
             if x1 == x2_ then
@@ -355,7 +360,7 @@ coloredPath vc _ value outgoing x1 y1 x2_ y2_ =
         [ text label
         ]
     ]
-        |> g []
+        |> g [ opacity_ |> String.fromFloat |> opacity ]
 
 
 bendedPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg

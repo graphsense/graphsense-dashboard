@@ -5,6 +5,7 @@ import Json.Decode as Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
 import Msg.Pathfinder exposing (Msg(..))
+import Set
 import Sub.Graph.Transform as Transform
 import Time
 
@@ -57,5 +58,10 @@ subscriptions model =
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
     , Time.every 60000 Tick
+    , if Set.isEmpty model.network.animatedAddresses && Set.isEmpty model.network.animatedTxs then
+        Sub.none
+
+      else
+        Browser.Events.onAnimationFrameDelta AnimationFrameDeltaForMove
     ]
         |> Sub.batch

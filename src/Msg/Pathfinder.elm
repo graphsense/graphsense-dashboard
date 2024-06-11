@@ -31,6 +31,7 @@ type Msg
     | AddressDetailsMsg AddressDetailsMsg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
+    | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id Api.Data.Address
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id

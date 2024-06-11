@@ -1,5 +1,6 @@
 module Model.Pathfinder.Address exposing (..)
 
+import Animation exposing (Animation, Clock)
 import Api.Data
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
@@ -9,9 +10,11 @@ import Time exposing (Posix)
 
 type alias Address =
     { x : Float
-    , y : Float
+    , y : Animation
+    , clock : Clock
     , dx : Float
     , dy : Float
+    , opacity : Animation
     , id : Id
     , incomingTxs : Set Id
     , outgoingTxs : Set Id

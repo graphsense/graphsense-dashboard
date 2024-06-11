@@ -5,11 +5,14 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
+import Set exposing (Set)
 
 
 type alias Network =
     { addresses : Dict Id Address
     , txs : Dict Id Tx
+    , animatedAddresses : Set Id
+    , animatedTxs : Set Id
     }
 
 
@@ -67,3 +70,10 @@ setSelectedAddress bool network id =
 
         Nothing ->
             network
+
+
+hasAnimations : Network -> Bool
+hasAnimations network =
+    Set.isEmpty network.animatedTxs
+        && Set.isEmpty network.animatedAddresses
+        |> not

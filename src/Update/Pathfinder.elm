@@ -1,5 +1,6 @@
 module Update.Pathfinder exposing (update, updateByRoute)
 
+import Animation as A
 import Api.Data
 import Config.Update as Update
 import Dict
@@ -341,6 +342,14 @@ updateByMsg plugins uc msg model =
             n
                 { model
                     | transform = Transform.transition delta model.transform
+                }
+
+        AnimationFrameDeltaForMove delta ->
+            n
+                { model
+                    | network = 
+                        Network.animateAddresses delta model.network
+                        |> Network.animateTxs delta 
                 }
 
         UserClickedAddressExpandHandle id direction ->
@@ -850,7 +859,7 @@ browserGotTxForAddress plugins uc addressId direction tx model =
                             (\t_ ->
                                 Transform.move
                                     { x = t_.x * uc.unit
-                                    , y = t_.y * uc.unit
+                                    , y = A.getTo t_.y * uc.unit
                                     , z = Transform.initZ
                                     }
                                     model.transform

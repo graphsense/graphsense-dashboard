@@ -1,9 +1,10 @@
 module View.Pathfinder.Address exposing (view)
 
+import Animation as A
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
-import Css.Pathfinder as Css exposing (lText)
+import Css.Pathfinder as Css
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (..)
@@ -30,8 +31,13 @@ view _ vc _ address =
     , label vc address
     ]
         |> g
-            [ translate ((address.x + address.dx) * unit) ((address.y + address.dy) * unit)
+            [ translate
+                ((address.x + address.dx) * unit)
+                ((A.animate address.clock address.y + address.dy) * unit)
                 |> transform
+            , A.animate address.clock address.opacity
+                |> String.fromFloat
+                |> opacity
             , Css.address vc |> css
             , UserClickedAddress address.id |> onClick
             , UserPushesLeftMouseButtonOnAddress address.id

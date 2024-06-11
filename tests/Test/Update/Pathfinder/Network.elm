@@ -1,5 +1,6 @@
 module Test.Update.Pathfinder.Network exposing (..)
 
+import Api.Data
 import Data.Api as Api
 import Data.Pathfinder.Id as Id
 import Data.Pathfinder.Network as Data
@@ -9,7 +10,6 @@ import RecordSetter exposing (..)
 import Test exposing (..)
 import Tuple exposing (..)
 import Update.Pathfinder.Network as Network
-import Api.Data
 
 
 equal : Network -> Network -> Expectation
