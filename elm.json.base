@@ -44,6 +44,7 @@
             "gregziegan/elm-font-awesome-5": "1.0.1",
             "grotsev/elm-debouncer": "1.0.0",
             "hmsk/elm-vite-plugin-helper": "1.0.1",
+            "jorgengranseth/elm-string-format": "1.0.1",
             "jschomay/elm-bounded-number": "2.1.2",
             "justinmimbs/date": "4.1.0",
             "justinmimbs/time-extra": "1.2.0",

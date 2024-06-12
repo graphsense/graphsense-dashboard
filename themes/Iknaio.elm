@@ -3,7 +3,6 @@ module Iknaio exposing (theme)
 import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
-import Dict exposing (Dict)
 import Iknaio.ColorScheme exposing (..)
 import Iknaio.DesignToken as DesignToken
 import Iknaio.DesignTokens exposing (..)
@@ -94,10 +93,12 @@ colors =
     }
 
 
+fontFam : List String
 fontFam =
     [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
 
 
+headingFontFamilies : List String
 headingFontFamilies =
     [ "Conv_Octarine-Light" ]
 
@@ -578,7 +579,7 @@ theme =
                         ]
                     )
                 |> s_iconButton
-                    (\lightmode ->
+                    (\_ ->
                         [ width <| px 16
                         ]
                     )
@@ -704,7 +705,7 @@ theme =
                 |> s_edgeColor (DesignToken.toVariable edgeUtxoStrokeColor)
                 |> s_outEdgeColor (DesignToken.toVariable edgeUtxoOutStrokeColor)
                 |> s_inEdgeColor (DesignToken.toVariable edgeUtxoInStrokeColor)
-                |> s_edgeUtxo
+                |> s_edge
                     [ DesignToken.init
                         |> DesignToken.token "stroke" edgeUtxoStrokeColor
                         |> DesignToken.token "stroke-width" edgeUtxoStrokeWidth
@@ -1145,11 +1146,10 @@ theme =
                     )
                 |> s_propertyBoxRow
                     (\lightmode active ->
-                        [ hover
+                        hover
                             [ backgroundColorWithLightmode lightmode colors.brandLightest
                             ]
-                        ]
-                            ++ (if active then
+                            :: (if active then
                                     [ backgroundColorWithLightmode lightmode colors.brandLightest
                                     ]
 
@@ -1431,9 +1431,8 @@ theme =
                     ]
                 |> s_log
                     (\lightmode noerror ->
-                        [ displayFlex
-                        ]
-                            ++ (if noerror then
+                        displayFlex
+                            :: (if noerror then
                                     [ alignItems center
                                     ]
 
@@ -1515,6 +1514,7 @@ paddingX x =
 --marginX : Length compatibleB unitsB -> Style
 
 
+marginX : { compatible | value : String, lengthOrAuto : Compatible } -> Style
 marginX x =
     batch
         [ marginLeft x

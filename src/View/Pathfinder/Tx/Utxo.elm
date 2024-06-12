@@ -1,7 +1,6 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
-import Animation as A exposing (Clock)
-import Api.Data
+import Animation as A
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -24,6 +23,7 @@ import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
+import View.Pathfinder.Tx.Path exposing (inPath, outPath)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
@@ -109,7 +109,7 @@ body vc =
 
 
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> UtxoTx -> Svg Msg
-edge _ vc gc addresses tx =
+edge _ vc _ addresses tx =
     let
         toValues =
             NDict.toList
@@ -117,7 +117,13 @@ edge _ vc gc addresses tx =
                     (\( id, { values } ) ->
                         getAddress addresses id
                             |> Result.toMaybe
-                            |> Maybe.map (pair values)
+                            |> Maybe.map
+                                (values
+                                    |> pair { network = Id.network id, asset = Id.network id }
+                                    |> List.singleton
+                                    |> Locale.currency vc.locale
+                                    >> pair
+                                )
                     )
 
         outputValues =
@@ -127,340 +133,75 @@ edge _ vc gc addresses tx =
         inputValues =
             tx.inputs
                 |> toValues
+
+        unit =
+            View.getUnit vc
+
+        rad =
+            vc.theme.pathfinder.addressRadius
+
+        txRad =
+            vc.theme.pathfinder.txRadius
+
+        toCoords address =
+            { tx = tx.x + tx.dx
+            , ty = A.animate tx.clock tx.y + tx.dy
+            , ax = address.x + address.dx
+            , ay = A.animate address.clock address.y + address.dy
+            }
     in
-    (outputValues
-        |> List.map
-            (\( values, address ) ->
-                ( Id.toString address.id
-                , Svg.lazy7 outPath
-                    vc
-                    values
-                    (tx.x + tx.dx)
-                    (A.animate tx.clock tx.y + tx.dy)
-                    (address.x + address.dx)
-                    (A.animate address.clock address.y + address.dy)
-                    (A.animate address.clock address.opacity)
-                )
-            )
-    )
-        ++ (inputValues
+        (inputValues
                 |> List.map
                     (\( values, address ) ->
+                        let
+                            c =
+                                toCoords address
+
+                            sign =
+                                if c.ax > c.tx then
+                                    -1
+
+                                else
+                                    1
+                        in
                         ( Id.toString address.id
                         , Svg.lazy7 inPath
                             vc
                             values
-                            (tx.x + tx.dx)
-                            (A.animate tx.clock tx.y + tx.dy)
-                            (address.x + address.dx)
-                            (A.animate address.clock address.y + address.dy)
+                            (c.ax * unit + (rad * sign))
+                            (c.ay * unit)
+                            (c.tx * unit - (txRad * sign))
+                            (c.ty * unit)
                             (A.animate tx.clock tx.opacity)
                         )
                     )
            )
+           ++ 
+    (outputValues
+        |> List.map
+            (\( values, address ) ->
+                let
+                    c =
+                        toCoords address
+
+                    sign =
+                        if c.ax < c.tx then
+                            -1
+
+                        else
+                            1
+                in
+                ( Id.toString address.id
+                , Svg.lazy7 outPath
+                    vc
+                    values
+                    (c.tx * unit + (txRad * sign))
+                    (c.ty * unit)
+                    (c.ax * unit - (rad * sign))
+                    (c.ay * unit)
+                    (A.animate address.clock address.opacity)
+                )
+            )
+    )
         |> Keyed.node "g"
             []
-
-
-outPath : View.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-outPath vc value tx ty ax ay opacity_ =
-    let
-        unit =
-            View.getUnit vc
-
-        rad =
-            vc.theme.pathfinder.addressRadius
-
-        txRad =
-            vc.theme.pathfinder.txRadius
-
-        x1 =
-            tx
-                * unit
-                + txRad
-                * (if ax < tx then
-                    -1
-
-                   else
-                    1
-                  )
-
-        y1 =
-            ty * unit
-
-        x2 =
-            ax
-                * unit
-                - rad
-                * (if ax < tx then
-                    -1
-
-                   else
-                    1
-                  )
-
-        y2 =
-            ay * unit
-    in
-    coloredPath vc value True x1 y1 x2 y2 opacity_
-
-
-inPath : View.Config -> Api.Data.Values -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-inPath vc value tx ty ax ay opacity_ =
-    let
-        unit =
-            View.getUnit vc
-
-        rad =
-            vc.theme.pathfinder.addressRadius
-
-        txRad =
-            vc.theme.pathfinder.txRadius
-
-        x1 =
-            ax
-                * unit
-                + rad
-                * (if tx < ax then
-                    -1
-
-                   else
-                    1
-                  )
-
-        y1 =
-            ay * unit
-
-        x2 =
-            tx
-                * unit
-                - txRad
-                * (if tx < ax then
-                    -1
-
-                   else
-                    1
-                  )
-
-        y2 =
-            ty * unit
-    in
-    coloredPath vc value False x1 y1 x2 y2 opacity_
-
-
-valueToLabel : View.Config -> Api.Data.Values -> String
-valueToLabel vc value =
-    Locale.currency vc.locale [ ( { network = "btc", asset = "btc" }, value ) ]
-
-
-coloredPath : View.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Float -> Svg Msg
-coloredPath vc value outgoing x1 y1 x2_ y2_ opacity_ =
-    let
-        x2 =
-            if x1 == x2_ then
-                x2_ + 0.01
-
-            else
-                x2_
-
-        y2 =
-            if y1 == y2_ then
-                y2_ + 0.01
-
-            else
-                y2_
-
-        ( dx, dy ) =
-            ( x2 - x1
-            , y2 - y1
-            )
-
-        ( nodes, lx, ly ) =
-            let
-                ( mx, my ) =
-                    ( x1 + dx / 2
-                    , y1 + dy / 2
-                    )
-            in
-            ( [ ( x2, y2 )
-                    |> C
-                        ( mx, y1 )
-                        ( mx, y2 )
-              ]
-            , mx
-            , my
-            )
-
-        label =
-            valueToLabel vc value
-    in
-    [ Svg.path
-        [ nodes
-            |> (::) (M ( x1, y1 ))
-            |> pathD
-            |> d
-        , css
-            [ Css.property "stroke" <|
-                "url(#"
-                    ++ (case ( outgoing, dx > 0 ) of
-                            ( True, True ) ->
-                                "outEdge"
-
-                            ( True, False ) ->
-                                "outEdgeBack"
-
-                            ( False, True ) ->
-                                "inEdge"
-
-                            ( False, False ) ->
-                                "inEdgeBack"
-                       )
-                    ++ ")"
-            , Css.property "fill" "none"
-            , Css.property "stroke-width" "2px"
-            ]
-        ]
-        []
-    , if outgoing then
-        let
-            arrowLength =
-                vc.theme.pathfinder.arrowLength
-        in
-        Svg.path
-            [ d <|
-                pathD
-                    [ M ( x2 - arrowLength, y2 - arrowLength )
-                    , l ( arrowLength, arrowLength )
-                    , l ( -arrowLength, arrowLength )
-                    ]
-            , "rotate("
-                ++ ([ if dx < 0 then
-                        "180"
-
-                      else
-                        "0"
-                    , String.fromFloat x2
-                    , String.fromFloat y2
-                    ]
-                        |> String.join ","
-                   )
-                ++ ")"
-                |> transform
-            , css
-                (Css.edgeUtxo vc
-                    ++ [ Css.property "stroke" vc.theme.pathfinder.outEdgeColor ]
-                )
-            ]
-            []
-
-      else
-        text ""
-    , text_
-        [ lx |> String.fromFloat |> x
-        , ly |> String.fromFloat |> y
-        , textAnchor "middle"
-        , Css.edgeLabel vc |> css
-        ]
-        [ text label
-        ]
-    ]
-        |> g [ opacity_ |> String.fromFloat |> opacity ]
-
-
-bendedPath : View.Config -> Pathfinder.Config -> Api.Data.Values -> Bool -> Float -> Float -> Float -> Float -> Svg Msg
-bendedPath vc _ value withArrow x1 y1 x2 y2 =
-    let
-        ( dx, dy ) =
-            ( x2 - x1
-            , y2 - y1
-            )
-
-        ( nodes, lx, ly ) =
-            if dx > 0 then
-                let
-                    ( mx, my ) =
-                        ( x1 + dx / 2
-                        , y1 + dy / 2
-                        )
-                in
-                ( [ ( x2, y2 )
-                        |> C
-                            ( mx, y1 )
-                            ( mx, y2 )
-                  ]
-                , mx
-                , my
-                )
-
-            else
-                let
-                    ( mx, my ) =
-                        ( x1 + dx / 2
-                        , y1 + Basics.max (dy / 2) vc.theme.pathfinder.addressRadius
-                        )
-
-                    ( c1x, c1y ) =
-                        ( x1 + (mx - x1 |> abs) / 2
-                        , my
-                        )
-
-                    ( c2x, c2y ) =
-                        ( mx
-                            - (mx - x1)
-                            / 2
-                        , my
-                        )
-                in
-                ( [ ( mx, my )
-                        |> C
-                            ( c1x, c1y )
-                            ( c2x, c2y )
-                  , ( x2, y2 )
-                        |> S
-                            ( x2 - (x2 - mx |> abs) / 2
-                            , y2 - (y2 - my) / 2
-                            )
-                  ]
-                , mx
-                , my
-                )
-
-        label =
-            valueToLabel vc value
-    in
-    [ Svg.path
-        [ nodes
-            |> (::) (M ( x1, y1 ))
-            |> pathD
-            |> d
-        , Css.edgeUtxo vc |> css
-        ]
-        []
-    , if withArrow then
-        let
-            arrowLength =
-                vc.theme.pathfinder.arrowLength
-        in
-        Svg.path
-            [ d <|
-                pathD
-                    [ M ( x2 - arrowLength, y2 - arrowLength )
-                    , l ( arrowLength, arrowLength )
-                    , l ( -arrowLength, arrowLength )
-                    ]
-            , Css.edgeUtxo vc |> css
-            ]
-            []
-
-      else
-        text ""
-    , text_
-        [ lx |> String.fromFloat |> x
-        , ly |> String.fromFloat |> y
-        , textAnchor "middle"
-        , Css.edgeLabel vc |> css
-        ]
-        [ text label
-        ]
-    ]
-        |> g []

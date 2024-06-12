@@ -16,7 +16,7 @@ type alias Pathfinder =
     , edgeCurvedEnd : Float
     , edgeLabelPadding : Float
     , edgeLabel : List Style
-    , edgeUtxo : List Style
+    , edge : List Style
     , arrowLength : Float
     , edgeColor : String
     , outEdgeColor : String
@@ -37,7 +37,7 @@ default =
     , edgeCurvedEnd = 0.25
     , edgeLabelPadding = 5
     , edgeLabel = []
-    , edgeUtxo = []
+    , edge = []
     , arrowLength = 5
     , edgeColor = "black"
     , outEdgeColor = "black"

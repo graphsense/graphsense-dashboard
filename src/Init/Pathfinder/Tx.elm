@@ -1,7 +1,7 @@
 module Init.Pathfinder.Tx exposing (fromTxAccountData, fromTxUtxoData)
 
-import Api.Data
 import Animation as A
+import Api.Data
 import Dict.Nonempty as NDict
 import Init.Pathfinder.Id as Id
 import List.Nonempty as NList

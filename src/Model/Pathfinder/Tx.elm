@@ -21,11 +21,11 @@ type alias Tx =
 
 
 type TxType
-    = Account AccontTx
+    = Account AccountTx
     | Utxo UtxoTx
 
 
-type alias AccontTx =
+type alias AccountTx =
     { from : Id
     , to : Id
     , value : Api.Data.Values

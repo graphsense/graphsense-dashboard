@@ -14,6 +14,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (first)
 import View.Pathfinder.Tx.Utxo as Utxo
+import View.Pathfinder.Tx.AccountTx as AccountTx
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Svg Msg
@@ -33,6 +34,6 @@ edge plugins vc gc addresses tx =
         Utxo t ->
             Utxo.edge plugins vc gc addresses t
 
-        Account _ ->
-            g [] []
+        Account t ->
+            AccountTx.edge plugins vc gc addresses t
     )

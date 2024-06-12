@@ -255,8 +255,9 @@ updateByMsg plugins uc msg model =
                 DraggingNode id _ _ ->
                     n
                         { model
-                            | network = Network.updateAddress id Node.release model.network
-                                |> Network.updateTx id (Tx.updateUtxo (Node.release))
+                            | network =
+                                Network.updateAddress id Node.release model.network
+                                    |> Network.updateTx id (Tx.updateUtxo Node.release)
                             , dragging = NoDragging
                         }
 

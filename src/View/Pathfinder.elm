@@ -318,7 +318,15 @@ searchBoxView plugins _ vc _ model =
         [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Add to graph") ]
         , div [ searchBoxContainerStyle vc |> toAttr ]
             [ span [ searchBoxIconStyle vc |> toAttr ] [ FontAwesome.icon FontAwesome.search |> Html.fromUnstyled ]
-            , View.Search.search plugins vc { css = searchInputStyle vc, multiline = False, resultsAsLink = True, showIcon = False } model.search |> Html.map SearchMsg
+            , View.Search.search plugins
+                vc
+                { css = searchInputStyle vc
+                , multiline = False
+                , resultsAsLink = True
+                , showIcon = False
+                }
+                model.search
+                |> Html.map SearchMsg
             ]
         ]
 
@@ -770,10 +778,14 @@ graphSvg plugins _ vc gc model bbox =
         )
         [ defs
             []
-            [ gradient "outEdge" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.outEdgeColor
-            , gradient "inEdge" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.edgeColor
-            , gradient "outEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.edgeColor
-            , gradient "inEdgeBack" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.inEdgeColor
+            [ gradient "utxoOutEdgeForth" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.outEdgeColor
+            , gradient "utxoInEdgeForth" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.edgeColor
+            , gradient "utxoOutEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.edgeColor
+            , gradient "utxoInEdgeBack" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.inEdgeColor
+            , gradient "accountOutEdgeForth" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.outEdgeColor
+            , gradient "accountInEdgeForth" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
+            , gradient "accountOutEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
+            , gradient "accountInEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
             ]
         , Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs

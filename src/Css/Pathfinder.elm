@@ -48,10 +48,10 @@ tx vc =
         :: vc.theme.pathfinder.tx
 
 
-edgeUtxo : View.Config -> List Style
-edgeUtxo vc =
+edge : View.Config -> List Style
+edge vc =
     property "fill" "none"
-        :: vc.theme.pathfinder.edgeUtxo
+        :: vc.theme.pathfinder.edge
 
 
 edgeLabel : View.Config -> List Style
