@@ -150,34 +150,7 @@ edge _ vc _ addresses tx =
             , ay = A.animate address.clock address.y + address.dy
             }
     in
-        (inputValues
-                |> List.map
-                    (\( values, address ) ->
-                        let
-                            c =
-                                toCoords address
-
-                            sign =
-                                if c.ax > c.tx then
-                                    -1
-
-                                else
-                                    1
-                        in
-                        ( Id.toString address.id
-                        , Svg.lazy7 inPath
-                            vc
-                            values
-                            (c.ax * unit + (rad * sign))
-                            (c.ay * unit)
-                            (c.tx * unit - (txRad * sign))
-                            (c.ty * unit)
-                            (A.animate tx.clock tx.opacity)
-                        )
-                    )
-           )
-           ++ 
-    (outputValues
+    (inputValues
         |> List.map
             (\( values, address ) ->
                 let
@@ -185,23 +158,49 @@ edge _ vc _ addresses tx =
                         toCoords address
 
                     sign =
-                        if c.ax < c.tx then
+                        if c.ax > c.tx then
                             -1
 
                         else
                             1
                 in
                 ( Id.toString address.id
-                , Svg.lazy7 outPath
+                , Svg.lazy7 inPath
                     vc
                     values
-                    (c.tx * unit + (txRad * sign))
-                    (c.ty * unit)
-                    (c.ax * unit - (rad * sign))
+                    (c.ax * unit + (rad * sign))
                     (c.ay * unit)
-                    (A.animate address.clock address.opacity)
+                    (c.tx * unit - (txRad * sign))
+                    (c.ty * unit)
+                    (A.animate tx.clock tx.opacity)
                 )
             )
     )
+        ++ (outputValues
+                |> List.map
+                    (\( values, address ) ->
+                        let
+                            c =
+                                toCoords address
+
+                            sign =
+                                if c.ax < c.tx then
+                                    -1
+
+                                else
+                                    1
+                        in
+                        ( Id.toString address.id
+                        , Svg.lazy7 outPath
+                            vc
+                            values
+                            (c.tx * unit + (txRad * sign))
+                            (c.ty * unit)
+                            (c.ax * unit - (rad * sign))
+                            (c.ay * unit)
+                            (A.animate address.clock address.opacity)
+                        )
+                    )
+           )
         |> Keyed.node "g"
             []

@@ -6,13 +6,15 @@ import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Model.Pathfinder exposing (Model)
 import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxByTimeMsg(..), WorkflowNextTxContext)
+import Effect exposing (n)
 
 
 update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, List Effect )
 update { addressId, direction } msg model =
     case msg of
         BrowserGotBlockHeight blockAtDate ->
-            Debug.todo ""
+            --Debug.todo ""
+            n model
 
         BrowserGotRecentTx data ->
             let

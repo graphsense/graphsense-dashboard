@@ -406,8 +406,14 @@ updateByMsg plugins uc msg model =
 
         UserClickedTxCheckboxInTable tx ->
             case tx of
-                Api.Data.AddressTxTxAccount _ ->
-                    n model
+                Api.Data.AddressTxTxAccount t ->
+                    n
+                        { model
+                            | network =
+                                Network.addTx (Api.Data.TxTxAccount t) model.network
+                                    |> Network.addAddress (Id.init t.currency t.fromAddress)
+                                    |> Network.addAddress (Id.init t.currency t.toAddress)
+                        }
 
                 Api.Data.AddressTxAddressTxUtxo t ->
                     ( model
