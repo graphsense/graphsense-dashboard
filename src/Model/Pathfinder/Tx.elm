@@ -36,6 +36,8 @@ type alias AccontTx =
 type alias UtxoTx =
     { x : Float
     , y : Animation
+    , dx : Float
+    , dy : Float
     , clock : Clock
     , opacity : Animation
     , inputs : NonemptyDict Id Io

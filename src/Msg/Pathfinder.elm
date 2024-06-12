@@ -54,6 +54,7 @@ type Msg
     | UserClickedAddressCheckboxInTable Id
     | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
     | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg
+    | UserPushesLeftMouseButtonOnUtxoTx Id Coords
 
 
 type DisplaySettingsMsg

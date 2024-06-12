@@ -45,13 +45,17 @@ view _ vc _ id tx =
                 []
            )
         |> g
-            [ translate (tx.x * unit) (A.animate tx.clock tx.y * unit)
+            [ translate
+                ((tx.x + tx.dx) * unit)
+                ((A.animate tx.clock tx.y + tx.dy) * unit)
                 |> transform
             , A.animate tx.clock tx.opacity
                 |> String.fromFloat
                 |> opacity
             , Css.tx vc |> css
             , UserClickedTx id |> onClick
+            , UserPushesLeftMouseButtonOnUtxoTx id
+                |> Util.Graph.mousedown
             ]
 
 
@@ -131,8 +135,8 @@ edge _ vc gc addresses tx =
                 , Svg.lazy7 outPath
                     vc
                     values
-                    tx.x
-                    (A.animate tx.clock tx.y)
+                    (tx.x + tx.dx)
+                    (A.animate tx.clock tx.y + tx.dy)
                     (address.x + address.dx)
                     (A.animate address.clock address.y + address.dy)
                     (A.animate address.clock address.opacity)
@@ -146,8 +150,8 @@ edge _ vc gc addresses tx =
                         , Svg.lazy7 inPath
                             vc
                             values
-                            tx.x
-                            (A.animate tx.clock tx.y)
+                            (tx.x + tx.dx)
+                            (A.animate tx.clock tx.y + tx.dy)
                             (address.x + address.dx)
                             (A.animate address.clock address.y + address.dy)
                             (A.animate tx.clock tx.opacity)

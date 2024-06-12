@@ -53,9 +53,10 @@ import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
-import Update.Pathfinder.Address as Address
 import Update.Pathfinder.AddressDetails as AddressDetails
 import Update.Pathfinder.Network as Network
+import Update.Pathfinder.Node as Node
+import Update.Pathfinder.Tx as Tx
 import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
@@ -245,16 +246,17 @@ updateByMsg plugins uc msg model =
                 NoDragging ->
                     n model
 
-                Dragging _ start coords ->
+                Dragging _ _ _ ->
                     n
                         { model
                             | dragging = NoDragging
                         }
 
-                DraggingNode id start coords ->
+                DraggingNode id _ _ ->
                     n
                         { model
-                            | network = Network.updateAddress id Address.release model.network
+                            | network = Network.updateAddress id Node.release model.network
+                                |> Network.updateTx id (Tx.updateUtxo (Node.release))
                             , dragging = NoDragging
                         }
 
@@ -301,6 +303,18 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserPushesLeftMouseButtonOnUtxoTx id coords ->
+            { model
+                | dragging =
+                    case ( model.dragging, model.transform.state ) of
+                        ( NoDragging, Transform.Settled _ ) ->
+                            DraggingNode id coords coords
+
+                        _ ->
+                            model.dragging
+            }
+                |> n
+
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
@@ -333,7 +347,9 @@ updateByMsg plugins uc msg model =
                     in
                     { model
                         | network =
-                            Network.updateAddress id (Address.move vectorRel) model.network
+                            Network.updateAddress id (Node.move vectorRel) model.network
+                                |> Network.updateTx id
+                                    (Tx.updateUtxo (Node.move vectorRel))
                         , dragging = DraggingNode id start coords
                     }
                         |> n
@@ -347,9 +363,9 @@ updateByMsg plugins uc msg model =
         AnimationFrameDeltaForMove delta ->
             n
                 { model
-                    | network = 
+                    | network =
                         Network.animateAddresses delta model.network
-                        |> Network.animateTxs delta 
+                            |> Network.animateTxs delta
                 }
 
         UserClickedAddressExpandHandle id direction ->

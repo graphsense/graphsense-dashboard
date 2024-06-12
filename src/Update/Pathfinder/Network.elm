@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -9,6 +9,7 @@ import Dict.Nonempty as NDict
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
+import Init.Pathfinder.Tx as Tx
 import List.Nonempty as NList
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -19,7 +20,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
 import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (Io, Tx, getAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_visible)
 import RemoteData exposing (RemoteData(..))
@@ -280,6 +281,11 @@ updateAddress id update model =
     { model | addresses = Dict.update id (Maybe.map update) model.addresses }
 
 
+updateTx : Id -> (Tx -> Tx) -> Network -> Network
+updateTx id update model =
+    { model | txs = Dict.update id (Maybe.map update) model.txs }
+
+
 findFreeCoords : Network -> Coords
 findFreeCoords model =
     { x = 0
@@ -352,7 +358,7 @@ addTx tx network =
     else
         case tx of
             Api.Data.TxTxAccount t ->
-                fromTxAccountData t
+                Tx.fromTxAccountData t
                     |> insertTx network
 
             Api.Data.TxTxUtxo t ->
@@ -360,7 +366,7 @@ addTx tx network =
                     coords =
                         findUtxoTxCoords t network
                 in
-                fromTxUtxoData t coords
+                Tx.fromTxUtxoData t coords
                     |> Maybe.map
                         (\tx_ ->
                             let
@@ -421,77 +427,6 @@ insertTx network tx =
             { network
                 | txs = Dict.insert tx.id tx network.txs
             }
-
-
-fromTxAccountData : Api.Data.TxAccount -> Tx
-fromTxAccountData tx =
-    let
-        id =
-            Id.init tx.currency tx.txHash
-    in
-    { id = id
-    , type_ =
-        Tx.Account
-            { from = Id.init tx.currency tx.fromAddress
-            , to = Id.init tx.currency tx.toAddress
-            , value = tx.value
-            , raw = tx
-            }
-    }
-
-
-fromTxUtxoData : Api.Data.TxUtxo -> Coords -> Maybe Tx
-fromTxUtxoData tx coords =
-    let
-        id =
-            Id.init tx.currency tx.txHash
-
-        fn dir =
-            let
-                field =
-                    case dir of
-                        Incoming ->
-                            .inputs
-
-                        Outgoing ->
-                            .outputs
-
-                toPair : Api.Data.TxValue -> Maybe ( Id, Io )
-                toPair { address, value } =
-                    -- TODO what to do with multisig?
-                    List.head address
-                        |> Maybe.map (\a -> ( Id.init tx.currency a, Io value False ))
-            in
-            field tx
-                |> Maybe.map (List.filterMap toPair)
-                |> Maybe.andThen NList.fromList
-    in
-    Maybe.map2
-        (\in_ out ->
-            { id = id
-            , type_ =
-                let
-                    inputs =
-                        NDict.fromNonemptyList in_
-                in
-                Tx.Utxo
-                    { x = coords.x
-                    , y = A.static coords.y
-                    , opacity = A.static 1
-                    , clock = 0
-                    , inputs = inputs
-                    , outputs =
-                        out
-                            |> NList.filter
-                                (\( o, _ ) -> NDict.get o inputs == Nothing)
-                                (NList.head out)
-                            |> NDict.fromNonemptyList
-                    , raw = tx
-                    }
-            }
-        )
-        (fn Incoming)
-        (fn Outgoing)
 
 
 findUtxoTxCoords : Api.Data.TxUtxo -> Network -> Coords
