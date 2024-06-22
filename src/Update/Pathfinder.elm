@@ -108,7 +108,28 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotActor id data ->
-            n { model | actors = Dict.insert id data model.actors }
+            let
+                network =
+                    if List.any (.id >> (==) "exchange") data.categories then
+                        Network.updateAddressIf
+                            (.data
+                                >> RemoteData.toMaybe
+                                >> Maybe.andThen .actors
+                                >> Maybe.withDefault []
+                                >> List.Extra.find (.id >> (==) id)
+                                >> (/=) Nothing
+                            )
+                            (s_isExchange True)
+                            model.network
+
+                    else
+                        model.network
+            in
+            n
+                { model
+                    | actors = Dict.insert id data model.actors
+                    , network = network
+                }
 
         UserPressedCtrlKey ->
             let
@@ -904,7 +925,7 @@ fetchActorsForAddress d existing =
 
 
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress plugins uc addressId direction tx model =
+browserGotTxForAddress plugins _ addressId direction tx model =
     let
         network =
             Network.addTx tx model.network

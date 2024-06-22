@@ -20,6 +20,7 @@ type alias Address =
     , outgoingTxs : Set Id
     , data : WebData Api.Data.Address
     , selected : Bool
+    , isExchange : Bool
     }
 
 

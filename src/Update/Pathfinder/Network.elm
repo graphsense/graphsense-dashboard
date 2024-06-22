@@ -1,8 +1,8 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress, updateTx)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
-import Basics.Extra exposing (uncurry)
+import Basics.Extra exposing (flip, uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
 import Dict.Nonempty as NDict
@@ -22,7 +22,7 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_visible)
+import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_visible)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
@@ -279,6 +279,20 @@ opacityAnimation =
 updateAddress : Id -> (Address -> Address) -> Network -> Network
 updateAddress id update model =
     { model | addresses = Dict.update id (Maybe.map update) model.addresses }
+
+
+updateAddressIf : (Address -> Bool) -> (Address -> Address) -> Network -> Network
+updateAddressIf predicate upd network =
+    network.addresses
+        |> Dict.map
+            (\_ address ->
+                if predicate address then
+                    upd address
+
+                else
+                    address
+            )
+        |> flip s_addresses network
 
 
 updateTx : Id -> (Tx -> Tx) -> Network -> Network

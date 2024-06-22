@@ -21,4 +21,5 @@ init id { x, y } =
     , outgoingTxs = Set.empty
     , data = NotAsked
     , selected = False
+    , isExchange = False
     }

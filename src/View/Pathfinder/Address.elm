@@ -76,5 +76,9 @@ view _ _ _ address =
         , highlight = address.selected
         , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
         , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs
-        , nodeIcon = PathfinderComponents.normalNodeIcon PathfinderComponents.defaultNormalNodeIconAttributes {}
+        , nodeIcon = 
+            if address.isExchange then
+            PathfinderComponents.exchangeNodeIcon PathfinderComponents.defaultExchangeNodeIconAttributes {}
+            else
+            PathfinderComponents.normalNodeIcon PathfinderComponents.defaultNormalNodeIconAttributes {}
         }
