@@ -342,8 +342,8 @@ updateByMsg plugins uc msg model =
                             Transform.vector start coords model.transform
 
                         vectorRel =
-                            { x = vector.x / uc.unit
-                            , y = vector.y / uc.unit
+                            { x = vector.x / unit
+                            , y = vector.y / unit
                             }
                     in
                     { model
@@ -881,8 +881,8 @@ browserGotTxForAddress plugins uc addressId direction tx model =
                         |> Maybe.map
                             (\t_ ->
                                 Transform.move
-                                    { x = t_.x * uc.unit
-                                    , y = A.getTo t_.y * uc.unit
+                                    { x = t_.x * unit
+                                    , y = A.getTo t_.y * unit
                                     , z = Transform.initZ
                                     }
                                     model.transform

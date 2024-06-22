@@ -8,6 +8,7 @@ import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
@@ -19,6 +20,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
+import Theme.PathfinderComponents as PathfinderComponents exposing (defaultTxNodeAttributes)
 import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
@@ -29,34 +31,38 @@ import View.Pathfinder.Tx.Path exposing (inPath, outPath)
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
 view _ vc _ id tx =
     let
-        unit =
-            View.getUnit vc
-
         anyIsNotVisible =
             NDict.toList
                 >> List.any (second >> .visible >> not)
-    in
-    body vc
-        :: (if anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs then
-                [ moreIndicator vc
-                ]
 
-            else
-                []
-           )
-        |> g
-            [ translate
-                ((tx.x + tx.dx) * unit)
-                ((A.animate tx.clock tx.y + tx.dy) * unit)
-                |> transform
-            , A.animate tx.clock tx.opacity
-                |> String.fromFloat
-                |> opacity
-            , Css.tx vc |> css
-            , UserClickedTx id |> onClick
-            , UserPushesLeftMouseButtonOnUtxoTx id
-                |> Util.Graph.mousedown
-            ]
+        fd =
+            PathfinderComponents.txNodeBodyEllipseDimensions
+
+        adjX =
+            fd.x + fd.width / 2
+
+        adjY =
+            fd.y + fd.height / 2
+    in
+    PathfinderComponents.txNode
+        { defaultTxNodeAttributes
+            | txNode =
+                [ translate
+                    ((tx.x + tx.dx) * unit - adjX)
+                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
+                    |> transform
+                , A.animate tx.clock tx.opacity
+                    |> String.fromFloat
+                    |> opacity
+                , UserClickedTx id |> onClick
+                , UserPushesLeftMouseButtonOnUtxoTx id
+                    |> Util.Graph.mousedown
+                , css [ Css.cursor Css.pointer ]
+                ]
+        }
+        { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
+        , highlightVisible = tx.selected
+        }
 
 
 moreIndicator : View.Config -> Svg Msg
@@ -134,11 +140,11 @@ edge _ vc _ addresses tx =
             tx.inputs
                 |> toValues
 
-        unit =
-            View.getUnit vc
+        fd =
+            PathfinderComponents.addressNodeFrameDimensions
 
         rad =
-            vc.theme.pathfinder.addressRadius
+            fd.width / 2
 
         txRad =
             vc.theme.pathfinder.txRadius

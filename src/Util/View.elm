@@ -1,10 +1,8 @@
 module Util.View exposing (..)
 
-import Browser.Dom as Dom
 import Color
 import Config.View as View
 import Css exposing (Color, Style)
-import Css.Browser
 import Css.Graph
 import Css.View as Css
 import FontAwesome
@@ -14,10 +12,9 @@ import Html
 import Html.Attributes
 import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title, value)
-import Html.Styled.Events exposing (onClick, stopPropagationOn)
+import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
 import Switch
-import Util.Css
 import View.Locale as Locale
 
 
@@ -245,3 +242,9 @@ frame : View.Config -> List (Attribute msg) -> List (Html msg) -> Html msg
 frame vc attr =
     div
         ((Css.frame vc |> css) :: attr)
+
+
+onClickWithStop : msg -> Attribute msg
+onClickWithStop msg =
+    Json.Decode.succeed ( msg, True )
+        |> stopPropagationOn "click"

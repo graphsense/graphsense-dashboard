@@ -2,8 +2,9 @@
     "type": "application",
     "source-directories": [
         "src",
-        "gen/recordsetter",
-        "gen/plugins",
+        "generated",
+        "generated/plugins",
+        "theme",
         "openapi/src",
         "themes",
         "config",

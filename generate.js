@@ -17,7 +17,7 @@ const isDir = fileName => {
 
 const pluginsFolder = './plugins'
 const templatesFolder = './plugin_templates'
-const genFolder = './gen'
+const genFolder = './generated'
 const genPluginsFolder = path.join(genFolder, pluginsFolder)
 const langFolder = './lang'
 const publicFolder = './public'

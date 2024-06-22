@@ -9,7 +9,7 @@ import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
-import Model.Pathfinder.Address as Address exposing (Address, getNrTxs)
+import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -17,8 +17,14 @@ import Model.Pathfinder.Table exposing (PagedTable)
 import Model.Pathfinder.Tools exposing (PointerTool)
 import Model.Search as Search
 import Msg.Pathfinder exposing (Msg)
-import RecordSetter exposing (s_detailsViewState, s_outDegree, s_selection)
+import RecordSetter exposing (s_detailsViewState, s_selection)
+import Theme.PathfinderComponents as PathfinderComponents
 import Time exposing (Posix)
+
+
+unit : Float
+unit =
+    PathfinderComponents.addressNodeFrameDimensions.width
 
 
 type alias Model =

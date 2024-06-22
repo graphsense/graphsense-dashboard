@@ -7,27 +7,20 @@ install:
 	pip install pre-commit
 	pre-commit install
 
-install:
-	pip install pre-commit
-	pre-commit install
-
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)
 			#--global-property=debugModels \
 			#--global-property=debugOperations \
 
-watch:
-	find . -name \*.elm | entr make dev
-
 dev: $(API_ELM) $(wildcard src/**)
-	make setem
+	make generated
 	npx elm-test-rs --watch tests/Graph/View/TestLabel.elm
 
 #$(API_ELM): $(wildcard templates/*) $(OPENAPI_LOCATION)
 	#make openapi
 
 setem:
-	npx setem --output gen/recordsetter
+	npx setem --output generated
 
 serve:
 	npm run dev
@@ -47,4 +40,15 @@ serve-docker: build-docker
 format:
 	npx elm-format --yes src
 
-.PHONY: openapi serve test format build build-docker serve-docker
+theme:
+	mkdir -p theme
+	curl 'https://api.figma.com/v1/files/$(FIGMA_FILE_ID)?geometry=paths' -H 'X-Figma-Token: $(FIGMA_API_TOKEN)' | jq > theme/figma.json
+	npx elm-codegen run --debug --flags-from=./theme/figma.json --output theme
+
+gen:
+	rm -rf generated/*
+	node generate.js
+	-make theme
+	make setem
+
+.PHONY: openapi serve test format build build-docker serve-docker gen theme

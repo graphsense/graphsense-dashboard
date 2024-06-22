@@ -5,6 +5,7 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
@@ -23,9 +24,6 @@ import View.Pathfinder.Tx.Path exposing (accountPath)
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> AccountTx -> Svg Msg
 edge _ vc _ addresses tx =
     let
-        unit =
-            View.getUnit vc
-
         rad =
             vc.theme.pathfinder.addressRadius
     in

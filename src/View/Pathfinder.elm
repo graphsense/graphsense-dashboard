@@ -777,11 +777,13 @@ graphSvg plugins _ vc gc model bbox =
                     ]
                     []
                 ]
+
+        originShiftX = searchBoxMinWidth / 2
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
          , model.transform
-            |> Transform.update { x = 0, y = 0 } { x = -searchBoxMinWidth / 2, y = 0 }
+            |> Transform.update { x = 0, y = 0 } { x = -originShiftX, y = 0 }
             |> Transform.viewBox dim
             |> viewBox
          , (Css.Graph.svgRoot vc ++ pointerStyle) |> SA.css
@@ -791,7 +793,7 @@ graphSvg plugins _ vc gc model bbox =
          , Svg.custom "wheel"
             (Json.Decode.map3
                 (\y mx my ->
-                    { message = UserWheeledOnGraph mx my y
+                    { message = UserWheeledOnGraph (mx + originShiftX) my y
                     , stopPropagation = False
                     , preventDefault = False
                     }

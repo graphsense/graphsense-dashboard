@@ -1,7 +1,8 @@
-module Config.View exposing (Config, getUnit)
+module Config.View exposing (Config)
 
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
+import Theme.PathfinderComponents as PathfinderComponents
 import Theme.Theme exposing (Theme)
 
 
@@ -13,8 +14,3 @@ type alias Config =
     , lightmode : Bool
     , size : Maybe BBox -- position and size of the main pane
     }
-
-
-getUnit : Config -> Float
-getUnit { theme } =
-    theme.pathfinder.addressRadius * 2

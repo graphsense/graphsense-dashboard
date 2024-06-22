@@ -41,7 +41,6 @@ main =
             , highlightsColorScheme = config.theme.graph.highlightsColorScheme
             , locale = Locale.init default |> first
             , size = Nothing
-            , unit = 0
             }
 
         updPlug =
@@ -66,7 +65,6 @@ main =
                     { uc
                         | locale = model.config.locale
                         , size = model.config.size
-                        , unit = View.getUnit model.config
                     }
                     msg
                     model
