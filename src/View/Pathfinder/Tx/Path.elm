@@ -13,6 +13,8 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
+import Theme.PathfinderComponents as PathfinderComponents exposing (defaultTxLabelAttributes)
+import Util.Graph exposing (translate)
 
 
 inPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
@@ -106,6 +108,15 @@ coloredPath vc c =
             , mx
             , my
             )
+
+        fd =
+            PathfinderComponents.txLabelDimensions
+
+        adjX =
+            fd.x + fd.width / 2
+
+        adjY =
+            fd.y + fd.height / 2
     in
     [ Svg.path
         [ nodes
@@ -175,14 +186,29 @@ coloredPath vc c =
 
       else
         text ""
-    , text_
-        [ lx |> String.fromFloat |> x
-        , ly |> String.fromFloat |> y
-        , textAnchor "middle"
-        , Css.edgeLabel vc |> css
-        ]
-        [ text c.label
-        ]
+    , let
+        lw =
+            c.label
+                |> String.length
+                |> toFloat
+                |> (*) (PathfinderComponents.txLabelLabelDimensions.width / 3)
+
+        fr =
+            PathfinderComponents.txLabelRectangleDimensions
+      in
+      PathfinderComponents.txLabel
+        { defaultTxLabelAttributes
+            | txLabel =
+                [ translate (lx - adjX) (ly - adjY)
+                    |> transform
+                ]
+            , rectangle =
+                [ String.fromFloat lw
+                    |> width
+                , fr.width / 2 - lw / 2 |> String.fromFloat |> x
+                ]
+        }
+        { label = c.label }
     ]
         |> g [ c.opacity |> String.fromFloat |> opacity ]
 

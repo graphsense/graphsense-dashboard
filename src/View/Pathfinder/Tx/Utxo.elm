@@ -65,55 +65,6 @@ view _ vc _ id tx =
         }
 
 
-moreIndicator : View.Config -> Svg Msg
-moreIndicator vc =
-    let
-        dot attrs =
-            circle
-                (attrs
-                    ++ [ vc.theme.pathfinder.txRadius
-                            / 3
-                            |> String.fromFloat
-                            |> r
-                       ]
-                )
-                []
-    in
-    g
-        [ translate 0 (vc.theme.pathfinder.txRadius * 1.5)
-            |> transform
-        ]
-        [ dot
-            [ cx "0"
-            , cy "0"
-            ]
-        , dot
-            [ cy "0"
-            , vc.theme.pathfinder.txRadius
-                / 1.5
-                |> String.fromFloat
-                |> cx
-            ]
-        , dot
-            [ cy "0"
-            , -vc.theme.pathfinder.txRadius
-                / 1.5
-                |> String.fromFloat
-                |> cx
-            ]
-        ]
-
-
-body : View.Config -> Svg Msg
-body vc =
-    circle
-        [ cx "0"
-        , cy "0"
-        , r <| String.fromFloat vc.theme.pathfinder.txRadius
-        ]
-        []
-
-
 edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> UtxoTx -> Svg Msg
 edge _ vc _ addresses tx =
     let

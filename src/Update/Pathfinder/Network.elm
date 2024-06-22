@@ -606,4 +606,3 @@ animateTxs delta model =
                     |> Maybe.withDefault network
             )
             model
-
