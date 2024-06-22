@@ -2,6 +2,7 @@ module Update.Pathfinder exposing (update, updateByRoute)
 
 import Animation as A
 import Api.Data
+import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Dict
 import DurationDatePicker
@@ -790,10 +791,25 @@ loadTx _ id model =
 selectTx : Id -> Model -> Model
 selectTx id model =
     if Network.hasTx id model.network then
-        (s_selection (SelectedTx id)
-            >> (setViewState <| s_detailsViewState (TxDetails id getTxDetailsDefaultState))
-        )
-            model
+        let
+            selectedTx =
+                case model.selection of
+                    SelectedTx a ->
+                        Just a
+
+                    _ ->
+                        Nothing
+
+            m1 =
+                s_detailsViewState (TxDetails id getTxDetailsDefaultState) model.view
+                    |> flip s_view (unselect model)
+        in
+        selectedTx
+            |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
+            |> Maybe.withDefault m1.network
+            |> Network.updateTx id (Tx.updateUtxo (s_selected True))
+            |> flip s_network m1
+            |> s_selection (SelectedTx id)
 
     else
         s_selection (WillSelectTx id) model
@@ -804,15 +820,35 @@ selectAddress id model =
     if Network.hasAddress id model.network then
         let
             m1 =
-                (s_selection (SelectedAddress id)
-                    >> (setViewState <| s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model)))
-                )
-                    model
+                s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model))
+                    model.view
+                    |> flip s_view (unselect model)
         in
-        { m1 | network = Network.selectAddress (Network.unSelectAll m1.network) id }
+        Network.updateAddress id (s_selected True) m1.network
+            |> flip s_network m1
+            |> s_selection (SelectedAddress id)
 
     else
         s_selection (WillSelectAddress id) model
+
+
+unselect : Model -> Model
+unselect model =
+    let
+        network =
+            case model.selection of
+                SelectedAddress a ->
+                    Network.updateAddress a (s_selected False) model.network
+
+                SelectedTx a ->
+                    Network.updateTx a (Tx.updateUtxo (s_selected False)) model.network
+
+                _ ->
+                    model.network
+    in
+    network
+        |> flip s_network model
+        |> s_selection NoSelection
 
 
 pushHistory : Msg -> Model -> Model

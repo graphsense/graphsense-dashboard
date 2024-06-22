@@ -43,6 +43,7 @@ type alias UtxoTx =
     , inputs : NonemptyDict Id Io
     , outputs : NonemptyDict Id Io
     , raw : Api.Data.TxUtxo
+    , selected : Bool
     }
 
 

@@ -77,6 +77,7 @@ fromTxUtxoData tx coords =
                                 (NList.head out)
                             |> NDict.fromNonemptyList
                     , raw = tx
+                    , selected = False
                     }
             }
         )
