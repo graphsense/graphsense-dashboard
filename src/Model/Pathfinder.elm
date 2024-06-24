@@ -41,12 +41,12 @@ type alias Model =
     , fromDate : Maybe Posix
     , toDate : Maybe Posix
     , currentTime : Posix
+    , pointerTool : PointerTool
     }
 
 
 type alias ViewState =
     { detailsViewState : DetailsViewState
-    , pointerTool : PointerTool
     }
 
 

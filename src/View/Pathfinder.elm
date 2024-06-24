@@ -265,7 +265,6 @@ settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 settingsView vc _ m =
     div [ boxStyle vc Nothing |> toAttr ]
         [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Display") ]
-
         --, case m.view.pointerTool of
         --    Drag ->
         --        Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
@@ -748,7 +747,7 @@ graphSvg plugins _ vc gc model bbox =
             { width = bbox.width, height = bbox.height }
 
         pointer =
-            case ( model.dragging, model.view.pointerTool ) of
+            case ( model.dragging, model.pointerTool ) of
                 ( Dragging _ _ _, Drag ) ->
                     Css.grabbing
 
@@ -778,7 +777,8 @@ graphSvg plugins _ vc gc model bbox =
                     []
                 ]
 
-        originShiftX = searchBoxMinWidth / 2
+        originShiftX =
+            searchBoxMinWidth / 2
     in
     svg
         ([ preserveAspectRatio "xMidYMid meet"
@@ -840,7 +840,7 @@ graphSvg plugins _ vc gc model bbox =
 
 drawDragSelector : View.Config -> Model -> Svg Msg
 drawDragSelector vc m =
-    case ( m.dragging, m.view.pointerTool ) of
+    case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
                 crd =

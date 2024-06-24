@@ -132,18 +132,10 @@ updateByMsg plugins uc msg model =
                 }
 
         UserPressedCtrlKey ->
-            let
-                vs =
-                    model.view
-            in
-            ( model |> s_view { vs | pointerTool = Select }, [] )
+            n { model | pointerTool = Select }
 
         UserReleasedCtrlKey ->
-            let
-                vs =
-                    model.view
-            in
-            ( model |> s_view { vs | pointerTool = Drag }, [] )
+            n { model | pointerTool = Drag }
 
         BrowserGotAddressData id data ->
             model
@@ -344,7 +336,7 @@ updateByMsg plugins uc msg model =
                     n model
 
                 Dragging transform start _ ->
-                    (case model.view.pointerTool of
+                    (case model.pointerTool of
                         Drag ->
                             { model
                                 | transform = Transform.update start (relativeToGraphZero uc.size coords) transform
@@ -468,11 +460,7 @@ updateByMsg plugins uc msg model =
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
                 ChangePointerTool tool ->
-                    let
-                        vs =
-                            model.view
-                    in
-                    ( { model | view = { vs | pointerTool = tool } }, [] )
+                    n { model | pointerTool = tool }
 
         BrowserGotFromDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet

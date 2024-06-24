@@ -24,12 +24,13 @@ init _ =
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init
-      , view = { detailsViewState = NoDetails, pointerTool = Drag }
+      , view = { detailsViewState = NoDetails }
       , config = {}
       , dateRangePicker = DatePicker.init UpdateDateRangePicker
       , toDate = Nothing
       , fromDate = Nothing
       , currentTime = Time.millisToPosix 0
+      , pointerTool = Drag
       }
     , Task.perform Tick Time.now
     )
