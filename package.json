@@ -8,7 +8,6 @@
     "postinstall": "elm-tooling install",
     "dev": "make gen && vite",
     "prebuild": "elm-tooling install",
-    "gen": "mkdir -p gen/recordsetter && node generate.js && elm make; npm run setem",
     "build": "make gen && NODE_ENV=${NODE_ENV:=production} vite build",
     "serve": "vite preview",
     "test": "elm-test-rs"
@@ -25,6 +24,7 @@
     "yaml": "^2.3.1"
   },
   "dependencies": {
+    "elm-open-api": "^0.5.0",
     "elm-tooling": "^1.13.1",
     "file-saver": "^2.0.5",
     "file-select-dialog": "^1.5.4",
