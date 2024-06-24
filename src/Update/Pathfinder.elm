@@ -66,6 +66,7 @@ import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util.Pathfinder.History as History
+import Tuple exposing (pair)
 
 
 type SetOrNoSet x
@@ -407,7 +408,13 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedAddressCheckboxInTable id ->
-            loadAddress plugins id model
+            if Dict.member id model.network.addresses then
+                Network.deleteAddress id model.network
+                    |> flip s_network model
+                    |> n
+
+            else
+                loadAddress plugins id model
 
         UserClickedTx id ->
             ( model
@@ -431,21 +438,26 @@ updateByMsg plugins uc msg model =
                         }
 
                 Api.Data.AddressTxAddressTxUtxo t ->
-                    ( model
-                    , let
+                    let
                         id =
                             Id.init t.currency t.txHash
-                      in
-                      BrowserGotTx
-                        |> Api.GetTxEffect
-                            { currency = Id.network id
-                            , txHash = Id.id id
-                            , includeIo = True
-                            , tokenTxId = Nothing
-                            }
-                        |> ApiEffect
-                        |> List.singleton
-                    )
+                    in
+                    if Dict.member id model.network.txs then
+                        Network.deleteTx id model.network
+                            |> flip s_network model
+                            |> n
+
+                    else
+                        BrowserGotTx
+                            |> Api.GetTxEffect
+                                { currency = Id.network id
+                                , txHash = Id.id id
+                                , includeIo = True
+                                , tokenTxId = Nothing
+                                }
+                            |> ApiEffect
+                            |> List.singleton
+                            |> pair model
 
         BrowserGotTx tx ->
             let

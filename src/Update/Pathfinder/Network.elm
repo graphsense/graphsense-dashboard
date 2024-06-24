@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, deleteAddress, updateAddress, updateAddressIf, updateTx, deleteTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -26,6 +26,7 @@ import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_visib
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
+import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Tx as Tx
 
 
@@ -620,3 +621,36 @@ animateTxs delta model =
                     |> Maybe.withDefault network
             )
             model
+
+
+deleteAddress : Id -> Network -> Network
+deleteAddress id network =
+    Dict.get id network.addresses
+        |> Maybe.map
+            (\_ ->
+                { network
+                    | addresses = Dict.remove id network.addresses
+                }
+            )
+        |> Maybe.withDefault network
+
+
+deleteTx : Id -> Network -> Network
+deleteTx id network =
+    Dict.get id network.txs
+        |> Maybe.map
+            (\tx ->
+                { network
+                    | addresses =
+                        Tx.getAddressesForTx network.addresses tx
+                            |> List.foldl
+                                (\( _, address ) ->
+                                    Dict.insert address.id (Address.removeTx tx.id address)
+                                )
+                                network.addresses
+                    , txs = Dict.remove id network.txs
+                }
+            )
+        |> Maybe.withDefault network
+
+
