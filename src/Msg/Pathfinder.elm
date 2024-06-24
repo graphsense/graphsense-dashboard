@@ -55,6 +55,8 @@ type Msg
     | WorkflowNextUtxoTx WorkflowNextTxContext WorkflowNextUtxoTxMsg
     | WorkflowNextTxByTime WorkflowNextTxContext WorkflowNextTxByTimeMsg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
+    | UserClickedRemoveAddressFromGraph Id
+    | UserPressedDeleteKey
 
 
 type DisplaySettingsMsg

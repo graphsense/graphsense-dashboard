@@ -433,9 +433,9 @@ getAddressAnnotationBtns data actor =
         ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
 
 
-getAddressActionBtns : id -> Api.Data.Address -> List BtnConfig
-getAddressActionBtns _ _ =
-    [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
+getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
+getAddressActionBtns id _ =
+    [ BtnConfig FontAwesome.tags "Remove from Graph" (UserClickedRemoveAddressFromGraph id) True ]
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Tx -> Html Msg

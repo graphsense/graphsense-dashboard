@@ -51,7 +51,7 @@ import Route.Pathfinder as Route
 import Set
 import Svg.Attributes exposing (x)
 import Time exposing (Posix)
-import Tuple exposing (mapFirst)
+import Tuple exposing (mapFirst, pair)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
@@ -66,7 +66,6 @@ import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util.Pathfinder.History as History
-import Tuple exposing (pair)
 
 
 type SetOrNoSet x
@@ -137,6 +136,13 @@ updateByMsg plugins uc msg model =
 
         UserPressedCtrlKey ->
             n { model | pointerTool = Select }
+
+        UserPressedDeleteKey ->
+            case model.selection of
+                SelectedAddress id ->
+                    removeAddress id model
+                _ ->
+                    n model
 
         UserReleasedCtrlKey ->
             n { model | pointerTool = Drag }
@@ -409,9 +415,7 @@ updateByMsg plugins uc msg model =
 
         UserClickedAddressCheckboxInTable id ->
             if Dict.member id model.network.addresses then
-                Network.deleteAddress id model.network
-                    |> flip s_network model
-                    |> n
+                removeAddress id model
 
             else
                 loadAddress plugins id model
@@ -458,6 +462,9 @@ updateByMsg plugins uc msg model =
                             |> ApiEffect
                             |> List.singleton
                             |> pair model
+
+        UserClickedRemoveAddressFromGraph id ->
+            removeAddress id model
 
         BrowserGotTx tx ->
             let
@@ -1030,3 +1037,34 @@ openAddressTransactionsTable model =
 
         _ ->
             n model
+
+
+removeAddress : Id -> Model -> ( Model, List Effect )
+removeAddress id model =
+    ( { model
+        | network = Network.deleteAddress id model.network
+        , details =
+            case model.details of
+                Just (Details.Address addressId _) ->
+                    if addressId == id then
+                        Nothing
+
+                    else
+                        model.details
+
+                _ ->
+                    model.details
+        , selection =
+            case model.selection of
+                SelectedAddress addressId ->
+                    if addressId == id then
+                        NoSelection
+
+                    else
+                        model.selection
+
+                _ ->
+                    model.selection
+      }
+    , []
+    )

@@ -17,12 +17,8 @@ keyDecoder kMap =
 
 toKeyDown : String -> Msg
 toKeyDown keyValue =
-    case String.uncons keyValue of
-        Just ( _, "" ) ->
-            NoOp
-
-        -- Normal keypress
-        Just ( 'C', "ontrol" ) ->
+    case Debug.log "keyvalue" keyValue of
+        "Control" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserPressedCtrlKey
 
@@ -32,14 +28,24 @@ toKeyDown keyValue =
 
 toKeyUp : String -> Msg
 toKeyUp keyValue =
-    case String.uncons keyValue of
-        Just ( _, "" ) ->
-            NoOp
-
-        -- Normal keypress
-        Just ( 'C', "ontrol" ) ->
+    case keyValue of
+        "Control" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserReleasedCtrlKey
+
+        "Backspace" ->
+            UserPressedDeleteKey
+
+        _ ->
+            NoOp
+
+
+toKeyPress : String -> Msg
+toKeyPress keyValue =
+    case Debug.log "keyvalue" keyValue of
+        "Delete" ->
+            -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
+            UserPressedDeleteKey
 
         _ ->
             NoOp
@@ -55,6 +61,7 @@ subscriptions model =
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
+    , Browser.Events.onKeyPress (keyDecoder toKeyPress)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
     , Time.every 60000 Tick
