@@ -12,10 +12,10 @@ import Css.View
 import Dict
 import DurationDatePicker as DatePicker
 import FontAwesome
-import Html as HtmlDefault
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
+import Init.Pathfinder.Details.AddressDetails exposing (getDetailsViewStateForSelection)
 import Json.Decode
 import Model.Currency exposing (assetFromBase)
 import Model.Direction exposing (Direction(..))
@@ -24,6 +24,9 @@ import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
+import Model.Pathfinder.Details as Details
+import Model.Pathfinder.Details.AddressDetails as AddressDetails
+import Model.Pathfinder.Details.TxDetails as TxDetails
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
@@ -46,7 +49,7 @@ import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder exposing (getAddress)
-import Util.View exposing (colorToHex, copyableLongIdentifier, none)
+import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Error as Error
@@ -265,6 +268,7 @@ settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 settingsView vc _ m =
     div [ boxStyle vc Nothing |> toAttr ]
         [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Display") ]
+
         --, case m.view.pointerTool of
         --    Drag ->
         --        Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
@@ -372,7 +376,7 @@ detailsView vc gc model =
             [ detailsViewStyle vc |> toAttr ]
             [ detailsViewCloseRow vc
             , case ( model.selection, getDetailsViewStateForSelection model ) of
-                ( SelectedAddress id, AddressDetails _ state ) ->
+                ( SelectedAddress id, Just (Details.Address _ state) ) ->
                     getAddress model.network.addresses id
                         |> Result.map .data
                         |> Result.Extra.unpack
@@ -382,7 +386,7 @@ detailsView vc gc model =
                                 (addressDetailsContentView vc gc model id state)
                             )
 
-                ( SelectedTx id, TxDetails _ state ) ->
+                ( SelectedTx id, Just (Details.Tx _ state) ) ->
                     Dict.get id model.network.txs
                         |> Maybe.map (\x -> txDetailsContentView vc gc model id state x)
                         |> Maybe.withDefault (Util.View.loadingSpinner vc Css.View.loadingSpinner)
@@ -430,15 +434,11 @@ getAddressAnnotationBtns data actor =
 
 
 getAddressActionBtns : id -> Api.Data.Address -> List BtnConfig
-getAddressActionBtns id data =
-    []
+getAddressActionBtns _ _ =
+    [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
 
 
-
--- [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
-
-
-txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Tx -> Html Msg
+txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Tx -> Html Msg
 txDetailsContentView vc gc model id viewState data =
     let
         header =
@@ -490,7 +490,7 @@ ioTableView vc network currency data =
     Table.rawTableView vc [] (IoTable.config vc currency isCheckedFn) "Value" data
 
 
-utxoTxDetailsSectionsView : View.Config -> Network -> TxDetailsViewState -> Api.Data.TxUtxo -> Html Msg
+utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> Html Msg
 utxoTxDetailsSectionsView vc network viewState data =
     let
         combinedData =
@@ -506,11 +506,11 @@ utxoTxDetailsSectionsView vc network viewState data =
 
 
 accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
-accountTxDetailsContentView vc data =
+accountTxDetailsContentView _ _ =
     div [] [ Html.text "I am a Account TX" ]
 
 
-addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
+addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
 addressDetailsContentView vc gc model id viewState data =
     let
         actor_id =
@@ -555,8 +555,8 @@ addressDetailsContentView vc gc model id viewState data =
         )
 
 
-addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> (Id -> Bool) -> Model -> Api.Data.Address -> Html Msg
-addressTransactionTableView vc gc id viewState txOnGraphFn m data =
+addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Model -> Api.Data.Address -> Html Msg
+addressTransactionTableView vc _ _ viewState txOnGraphFn m data =
     let
         attributes =
             []
@@ -620,8 +620,8 @@ addressTransactionTableView vc gc id viewState txOnGraphFn m data =
     collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg UserClickedToggleTransactionTable)
 
 
-addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetailsViewState -> Api.Data.Address -> Html Msg
-addressNeighborsTableView vc gc id viewState data =
+addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
+addressNeighborsTableView vc _ _ viewState data =
     let
         attributes =
             []
@@ -650,7 +650,7 @@ addressNeighborsTableView vc gc id viewState data =
 
 
 longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> String -> List BtnConfig -> Html Msg
-longIdentDetailsHeadingView vc gc id typeName annotations =
+longIdentDetailsHeadingView vc _ id typeName annotations =
     let
         mNetwork =
             Id.network id

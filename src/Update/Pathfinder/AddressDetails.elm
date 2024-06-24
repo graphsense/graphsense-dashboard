@@ -5,7 +5,7 @@ import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Table as GT
-import Model.Pathfinder exposing (AddressDetailsViewState)
+import Model.Pathfinder.Details.AddressDetails as AddressDetails
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
@@ -15,7 +15,7 @@ import RecordSetter exposing (..)
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 
 
-update : AddressDetailsMsg -> Id -> AddressDetailsViewState -> ( AddressDetailsViewState, List Effect )
+update : AddressDetailsMsg -> Id -> AddressDetails.Model -> ( AddressDetails.Model, List Effect )
 update msg id model =
     case msg of
         UserClickedToggleNeighborsTable ->
@@ -161,7 +161,7 @@ update msg id model =
                 n model
 
 
-showTransactionsTable : Id -> AddressDetailsViewState -> Bool -> ( AddressDetailsViewState, List Effect )
+showTransactionsTable : Id -> AddressDetails.Model -> Bool -> ( AddressDetails.Model, List Effect )
 showTransactionsTable id model show =
     let
         eff =

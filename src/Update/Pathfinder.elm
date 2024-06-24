@@ -10,6 +10,8 @@ import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Graph.Transform as Transform
+import Init.Pathfinder.Details.AddressDetails exposing (getAddressDetailsViewStateDefaultForAddress)
+import Init.Pathfinder.Details.TxDetails as TxDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
@@ -24,6 +26,7 @@ import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
+import Model.Pathfinder.Details as Details
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
@@ -182,33 +185,31 @@ updateByMsg plugins uc msg model =
                         |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
 
         UserClosedDetailsView ->
-            n (closeDetailsView model)
+            { model | details = Nothing }
+                |> n
 
         TxDetailsMsg submsg ->
-            case model.view.detailsViewState of
-                TxDetails id txViewState ->
+            case model.details of
+                Just (Details.Tx id txViewState) ->
                     let
                         ( nVs, eff ) =
                             TxDetails.update submsg txViewState
                     in
-                    ( (setViewState <| s_detailsViewState (TxDetails id nVs)) model, eff )
+                    ( { model | details = Just (Details.Tx id nVs) }, eff )
 
                 _ ->
                     n model
 
         AddressDetailsMsg subm ->
-            case model.view.detailsViewState of
-                AddressDetails id ad ->
+            case model.details of
+                Just (Details.Address id ad) ->
                     let
                         ( addressViewDetails, eff ) =
                             AddressDetails.update subm id ad
                     in
-                    ( (setViewState <| s_detailsViewState (AddressDetails id addressViewDetails)) model, eff )
+                    ( { model | details = Just (Details.Address id addressViewDetails) }, eff )
 
-                TxDetails _ _ ->
-                    n model
-
-                NoDetails ->
+                _ ->
                     n model
 
         UserClickedRestart ->
@@ -480,8 +481,8 @@ updateByMsg plugins uc msg model =
                     Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.fromDate, model.toDate )
 
                 eff =
-                    case model.view.detailsViewState of
-                        AddressDetails id _ ->
+                    case model.details of
+                        Just (Details.Address id _) ->
                             let
                                 startEff =
                                     case startTime of
@@ -639,8 +640,8 @@ getMinAndMaxSelectableDateFromModel model =
         default =
             ( Time.millisToPosix 0, model.currentTime )
     in
-    case model.view.detailsViewState of
-        AddressDetails id _ ->
+    case model.details of
+        Just (Details.Address id _) ->
             Dict.get id model.network.addresses
                 |> Maybe.andThen Address.getActivityRange
                 |> Maybe.withDefault default
@@ -653,8 +654,8 @@ updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> (
 updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
     let
         ( m2, eff ) =
-            case model.view.detailsViewState of
-                AddressDetails id ad ->
+            case model.details of
+                Just (Details.Address id ad) ->
                     let
                         txmin =
                             case txMinBlock of
@@ -724,7 +725,15 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
                                 _ ->
                                     ad.txs
                     in
-                    ( (setViewState <| s_detailsViewState (AddressDetails id { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew })) model, effects )
+                    ( { model
+                        | details =
+                            Just
+                                (Details.Address id
+                                    { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew }
+                                )
+                      }
+                    , effects
+                    )
 
                 _ ->
                     n model
@@ -810,8 +819,8 @@ selectTx id model =
                         Nothing
 
             m1 =
-                s_detailsViewState (TxDetails id getTxDetailsDefaultState) model.view
-                    |> flip s_view (unselect model)
+                unselect model
+                    |> s_details (Details.Tx id TxDetails.init |> Just)
         in
         selectedTx
             |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
@@ -829,9 +838,8 @@ selectAddress id model =
     if Network.hasAddress id model.network then
         let
             m1 =
-                s_detailsViewState (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model))
-                    model.view
-                    |> flip s_view (unselect model)
+                unselect model
+                    |> s_details (Details.Address id (getAddressDetailsViewStateDefaultForAddress id model) |> Just)
         in
         Network.updateAddress id (s_selected True) m1.network
             |> flip s_network m1
@@ -996,14 +1004,14 @@ checkSelection model =
 
 openAddressTransactionsTable : Model -> ( Model, List Effect )
 openAddressTransactionsTable model =
-    case model.view.detailsViewState of
-        AddressDetails id ad ->
+    case model.details of
+        Just (Details.Address id ad) ->
             let
                 ( new, eff ) =
                     AddressDetails.showTransactionsTable id ad True
             in
             ( { model
-                | view = s_detailsViewState (AddressDetails id new) model.view
+                | details = Just (Details.Address id new)
               }
             , eff
             )

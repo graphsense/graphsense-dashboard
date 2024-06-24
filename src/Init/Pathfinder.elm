@@ -8,7 +8,7 @@ import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (DetailsViewState(..), Model, Selection(..))
+import Model.Pathfinder exposing (Model, Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Task
@@ -24,7 +24,7 @@ init _ =
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init
-      , view = { detailsViewState = NoDetails }
+      , details = Nothing
       , config = {}
       , dateRangePicker = DatePicker.init UpdateDateRangePicker
       , toDate = Nothing
