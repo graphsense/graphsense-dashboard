@@ -29,7 +29,9 @@ subcanvasNodeComponentsToDeclarations node =
                 |> componentNodeToDeclarations
 
         SubcanvasNodeComponentSetNode n ->
-            componentSetNodeToDeclarations n
+            n.frameTraits.children
+            |> List.map subcanvasNodeComponentsToDeclarations 
+            |> List.concat
 
         _ ->
             []
@@ -177,7 +179,8 @@ componentNodeToDeclarations node =
             withFrameTraitsNodeToMetadata node
 
         names =
-            metadata.name :: List.map .name descendantsMetadata
+            metadata.name
+                :: List.map .name descendantsMetadata
 
         formatName =
             String.Extra.leftOf "#" >> toCamelCaseLower
@@ -296,11 +299,6 @@ frameTraitsToMetadata node =
     node.children
         |> List.map subcanvasNodeToMetadata
         |> List.concat
-
-
-componentSetNodeToDeclarations : ComponentSetNode -> List Elm.Declaration
-componentSetNodeToDeclarations _ =
-    Debug.todo "componentSetNodeToDeclarations"
 
 
 frameTraitsToExpressions : Config -> FrameTraits -> List Elm.Expression

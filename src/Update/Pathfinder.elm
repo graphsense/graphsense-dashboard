@@ -141,6 +141,7 @@ updateByMsg plugins uc msg model =
             case model.selection of
                 SelectedAddress id ->
                     removeAddress id model
+
                 _ ->
                     n model
 

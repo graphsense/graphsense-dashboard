@@ -10,18 +10,23 @@ import Gen.Html.Styled
 import Gen.Html.Styled.Attributes
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.TextNode as TextNode
-import Tuple exposing (mapFirst, pair, second)
+import String.Case exposing (toCamelCaseLower)
+import Tuple exposing (mapFirst, second)
+
+
+subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations node =
+    case node of
+        SubcanvasNodeComponentNode n ->
+            componentNodeToDeclarations n
+
+        _ ->
+            []
 
 
 subcanvasNodeToExpressions : SubcanvasNode -> List ( String, Elm.Expression )
 subcanvasNodeToExpressions node =
     case node of
-        SubcanvasNodeComponentNode n ->
-            componentNodeToExpressions n
-
-        SubcanvasNodeComponentSetNode n ->
-            componentSetNodeToExpressions n
-
         SubcanvasNodeTextNode n ->
             TextNode.toExpressions n
 
@@ -29,8 +34,8 @@ subcanvasNodeToExpressions node =
             []
 
 
-componentNodeToExpressions : ComponentNode -> List ( String, Elm.Expression )
-componentNodeToExpressions node =
+componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations node =
     -- aim:
     -- myButton : { variant : Variant, iconVisible : Bool, text : String } -> List (Attribute msg) -> List (Html msg) -> Html msg
     Elm.fn2
@@ -59,7 +64,7 @@ componentNodeToExpressions node =
                         )
                 )
         )
-        |> pair node.frameTraits.isLayerTrait.name
+        |> Elm.declaration (toCamelCaseLower node.frameTraits.isLayerTrait.name)
         |> List.singleton
 
 

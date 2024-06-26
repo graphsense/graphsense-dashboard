@@ -28,7 +28,6 @@ module Api.Raw exposing
     , ColorStop
     , ColorStopBoundVariables
     , Component
-    , Components
     , ComponentNode
     , ComponentNodeType(..)
     , ComponentPropertiesTrait
@@ -43,6 +42,7 @@ module Api.Raw exposing
     , ComponentSet
     , ComponentSetNode
     , ComponentSetNodeType(..)
+    , Components
     , ConnectorEndpoint(..)
     , ConnectorEndpointOneOf
     , ConnectorEndpointOneOf1
@@ -1244,6 +1244,7 @@ type alias FrameTraits =
     , transitionDuration : Maybe Float
     , transitionEasing : Maybe EasingType
     , individualStrokeWeights : Maybe StrokeWeights
+    , readyForDev : Bool
     }
 
 
@@ -4219,6 +4220,19 @@ frameTraitsDecoder =
         |> maybeDecode "transitionDuration" Json.Decode.float Nothing
         |> maybeDecode "transitionEasing" easingTypeDecoder Nothing
         |> maybeDecode "individualStrokeWeights" strokeWeightsDecoder Nothing
+        |> decodeChain devStatusDecoder
+
+
+devStatusDecoder : Json.Decode.Decoder Bool
+devStatusDecoder =
+    Json.Decode.oneOf
+        [ Json.Decode.string
+            |> Json.Decode.field "type_"
+            |> Json.Decode.map
+                ((==) "READY_FOR_DEV")
+            |> Json.Decode.field "devStatus"
+        , Json.Decode.succeed False
+        ]
 
 
 overflowDirectionDecoder : Json.Decode.Decoder OverflowDirection

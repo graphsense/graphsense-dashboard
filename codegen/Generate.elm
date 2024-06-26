@@ -5,6 +5,7 @@ module Generate exposing (main)
 import Api.Raw exposing (..)
 import Elm
 import Gen.CodeGen.Generate as Generate
+import Generate.Html
 import Generate.Svg
 import Json.Decode
 import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
@@ -21,6 +22,7 @@ main =
 generate : Api.Raw.DocumentNode -> List Generate.File
 generate { children } =
     children
+        |> Debug.log "children"
         |> List.map canvasNodeToFiles
         |> List.concat
 
@@ -28,7 +30,8 @@ generate { children } =
 canvasNodeToFiles : CanvasNode -> List Generate.File
 canvasNodeToFiles node =
     node.children
-        |> List.filterMap frameToFile
+        |> List.map frameToFiles
+        |> List.concat
 
 
 formatExpression : ( String, Elm.Expression ) -> Elm.Declaration
@@ -37,33 +40,37 @@ formatExpression =
         >> (\( name, expr ) -> Elm.declaration name expr)
 
 
-frameToFile : SubcanvasNode -> Maybe Generate.File
-frameToFile node =
+frameToFiles : SubcanvasNode -> List Generate.File
+frameToFiles node =
     case node of
         SubcanvasNodeFrameNode n ->
             let
-                name =
+                name sub =
                     n.frameTraits.isLayerTrait.name
                         |> toCamelCaseUpper
                         |> List.singleton
+                        |> (::) sub
                         |> (::) "Theme"
             in
-            frameNodeToDeclarations n
-                |> Elm.file name
-                |> Just
+            [ frameNodeToDeclarations
+                Generate.Svg.subcanvasNodeComponentsToDeclarations
+                n
+                |> Elm.file (name "Svg")
+            , frameNodeToDeclarations
+                Generate.Html.subcanvasNodeComponentsToDeclarations
+                n
+                |> Elm.file (name "Html")
+            ]
 
         _ ->
-            Nothing
+            []
 
 
-frameNodeToDeclarations : FrameNode -> List Elm.Declaration
-frameNodeToDeclarations node =
-    node.frameTraits.children
-        |> List.map
-            (if node.frameTraits.isLayerTrait.name == "Pathfinder components" then
-                Generate.Svg.subcanvasNodeComponentsToDeclarations
+frameNodeToDeclarations : (SubcanvasNode -> List Elm.Declaration) -> FrameNode -> List Elm.Declaration
+frameNodeToDeclarations gen node =
+    if True || node.frameTraits.readyForDev then
+        List.map gen node.frameTraits.children
+            |> List.concat
 
-             else
-                Debug.todo "Generate.Html.subcanvasNodeToDeclarations"
-            )
-        |> List.concat
+    else
+        []
