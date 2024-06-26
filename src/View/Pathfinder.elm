@@ -67,19 +67,25 @@ type alias BtnConfig =
     { icon : FontAwesome.Icon, text : String, msg : Msg, enable : Bool }
 
 
-graphTools : List BtnConfig
-graphTools =
-    [ BtnConfig FontAwesome.trash "restart" UserClickedRestart True
+type alias ToggleButton =
+    { btn : BtnConfig, isToggled : Bool }
+
+
+graphActionTools : List BtnConfig
+graphActionTools =
+    [ BtnConfig FontAwesome.file "restart" UserClickedRestart True
+    , BtnConfig FontAwesome.folder "open" NoOp False
     , BtnConfig FontAwesome.redo "redo" UserClickedRedo False
     , BtnConfig FontAwesome.undo "undo" UserClickedUndo True
-    , BtnConfig FontAwesome.highlighter "highlight" UserClickedHighlighter True
+
+    --, BtnConfig FontAwesome.highlighter "highlight" UserClickedHighlighter True
     ]
 
 
 graphActionButtons : List BtnConfig
 graphActionButtons =
     [ BtnConfig FontAwesome.arrowUp "Import file" UserClickedImportFile True
-    , BtnConfig FontAwesome.arrowDown "Export graph" UserClickedExportGraph True
+    , BtnConfig FontAwesome.download "Export" UserClickedExportGraph True
     ]
 
 
@@ -239,39 +245,69 @@ graph plugins states vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
-    , topLeftPanel vc gc model
-    , graphToolsView plugins states vc gc model
+    , topLeftPanel plugins states vc gc model
     , topRightPanel plugins states vc gc model
+    , graphSelectionToolsView plugins states vc gc model
     ]
 
 
-topLeftPanel : View.Config -> Pathfinder.Config -> Model -> Html Msg
-topLeftPanel vc gc model =
+topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+topLeftPanel plugins ms vc gc model =
     div [ topLeftPanelStyle vc |> toAttr ]
         [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
+        , graphActionsTopLeftView plugins ms vc gc model
+        , searchBoxView plugins ms vc gc model
         , settingsView vc gc model
         ]
 
 
 settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 settingsView vc _ m =
-    div [ searchViewStyle vc |> toAttr ]
+    div [ boxStyle vc Nothing |> toAttr ]
         [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Display") ]
-        , case m.view.pointerTool of
-            Drag ->
-                Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
 
-            Select ->
-                Util.View.switch vc [ HA.checked False, onClick (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) ] "Select"
+        --, case m.view.pointerTool of
+        --    Drag ->
+        --        Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
+        --    Select ->
+        --        Util.View.switch vc [ HA.checked False, onClick (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) ] "Select"
         ]
 
 
-graphToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphToolsView _ _ vc _ _ =
+graphActionsTopLeftView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+graphActionsTopLeftView _ _ vc _ _ =
     div
-        [ graphToolsStyle vc |> toAttr
+        [ graphActionsStyle vc |> toAttr
         ]
-        (graphTools |> List.map (graphToolButton vc))
+        (graphActionTools |> List.map (graphToolButton vc))
+
+
+graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+graphSelectionToolsView _ _ vc _ m =
+    let
+        selectBtn =
+            BtnConfig FontAwesome.mousePointer "select" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
+
+        dragBtn =
+            BtnConfig FontAwesome.handPaper "Drag" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
+    in
+    div
+        [ graphSelectionToolsStyle vc |> toAttr
+        ]
+        [ graphSelectionToolButton vc selectBtn (m.view.pointerTool == Select)
+        , graphSelectionToolButton vc dragBtn (m.view.pointerTool == Drag)
+        ]
+
+
+graphSelectionToolButton : View.Config -> BtnConfig -> Bool -> Svg Msg
+graphSelectionToolButton vc btn selected =
+    div [ toolItemSmallStyle vc |> toAttr ]
+        [ disableableButton (toggleToolButtonStyle vc selected)
+            btn
+            [ HA.title (Locale.string vc.locale btn.text) ]
+            [ div [ toolIconStyle vc |> toAttr ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+            ]
+        ]
 
 
 graphToolButton : View.Config -> BtnConfig -> Svg Msg
@@ -290,7 +326,6 @@ topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Mod
 topRightPanel plugins ms vc gc model =
     div [ topRightPanelStyle vc |> toAttr ]
         [ graphActionsView vc gc model
-        , searchBoxView plugins ms vc gc model
         , detailsView vc gc model
         ]
 
@@ -315,7 +350,7 @@ searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Mod
 searchBoxView plugins _ vc _ model =
     div
         [ searchBoxStyle vc Nothing |> toAttr ]
-        [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Add to graph") ]
+        [ span [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Search") ]
         , div [ searchBoxContainerStyle vc |> toAttr ]
             [ span [ searchBoxIconStyle vc |> toAttr ] [ FontAwesome.icon FontAwesome.search |> Html.fromUnstyled ]
             , View.Search.search plugins
@@ -397,7 +432,11 @@ getAddressAnnotationBtns data actor =
 
 getAddressActionBtns : id -> Api.Data.Address -> List BtnConfig
 getAddressActionBtns id data =
-    [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
+    []
+
+
+
+-- [ BtnConfig FontAwesome.tags "Remove from Graph" NoOp True ]
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetailsViewState -> Tx -> Html Msg
@@ -434,8 +473,9 @@ utxoTxDetailsContentView : View.Config -> Api.Data.TxUtxo -> Html Msg
 utxoTxDetailsContentView vc data =
     let
         actionBtns =
-            [ BtnConfig FontAwesome.tags "Do it" NoOp True ]
+            []
 
+        -- [ BtnConfig FontAwesome.tags "Do it" NoOp True ]
         tbls =
             [ detailsFactTableView vc (apiUtxoTxToRows data), detailsActionsView vc actionBtns ]
     in
@@ -455,13 +495,13 @@ utxoTxDetailsSectionsView : View.Config -> Network -> TxDetailsViewState -> Api.
 utxoTxDetailsSectionsView vc network viewState data =
     let
         combinedData =
-            (data.inputs |> Maybe.withDefault []) ++ (data.outputs |> Maybe.withDefault [] |> List.map negateTxValue)
+            (data.inputs |> Maybe.withDefault [] |> List.map negateTxValue) ++ (data.outputs |> Maybe.withDefault [])
 
         content =
             ioTableView vc network data.currency combinedData
 
         ioIndicatorState =
-            Just (inOutIndicator Nothing data.noInputs data.noOutputs)
+            Just (inOutIndicator Nothing data.noOutputs data.noInputs)
     in
     collapsibleSection vc "In- and Outputs" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 

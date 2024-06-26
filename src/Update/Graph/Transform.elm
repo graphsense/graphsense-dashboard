@@ -1,4 +1,4 @@
-module Update.Graph.Transform exposing (delay, pop, transition, update, updateByBoundingBox, vector, wheel, move)
+module Update.Graph.Transform exposing (delay, move, pop, transition, update, updateByBoundingBox, vector, wheel)
 
 import Basics.Extra exposing (flip)
 import Bounce

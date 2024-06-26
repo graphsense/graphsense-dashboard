@@ -280,9 +280,16 @@ collapsibleSectionHeadingStyle vc =
     ]
 
 
+toolItemSmallStyle : View.Config -> List Style
+toolItemSmallStyle _ =
+    [ px 30 |> minWidth
+    , textAlign center
+    ]
+
+
 toolItemStyle : View.Config -> List Style
 toolItemStyle _ =
-    [ px 55 |> minWidth
+    [ px 50 |> minWidth
     , textAlign center
     ]
 
@@ -317,6 +324,18 @@ linkButtonStyle vc enabled =
     ]
 
 
+toggleToolButtonStyle : View.Config -> Bool -> Bool -> List Style
+toggleToolButtonStyle vc selected enabled =
+    (textAlign center :: linkButtonStyle vc enabled)
+        ++ (if selected then
+                [ highlightPrimaryFrostedColor vc |> backgroundColor ]
+
+            else
+                []
+           )
+        ++ [ paddingTop (px 5) ]
+
+
 toolButtonStyle : View.Config -> Bool -> List Style
 toolButtonStyle vc enabled =
     textAlign center :: linkButtonStyle vc enabled
@@ -324,7 +343,7 @@ toolButtonStyle vc enabled =
 
 toolIconStyle : View.Config -> List Style
 toolIconStyle _ =
-    [ lText |> fontSize
+    [ mText |> fontSize
     , mGap |> marginBottom
     ]
 
@@ -337,14 +356,20 @@ topLeftPanelStyle _ =
     ]
 
 
-graphToolsStyle : View.Config -> List Style
-graphToolsStyle vc =
+graphSelectionToolsStyle : View.Config -> List Style
+graphSelectionToolsStyle vc =
     [ position absolute
     , half |> left
     , px 50 |> bottom
     , displayFlex
     , transform (translate (pct -50))
     ]
+        ++ boxStyle vc (Just 5)
+
+
+graphActionsStyle : View.Config -> List Style
+graphActionsStyle vc =
+    [ displayFlex, sGap |> marginBottom ]
         ++ boxStyle vc Nothing
 
 
@@ -359,14 +384,14 @@ topRightPanelStyle _ =
 searchBoxStyle : View.Config -> Maybe Float -> List Style
 searchBoxStyle vc padding =
     [ px searchBoxMinWidth |> minWidth
-    , mlGap |> marginBottom
+    , sGap |> marginBottom
     ]
         ++ boxStyle vc padding
 
 
 searchBoxMinWidth : Float
 searchBoxMinWidth =
-    300
+    150
 
 
 detailsViewStyle : View.Config -> List Style
@@ -444,11 +469,6 @@ detailsActionButtonStyle vc bt _ =
                    , backgroundColor whiteColor
                    , highlightPrimaryFrostedColor vc |> border3 xsGap solid
                    ]
-
-
-searchViewStyle : View.Config -> List Style
-searchViewStyle vc =
-    boxStyle vc Nothing ++ [ lGap |> marginTop ]
 
 
 searchBoxContainerStyle : View.Config -> List Style

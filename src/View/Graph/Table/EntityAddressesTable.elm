@@ -1,9 +1,9 @@
 module View.Graph.Table.EntityAddressesTable exposing (..)
 
-import Css.Table exposing (styles)
 import Api.Data
 import Config.View as View
 import Css exposing (cursor, pointer)
+import Css.Table exposing (styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -27,14 +27,16 @@ config vc coinCode entityId entityHasAddress =
         { toId = .address
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn styles vc
+            [ T.htmlColumn styles
+                vc
                 titleAddress
                 .address
                 (\data ->
                     [ entityId
                         |> Maybe.map
                             (\id ->
-                                T.tickIf styles vc
+                                T.tickIf styles
+                                    vc
                                     (entityHasAddress id)
                                     { currency = data.currency, address = data.address }
                             )

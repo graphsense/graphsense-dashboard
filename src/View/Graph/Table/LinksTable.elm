@@ -19,7 +19,8 @@ config vc =
         { toId = \data -> data
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn styles vc
+            [ T.htmlColumn styles
+                vc
                 titleUrl
                 identity
                 (\data ->

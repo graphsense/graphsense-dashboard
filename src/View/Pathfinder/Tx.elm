@@ -13,8 +13,8 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Tuple exposing (first)
-import View.Pathfinder.Tx.Utxo as Utxo
 import View.Pathfinder.Tx.AccountTx as AccountTx
+import View.Pathfinder.Tx.Utxo as Utxo
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Svg Msg

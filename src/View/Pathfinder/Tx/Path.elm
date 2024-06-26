@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Path exposing (inPath, outPath, accountPath)
+module View.Pathfinder.Tx.Path exposing (accountPath, inPath, outPath)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View

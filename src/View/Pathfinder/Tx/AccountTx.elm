@@ -25,9 +25,9 @@ edge _ vc _ addresses tx =
     let
         unit =
             View.getUnit vc
+
         rad =
             vc.theme.pathfinder.addressRadius
-
     in
     tx.to
         |> getAddress addresses

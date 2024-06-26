@@ -26,7 +26,8 @@ config vc coinCode =
         { toId = .txHash
         , toMsg = TableNewState
         , columns =
-            [ T.htmlColumn styles vc
+            [ T.htmlColumn styles
+                vc
                 titleTx
                 .txHash
                 (\data ->

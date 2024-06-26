@@ -17,4 +17,4 @@ nodeYOffset =
 
 
 type alias Config =
-    { }
+    {}
