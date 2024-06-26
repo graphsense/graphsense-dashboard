@@ -122,7 +122,7 @@ updateByMsg plugins uc msg model =
                                 >> List.Extra.find (.id >> (==) id)
                                 >> (/=) Nothing
                             )
-                            (s_isExchange True)
+                            (s_exchange (Just data.label))
                             model.network
 
                     else

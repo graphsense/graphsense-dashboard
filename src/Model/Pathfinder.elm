@@ -16,13 +16,13 @@ import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool)
 import Model.Search as Search
 import Msg.Pathfinder exposing (Msg)
-import Theme.PathfinderComponents as PathfinderComponents
+import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
 
 
 unit : Float
 unit =
-    PathfinderComponents.addressNodeFrameDimensions.width
+    GraphComponents.addressNodeNodeFrameDimensions.width
 
 
 type alias Model =

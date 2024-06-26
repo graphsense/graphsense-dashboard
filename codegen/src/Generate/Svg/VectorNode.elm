@@ -5,10 +5,10 @@ import Basics.Extra exposing (flip)
 import Elm
 import Gen.Css as Css
 import Gen.Svg.Styled
-import Gen.Svg.Styled.Attributes as Attributes exposing (transform)
+import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
-import Generate.Util exposing (a, toTranslate, withVisibility)
+import Generate.Util exposing (a, toMatrix, toRotate, toTranslate, withVisibility)
 import Generate.Util.Paint as Paint
 import RecordSetter exposing (s_cornerRadiusShapeTraits)
 import Tuple exposing (pair)
@@ -89,7 +89,11 @@ toFillPaths node =
 
 toAttributes : VectorNode -> List Elm.Expression
 toAttributes node =
-    [ toTranslate node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox ]
+    [ toTranslate node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox
+        ++ " "
+        ++ (Maybe.map toMatrix node.cornerRadiusShapeTraits.defaultShapeTraits.relativeTransform |> Maybe.withDefault "")
+        |> Attributes.transform
+    ]
 
 
 adjustBoundingBox : OriginAdjust -> VectorNode -> VectorNode

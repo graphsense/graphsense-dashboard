@@ -2,7 +2,6 @@ module Config.View exposing (Config)
 
 import Model.Graph.Coords exposing (BBox)
 import Model.Locale as Locale
-import Theme.PathfinderComponents as PathfinderComponents
 import Theme.Theme exposing (Theme)
 
 

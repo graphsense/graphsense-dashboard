@@ -18,7 +18,8 @@ import Set
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
-import Theme.PathfinderComponents as PathfinderComponents
+import Theme.Svg.GraphComponents as GraphComponents
+import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifier)
 
@@ -43,7 +44,7 @@ view _ _ _ address =
             ]
 
         fd =
-            PathfinderComponents.addressNodeFrameDimensions
+            GraphComponents.addressNodeNodeFrameDimensions
 
         adjX =
             fd.x + fd.width / 2
@@ -51,8 +52,8 @@ view _ _ _ address =
         adjY =
             fd.y + fd.height / 2
     in
-    PathfinderComponents.addressNode
-        (PathfinderComponents.defaultAddressNodeAttributes
+    GraphComponents.addressNode
+        (GraphComponents.defaultAddressNodeAttributes
             |> s_addressNode
                 [ translate
                     ((address.x + address.dx) * unit - adjX)
@@ -66,10 +67,10 @@ view _ _ _ address =
                     |> Util.Graph.mousedown
                 , css [ Css.cursor Css.pointer ]
                 ]
-            |> s_plusIn (plus Incoming)
-            |> s_plusOut (plus Outgoing)
+            |> s_iconsPlusIn (plus Incoming)
+            |> s_iconsPlusOut (plus Outgoing)
         )
-        { label =
+        { addressId =
             address.id
                 |> Id.id
                 |> truncateLongIdentifier
@@ -77,9 +78,14 @@ view _ _ _ address =
         , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
         , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs
         , nodeIcon =
-            if address.isExchange then
-                PathfinderComponents.exchangeNodeIcon PathfinderComponents.defaultExchangeNodeIconAttributes {}
+            if address.exchange == Nothing then
+                Icons.iconsUntagged Icons.defaultIconsUntaggedAttributes {}
 
             else
-                PathfinderComponents.untaggedNodeIcon PathfinderComponents.defaultUntaggedNodeIconAttributes {}
+                Icons.iconsExchange Icons.defaultIconsExchangeAttributes {}
+        , exchangeLabel =
+            address.exchange
+                |> Maybe.withDefault ""
+        , startingPoint = True
+        , tagIcon = True
         }

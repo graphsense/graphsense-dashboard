@@ -13,7 +13,7 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
-import Theme.PathfinderComponents as PathfinderComponents exposing (defaultTxLabelAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxLabelAttributes)
 import Util.Graph exposing (translate)
 
 
@@ -110,7 +110,7 @@ coloredPath vc c =
             )
 
         fd =
-            PathfinderComponents.txLabelDimensions
+            GraphComponents.txLabelDimensions
 
         adjX =
             fd.x + fd.width / 2
@@ -191,12 +191,12 @@ coloredPath vc c =
             c.label
                 |> String.length
                 |> toFloat
-                |> (*) (PathfinderComponents.txLabelLabelDimensions.width / 3)
+                |> (*) (GraphComponents.txLabelLabelDimensions.width / 3)
 
         fr =
-            PathfinderComponents.txLabelRectangleDimensions
+            GraphComponents.txLabelRectangleDimensions
       in
-      PathfinderComponents.txLabel
+      GraphComponents.txLabel
         { defaultTxLabelAttributes
             | txLabel =
                 [ translate (lx - adjX) (ly - adjY)

@@ -60,6 +60,7 @@ module Api.Raw exposing
     , CounterAxisAlignContent(..)
     , CounterAxisAlignItems(..)
     , CounterAxisSizingMode(..)
+    , Transform
     , DefaultShapeTraits
     , DefaultShapeTraitsMaskType(..)
     , DocumentNode
@@ -456,6 +457,7 @@ import Api.Time exposing (Posix)
 import Dict exposing (Dict)
 import Json.Decode
 import Json.Encode
+import Tuple exposing (pair)
 
 
 type alias Object =
@@ -952,6 +954,10 @@ type alias CornerTrait =
     }
 
 
+type alias Transform =
+    ( ( Float, Float, Float ), ( Float, Float, Float ) )
+
+
 type alias DefaultShapeTraits =
     { hasBlendModeAndOpacityTrait : HasBlendModeAndOpacityTrait
     , hasEffectsTrait : HasEffectsTrait
@@ -974,6 +980,7 @@ type alias DefaultShapeTraits =
     , maxWidth : Maybe Float
     , minHeight : Maybe Float
     , maxHeight : Maybe Float
+    , relativeTransform : Maybe Transform
     , layoutSizingHorizontal : Maybe LayoutSizingHorizontal
     , layoutSizingVertical : Maybe LayoutSizingVertical
     , fills : List Paint
@@ -3823,6 +3830,7 @@ defaultShapeTraitsDecoder =
         |> maybeDecode "maxWidth" Json.Decode.float (Just 0)
         |> maybeDecode "minHeight" Json.Decode.float (Just 0)
         |> maybeDecode "maxHeight" Json.Decode.float (Just 0)
+        |> maybeDecode "relativeTransform" transformDecoder Nothing
         |> maybeDecode "layoutSizingHorizontal" layoutSizingHorizontalDecoder Nothing
         |> maybeDecode "layoutSizingVertical" layoutSizingVerticalDecoder Nothing
         |> decode "fills" (Json.Decode.list paintDecoder)
@@ -3842,6 +3850,23 @@ defaultShapeTraitsDecoder =
         |> maybeDecode "transitionNodeID" Json.Decode.string Nothing
         |> maybeDecode "transitionDuration" Json.Decode.float Nothing
         |> maybeDecode "transitionEasing" easingTypeDecoder Nothing
+
+
+transformDecoder : Json.Decode.Decoder Transform
+transformDecoder =
+    let
+        tuple3 a b c =
+            ( a, b, c )
+
+        row =
+            Json.Decode.map3 tuple3
+                (Json.Decode.index 0 Json.Decode.float)
+                (Json.Decode.index 1 Json.Decode.float)
+                (Json.Decode.index 2 Json.Decode.float)
+    in
+    Json.Decode.map2 pair
+        (Json.Decode.index 0 row)
+        (Json.Decode.index 1 row)
 
 
 layoutGrowDecoder : Json.Decode.Decoder LayoutGrow

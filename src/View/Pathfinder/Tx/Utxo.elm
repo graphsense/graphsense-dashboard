@@ -20,7 +20,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Theme.PathfinderComponents as PathfinderComponents exposing (defaultTxNodeAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxNodeAttributes)
 import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
@@ -29,14 +29,14 @@ import View.Pathfinder.Tx.Path exposing (inPath, outPath)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
-view _ vc _ id tx =
+view _ _ _ id tx =
     let
         anyIsNotVisible =
             NDict.toList
                 >> List.any (second >> .visible >> not)
 
         fd =
-            PathfinderComponents.txNodeBodyEllipseDimensions
+            GraphComponents.txNodeBodyEllipseDimensions
 
         adjX =
             fd.x + fd.width / 2
@@ -44,7 +44,7 @@ view _ vc _ id tx =
         adjY =
             fd.y + fd.height / 2
     in
-    PathfinderComponents.txNode
+    GraphComponents.txNode
         { defaultTxNodeAttributes
             | txNode =
                 [ translate
@@ -92,7 +92,7 @@ edge _ vc _ addresses tx =
                 |> toValues
 
         fd =
-            PathfinderComponents.addressNodeFrameDimensions
+            GraphComponents.addressNodeNodeFrameDimensions
 
         rad =
             fd.width / 2

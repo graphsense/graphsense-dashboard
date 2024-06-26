@@ -1,7 +1,7 @@
 module Generate.Util exposing (..)
 
-import Api.Raw exposing (ComponentPropertyReferences, Rectangle)
-import Dict as Dict
+import Api.Raw exposing (ComponentPropertyReferences, Rectangle, Transform)
+import Dict
 import Elm exposing (Expression)
 import Elm.Annotation as Type
 import Gen.Svg.Styled
@@ -108,9 +108,20 @@ withInstanceSwap def references element =
         |> Maybe.withDefault element
 
 
-toTranslate : Rectangle -> Elm.Expression
+toTranslate : Rectangle -> String
 toTranslate b =
     "translate({{ x }}, {{ y }})"
         |> Format.namedValue "x" (b.x |> String.fromFloat)
         |> Format.namedValue "y" (b.y |> String.fromFloat)
-        |> Attributes.transform
+
+
+toRotate : Float -> String
+toRotate r =
+    "rotate({{ }})"
+        |> Format.value (r * (180 / pi) |> String.fromFloat)
+
+
+toMatrix : Transform -> String
+toMatrix ( ( a_, c, e ), ( b, d, f ) ) =
+    "matrix({{ }})"
+        |> Format.value ([ a_, b, c, d, 0, 0 ] |> List.map String.fromFloat |> String.join ",")

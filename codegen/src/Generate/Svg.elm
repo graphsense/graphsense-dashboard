@@ -6,6 +6,7 @@ import Dict
 import Elm
 import Elm.Annotation as Annotation
 import Gen.Svg.Styled
+import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.EllipseNode as EllipseNode
 import Generate.Svg.FrameTraits as FrameTraits
@@ -30,8 +31,8 @@ subcanvasNodeComponentsToDeclarations node =
 
         SubcanvasNodeComponentSetNode n ->
             n.frameTraits.children
-            |> List.map subcanvasNodeComponentsToDeclarations 
-            |> List.concat
+                |> List.map subcanvasNodeComponentsToDeclarations
+                |> List.concat
 
         _ ->
             []
@@ -329,6 +330,7 @@ instanceNodeToExpressions config node =
         coords =
             node.frameTraits.absoluteBoundingBox
                 |> toTranslate
+                |> Attributes.transform
     in
     node.frameTraits.isLayerTrait.componentPropertyReferences
         |> Maybe.andThen (Dict.get "mainComponent")
