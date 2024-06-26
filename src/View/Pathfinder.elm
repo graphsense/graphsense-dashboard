@@ -297,8 +297,8 @@ graphSelectionToolsView _ _ vc _ m =
     div
         [ graphSelectionToolsStyle vc |> toAttr
         ]
-        [ graphSelectionToolButton vc selectBtn (m.view.pointerTool == Select)
-        , graphSelectionToolButton vc dragBtn (m.view.pointerTool == Drag)
+        [ graphSelectionToolButton vc selectBtn (m.pointerTool == Select)
+        , graphSelectionToolButton vc dragBtn (m.pointerTool == Drag)
         ]
 
 
