@@ -6,6 +6,7 @@ REST_URL?=https://app.ikna.io
 install:
 	pip install pre-commit
 	pre-commit install
+	npm install
 
 openapi:
 	tools/generate-openapi.sh $(OPENAPI_LOCATION) $(REST_URL)

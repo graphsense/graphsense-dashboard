@@ -24,6 +24,7 @@ generated
 theme
 # ignore elm.json for it's generated at build time from elm.json.base via generate.js
 elm.json
+!codegen/elm.json
 .idea
 .vscode/
 
