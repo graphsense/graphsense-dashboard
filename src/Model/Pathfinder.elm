@@ -28,6 +28,7 @@ unit =
 type alias Model =
     { network : Network
     , actors : Dict String Actor
+    , tags : Dict Id Api.Data.AddressTags
     , dragging : Dragging Id
     , selection : Selection
     , search : Search.Model

@@ -9,6 +9,7 @@ import DurationDatePicker
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
+import Html exposing (th)
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.Details.AddressDetails exposing (getAddressDetailsViewStateDefaultForAddress)
 import Init.Pathfinder.Details.TxDetails as TxDetails
@@ -164,9 +165,16 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotAddressData id data ->
+            let
+                net =
+                    Network.updateAddress id (s_data (Success data)) model.network
+
+                net2 =
+                    Network.updateAddress id (s_data (Success data)) net
+            in
             model
-                |> s_network (Network.updateAddress id (s_data (Success data)) model.network)
-                |> pairTo (fetchActorsForAddress data model.actors)
+                |> s_network net2
+                |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors)
 
         BrowserGotTxForAddress addressId direction data ->
             browserGotTxForAddress plugins uc addressId direction data model
@@ -586,6 +594,17 @@ updateByMsg plugins uc msg model =
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
+        BrowserGotAddressTags id data ->
+            if not (List.isEmpty data.addressTags) then
+                n
+                    { model
+                        | tags = Dict.insert id data model.tags
+                        , network = Network.updateAddress id (s_hasTags True) model.network
+                    }
+
+            else
+                n model
+
 
 getNextTxEffects : Model -> Id -> Direction -> List Effect
 getNextTxEffects model addressId direction =
@@ -956,6 +975,24 @@ markDirty msg model =
 fetchActor : String -> Effect
 fetchActor id =
     BrowserGotActor id |> Api.GetActorEffect { actorId = id } |> ApiEffect
+
+
+fetchTags : Id -> Effect
+fetchTags id =
+    BrowserGotAddressTags id |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 1000, nextpage = Nothing } |> ApiEffect
+
+
+fetchTagsForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.AddressTags -> Effect
+fetchTagsForAddress d existing =
+    let
+        id =
+            ( d.currency, d.address )
+    in
+    if Dict.member id existing then
+        CmdEffect Cmd.none
+
+    else
+        fetchTags id
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect

@@ -21,6 +21,9 @@ type alias Address =
     , data : WebData Api.Data.Address
     , selected : Bool
     , exchange : Maybe String
+    , hasTags : Bool
+    , hasActor : Bool
+    , isStartingPoint : Bool
     }
 
 

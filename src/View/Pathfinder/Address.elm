@@ -86,6 +86,6 @@ view _ _ _ address =
         , exchangeLabel =
             address.exchange
                 |> Maybe.withDefault ""
-        , startingPoint = True
-        , tagIcon = True
+        , startingPoint = address.isStartingPoint
+        , tagIcon = address.hasTags
         }

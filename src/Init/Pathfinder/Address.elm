@@ -22,4 +22,7 @@ init id { x, y } =
     , data = NotAsked
     , selected = False
     , exchange = Nothing
+    , hasActor = False
+    , hasTags = False
+    , isStartingPoint = False
     }
