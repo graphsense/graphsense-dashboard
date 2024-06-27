@@ -505,6 +505,8 @@ accountTxDetailsContentView _ _ =
 addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
 addressDetailsContentView vc gc model id viewState =
     let
+        data =
+            viewState.address
         actor_id =
             viewState.address.actors |> Maybe.andThen (List.head >> Maybe.map .id)
 
