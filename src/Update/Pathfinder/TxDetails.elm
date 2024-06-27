@@ -2,11 +2,11 @@ module Update.Pathfinder.TxDetails exposing (update)
 
 import Effect exposing (n)
 import Effect.Pathfinder exposing (Effect)
-import Model.Pathfinder.Details.TxDetails as TxDetails
+import Model.Pathfinder.TxDetails exposing (..)
 import Msg.Pathfinder exposing (TxDetailsMsg(..))
 
 
-update : TxDetailsMsg -> TxDetails.Model -> ( TxDetails.Model, List Effect )
+update : TxDetailsMsg -> Model -> ( Model, List Effect )
 update msg model =
     case msg of
         UserClickedToggleIOTable ->

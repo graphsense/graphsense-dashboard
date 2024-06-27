@@ -1,6 +1,5 @@
 module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
 
-import DurationDatePicker
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
@@ -8,15 +7,15 @@ import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Table as GT
 import Model.Pathfinder exposing (Details(..))
-import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder exposing (Msg(..))
-import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
+import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 
 
@@ -167,73 +166,81 @@ update msg id model =
 
         UpdateDateRangePicker subMsg ->
             let
-                ( newPicker, maybeRuntime ) =
-                    DurationDatePicker.update model.dateRangePicker.settings subMsg model.dateRangePicker
+                newPicker =
+                    DateRangePicker.update subMsg model.dateRangePicker
 
-                ( startTime, endTime ) =
-                    Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.dateRangePicker.fromDate, model.dateRangePicker.toDate )
-
-                eff =
-                    let
-                        startEff =
-                            case startTime of
-                                Just st ->
-                                    BrowserGotFromDateBlock st
+                ( txMinBlock, startEff ) =
+                    if newPicker.fromDate /= model.dateRangePicker.fromDate then
+                        newPicker.fromDate
+                            |> Maybe.map
+                                (\st ->
+                                    ( Nothing
+                                    , BrowserGotFromDateBlock st
+                                        >> AddressDetailsMsg
                                         |> Api.GetBlockByDateEffect
                                             { currency = Id.network id
                                             , datetime = st
                                             }
                                         |> ApiEffect
                                         |> List.singleton
+                                    )
+                                )
+                            |> Maybe.withDefault ( model.txMinBlock, [] )
 
-                                _ ->
-                                    []
+                    else
+                        ( model.txMinBlock, [] )
 
-                        endEff =
-                            case endTime of
-                                Just et ->
-                                    BrowserGotToDateBlock et
+                ( txMaxBlock, endEff ) =
+                    if newPicker.toDate /= model.dateRangePicker.toDate then
+                        newPicker.toDate
+                            |> Maybe.map
+                                (\et ->
+                                    ( Nothing
+                                    , BrowserGotToDateBlock et
+                                        >> AddressDetailsMsg
                                         |> Api.GetBlockByDateEffect
                                             { currency = Id.network id
                                             , datetime = et
                                             }
                                         |> ApiEffect
                                         |> List.singleton
+                                    )
+                                )
+                            |> Maybe.withDefault ( model.txMaxBlock, [] )
 
-                                _ ->
-                                    []
-                    in
-                    startEff ++ endEff
+                    else
+                        ( model.txMaxBlock, [] )
             in
-            case maybeRuntime of
-                Just _ ->
-                    ( { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }, eff )
-
-                _ ->
-                    n { model | dateRangePicker = newPicker }
+            ( { model
+                | dateRangePicker = newPicker
+                , txMinBlock = txMinBlock
+                , txMaxBlock = txMaxBlock
+              }
+            , startEff ++ endEff
+            )
 
         OpenDateRangePicker ->
-            let
-                ( mindate, maxdate ) =
-                    getMinAndMaxSelectableDateFromModel model
-            in
-            n { model | dateRangePicker = DurationDatePicker.openPicker (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) maxdate model.fromDate model.toDate model.dateRangePicker }
+            n { model | dateRangePicker = DateRangePicker.openPicker model.dateRangePicker }
 
         CloseDateRangePicker ->
-            n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
+            n { model | dateRangePicker = DateRangePicker.closePicker model.dateRangePicker }
 
         ResetDateRangePicker ->
             let
                 ( m2, eff ) =
-                    updateDatePickerRangeBlockRange model Reset Reset
+                    updateDatePickerRangeBlockRange id model Reset Reset
             in
-            ( { m2 | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }, eff )
+            ( { m2
+                | dateRangePicker = DateRangePicker.closePicker model.dateRangePicker
+              }
+            , eff
+            )
 
         BrowserGotFromDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
+            updateDatePickerRangeBlockRange id model (Set blockAt.beforeBlock) NoSet
 
         BrowserGotToDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
+            updateDatePickerRangeBlockRange id model NoSet (Set blockAt.afterBlock)
 
 
 type SetOrNoSet x
@@ -242,8 +249,8 @@ type SetOrNoSet x
     | Reset
 
 
-updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
+updateDatePickerRangeBlockRange : Id -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange id model txMinBlock txMaxBlock =
     let
         txmin =
             case txMinBlock of
@@ -262,7 +269,7 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
                     Nothing
 
                 NoSet ->
-                    ad.txMaxBlock
+                    model.txMaxBlock
 
                 Set x ->
                     Just x
@@ -275,7 +282,7 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing
-                            , pagesize = ad.txs.itemsPerPage
+                            , pagesize = model.txs.itemsPerPage
                             , nextpage = Nothing
                             , order = Nothing
                             , minHeight = Just min
@@ -290,7 +297,7 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing
-                            , pagesize = ad.txs.itemsPerPage
+                            , pagesize = model.txs.itemsPerPage
                             , nextpage = Nothing
                             , order = Nothing
                             , minHeight = Nothing
@@ -311,9 +318,9 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
                     TransactionTable.init Nothing
 
                 _ ->
-                    ad.txs
+                    model.txs
     in
-    ( { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew }
+    ( { model | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew }
     , effects
     )
 

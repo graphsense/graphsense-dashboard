@@ -15,7 +15,6 @@ import FontAwesome
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
-import Init.Pathfinder.Details.AddressDetails exposing (getDetailsViewStateForSelection)
 import Json.Decode
 import Model.Currency exposing (assetFromBase)
 import Model.Direction exposing (Direction(..))
@@ -23,20 +22,18 @@ import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
-import Model.Pathfinder.Details as Details
-import Model.Pathfinder.Details.AddressDetails as AddressDetails
-import Model.Pathfinder.Details.TxDetails as TxDetails
+import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
-import Model.Pathfinder.Tx as Tx exposing (Tx)
-import Msg.Pathfinder exposing (AddressDetailsMsg(..), DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
+import Model.Pathfinder.Tx as Tx
+import Model.Pathfinder.TxDetails as TxDetails
+import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RemoteData
-import Result.Extra
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
@@ -48,11 +45,9 @@ import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
-import Util.Pathfinder exposing (getAddress)
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
-import View.Pathfinder.Error as Error
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.Table as Table
@@ -375,36 +370,24 @@ searchBoxView plugins _ vc _ model =
 
 detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 detailsView vc gc model =
-    let
-        content =
-            case ( model.selection, getDetailsViewStateForSelection model ) of
-                ( SelectedAddress id, Just (Details.Address _ state) ) ->
-                    getAddress model.network.addresses id
-                        |> Result.map .data
-                        |> Result.Extra.unpack
-                            (Error.view vc)
-                            (RemoteData.unwrap
-                                (Util.View.loadingSpinner vc Css.View.loadingSpinner)
-                                (addressDetailsContentView vc gc model id state)
-                            )
+    case model.details of
+        Just details ->
+            div
+                [ detailsViewStyle vc |> toAttr ]
+                [ detailsViewCloseRow vc
+                , case details of
+                    AddressDetails id state ->
+                        RemoteData.unwrap
+                            (Util.View.loadingSpinner vc Css.View.loadingSpinner)
+                            (addressDetailsContentView vc gc model id)
+                            state
 
-                ( SelectedTx id, Just (Details.Tx _ state) ) ->
-                    Dict.get id model.network.txs
-                        |> Maybe.map (\x -> txDetailsContentView vc gc model id state x)
-                        |> Maybe.withDefault (Util.View.loadingSpinner vc Css.View.loadingSpinner)
+                    TxDetails id state ->
+                        txDetailsContentView vc gc model id state
+                ]
 
-                _ ->
-                    none
-    in
-    if not (content == none) then
-        div
-            [ detailsViewStyle vc |> toAttr ]
-            [ detailsViewCloseRow vc
-            , content
-            ]
-
-    else
-        none
+        Nothing ->
+            none
 
 
 detailsViewCloseRow : View.Config -> Html Msg
@@ -447,8 +430,8 @@ getAddressActionBtns id _ =
 -- [ BtnConfig FontAwesome.tags "Remove from Graph" (UserClickedRemoveAddressFromGraph id) True ]
 
 
-txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Tx -> Html Msg
-txDetailsContentView vc gc model id viewState data =
+txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
+txDetailsContentView vc gc model id viewState =
     let
         header =
             [ longIdentDetailsHeadingView vc gc id "Transaction" []
@@ -456,7 +439,7 @@ txDetailsContentView vc gc model id viewState data =
             ]
 
         ( detailsTblBody, sections ) =
-            case data.type_ of
+            case viewState.tx.type_ of
                 Tx.Account tx ->
                     ( [ accountTxDetailsContentView vc tx.raw ]
                     , [ none ]
@@ -519,11 +502,11 @@ accountTxDetailsContentView _ _ =
     div [] [ Html.text "I am a Account TX" ]
 
 
-addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
-addressDetailsContentView vc gc model id viewState data =
+addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
+addressDetailsContentView vc gc model id viewState =
     let
         actor_id =
-            data.actors |> Maybe.andThen (List.head >> Maybe.map .id)
+            viewState.address.actors |> Maybe.andThen (List.head >> Maybe.map .id)
 
         actor =
             actor_id |> Maybe.andThen (\i -> Dict.get i model.actors)
@@ -538,15 +521,15 @@ addressDetailsContentView vc gc model id viewState data =
             \txId -> Dict.member txId model.network.txs
 
         sections =
-            [ addressTransactionTableView vc gc id viewState txOnGraphFn model data
-            , addressNeighborsTableView vc gc id viewState data
+            [ addressTransactionTableView vc gc id viewState txOnGraphFn
+            , addressNeighborsTableView vc gc id viewState viewState.address
             ]
 
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows data), detailsActionsView vc (getAddressActionBtns id data) ]
+            [ detailsFactTableView vc (apiAddressToRows viewState.address), detailsActionsView vc (getAddressActionBtns id viewState.address) ]
 
         addressAnnotationBtns =
-            getAddressAnnotationBtns data actor (Dict.member ( data.currency, data.address ) model.tags)
+            getAddressAnnotationBtns viewState.address actor (Dict.member ( data.currency, data.address ) model.tags)
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]
@@ -564,41 +547,40 @@ addressDetailsContentView vc gc model id viewState data =
         )
 
 
-addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Model -> Api.Data.Address -> Html Msg
-addressTransactionTableView vc _ _ viewState txOnGraphFn m data =
+addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
+addressTransactionTableView vc _ _ viewState txOnGraphFn =
     let
+        data =
+            viewState.address
+
         attributes =
             []
 
         prevMsg =
-            \_ -> AddressDetailsMsg UserClickedPreviousPageTransactionTable
+            \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
 
         nextMsg =
-            \_ -> AddressDetailsMsg UserClickedNextPageTransactionTable
-
-        minDate =
-            Time.millisToPosix (data.firstTx.timestamp * 1000)
-
-        maxDate =
-            Time.millisToPosix (data.lastTx.timestamp * 1000)
+            \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
 
         content =
             div []
-                (if DatePicker.isOpen m.dateRangePicker then
+                (if DatePicker.isOpen viewState.dateRangePicker.dateRangePicker then
                     [ div []
-                        [ primaryButton vc (BtnConfig FontAwesome.check "Ok" CloseDateRangePicker True)
-                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" ResetDateRangePicker True)
+                        [ primaryButton vc (BtnConfig FontAwesome.check "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
+                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                         ]
-                    , DatePicker.view (pathfinderRangeDatePickerSettings vc.locale minDate maxDate) m.dateRangePicker |> Html.fromUnstyled
+                    , DatePicker.view viewState.dateRangePicker.settings viewState.dateRangePicker.dateRangePicker
+                        |> Html.fromUnstyled
+                        |> Html.map AddressDetailsMsg
                     ]
 
                  else
                     let
                         startP =
-                            m.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
+                            viewState.dateRangePicker.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
 
                         endP =
-                            m.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
+                            viewState.dateRangePicker.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
 
                         selectedDuration =
                             Locale.durationPosix vc.locale 1 startP endP
@@ -616,7 +598,7 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn m data =
                             , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
                             , span [] [ Html.text (Locale.string vc.locale "to") ]
                             , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
-                            , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" OpenDateRangePicker True) ]
+                            , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True) ]
                             ]
                         , Table.pagedTableView vc attributes (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
                         ]
@@ -626,7 +608,7 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn m data =
         ioIndicatorState =
             Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
     in
-    collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg UserClickedToggleTransactionTable)
+    collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 
 
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
@@ -636,10 +618,10 @@ addressNeighborsTableView vc _ _ viewState data =
             []
 
         prevMsg =
-            \dir _ -> AddressDetailsMsg (UserClickedPreviousPageNeighborsTable dir)
+            \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedPreviousPageNeighborsTable dir)
 
         nextMsg =
-            \dir _ -> AddressDetailsMsg (UserClickedNextPageNeighborsTable dir)
+            \dir _ -> AddressDetailsMsg (AddressDetails.UserClickedNextPageNeighborsTable dir)
 
         tblCfg =
             NeighborsTable.config vc data.currency
@@ -655,7 +637,7 @@ addressNeighborsTableView vc _ _ viewState data =
         ioIndicatorState =
             Just (inOutIndicator Nothing data.inDegree data.outDegree)
     in
-    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg UserClickedToggleNeighborsTable)
+    collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
 
 longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> String -> List BtnConfig -> Html Msg

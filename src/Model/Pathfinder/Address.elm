@@ -57,11 +57,6 @@ getOutDegree a =
             Nothing
 
 
-getActivityRange : Address -> Maybe ( Posix, Posix )
-getActivityRange a =
-    case a.data of
-        Success x ->
-            Just ( Time.millisToPosix (x.firstTx.timestamp * 1000), Time.millisToPosix (x.lastTx.timestamp * 1000) )
-
-        _ ->
-            Nothing
+getActivityRange : Api.Data.Address -> ( Posix, Posix )
+getActivityRange x =
+    ( Time.millisToPosix (x.firstTx.timestamp * 1000), Time.millisToPosix (x.lastTx.timestamp * 1000) )

@@ -5,17 +5,14 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Dict
-import Dict.Nonempty as NDict exposing (NonemptyDict)
-import DurationDatePicker
+import Dict.Nonempty as NDict
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
-import Html exposing (th)
 import Init.Graph.Transform as Transform
-import Init.Pathfinder.AddressDetails exposing (getAddressDetailsViewStateDefaultForAddress)
+import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
-import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Init.Pathfinder.TxDetails as TxDetails
 import List.Extra
 import Log
@@ -26,12 +23,10 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Address
-import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
+import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
-import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
@@ -51,7 +46,7 @@ import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route
 import Set
 import Svg.Attributes exposing (x)
-import Time exposing (Posix)
+import Time
 import Tuple exposing (mapFirst, pair)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
@@ -184,6 +179,7 @@ updateByMsg plugins uc msg model =
             in
             model
                 |> s_network net2
+                |> selectAddress uc id
                 |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors)
 
         BrowserGotTxForAddress addressId direction data ->
@@ -243,12 +239,12 @@ updateByMsg plugins uc msg model =
 
         AddressDetailsMsg subm ->
             case model.details of
-                Just (AddressDetails id ad) ->
+                Just (AddressDetails id (Success ad)) ->
                     let
                         ( addressViewDetails, eff ) =
                             AddressDetails.update subm id ad
                     in
-                    ( { model | details = Just (AddressDetails id addressViewDetails) }, eff )
+                    ( { model | details = Just (AddressDetails id (Success addressViewDetails)) }, eff )
 
                 _ ->
                     n model
@@ -430,7 +426,7 @@ updateByMsg plugins uc msg model =
             let
                 ( newmodel, eff ) =
                     model
-                        |> selectAddress id
+                        |> selectAddress uc id
                         |> openAddressTransactionsTable
             in
             ( newmodel
@@ -553,7 +549,7 @@ updateByMsg plugins uc msg model =
             { model
                 | network = nw
             }
-                |> checkSelection
+                |> checkSelection uc
                 |> n
 
         ChangedDisplaySettingsMsg submsg ->
@@ -679,14 +675,14 @@ getNextTxEffects model addressId direction =
         |> List.map ApiEffect
 
 
-updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
-updateByRoute plugins route model =
+updateByRoute : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute plugins uc route model =
     forcePushHistory (model |> s_isDirty True)
-        |> updateByRoute_ plugins route
+        |> updateByRoute_ plugins uc route
 
 
-updateByRoute_ : Plugins -> Route.Route -> Model -> ( Model, List Effect )
-updateByRoute_ plugins route model =
+updateByRoute_ : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, List Effect )
+updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
         Route.Root ->
             n model
@@ -697,7 +693,7 @@ updateByRoute_ plugins route model =
                     Id.init network a
             in
             loadAddress plugins id model True
-                |> mapFirst (selectAddress id)
+                |> mapFirst (selectAddress uc id)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -713,30 +709,34 @@ updateByRoute_ plugins route model =
 
 loadAddress : Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
 loadAddress _ id model starting =
-    let
-        is_new =
-            not (Dict.member id model.network.addresses)
+    if Dict.member id model.network.addresses then
+        n model
 
-        nw =
-            Network.addAddress id model.network
-                |> Network.updateAddress id (s_data Loading)
+    else
+        let
+            is_new =
+                not (Dict.member id model.network.addresses)
 
-        nw2 =
-            if is_new then
-                Network.updateAddress id (s_isStartingPoint (starting && is_new)) nw
+            nw =
+                Network.addAddress id model.network
+                    |> Network.updateAddress id (s_data Loading)
 
-            else
-                nw
-    in
-    ( { model | network = nw2 }
-    , BrowserGotAddressData id
-        |> Api.GetAddressEffect
-            { currency = Id.network id
-            , address = Id.id id
-            }
-        |> ApiEffect
-        |> List.singleton
-    )
+            nw2 =
+                if is_new then
+                    Network.updateAddress id (s_isStartingPoint (starting && is_new)) nw
+
+                else
+                    nw
+        in
+        ( { model | network = nw2 }
+        , BrowserGotAddressData id
+            |> Api.GetAddressEffect
+                { currency = Id.network id
+                , address = Id.id id
+                }
+            |> ApiEffect
+            |> List.singleton
+        )
 
 
 loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
@@ -756,45 +756,51 @@ loadTx _ id model =
 
 selectTx : Id -> Model -> Model
 selectTx id model =
-    if Network.hasTx id model.network then
-        let
-            selectedTx =
-                case model.selection of
-                    SelectedTx a ->
-                        Just a
+    case Dict.get id model.network.txs of
+        Just tx ->
+            let
+                selectedTx =
+                    case model.selection of
+                        SelectedTx a ->
+                            Just a
 
-                    _ ->
-                        Nothing
+                        _ ->
+                            Nothing
 
-            m1 =
-                unselect model
-                    |> s_details (TxDetails id TxDetails.init |> Just)
-        in
-        selectedTx
-            |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
-            |> Maybe.withDefault m1.network
-            |> Network.updateTx id (Tx.updateUtxo (s_selected True))
-            |> flip s_network m1
-            |> s_selection (SelectedTx id)
+                m1 =
+                    unselect model
+                        |> s_details (TxDetails.init tx |> TxDetails id |> Just)
+            in
+            selectedTx
+                |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
+                |> Maybe.withDefault m1.network
+                |> Network.updateTx id (Tx.updateUtxo (s_selected True))
+                |> flip s_network m1
+                |> s_selection (SelectedTx id)
 
-    else
-        s_selection (WillSelectTx id) model
+        Nothing ->
+            s_selection (WillSelectTx id) model
 
 
-selectAddress : Id -> Model -> Model
-selectAddress id model =
-    if Network.hasAddress id model.network then
-        let
-            m1 =
-                unselect model
-                    |> s_details (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model) |> Just)
-        in
-        Network.updateAddress id (s_selected True) m1.network
-            |> flip s_network m1
-            |> s_selection (SelectedAddress id)
+selectAddress : Update.Config -> Id -> Model -> Model
+selectAddress uc id model =
+    case Dict.get id model.network.addresses of
+        Just address ->
+            let
+                details =
+                    address.data
+                        |> RemoteData.map (AddressDetails.init uc.locale)
 
-    else
-        s_selection (WillSelectAddress id) model
+                m1 =
+                    unselect model
+                        |> s_details (AddressDetails id details |> Just)
+            in
+            Network.updateAddress id (s_selected True) m1.network
+                |> flip s_network m1
+                |> s_selection (SelectedAddress id)
+
+        Nothing ->
+            s_selection (WillSelectAddress id) model
 
 
 unselect : Model -> Model
@@ -965,14 +971,14 @@ browserGotTxForAddress plugins _ addressId direction tx model =
         |> Maybe.withDefault (n newmodel)
 
 
-checkSelection : Model -> Model
-checkSelection model =
+checkSelection : Update.Config -> Model -> Model
+checkSelection uc model =
     case model.selection of
         WillSelectTx id ->
             selectTx id model
 
         WillSelectAddress id ->
-            selectAddress id model
+            selectAddress uc id model
 
         _ ->
             model
@@ -981,13 +987,13 @@ checkSelection model =
 openAddressTransactionsTable : Model -> ( Model, List Effect )
 openAddressTransactionsTable model =
     case model.details of
-        Just (AddressDetails id ad) ->
+        Just (AddressDetails id (Success ad)) ->
             let
                 ( new, eff ) =
                     AddressDetails.showTransactionsTable id ad True
             in
             ( { model
-                | details = Just (AddressDetails id new)
+                | details = Just (AddressDetails id (Success new))
               }
             , eff
             )
@@ -1032,7 +1038,7 @@ removeTx id model =
         | network = Network.deleteTx id model.network
         , details =
             case model.details of
-                Just (Details.Tx txId _) ->
+                Just (TxDetails txId _) ->
                     if txId == id then
                         Nothing
 

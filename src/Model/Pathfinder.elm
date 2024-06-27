@@ -14,6 +14,7 @@ import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
+import RemoteData exposing (WebData)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
 
@@ -63,7 +64,7 @@ type MultiSelectOptions
 
 
 type Details
-    = AddressDetails Id AddressDetails.Model
+    = AddressDetails Id (WebData AddressDetails.Model)
     | TxDetails Id TxDetails.Model
 
 

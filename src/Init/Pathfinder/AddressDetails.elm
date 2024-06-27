@@ -1,87 +1,60 @@
 module Init.Pathfinder.AddressDetails exposing (..)
 
+import Api.Data
+import DurationDatePicker exposing (TimePickerVisibility(..))
 import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
-import Init.Pathfinder.TxDetails as TxDetails
 import Model.DateRangePicker as DateRangePicker
-import Model.Pathfinder as Pathfinder exposing (Details(..), Selection(..), getAddressDetailStats)
-import Model.Pathfinder.Address exposing (Address)
+import Model.Locale as Locale
+import Model.Pathfinder exposing (Details(..), Selection(..))
+import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails as AddressDetails
-import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
-import Dict
+import Time exposing (Posix)
+import Time.Extra as Time exposing (Interval(..))
+import View.Locale as Locale
 
 
-init : Maybe Int -> Maybe Int -> Maybe Int -> Address -> AddressDetails.Model
-init nrTransactions inDegree outDegree address =
+init : Locale.Model -> Api.Data.Address -> AddressDetails.Model
+init locale address =
     { neighborsTableOpen = False
     , transactionsTableOpen = False
-    , txs = TransactionTable.init nrTransactions
+    , txs = TransactionTable.init <| Just <| address.noIncomingTxs + address.noOutgoingTxs
     , txMinBlock = Nothing
     , txMaxBlock = Nothing
-    , neighborsOutgoing = NeighborsTable.init outDegree
-    , neighborsIncoming = NeighborsTable.init inDegree
-    , dateRangePicker = DateRangePicker.init UpdateDateRangePicker
+    , neighborsOutgoing = NeighborsTable.init address.outDegree
+    , neighborsIncoming = NeighborsTable.init address.inDegree
+    , dateRangePicker =
+        let
+            ( mn, mx ) =
+                Address.getActivityRange address
+        in
+        datePickerSettings locale mn mx
+            |> DateRangePicker.init UpdateDateRangePicker mx
     , address = address
     }
 
 
-getAddressDetailsViewStateDefaultForAddress : Id -> Pathfinder.Model -> Maybe AddressDetails.Model
-getAddressDetailsViewStateDefaultForAddress id model =
+datePickerSettings : Locale.Model -> Posix -> Posix -> DurationDatePicker.Settings
+datePickerSettings localeModel min max =
     let
-        stats =
-            Pathfinder.getAddressDetailStats id model Nothing
+        defaults =
+            DurationDatePicker.defaultSettings localeModel.zone
+
+        isDateBefore x datetime =
+            Time.posixToMillis x > Time.posixToMillis datetime
+
+        toDate z x =
+            Time.floor Day z x
     in
-    Dict.get id model.network.addresses
-    |> Maybe.map (init stats.nrTxs stats.nrIncomeingNeighbors stats.nrOutgoingNeighbors)
-
-
-getDetailsViewStateForSelection : Pathfinder.Model -> Maybe Details
-getDetailsViewStateForSelection model =
-    case ( model.selection, model.details ) of
-        ( SelectedAddress _, Just (AddressDetails id c) ) ->
-            let
-                stats =
-                    getAddressDetailStats id model (Just c)
-
-                txsNew =
-                    c.txs
-
-                nIn =
-                    c.neighborsIncoming
-
-                nOut =
-                    c.neighborsOutgoing
-            in
-            AddressDetails id
-                { c
-                    | txs = { txsNew | nrItems = stats.nrTxs }
-                    , neighborsIncoming = { nIn | nrItems = stats.nrIncomeingNeighbors }
-                    , neighborsOutgoing = { nOut | nrItems = stats.nrOutgoingNeighbors }
-                }
-                |> Just
-
-        ( SelectedAddress id, _ ) ->
-            (getAddressDetailsViewStateDefaultForAddress id model)
-            |> Maybe.map (AddressDetails id )
-
-        ( SelectedTx _, Just (TxDetails id c) ) ->
-            TxDetails id c
-                |> Just
-
-        ( SelectedTx id, _ ) ->
-            TxDetails id TxDetails.init
-                |> Just
-
-        ( WillSelectTx _, details ) ->
-            details
-
-        ( WillSelectAddress _, details ) ->
-            details
-
-        ( MultiSelect _, _ ) ->
-            Nothing
-
-        ( NoSelection, _ ) ->
-            Nothing
+    { defaults
+        | isDayDisabled =
+            \clientZone datetime ->
+                isDateBefore (toDate clientZone datetime) (toDate clientZone max)
+                    || isDateBefore (toDate clientZone min) (toDate clientZone datetime)
+        , focusedDate = Just max
+        , dateStringFn = \_ pos -> (pos |> Time.posixToMillis) |> (\x -> x // 1000) |> Locale.timestampDateUniform localeModel
+        , timePickerVisibility = NeverVisible
+        , showCalendarWeekNumbers = True
+    }

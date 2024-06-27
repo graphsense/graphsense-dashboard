@@ -1125,7 +1125,7 @@ updateByUrl plugins uc url model =
                     Route.Pathfinder pfRoute ->
                         let
                             ( pfn, graphEffect ) =
-                                Pathfinder.updateByRoute plugins pfRoute model.pathfinder
+                                Pathfinder.updateByRoute plugins uc pfRoute model.pathfinder
                         in
                         ( { model
                             | page = Pathfinder

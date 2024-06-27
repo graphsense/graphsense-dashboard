@@ -1,4 +1,5 @@
 module Model.DateRangePicker exposing (..)
+
 import DurationDatePicker
 import Time exposing (Posix)
 
@@ -8,4 +9,5 @@ type alias Model msg =
     , dateRangePicker : DurationDatePicker.DatePicker msg
     , fromDate : Maybe Posix
     , toDate : Maybe Posix
+    , maxDate : Posix
     }

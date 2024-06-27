@@ -6,14 +6,14 @@ import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Table exposing (PagedTable)
 
 
-init : Maybe Int -> PagedTable Api.Data.NeighborAddress
+init : Int -> PagedTable Api.Data.NeighborAddress
 init nrItems =
     let
         m =
             Init.Graph.Table.initUnsorted
     in
     { table = m
-    , nrItems = nrItems
+    , nrItems = Just nrItems
     , currentPage = 1
     , itemsPerPage = 5
     }
