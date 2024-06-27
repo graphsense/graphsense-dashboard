@@ -78,6 +78,7 @@ update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
 update plugins uc msg model =
     model
         |> pushHistory msg
+        |> markDirty msg
         |> updateByMsg plugins uc msg
 
 
@@ -207,7 +208,7 @@ updateByMsg plugins uc msg model =
                         |> Tuple.mapSecond (List.map Pathfinder.SearchEffect)
 
         UserClosedDetailsView ->
-            { model | details = Nothing }
+            { model | details = Nothing, selection = NoSelection }
                 |> n
 
         TxDetailsMsg submsg ->
@@ -238,17 +239,18 @@ updateByMsg plugins uc msg model =
             -- Handled upstream
             n model
 
-        --n Init.Pathfinder.init
-        -- TODO: Implement
-        UserClickedUndo ->
+        UserClickedRestartYes ->
+            -- Handled upstream
             n model
+
+        UserClickedUndo ->
+            undoRedo History.undo model
 
         UserClickedRedo ->
-            n model
+            undoRedo History.redo model
 
-        UserClickedHighlighter ->
-            n model
-
+        --n Init.Pathfinder.init
+        -- TODO: Implement
         UserClickedImportFile ->
             n model
 
@@ -777,7 +779,7 @@ updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
 
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
-    forcePushHistory model
+    forcePushHistory (model |> s_isDirty True)
         |> updateByRoute_ plugins route
 
 
@@ -935,10 +937,20 @@ undoRedo fun model =
                 { model
                     | history = history
                     , network = entry.network
+                    , selection = NoSelection
                 }
             )
         |> Maybe.withDefault model
         |> n
+
+
+markDirty : Msg -> Model -> Model
+markDirty msg model =
+    if History.shallPushHistory msg model then
+        model |> s_isDirty True
+
+    else
+        model
 
 
 fetchActor : String -> Effect

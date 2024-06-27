@@ -74,14 +74,12 @@ type alias ToggleButton =
     { btn : BtnConfig, isToggled : Bool }
 
 
-graphActionTools : List BtnConfig
-graphActionTools =
-    [ BtnConfig FontAwesome.file "restart" UserClickedRestart True
+graphActionTools : Model -> List BtnConfig
+graphActionTools m =
+    [ BtnConfig FontAwesome.file "restart" UserClickedRestart m.isDirty
     , BtnConfig FontAwesome.folder "open" NoOp False
-    , BtnConfig FontAwesome.redo "redo" UserClickedRedo False
-    , BtnConfig FontAwesome.undo "undo" UserClickedUndo True
-
-    --, BtnConfig FontAwesome.highlighter "highlight" UserClickedHighlighter True
+    , BtnConfig FontAwesome.redo "redo" UserClickedRedo (not (List.isEmpty m.history.future))
+    , BtnConfig FontAwesome.undo "undo" UserClickedUndo (not (List.isEmpty m.history.past))
     ]
 
 
@@ -278,11 +276,11 @@ settingsView vc _ m =
 
 
 graphActionsTopLeftView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphActionsTopLeftView _ _ vc _ _ =
+graphActionsTopLeftView _ _ vc _ m =
     div
         [ graphActionsStyle vc |> toAttr
         ]
-        (graphActionTools |> List.map (graphToolButton vc))
+        (graphActionTools m |> List.map (graphToolButton vc))
 
 
 graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg

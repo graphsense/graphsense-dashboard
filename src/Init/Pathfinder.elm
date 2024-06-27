@@ -32,6 +32,7 @@ init _ =
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
       , ctrlPressed = False
+      , isDirty = False
       }
     , Task.perform Tick Time.now
     )

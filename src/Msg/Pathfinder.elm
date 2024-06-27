@@ -20,9 +20,9 @@ type Msg
     | UserMovesMouseOnGraph Coords
     | UserReleasesMouseButton
     | UserClickedRestart
+    | UserClickedRestartYes
     | UserClickedUndo
     | UserClickedRedo
-    | UserClickedHighlighter
     | UserClickedExportGraph
     | UserClickedImportFile
     | UserClosedDetailsView

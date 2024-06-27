@@ -41,6 +41,7 @@ type alias Model =
     , currentTime : Posix
     , pointerTool : PointerTool
     , ctrlPressed : Bool
+    , isDirty : Bool
     }
 
 

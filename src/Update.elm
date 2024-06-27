@@ -586,6 +586,22 @@ update plugins uc msg model =
                     )
 
         PathfinderMsg Pathfinder.UserClickedRestart ->
+            if model.pathfinder.isDirty then
+                { model
+                    | dialog =
+                        { message = Locale.string model.locale "Do you want to start from scratch?"
+                        , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
+                        , onNo = NoOp
+                        }
+                            |> Dialog.confirm
+                            |> Just
+                }
+                    |> n
+
+            else
+                n model
+
+        PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
                     model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
