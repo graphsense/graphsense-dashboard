@@ -3,19 +3,17 @@ module Model.Pathfinder exposing (..)
 import Api.Data exposing (Actor)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
-import DurationDatePicker
 import Model.Graph exposing (Dragging)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address as Address exposing (Address)
-import Model.Pathfinder.Details as Details
-import Model.Pathfinder.Details.AddressDetails as AddressDetails
+import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool)
+import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
-import Msg.Pathfinder exposing (Msg)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
 
@@ -34,11 +32,8 @@ type alias Model =
     , search : Search.Model
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
-    , details : Maybe Details.Model
+    , details : Maybe Details
     , config : Config
-    , dateRangePicker : DurationDatePicker.DatePicker Msg
-    , fromDate : Maybe Posix
-    , toDate : Maybe Posix
     , currentTime : Posix
     , pointerTool : PointerTool
     , ctrlPressed : Bool
@@ -65,6 +60,11 @@ type Selection
 type MultiSelectOptions
     = MSelectedAddress Id
     | MSelectedTx Id
+
+
+type Details
+    = AddressDetails Id AddressDetails.Model
+    | TxDetails Id TxDetails.Model
 
 
 getLoadedAddress : Model -> Id -> Maybe Address

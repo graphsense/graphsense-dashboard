@@ -1,12 +1,12 @@
 module Msg.Pathfinder exposing (..)
 
 import Api.Data
-import DurationDatePicker as DatePicker
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tools exposing (PointerTool)
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
 import Time exposing (Posix)
@@ -30,7 +30,7 @@ type Msg
     | UserReleasedCtrlKey
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
-    | AddressDetailsMsg AddressDetailsMsg
+    | AddressDetailsMsg AddressDetails.Msg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
@@ -45,13 +45,7 @@ type Msg
     | BrowserGotActor String Api.Data.Actor
     | BrowserGotTx Api.Data.Tx
     | ChangedDisplaySettingsMsg DisplaySettingsMsg
-    | UpdateDateRangePicker DatePicker.Msg
-    | OpenDateRangePicker
-    | CloseDateRangePicker
-    | ResetDateRangePicker
     | Tick Posix
-    | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
-    | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
     | UserClickedTx Id
     | UserClickedTxCheckboxInTable Api.Data.AddressTx
     | UserClickedAddressCheckboxInTable Id
@@ -66,17 +60,6 @@ type DisplaySettingsMsg
     = ChangePointerTool PointerTool
     | UserClickedToggleDisplaySettings
     | UserClickedToggleShowTxTimestamp
-
-
-type AddressDetailsMsg
-    = UserClickedToggleNeighborsTable
-    | UserClickedToggleTransactionTable
-    | UserClickedNextPageTransactionTable
-    | UserClickedPreviousPageTransactionTable
-    | UserClickedNextPageNeighborsTable Direction
-    | UserClickedPreviousPageNeighborsTable Direction
-    | GotTxsForAddressDetails Id Api.Data.AddressTxs
-    | GotNeighborsForAddressDetails Id Direction Api.Data.NeighborAddresses
 
 
 type TxDetailsMsg

@@ -1,7 +1,10 @@
-module Model.Pathfinder.Details.AddressDetails exposing (..)
+module Model.Pathfinder.AddressDetails exposing (..)
 
 import Api.Data
+import Model.DateRangePicker as DateRangePicker
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Table exposing (PagedTable)
+import Msg.Pathfinder.AddressDetails exposing (Msg)
 
 
 type alias Model =
@@ -12,4 +15,6 @@ type alias Model =
     , txMaxBlock : Maybe Int
     , neighborsIncoming : PagedTable Api.Data.NeighborAddress
     , neighborsOutgoing : PagedTable Api.Data.NeighborAddress
+    , dateRangePicker : DateRangePicker.Model Msg
+    , address : Address
     }

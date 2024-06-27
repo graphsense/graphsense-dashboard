@@ -12,11 +12,11 @@ import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Html exposing (th)
 import Init.Graph.Transform as Transform
-import Init.Pathfinder.Details.AddressDetails exposing (getAddressDetailsViewStateDefaultForAddress)
-import Init.Pathfinder.Details.TxDetails as TxDetails
+import Init.Pathfinder.AddressDetails exposing (getAddressDetailsViewStateDefaultForAddress)
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
+import Init.Pathfinder.TxDetails as TxDetails
 import List.Extra
 import Log
 import Model.Direction exposing (Direction(..))
@@ -28,7 +28,6 @@ import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.DatePicker exposing (pathfinderRangeDatePickerSettings)
-import Model.Pathfinder.Details as Details
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network
@@ -38,13 +37,13 @@ import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg
     exposing
-        ( AddressDetailsMsg(..)
-        , DisplaySettingsMsg(..)
+        ( DisplaySettingsMsg(..)
         , Msg(..)
         , TxDetailsMsg(..)
         , WorkflowNextTxByTimeMsg(..)
         , WorkflowNextUtxoTxMsg(..)
         )
+import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
@@ -68,12 +67,6 @@ import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util.Pathfinder.History as History
-
-
-type SetOrNoSet x
-    = Set x
-    | NoSet
-    | Reset
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -238,24 +231,24 @@ updateByMsg plugins uc msg model =
 
         TxDetailsMsg submsg ->
             case model.details of
-                Just (Details.Tx id txViewState) ->
+                Just (TxDetails id txViewState) ->
                     let
                         ( nVs, eff ) =
                             TxDetails.update submsg txViewState
                     in
-                    ( { model | details = Just (Details.Tx id nVs) }, eff )
+                    ( { model | details = Just (TxDetails id nVs) }, eff )
 
                 _ ->
                     n model
 
         AddressDetailsMsg subm ->
             case model.details of
-                Just (Details.Address id ad) ->
+                Just (AddressDetails id ad) ->
                     let
                         ( addressViewDetails, eff ) =
                             AddressDetails.update subm id ad
                     in
-                    ( { model | details = Just (Details.Address id addressViewDetails) }, eff )
+                    ( { model | details = Just (AddressDetails id addressViewDetails) }, eff )
 
                 _ ->
                     n model
@@ -582,84 +575,6 @@ updateByMsg plugins uc msg model =
                     in
                     n { model | displaySettings = nds }
 
-        BrowserGotFromDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
-
-        BrowserGotToDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
-
-        UpdateDateRangePicker subMsg ->
-            let
-                ( mindate, maxdate ) =
-                    getMinAndMaxSelectableDateFromModel model
-
-                ( newPicker, maybeRuntime ) =
-                    DurationDatePicker.update (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) subMsg model.dateRangePicker
-
-                ( startTime, endTime ) =
-                    Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.fromDate, model.toDate )
-
-                eff =
-                    case model.details of
-                        Just (Details.Address id _) ->
-                            let
-                                startEff =
-                                    case startTime of
-                                        Just st ->
-                                            BrowserGotFromDateBlock st
-                                                |> Api.GetBlockByDateEffect
-                                                    { currency = Id.network id
-                                                    , datetime = st
-                                                    }
-                                                |> ApiEffect
-                                                |> List.singleton
-
-                                        _ ->
-                                            []
-
-                                endEff =
-                                    case endTime of
-                                        Just et ->
-                                            BrowserGotToDateBlock et
-                                                |> Api.GetBlockByDateEffect
-                                                    { currency = Id.network id
-                                                    , datetime = et
-                                                    }
-                                                |> ApiEffect
-                                                |> List.singleton
-
-                                        _ ->
-                                            []
-                            in
-                            startEff ++ endEff
-
-                        _ ->
-                            []
-            in
-            case maybeRuntime of
-                Just _ ->
-                    ( { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }, eff )
-
-                _ ->
-                    n { model | dateRangePicker = newPicker }
-
-        OpenDateRangePicker ->
-            let
-                ( mindate, maxdate ) =
-                    getMinAndMaxSelectableDateFromModel model
-            in
-            n { model | dateRangePicker = DurationDatePicker.openPicker (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) maxdate model.fromDate model.toDate model.dateRangePicker }
-
-        CloseDateRangePicker ->
-            n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
-
-        ResetDateRangePicker ->
-            let
-                ( m2, eff ) =
-                    updateDatePickerRangeBlockRange model Reset Reset
-            in
-            ( { m2 | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }, eff )
-
         Tick time ->
             n { model | currentTime = time }
 
@@ -764,113 +679,6 @@ getNextTxEffects model addressId direction =
         |> List.map ApiEffect
 
 
-getMinAndMaxSelectableDateFromModel : Model -> ( Posix, Posix )
-getMinAndMaxSelectableDateFromModel model =
-    let
-        default =
-            ( Time.millisToPosix 0, model.currentTime )
-    in
-    case model.details of
-        Just (Details.Address id _) ->
-            Dict.get id model.network.addresses
-                |> Maybe.andThen Address.getActivityRange
-                |> Maybe.withDefault default
-
-        _ ->
-            default
-
-
-updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
-    let
-        ( m2, eff ) =
-            case model.details of
-                Just (Details.Address id ad) ->
-                    let
-                        txmin =
-                            case txMinBlock of
-                                Reset ->
-                                    Nothing
-
-                                NoSet ->
-                                    ad.txMinBlock
-
-                                Set x ->
-                                    Just x
-
-                        txmax =
-                            case txMaxBlock of
-                                Reset ->
-                                    Nothing
-
-                                NoSet ->
-                                    ad.txMaxBlock
-
-                                Set x ->
-                                    Just x
-
-                        effects =
-                            case ( txmin, txmax ) of
-                                ( Just min, Just max ) ->
-                                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                        |> Api.GetAddressTxsEffect
-                                            { currency = Id.network id
-                                            , address = Id.id id
-                                            , direction = Nothing
-                                            , pagesize = ad.txs.itemsPerPage
-                                            , nextpage = Nothing
-                                            , order = Nothing
-                                            , minHeight = Just min
-                                            , maxHeight = Just max
-                                            }
-                                        |> ApiEffect
-                                        |> List.singleton
-
-                                ( Nothing, Nothing ) ->
-                                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                                        |> Api.GetAddressTxsEffect
-                                            { currency = Id.network id
-                                            , address = Id.id id
-                                            , direction = Nothing
-                                            , pagesize = ad.txs.itemsPerPage
-                                            , nextpage = Nothing
-                                            , order = Nothing
-                                            , minHeight = Nothing
-                                            , maxHeight = Nothing
-                                            }
-                                        |> ApiEffect
-                                        |> List.singleton
-
-                                _ ->
-                                    []
-
-                        txsnew =
-                            case ( txmin, txmax ) of
-                                ( Just _, Just _ ) ->
-                                    TransactionTable.init Nothing
-
-                                ( Nothing, Nothing ) ->
-                                    TransactionTable.init Nothing
-
-                                _ ->
-                                    ad.txs
-                    in
-                    ( { model
-                        | details =
-                            Just
-                                (Details.Address id
-                                    { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew }
-                                )
-                      }
-                    , effects
-                    )
-
-                _ ->
-                    n model
-    in
-    ( m2, eff )
-
-
 updateByRoute : Plugins -> Route.Route -> Model -> ( Model, List Effect )
 updateByRoute plugins route model =
     forcePushHistory (model |> s_isDirty True)
@@ -960,7 +768,7 @@ selectTx id model =
 
             m1 =
                 unselect model
-                    |> s_details (Details.Tx id TxDetails.init |> Just)
+                    |> s_details (TxDetails id TxDetails.init |> Just)
         in
         selectedTx
             |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
@@ -979,7 +787,7 @@ selectAddress id model =
         let
             m1 =
                 unselect model
-                    |> s_details (Details.Address id (getAddressDetailsViewStateDefaultForAddress id model) |> Just)
+                    |> s_details (AddressDetails id (getAddressDetailsViewStateDefaultForAddress id model) |> Just)
         in
         Network.updateAddress id (s_selected True) m1.network
             |> flip s_network m1
@@ -1173,13 +981,13 @@ checkSelection model =
 openAddressTransactionsTable : Model -> ( Model, List Effect )
 openAddressTransactionsTable model =
     case model.details of
-        Just (Details.Address id ad) ->
+        Just (AddressDetails id ad) ->
             let
                 ( new, eff ) =
                     AddressDetails.showTransactionsTable id ad True
             in
             ( { model
-                | details = Just (Details.Address id new)
+                | details = Just (AddressDetails id new)
               }
             , eff
             )
@@ -1194,7 +1002,7 @@ removeAddress id model =
         | network = Network.deleteAddress id model.network
         , details =
             case model.details of
-                Just (Details.Address addressId _) ->
+                Just (AddressDetails addressId _) ->
                     if addressId == id then
                         Nothing
 

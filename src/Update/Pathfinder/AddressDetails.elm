@@ -1,21 +1,26 @@
 module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
 
+import DurationDatePicker
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
+import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Table as GT
-import Model.Pathfinder.Details.AddressDetails as AddressDetails
+import Model.Pathfinder exposing (Details(..))
+import Model.Pathfinder.Address as Address
+import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
-import Msg.Pathfinder exposing (AddressDetailsMsg(..), Msg(..))
+import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder.AddressDetails as AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
 
 
-update : AddressDetailsMsg -> Id -> AddressDetails.Model -> ( AddressDetails.Model, List Effect )
+update : Msg -> Id -> Model -> ( Model, List Effect )
 update msg id model =
     case msg of
         UserClickedToggleNeighborsTable ->
@@ -160,8 +165,160 @@ update msg id model =
             else
                 n model
 
+        UpdateDateRangePicker subMsg ->
+            let
+                ( newPicker, maybeRuntime ) =
+                    DurationDatePicker.update model.dateRangePicker.settings subMsg model.dateRangePicker
 
-showTransactionsTable : Id -> AddressDetails.Model -> Bool -> ( AddressDetails.Model, List Effect )
+                ( startTime, endTime ) =
+                    Maybe.map (\( start, end ) -> ( Just start, Just end )) maybeRuntime |> Maybe.withDefault ( model.dateRangePicker.fromDate, model.dateRangePicker.toDate )
+
+                eff =
+                    let
+                        startEff =
+                            case startTime of
+                                Just st ->
+                                    BrowserGotFromDateBlock st
+                                        |> Api.GetBlockByDateEffect
+                                            { currency = Id.network id
+                                            , datetime = st
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                _ ->
+                                    []
+
+                        endEff =
+                            case endTime of
+                                Just et ->
+                                    BrowserGotToDateBlock et
+                                        |> Api.GetBlockByDateEffect
+                                            { currency = Id.network id
+                                            , datetime = et
+                                            }
+                                        |> ApiEffect
+                                        |> List.singleton
+
+                                _ ->
+                                    []
+                    in
+                    startEff ++ endEff
+            in
+            case maybeRuntime of
+                Just _ ->
+                    ( { model | dateRangePicker = newPicker, fromDate = startTime, toDate = endTime }, eff )
+
+                _ ->
+                    n { model | dateRangePicker = newPicker }
+
+        OpenDateRangePicker ->
+            let
+                ( mindate, maxdate ) =
+                    getMinAndMaxSelectableDateFromModel model
+            in
+            n { model | dateRangePicker = DurationDatePicker.openPicker (pathfinderRangeDatePickerSettings uc.locale mindate maxdate) maxdate model.fromDate model.toDate model.dateRangePicker }
+
+        CloseDateRangePicker ->
+            n { model | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker }
+
+        ResetDateRangePicker ->
+            let
+                ( m2, eff ) =
+                    updateDatePickerRangeBlockRange model Reset Reset
+            in
+            ( { m2 | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker, fromDate = Nothing, toDate = Nothing }, eff )
+
+        BrowserGotFromDateBlock _ blockAt ->
+            updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
+
+        BrowserGotToDateBlock _ blockAt ->
+            updateDatePickerRangeBlockRange model NoSet (Set blockAt.afterBlock)
+
+
+type SetOrNoSet x
+    = Set x
+    | NoSet
+    | Reset
+
+
+updateDatePickerRangeBlockRange : Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange model txMinBlock txMaxBlock =
+    let
+        txmin =
+            case txMinBlock of
+                Reset ->
+                    Nothing
+
+                NoSet ->
+                    model.txMinBlock
+
+                Set x ->
+                    Just x
+
+        txmax =
+            case txMaxBlock of
+                Reset ->
+                    Nothing
+
+                NoSet ->
+                    ad.txMaxBlock
+
+                Set x ->
+                    Just x
+
+        effects =
+            case ( txmin, txmax ) of
+                ( Just min, Just max ) ->
+                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                        |> Api.GetAddressTxsEffect
+                            { currency = Id.network id
+                            , address = Id.id id
+                            , direction = Nothing
+                            , pagesize = ad.txs.itemsPerPage
+                            , nextpage = Nothing
+                            , order = Nothing
+                            , minHeight = Just min
+                            , maxHeight = Just max
+                            }
+                        |> ApiEffect
+                        |> List.singleton
+
+                ( Nothing, Nothing ) ->
+                    (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                        |> Api.GetAddressTxsEffect
+                            { currency = Id.network id
+                            , address = Id.id id
+                            , direction = Nothing
+                            , pagesize = ad.txs.itemsPerPage
+                            , nextpage = Nothing
+                            , order = Nothing
+                            , minHeight = Nothing
+                            , maxHeight = Nothing
+                            }
+                        |> ApiEffect
+                        |> List.singleton
+
+                _ ->
+                    []
+
+        txsnew =
+            case ( txmin, txmax ) of
+                ( Just _, Just _ ) ->
+                    TransactionTable.init Nothing
+
+                ( Nothing, Nothing ) ->
+                    TransactionTable.init Nothing
+
+                _ ->
+                    ad.txs
+    in
+    ( { ad | txMinBlock = txmin, txMaxBlock = txmax, txs = txsnew }
+    , effects
+    )
+
+
+showTransactionsTable : Id -> Model -> Bool -> ( Model, List Effect )
 showTransactionsTable id model show =
     let
         eff =

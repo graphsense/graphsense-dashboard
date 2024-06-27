@@ -90,8 +90,8 @@ toFillPaths node =
 toAttributes : VectorNode -> List Elm.Expression
 toAttributes node =
     [ toTranslate node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox
-        ++ " "
-        ++ (Maybe.map toMatrix node.cornerRadiusShapeTraits.defaultShapeTraits.relativeTransform |> Maybe.withDefault "")
+        --++ " "
+        --++ (Maybe.map toMatrix node.cornerRadiusShapeTraits.defaultShapeTraits.relativeTransform |> Maybe.withDefault "")
         |> Attributes.transform
     ]
 
