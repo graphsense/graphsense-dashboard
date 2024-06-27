@@ -28,6 +28,8 @@ type Msg
     | UserClosedDetailsView
     | UserPressedCtrlKey
     | UserReleasedCtrlKey
+    | UserPressedNormalKey String
+    | UserReleasedNormalKey String
     | AddressDetailsMsg AddressDetailsMsg
     | TxDetailsMsg TxDetailsMsg
     | AnimationFrameDeltaForTransform Float

@@ -40,6 +40,7 @@ type alias Model =
     , toDate : Maybe Posix
     , currentTime : Posix
     , pointerTool : PointerTool
+    , ctrlPressed : Bool
     }
 
 

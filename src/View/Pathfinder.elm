@@ -435,7 +435,11 @@ getAddressAnnotationBtns data actor =
 
 getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
 getAddressActionBtns id _ =
-    [ BtnConfig FontAwesome.tags "Remove from Graph" (UserClickedRemoveAddressFromGraph id) True ]
+    []
+
+
+
+-- [ BtnConfig FontAwesome.tags "Remove from Graph" (UserClickedRemoveAddressFromGraph id) True ]
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Tx -> Html Msg

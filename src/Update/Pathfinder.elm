@@ -135,7 +135,10 @@ updateByMsg plugins uc msg model =
                 }
 
         UserPressedCtrlKey ->
-            n { model | pointerTool = Select }
+            n { model | ctrlPressed = True }
+
+        UserReleasedCtrlKey ->
+            n { model | ctrlPressed = False }
 
         UserPressedDeleteKey ->
             case model.selection of
@@ -145,8 +148,19 @@ updateByMsg plugins uc msg model =
                 _ ->
                     n model
 
-        UserReleasedCtrlKey ->
-            n { model | pointerTool = Drag }
+        UserPressedNormalKey key ->
+            case key of
+                "z" ->
+                    update plugins uc UserClickedUndo model
+
+                "y" ->
+                    update plugins uc UserClickedRedo model
+
+                _ ->
+                    n model
+
+        UserReleasedNormalKey _ ->
+            n model
 
         BrowserGotAddressData id data ->
             model

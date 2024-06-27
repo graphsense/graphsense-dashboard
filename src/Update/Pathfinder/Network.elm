@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, deleteAddress, updateAddress, updateAddressIf, updateTx, deleteTx)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, deleteAddress, deleteTx, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -652,5 +652,3 @@ deleteTx id network =
                 }
             )
         |> Maybe.withDefault network
-
-
