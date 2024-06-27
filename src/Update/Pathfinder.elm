@@ -5,6 +5,7 @@ import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Dict
+import Dict.Nonempty as NDict exposing (NonemptyDict)
 import DurationDatePicker
 import Effect exposing (n)
 import Effect.Api as Api
@@ -146,6 +147,22 @@ updateByMsg plugins uc msg model =
             case model.selection of
                 SelectedAddress id ->
                     removeAddress id model
+
+                SelectedTx id ->
+                    removeTx id model
+
+                MultiSelect items ->
+                    List.foldl
+                        (\i ( m, eff ) ->
+                            case i of
+                                MSelectedAddress id ->
+                                    removeAddress id m
+
+                                MSelectedTx id ->
+                                    removeTx id m
+                        )
+                        ( model, [] )
+                        items
 
                 _ ->
                     n model
@@ -429,31 +446,75 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedAddress id ->
-            ( model
-            , Route.addressRoute
-                { network = Id.network id
-                , address = Id.id id
-                }
-                |> NavPushRouteEffect
-                |> List.singleton
-            )
+            if model.ctrlPressed then
+                let
+                    nn =
+                        Network.updateAddress id (s_selected True) model.network
+
+                    nselect =
+                        case model.selection of
+                            MultiSelect x ->
+                                MultiSelect (MSelectedAddress id :: x)
+
+                            SelectedAddress oid ->
+                                MultiSelect [ MSelectedAddress id, MSelectedAddress oid ]
+
+                            SelectedTx oid ->
+                                MultiSelect [ MSelectedAddress id, MSelectedTx oid ]
+
+                            _ ->
+                                MultiSelect [ MSelectedAddress id ]
+                in
+                n { model | selection = nselect, details = Nothing, network = nn }
+
+            else
+                ( model
+                , Route.addressRoute
+                    { network = Id.network id
+                    , address = Id.id id
+                    }
+                    |> NavPushRouteEffect
+                    |> List.singleton
+                )
 
         UserClickedAddressCheckboxInTable id ->
             if Dict.member id model.network.addresses then
                 removeAddress id model
 
             else
-                loadAddress plugins id model
+                loadAddress plugins id model False
 
         UserClickedTx id ->
-            ( model
-            , Route.txRoute
-                { network = Id.network id
-                , txHash = Id.id id
-                }
-                |> NavPushRouteEffect
-                |> List.singleton
-            )
+            if model.ctrlPressed then
+                let
+                    nn =
+                        Network.updateTx id (Tx.updateUtxo (s_selected True)) model.network
+
+                    nselect =
+                        case model.selection of
+                            MultiSelect x ->
+                                MultiSelect (MSelectedTx id :: x)
+
+                            SelectedAddress oid ->
+                                MultiSelect [ MSelectedTx id, MSelectedAddress oid ]
+
+                            SelectedTx oid ->
+                                MultiSelect [ MSelectedTx id, MSelectedTx oid ]
+
+                            _ ->
+                                MultiSelect [ MSelectedTx id ]
+                in
+                n { model | selection = nselect, details = Nothing, network = nn }
+
+            else
+                ( model
+                , Route.txRoute
+                    { network = Id.network id
+                    , txHash = Id.id id
+                    }
+                    |> NavPushRouteEffect
+                    |> List.singleton
+                )
 
         UserClickedTxCheckboxInTable tx ->
             case tx of
@@ -506,6 +567,20 @@ updateByMsg plugins uc msg model =
             case submsg of
                 ChangePointerTool tool ->
                     n { model | pointerTool = tool }
+
+                UserClickedToggleShowTxTimestamp ->
+                    let
+                        nds =
+                            model.displaySettings |> s_showTxTimestamps (not model.displaySettings.showTxTimestamps)
+                    in
+                    n { model | displaySettings = nds }
+
+                UserClickedToggleDisplaySettings ->
+                    let
+                        nds =
+                            model.displaySettings |> s_isDisplaySettingsOpen (not model.displaySettings.isDisplaySettingsOpen)
+                    in
+                    n { model | displaySettings = nds }
 
         BrowserGotFromDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange model (Set blockAt.beforeBlock) NoSet
@@ -813,7 +888,7 @@ updateByRoute_ plugins route model =
                 id =
                     Id.init network a
             in
-            loadAddress plugins id model
+            loadAddress plugins id model True
                 |> mapFirst (selectAddress id)
 
         Route.Network network (Route.Tx a) ->
@@ -828,14 +903,24 @@ updateByRoute_ plugins route model =
             n model
 
 
-loadAddress : Plugins -> Id -> Model -> ( Model, List Effect )
-loadAddress _ id model =
+loadAddress : Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
+loadAddress _ id model starting =
     let
+        is_new =
+            not (Dict.member id model.network.addresses)
+
         nw =
             Network.addAddress id model.network
                 |> Network.updateAddress id (s_data Loading)
+
+        nw2 =
+            if is_new then
+                Network.updateAddress id (s_isStartingPoint (starting && is_new)) nw
+
+            else
+                nw
     in
-    ( { model | network = nw }
+    ( { model | network = nw2 }
     , BrowserGotAddressData id
         |> Api.GetAddressEffect
             { currency = Id.network id
@@ -1067,7 +1152,7 @@ browserGotTxForAddress plugins _ addressId direction tx model =
     firstAddress
         |> Maybe.map
             (\a ->
-                loadAddress plugins (Id.init (Id.network addressId) a) newmodel
+                loadAddress plugins (Id.init (Id.network addressId) a) newmodel False
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -1105,7 +1190,7 @@ openAddressTransactionsTable model =
 
 removeAddress : Id -> Model -> ( Model, List Effect )
 removeAddress id model =
-    ( { model
+    { model
         | network = Network.deleteAddress id model.network
         , details =
             case model.details of
@@ -1129,6 +1214,59 @@ removeAddress id model =
 
                 _ ->
                     model.selection
+    }
+        |> removeIsolatedTransactions
+
+
+removeTx : Id -> Model -> ( Model, List Effect )
+removeTx id model =
+    ( { model
+        | network = Network.deleteTx id model.network
+        , details =
+            case model.details of
+                Just (Details.Tx txId _) ->
+                    if txId == id then
+                        Nothing
+
+                    else
+                        model.details
+
+                _ ->
+                    model.details
+        , selection =
+            case model.selection of
+                SelectedAddress addressId ->
+                    if addressId == id then
+                        NoSelection
+
+                    else
+                        model.selection
+
+                _ ->
+                    model.selection
       }
     , []
     )
+
+
+isIsolatedTx : Model -> Tx.Tx -> Bool
+isIsolatedTx model tx =
+    case tx.type_ of
+        Tx.Utxo x ->
+            let
+                keys =
+                    (x.outputs |> NDict.toDict |> Dict.keys) ++ (x.inputs |> NDict.toDict |> Dict.keys)
+            in
+            not (List.any (\y -> Dict.member y model.network.addresses) keys)
+
+        Tx.Account x ->
+            Dict.member x.from model.network.addresses || Dict.member x.to model.network.addresses
+
+
+removeIsolatedTransactions : Model -> ( Model, List Effect )
+removeIsolatedTransactions model =
+    let
+        idsToRemove =
+            Dict.keys (Dict.filter (\k v -> isIsolatedTx model v) model.network.txs)
+    in
+    List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove

@@ -64,6 +64,8 @@ type Msg
 
 type DisplaySettingsMsg
     = ChangePointerTool PointerTool
+    | UserClickedToggleDisplaySettings
+    | UserClickedToggleShowTxTimestamp
 
 
 type AddressDetailsMsg

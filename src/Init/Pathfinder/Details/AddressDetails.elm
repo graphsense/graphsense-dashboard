@@ -73,5 +73,8 @@ getDetailsViewStateForSelection model =
         ( WillSelectAddress _, details ) ->
             details
 
+        ( MultiSelect _, _ ) ->
+            Nothing
+
         ( NoSelection, _ ) ->
             Nothing

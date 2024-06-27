@@ -204,7 +204,12 @@ inOutIndicator mnr inNr outNr =
 
 
 collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
-collapsibleSection vc title open indicator content action =
+collapsibleSection vc =
+    collapsibleSectionRaw (collapsibleSectionHeadingStyle vc |> toAttr) (collapsibleSectionIconStyle |> toAttr) vc
+
+
+collapsibleSectionRaw : Html.Attribute Msg -> Html.Attribute Msg -> View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
+collapsibleSectionRaw headingAttr iconAttr vc title open indicator content action =
     let
         icon =
             if open then
@@ -221,8 +226,8 @@ collapsibleSection vc title open indicator content action =
                 []
     in
     div []
-        (div [ collapsibleSectionHeadingStyle vc |> toAttr, onClick action ]
-            [ span [ collapsibleSectionIconStyle |> toAttr ] [ FontAwesome.icon icon |> Html.fromUnstyled ]
+        (div [ headingAttr, onClick action ]
+            [ span [ iconAttr ] [ FontAwesome.icon icon |> Html.fromUnstyled ]
             , Html.text (Locale.string vc.locale title)
             , indicator |> Maybe.withDefault none
             ]
@@ -264,14 +269,15 @@ topLeftPanel plugins ms vc gc model =
 
 settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 settingsView vc _ m =
+    let
+        content =
+            div []
+                [ span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction Settings") ]
+                , Util.View.switch vc [ HA.checked m.displaySettings.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
+                ]
+    in
     div [ boxStyle vc Nothing |> toAttr ]
-        [ h3 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Display") ]
-
-        --, case m.view.pointerTool of
-        --    Drag ->
-        --        Util.View.switch vc [ HA.checked True, onClick (ChangePointerTool Select |> ChangedDisplaySettingsMsg) ] "Drag"
-        --    Select ->
-        --        Util.View.switch vc [ HA.checked False, onClick (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) ] "Select"
+        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.displaySettings.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
         ]
 
 
@@ -369,11 +375,9 @@ searchBoxView plugins _ vc _ model =
 
 detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 detailsView vc gc model =
-    if isDetailsViewVisible model then
-        div
-            [ detailsViewStyle vc |> toAttr ]
-            [ detailsViewCloseRow vc
-            , case ( model.selection, getDetailsViewStateForSelection model ) of
+    let
+        content =
+            case ( model.selection, getDetailsViewStateForSelection model ) of
                 ( SelectedAddress id, Just (Details.Address _ state) ) ->
                     getAddress model.network.addresses id
                         |> Result.map .data
@@ -391,6 +395,12 @@ detailsView vc gc model =
 
                 _ ->
                     none
+    in
+    if not (content == none) then
+        div
+            [ detailsViewStyle vc |> toAttr ]
+            [ detailsViewCloseRow vc
+            , content
             ]
 
     else

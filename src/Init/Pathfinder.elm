@@ -34,6 +34,10 @@ init _ =
       , pointerTool = Drag
       , ctrlPressed = False
       , isDirty = False
+      , displaySettings =
+            { showTxTimestamps = False
+            , isDisplaySettingsOpen = False
+            }
       }
     , Task.perform Tick Time.now
     )

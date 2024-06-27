@@ -268,6 +268,14 @@ panelHeadingStyle2 _ =
     ]
 
 
+panelHeadingStyle3 : View.Config -> List Style
+panelHeadingStyle3 _ =
+    [ fontWeight bold
+    , mText |> fontSize
+    , mlGap |> marginBottom
+    ]
+
+
 collapsibleSectionHeadingStyle : View.Config -> List Style
 collapsibleSectionHeadingStyle vc =
     [ fontWeight bold
@@ -276,6 +284,16 @@ collapsibleSectionHeadingStyle vc =
     , mlGap |> marginTop
     , boxBorderColor vc |> borderBottom3 (px 0.3) solid
     , px 30 |> height
+    , cursor pointer
+    ]
+
+
+collapsibleSectionHeadingDisplaySettingsStyle : View.Config -> List Style
+collapsibleSectionHeadingDisplaySettingsStyle vc =
+    [ fontWeight bold
+    , lText |> fontSize
+    , mlGap |> marginBottom
+    , mlGap |> marginTop
     , cursor pointer
     ]
 
@@ -378,6 +396,7 @@ topRightPanelStyle _ =
     [ position absolute
     , mlGap |> right
     , mlGap |> top
+    , minWidth (px 330)
     ]
 
 
@@ -556,6 +575,11 @@ ioOutIndicatorStyle =
 collapsibleSectionIconStyle : List Style
 collapsibleSectionIconStyle =
     [ ch 1 |> paddingRight, ch 2 |> paddingLeft ]
+
+
+collapsibleSectionDisplaySettingsIconStyle : List Style
+collapsibleSectionDisplaySettingsIconStyle =
+    [ ch 1 |> paddingRight ]
 
 
 iconWithTextStyle : List Style

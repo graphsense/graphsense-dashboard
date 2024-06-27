@@ -43,15 +43,28 @@ type alias Model =
     , pointerTool : PointerTool
     , ctrlPressed : Bool
     , isDirty : Bool
+    , displaySettings : DisplaySettings
+    }
+
+
+type alias DisplaySettings =
+    { showTxTimestamps : Bool
+    , isDisplaySettingsOpen : Bool
     }
 
 
 type Selection
     = SelectedAddress Id
     | SelectedTx Id
+    | MultiSelect (List MultiSelectOptions)
     | WillSelectTx Id
     | WillSelectAddress Id
     | NoSelection
+
+
+type MultiSelectOptions
+    = MSelectedAddress Id
+    | MSelectedTx Id
 
 
 getLoadedAddress : Model -> Id -> Maybe Address
@@ -85,8 +98,3 @@ getAddressDetailStats id model madvs =
             maddress |> Maybe.andThen Address.getOutDegree
     in
     { nrTxs = nrTxs, nrIncomeingNeighbors = indegree, nrOutgoingNeighbors = outdegree }
-
-
-isDetailsViewVisible : Model -> Bool
-isDetailsViewVisible model =
-    not (model.selection == NoSelection)
