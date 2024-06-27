@@ -507,6 +507,7 @@ addressDetailsContentView vc gc model id viewState =
     let
         data =
             viewState.address
+
         actor_id =
             viewState.address.actors |> Maybe.andThen (List.head >> Maybe.map .id)
 

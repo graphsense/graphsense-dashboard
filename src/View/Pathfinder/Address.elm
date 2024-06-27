@@ -21,7 +21,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
-import Util.View exposing (onClickWithStop, truncateLongIdentifier)
+import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
@@ -73,7 +73,7 @@ view _ _ _ address =
         { addressId =
             address.id
                 |> Id.id
-                |> truncateLongIdentifier
+                |> truncateLongIdentifierWithLengths 6 3
         , highlight = address.selected
         , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
         , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs

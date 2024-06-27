@@ -67,7 +67,12 @@ truncate len str =
 
 
 truncateLongIdentifier : String -> String
-truncateLongIdentifier str =
+truncateLongIdentifier =
+    truncateLongIdentifierWithLengths 8 8
+
+
+truncateLongIdentifierWithLengths : Int -> Int -> String -> String
+truncateLongIdentifierWithLengths start end str =
     if String.length str > 18 then
         let
             sigPart =
@@ -76,11 +81,8 @@ truncateLongIdentifier str =
 
                 else
                     str
-
-            len =
-                8
         in
-        String.left len sigPart ++ "…" ++ String.right len sigPart
+        String.left start sigPart ++ "…" ++ String.right end sigPart
 
     else
         str
