@@ -4,6 +4,7 @@ import Animation as A
 import Api.Data
 import Basics.Extra exposing (flip)
 import Config.Update as Update
+import Css.Pathfinder exposing (searchBoxMinWidth)
 import Dict
 import Dict.Nonempty as NDict
 import Effect exposing (n)
@@ -23,6 +24,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
+import Model.Pathfinder.Address as Addr
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, network)
@@ -40,6 +42,7 @@ import Msg.Pathfinder as Msg
         )
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
+import Number.Bounded exposing (value)
 import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
@@ -49,7 +52,7 @@ import Svg.Attributes exposing (x)
 import Time
 import Tuple exposing (mapFirst, pair)
 import Tuple2 exposing (pairTo)
-import Update.Graph exposing (draggingToClick)
+import Update.Graph exposing (draggingToClick, handleEntitySearchResult)
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
@@ -299,11 +302,67 @@ updateByMsg plugins uc msg model =
                 NoDragging ->
                     n model
 
-                Dragging _ _ _ ->
-                    n
-                        { model
-                            | dragging = NoDragging
-                        }
+                Dragging tm start now ->
+                    case model.pointerTool of
+                        Select ->
+                            let
+                                xoffset =
+                                    searchBoxMinWidth / 2
+
+                                crd =
+                                    case tm.state of
+                                        Transform.Settled c ->
+                                            c
+
+                                        Transform.Transitioning v ->
+                                            v.from
+
+                                z =
+                                    value crd.z
+
+                                xn =
+                                    ((Basics.min start.x now.x + xoffset) * z) + crd.x
+
+                                yn =
+                                    (Basics.min start.y now.y * z) + crd.y
+
+                                widthn =
+                                    abs (start.x - now.x) * z
+
+                                heightn =
+                                    abs (start.y - now.y) * z
+
+                                isIn x1 y1 x2 y2 x y =
+                                    x > x1 && x < x2 && y > y1 && y < y2
+
+                                isinRect c =
+                                    isIn xn yn (xn + widthn) (yn + heightn) (c.x * unit) (c.y * unit)
+
+                                isinRectTx tx =
+                                    tx |> Tx.getCoords |> Maybe.map isinRect |> Maybe.withDefault False
+
+                                isinRectAddr adr =
+                                    adr |> Addr.getCoords |> isinRect
+
+                                selectedTxs =
+                                    List.filter isinRectTx (Dict.values model.network.txs) |> List.map (.id >> MSelectedTx)
+
+                                selectedAdr =
+                                    List.filter isinRectAddr (Dict.values model.network.addresses) |> List.map (.id >> MSelectedAddress)
+
+                                ( modelS, _ ) =
+                                    multiSelect model (selectedTxs ++ selectedAdr) False
+                            in
+                            n
+                                { modelS
+                                    | dragging = NoDragging
+                                }
+
+                        Drag ->
+                            n
+                                { model
+                                    | dragging = NoDragging
+                                }
 
                 DraggingNode id _ _ ->
                     n
@@ -437,24 +496,10 @@ updateByMsg plugins uc msg model =
         UserClickedAddress id ->
             if model.ctrlPressed then
                 let
-                    nn =
-                        Network.updateAddress id (s_selected True) model.network
-
-                    nselect =
-                        case model.selection of
-                            MultiSelect x ->
-                                MultiSelect (MSelectedAddress id :: x)
-
-                            SelectedAddress oid ->
-                                MultiSelect [ MSelectedAddress id, MSelectedAddress oid ]
-
-                            SelectedTx oid ->
-                                MultiSelect [ MSelectedAddress id, MSelectedTx oid ]
-
-                            _ ->
-                                MultiSelect [ MSelectedAddress id ]
+                    ( modelS, _ ) =
+                        multiSelect model [ MSelectedAddress id ] True
                 in
-                n { model | selection = nselect, details = Nothing, network = nn }
+                n { modelS | details = Nothing }
 
             else
                 ( model
@@ -476,24 +521,10 @@ updateByMsg plugins uc msg model =
         UserClickedTx id ->
             if model.ctrlPressed then
                 let
-                    nn =
-                        Network.updateTx id (Tx.updateUtxo (s_selected True)) model.network
-
-                    nselect =
-                        case model.selection of
-                            MultiSelect x ->
-                                MultiSelect (MSelectedTx id :: x)
-
-                            SelectedAddress oid ->
-                                MultiSelect [ MSelectedTx id, MSelectedAddress oid ]
-
-                            SelectedTx oid ->
-                                MultiSelect [ MSelectedTx id, MSelectedTx oid ]
-
-                            _ ->
-                                MultiSelect [ MSelectedTx id ]
+                    ( modelS, _ ) =
+                        multiSelect model [ MSelectedTx id ] True
                 in
-                n { model | selection = nselect, details = Nothing, network = nn }
+                n { modelS | details = Nothing }
 
             else
                 ( model
@@ -1090,3 +1121,38 @@ removeIsolatedTransactions model =
             Dict.keys (Dict.filter (\k v -> isIsolatedTx model v) model.network.txs)
     in
     List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove
+
+
+multiSelect : Model -> List MultiSelectOptions -> Bool -> ( Model, List Effect )
+multiSelect m sel keepOld =
+    let
+        newSelection =
+            case m.selection of
+                MultiSelect x ->
+                    if keepOld then
+                        x ++ sel
+
+                    else
+                        sel
+
+                SelectedAddress oid ->
+                    MSelectedAddress oid :: sel
+
+                SelectedTx oid ->
+                    MSelectedTx oid :: sel
+
+                _ ->
+                    sel
+
+        selectItem s item n =
+            case item of
+                MSelectedAddress id ->
+                    Network.updateAddress id (s_selected s) n
+
+                MSelectedTx id ->
+                    Network.updateTx id (Tx.updateUtxo (s_selected s)) n
+
+        nNet =
+            List.foldl (selectItem True) (Network.clearSelection m.network) newSelection
+    in
+    ( { m | selection = MultiSelect newSelection, network = nNet }, [] )

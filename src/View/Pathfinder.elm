@@ -828,7 +828,7 @@ graphSvg plugins _ vc gc model bbox =
         , Svg.lazy5 Network.edges plugins vc gc model.network.addresses model.network.txs
         , drawDragSelector vc model
 
-        -- , rect [ fill "black", width "1", height "1", x "0", y "0" ] [] -- Mark zero point in coordinate system
+        -- , rect [ fill "red", width "3", height "3", x "8", y "0" ] [] -- Mark zero point in coordinate system
         ]
 
 
@@ -837,6 +837,9 @@ drawDragSelector vc m =
     case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
+                originShiftX =
+                    searchBoxMinWidth / 2
+
                 crd =
                     case tm.state of
                         Settled c ->
@@ -849,7 +852,7 @@ drawDragSelector vc m =
                     value crd.z
 
                 xn =
-                    Basics.min start.x now.x * z + crd.x
+                    (Basics.min start.x now.x + originShiftX) * z + crd.x
 
                 yn =
                     Basics.min start.y now.y * z + crd.y

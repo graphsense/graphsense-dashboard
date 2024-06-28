@@ -2,6 +2,7 @@ module Model.Pathfinder.Address exposing (..)
 
 import Animation exposing (Animation, Clock)
 import Api.Data
+import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
@@ -35,6 +36,11 @@ getNrTxs a =
 
         _ ->
             Nothing
+
+
+getCoords : Address -> Coords
+getCoords a =
+    Coords (a.x + a.dx) (Animation.animate a.clock a.y + a.dy)
 
 
 getInDegree : Address -> Maybe Int
