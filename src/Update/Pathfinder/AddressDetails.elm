@@ -231,7 +231,7 @@ update msg id model =
                     updateDatePickerRangeBlockRange id model Reset Reset
             in
             ( { m2
-                | dateRangePicker = DateRangePicker.closePicker model.dateRangePicker
+                | dateRangePicker = DateRangePicker.resetPicker model.dateRangePicker
               }
             , eff
             )
