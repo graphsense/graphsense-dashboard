@@ -17,7 +17,7 @@ keyDecoder kMap =
 
 toKeyDown : String -> Msg
 toKeyDown keyValue =
-    case Debug.log "keyvalue" keyValue of
+    case keyValue of
         "Control" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserPressedCtrlKey
@@ -54,7 +54,7 @@ toKeyUp keyValue =
 
 toKeyPress : String -> Msg
 toKeyPress keyValue =
-    case Debug.log "keyvalue" keyValue of
+    case keyValue of
         "Delete" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserPressedDeleteKey

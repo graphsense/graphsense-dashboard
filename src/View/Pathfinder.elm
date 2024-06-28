@@ -400,20 +400,20 @@ closeButton vc msg =
     button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
 
 
-getAddressAnnotationBtns : Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
-getAddressAnnotationBtns data actor hasTags =
+getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
+getAddressAnnotationBtns vc data actor hasTags =
     let
         isContract x =
             x.isContract |> Maybe.withDefault False
     in
     (if hasTags then
-        [ BtnConfig FontAwesome.tags "has tags" NoOp True ]
+        [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
 
      else
         []
     )
         ++ (if isContract data then
-                [ BtnConfig FontAwesome.cog "is contract" NoOp True ]
+                [ BtnConfig FontAwesome.cog (Locale.string vc.locale "is contract") NoOp True ]
 
             else
                 []
@@ -532,7 +532,7 @@ addressDetailsContentView vc gc model id viewState =
             [ detailsFactTableView vc (apiAddressToRows viewState.address), detailsActionsView vc (getAddressActionBtns id viewState.address) ]
 
         addressAnnotationBtns =
-            getAddressAnnotationBtns viewState.address actor (Dict.member ( data.currency, data.address ) model.tags)
+            getAddressAnnotationBtns vc data actor (Dict.member ( data.currency, data.address ) model.tags)
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]

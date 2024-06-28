@@ -25,7 +25,7 @@ import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.History.Entry as Entry
-import Model.Pathfinder.Id as Id exposing (Id)
+import Model.Pathfinder.Id as Id exposing (Id, network)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
@@ -691,16 +691,22 @@ updateByRoute_ plugins uc route model =
             let
                 id =
                     Id.init network a
+
+                m1 =
+                    { model | network = Network.clearSelection model.network }
             in
-            loadAddress plugins id model True
+            loadAddress plugins id m1 True
                 |> mapFirst (selectAddress uc id)
 
         Route.Network network (Route.Tx a) ->
             let
                 id =
                     Id.init network a
+
+                m1 =
+                    { model | network = Network.clearSelection model.network }
             in
-            loadTx plugins id model
+            loadTx plugins id m1
                 |> mapFirst (selectTx id)
 
         _ ->

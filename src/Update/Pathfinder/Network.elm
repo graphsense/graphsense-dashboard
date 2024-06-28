@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, deleteAddress, deleteTx, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -22,12 +22,20 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_visible)
+import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_selected, s_visible)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
 import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Tx as Tx
+
+
+clearSelection : Network -> Network
+clearSelection n =
+    { n
+        | addresses = Dict.map (\k v -> v |> s_selected False) n.addresses
+        , txs = Dict.map (\k v -> v |> Tx.updateUtxo (s_selected False)) n.txs
+    }
 
 
 addAddress : Id -> Network -> Network
