@@ -3,6 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [24.06.0] - 2024-06-28
+
+### Added
+- precommit hook to set version automatically
+
+### Changed
+
+- better auto complete lib (needed for some plugins)
+
+### Fixed
+
+- Fixed loading eth address path
+
 ## [24.04.0] - 2024-04-05
 
 ### Changed
