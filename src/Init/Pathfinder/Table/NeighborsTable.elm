@@ -2,7 +2,6 @@ module Init.Pathfinder.Table.NeighborsTable exposing (..)
 
 import Api.Data
 import Init.Graph.Table
-import Model.Graph.Table exposing (Table)
 import Model.Pathfinder.Table exposing (PagedTable)
 
 

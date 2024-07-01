@@ -37,7 +37,7 @@ view _ _ _ address =
                 |> Maybe.withDefault False
 
         plus direction =
-            [ UserClickedAddressExpandHandle address.id direction |> onClick
+            [ UserClickedAddressExpandHandle address.id direction |> onClickWithStop
             , Json.Decode.succeed ( NoOp, True )
                 |> stopPropagationOn "mousedown"
             , css [ Css.cursor Css.pointer ]

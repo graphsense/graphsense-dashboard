@@ -176,13 +176,9 @@ updateByMsg plugins uc msg model =
             let
                 net =
                     Network.updateAddress id (s_data (Success data)) model.network
-
-                net2 =
-                    Network.updateAddress id (s_data (Success data)) net
             in
             model
-                |> s_network net2
-                |> selectAddress uc id
+                |> s_network net
                 |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors)
 
         BrowserGotTxForAddress addressId direction data ->
@@ -245,7 +241,7 @@ updateByMsg plugins uc msg model =
                 Just (AddressDetails id (Success ad)) ->
                     let
                         ( addressViewDetails, eff ) =
-                            AddressDetails.update subm id ad
+                            AddressDetails.update uc subm id ad
                     in
                     ( { model | details = Just (AddressDetails id (Success addressViewDetails)) }, eff )
 

@@ -65,10 +65,6 @@ type alias BtnConfig =
     { icon : FontAwesome.Icon, text : String, msg : Msg, enable : Bool }
 
 
-type alias ToggleButton =
-    { btn : BtnConfig, isToggled : Bool }
-
-
 graphActionTools : Model -> List BtnConfig
 graphActionTools m =
     [ BtnConfig FontAwesome.file "restart" UserClickedRestart m.isDirty
@@ -325,7 +321,7 @@ graphToolButton vc btn =
 
 
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-topRightPanel plugins ms vc gc model =
+topRightPanel _ _ vc gc model =
     div [ topRightPanelStyle vc |> toAttr ]
         [ graphActionsView vc gc model
         , detailsView vc gc model
@@ -422,7 +418,7 @@ getAddressAnnotationBtns vc data actor hasTags =
 
 
 getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
-getAddressActionBtns id _ =
+getAddressActionBtns _ _ =
     []
 
 
@@ -565,14 +561,17 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
         nextMsg =
             \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
 
+        dateRangePicker =
+            viewState.txs.dateRangePicker
+
         content =
             div []
-                (if DatePicker.isOpen viewState.dateRangePicker.dateRangePicker then
+                (if DatePicker.isOpen dateRangePicker.dateRangePicker then
                     [ div []
                         [ primaryButton vc (BtnConfig FontAwesome.check "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
                         , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                         ]
-                    , DatePicker.view viewState.dateRangePicker.settings viewState.dateRangePicker.dateRangePicker
+                    , DatePicker.view viewState.txs.dateRangePicker.settings dateRangePicker.dateRangePicker
                         |> Html.fromUnstyled
                         |> Html.map AddressDetailsMsg
                     ]
@@ -580,10 +579,10 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
                  else
                     let
                         startP =
-                            viewState.dateRangePicker.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
+                            dateRangePicker.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
 
                         endP =
-                            viewState.dateRangePicker.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
+                            dateRangePicker.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
 
                         selectedDuration =
                             Locale.durationPosix vc.locale 1 startP endP
@@ -603,7 +602,7 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
                             , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
                             , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True) ]
                             ]
-                        , Table.pagedTableView vc attributes (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs prevMsg nextMsg
+                        , Table.pagedTableView vc attributes (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs.table prevMsg nextMsg
                         ]
                     ]
                 )

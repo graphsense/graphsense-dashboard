@@ -1,11 +1,12 @@
 module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
 
+import Basics.Extra exposing (flip)
+import Config.Update as Update
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
-import Model.Graph.Table as GT
 import Model.Pathfinder exposing (Details(..))
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
@@ -16,11 +17,12 @@ import Msg.Pathfinder exposing (Msg(..))
 import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import Update.DateRangePicker as DateRangePicker
-import Update.Graph.Table exposing (UpdateSearchTerm(..), appendData)
+import Update.Graph.Table exposing (UpdateSearchTerm(..))
+import Update.Pathfinder.Table as PT
 
 
-update : Msg -> Id -> Model -> ( Model, List Effect )
-update msg id model =
+update : Update.Config -> Msg -> Id -> Model -> ( Model, List Effect )
+update uc msg id model =
     case msg of
         UserClickedToggleNeighborsTable ->
             let
@@ -106,12 +108,12 @@ update msg id model =
                     (case dir of
                         Incoming ->
                             { model
-                                | neighborsIncoming = appendPagedTableData model.neighborsIncoming NeighborsTable.filter neighbors.nextPage neighbors.neighbors
+                                | neighborsIncoming = PT.appendData model.neighborsIncoming NeighborsTable.filter neighbors.nextPage neighbors.neighbors
                             }
 
                         Outgoing ->
                             { model
-                                | neighborsOutgoing = appendPagedTableData model.neighborsOutgoing NeighborsTable.filter neighbors.nextPage neighbors.neighbors
+                                | neighborsOutgoing = PT.appendData model.neighborsOutgoing NeighborsTable.filter neighbors.nextPage neighbors.neighbors
                             }
                     )
 
@@ -121,14 +123,14 @@ update msg id model =
         UserClickedNextPageTransactionTable ->
             let
                 ( eff, loading ) =
-                    if not (model.txs.table.nextpage == Nothing) then
+                    if not (model.txs.table.table.nextpage == Nothing) then
                         ( (GotTxsForAddressDetails id >> AddressDetailsMsg)
                             |> Api.GetAddressTxsEffect
                                 { currency = Id.network id
                                 , address = Id.id id
                                 , direction = Nothing
-                                , pagesize = model.txs.itemsPerPage
-                                , nextpage = model.txs.table.nextpage
+                                , pagesize = model.txs.table.itemsPerPage
+                                , nextpage = model.txs.table.table.nextpage
                                 , order = Nothing
                                 , minHeight = model.txMinBlock
                                 , maxHeight = model.txMaxBlock
@@ -142,13 +144,20 @@ update msg id model =
                         ( [], False )
             in
             if loading then
-                ( { model | txs = (PT.incPage >> PT.setLoading loading) model.txs }, eff )
+                ( { model
+                    | txs =
+                        PT.incPage model.txs.table
+                            |> PT.setLoading loading
+                            |> flip s_table model.txs
+                  }
+                , eff
+                )
 
             else
                 n model
 
         UserClickedPreviousPageTransactionTable ->
-            ( { model | txs = PT.decPage model.txs }, [] )
+            ( { model | txs = PT.decPage model.txs.table |> flip s_table model.txs }, [] )
 
         UserClickedToggleTransactionTable ->
             not model.transactionsTableOpen
@@ -158,7 +167,9 @@ update msg id model =
             if responseId == id then
                 n
                     { model
-                        | txs = appendPagedTableData model.txs TransactionTable.filter txs.nextPage txs.addressTxs
+                        | txs =
+                            PT.appendData model.txs.table TransactionTable.filter txs.nextPage txs.addressTxs
+                                |> flip s_table model.txs
                     }
 
             else
@@ -167,10 +178,10 @@ update msg id model =
         UpdateDateRangePicker subMsg ->
             let
                 newPicker =
-                    DateRangePicker.update subMsg model.dateRangePicker
+                    DateRangePicker.update subMsg model.txs.dateRangePicker
 
                 ( txMinBlock, startEff ) =
-                    if newPicker.fromDate /= model.dateRangePicker.fromDate then
+                    if newPicker.fromDate /= model.txs.dateRangePicker.fromDate then
                         newPicker.fromDate
                             |> Maybe.map
                                 (\st ->
@@ -191,7 +202,7 @@ update msg id model =
                         ( model.txMinBlock, [] )
 
                 ( txMaxBlock, endEff ) =
-                    if newPicker.toDate /= model.dateRangePicker.toDate then
+                    if newPicker.toDate /= model.txs.dateRangePicker.toDate then
                         newPicker.toDate
                             |> Maybe.map
                                 (\et ->
@@ -212,7 +223,7 @@ update msg id model =
                         ( model.txMaxBlock, [] )
             in
             ( { model
-                | dateRangePicker = newPicker
+                | txs = s_dateRangePicker newPicker model.txs
                 , txMinBlock = txMinBlock
                 , txMaxBlock = txMaxBlock
               }
@@ -220,27 +231,35 @@ update msg id model =
             )
 
         OpenDateRangePicker ->
-            n { model | dateRangePicker = DateRangePicker.openPicker model.dateRangePicker }
+            DateRangePicker.openPicker model.txs.dateRangePicker
+                |> flip s_dateRangePicker model.txs
+                |> flip s_txs model
+                |> n
 
         CloseDateRangePicker ->
-            n { model | dateRangePicker = DateRangePicker.closePicker model.dateRangePicker }
+            DateRangePicker.closePicker model.txs.dateRangePicker
+                |> flip s_dateRangePicker model.txs
+                |> flip s_txs model
+                |> n
 
         ResetDateRangePicker ->
             let
                 ( m2, eff ) =
-                    updateDatePickerRangeBlockRange id model Reset Reset
+                    updateDatePickerRangeBlockRange uc id model Reset Reset
             in
             ( { m2
-                | dateRangePicker = DateRangePicker.resetPicker model.dateRangePicker
+                | txs =
+                    DateRangePicker.resetPicker model.txs.dateRangePicker
+                        |> flip s_dateRangePicker m2.txs
               }
             , eff
             )
 
         BrowserGotFromDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange id model (Set blockAt.beforeBlock) NoSet
+            updateDatePickerRangeBlockRange uc id model (Set blockAt.beforeBlock) NoSet
 
         BrowserGotToDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange id model NoSet (Set blockAt.afterBlock)
+            updateDatePickerRangeBlockRange uc id model NoSet (Set blockAt.afterBlock)
 
 
 type SetOrNoSet x
@@ -249,8 +268,8 @@ type SetOrNoSet x
     | Reset
 
 
-updateDatePickerRangeBlockRange : Id -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
-updateDatePickerRangeBlockRange id model txMinBlock txMaxBlock =
+updateDatePickerRangeBlockRange : Update.Config -> Id -> Model -> SetOrNoSet Int -> SetOrNoSet Int -> ( Model, List Effect )
+updateDatePickerRangeBlockRange uc id model txMinBlock txMaxBlock =
     let
         txmin =
             case txMinBlock of
@@ -282,7 +301,7 @@ updateDatePickerRangeBlockRange id model txMinBlock txMaxBlock =
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing
-                            , pagesize = model.txs.itemsPerPage
+                            , pagesize = model.txs.table.itemsPerPage
                             , nextpage = Nothing
                             , order = Nothing
                             , minHeight = Just min
@@ -297,7 +316,7 @@ updateDatePickerRangeBlockRange id model txMinBlock txMaxBlock =
                             { currency = Id.network id
                             , address = Id.id id
                             , direction = Nothing
-                            , pagesize = model.txs.itemsPerPage
+                            , pagesize = model.txs.table.itemsPerPage
                             , nextpage = Nothing
                             , order = Nothing
                             , minHeight = Nothing
@@ -312,10 +331,10 @@ updateDatePickerRangeBlockRange id model txMinBlock txMaxBlock =
         txsnew =
             case ( txmin, txmax ) of
                 ( Just _, Just _ ) ->
-                    TransactionTable.init Nothing
+                    TransactionTable.init uc.locale model.address
 
                 ( Nothing, Nothing ) ->
-                    TransactionTable.init Nothing
+                    TransactionTable.init uc.locale model.address
 
                 _ ->
                     model.txs
@@ -329,14 +348,14 @@ showTransactionsTable : Id -> Model -> Bool -> ( Model, List Effect )
 showTransactionsTable id model show =
     let
         eff =
-            if List.isEmpty model.txs.table.data then
+            if List.isEmpty model.txs.table.table.data then
                 (GotTxsForAddressDetails id >> AddressDetailsMsg)
                     |> Api.GetAddressTxsEffect
                         { currency = Id.network id
                         , address = Id.id id
                         , direction = Nothing
-                        , pagesize = model.txs.itemsPerPage
-                        , nextpage = model.txs.table.nextpage
+                        , pagesize = model.txs.table.itemsPerPage
+                        , nextpage = model.txs.table.table.nextpage
                         , order = Nothing
                         , minHeight = Nothing
                         , maxHeight = Nothing
@@ -348,13 +367,3 @@ showTransactionsTable id model show =
                 []
     in
     ( { model | transactionsTableOpen = show }, eff )
-
-
-appendPagedTableData : PT.PagedTable p -> GT.Filter p -> Maybe String -> List p -> PT.PagedTable p
-appendPagedTableData pt f nextPage data =
-    { pt
-        | table =
-            appendData f data pt.table
-                |> s_nextpage nextPage
-                |> s_loading False
-    }
