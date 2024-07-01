@@ -331,10 +331,10 @@ updateDatePickerRangeBlockRange uc id model txMinBlock txMaxBlock =
         txsnew =
             case ( txmin, txmax ) of
                 ( Just _, Just _ ) ->
-                    TransactionTable.init uc.locale model.address
+                    TransactionTable.init uc.locale model.address model.data
 
                 ( Nothing, Nothing ) ->
-                    TransactionTable.init uc.locale model.address
+                    TransactionTable.init uc.locale model.address model.data
 
                 _ ->
                     model.txs

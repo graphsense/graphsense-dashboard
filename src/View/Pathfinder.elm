@@ -501,11 +501,8 @@ accountTxDetailsContentView _ _ =
 addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
 addressDetailsContentView vc gc model id viewState =
     let
-        data =
-            viewState.address
-
         actor_id =
-            viewState.address.actors |> Maybe.andThen (List.head >> Maybe.map .id)
+            viewState.data.actors |> Maybe.andThen (List.head >> Maybe.map .id)
 
         actor =
             actor_id |> Maybe.andThen (\i -> Dict.get i model.actors)
@@ -521,14 +518,14 @@ addressDetailsContentView vc gc model id viewState =
 
         sections =
             [ addressTransactionTableView vc gc id viewState txOnGraphFn
-            , addressNeighborsTableView vc gc id viewState viewState.address
+            , addressNeighborsTableView vc gc id viewState viewState.data
             ]
 
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows viewState.address), detailsActionsView vc (getAddressActionBtns id viewState.address) ]
+            [ detailsFactTableView vc (apiAddressToRows viewState.data), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
 
         addressAnnotationBtns =
-            getAddressAnnotationBtns vc data actor (Dict.member ( data.currency, data.address ) model.tags)
+            getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tags)
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]
@@ -550,7 +547,7 @@ addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressD
 addressTransactionTableView vc _ _ viewState txOnGraphFn =
     let
         data =
-            viewState.address
+            viewState.data
 
         attributes =
             []

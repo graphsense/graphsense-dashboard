@@ -7,7 +7,7 @@ import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Dict
 import Dict.Nonempty as NDict
-import Effect exposing (n)
+import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
 import Init.Graph.Transform as Transform
@@ -52,7 +52,7 @@ import Svg.Attributes exposing (x)
 import Time
 import Tuple exposing (mapFirst, pair)
 import Tuple2 exposing (pairTo)
-import Update.Graph exposing (draggingToClick, handleEntitySearchResult)
+import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
@@ -144,7 +144,7 @@ updateByMsg plugins uc msg model =
 
                 MultiSelect items ->
                     List.foldl
-                        (\i ( m, eff ) ->
+                        (\i ( m, _ ) ->
                             case i of
                                 MSelectedAddress id ->
                                     removeAddress id m
@@ -176,9 +176,34 @@ updateByMsg plugins uc msg model =
             let
                 net =
                     Network.updateAddress id (s_data (Success data)) model.network
+
+                details =
+                    case model.details of
+                        Just (AddressDetails i ad) ->
+                            if i == id then
+                                case ad of
+                                    Success a ->
+                                        { a | data = data }
+                                            |> Success
+                                            |> AddressDetails id
+                                            |> Just
+
+                                    _ ->
+                                        Dict.get id net.addresses
+                                            |> Maybe.map
+                                                (\address -> AddressDetails.init uc.locale address data)
+                                            |> Maybe.map Success
+                                            |> Maybe.map (AddressDetails id)
+
+                            else
+                                model.details
+
+                        _ ->
+                            model.details
             in
             model
                 |> s_network net
+                |> s_details details
                 |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors)
 
         BrowserGotTxForAddress addressId direction data ->
@@ -482,7 +507,6 @@ updateByMsg plugins uc msg model =
                 ( newmodel, eff ) =
                     model
                         |> selectAddress uc id
-                        |> openAddressTransactionsTable
             in
             ( newmodel
             , getNextTxEffects newmodel id direction
@@ -577,7 +601,6 @@ updateByMsg plugins uc msg model =
                 | network = nw
             }
                 |> checkSelection uc
-                |> n
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -723,7 +746,7 @@ updateByRoute_ plugins uc route model =
                     { model | network = Network.clearSelection model.network }
             in
             loadAddress plugins id m1 True
-                |> mapFirst (selectAddress uc id)
+                |> and (selectAddress uc id)
 
         Route.Network network (Route.Tx a) ->
             let
@@ -815,14 +838,14 @@ selectTx id model =
             s_selection (WillSelectTx id) model
 
 
-selectAddress : Update.Config -> Id -> Model -> Model
+selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
 selectAddress uc id model =
-    case Dict.get id model.network.addresses of
+    (case Dict.get id model.network.addresses of
         Just address ->
             let
                 details =
                     address.data
-                        |> RemoteData.map (AddressDetails.init uc.locale)
+                        |> RemoteData.map (AddressDetails.init uc.locale address)
 
                 m1 =
                     unselect model
@@ -834,6 +857,8 @@ selectAddress uc id model =
 
         Nothing ->
             s_selection (WillSelectAddress id) model
+    )
+                |> openAddressTransactionsTable
 
 
 unselect : Model -> Model
@@ -1004,17 +1029,18 @@ browserGotTxForAddress plugins _ addressId direction tx model =
         |> Maybe.withDefault (n newmodel)
 
 
-checkSelection : Update.Config -> Model -> Model
+checkSelection : Update.Config -> Model -> ( Model, List Effect )
 checkSelection uc model =
     case model.selection of
         WillSelectTx id ->
             selectTx id model
+                |> n
 
         WillSelectAddress id ->
             selectAddress uc id model
 
         _ ->
-            model
+            n model
 
 
 openAddressTransactionsTable : Model -> ( Model, List Effect )
@@ -1114,7 +1140,7 @@ removeIsolatedTransactions : Model -> ( Model, List Effect )
 removeIsolatedTransactions model =
     let
         idsToRemove =
-            Dict.keys (Dict.filter (\k v -> isIsolatedTx model v) model.network.txs)
+            Dict.keys (Dict.filter (\_ v -> isIsolatedTx model v) model.network.txs)
     in
     List.foldl (\i ( m, _ ) -> removeTx i m) ( model, [] ) idsToRemove
 
