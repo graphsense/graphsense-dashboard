@@ -16,6 +16,10 @@ tx1 =
         Tx.Utxo
             { x = nodeXOffset
             , y = Animation.static 0
+            , dx = 0
+            , dy = 0
+            , selected = False
+            , opacity = Animation.static 0
             , clock = 0
             , inputs = NDict.singleton Id.address1 (Io Api.values False)
             , outputs =
@@ -33,7 +37,11 @@ tx2 =
     , type_ =
         Tx.Utxo
             { x = -nodeXOffset
-            , y = 0
+            , y = Animation.static 0
+            , dx = 0
+            , dy = 0
+            , selected = False
+            , opacity = Animation.static 0
             , clock = 0
             , outputs = NDict.singleton Id.address1 <| Io Api.values False
             , inputs = NDict.singleton Id.address6 <| Io Api.values False
@@ -48,7 +56,12 @@ tx3 =
     , type_ =
         Tx.Utxo
             { x = nodeXOffset
-            , y = 3 * nodeYOffset
+            , y = Animation.static <| 3 * nodeYOffset
+            , dx = 0
+            , dy = 0
+            , selected = False
+            , opacity = Animation.static 0
+            , clock = 0
             , outputs = NDict.singleton Id.address7 <| Io Api.values False
             , inputs = NDict.singleton Id.address1 <| Io Api.values False
             , raw = Api.tx3

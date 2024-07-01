@@ -24,6 +24,8 @@ oneAddress =
         Dict.fromList
             [ ( Id.address1, Address.address1 ) ]
     , txs = Dict.empty
+    , animatedAddresses = Set.empty
+    , animatedTxs = Set.empty
     }
 
 
