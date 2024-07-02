@@ -2,11 +2,12 @@ module Model.Pathfinder.Address exposing (..)
 
 import Animation exposing (Animation, Clock)
 import Api.Data
-import Model.Graph.Coords as Coords exposing (Coords)
+import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
+import Util.Data exposing (timestampToPosix)
 
 
 type alias Address =
@@ -65,4 +66,6 @@ getOutDegree a =
 
 getActivityRange : Api.Data.Address -> ( Posix, Posix )
 getActivityRange x =
-    ( Time.millisToPosix (x.firstTx.timestamp * 1000), Time.millisToPosix (x.lastTx.timestamp * 1000) )
+    ( timestampToPosix x.firstTx.timestamp
+    , timestampToPosix x.lastTx.timestamp
+    )

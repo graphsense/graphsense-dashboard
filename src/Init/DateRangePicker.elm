@@ -5,11 +5,11 @@ import Model.DateRangePicker exposing (..)
 import Time exposing (Posix)
 
 
-init : (DurationDatePicker.Msg -> msg) -> Posix -> Settings -> Model msg
-init toMsg maxDate settings =
+init : (DurationDatePicker.Msg -> msg) -> Posix -> Posix -> Settings -> Model msg
+init toMsg fromDate toDate settings =
     { settings = settings
     , dateRangePicker = DurationDatePicker.init toMsg
-    , toDate = Nothing
-    , fromDate = Nothing
-    , maxDate = maxDate
+    , toDate = toDate
+    , fromDate = fromDate
+    , focusDate = fromDate
     }

@@ -46,6 +46,7 @@ import Model.Locale exposing (..)
 import String.Interpolate
 import Time exposing (Posix)
 import Tuple exposing (..)
+import Util.Data exposing (timestampToPosix)
 
 
 type CodeVisibility
@@ -317,8 +318,7 @@ time model =
 
 timestampWithFormat : List Token -> Model -> Int -> String
 timestampWithFormat format { timeLang, zone } =
-    (*) 1000
-        >> Time.millisToPosix
+    timestampToPosix
         >> formatWithLanguage timeLang format zone
 
 
@@ -326,7 +326,7 @@ relativeTime : Model -> Time.Posix -> Int -> String
 relativeTime { relativeTimeOptions } from to =
     DateFormat.Relative.relativeTimeWithOptions relativeTimeOptions
         from
-        (Time.millisToPosix <| to * 1000)
+        (timestampToPosix to)
 
 
 percentage : Model -> Float -> String

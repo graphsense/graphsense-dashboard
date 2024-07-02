@@ -24,3 +24,12 @@ signOffsetByDirection direction offset =
 
         Outgoing ->
             offset
+
+
+flip : Direction -> Direction
+flip dir =
+    case dir of
+        Incoming ->
+            Outgoing
+        Outgoing ->
+            Incoming

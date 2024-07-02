@@ -17,7 +17,7 @@ import Init.Pathfinder.Network as Network
 import Init.Pathfinder.TxDetails as TxDetails
 import List.Extra
 import Log
-import Model.Direction exposing (Direction(..))
+import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
@@ -47,10 +47,8 @@ import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route
-import Set
 import Svg.Attributes exposing (x)
-import Time
-import Tuple exposing (mapFirst, pair)
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
 import Update.Graph.History as History
@@ -64,6 +62,7 @@ import Update.Pathfinder.TxDetails as TxDetails
 import Update.Pathfinder.WorkflowNextTxByTime as WorkflowNextTxByTime
 import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
+import Util.Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
 
 
@@ -177,7 +176,7 @@ updateByMsg plugins uc msg model =
                 net =
                     Network.updateAddress id (s_data (Success data)) model.network
 
-                details =
+                ( details, eff ) =
                     case model.details of
                         Just (AddressDetails i ad) ->
                             if i == id then
@@ -187,24 +186,29 @@ updateByMsg plugins uc msg model =
                                             |> Success
                                             |> AddressDetails id
                                             |> Just
+                                            |> n
 
                                     _ ->
                                         Dict.get id net.addresses
                                             |> Maybe.map
-                                                (\address -> AddressDetails.init uc.locale address data)
-                                            |> Maybe.map Success
-                                            |> Maybe.map (AddressDetails id)
+                                                (\address -> AddressDetails.init net uc.locale address data)
+                                            |> Maybe.map (mapFirst Success)
+                                            |> Maybe.map (mapFirst (AddressDetails id))
+                                            |> Maybe.map (mapFirst Just)
+                                            |> Maybe.withDefault (n model.details)
 
                             else
                                 model.details
+                                    |> n
 
                         _ ->
                             model.details
+                                |> n
             in
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors)
+                |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
             browserGotTxForAddress plugins uc addressId direction data model
@@ -266,7 +270,7 @@ updateByMsg plugins uc msg model =
                 Just (AddressDetails id (Success ad)) ->
                     let
                         ( addressViewDetails, eff ) =
-                            AddressDetails.update uc subm id ad
+                            AddressDetails.update uc model subm id ad
                     in
                     ( { model | details = Just (AddressDetails id (Success addressViewDetails)) }, eff )
 
@@ -645,83 +649,65 @@ updateByMsg plugins uc msg model =
 getNextTxEffects : Model -> Id -> Direction -> List Effect
 getNextTxEffects model addressId direction =
     let
-        getTxSet =
-            case direction of
-                Incoming ->
-                    .outgoingTxs
-
-                Outgoing ->
-                    .incomingTxs
-
         context =
             { addressId = addressId
             , direction = direction
             }
     in
-    Dict.get addressId model.network.addresses
+    Network.getRecentTxForAddress model.network (Direction.flip direction) addressId
         |> Maybe.map
-            (\address ->
-                getTxSet address
-                    |> Set.toList
-                    |> List.filterMap (\txId -> Dict.get txId model.network.txs)
-                    |> List.sortBy Tx.getRawTimestamp
-                    |> List.Extra.last
-                    |> Maybe.map
-                        (\tx ->
-                            case tx.type_ of
-                                Tx.Account t ->
-                                    BrowserGotBlockHeight
-                                        >> WorkflowNextTxByTime context
-                                        |> Api.GetBlockByDateEffect
-                                            { currency = t.raw.currency
-                                            , datetime =
-                                                t.raw.timestamp
-                                                    |> (*) 1000
-                                                    |> Time.millisToPosix
-                                            }
-
-                                Tx.Utxo t ->
-                                    let
-                                        ( listLinkedTxRefs, getIo ) =
-                                            case direction of
-                                                Incoming ->
-                                                    ( Api.ListSpendingTxRefsEffect, .inputs )
-
-                                                Outgoing ->
-                                                    ( Api.ListSpentInTxRefsEffect, .outputs )
-
-                                        index =
-                                            getIo t.raw
-                                                |> Maybe.andThen
-                                                    (List.Extra.findIndex
-                                                        (.address >> List.any ((==) (Id.id addressId)))
-                                                    )
-                                    in
-                                    BrowserGotReferencedTxs
-                                        >> WorkflowNextUtxoTx context
-                                        |> listLinkedTxRefs
-                                            { currency = t.raw.currency
-                                            , txHash = t.raw.txHash
-                                            , index = index
-                                            }
-                        )
-                    |> Maybe.withDefault
-                        (BrowserGotRecentTx
+            (\tx ->
+                case tx.type_ of
+                    Tx.Account t ->
+                        BrowserGotBlockHeight
                             >> WorkflowNextTxByTime context
-                            |> Api.GetAddressTxsEffect
-                                { currency = Id.network addressId
-                                , address = Id.id addressId
-                                , direction = Just direction
-                                , pagesize = 1
-                                , nextpage = Nothing
-                                , order = Nothing
-                                , minHeight = Nothing
-                                , maxHeight = Nothing
+                            |> Api.GetBlockByDateEffect
+                                { currency = t.raw.currency
+                                , datetime =
+                                    t.raw.timestamp
+                                        |> timestampToPosix
                                 }
-                        )
-                    |> List.singleton
+
+                    Tx.Utxo t ->
+                        let
+                            ( listLinkedTxRefs, getIo ) =
+                                case direction of
+                                    Incoming ->
+                                        ( Api.ListSpendingTxRefsEffect, .inputs )
+
+                                    Outgoing ->
+                                        ( Api.ListSpentInTxRefsEffect, .outputs )
+
+                            index =
+                                getIo t.raw
+                                    |> Maybe.andThen
+                                        (List.Extra.findIndex
+                                            (.address >> List.any ((==) (Id.id addressId)))
+                                        )
+                        in
+                        BrowserGotReferencedTxs
+                            >> WorkflowNextUtxoTx context
+                            |> listLinkedTxRefs
+                                { currency = t.raw.currency
+                                , txHash = t.raw.txHash
+                                , index = index
+                                }
             )
-        |> Maybe.withDefault []
+        |> Maybe.withDefault
+            (BrowserGotRecentTx
+                >> WorkflowNextTxByTime context
+                |> Api.GetAddressTxsEffect
+                    { currency = Id.network addressId
+                    , address = Id.id addressId
+                    , direction = Just direction
+                    , pagesize = 1
+                    , nextpage = Nothing
+                    , order = Nothing
+                    , minHeight = Nothing
+                    , maxHeight = Nothing
+                    }
+            )
+        |> List.singleton
         |> List.map ApiEffect
 
 
@@ -770,21 +756,17 @@ loadAddress _ id model starting =
 
     else
         let
-            is_new =
-                not (Dict.member id model.network.addresses)
-
             nw =
                 Network.addAddress id model.network
-                    |> Network.updateAddress id (s_data Loading)
-
-            nw2 =
-                if is_new then
-                    Network.updateAddress id (s_isStartingPoint (starting && is_new)) nw
-
-                else
-                    nw
+                    |> Network.updateAddress id
+                        (\a ->
+                            { a
+                                | data = Loading
+                                , isStartingPoint = starting
+                            }
+                        )
         in
-        ( { model | network = nw2 }
+        ( { model | network = nw }
         , BrowserGotAddressData id
             |> Api.GetAddressEffect
                 { currency = Id.network id
@@ -840,25 +822,50 @@ selectTx id model =
 
 selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
 selectAddress uc id model =
-    (case Dict.get id model.network.addresses of
+    case Dict.get id model.network.addresses of
         Just address ->
             let
-                details =
+                newDetails =
                     address.data
-                        |> RemoteData.map (AddressDetails.init uc.locale address)
+                        |> RemoteData.map (AddressDetails.init model.network uc.locale address)
+
+                details =
+                    case model.details of
+                        Just (AddressDetails i data) ->
+                            if id == i then
+                                -- keep it unchanged
+                                data
+                                |> RemoteData.map n
+
+                            else
+                                newDetails
+
+                        _ ->
+                            newDetails
+
+                eff =
+                    details
+                        |> RemoteData.toMaybe
+                        |> Maybe.map second
+                        |> Maybe.withDefault []
 
                 m1 =
                     unselect model
-                        |> s_details (AddressDetails id details |> Just)
+                        |> s_details
+                            (RemoteData.map first details
+                                |> AddressDetails id
+                                |> Just
+                            )
             in
             Network.updateAddress id (s_selected True) m1.network
                 |> flip s_network m1
                 |> s_selection (SelectedAddress id)
+                |> openAddressTransactionsTable
+                |> mapSecond ((++) eff)
 
         Nothing ->
             s_selection (WillSelectAddress id) model
-    )
-                |> openAddressTransactionsTable
+                |> n
 
 
 unselect : Model -> Model

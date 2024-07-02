@@ -1,6 +1,7 @@
 module Model.Pathfinder.Network exposing (..)
 
 import Dict exposing (Dict)
+import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
@@ -48,3 +49,26 @@ hasAnimations network =
     Set.isEmpty network.animatedTxs
         && Set.isEmpty network.animatedAddresses
         |> not
+
+
+getRecentTxForAddress : Network -> Direction -> Id -> Maybe Tx
+getRecentTxForAddress network direction addressId =
+    let
+        getTxSet =
+            case direction of
+                Incoming ->
+                    .incomingTxs
+
+                Outgoing ->
+                    .outgoingTxs
+    in
+    Dict.get addressId network.addresses
+        |> Maybe.andThen
+            (\address ->
+                getTxSet address
+                    |> Debug.log "tx set"
+                    |> Set.toList
+                    |> List.filterMap (\txId -> Dict.get txId network.txs)
+                    |> List.sortBy Tx.getRawTimestamp
+                    |> List.Extra.last
+            )

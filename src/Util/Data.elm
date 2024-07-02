@@ -1,6 +1,13 @@
 module Util.Data exposing (..)
 
 import Api.Data
+import Time
+
+
+timestampToPosix : Int -> Time.Posix
+timestampToPosix =
+    (*) 1000
+        >> Time.millisToPosix
 
 
 averageFiatValue : Api.Data.Values -> Float

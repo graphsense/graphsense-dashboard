@@ -17,6 +17,7 @@ import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
 import Model.Currency exposing (assetFromBase)
+import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
@@ -25,6 +26,7 @@ import Model.Pathfinder exposing (..)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
+import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Model.Pathfinder.Tx as Tx
 import Model.Pathfinder.TxDetails as TxDetails
@@ -40,7 +42,6 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
-import Time
 import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -549,60 +550,8 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
         data =
             viewState.data
 
-        attributes =
-            []
-
-        prevMsg =
-            \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
-
-        nextMsg =
-            \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
-
-        dateRangePicker =
-            viewState.txs.dateRangePicker
-
         content =
-            div []
-                (if DatePicker.isOpen dateRangePicker.dateRangePicker then
-                    [ div []
-                        [ primaryButton vc (BtnConfig FontAwesome.check "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
-                        , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
-                        ]
-                    , DatePicker.view viewState.txs.dateRangePicker.settings dateRangePicker.dateRangePicker
-                        |> Html.fromUnstyled
-                        |> Html.map AddressDetailsMsg
-                    ]
-
-                 else
-                    let
-                        startP =
-                            dateRangePicker.fromDate |> Maybe.withDefault (Time.millisToPosix <| data.firstTx.timestamp * 1000)
-
-                        endP =
-                            dateRangePicker.toDate |> Maybe.withDefault (Time.millisToPosix <| data.lastTx.timestamp * 1000)
-
-                        selectedDuration =
-                            Locale.durationPosix vc.locale 1 startP endP
-
-                        startS =
-                            Locale.posixDate vc.locale startP
-
-                        endS =
-                            Locale.posixDate vc.locale endP
-                    in
-                    [ div []
-                        [ div [ dateTimeRangeBoxStyle vc |> toAttr ]
-                            [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
-                            , span [] [ Html.text selectedDuration ]
-                            , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
-                            , span [] [ Html.text (Locale.string vc.locale "to") ]
-                            , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
-                            , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True) ]
-                            ]
-                        , Table.pagedTableView vc attributes (TransactionTable.config vc data.currency txOnGraphFn) viewState.txs.table prevMsg nextMsg
-                        ]
-                    ]
-                )
+            transactionTableView vc data.currency txOnGraphFn viewState.txs
 
         ioIndicatorState =
             Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
@@ -867,3 +816,75 @@ drawDragSelector vc m =
 
         _ ->
             rect [ x "0", y "0", width "0", height "0" ] []
+
+
+dateRangePickerView : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html Msg
+dateRangePickerView vc model =
+    let
+        startP =
+            model.fromDate
+
+        endP =
+            model.toDate
+
+        selectedDuration =
+            Locale.durationPosix vc.locale 1 startP endP
+
+        startS =
+            Locale.posixDate vc.locale startP
+
+        endS =
+            Locale.posixDate vc.locale endP
+    in
+    div [ dateTimeRangeBoxStyle vc |> toAttr ]
+        [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
+        , span [] [ Html.text selectedDuration ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
+        , span [] [ Html.text (Locale.string vc.locale "to") ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
+        , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True) ]
+        ]
+
+
+transactionTableView : View.Config -> String -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
+transactionTableView vc currency txOnGraphFn model =
+    let
+        attributes =
+            []
+
+        prevMsg =
+            \_ -> AddressDetailsMsg AddressDetails.UserClickedPreviousPageTransactionTable
+
+        nextMsg =
+            \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
+
+        table =
+            Table.pagedTableView vc
+                attributes
+                (TransactionTable.config vc currency txOnGraphFn)
+                model.table
+                prevMsg
+                nextMsg
+    in
+    (case model.dateRangePicker of
+        Just drp ->
+            if DatePicker.isOpen drp.dateRangePicker then
+                [ div []
+                    [ primaryButton vc (BtnConfig FontAwesome.check "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
+                    , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
+                    ]
+                , DatePicker.view drp.settings drp.dateRangePicker
+                    |> Html.fromUnstyled
+                    |> Html.map AddressDetailsMsg
+                ]
+
+            else
+                [ dateRangePickerView vc drp
+                , table
+                ]
+
+        Nothing ->
+            [ table
+            ]
+    )
+        |> div []

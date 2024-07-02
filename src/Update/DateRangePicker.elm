@@ -12,23 +12,14 @@ closePicker model =
     }
 
 
-resetPicker : Model msg -> Model msg
-resetPicker model =
-    { model
-        | dateRangePicker = DurationDatePicker.closePicker model.dateRangePicker
-        , fromDate = Nothing
-        , toDate = Nothing
-    }
-
-
 openPicker : Model msg -> Model msg
 openPicker model =
     { model
         | dateRangePicker =
             DurationDatePicker.openPicker model.settings
-                model.maxDate
-                model.fromDate
-                model.toDate
+                model.focusDate
+                (Just model.fromDate)
+                (Just model.toDate)
                 model.dateRangePicker
     }
 
@@ -39,18 +30,13 @@ update msg model =
         ( newPicker, maybeRuntime ) =
             DurationDatePicker.update model.settings msg model.dateRangePicker
                 |> Debug.log "update picker"
-
-        mergeTimes newTime oldTime =
-            newTime
-                |> Maybe.map Just
-                |> Maybe.withDefault oldTime
     in
     { model
         | dateRangePicker = newPicker
         , fromDate =
             Maybe.map first maybeRuntime
-                |> mergeTimes model.fromDate
+                |> Maybe.withDefault model.fromDate
         , toDate =
             Maybe.map second maybeRuntime
-                |> mergeTimes model.toDate
+                |> Maybe.withDefault model.toDate
     }
