@@ -140,6 +140,7 @@ metadataToDeclaration componentName metadata =
     , ( "y", Elm.float metadata.bbox.y )
     , ( "width", Elm.float metadata.bbox.width )
     , ( "height", Elm.float metadata.bbox.height )
+    , ( "strokeWidth", Elm.float metadata.strokeWidth )
     ]
         |> Elm.record
         |> Elm.declaration (prefix ++ " dimensions" |> sanitize)

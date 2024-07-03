@@ -18,4 +18,6 @@ toMetadata : { a | frameTraits : FrameTraits } -> Metadata
 toMetadata node =
     { name = node.frameTraits.isLayerTrait.name
     , bbox = node.frameTraits.absoluteBoundingBox
+    , strokeWidth = node.frameTraits.strokeWeight
+        |> Maybe.withDefault 0
     }

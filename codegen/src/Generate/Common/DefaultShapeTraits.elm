@@ -19,4 +19,7 @@ toMetadata : { a | defaultShapeTraits : DefaultShapeTraits } -> Metadata
 toMetadata node =
     { name = node.defaultShapeTraits.isLayerTrait.name
     , bbox = node.defaultShapeTraits.absoluteBoundingBox
+    , strokeWidth =
+        node.defaultShapeTraits.strokeWeight
+            |> Maybe.withDefault 0
     }

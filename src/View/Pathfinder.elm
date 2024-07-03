@@ -535,19 +535,22 @@ addressDetailsContentView vc gc model id viewState =
 
         addressAnnotationBtns =
             getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tags)
+
+        df =
+            GraphComponents.addressNodeNodeFrameDimensions
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
                 [ GraphComponents.addressNodeSvg
-                    [ SA.width <| String.fromFloat <| GraphComponents.addressNodeNodeFrameDimensions.width
-                    , SA.height <| String.fromFloat <| GraphComponents.addressNodeNodeFrameDimensions.height
+                    [ SA.width <| String.fromFloat <| df.width + df.strokeWidth * 2
+                    , SA.height <| String.fromFloat <| df.height + df.strokeWidth * 2 + 1
                     ]
                     { defaultAddressNodeAttributes
                         | addressNode =
                             [ Util.Graph.translate
-                                -GraphComponents.addressNodeNodeFrameDimensions.x
-                                -GraphComponents.addressNodeNodeFrameDimensions.y
+                                (-df.x + df.strokeWidth)
+                                (-df.y + df.strokeWidth)
                                 |> transform
                             ]
                     }
@@ -561,7 +564,7 @@ addressDetailsContentView vc gc model id viewState =
                     , startingPoint = False
                     , tagIcon = False
                     }
-                , div [ fullWidth |> toAttr ]
+                , div [ css [ Css.flexGrow <| Css.num 1 ]]
                     ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
                      , actorText
                         |> Maybe.map

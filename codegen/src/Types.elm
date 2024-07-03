@@ -14,6 +14,7 @@ type alias Config =
 type alias Metadata =
     { name : String
     , bbox : Rectangle
+    , strokeWidth : Float
     }
 
 
