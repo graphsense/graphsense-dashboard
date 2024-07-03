@@ -124,7 +124,7 @@ update uc pathfinderModel msg id model =
             let
                 ( eff, loading ) =
                     if not (model.txs.table.table.nextpage == Nothing) then
-                        ( (GotTxsForAddressDetails id >> AddressDetailsMsg)
+                        ( (GotNextPageTxsForAddressDetails id >> AddressDetailsMsg)
                             |> Api.GetAddressTxsEffect
                                 { currency = Id.network id
                                 , address = Id.id id
