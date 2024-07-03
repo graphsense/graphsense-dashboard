@@ -4,6 +4,7 @@ import Api.Raw exposing (..)
 import Dict
 import Elm
 import Elm.Annotation as Annotation
+import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common as Common exposing (adjustBoundingBoxes)
@@ -13,7 +14,7 @@ import Generate.Svg.FrameTraits as FrameTraits
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (getElementAttributes, metadataToDeclaration, toTranslate, withVisibility)
+import Generate.Util exposing (getElementAttributes, metadataToDeclaration, sanitize, toTranslate, withVisibility)
 import Set
 import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
 import String.Extra
@@ -73,7 +74,7 @@ componentNodeToDeclarations node =
                 :: List.map .name descendantsMetadata
 
         formatName =
-            String.Extra.leftOf "#" >> toCamelCaseLower
+            String.Extra.leftOf "#" >> sanitize
 
         properties =
             node.componentPropertiesTrait.componentPropertyDefinitions
@@ -93,7 +94,7 @@ componentNodeToDeclarations node =
                 >> Set.toList
                 >> List.map
                     (\n ->
-                        ( toCamelCaseLower n
+                        ( sanitize n
                         , Elm.list []
                             |> Elm.withType
                                 (Gen.Svg.Styled.annotation_.attribute
@@ -105,10 +106,10 @@ componentNodeToDeclarations node =
                 >> Elm.record
 
         funName =
-            toCamelCaseLower metadata.name
+            sanitize metadata.name
 
         attributesParamName =
-            "attributes"
+            "childrenAttributes"
 
         propertiesParamName =
             "properties"
@@ -116,6 +117,9 @@ componentNodeToDeclarations node =
         attributesParam =
             ( attributesParamName
             , names
+                |> List.map sanitize
+                |> Set.fromList
+                |> Set.toList
                 |> List.map (\n -> ( n, Gen.Svg.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
                 |> Annotation.record
                 |> Just
@@ -123,7 +127,7 @@ componentNodeToDeclarations node =
 
         propertiesParam =
             ( propertiesParamName
-            , Nothing
+            , properties |> propertiesType |> Just
             )
     in
     metadata
@@ -141,7 +145,7 @@ componentNodeToDeclarations node =
                 |> Elm.alias (metadata.name ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
-                |> Elm.declaration ("default " ++ metadata.name ++ " attributes" |> toCamelCaseLower)
+                |> Elm.declaration ("default " ++ metadata.name ++ " attributes" |> sanitize)
             , Elm.fn2
                 attributesParam
                 propertiesParam
@@ -163,10 +167,11 @@ componentNodeToDeclarations node =
                         )
                 )
                 |> Elm.declaration funName
-            , Elm.fn2
+            , Elm.fn3
                 ( "attributes", Nothing )
-                ( "properties", Nothing )
-                (\attributes_ properties_ ->
+                attributesParam
+                propertiesParam
+                (\attributes_ childrenAttributes properties_ ->
                     Elm.apply
                         (Elm.value
                             { importFrom = []
@@ -174,16 +179,22 @@ componentNodeToDeclarations node =
                             , annotation = Nothing
                             }
                         )
-                        [ attributes_
+                        [ childrenAttributes
                         , properties_
                         ]
                         |> List.singleton
-                        |> Gen.Svg.Styled.svg
-                            [ Attributes.width <| String.fromFloat metadata.bbox.width
-                            , Attributes.height <| String.fromFloat metadata.bbox.height
-                            ]
+                        |> Elm.list
+                        |> Gen.Svg.Styled.call_.svg
+                            (attributes_
+                                |> Elm.Op.append
+                                    ([ Attributes.width <| String.fromFloat metadata.bbox.width
+                                     , Attributes.height <| String.fromFloat metadata.bbox.height
+                                     ]
+                                        |> Elm.list
+                                    )
+                            )
                 )
-                |> Elm.declaration (toCamelCaseLower <| funName ++ " svg")
+                |> Elm.declaration (sanitize <| funName ++ " svg")
             ]
 
 

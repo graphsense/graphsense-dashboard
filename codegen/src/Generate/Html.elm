@@ -6,9 +6,12 @@ import Api.Raw exposing (..)
 import Dict
 import Elm
 import Elm.Annotation as Annotation
+import Elm.Op
 import Gen.Html.Styled
+import Gen.Html.Styled.Attributes as Attributes
 import Generate.Common as Common
 import Generate.Common.FrameTraits as FrameTraits
+import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Util exposing (getElementAttributes, metadataToDeclaration, withVisibility)
@@ -136,7 +139,14 @@ componentNodeToDeclarations node =
                             }
                     in
                     Gen.Html.Styled.call_.div
-                        (getElementAttributes config metadata.name)
+                        (getElementAttributes config metadata.name
+                            |> Elm.Op.append
+                                (ComponentNode.toCss node
+                                    |> Attributes.css
+                                    |> List.singleton
+                                    |> Elm.list
+                                )
+                        )
                         (frameTraitsToExpressions config node.frameTraits
                             |> Elm.list
                         )

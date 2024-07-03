@@ -75,7 +75,7 @@ intOrAutoType =
 
 getElementAttributes : Config -> String -> Elm.Expression
 getElementAttributes { attributes } name =
-    Elm.get (toCamelCaseLower name) attributes
+    Elm.get (sanitize name) attributes
 
 
 uniqueElementName : String -> String -> String
@@ -83,7 +83,7 @@ uniqueElementName arg1 arg2 =
     arg1
         ++ " "
         ++ arg2
-        |> toCamelCaseLower
+        |> sanitize
 
 
 withVisibility : ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
@@ -142,4 +142,18 @@ metadataToDeclaration componentName metadata =
     , ( "height", Elm.float metadata.bbox.height )
     ]
         |> Elm.record
-        |> Elm.declaration (prefix ++ " dimensions" |> toCamelCaseLower)
+        |> Elm.declaration (prefix ++ " dimensions" |> sanitize)
+
+
+sanitize : String -> String
+sanitize s =
+    let
+        c =
+            toCamelCaseLower s
+    in
+    if String.left 1 c |> String.toList |> List.all Char.isDigit then
+        "n"
+            ++ c
+
+    else
+        c

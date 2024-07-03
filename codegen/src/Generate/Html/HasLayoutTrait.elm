@@ -22,4 +22,4 @@ layoutSizingHorizontal sizing =
             Css.display Css.block
 
         LayoutSizingHorizontalHUG ->
-            Css.display Css.inlineBlock
+            Css.displayFlex

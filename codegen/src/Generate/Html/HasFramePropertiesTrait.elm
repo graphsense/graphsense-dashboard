@@ -1,10 +1,11 @@
 module Generate.Html.HasFramePropertiesTrait exposing (..)
 
-import Api.Raw exposing (HasFramePropertiesTrait)
+import Api.Raw exposing (CounterAxisAlignItems(..), HasFramePropertiesTrait, LayoutMode(..))
+import Basics.Extra exposing (flip)
 import Elm
 import Gen.Css as Css
-import Generate.Util.RGBA as RGBA
 import Generate.Util exposing (..)
+import Generate.Util.RGBA as RGBA
 
 
 toCss : HasFramePropertiesTrait -> List Elm.Expression
@@ -15,6 +16,42 @@ toCss node =
         |> m (Css.px >> Css.paddingRight) node.paddingRight
         |> m (Css.px >> Css.paddingTop) node.paddingTop
         |> m (Css.px >> Css.paddingBottom) node.paddingBottom
+        |> mm layoutMode node.layoutMode
+        |> m counterAxisAlignItems node.counterAxisAlignItems
+        |> m (String.fromFloat >> flip (++) "px" >> Css.property "gap") node.itemSpacing
+
+
+counterAxisAlignItems : CounterAxisAlignItems -> Elm.Expression
+counterAxisAlignItems axis =
+    case axis of
+        CounterAxisAlignItemsMIN ->
+            Css.call_.alignItems Css.start
+
+        CounterAxisAlignItemsMAX ->
+            Css.call_.alignItems Css.end
+
+        CounterAxisAlignItemsCENTER ->
+            Css.call_.alignItems Css.center
+
+        CounterAxisAlignItemsBASELINE ->
+            Css.call_.alignItems Css.baseline
+
+
+layoutMode : LayoutMode -> List Elm.Expression
+layoutMode mode =
+    case mode of
+        LayoutModeHORIZONTAL ->
+            [ Css.displayFlex
+            , Css.flexDirection Css.row
+            ]
+
+        LayoutModeVERTICAL ->
+            [ Css.displayFlex
+            , Css.flexDirection Css.column
+            ]
+
+        LayoutModeNONE ->
+            []
 
 
 

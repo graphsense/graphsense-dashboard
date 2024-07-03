@@ -60,7 +60,6 @@ module Api.Raw exposing
     , CounterAxisAlignContent(..)
     , CounterAxisAlignItems(..)
     , CounterAxisSizingMode(..)
-    , Transform
     , DefaultShapeTraits
     , DefaultShapeTraitsMaskType(..)
     , DocumentNode
@@ -195,6 +194,7 @@ module Api.Raw exposing
     , TextNode
     , TextNodeLineTypes(..)
     , TextNodeType(..)
+    , Transform
     , TransitionSourceTrait
     , TypePropertiesTrait
     , TypePropertiesTraitLineTypes(..)
@@ -4252,11 +4252,11 @@ devStatusDecoder : Json.Decode.Decoder Bool
 devStatusDecoder =
     Json.Decode.oneOf
         [ Json.Decode.string
-            |> Json.Decode.field "type_"
+            |> Json.Decode.field "type"
             |> Json.Decode.map
                 ((==) "READY_FOR_DEV")
             |> Json.Decode.field "devStatus"
-        , Json.Decode.succeed False
+        , Json.Decode.succeed (Debug.log "false" False)
         ]
 
 

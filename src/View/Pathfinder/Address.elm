@@ -1,4 +1,4 @@
-module View.Pathfinder.Address exposing (view)
+module View.Pathfinder.Address exposing (toNodeIcon, view)
 
 import Animation as A
 import Config.Pathfinder as Pathfinder
@@ -77,15 +77,19 @@ view _ _ _ address =
         , highlight = address.selected
         , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
         , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs
-        , nodeIcon =
-            if address.exchange == Nothing then
-                Icons.iconsUntagged Icons.defaultIconsUntaggedAttributes {}
-
-            else
-                Icons.iconsExchange Icons.defaultIconsExchangeAttributes {}
+        , nodeIcon = toNodeIcon address
         , exchangeLabel =
             address.exchange
                 |> Maybe.withDefault ""
         , startingPoint = address.isStartingPoint
         , tagIcon = address.hasTags
         }
+
+
+toNodeIcon : Address -> Svg msg
+toNodeIcon address =
+    if address.exchange == Nothing then
+        Icons.iconsUntagged Icons.defaultIconsUntaggedAttributes {}
+
+    else
+        Icons.iconsExchange Icons.defaultIconsExchangeAttributes {}

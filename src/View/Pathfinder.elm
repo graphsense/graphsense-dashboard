@@ -42,6 +42,10 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
+import Theme.Html.GraphComponents exposing (defaultAddressNodeAttributes)
+import Theme.Html.SidebarComponents as SidebarComponents
+import Theme.Svg.GraphComponents as GraphComponents
+import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -49,6 +53,7 @@ import Util.Graph
 import Util.View exposing (copyableLongIdentifier, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
+import View.Pathfinder.Address as Address
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.Table as Table
@@ -56,10 +61,6 @@ import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Search
-
-
-
--- Config
 
 
 type alias BtnConfig =
@@ -103,11 +104,6 @@ type KVTableRow
 
 
 -- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
-
-
-dummyImageSrc : View.Config -> String
-dummyImageSrc _ =
-    "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
 
 
 renderKVTable : View.Config -> List KVTableRow -> Html Msg
@@ -502,17 +498,29 @@ accountTxDetailsContentView _ _ =
 addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
 addressDetailsContentView vc gc model id viewState =
     let
+        address =
+            model.network.addresses
+                |> Dict.get id
+                |> Maybe.withDefault viewState.address
+
         actor_id =
-            viewState.data.actors |> Maybe.andThen (List.head >> Maybe.map .id)
+            viewState.data.actors
+                |> Maybe.andThen List.head
+                |> Maybe.map .id
 
         actor =
-            actor_id |> Maybe.andThen (\i -> Dict.get i model.actors)
+            actor_id
+                |> Maybe.andThen (\i -> Dict.get i model.actors)
 
-        addressImg =
-            actor |> Maybe.andThen .context |> Maybe.andThen (.images >> List.head) |> Maybe.map addProtocolPrefx |> Maybe.withDefault (dummyImageSrc vc)
+        actorImg =
+            actor
+                |> Maybe.andThen .context
+                |> Maybe.andThen (.images >> List.head)
+                |> Maybe.map addProtocolPrefx
 
-        actor_text =
-            actor |> Maybe.map .label |> Maybe.withDefault ""
+        actorText =
+            actor
+                |> Maybe.map .label
 
         txOnGraphFn =
             \txId -> Dict.member txId model.network.txs
@@ -531,9 +539,51 @@ addressDetailsContentView vc gc model id viewState =
     div []
         (div [ detailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
-                [ img [ src addressImg, HA.alt actor_text, HA.title actor_text, addressDetailsViewActorImageStyle vc |> toAttr ] []
+                [ GraphComponents.addressNodeSvg
+                    [ SA.width <| String.fromFloat <| GraphComponents.addressNodeNodeFrameDimensions.width
+                    , SA.height <| String.fromFloat <| GraphComponents.addressNodeNodeFrameDimensions.height
+                    ]
+                    { defaultAddressNodeAttributes
+                        | addressNode =
+                            [ Util.Graph.translate
+                                -GraphComponents.addressNodeNodeFrameDimensions.x
+                                -GraphComponents.addressNodeNodeFrameDimensions.y
+                                |> transform
+                            ]
+                    }
+                    { addressId = ""
+                    , highlight = False
+                    , plusInVisible = False
+                    , plusOutVisible = False
+                    , nodeIcon = Address.toNodeIcon address
+                    , exchangeLabel = ""
+                    , exchangeLabel2 = False
+                    , startingPoint = False
+                    , tagIcon = False
+                    }
                 , div [ fullWidth |> toAttr ]
                     ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
+                     , actorText
+                        |> Maybe.map
+                            (\actorText_ ->
+                                SidebarComponents.actorTag SidebarComponents.defaultActorTagAttributes
+                                    { tagIcon =
+                                        actorImg
+                                            |> Maybe.map
+                                                (\imgSrc ->
+                                                    img
+                                                        [ src imgSrc
+                                                        , HA.alt actorText_
+                                                        , HA.width <| round SidebarComponents.actorTagIconsTagDimensions.width
+                                                        , HA.height <| round SidebarComponents.actorTagIconsTagDimensions.height
+                                                        ]
+                                                        []
+                                                )
+                                            |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes {})
+                                    , tagLabels = actorText_
+                                    }
+                            )
+                        |> Maybe.withDefault none
                      , rule
                      ]
                         ++ tbls

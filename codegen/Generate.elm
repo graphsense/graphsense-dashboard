@@ -22,7 +22,6 @@ main =
 generate : Api.Raw.DocumentNode -> List Generate.File
 generate { children } =
     children
-        |> Debug.log "children"
         |> List.map canvasNodeToFiles
         |> List.concat
 
