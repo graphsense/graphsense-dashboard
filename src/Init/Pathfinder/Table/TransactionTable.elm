@@ -23,15 +23,17 @@ import Util.Data exposing (timestampToPosix)
 init : Network -> Locale.Model -> Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
 init network locale address data =
     let
-        itemsPerPage =
+        nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
+
+        itemsPerPage = 5
 
         table isDesc =
             { table =
                 Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
-            , nrItems = Just <| itemsPerPage
+            , nrItems = Just <| nrItems
             , currentPage = 1
-            , itemsPerPage = 5
+            , itemsPerPage = itemsPerPage
             }
     in
     Network.getRecentTxForAddress network Incoming (Debug.log "addressId" address.id)
