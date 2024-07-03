@@ -1,25 +1,24 @@
 module Generate.Svg exposing (..)
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip, uncurry)
 import Dict
 import Elm
 import Elm.Annotation as Annotation
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Common as Common exposing (adjustBoundingBoxes)
+import Generate.Common.FrameTraits as FrameTraits
 import Generate.Svg.EllipseNode as EllipseNode
 import Generate.Svg.FrameTraits as FrameTraits
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (getElementAttributes, toTranslate, withVisibility)
-import RecordSetter exposing (s_children, s_frameTraits)
+import Generate.Util exposing (getElementAttributes, metadataToDeclaration, toTranslate, withVisibility)
 import Set
 import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
 import String.Extra
 import Tuple exposing (mapFirst)
-import Types exposing (Config, Metadata, OriginAdjust)
+import Types exposing (Config)
 
 
 subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
@@ -36,15 +35,6 @@ subcanvasNodeComponentsToDeclarations node =
 
         _ ->
             []
-
-
-adjustBoundingBoxes : ComponentNode -> ComponentNode
-adjustBoundingBoxes node =
-    let
-        originAdjust =
-            getOriginAdjust node
-    in
-    withFrameTraitsAdjustBoundingBox originAdjust node
 
 
 subcanvasNodeToExpressions : Config -> SubcanvasNode -> List Elm.Expression
@@ -72,112 +62,11 @@ subcanvasNodeToExpressions config node =
             []
 
 
-subcanvasNodeAdjustBoundingBox : OriginAdjust -> SubcanvasNode -> SubcanvasNode
-subcanvasNodeAdjustBoundingBox adjust node =
-    case node of
-        SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
-                |> SubcanvasNodeTextNode
-
-        SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.adjustBoundingBox adjust n
-                |> SubcanvasNodeEllipseNode
-
-        SubcanvasNodeGroupNode n ->
-            withFrameTraitsAdjustBoundingBox adjust n
-                |> SubcanvasNodeGroupNode
-
-        SubcanvasNodeInstanceNode n ->
-            withFrameTraitsAdjustBoundingBox adjust n
-                |> SubcanvasNodeInstanceNode
-
-        SubcanvasNodeVectorNode n ->
-            VectorNode.adjustBoundingBox adjust n
-                |> SubcanvasNodeVectorNode
-
-        SubcanvasNodeRectangleNode n ->
-            RectangleNode.adjustBoundingBox adjust n
-                |> SubcanvasNodeRectangleNode
-
-        a ->
-            a
-
-
-withFrameTraitsAdjustBoundingBox : OriginAdjust -> { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
-withFrameTraitsAdjustBoundingBox adjust node =
-    node.frameTraits.children
-        |> List.map (subcanvasNodeAdjustBoundingBox adjust)
-        |> flip s_children node.frameTraits
-        |> flip s_frameTraits node
-        |> FrameTraits.adjustBoundingBox adjust
-
-
-subcanvasNodeToMetadata : SubcanvasNode -> List Metadata
-subcanvasNodeToMetadata node =
-    case node of
-        SubcanvasNodeComponentNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeComponentSetNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.toMetadata n
-                |> List.singleton
-
-        SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.toMetadata n
-                |> List.singleton
-
-        SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeInstanceNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeRectangleNode n ->
-            n.rectangularShapeTraits
-                |> DefaultShapeTraits.toMetadata
-                |> List.singleton
-
-        SubcanvasNodeVectorNode _ ->
-            []
-
-        _ ->
-            []
-
-
-withFrameTraitsNodeToMetadata : { a | frameTraits : FrameTraits } -> ( Metadata, List Metadata )
-withFrameTraitsNodeToMetadata node =
-    ( FrameTraits.toMetadata node, frameTraitsToMetadata node.frameTraits )
-
-
 componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
 componentNodeToDeclarations node =
     let
-        defaultAttributeConfig : List String -> Elm.Expression
-        defaultAttributeConfig =
-            Set.fromList
-                >> Set.toList
-                >> List.map
-                    (\n ->
-                        ( toCamelCaseLower n
-                        , Elm.list []
-                            |> Elm.withType
-                                (Gen.Svg.Styled.annotation_.attribute
-                                    (Annotation.var "msg")
-                                    |> Annotation.list
-                                )
-                        )
-                    )
-                >> Elm.record
-
         ( metadata, descendantsMetadata ) =
-            withFrameTraitsNodeToMetadata node
+            Common.withFrameTraitsNodeToMetadata node
 
         names =
             metadata.name
@@ -197,6 +86,45 @@ componentNodeToDeclarations node =
                         >> Dict.fromList
                     )
                 |> Maybe.withDefault Dict.empty
+
+        defaultAttributeConfig : List String -> Elm.Expression
+        defaultAttributeConfig =
+            Set.fromList
+                >> Set.toList
+                >> List.map
+                    (\n ->
+                        ( toCamelCaseLower n
+                        , Elm.list []
+                            |> Elm.withType
+                                (Gen.Svg.Styled.annotation_.attribute
+                                    (Annotation.var "msg")
+                                    |> Annotation.list
+                                )
+                        )
+                    )
+                >> Elm.record
+
+        funName =
+            toCamelCaseLower metadata.name
+
+        attributesParamName =
+            "attributes"
+
+        propertiesParamName =
+            "properties"
+
+        attributesParam =
+            ( attributesParamName
+            , names
+                |> List.map (\n -> ( n, Gen.Svg.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
+                |> Annotation.record
+                |> Just
+            )
+
+        propertiesParam =
+            ( propertiesParamName
+            , Nothing
+            )
     in
     metadata
         :: descendantsMetadata
@@ -215,22 +143,15 @@ componentNodeToDeclarations node =
                 |> defaultAttributeConfig
                 |> Elm.declaration ("default " ++ metadata.name ++ " attributes" |> toCamelCaseLower)
             , Elm.fn2
-                ( "attributes"
-                , names
-                    |> List.map (\n -> ( n, Gen.Svg.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
-                    |> Annotation.record
-                    |> Just
-                )
-                ( "properties"
-                , Nothing
-                )
-                (\attributes children ->
+                attributesParam
+                propertiesParam
+                (\attributes properties_ ->
                     let
                         config =
                             { propertyExpressions =
                                 node.componentPropertiesTrait.componentPropertyDefinitions
                                     |> Maybe.map
-                                        (Dict.map (\nam _ -> children |> Elm.get (formatName nam)))
+                                        (Dict.map (\nam _ -> properties_ |> Elm.get (formatName nam)))
                                     |> Maybe.withDefault Dict.empty
                             , attributes = attributes
                             }
@@ -241,37 +162,29 @@ componentNodeToDeclarations node =
                             |> Elm.list
                         )
                 )
-                |> Elm.declaration (toCamelCaseLower metadata.name)
+                |> Elm.declaration funName
+            , Elm.fn2
+                ( "attributes", Nothing )
+                ( "properties", Nothing )
+                (\attributes_ properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = funName
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes_
+                        , properties_
+                        ]
+                        |> List.singleton
+                        |> Gen.Svg.Styled.svg
+                            [ Attributes.width <| String.fromFloat metadata.bbox.width
+                            , Attributes.height <| String.fromFloat metadata.bbox.height
+                            ]
+                )
+                |> Elm.declaration (toCamelCaseLower <| funName ++ " svg")
             ]
-
-
-metadataToDeclaration : String -> Metadata -> Elm.Declaration
-metadataToDeclaration componentName metadata =
-    let
-        prefix =
-            if componentName == metadata.name then
-                componentName
-
-            else
-                componentName ++ " " ++ metadata.name
-    in
-    [ ( "x", Elm.float metadata.bbox.x )
-    , ( "y", Elm.float metadata.bbox.y )
-    , ( "width", Elm.float metadata.bbox.width )
-    , ( "height", Elm.float metadata.bbox.height )
-    ]
-        |> Elm.record
-        |> Elm.declaration (prefix ++ " dimensions" |> toCamelCaseLower)
-
-
-getOriginAdjust : ComponentNode -> OriginAdjust
-getOriginAdjust node =
-    node.frameTraits.absoluteBoundingBox
-        |> (\r ->
-                { x = r.x
-                , y = r.y
-                }
-           )
 
 
 propertiesType : Dict.Dict String ComponentPropertyDefinition -> Annotation.Annotation
@@ -293,13 +206,6 @@ propertiesType =
         )
         >> Dict.toList
         >> Annotation.record
-
-
-frameTraitsToMetadata : FrameTraits -> List Metadata
-frameTraitsToMetadata node =
-    node.children
-        |> List.map subcanvasNodeToMetadata
-        |> List.concat
 
 
 frameTraitsToExpressions : Config -> FrameTraits -> List Elm.Expression

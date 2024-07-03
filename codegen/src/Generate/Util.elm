@@ -3,12 +3,11 @@ module Generate.Util exposing (..)
 import Api.Raw exposing (ComponentPropertyReferences, Rectangle, Transform)
 import Dict
 import Elm exposing (Expression)
-import Elm.Annotation as Type
+import Elm.Annotation as Annotation
 import Gen.Svg.Styled
-import Gen.Svg.Styled.Attributes as Attributes
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
-import Types exposing (ComponentPropertyExpressions, Config)
+import Types exposing (ComponentPropertyExpressions, Config, Metadata)
 
 
 m : (a -> Elm.Expression) -> Maybe a -> List Elm.Expression -> List Elm.Expression
@@ -34,21 +33,21 @@ aa fun =
 lengthOrAutoType : Elm.Expression -> Elm.Expression
 lengthOrAutoType =
     Elm.withType
-        (Type.namedWith
+        (Annotation.namedWith
             [ "Css" ]
             "LengthOrAuto"
-            [ Type.var "compatible" ]
+            [ Annotation.var "compatible" ]
         )
 
 
 lengthType : Elm.Expression -> Elm.Expression
 lengthType =
     Elm.withType
-        (Type.namedWith
+        (Annotation.namedWith
             [ "Css" ]
             "Length"
-            [ Type.var "compatible"
-            , Type.var "units"
+            [ Annotation.var "compatible"
+            , Annotation.var "units"
             ]
         )
 
@@ -56,10 +55,10 @@ lengthType =
 numberType : Elm.Expression -> Elm.Expression
 numberType =
     Elm.withType
-        (Type.namedWith
+        (Annotation.namedWith
             [ "Css" ]
             "Number"
-            [ Type.var "compatible"
+            [ Annotation.var "compatible"
             ]
         )
 
@@ -67,10 +66,10 @@ numberType =
 intOrAutoType : Elm.Expression -> Elm.Expression
 intOrAutoType =
     Elm.withType
-        (Type.namedWith
+        (Annotation.namedWith
             [ "Css" ]
             "IntOrAuto"
-            [ Type.var "compatible" ]
+            [ Annotation.var "compatible" ]
         )
 
 
@@ -125,3 +124,22 @@ toMatrix : Transform -> String
 toMatrix ( ( a_, c, e ), ( b, d, f ) ) =
     "matrix({{ }})"
         |> Format.value ([ a_, b, c, d, 0, 0 ] |> List.map String.fromFloat |> String.join ",")
+
+
+metadataToDeclaration : String -> Metadata -> Elm.Declaration
+metadataToDeclaration componentName metadata =
+    let
+        prefix =
+            if componentName == metadata.name then
+                componentName
+
+            else
+                componentName ++ " " ++ metadata.name
+    in
+    [ ( "x", Elm.float metadata.bbox.x )
+    , ( "y", Elm.float metadata.bbox.y )
+    , ( "width", Elm.float metadata.bbox.width )
+    , ( "height", Elm.float metadata.bbox.height )
+    ]
+        |> Elm.record
+        |> Elm.declaration (prefix ++ " dimensions" |> toCamelCaseLower)

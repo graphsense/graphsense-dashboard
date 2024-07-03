@@ -1,23 +1,36 @@
 module Generate.Html.TextNode exposing (..)
 
 import Api.Raw exposing (..)
+import Dict
 import Elm
+import Elm.Op
 import Gen.Html.Styled
-import Gen.Html.Styled.Attributes
+import Gen.Html.Styled.Attributes as Attributes
+import Generate.Common.TextNode exposing (getName)
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.TypeStyle as TypeStyle
-import Tuple exposing (pair)
+import Generate.Util exposing (getElementAttributes)
+import Types exposing (Config)
 
 
-toExpressions : TextNode -> List ( String, Elm.Expression )
-toExpressions node =
-    Gen.Html.Styled.div
-        [ toCss node
-            |> Gen.Html.Styled.Attributes.css
-        ]
-        [ Gen.Html.Styled.text node.characters
-        ]
-        |> pair node.defaultShapeTraits.isLayerTrait.name
+toExpressions : Config -> TextNode -> List Elm.Expression
+toExpressions config node =
+    Gen.Html.Styled.call_.div
+        (getName node
+            |> getElementAttributes config
+            |> Elm.Op.append
+                ([ toCss node |> Attributes.css ]
+                    |> Elm.list
+                )
+        )
+        (node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> Maybe.andThen (Dict.get "characters")
+            |> Maybe.andThen (\ref -> Dict.get ref config.propertyExpressions)
+            |> Maybe.map Gen.Html.Styled.call_.text
+            |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
+            |> List.singleton
+            |> Elm.list
+        )
         |> List.singleton
 
 

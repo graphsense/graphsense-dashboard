@@ -6,6 +6,8 @@ import Elm exposing (Expression)
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (height, width, x, y)
+import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Common.RectangleNode exposing (getName)
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
@@ -14,12 +16,9 @@ import Types exposing (Config, OriginAdjust)
 
 toExpressions : Config -> RectangleNode -> List Elm.Expression
 toExpressions config node =
-    let
-        name =
-            getName node
-    in
     Gen.Svg.Styled.call_.rect
-        (getElementAttributes config name
+        (getName node
+            |> getElementAttributes config
             |> Elm.Op.append
                 ((toCss node
                     |> Gen.Svg.Styled.Attributes.css
@@ -31,11 +30,6 @@ toExpressions config node =
         (Elm.list [])
         |> withVisibility config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
-
-
-getName : RectangleNode -> String
-getName node =
-    node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.name
 
 
 toCss : RectangleNode -> List Elm.Expression

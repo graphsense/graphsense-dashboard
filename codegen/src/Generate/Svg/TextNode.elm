@@ -6,21 +6,18 @@ import Elm
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
+import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, m, mm)
-import Tuple exposing (pair)
-import Types exposing (Config, OriginAdjust)
+import Types exposing (Config)
 
 
 toExpressions : Config -> TextNode -> List Elm.Expression
 toExpressions config node =
-    let
-        name =
-            getName node
-    in
     Gen.Svg.Styled.call_.text_
-        (getElementAttributes config name
+        (getName node
+            |> getElementAttributes config
             |> Elm.Op.append
                 ((toCss node |> Attributes.css)
                     :: toAttributes node
@@ -41,9 +38,10 @@ toExpressions config node =
         |> List.singleton
 
 
-getName : TextNode -> String
-getName node =
-    node.defaultShapeTraits.isLayerTrait.name
+toCss : TextNode -> List Elm.Expression
+toCss node =
+    TypeStyle.toCss node.style
+        ++ DefaultShapeTraits.toCss node.defaultShapeTraits
 
 
 tspanAttributes : TextNode -> List Elm.Expression
@@ -64,12 +62,6 @@ toAlignmentBaseline align =
 
             TypeStyleTextAlignVerticalBOTTOM ->
                 "bottom"
-
-
-toCss : TextNode -> List Elm.Expression
-toCss node =
-    TypeStyle.toCss node.style
-        ++ DefaultShapeTraits.toCss node.defaultShapeTraits
 
 
 toAttributes : TextNode -> List Elm.Expression
