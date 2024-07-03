@@ -133,7 +133,7 @@ updateByMsg plugins uc msg model =
         UserReleasedCtrlKey ->
             n { model | ctrlPressed = False }
 
-        UserPressedDeleteKey ->
+        UserReleasedDeleteKey ->
             case model.selection of
                 SelectedAddress id ->
                     removeAddress id model

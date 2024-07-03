@@ -40,28 +40,20 @@ toKeyUp keyValue =
             UserReleasedCtrlKey
 
         "Backspace" ->
-            UserPressedDeleteKey
+            UserReleasedDeleteKey
 
         "z" ->
             UserReleasedNormalKey keyValue
 
         "y" ->
             UserReleasedNormalKey keyValue
-
-        _ ->
-            NoOp
-
-
-toKeyPress : String -> Msg
-toKeyPress keyValue =
-    case keyValue of
+        
         "Delete" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-            UserPressedDeleteKey
+            UserReleasedDeleteKey
 
         _ ->
             NoOp
-
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -73,7 +65,6 @@ subscriptions model =
             Browser.Events.onMouseUp (Decode.succeed UserReleasesMouseButton)
     , Transform.subscriptions AnimationFrameDeltaForTransform model.transform
     , Browser.Events.onKeyDown (keyDecoder toKeyDown)
-    , Browser.Events.onKeyPress (keyDecoder toKeyPress)
     , Browser.Events.onKeyUp (keyDecoder toKeyUp)
     , Browser.Events.onVisibilityChange (\_ -> UserReleasedCtrlKey)
     , Time.every 60000 Tick
