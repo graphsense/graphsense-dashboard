@@ -12,6 +12,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool)
+import Model.Pathfinder.Tooltip as Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
@@ -30,6 +31,7 @@ type alias Model =
     , tags : Dict Id Api.Data.AddressTags
     , dragging : Dragging Id
     , selection : Selection
+    , hovered : Hovered
     , search : Search.Model
     , transform : Transform.Model Id
     , history : History.Model Entry.Model
@@ -40,6 +42,7 @@ type alias Model =
     , ctrlPressed : Bool
     , isDirty : Bool
     , displaySettings : DisplaySettings
+    , tooltip : Maybe Tooltip
     }
 
 
@@ -56,6 +59,11 @@ type Selection
     | WillSelectTx Id
     | WillSelectAddress Id
     | NoSelection
+
+
+type Hovered
+    = HoveredTx Id
+    | NoHover
 
 
 type MultiSelectOptions

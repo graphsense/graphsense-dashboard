@@ -2,13 +2,12 @@ module Init.Pathfinder exposing (..)
 
 import Api.Data
 import Dict
-import DurationDatePicker as DatePicker
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
-import Model.Pathfinder exposing (Model, Selection(..))
+import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Task
@@ -21,6 +20,7 @@ init _ =
       , actors = Dict.empty
       , tags = Dict.empty
       , selection = NoSelection
+      , hovered = NoHover
       , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "eth", "trx", "zec", "ltc" ])
       , dragging = NoDragging
       , transform = Transform.init
@@ -35,6 +35,7 @@ init _ =
             { showTxTimestamps = False
             , isDisplaySettingsOpen = False
             }
+      , tooltip = Nothing
       }
     , Task.perform Tick Time.now
     )

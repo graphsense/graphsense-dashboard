@@ -33,8 +33,8 @@ import Update.Pathfinder.Tx as Tx
 clearSelection : Network -> Network
 clearSelection n =
     { n
-        | addresses = Dict.map (\k v -> v |> s_selected False) n.addresses
-        , txs = Dict.map (\k v -> v |> Tx.updateUtxo (s_selected False)) n.txs
+        | addresses = Dict.map (\_ v -> v |> s_selected False) n.addresses
+        , txs = Dict.map (\_ v -> v |> s_selected False) n.txs
     }
 
 

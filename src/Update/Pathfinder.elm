@@ -30,6 +30,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, network)
 import Model.Pathfinder.Network as Network
 import Model.Pathfinder.Tools exposing (PointerTool(..))
+import Model.Pathfinder.Tooltip as Tooltip
 import Model.Pathfinder.Tx as Tx
 import Model.Search as Search
 import Msg.Pathfinder as Msg
@@ -441,6 +442,49 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserMovesMouseOverUtxoTx id ->
+            { model
+                | tooltip =
+                    model.network.txs
+                        |> Dict.get id
+                        |> Maybe.andThen
+                            (\tx ->
+                                case tx.type_ of
+                                    Tx.Utxo t ->
+                                        Just <| Tooltip.UtxoTx t
+
+                                    _ ->
+                                        Nothing
+                            )
+                , network = Network.updateTx id (s_hovered True) model.network
+                , hovered = HoveredTx id
+            }
+                |> n
+
+        UserMovesMouseOutUtxoTx id ->
+            { model
+                | tooltip =
+                    model.network.txs
+                        |> Dict.get id
+                        |> Maybe.andThen
+                            (\tx ->
+                                case tx.type_ of
+                                    Tx.Utxo t ->
+                                        Just <| Tooltip.UtxoTx t
+
+                                    _ ->
+                                        Nothing
+                            )
+                , network = Network.updateTx id (s_hovered False) model.network
+                , hovered =
+                    if model.hovered == HoveredTx id then
+                        NoHover
+
+                    else
+                        model.hovered
+            }
+                |> n
+
         UserPushesLeftMouseButtonOnUtxoTx id coords ->
             { model
                 | dragging =
@@ -810,9 +854,9 @@ selectTx id model =
                         |> s_details (TxDetails.init tx |> TxDetails id |> Just)
             in
             selectedTx
-                |> Maybe.map (\a -> Network.updateTx a (Tx.updateUtxo (s_selected False)) m1.network)
+                |> Maybe.map (\a -> Network.updateTx a (s_selected False) m1.network)
                 |> Maybe.withDefault m1.network
-                |> Network.updateTx id (Tx.updateUtxo (s_selected True))
+                |> Network.updateTx id (s_selected True)
                 |> flip s_network m1
                 |> s_selection (SelectedTx id)
 
@@ -835,7 +879,7 @@ selectAddress uc id model =
                             if id == i then
                                 -- keep it unchanged
                                 data
-                                |> RemoteData.map n
+                                    |> RemoteData.map n
 
                             else
                                 newDetails
@@ -877,7 +921,7 @@ unselect model =
                     Network.updateAddress a (s_selected False) model.network
 
                 SelectedTx a ->
-                    Network.updateTx a (Tx.updateUtxo (s_selected False)) model.network
+                    Network.updateTx a (s_selected False) model.network
 
                 _ ->
                     model.network
@@ -1179,7 +1223,7 @@ multiSelect m sel keepOld =
                     Network.updateAddress id (s_selected s) n
 
                 MSelectedTx id ->
-                    Network.updateTx id (Tx.updateUtxo (s_selected s)) n
+                    Network.updateTx id (s_selected s) n
 
         nNet =
             List.foldl (selectItem True) (Network.clearSelection m.network) newSelection

@@ -16,6 +16,8 @@ import Util.Pathfinder exposing (getAddress)
 
 type alias Tx =
     { id : Id
+    , hovered : Bool
+    , selected : Bool
     , type_ : TxType
     }
 
@@ -43,7 +45,6 @@ type alias UtxoTx =
     , inputs : NonemptyDict Id Io
     , outputs : NonemptyDict Id Io
     , raw : Api.Data.TxUtxo
-    , selected : Bool
     }
 
 

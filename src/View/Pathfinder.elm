@@ -60,6 +60,7 @@ import View.Pathfinder.Table as Table
 import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
+import View.Pathfinder.Tooltip as Tooltip
 import View.Search
 
 
@@ -243,6 +244,11 @@ graph plugins states vc gc model =
     , topRightPanel plugins states vc gc model
     , graphSelectionToolsView plugins states vc gc model
     ]
+        ++ (model.tooltip
+                |> Maybe.map (Tooltip.view vc)
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+           )
 
 
 topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -564,7 +570,7 @@ addressDetailsContentView vc gc model id viewState =
                     , startingPoint = False
                     , tagIcon = False
                     }
-                , div [ css [ Css.flexGrow <| Css.num 1 ]]
+                , div [ css [ Css.flexGrow <| Css.num 1 ] ]
                     ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
                      , actorText
                         |> Maybe.map

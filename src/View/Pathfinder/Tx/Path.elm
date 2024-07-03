@@ -1,4 +1,4 @@
-module View.Pathfinder.Tx.Path exposing (accountPath, inPath, outPath)
+module View.Pathfinder.Tx.Path exposing (accountPath, inPath, inPathHovered, outPath, outPathHovered)
 
 import Config.Pathfinder as Pathfinder
 import Config.View as View
@@ -15,12 +15,29 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxLabelAttributes)
 import Util.Graph exposing (translate)
+import Util.View
 
 
 inPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
 inPath vc label x1 y1 x2 y2 opacity =
     coloredPath vc
         { label = label
+        , highlight = False
+        , isOutgoing = False
+        , x1 = x1
+        , y1 = y1
+        , x2 = x2
+        , y2 = y2
+        , opacity = opacity
+        , isUtxo = True
+        }
+
+
+inPathHovered : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+inPathHovered vc label x1 y1 x2 y2 opacity =
+    coloredPath vc
+        { label = label
+        , highlight = True
         , isOutgoing = False
         , x1 = x1
         , y1 = y1
@@ -35,6 +52,22 @@ outPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> 
 outPath vc label x1 y1 x2 y2 opacity =
     coloredPath vc
         { label = label
+        , highlight = False
+        , isOutgoing = True
+        , x1 = x1
+        , y1 = y1
+        , x2 = x2
+        , y2 = y2
+        , opacity = opacity
+        , isUtxo = True
+        }
+
+
+outPathHovered : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
+outPathHovered vc label x1 y1 x2 y2 opacity =
+    coloredPath vc
+        { label = label
+        , highlight = True
         , isOutgoing = True
         , x1 = x1
         , y1 = y1
@@ -49,6 +82,7 @@ accountPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float
 accountPath vc label x1 y1 x2 y2 opacity =
     coloredPath vc
         { label = label
+        , highlight = False
         , isOutgoing = True
         , x1 = x1
         , y1 = y1
@@ -62,6 +96,7 @@ accountPath vc label x1 y1 x2 y2 opacity =
 type alias ColoredPathConfig =
     { label : String
     , isOutgoing : Bool
+    , highlight : Bool
     , x1 : Float
     , y1 : Float
     , x2 : Float
@@ -117,8 +152,40 @@ coloredPath vc c =
 
         adjY =
             fd.y + fd.height / 2
+
+        dim =
+            if c.isOutgoing then
+                GraphComponents.outputPathHighlightLineDimensions
+
+            else
+                GraphComponents.inputPathHighlightLineDimensions
     in
-    [ Svg.path
+    [ if c.highlight then
+        Svg.path
+            [ nodes
+                |> (::) (M ( c.x1, c.y1 ))
+                |> pathD
+                |> d
+            , css
+                ([ dim.strokeWidth
+                    |> String.fromFloat
+                    |> Css.property "stroke-width"
+                 , dim.strokeOpacity
+                    |> String.fromFloat
+                    |> Css.property "opacity"
+                 , Css.property "fill" "none"
+                 ]
+                    ++ (dim.strokeColor
+                            |> Maybe.map (Util.View.colorToHex >> Css.property "stroke" >> List.singleton)
+                            |> Maybe.withDefault []
+                       )
+                )
+            ]
+            []
+
+      else
+        g [] []
+    , Svg.path
         [ nodes
             |> (::) (M ( c.x1, c.y1 ))
             |> pathD
@@ -210,7 +277,10 @@ coloredPath vc c =
         }
         { label = c.label }
     ]
-        |> g [ c.opacity |> String.fromFloat |> opacity ]
+        |> g
+            [ c.opacity |> String.fromFloat |> opacity
+            , Css.cursor Css.pointer |> List.singleton |> css
+            ]
 
 
 bendedPath : View.Config -> Pathfinder.Config -> String -> Bool -> Float -> Float -> Float -> Float -> Svg Msg

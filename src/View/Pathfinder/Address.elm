@@ -27,7 +27,9 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
 view _ _ _ address =
     let
-        _ = Debug.log "address render" address.id
+        _ =
+            Debug.log "address render" address.id
+
         data =
             RemoteData.toMaybe address.data
 

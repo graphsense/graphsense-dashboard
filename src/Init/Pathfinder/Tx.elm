@@ -18,6 +18,8 @@ fromTxAccountData tx =
             Id.init tx.currency tx.txHash
     in
     { id = id
+    , hovered = False
+    , selected = False
     , type_ =
         Account
             { from = Id.init tx.currency tx.fromAddress
@@ -57,6 +59,8 @@ fromTxUtxoData tx coords =
     Maybe.map2
         (\in_ out ->
             { id = id
+            , hovered = False
+            , selected = False
             , type_ =
                 let
                     inputs =
@@ -77,7 +81,6 @@ fromTxUtxoData tx coords =
                                 (NList.head out)
                             |> NDict.fromNonemptyList
                     , raw = tx
-                    , selected = False
                     }
             }
         )

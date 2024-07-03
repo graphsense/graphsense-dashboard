@@ -54,6 +54,8 @@ type Msg
     | UserPushesLeftMouseButtonOnUtxoTx Id Coords
     | UserClickedRemoveAddressFromGraph Id
     | UserReleasedDeleteKey
+    | UserMovesMouseOverUtxoTx Id
+    | UserMovesMouseOutUtxoTx Id
 
 
 type DisplaySettingsMsg

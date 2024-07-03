@@ -2,7 +2,9 @@ module Generate.Common.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
+import Color exposing (Color)
 import Generate.Util exposing (..)
+import Generate.Util.Paint as Paint
 import RecordSetter exposing (s_absoluteBoundingBox, s_defaultShapeTraits)
 import Types exposing (Metadata, OriginAdjust)
 
@@ -22,4 +24,13 @@ toMetadata node =
     , strokeWidth =
         node.defaultShapeTraits.strokeWeight
             |> Maybe.withDefault 0
+    , strokeColor = Paint.toColor node.defaultShapeTraits.hasGeometryTrait.strokes
+    , fillColor = Paint.toColor <| Just node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
+    , strokeOpacity =
+        node.defaultShapeTraits.hasGeometryTrait.strokes
+            |> Paint.getOpacity
+    , fillOpacity =
+        node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
+        |> Just
+        |> Paint.getOpacity
     }

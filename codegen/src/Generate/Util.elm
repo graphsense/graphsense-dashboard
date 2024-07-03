@@ -141,6 +141,10 @@ metadataToDeclaration componentName metadata =
     , ( "width", Elm.float metadata.bbox.width )
     , ( "height", Elm.float metadata.bbox.height )
     , ( "strokeWidth", Elm.float metadata.strokeWidth )
+    , ( "strokeColor", Elm.maybe metadata.strokeColor )
+    , ( "fillColor", Elm.maybe metadata.fillColor )
+    , ( "strokeOpacity", Elm.float metadata.strokeOpacity )
+    , ( "fillOpacity", Elm.float metadata.fillOpacity )
     ]
         |> Elm.record
         |> Elm.declaration (prefix ++ " dimensions" |> sanitize)

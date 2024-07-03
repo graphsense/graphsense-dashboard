@@ -14,6 +14,7 @@ import Generate.Common.FrameTraits as FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
+import Generate.Html.VectorNode as VectorNode
 import Generate.Util exposing (getElementAttributes, metadataToDeclaration, withVisibility)
 import Set
 import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
@@ -54,6 +55,9 @@ subcanvasNodeToExpressions config node =
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toExpressions config n
+
+        SubcanvasNodeVectorNode n ->
+            VectorNode.toExpressions config n
 
         _ ->
             []

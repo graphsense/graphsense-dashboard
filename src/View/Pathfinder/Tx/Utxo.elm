@@ -7,6 +7,7 @@ import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Dict.Nonempty as NDict
+import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (Address)
@@ -25,11 +26,11 @@ import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
-import View.Pathfinder.Tx.Path exposing (inPath, outPath)
+import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Id -> UtxoTx -> Svg Msg
-view _ _ _ id tx =
+view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> Svg Msg
+view _ _ _ id highlight tx =
     let
         anyIsNotVisible =
             NDict.toList
@@ -57,16 +58,20 @@ view _ _ _ id tx =
                 , UserClickedTx id |> onClick
                 , UserPushesLeftMouseButtonOnUtxoTx id
                     |> Util.Graph.mousedown
+                , UserMovesMouseOverUtxoTx id
+                    |> onMouseOver
+                , UserMovesMouseOutUtxoTx id
+                    |> onMouseOut
                 , css [ Css.cursor Css.pointer ]
                 ]
         }
         { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
-        , highlightVisible = tx.selected
+        , highlightVisible = highlight
         }
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> UtxoTx -> Svg Msg
-edge _ vc _ addresses tx =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Bool -> UtxoTx -> Svg Msg
+edge _ vc _ addresses hovered tx =
     let
         toValues =
             NDict.toList
@@ -106,6 +111,9 @@ edge _ vc _ addresses tx =
             , ax = address.x + address.dx
             , ay = A.animate address.clock address.y + address.dy
             }
+
+        txId =
+            Id.init tx.raw.currency tx.raw.txHash
     in
     (inputValues
         |> List.map
@@ -122,7 +130,13 @@ edge _ vc _ addresses tx =
                             1
                 in
                 ( Id.toString address.id
-                , Svg.lazy7 inPath
+                , Svg.lazy7
+                    (if hovered then
+                        inPathHovered
+
+                     else
+                        inPath
+                    )
                     vc
                     values
                     (c.ax * unit + (rad * sign))
@@ -148,7 +162,13 @@ edge _ vc _ addresses tx =
                                     1
                         in
                         ( Id.toString address.id
-                        , Svg.lazy7 outPath
+                        , Svg.lazy7
+                            (if hovered then
+                                outPathHovered
+
+                             else
+                                outPath
+                            )
                             vc
                             values
                             (c.tx * unit + (txRad * sign))
@@ -160,4 +180,13 @@ edge _ vc _ addresses tx =
                     )
            )
         |> Keyed.node "g"
-            []
+            [ txId
+                |> UserMovesMouseOverUtxoTx
+                |> onMouseOver
+            , txId
+                |> UserMovesMouseOutUtxoTx
+                |> onMouseOut
+            , txId
+                |> UserClickedTx
+                |> onClick
+            ]

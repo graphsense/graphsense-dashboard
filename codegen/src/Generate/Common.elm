@@ -91,8 +91,10 @@ subcanvasNodeToMetadata node =
                 |> DefaultShapeTraits.toMetadata
                 |> List.singleton
 
-        SubcanvasNodeVectorNode _ ->
-            []
+        SubcanvasNodeVectorNode n ->
+            n.cornerRadiusShapeTraits
+                |> DefaultShapeTraits.toMetadata
+                |> List.singleton
 
         _ ->
             []
