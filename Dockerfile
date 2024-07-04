@@ -31,6 +31,7 @@ COPY ./lang $WORKDIR/lang
 COPY ./plugins $WORKDIR/plugins
 COPY ./plugin_templates $WORKDIR/plugin_templates
 COPY ./themes $WORKDIR/themes
+COPY ./theme $WORKDIR/theme
 COPY ./lib $WORKDIR/lib
 COPY ./docker/site.conf /etc/nginx/http.d/
 COPY ./generate.js $WORKDIR/generate.js

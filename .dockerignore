@@ -3,4 +3,5 @@ elm-stuff
 Dockerfile
 README.md
 npm-debug.log
+theme/Theme
 dist
