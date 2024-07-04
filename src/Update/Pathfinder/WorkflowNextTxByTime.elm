@@ -13,7 +13,6 @@ update : WorkflowNextTxContext -> WorkflowNextTxByTimeMsg -> Model -> ( Model, L
 update { addressId, direction } msg model =
     case msg of
         BrowserGotBlockHeight blockAtDate ->
-            --Debug.todo ""
             n model
 
         BrowserGotRecentTx data ->

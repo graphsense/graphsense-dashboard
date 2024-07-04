@@ -66,7 +66,6 @@ getRecentTxForAddress network direction addressId =
         |> Maybe.andThen
             (\address ->
                 getTxSet address
-                    |> Debug.log "tx set"
                     |> Set.toList
                     |> List.filterMap (\txId -> Dict.get txId network.txs)
                     |> List.sortBy Tx.getRawTimestamp

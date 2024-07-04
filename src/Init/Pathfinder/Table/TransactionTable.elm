@@ -36,8 +36,7 @@ init network locale address data =
             , itemsPerPage = itemsPerPage
             }
     in
-    Network.getRecentTxForAddress network Incoming (Debug.log "addressId" address.id)
-        |> Debug.log "recent tx"
+    Network.getRecentTxForAddress network Incoming address.id
         |> Maybe.map
             (\tx ->
                 let

@@ -29,7 +29,6 @@ update msg model =
     let
         ( newPicker, maybeRuntime ) =
             DurationDatePicker.update model.settings msg model.dateRangePicker
-                |> Debug.log "update picker"
     in
     { model
         | dateRangePicker = newPicker
