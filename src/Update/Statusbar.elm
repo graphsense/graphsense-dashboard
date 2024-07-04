@@ -231,6 +231,9 @@ messageFromApiEffect model effect =
         Api.SearchEffect _ _ ->
             Nothing
 
+        Api.GetAddressTagSummaryEffect _ _ ->
+            Nothing
+
         Api.GetStatisticsEffect _ ->
             Nothing
 

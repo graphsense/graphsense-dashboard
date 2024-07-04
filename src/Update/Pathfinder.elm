@@ -107,27 +107,9 @@ updateByMsg plugins uc msg model =
             n model
 
         BrowserGotActor id data ->
-            let
-                network =
-                    if List.any (.id >> (==) "exchange") data.categories then
-                        Network.updateAddressIf
-                            (.data
-                                >> RemoteData.toMaybe
-                                >> Maybe.andThen .actors
-                                >> Maybe.withDefault []
-                                >> List.Extra.find (.id >> (==) id)
-                                >> (/=) Nothing
-                            )
-                            (s_exchange (Just data.label))
-                            model.network
-
-                    else
-                        model.network
-            in
             n
                 { model
                     | actors = Dict.insert id data model.actors
-                    , network = network
                 }
 
         UserPressedCtrlKey ->
@@ -211,7 +193,7 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagsForAddress data model.tags :: fetchActorsForAddress data model.actors ++ eff)
+                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
             browserGotTxForAddress plugins uc addressId direction data model
@@ -697,15 +679,28 @@ updateByMsg plugins uc msg model =
         WorkflowNextTxByTime context wm ->
             WorkflowNextTxByTime.update context wm model
 
-        BrowserGotAddressTags id data ->
-            if not (List.isEmpty data.addressTags) then
-                n
-                    { model
-                        | tags = Dict.insert id data model.tags
-                        , network = Network.updateAddress id (s_hasTags True) model.network
-                    }
+        BrowserGotTagSummary id data ->
+                if (data.tagCount > 0) then
+                    let
+                        net =
+                            (if data.broadCategory == "exchange" then
+                                Network.updateAddress id
+                                    (s_exchange data.bestLabel)
+                                    model.network
 
-            else
+                            else
+                                model.network
+                            ) 
+                            |> Network.updateAddress id (s_hasTags True)
+                            |> Network.updateAddress id (s_hasActor (data.bestActor /= Nothing))
+                    in
+                    n { model
+                        | tagSummaries = Dict.insert id data model.tagSummaries
+                        , network = net
+                    }
+                else
+                    n model
+        BrowserGotAddressTags id data ->
                 n model
 
 
@@ -1006,11 +1001,11 @@ fetchActor id =
 
 fetchTags : Id -> Effect
 fetchTags id =
-    BrowserGotAddressTags id |> Api.GetAddressTagsEffect { currency = Id.network id, address = Id.id id, pagesize = 1000, nextpage = Nothing } |> ApiEffect
+    BrowserGotTagSummary id |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id } |> ApiEffect
 
 
-fetchTagsForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.AddressTags -> Effect
-fetchTagsForAddress d existing =
+fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Effect
+fetchTagSummaryForAddress d existing =
     let
         id =
             ( d.currency, d.address )

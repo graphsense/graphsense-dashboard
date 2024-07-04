@@ -37,6 +37,7 @@ type Msg
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id Api.Data.Address
     | BrowserGotAddressTags Id Api.Data.AddressTags
+    | BrowserGotTagSummary Id Api.Data.TagSummary
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
     | PluginMsg Plugin.Msg

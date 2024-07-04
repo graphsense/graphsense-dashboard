@@ -23,6 +23,7 @@ module View.Locale exposing
     , timestamp
     , timestampDateUniform
     , timestampTimeUniform
+    , timesampDateTimeUniform
     , timestampWithFormat
     , tokenCurrencies
     , valuesToFloat
@@ -257,6 +258,25 @@ timestampTimeUniform model =
     let
         format =
             [ hourFixed
+            , DateFormat.text ":"
+            , minuteFixed
+            , DateFormat.text " "
+            , amPmUppercase
+            ]
+    in
+    timestampWithFormat format model
+
+timesampDateTimeUniform: Model -> Int -> String
+timesampDateTimeUniform model =
+    let
+        format =
+            [monthNameAbbreviated
+            , DateFormat.text " "
+            , dayOfMonthSuffix
+            , DateFormat.text ", "
+            , yearNumber
+            , DateFormat.text " "
+            , hourFixed
             , DateFormat.text ":"
             , minuteFixed
             , DateFormat.text " "

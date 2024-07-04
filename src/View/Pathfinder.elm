@@ -95,6 +95,7 @@ type ValueType
     | CurrencyWithCode Api.Data.Values String
     | InOut (Maybe Int) Int Int
     | Timestamp Int
+    | TimestampWithTime Int
     | CopyIdent String
 
 
@@ -153,6 +154,8 @@ renderValueTypeValue vc val =
 
         Timestamp ts ->
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
+        TimestampWithTime ts -> 
+            span [] [ Locale.timesampDateTimeUniform vc.locale ts |> Html.text ]
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
@@ -509,10 +512,7 @@ addressDetailsContentView vc gc model id viewState =
                 |> Dict.get id
                 |> Maybe.withDefault viewState.address
 
-        actor_id =
-            viewState.data.actors
-                |> Maybe.andThen List.head
-                |> Maybe.map .id
+        actor_id = Dict.get id model.tagSummaries |> Maybe.andThen .bestActor
 
         actor =
             actor_id
@@ -540,7 +540,7 @@ addressDetailsContentView vc gc model id viewState =
             [ detailsFactTableView vc (apiAddressToRows viewState.data), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
 
         addressAnnotationBtns =
-            getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tags)
+            getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
 
         df =
             GraphComponents.addressNodeNodeFrameDetails
@@ -680,7 +680,7 @@ apiAddressToRows address =
 
 apiUtxoTxToRows : Api.Data.TxUtxo -> List KVTableRow
 apiUtxoTxToRows tx =
-    [ Row "Timstamp" (Timestamp tx.timestamp)
+    [ Row "Timstamp" (TimestampWithTime tx.timestamp)
     , Gap
     , Row "Total Input" (Currency tx.totalInput tx.currency)
     , Row "Total Output" (Currency tx.totalOutput tx.currency)

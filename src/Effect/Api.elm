@@ -91,6 +91,7 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.AddressTxs -> msg)
+    
     | GetEntityAddressesEffect
         { currency : String
         , entity : Int
@@ -112,6 +113,11 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.AddressTags -> msg)
+    | GetAddressTagSummaryEffect
+        { currency : String
+        , address : String
+        }
+        (Api.Data.TagSummary -> msg)
     | GetActorTagsEffect
         { actorId : String
         , pagesize : Int
@@ -301,6 +307,10 @@ getAddressEgonet id msg layers =
 map : (msgA -> msgB) -> Effect msgA -> Effect msgB
 map mapMsg effect =
     case effect of
+        GetAddressTagSummaryEffect eff m ->
+            m
+                >> mapMsg
+                |> GetAddressTagSummaryEffect eff
         SearchEffect eff m ->
             m
                 >> mapMsg
@@ -475,6 +485,9 @@ map mapMsg effect =
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
+        GetAddressTagSummaryEffect { currency, address } toMsg ->
+            Api.Request.Addresses.getTagSummaryByAddress currency address
+                |> send apiKey wrapMsg effect toMsg
         SearchEffect { query, currency, limit } toMsg ->
             Api.Request.General.search query currency limit
                 |> Api.withTracker "search"

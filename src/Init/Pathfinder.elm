@@ -18,7 +18,7 @@ init : Maybe Api.Data.Stats -> ( Model, Cmd Msg )
 init _ =
     ( { network = Network.init
       , actors = Dict.empty
-      , tags = Dict.empty
+      , tagSummaries = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "eth", "trx", "zec", "ltc" ])

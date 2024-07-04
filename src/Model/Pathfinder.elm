@@ -28,7 +28,7 @@ unit =
 type alias Model =
     { network : Network
     , actors : Dict String Actor
-    , tags : Dict Id Api.Data.AddressTags
+    , tagSummaries : Dict Id Api.Data.TagSummary
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered
