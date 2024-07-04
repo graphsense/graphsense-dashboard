@@ -7,10 +7,10 @@ import Gen.Css as Css
 import Generate.Util exposing (..)
 
 
-toCss : HasFramePropertiesTrait -> List Elm.Expression
-toCss node =
+toStyles : HasFramePropertiesTrait -> List Elm.Expression
+toStyles node =
     []
-        |> m (RGBA.toCss >> Css.backgroundColor) node.backgroundColor
+        |> m (RGBA.toStyles >> Css.backgroundColor) node.backgroundColor
         |> m (Css.px >> Css.paddingLeft) node.paddingLeft
         |> m (Css.px >> Css.paddingRight) node.paddingRight
         |> m (Css.px >> Css.paddingTop) node.paddingTop

@@ -1,6 +1,7 @@
 module Msg.Pathfinder exposing (..)
 
 import Api.Data
+import Hovercard
 import Model.Direction exposing (Direction)
 import Model.Graph exposing (Dragging)
 import Model.Graph.Coords exposing (Coords)
@@ -56,6 +57,7 @@ type Msg
     | UserReleasedDeleteKey
     | UserMovesMouseOverUtxoTx Id
     | UserMovesMouseOutUtxoTx Id
+    | HovercardMsg Hovercard.Msg
 
 
 type DisplaySettingsMsg

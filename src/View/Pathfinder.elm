@@ -543,7 +543,7 @@ addressDetailsContentView vc gc model id viewState =
             getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tags)
 
         df =
-            GraphComponents.addressNodeNodeFrameDimensions
+            GraphComponents.addressNodeNodeFrameDetails
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]
@@ -583,8 +583,8 @@ addressDetailsContentView vc gc model id viewState =
                                                     img
                                                         [ src imgSrc
                                                         , HA.alt actorText_
-                                                        , HA.width <| round SidebarComponents.actorTagIconsTagDimensions.width
-                                                        , HA.height <| round SidebarComponents.actorTagIconsTagDimensions.height
+                                                        , HA.width <| round SidebarComponents.actorTagIconsTagDetails.width
+                                                        , HA.height <| round SidebarComponents.actorTagIconsTagDetails.height
                                                         ]
                                                         []
                                                 )

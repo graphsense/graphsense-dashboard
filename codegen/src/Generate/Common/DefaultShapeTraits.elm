@@ -2,11 +2,10 @@ module Generate.Common.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
-import Color exposing (Color)
+import Elm
 import Generate.Util exposing (..)
-import Generate.Util.Paint as Paint
 import RecordSetter exposing (s_absoluteBoundingBox, s_defaultShapeTraits)
-import Types exposing (Metadata, OriginAdjust)
+import Types exposing (Details, OriginAdjust)
 
 
 adjustBoundingBox : OriginAdjust -> { a | defaultShapeTraits : DefaultShapeTraits } -> { a | defaultShapeTraits : DefaultShapeTraits }
@@ -17,20 +16,26 @@ adjustBoundingBox { x, y } node =
         |> flip s_defaultShapeTraits node
 
 
-toMetadata : { a | defaultShapeTraits : DefaultShapeTraits } -> Metadata
-toMetadata node =
-    { name = node.defaultShapeTraits.isLayerTrait.name
-    , bbox = node.defaultShapeTraits.absoluteBoundingBox
-    , strokeWidth =
-        node.defaultShapeTraits.strokeWeight
-            |> Maybe.withDefault 0
-    , strokeColor = Paint.toColor node.defaultShapeTraits.hasGeometryTrait.strokes
-    , fillColor = Paint.toColor <| Just node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
-    , strokeOpacity =
-        node.defaultShapeTraits.hasGeometryTrait.strokes
-            |> Paint.getOpacity
-    , fillOpacity =
-        node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait.fills
-        |> Just
-        |> Paint.getOpacity
+getName : { a | defaultShapeTraits : DefaultShapeTraits } -> String
+getName node =
+    node.defaultShapeTraits.isLayerTrait.name
+
+
+getBoundingBox : { a | defaultShapeTraits : DefaultShapeTraits } -> Rectangle
+getBoundingBox node =
+    node.defaultShapeTraits.absoluteBoundingBox
+
+
+getStrokeWidth : { a | defaultShapeTraits : DefaultShapeTraits } -> Float
+getStrokeWidth node =
+    node.defaultShapeTraits.strokeWeight
+        |> Maybe.withDefault 0
+
+
+toDetails : List Elm.Expression -> { a | defaultShapeTraits : DefaultShapeTraits } -> Details
+toDetails styles node =
+    { name = getName node
+    , bbox = getBoundingBox node
+    , strokeWidth = getStrokeWidth node
+    , styles = styles
     }

@@ -2,11 +2,17 @@ module Generate.Html.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css
-import Generate.Util exposing (..)
+import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
+import Generate.Util exposing (..)
+import Types exposing (Details)
 
 
-toCss : DefaultShapeTraits -> List Elm.Expression
-toCss node =
-    HasGeometryTrait.toCss node.hasGeometryTrait
+toStyles : DefaultShapeTraits -> List Elm.Expression
+toStyles node =
+    HasGeometryTrait.toStyles node.hasGeometryTrait
+
+
+toDetails : { a | defaultShapeTraits : DefaultShapeTraits } -> Details
+toDetails node =
+    Common.toDetails (toStyles node.defaultShapeTraits) node

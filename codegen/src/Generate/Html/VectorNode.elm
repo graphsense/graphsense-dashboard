@@ -5,7 +5,7 @@ import Elm
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Svg.VectorNode
-import Types exposing (Config)
+import Types exposing (Config, Details)
 
 
 toExpressions : Config -> VectorNode -> List Elm.Expression
@@ -20,3 +20,8 @@ toExpressions config node =
                 |> Attributes.height
             ]
         |> List.singleton
+
+
+toDetails : VectorNode -> Details
+toDetails node =
+    Generate.Svg.VectorNode.toDetails node

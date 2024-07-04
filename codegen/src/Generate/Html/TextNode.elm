@@ -6,20 +6,20 @@ import Elm
 import Elm.Op
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
-import Generate.Common.TextNode exposing (getName)
+import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes)
-import Types exposing (Config)
+import Types exposing (Config, Details)
 
 
 toExpressions : Config -> TextNode -> List Elm.Expression
 toExpressions config node =
     Gen.Html.Styled.call_.div
-        (getName node
+        (Common.getName node
             |> getElementAttributes config
             |> Elm.Op.append
-                ([ toCss node |> Attributes.css ]
+                ([ toStyles node |> Attributes.css ]
                     |> Elm.list
                 )
         )
@@ -34,7 +34,12 @@ toExpressions config node =
         |> List.singleton
 
 
-toCss : TextNode -> List Elm.Expression
-toCss node =
-    TypeStyle.toCss node.style
-        ++ DefaultShapeTraits.toCss node.defaultShapeTraits
+toStyles : TextNode -> List Elm.Expression
+toStyles node =
+    TypeStyle.toStyles node.style
+        ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
+
+
+toDetails : TextNode -> Details
+toDetails node =
+    Common.toDetails (toStyles node) node

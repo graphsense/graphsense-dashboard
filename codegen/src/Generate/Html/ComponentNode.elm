@@ -5,6 +5,6 @@ import Elm
 import Generate.Html.FrameTraits as FrameTraits
 
 
-toCss : ComponentNode -> List Elm.Expression
-toCss node =
-    FrameTraits.toCss node.frameTraits
+toStyles : ComponentNode -> List Elm.Expression
+toStyles node =
+    FrameTraits.toStyles node.frameTraits

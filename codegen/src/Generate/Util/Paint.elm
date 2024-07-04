@@ -1,4 +1,4 @@
-module Generate.Util.Paint exposing (getBasePaint, toColor, toCss, toCssString, getOpacity)
+module Generate.Util.Paint exposing (getBasePaint, getOpacity, toColor, toStyles, toStylesString)
 
 import Api.Raw exposing (BasePaint, Paint(..), RGBA)
 import Elm
@@ -6,16 +6,16 @@ import Gen.Color as Color
 import Generate.Util.RGBA as RGBA
 
 
-toCss : List Paint -> Maybe Elm.Expression
-toCss =
+toStyles : List Paint -> Maybe Elm.Expression
+toStyles =
     toRGBA
-        >> Maybe.map RGBA.toCss
+        >> Maybe.map RGBA.toStyles
 
 
-toCssString : List Paint -> Maybe Elm.Expression
-toCssString =
+toStylesString : List Paint -> Maybe Elm.Expression
+toStylesString =
     toRGBA
-        >> Maybe.map RGBA.toCssString
+        >> Maybe.map RGBA.toStylesString
 
 
 toRGBA : List Paint -> Maybe RGBA

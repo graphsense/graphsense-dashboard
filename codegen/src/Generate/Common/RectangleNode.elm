@@ -9,7 +9,7 @@ import Types exposing (OriginAdjust)
 
 getName : RectangleNode -> String
 getName node =
-    node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.name
+    DefaultShapeTraits.getName node.rectangularShapeTraits
 
 
 adjustBoundingBox : OriginAdjust -> RectangleNode -> RectangleNode

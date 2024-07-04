@@ -7,7 +7,7 @@ import Elm.Annotation as Annotation
 import Gen.Svg.Styled
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
-import Types exposing (ComponentPropertyExpressions, Config, Metadata)
+import Types exposing (ComponentPropertyExpressions, Config, Details)
 
 
 m : (a -> Elm.Expression) -> Maybe a -> List Elm.Expression -> List Elm.Expression
@@ -126,28 +126,25 @@ toMatrix ( ( a_, c, e ), ( b, d, f ) ) =
         |> Format.value ([ a_, b, c, d, 0, 0 ] |> List.map String.fromFloat |> String.join ",")
 
 
-metadataToDeclaration : String -> Metadata -> Elm.Declaration
-metadataToDeclaration componentName metadata =
+detailsToDeclaration : String -> Details -> Elm.Declaration
+detailsToDeclaration componentName details =
     let
         prefix =
-            if componentName == metadata.name then
+            if componentName == details.name then
                 componentName
 
             else
-                componentName ++ " " ++ metadata.name
+                componentName ++ " " ++ details.name
     in
-    [ ( "x", Elm.float metadata.bbox.x )
-    , ( "y", Elm.float metadata.bbox.y )
-    , ( "width", Elm.float metadata.bbox.width )
-    , ( "height", Elm.float metadata.bbox.height )
-    , ( "strokeWidth", Elm.float metadata.strokeWidth )
-    , ( "strokeColor", Elm.maybe metadata.strokeColor )
-    , ( "fillColor", Elm.maybe metadata.fillColor )
-    , ( "strokeOpacity", Elm.float metadata.strokeOpacity )
-    , ( "fillOpacity", Elm.float metadata.fillOpacity )
+    [ ( "x", Elm.float details.bbox.x )
+    , ( "y", Elm.float details.bbox.y )
+    , ( "width", Elm.float details.bbox.width )
+    , ( "height", Elm.float details.bbox.height )
+    , ( "strokeWidth", Elm.float details.strokeWidth )
+    , ( "styles", Elm.list details.styles )
     ]
         |> Elm.record
-        |> Elm.declaration (prefix ++ " dimensions" |> sanitize)
+        |> Elm.declaration (prefix ++ " details" |> sanitize)
 
 
 sanitize : String -> String

@@ -7,10 +7,10 @@ import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
 
 
-toCss : MinimalFillsTrait -> List Elm.Expression
-toCss node =
+toStyles : MinimalFillsTrait -> List Elm.Expression
+toStyles node =
     []
-        |> m (Paint.toCss >> Maybe.withDefault Css.transparent >> Css.fill) (Just node.fills)
+        |> m (Paint.toStyles >> Maybe.withDefault Css.transparent >> Css.fill) (Just node.fills)
         |> a
             (Paint.getBasePaint
                 >> Maybe.andThen .opacity

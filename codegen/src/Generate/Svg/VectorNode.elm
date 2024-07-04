@@ -5,10 +5,12 @@ import Elm
 import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
+import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (a, toTranslate, withVisibility)
 import Generate.Util.Paint as Paint
-import Types exposing (Config)
+import Types exposing (Config, Details)
+import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 
 
 toExpressions : Config -> VectorNode -> List Elm.Expression
@@ -39,7 +41,7 @@ toStrokePaths node =
         css =
             []
                 |> a
-                    (Paint.toCssString
+                    (Paint.toStylesString
                         >> Maybe.map (Css.call_.property (Elm.string "fill"))
                     )
                     strokes
@@ -66,7 +68,7 @@ toFillPaths node =
     let
         css =
             node.cornerRadiusShapeTraits.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
-                |> MinimalFillsTrait.toCss
+                |> MinimalFillsTrait.toStyles
     in
     node.cornerRadiusShapeTraits.defaultShapeTraits.fillGeometry
         |> Maybe.map (List.map renderPath)
@@ -81,7 +83,10 @@ toFillPaths node =
 toAttributes : VectorNode -> List Elm.Expression
 toAttributes node =
     [ toTranslate node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox
-        --++ " "
-        --++ (Maybe.map toMatrix node.cornerRadiusShapeTraits.defaultShapeTraits.relativeTransform |> Maybe.withDefault "")
         |> Attributes.transform
     ]
+
+
+toDetails : VectorNode -> Details
+toDetails node =
+    Common.toDetails (DefaultShapeTraits.toStyles node.cornerRadiusShapeTraits.defaultShapeTraits) node.cornerRadiusShapeTraits

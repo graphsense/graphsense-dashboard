@@ -47,7 +47,7 @@ view _ _ _ address =
             ]
 
         fd =
-            GraphComponents.addressNodeNodeFrameDimensions
+            GraphComponents.addressNodeNodeFrameDetails
 
         adjX =
             fd.x + fd.width / 2

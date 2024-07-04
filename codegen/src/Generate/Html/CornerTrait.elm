@@ -6,8 +6,8 @@ import Gen.Css as Css
 import Generate.Util exposing (..)
 
 
-toCss : CornerTrait -> List Elm.Expression
-toCss node =
+toStyles : CornerTrait -> List Elm.Expression
+toStyles node =
     []
         |> m cornerRadius node.cornerRadius
         |> (++) (rectangleCornerRadii node.rectangleCornerRadii)

@@ -7,14 +7,14 @@ import Generate.Util.Paint as Paint
 import Generate.Util exposing (..)
 
 
-toCss : TypeStyle -> List Elm.Expression
-toCss node =
+toStyles : TypeStyle -> List Elm.Expression
+toStyles node =
     []
         |> m (List.singleton >> Css.fontFamilies) node.fontFamily
         --|> m italic node.italic
         |> m (round >> Css.int >> intOrAutoType >> Css.fontWeight) node.fontWeight
         |> m (Css.px >> Css.fontSize) node.fontSize
-        |> a (Paint.toCss >> Maybe.map Css.color) node.fills
+        |> a (Paint.toStyles >> Maybe.map Css.color) node.fills
         |> m (Css.px >> Css.letterSpacing) node.letterSpacing
         |> m (Css.px >> Css.lineHeight) node.lineHeightPx
 

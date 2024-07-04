@@ -7,6 +7,6 @@ import Gen.Css as Css
 import Generate.Util exposing (..)
 
 
-toCss : HasGeometryTrait -> List Elm.Expression
-toCss node =
-    MinimalFillsTrait.toCss node.minimalFillsTrait
+toStyles : HasGeometryTrait -> List Elm.Expression
+toStyles node =
+    MinimalFillsTrait.toStyles node.minimalFillsTrait

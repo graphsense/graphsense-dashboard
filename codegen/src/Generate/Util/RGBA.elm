@@ -6,8 +6,8 @@ import Gen.Css as Css
 import String.Format as Format
 
 
-toCss : RGBA -> Elm.Expression
-toCss { r, g, b, a } =
+toStyles : RGBA -> Elm.Expression
+toStyles { r, g, b, a } =
     let
         f =
             round << (*) 255
@@ -19,8 +19,8 @@ toCss { r, g, b, a } =
         a
 
 
-toCssString : RGBA -> Elm.Expression
-toCssString { r, g, b, a } =
+toStylesString : RGBA -> Elm.Expression
+toStylesString { r, g, b, a } =
     let
         f =
             String.fromInt << round << (*) 255

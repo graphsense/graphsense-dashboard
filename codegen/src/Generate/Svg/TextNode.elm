@@ -6,11 +6,12 @@ import Elm
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
+import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, m, mm)
-import Types exposing (Config)
+import Types exposing (Config, Details)
 
 
 toExpressions : Config -> TextNode -> List Elm.Expression
@@ -19,7 +20,7 @@ toExpressions config node =
         (getName node
             |> getElementAttributes config
             |> Elm.Op.append
-                ((toCss node |> Attributes.css)
+                ((toStyles node |> Attributes.css)
                     :: toAttributes node
                     |> Elm.list
                 )
@@ -38,10 +39,15 @@ toExpressions config node =
         |> List.singleton
 
 
-toCss : TextNode -> List Elm.Expression
-toCss node =
-    TypeStyle.toCss node.style
-        ++ DefaultShapeTraits.toCss node.defaultShapeTraits
+toStyles : TextNode -> List Elm.Expression
+toStyles node =
+    TypeStyle.toStyles node.style
+        ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
+
+
+toDetails : TextNode -> Details
+toDetails node =
+    Common.toDetails (toStyles node) node
 
 
 tspanAttributes : TextNode -> List Elm.Expression

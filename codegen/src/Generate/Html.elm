@@ -3,24 +3,26 @@ module Generate.Html exposing (..)
 {-| -}
 
 import Api.Raw exposing (..)
+import Basics.Extra exposing (uncurry)
 import Dict
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
-import Generate.Common as Common
-import Generate.Common.FrameTraits as FrameTraits
+import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
+import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Html.FrameTraits as FrameTraits
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
-import Generate.Util exposing (getElementAttributes, metadataToDeclaration, withVisibility)
+import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
 import Set
-import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
+import String.Case exposing (toCamelCaseUpper)
 import String.Extra
 import Tuple exposing (mapFirst)
-import Types exposing (Config)
+import Types exposing (Config, Details)
 
 
 subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
@@ -63,18 +65,43 @@ subcanvasNodeToExpressions config node =
             []
 
 
+subcanvasNodeToStyles : SubcanvasNode -> List Elm.Expression
+subcanvasNodeToStyles node =
+    case node of
+        SubcanvasNodeTextNode n ->
+            TextNode.toStyles n
+
+        SubcanvasNodeGroupNode n ->
+            FrameTraits.toStyles n.frameTraits
+
+        SubcanvasNodeFrameNode n ->
+            FrameTraits.toStyles n.frameTraits
+
+        SubcanvasNodeInstanceNode n ->
+            instanceNodeToStyles n
+
+        SubcanvasNodeRectangleNode n ->
+            RectangleNode.toStyles n
+
+        SubcanvasNodeVectorNode _ ->
+            []
+
+        _ ->
+            []
+
+
 componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
 componentNodeToDeclarations node =
     let
-        ( metadata, descendantsMetadata ) =
-            Common.withFrameTraitsNodeToMetadata node
+        ( details, descendantsDetails ) =
+            withFrameTraitsNodeToDetails node
 
         names =
-            metadata.name
-                :: List.map .name descendantsMetadata
+            details.name
+                :: List.map .name descendantsDetails
 
         formatName =
-            String.Extra.leftOf "#" >> toCamelCaseLower
+            String.Extra.leftOf "#" >> sanitize
 
         properties =
             node.componentPropertiesTrait.componentPropertyDefinitions
@@ -94,7 +121,7 @@ componentNodeToDeclarations node =
                 >> Set.toList
                 >> List.map
                     (\n ->
-                        ( toCamelCaseLower n
+                        ( sanitize n
                         , Elm.list []
                             |> Elm.withType
                                 (Gen.Html.Styled.annotation_.attribute
@@ -105,22 +132,22 @@ componentNodeToDeclarations node =
                     )
                 >> Elm.record
     in
-    metadata
-        :: descendantsMetadata
+    details
+        :: descendantsDetails
         |> List.foldl
             (\md ->
                 Dict.insert md.name md
             )
             Dict.empty
         |> Dict.values
-        |> List.map (metadataToDeclaration metadata.name)
+        |> List.map (detailsToDeclaration details.name)
         |> (++)
             [ properties
                 |> propertiesType
-                |> Elm.alias (metadata.name ++ " properties" |> toCamelCaseUpper)
+                |> Elm.alias (details.name ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
-                |> Elm.declaration ("default " ++ metadata.name ++ " attributes" |> toCamelCaseLower)
+                |> Elm.declaration ("default " ++ details.name ++ " attributes" |> sanitize)
             , Elm.fn2
                 ( "attributes"
                 , names
@@ -143,9 +170,9 @@ componentNodeToDeclarations node =
                             }
                     in
                     Gen.Html.Styled.call_.div
-                        (getElementAttributes config metadata.name
+                        (getElementAttributes config details.name
                             |> Elm.Op.append
-                                (ComponentNode.toCss node
+                                (ComponentNode.toStyles node
                                     |> Attributes.css
                                     |> List.singleton
                                     |> Elm.list
@@ -155,7 +182,7 @@ componentNodeToDeclarations node =
                             |> Elm.list
                         )
                 )
-                |> Elm.declaration (toCamelCaseLower metadata.name)
+                |> Elm.declaration (sanitize details.name)
             ]
 
 
@@ -190,8 +217,8 @@ propertiesType =
 withFrameTraitsNodeToExpressions : Config -> { a | frameTraits : FrameTraits } -> List Elm.Expression
 withFrameTraitsNodeToExpressions config node =
     let
-        { name } =
-            FrameTraits.toMetadata node
+        name =
+            Generate.Common.FrameTraits.getName node
     in
     Gen.Html.Styled.call_.div
         (getElementAttributes config name)
@@ -214,3 +241,60 @@ instanceNodeToExpressions config node =
             )
         |> Maybe.withDefault
             (withFrameTraitsNodeToExpressions config node)
+
+
+instanceNodeToStyles : InstanceNode -> List Elm.Expression
+instanceNodeToStyles _ =
+    []
+
+
+subcanvasNodeToDetails : SubcanvasNode -> List Details
+subcanvasNodeToDetails node =
+    case node of
+        SubcanvasNodeComponentNode n ->
+            withFrameTraitsNodeToDetails n
+                |> uncurry (::)
+
+        SubcanvasNodeComponentSetNode n ->
+            withFrameTraitsNodeToDetails n
+                |> uncurry (::)
+
+        SubcanvasNodeTextNode n ->
+            TextNode.toDetails n
+                |> List.singleton
+
+        SubcanvasNodeEllipseNode n ->
+            DefaultShapeTraits.toDetails n
+                |> List.singleton
+
+        SubcanvasNodeGroupNode n ->
+            withFrameTraitsNodeToDetails n
+                |> uncurry (::)
+
+        SubcanvasNodeFrameNode n ->
+            withFrameTraitsNodeToDetails n
+                |> uncurry (::)
+
+        SubcanvasNodeInstanceNode n ->
+            withFrameTraitsNodeToDetails n
+                |> uncurry (::)
+
+        SubcanvasNodeRectangleNode n ->
+            RectangleNode.toDetails n
+                |> List.singleton
+
+        SubcanvasNodeVectorNode n ->
+            VectorNode.toDetails n
+                |> List.singleton
+
+        _ ->
+            []
+
+
+withFrameTraitsNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )
+withFrameTraitsNodeToDetails node =
+    ( FrameTraits.toDetails node
+    , node.frameTraits.children
+        |> List.map subcanvasNodeToDetails
+        |> List.concat
+    )

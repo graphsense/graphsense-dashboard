@@ -12,7 +12,7 @@ import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tools exposing (PointerTool)
-import Model.Pathfinder.Tooltip as Tooltip exposing (Tooltip)
+import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
@@ -22,7 +22,7 @@ import Time exposing (Posix)
 
 unit : Float
 unit =
-    GraphComponents.addressNodeNodeFrameDimensions.width
+    GraphComponents.addressNodeNodeFrameDetails.width
 
 
 type alias Model =

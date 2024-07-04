@@ -7,7 +7,7 @@ import Generate.Util.Paint as Paint
 import Generate.Util exposing (..)
 
 
-toCss : MinimalFillsTrait -> List Elm.Expression
-toCss node =
+toStyles : MinimalFillsTrait -> List Elm.Expression
+toStyles node =
     []
-        |> a (Paint.toCss >> Maybe.map Css.color) (Just node.fills)
+        |> a (Paint.toStyles >> Maybe.map Css.color) (Just node.fills)

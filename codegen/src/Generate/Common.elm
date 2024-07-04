@@ -2,12 +2,13 @@ module Generate.Common exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (flip, uncurry)
+import Elm
 import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
 import RecordSetter exposing (s_children, s_frameTraits)
-import Types exposing (Metadata, OriginAdjust)
+import Types exposing (Details, OriginAdjust)
 
 
 adjustBoundingBoxes : ComponentNode -> ComponentNode
@@ -59,52 +60,6 @@ withFrameTraitsAdjustBoundingBox adjust node =
         |> FrameTraits.adjustBoundingBox adjust
 
 
-subcanvasNodeToMetadata : SubcanvasNode -> List Metadata
-subcanvasNodeToMetadata node =
-    case node of
-        SubcanvasNodeComponentNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeComponentSetNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeTextNode n ->
-            DefaultShapeTraits.toMetadata n
-                |> List.singleton
-
-        SubcanvasNodeEllipseNode n ->
-            DefaultShapeTraits.toMetadata n
-                |> List.singleton
-
-        SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeInstanceNode n ->
-            withFrameTraitsNodeToMetadata n
-                |> uncurry (::)
-
-        SubcanvasNodeRectangleNode n ->
-            n.rectangularShapeTraits
-                |> DefaultShapeTraits.toMetadata
-                |> List.singleton
-
-        SubcanvasNodeVectorNode n ->
-            n.cornerRadiusShapeTraits
-                |> DefaultShapeTraits.toMetadata
-                |> List.singleton
-
-        _ ->
-            []
-
-
-withFrameTraitsNodeToMetadata : { a | frameTraits : FrameTraits } -> ( Metadata, List Metadata )
-withFrameTraitsNodeToMetadata node =
-    ( FrameTraits.toMetadata node, frameTraitsToMetadata node.frameTraits )
-
-
 getOriginAdjust : ComponentNode -> OriginAdjust
 getOriginAdjust node =
     node.frameTraits.absoluteBoundingBox
@@ -114,9 +69,3 @@ getOriginAdjust node =
                 }
            )
 
-
-frameTraitsToMetadata : FrameTraits -> List Metadata
-frameTraitsToMetadata node =
-    node.children
-        |> List.map subcanvasNodeToMetadata
-        |> List.concat

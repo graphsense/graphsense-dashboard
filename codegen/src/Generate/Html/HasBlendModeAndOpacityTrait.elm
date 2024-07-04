@@ -6,8 +6,8 @@ import Gen.Css
 import Generate.Util exposing (..)
 
 
-toCss : HasBlendModeAndOpacityTrait -> List Elm.Expression
-toCss node =
+toStyles : HasBlendModeAndOpacityTrait -> List Elm.Expression
+toStyles node =
     []
         |> m opacity node.opacity
 

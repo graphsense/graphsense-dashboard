@@ -1,7 +1,7 @@
-module Gen.Color exposing (annotation_, black, blue, brown, call_, charcoal, darkBlue, darkBrown, darkCharcoal, darkGray, darkGreen, darkGrey, darkOrange, darkPurple, darkRed, darkYellow, fromHsla, fromRgba, gray, green, grey, hsl, hsla, lightBlue, lightBrown, lightCharcoal, lightGray, lightGreen, lightGrey, lightOrange, lightPurple, lightRed, lightYellow, moduleName_, orange, purple, red, rgb, rgb255, rgba, toCssString, toHsla, toRgba, values_, white, yellow)
+module Gen.Color exposing (annotation_, black, blue, brown, call_, charcoal, darkBlue, darkBrown, darkCharcoal, darkGray, darkGreen, darkGrey, darkOrange, darkPurple, darkRed, darkYellow, fromHsla, fromRgba, gray, green, grey, hsl, hsla, lightBlue, lightBrown, lightCharcoal, lightGray, lightGreen, lightGrey, lightOrange, lightPurple, lightRed, lightYellow, moduleName_, orange, purple, red, rgb, rgb255, rgba, toStylesString, toHsla, toRgba, values_, white, yellow)
 
 {-| 
-@docs moduleName_, rgb255, rgb, rgba, hsl, hsla, fromRgba, fromHsla, toCssString, toRgba, toHsla, red, orange, yellow, green, blue, purple, brown, lightRed, lightOrange, lightYellow, lightGreen, lightBlue, lightPurple, lightBrown, darkRed, darkOrange, darkYellow, darkGreen, darkBlue, darkPurple, darkBrown, white, lightGrey, grey, darkGrey, lightCharcoal, charcoal, darkCharcoal, black, lightGray, gray, darkGray, annotation_, call_, values_
+@docs moduleName_, rgb255, rgb, rgba, hsl, hsla, fromRgba, fromHsla, toStylesString, toRgba, toHsla, red, orange, yellow, green, blue, purple, brown, lightRed, lightOrange, lightYellow, lightGreen, lightBlue, lightPurple, lightBrown, darkRed, darkOrange, darkYellow, darkGreen, darkBlue, darkPurple, darkBrown, white, lightGrey, grey, darkGrey, lightCharcoal, charcoal, darkCharcoal, black, lightGray, gray, darkGray, annotation_, call_, values_
 -}
 
 
@@ -258,20 +258,20 @@ which is supported by all current web browsers, all versions of Firefox,
 all versions of Chrome, IE 9+, and all common mobile browsers
 ([browser support details](https://caniuse.com/#feat=css3-colors)).
 
-    Html.Attributes.style "background-color" (Color.toCssString Color.lightPurple)
+    Html.Attributes.style "background-color" (Color.toStylesString Color.lightPurple)
 
 Note: the current implementation produces a string in the form
 `rgba(rr.rr%,gg.gg%,bb.bb%,a.aaa)`, but this may change in the
 future, and you should not rely on this implementation detail.
 
-toCssString: Color.Color -> String
+toStylesString: Color.Color -> String
 -}
-toCssString : Elm.Expression -> Elm.Expression
-toCssString toCssStringArg =
+toStylesString : Elm.Expression -> Elm.Expression
+toStylesString toStylesStringArg =
     Elm.apply
         (Elm.value
              { importFrom = [ "Color" ]
-             , name = "toCssString"
+             , name = "toStylesString"
              , annotation =
                  Just
                      (Type.function
@@ -280,7 +280,7 @@ toCssString toCssStringArg =
                      )
              }
         )
-        [ toCssStringArg ]
+        [ toStylesStringArg ]
 
 
 {-| Extract the RGBA (red, green, blue, alpha) components from a color.
@@ -691,7 +691,7 @@ call_ :
         -> Elm.Expression
     , fromRgba : Elm.Expression -> Elm.Expression
     , fromHsla : Elm.Expression -> Elm.Expression
-    , toCssString : Elm.Expression -> Elm.Expression
+    , toStylesString : Elm.Expression -> Elm.Expression
     , toRgba : Elm.Expression -> Elm.Expression
     , toHsla : Elm.Expression -> Elm.Expression
     }
@@ -821,12 +821,12 @@ call_ =
                      }
                 )
                 [ fromHslaArg ]
-    , toCssString =
-        \toCssStringArg ->
+    , toStylesString =
+        \toStylesStringArg ->
             Elm.apply
                 (Elm.value
                      { importFrom = [ "Color" ]
-                     , name = "toCssString"
+                     , name = "toStylesString"
                      , annotation =
                          Just
                              (Type.function
@@ -835,7 +835,7 @@ call_ =
                              )
                      }
                 )
-                [ toCssStringArg ]
+                [ toStylesStringArg ]
     , toRgba =
         \toRgbaArg ->
             Elm.apply
@@ -889,7 +889,7 @@ values_ :
     , hsla : Elm.Expression
     , fromRgba : Elm.Expression
     , fromHsla : Elm.Expression
-    , toCssString : Elm.Expression
+    , toStylesString : Elm.Expression
     , toRgba : Elm.Expression
     , toHsla : Elm.Expression
     , red : Elm.Expression
@@ -1015,10 +1015,10 @@ values_ =
                          (Type.namedWith [ "Color" ] "Color" [])
                     )
             }
-    , toCssString =
+    , toStylesString =
         Elm.value
             { importFrom = [ "Color" ]
-            , name = "toCssString"
+            , name = "toStylesString"
             , annotation =
                 Just
                     (Type.function

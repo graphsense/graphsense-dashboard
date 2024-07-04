@@ -20,7 +20,7 @@ toExpressions config node =
     Gen.Svg.Styled.call_.ellipse
         (getElementAttributes config name
             |> Elm.Op.append
-                ((toCss node
+                ((toStyles node
                     |> Gen.Svg.Styled.Attributes.css
                  )
                     :: toAttributes node
@@ -37,9 +37,9 @@ getName node =
     node.defaultShapeTraits.isLayerTrait.name
 
 
-toCss : EllipseNode -> List Elm.Expression
-toCss node =
-    DefaultShapeTraits.toCss node.defaultShapeTraits
+toStyles : EllipseNode -> List Elm.Expression
+toStyles node =
+    DefaultShapeTraits.toStyles node.defaultShapeTraits
 
 
 toAttributes : EllipseNode -> List Elm.Expression

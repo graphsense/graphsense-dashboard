@@ -37,7 +37,7 @@ view _ _ _ id highlight tx =
                 >> List.any (second >> .visible >> not)
 
         fd =
-            GraphComponents.txNodeBodyEllipseDimensions
+            GraphComponents.txNodeBodyEllipseDetails
 
         adjX =
             fd.x + fd.width / 2
@@ -63,6 +63,8 @@ view _ _ _ id highlight tx =
                 , UserMovesMouseOutUtxoTx id
                     |> onMouseOut
                 , css [ Css.cursor Css.pointer ]
+                , Id.toString id
+                    |> Svg.Styled.Attributes.id
                 ]
         }
         { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
@@ -97,7 +99,7 @@ edge _ vc _ addresses hovered tx =
                 |> toValues
 
         fd =
-            GraphComponents.addressNodeNodeFrameDimensions
+            GraphComponents.addressNodeNodeFrameDetails
 
         rad =
             fd.width / 2

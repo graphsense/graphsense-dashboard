@@ -9,7 +9,7 @@ import Types exposing (OriginAdjust)
 
 getName : VectorNode -> String
 getName node =
-    node.cornerRadiusShapeTraits.defaultShapeTraits.isLayerTrait.name
+    DefaultShapeTraits.getName node.cornerRadiusShapeTraits
 
 
 adjustBoundingBox : OriginAdjust -> VectorNode -> VectorNode

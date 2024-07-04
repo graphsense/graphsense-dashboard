@@ -1,7 +1,6 @@
 module Types exposing (..)
 
 import Api.Raw exposing (Rectangle)
-import Color exposing (Color)
 import Dict exposing (Dict)
 import Elm exposing (Expression)
 
@@ -12,14 +11,11 @@ type alias Config =
     }
 
 
-type alias Metadata =
+type alias Details =
     { name : String
     , bbox : Rectangle
     , strokeWidth : Float
-    , strokeColor : Maybe Expression
-    , fillColor : Maybe Expression
-    , strokeOpacity : Float
-    , fillOpacity : Float
+    , styles : List Elm.Expression
     }
 
 

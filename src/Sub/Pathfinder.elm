@@ -1,6 +1,7 @@
 module Sub.Pathfinder exposing (subscriptions)
 
 import Browser.Events
+import Hovercard
 import Json.Decode as Decode
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Model)
@@ -47,13 +48,14 @@ toKeyUp keyValue =
 
         "y" ->
             UserReleasedNormalKey keyValue
-        
+
         "Delete" ->
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserReleasedDeleteKey
 
         _ ->
             NoOp
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -73,5 +75,8 @@ subscriptions model =
 
       else
         Browser.Events.onAnimationFrameDelta AnimationFrameDeltaForMove
+    , model.tooltip
+        |> Maybe.map (.hovercard >> Hovercard.subscriptions >> Sub.map HovercardMsg)
+        |> Maybe.withDefault Sub.none
     ]
         |> Sub.batch

@@ -128,6 +128,17 @@ coloredPath vc c =
             , y2 - c.y1
             )
 
+        ( val, pa ) =
+            if c.isOutgoing then
+                ( GraphComponents.outputPathOutputValueDetails
+                , GraphComponents.outputPathDetails
+                )
+
+            else
+                ( GraphComponents.inputPathInputValueDetails
+                , GraphComponents.inputPathDetails
+                )
+
         ( nodes, lx, ly ) =
             let
                 ( mx, my ) =
@@ -140,46 +151,40 @@ coloredPath vc c =
                         ( mx, c.y1 )
                         ( mx, c.y2 )
               ]
-            , mx
-            , my
+            , if c.isOutgoing then
+                if dx < 0 then
+                    x2 + val.x
+
+                else
+                    x2 - (pa.width - val.x - val.width)
+
+              else if dx < 0 then
+                c.x1 - val.x - val.width
+
+              else
+                c.x1 + val.x
+            , if c.isOutgoing then
+                c.y2 + val.y
+
+              else
+                c.y1 + val.y
             )
-
-        fd =
-            GraphComponents.txLabelDimensions
-
-        adjX =
-            fd.x + fd.width / 2
-
-        adjY =
-            fd.y + fd.height / 2
-
-        dim =
-            if c.isOutgoing then
-                GraphComponents.outputPathHighlightLineDimensions
-
-            else
-                GraphComponents.inputPathHighlightLineDimensions
     in
     [ if c.highlight then
+        let
+            det =
+                if c.isOutgoing then
+                    GraphComponents.outputPathHighlightLineDetails
+
+                else
+                    GraphComponents.inputPathHighlightLineDetails
+        in
         Svg.path
             [ nodes
                 |> (::) (M ( c.x1, c.y1 ))
                 |> pathD
                 |> d
-            , css
-                ([ dim.strokeWidth
-                    |> String.fromFloat
-                    |> Css.property "stroke-width"
-                 , dim.strokeOpacity
-                    |> String.fromFloat
-                    |> Css.property "opacity"
-                 , Css.property "fill" "none"
-                 ]
-                    ++ (dim.strokeColor
-                            |> Maybe.map (Util.View.colorToHex >> Css.property "stroke" >> List.singleton)
-                            |> Maybe.withDefault []
-                       )
-                )
+            , css det.styles
             ]
             []
 
@@ -190,33 +195,40 @@ coloredPath vc c =
             |> (::) (M ( c.x1, c.y1 ))
             |> pathD
             |> d
-        , css
-            [ "url(#{{ prefix }}{{ direction }}Edge{{ back }})"
-                |> Format.namedValue "prefix"
-                    (if c.isUtxo then
-                        "utxo"
+        , let
+            det =
+                if c.isOutgoing then
+                    GraphComponents.outputPathMainLineDetails
 
-                     else
-                        "account"
-                    )
-                |> Format.namedValue "direction"
-                    (if c.isOutgoing then
-                        "Out"
+                else
+                    GraphComponents.inputPathMainLineDetails
+          in
+          det.styles
+            ++ [ "url(#{{ prefix }}{{ direction }}Edge{{ back }})"
+                    |> Format.namedValue "prefix"
+                        (if c.isUtxo then
+                            "utxo"
 
-                     else
-                        "In"
-                    )
-                |> Format.namedValue "back"
-                    (if dx > 0 then
-                        "Forth"
+                         else
+                            "account"
+                        )
+                    |> Format.namedValue "direction"
+                        (if c.isOutgoing then
+                            "Out"
 
-                     else
-                        "Back"
-                    )
-                |> Css.property "stroke"
-            , Css.property "fill" "none"
-            , Css.property "stroke-width" "2px"
-            ]
+                         else
+                            "In"
+                        )
+                    |> Format.namedValue "back"
+                        (if dx > 0 then
+                            "Forth"
+
+                         else
+                            "Back"
+                        )
+                    |> Css.property "stroke"
+               ]
+            |> css
         ]
         []
     , if c.isOutgoing then
@@ -258,24 +270,25 @@ coloredPath vc c =
             c.label
                 |> String.length
                 |> toFloat
-                |> (*) (GraphComponents.txLabelLabelDimensions.width / 3)
+                |> (*) (GraphComponents.txLabelLabelDetails.width / 3)
 
         fr =
-            GraphComponents.txLabelRectangleDimensions
+            GraphComponents.txLabelRectangleDetails
       in
-      GraphComponents.txLabel
-        { defaultTxLabelAttributes
-            | txLabel =
-                [ translate (lx - adjX) (ly - adjY)
-                    |> transform
-                ]
-            , rectangle =
-                [ String.fromFloat lw
-                    |> width
-                , fr.width / 2 - lw / 2 |> String.fromFloat |> x
-                ]
-        }
-        { label = c.label }
+      tspan
+        [ alignmentBaseline "hanging"
+        ]
+        [ text c.label ]
+        |> List.singleton
+        |> text_
+            [ translate lx ly
+                |> transform
+            , if c.isOutgoing then
+                textAnchor "end"
+
+              else
+                textAnchor "start"
+            ]
     ]
         |> g
             [ c.opacity |> String.fromFloat |> opacity

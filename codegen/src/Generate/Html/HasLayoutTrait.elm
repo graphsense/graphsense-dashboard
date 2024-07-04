@@ -6,8 +6,8 @@ import Gen.Css as Css
 import Generate.Util exposing (..)
 
 
-toCss : HasLayoutTrait -> List Elm.Expression
-toCss node =
+toStyles : HasLayoutTrait -> List Elm.Expression
+toStyles node =
     []
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
 

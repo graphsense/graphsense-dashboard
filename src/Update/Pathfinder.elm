@@ -10,10 +10,12 @@ import Dict.Nonempty as NDict
 import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
+import Hovercard
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.AddressDetails as AddressDetails
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Network as Network
+import Init.Pathfinder.Tooltip as Tooltip
 import Init.Pathfinder.TxDetails as TxDetails
 import List.Extra
 import Log
@@ -443,7 +445,12 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserMovesMouseOverUtxoTx id ->
-            { model
+            let
+                ( hc, cmd ) =
+                    Id.toString id
+                        |> Hovercard.init
+            in
+            ( { model
                 | tooltip =
                     model.network.txs
                         |> Dict.get id
@@ -451,30 +458,42 @@ updateByMsg plugins uc msg model =
                             (\tx ->
                                 case tx.type_ of
                                     Tx.Utxo t ->
-                                        Just <| Tooltip.UtxoTx t
+                                        Tooltip.UtxoTx t
+                                            |> Tooltip.init hc
+                                            |> Just
 
                                     _ ->
                                         Nothing
                             )
                 , network = Network.updateTx id (s_hovered True) model.network
                 , hovered = HoveredTx id
-            }
-                |> n
+              }
+            , Cmd.map HovercardMsg cmd
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        HovercardMsg hcMsg ->
+            model.tooltip
+                |> Maybe.map
+                    (\tooltip ->
+                        let
+                            ( hc, cmd ) =
+                                Hovercard.update hcMsg tooltip.hovercard
+                        in
+                        ( { model
+                            | tooltip = Just { tooltip | hovercard = hc }
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                    )
+                |> Maybe.withDefault (n model)
 
         UserMovesMouseOutUtxoTx id ->
             { model
-                | tooltip =
-                    model.network.txs
-                        |> Dict.get id
-                        |> Maybe.andThen
-                            (\tx ->
-                                case tx.type_ of
-                                    Tx.Utxo t ->
-                                        Just <| Tooltip.UtxoTx t
-
-                                    _ ->
-                                        Nothing
-                            )
+                | tooltip = Nothing
                 , network = Network.updateTx id (s_hovered False) model.network
                 , hovered =
                     if model.hovered == HoveredTx id then
