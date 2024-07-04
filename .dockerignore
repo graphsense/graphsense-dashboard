@@ -3,5 +3,4 @@ elm-stuff
 Dockerfile
 README.md
 npm-debug.log
-Makefile
 dist
