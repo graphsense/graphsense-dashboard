@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table exposing (PagedTable, decPage, getPage, incPage, nrPages, setLoading)
+module Model.Pathfinder.Table exposing (PagedTable, decPage, getPage, incPage, nrPages, setLoading, hasNextPage, isNextPageLoaded)
 
 import Model.Graph.Table exposing (Table)
 import RecordSetter exposing (s_loading)
@@ -43,11 +43,21 @@ setLoading l pt =
     in
     { pt | table = t |> s_loading l }
 
-
-getPage : PagedTable d -> List d
-getPage pt =
+getPageByNr: PagedTable d -> Int -> List d
+getPageByNr pt nr =
     let
         drp =
-            (pt.currentPage - 1) * pt.itemsPerPage
+            (nr - 1) * pt.itemsPerPage
     in
     (List.drop drp >> List.take pt.itemsPerPage) pt.table.filtered
+
+getPage : PagedTable d -> List d
+getPage pt = getPageByNr pt pt.currentPage
+
+hasNextPage: PagedTable d -> Bool
+hasNextPage pt =
+        (isNextPageLoaded pt) || (pt.table.nextpage /= Nothing)
+
+isNextPageLoaded: PagedTable d -> Bool
+isNextPageLoaded pt =
+        (List.length (getPageByNr pt (pt.currentPage + 1))) > 0

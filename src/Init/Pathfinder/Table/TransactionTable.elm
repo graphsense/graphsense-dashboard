@@ -77,6 +77,41 @@ init network locale address data =
                 |> List.singleton
             )
 
+initWithoutFilter : Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+initWithoutFilter address data =
+    let
+        nrItems =
+            data.noIncomingTxs + data.noOutgoingTxs
+
+        itemsPerPage = 5
+
+        table isDesc =
+            { table =
+                Init.Graph.Table.initSorted isDesc TransactionTable.titleTimestamp
+            , nrItems = Just <| nrItems
+            , currentPage = 1
+            , itemsPerPage = itemsPerPage
+            }
+    in
+    ( { table = table True
+        , order = Nothing
+        , dateRangePicker = Nothing
+        }
+    , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
+        |> Api.GetAddressTxsEffect
+            { currency = Id.network address.id
+            , address = Id.id address.id
+            , direction = Nothing
+            , pagesize = itemsPerPage
+            , nextpage = Nothing
+            , order = Nothing
+            , minHeight = Nothing
+            , maxHeight = Nothing
+            }
+        |> ApiEffect
+        |> List.singleton
+    )
+
 
 loadTxs : Id.Id -> Posix -> Posix -> List Effect
 loadTxs id mn mx =

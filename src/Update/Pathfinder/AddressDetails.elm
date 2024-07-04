@@ -123,7 +123,7 @@ update uc pathfinderModel msg id model =
         UserClickedNextPageTransactionTable ->
             let
                 ( eff, loading ) =
-                    if not (model.txs.table.table.nextpage == Nothing) then
+                    if not (model.txs.table.table.nextpage == Nothing) && not (PT.isNextPageLoaded model.txs.table) then
                         ( (GotNextPageTxsForAddressDetails id >> AddressDetailsMsg)
                             |> Api.GetAddressTxsEffect
                                 { currency = Id.network id
@@ -154,7 +154,11 @@ update uc pathfinderModel msg id model =
                 )
 
             else
-                n model
+                n { model
+                    | txs =
+                        PT.incPage model.txs.table
+                            |> flip s_table model.txs
+                  }
 
         UserClickedPreviousPageTransactionTable ->
             ( { model | txs = PT.decPage model.txs.table |> flip s_table model.txs }, [] )
@@ -248,13 +252,14 @@ update uc pathfinderModel msg id model =
                 |> Maybe.map
                     (\_ ->
                         let
-                            ( m2, eff ) =
-                                updateDatePickerRangeBlockRange uc pathfinderModel id model Reset Reset
+                            -- ( m2, eff ) =
+                            --     updateDatePickerRangeBlockRange uc pathfinderModel id model Reset Reset
+                            (ft, teff) = (TransactionTable.initWithoutFilter model.address model.data)
                         in
-                        ( { m2
-                            | txs = s_dateRangePicker Nothing m2.txs
+                        ( { model
+                            | txs = ft
                           }
-                        , eff
+                        , teff
                         )
                     )
                 |> Maybe.withDefault (n model)
