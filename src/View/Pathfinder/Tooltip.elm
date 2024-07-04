@@ -12,6 +12,7 @@ import Model.Pathfinder.Tx as Tx
 import Theme.Html.GraphComponents as GraphComponents exposing (defaultProperty1DownAttributes)
 import Util.Css as Css
 import Util.View exposing (none, truncateLongIdentifierWithLengths)
+import View.Locale as Locale
 
 
 view : View.Config -> Tooltip -> Html msg
@@ -40,42 +41,41 @@ view vc tt =
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg
 utxoTx vc tx =
     let
-        row key value =
-            div
-                [ css
-                    [ Css.displayFlex
+        key =
+            Locale.string vc.locale
+                >> text
+                >> List.singleton
+                >> div
+                    [ css GraphComponents.property1DownLabel1Details.styles
                     ]
-                ]
-                [ div
-                    [ css
-                        [ Css.lineHeight (Css.px 14.0625)
-                        , Css.letterSpacing (Css.px -0.24)
-                        , Css.fontSize (Css.px 12)
-                        , Css.fontWeight (Css.int 400)
-                        , Css.fontFamilies [ "Roboto" ]
-                        , Css.color (Css.rgba 121 121 121 1)
-                        , Css.whiteSpace Css.noWrap
-                        , Css.width <| Css.px 100
-                        ]
+
+        val =
+            List.singleton
+                >> div
+                    [ css GraphComponents.property1DownValue1Details.styles
                     ]
-                    [ text key
-                    ]
-                , div
-                    [ css [ Css.whiteSpace Css.noWrap ]
-                    ]
-                    [ text value
-                    ]
-                ]
     in
     div
-        [ css
-            [ Css.padding2 (Css.px 10) (Css.px 15)
-            , Css.displayFlex
-            , Css.flexDirection Css.column
-            , Css.property "gap" "6px"
-            ]
+        [ css GraphComponents.property1DownDetails.styles
         ]
-        [ tx.raw.txHash
-            |> truncateLongIdentifierWithLengths 6 3
-            |> row "Tx hash"
+        [ div
+            [ css GraphComponents.property1DownContent1Details.styles
+            , css [ Css.whiteSpace Css.noWrap ]
+            ]
+            [ key "Tx hash"
+            , key "Timestamp"
+            ]
+        , div
+            [ css GraphComponents.property1DownContent2Details.styles
+            , css [ Css.whiteSpace Css.noWrap ]
+            ]
+            [ tx.raw.txHash
+                |> truncateLongIdentifierWithLengths 6 3
+                |> text
+                |> val
+            , tx.raw.timestamp
+                |> Locale.timestamp vc.locale
+                |> text
+                |> val
+            ]
         ]

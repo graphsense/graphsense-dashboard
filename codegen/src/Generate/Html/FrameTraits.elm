@@ -14,8 +14,8 @@ toStyles : FrameTraits -> List Elm.Expression
 toStyles node =
     CornerTrait.toStyles node.cornerTrait
         ++ HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
-        ++ HasFramePropertiesTrait.toStyles node.hasFramePropertiesTrait
         ++ HasLayoutTrait.toStyles node.hasLayoutTrait
+        ++ HasFramePropertiesTrait.toStyles node.hasFramePropertiesTrait
 
 
 toDetails : { a | frameTraits : FrameTraits } -> Details
