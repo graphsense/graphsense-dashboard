@@ -1,4 +1,4 @@
-include .env
+-include .env
 
 API_ELM=openapi/src/Api.elm
 REST_URL?=https://app.ikna.io
