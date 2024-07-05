@@ -70,7 +70,7 @@ utxoTx vc tx =
             , css [ Css.whiteSpace Css.noWrap ]
             ]
             [ tx.raw.txHash
-                |> truncateLongIdentifierWithLengths 8 3
+                |> truncateLongIdentifierWithLengths 8 4
                 |> text
                 |> val
             , tx.raw.timestamp

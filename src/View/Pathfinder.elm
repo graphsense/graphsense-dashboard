@@ -50,7 +50,7 @@ import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
-import Util.View exposing (copyableLongIdentifier, none)
+import Util.View exposing (copyableLongIdentifierPathfinder, none)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -150,7 +150,7 @@ renderValueTypeValue vc val =
             span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
 
         CopyIdent ident ->
-            Util.View.copyableLongIdentifier vc [] ident
+            Util.View.copyableLongIdentifierPathfinder vc [] ident
 
         Timestamp ts ->
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
@@ -661,7 +661,7 @@ longIdentDetailsHeadingView vc _ id typeName annotations =
     in
     div []
         [ h1 [ panelHeadingStyle2 vc |> toAttr ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
-        , copyableLongIdentifier vc [ copyableIdentifierStyle vc |> toAttr ] (Id.id id)
+        , copyableLongIdentifierPathfinder vc [ copyableIdentifierStyle vc |> toAttr ] (Id.id id)
         ]
 
 

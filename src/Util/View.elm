@@ -197,6 +197,20 @@ copyableLongIdentifier vc attr identifier =
         ]
 
 
+copyableLongIdentifierPathfinder: View.Config -> List (Attribute msg) -> String -> Html msg
+copyableLongIdentifierPathfinder vc attr identifier =
+    span
+        [ Css.longIdentifier vc |> css
+        ]
+        [ text (truncateLongIdentifierWithLengths 8 4 identifier)
+            |> List.singleton
+            |> span
+                (title identifier
+                    :: attr
+                )
+        , copyIcon vc identifier
+        ]
+
 copyIcon : View.Config -> String -> Html msg
 copyIcon =
     copyIconWithAttr []

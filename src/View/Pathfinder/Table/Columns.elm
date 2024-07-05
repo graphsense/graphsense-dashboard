@@ -4,13 +4,12 @@ import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS
-import Html.Events
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier)
 import Table
-import Util.View exposing (copyableLongIdentifier, nona, none)
+import Util.View exposing (copyableLongIdentifierPathfinder, none)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 
@@ -62,7 +61,7 @@ txColumn vc { label, accessor, onClick } =
         , viewData =
             \data ->
                 accessor data
-                    |> copyableLongIdentifier vc []
+                    |> copyableLongIdentifierPathfinder vc []
                     |> List.singleton
                     |> Table.HtmlDetails
                         (([ PCSS.mGap |> Css.padding ] |> css)
