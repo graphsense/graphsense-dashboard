@@ -375,11 +375,23 @@ updateByMsg plugins uc msg model =
                                 }
 
                 DraggingNode id _ _ ->
+                    let
+
+                        moveNode txOrAdrId net = Network.updateAddress txOrAdrId (Node.release) net
+                                        |> Network.updateTx txOrAdrId
+                                            (Tx.updateUtxo (Node.release))
+
+                        moveSelectedNode sel net = case sel of
+                                    MSelectedAddress aid -> moveNode aid net
+                                    MSelectedTx tid -> moveNode tid net
+
+                        network = case model.selection of
+                                MultiSelect sel -> List.foldl (moveSelectedNode) model.network sel
+                                _ -> moveNode id model.network
+                    in
                     n
                         { model
-                            | network =
-                                Network.updateAddress id Node.release model.network
-                                    |> Network.updateTx id (Tx.updateUtxo Node.release)
+                            | network = network
                             , dragging = NoDragging
                         }
 
@@ -527,12 +539,21 @@ updateByMsg plugins uc msg model =
                             { x = vector.x / unit
                             , y = vector.y / unit
                             }
+
+                        moveNode txOrAdrId net = Network.updateAddress txOrAdrId (Node.move vectorRel) net
+                                        |> Network.updateTx txOrAdrId
+                                            (Tx.updateUtxo (Node.move vectorRel))
+
+                        moveSelectedNode sel net = case sel of
+                                    MSelectedAddress aid -> moveNode aid net
+                                    MSelectedTx tid -> moveNode tid net
+
+                        network = case model.selection of
+                                MultiSelect sel -> List.foldl (moveSelectedNode) model.network sel
+                                _ -> moveNode id model.network
                     in
                     { model
-                        | network =
-                            Network.updateAddress id (Node.move vectorRel) model.network
-                                |> Network.updateTx id
-                                    (Tx.updateUtxo (Node.move vectorRel))
+                        | network = network
                         , dragging = DraggingNode id start coords
                     }
                         |> n
