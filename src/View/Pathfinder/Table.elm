@@ -30,7 +30,9 @@ pageIndicatorView : PagedTable data -> Html msg
 pageIndicatorView pt =
     let
         pageText =
-            (pt.currentPage |> String.fromInt) -- ++ " of " ++ (PT.nrPages pt |> Maybe.map String.fromInt |> Maybe.withDefault "?")
+            pt.currentPage |> String.fromInt
+
+        -- ++ " of " ++ (PT.nrPages pt |> Maybe.map String.fromInt |> Maybe.withDefault "?")
     in
     span [] [ text pageText ]
 
@@ -48,10 +50,12 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
     let
         tbl =
             tblPaged.table
+
         filteredData =
             PT.getPage tblPaged
 
-        nextPageAvailable = PT.hasNextPage tblPaged
+        nextPageAvailable =
+            PT.hasNextPage tblPaged
     in
     div
         []
@@ -75,7 +79,7 @@ pagedTableView vc attributes config tblPaged prevMsg nextMsg =
                             [ div []
                                 [ button [ linkButtonStyle vc (tblPaged.currentPage > 1) |> toAttr, onClick (prevMsg tblPaged) ] [ text "<" ]
                                 , pageIndicatorView tblPaged
-                                , button [ linkButtonStyle vc (nextPageAvailable) |> toAttr, onClick (nextMsg tblPaged) ] [ text ">" ]
+                                , button [ linkButtonStyle vc nextPageAvailable |> toAttr, onClick (nextMsg tblPaged) ] [ text ">" ]
                                 ]
                             ]
                         ]

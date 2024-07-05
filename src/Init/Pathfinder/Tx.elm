@@ -2,6 +2,8 @@ module Init.Pathfinder.Tx exposing (fromTxAccountData, fromTxUtxoData)
 
 import Animation as A
 import Api.Data
+import Dict
+import Dict.Extra
 import Dict.Nonempty as NDict
 import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
@@ -9,6 +11,8 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
+import Monocle.Compose exposing (isoWithIso)
+import Util.Data
 
 
 fromTxAccountData : Api.Data.TxAccount -> Tx
@@ -36,25 +40,44 @@ fromTxUtxoData tx coords =
         id =
             Id.init tx.currency tx.txHash
 
-        fn dir =
+        createIoIntermediate isOut x =
+            List.head x.address
+                |> Maybe.map
+                    (\addr ->
+                        { address = addr
+                        , values =
+                            if isOut then
+                                x.value
+
+                            else
+                                Util.Data.negateValues x.value
+                        }
+                    )
+
+        getAddressValuesIntermediates io isOut =
+            io
+                |> Maybe.map (List.filterMap (createIoIntermediate isOut))
+                |> Maybe.withDefault []
+
+        groupedIos =
+            Dict.Extra.groupBy .address (getAddressValuesIntermediates tx.outputs True ++ getAddressValuesIntermediates tx.inputs False)
+
+        sumIoEntries addr l =
             let
-                field =
-                    case dir of
-                        Incoming ->
-                            .inputs
-
-                        Outgoing ->
-                            .outputs
-
-                toPair : Api.Data.TxValue -> Maybe ( Id, Io )
-                toPair { address, value } =
-                    -- TODO what to do with multisig?
-                    List.head address
-                        |> Maybe.map (\a -> ( Id.init tx.currency a, Io value False ))
+                value =
+                    List.foldl Util.Data.addValues Util.Data.valuesZero (List.map .values l)
             in
-            field tx
-                |> Maybe.map (List.filterMap toPair)
-                |> Maybe.andThen NList.fromList
+            { address = addr, cnt = List.length l, value = value, isOutput = value.value > 0 }
+
+        summedIo =
+            Dict.map sumIoEntries groupedIos
+
+        fn dir =
+            Dict.toList summedIo
+                |> List.map Tuple.second
+                |> List.filter (\x -> x.isOutput == (dir == Outgoing))
+                |> List.map (\ioEntry -> ( Id.init tx.currency ioEntry.address, Io (Util.Data.absValues ioEntry.value) False ))
+                |> NList.fromList
     in
     Maybe.map2
         (\in_ out ->

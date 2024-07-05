@@ -6,6 +6,7 @@ import Config.View as View
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
+import Dict.Extra
 import Dict.Nonempty as NDict
 import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
@@ -23,6 +24,7 @@ import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxNodeAttributes)
 import Tuple exposing (pair, second)
+import Util.Data
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale

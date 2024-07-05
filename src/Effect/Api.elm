@@ -91,7 +91,6 @@ type Effect msg
         , nextpage : Maybe String
         }
         (Api.Data.AddressTxs -> msg)
-    
     | GetEntityAddressesEffect
         { currency : String
         , entity : Int
@@ -311,6 +310,7 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetAddressTagSummaryEffect eff
+
         SearchEffect eff m ->
             m
                 >> mapMsg
@@ -488,6 +488,7 @@ perform apiKey wrapMsg effect =
         GetAddressTagSummaryEffect { currency, address } toMsg ->
             Api.Request.Addresses.getTagSummaryByAddress currency address
                 |> send apiKey wrapMsg effect toMsg
+
         SearchEffect { query, currency, limit } toMsg ->
             Api.Request.General.search query currency limit
                 |> Api.withTracker "search"

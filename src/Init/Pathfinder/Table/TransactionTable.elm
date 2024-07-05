@@ -26,7 +26,8 @@ init network locale address data =
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
 
-        itemsPerPage = 5
+        itemsPerPage =
+            5
 
         table isDesc =
             { table =
@@ -77,13 +78,15 @@ init network locale address data =
                 |> List.singleton
             )
 
+
 initWithoutFilter : Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
 initWithoutFilter address data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
 
-        itemsPerPage = 5
+        itemsPerPage =
+            5
 
         table isDesc =
             { table =
@@ -94,9 +97,9 @@ initWithoutFilter address data =
             }
     in
     ( { table = table True
-        , order = Nothing
-        , dateRangePicker = Nothing
-        }
+      , order = Nothing
+      , dateRangePicker = Nothing
+      }
     , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
         |> Api.GetAddressTxsEffect
             { currency = Id.network address.id

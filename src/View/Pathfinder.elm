@@ -154,7 +154,8 @@ renderValueTypeValue vc val =
 
         Timestamp ts ->
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
-        TimestampWithTime ts -> 
+
+        TimestampWithTime ts ->
             span [] [ Locale.timesampDateTimeUniform vc.locale ts |> Html.text ]
 
 
@@ -512,7 +513,8 @@ addressDetailsContentView vc gc model id viewState =
                 |> Dict.get id
                 |> Maybe.withDefault viewState.address
 
-        actor_id = Dict.get id model.tagSummaries |> Maybe.andThen .bestActor
+        actor_id =
+            Dict.get id model.tagSummaries |> Maybe.andThen .bestActor
 
         actor =
             actor_id
@@ -533,6 +535,7 @@ addressDetailsContentView vc gc model id viewState =
 
         sections =
             [ addressTransactionTableView vc gc id viewState txOnGraphFn
+
             -- , addressNeighborsTableView vc gc id viewState viewState.data
             ]
 

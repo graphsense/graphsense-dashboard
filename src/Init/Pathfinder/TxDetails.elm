@@ -6,6 +6,6 @@ import Model.Pathfinder.TxDetails as TxDetails
 
 init : Tx -> TxDetails.Model
 init tx =
-    { ioTableOpen = False
+    { ioTableOpen = True
     , tx = tx
     }

@@ -20,10 +20,10 @@ module View.Locale exposing
     , string
     , text
     , time
+    , timesampDateTimeUniform
     , timestamp
     , timestampDateUniform
     , timestampTimeUniform
-    , timesampDateTimeUniform
     , timestampWithFormat
     , tokenCurrencies
     , valuesToFloat
@@ -266,11 +266,12 @@ timestampTimeUniform model =
     in
     timestampWithFormat format model
 
-timesampDateTimeUniform: Model -> Int -> String
+
+timesampDateTimeUniform : Model -> Int -> String
 timesampDateTimeUniform model =
     let
         format =
-            [monthNameAbbreviated
+            [ monthNameAbbreviated
             , DateFormat.text " "
             , dayOfMonthSuffix
             , DateFormat.text ", "

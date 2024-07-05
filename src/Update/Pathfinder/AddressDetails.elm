@@ -154,11 +154,12 @@ update uc pathfinderModel msg id model =
                 )
 
             else
-                n { model
-                    | txs =
-                        PT.incPage model.txs.table
-                            |> flip s_table model.txs
-                  }
+                n
+                    { model
+                        | txs =
+                            PT.incPage model.txs.table
+                                |> flip s_table model.txs
+                    }
 
         UserClickedPreviousPageTransactionTable ->
             ( { model | txs = PT.decPage model.txs.table |> flip s_table model.txs }, [] )
@@ -254,7 +255,8 @@ update uc pathfinderModel msg id model =
                         let
                             -- ( m2, eff ) =
                             --     updateDatePickerRangeBlockRange uc pathfinderModel id model Reset Reset
-                            (ft, teff) = (TransactionTable.initWithoutFilter model.address model.data)
+                            ( ft, teff ) =
+                                TransactionTable.initWithoutFilter model.address model.data
                         in
                         ( { model
                             | txs = ft

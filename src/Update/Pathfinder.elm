@@ -376,18 +376,26 @@ updateByMsg plugins uc msg model =
 
                 DraggingNode id _ _ ->
                     let
+                        moveNode txOrAdrId net =
+                            Network.updateAddress txOrAdrId Node.release net
+                                |> Network.updateTx txOrAdrId
+                                    (Tx.updateUtxo Node.release)
 
-                        moveNode txOrAdrId net = Network.updateAddress txOrAdrId (Node.release) net
-                                        |> Network.updateTx txOrAdrId
-                                            (Tx.updateUtxo (Node.release))
+                        moveSelectedNode sel net =
+                            case sel of
+                                MSelectedAddress aid ->
+                                    moveNode aid net
 
-                        moveSelectedNode sel net = case sel of
-                                    MSelectedAddress aid -> moveNode aid net
-                                    MSelectedTx tid -> moveNode tid net
+                                MSelectedTx tid ->
+                                    moveNode tid net
 
-                        network = case model.selection of
-                                MultiSelect sel -> List.foldl (moveSelectedNode) model.network sel
-                                _ -> moveNode id model.network
+                        network =
+                            case model.selection of
+                                MultiSelect sel ->
+                                    List.foldl moveSelectedNode model.network sel
+
+                                _ ->
+                                    moveNode id model.network
                     in
                     n
                         { model
@@ -513,7 +521,7 @@ updateByMsg plugins uc msg model =
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
-                    n (model |> s_tooltip Nothing )
+                    n (model |> s_tooltip Nothing)
 
                 Dragging transform start _ ->
                     (case model.pointerTool of
@@ -540,17 +548,26 @@ updateByMsg plugins uc msg model =
                             , y = vector.y / unit
                             }
 
-                        moveNode txOrAdrId net = Network.updateAddress txOrAdrId (Node.move vectorRel) net
-                                        |> Network.updateTx txOrAdrId
-                                            (Tx.updateUtxo (Node.move vectorRel))
+                        moveNode txOrAdrId net =
+                            Network.updateAddress txOrAdrId (Node.move vectorRel) net
+                                |> Network.updateTx txOrAdrId
+                                    (Tx.updateUtxo (Node.move vectorRel))
 
-                        moveSelectedNode sel net = case sel of
-                                    MSelectedAddress aid -> moveNode aid net
-                                    MSelectedTx tid -> moveNode tid net
+                        moveSelectedNode sel net =
+                            case sel of
+                                MSelectedAddress aid ->
+                                    moveNode aid net
 
-                        network = case model.selection of
-                                MultiSelect sel -> List.foldl (moveSelectedNode) model.network sel
-                                _ -> moveNode id model.network
+                                MSelectedTx tid ->
+                                    moveNode tid net
+
+                        network =
+                            case model.selection of
+                                MultiSelect sel ->
+                                    List.foldl moveSelectedNode model.network sel
+
+                                _ ->
+                                    moveNode id model.network
                     in
                     { model
                         | network = network
@@ -701,28 +718,31 @@ updateByMsg plugins uc msg model =
             WorkflowNextTxByTime.update context wm model
 
         BrowserGotTagSummary id data ->
-                if (data.tagCount > 0) then
-                    let
-                        net =
-                            (if data.broadCategory == "exchange" then
-                                Network.updateAddress id
-                                    (s_exchange data.bestLabel)
-                                    model.network
-
-                            else
+            if data.tagCount > 0 then
+                let
+                    net =
+                        (if data.broadCategory == "exchange" then
+                            Network.updateAddress id
+                                (s_exchange data.bestLabel)
                                 model.network
-                            ) 
+
+                         else
+                            model.network
+                        )
                             |> Network.updateAddress id (s_hasTags True)
                             |> Network.updateAddress id (s_hasActor (data.bestActor /= Nothing))
-                    in
-                    n { model
+                in
+                n
+                    { model
                         | tagSummaries = Dict.insert id data model.tagSummaries
                         , network = net
                     }
-                else
-                    n model
-        BrowserGotAddressTags id data ->
+
+            else
                 n model
+
+        BrowserGotAddressTags id data ->
+            n model
 
 
 getNextTxEffects : Model -> Id -> Direction -> List Effect
