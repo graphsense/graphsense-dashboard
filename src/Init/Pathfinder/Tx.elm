@@ -76,7 +76,7 @@ fromTxUtxoData tx coords =
             Dict.toList summedIo
                 |> List.map Tuple.second
                 |> List.filter (\x -> x.isOutput == (dir == Outgoing))
-                |> List.map (\ioEntry -> ( Id.init tx.currency ioEntry.address, Io (Util.Data.absValues ioEntry.value) False ))
+                |> List.map (\ioEntry -> ( Id.init tx.currency ioEntry.address, Io (Util.Data.absValues ioEntry.value) False ioEntry.cnt ))
                 |> NList.fromList
     in
     Maybe.map2

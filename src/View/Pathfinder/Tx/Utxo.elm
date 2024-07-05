@@ -80,7 +80,7 @@ edge _ vc _ addresses hovered tx =
         toValues =
             NDict.toList
                 >> List.filterMap
-                    (\( id, { values } ) ->
+                    (\( id, { values, aggregatesN } ) ->
                         getAddress addresses id
                             |> Result.toMaybe
                             |> Maybe.map
@@ -88,6 +88,7 @@ edge _ vc _ addresses hovered tx =
                                     |> pair { network = Id.network id, asset = Id.network id }
                                     |> List.singleton
                                     |> Locale.currency vc.locale
+                                    |> (\x -> if (aggregatesN > 1) then x ++ " (" ++ String.fromInt aggregatesN ++ ")" else x)
                                     >> pair
                                 )
                     )

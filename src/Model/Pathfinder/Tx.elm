@@ -51,6 +51,7 @@ type alias UtxoTx =
 type alias Io =
     { values : Api.Data.Values
     , visible : Bool
+    , aggregatesN : Int
     }
 
 
