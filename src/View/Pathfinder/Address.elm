@@ -73,7 +73,7 @@ view _ _ _ address =
         { addressId =
             address.id
                 |> Id.id
-                |> truncateLongIdentifierWithLengths 6 3
+                |> truncateLongIdentifierWithLengths 8 3
         , highlight = address.selected
         , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
         , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs
