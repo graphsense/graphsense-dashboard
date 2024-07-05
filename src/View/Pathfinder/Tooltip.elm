@@ -74,7 +74,7 @@ utxoTx vc tx =
                 |> text
                 |> val
             , tx.raw.timestamp
-                |> Locale.timestamp vc.locale
+                |> Locale.timesampDateTimeUniform vc.locale
                 |> text
                 |> val
             ]

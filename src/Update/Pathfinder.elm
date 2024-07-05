@@ -501,7 +501,7 @@ updateByMsg plugins uc msg model =
         UserMovesMouseOnGraph coords ->
             case model.dragging of
                 NoDragging ->
-                    n model
+                    n (model |> s_tooltip Nothing )
 
                 Dragging transform start _ ->
                     (case model.pointerTool of
@@ -1171,6 +1171,7 @@ removeTx id model =
 
                 _ ->
                     model.details
+        , tooltip = Nothing
         , selection =
             case model.selection of
                 SelectedAddress addressId ->

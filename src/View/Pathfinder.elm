@@ -533,7 +533,7 @@ addressDetailsContentView vc gc model id viewState =
 
         sections =
             [ addressTransactionTableView vc gc id viewState txOnGraphFn
-            , addressNeighborsTableView vc gc id viewState viewState.data
+            -- , addressNeighborsTableView vc gc id viewState viewState.data
             ]
 
         tbls =
