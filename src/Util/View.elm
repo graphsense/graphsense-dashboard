@@ -197,7 +197,7 @@ copyableLongIdentifier vc attr identifier =
         ]
 
 
-copyableLongIdentifierPathfinder: View.Config -> List (Attribute msg) -> String -> Html msg
+copyableLongIdentifierPathfinder : View.Config -> List (Attribute msg) -> String -> Html msg
 copyableLongIdentifierPathfinder vc attr identifier =
     span
         [ Css.longIdentifier vc |> css
@@ -210,6 +210,7 @@ copyableLongIdentifierPathfinder vc attr identifier =
                 )
         , copyIcon vc identifier
         ]
+
 
 copyIcon : View.Config -> String -> Html msg
 copyIcon =

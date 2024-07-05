@@ -1,9 +1,10 @@
-module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, timestampDateMultiRowColumn, txColumn, valueColumn)
+module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn)
 
 import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS
+import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -49,20 +50,25 @@ type alias ColumnConfig data msg =
     }
 
 
-addressColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
-addressColumn =
-    txColumn
+addressColumn : View.Config -> ColumnConfig data msg -> Maybe (data -> Maybe String) -> Table.Column data msg
+addressColumn vc cc lblfn =
+    identifierColumn (lblfn |> Maybe.withDefault (\_ -> Nothing)) vc cc
 
 
-txColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
-txColumn vc { label, accessor, onClick } =
+identifierColumn : (data -> Maybe String) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
+identifierColumn lblfn vc { label, accessor, onClick } =
     Table.veryCustomColumn
         { name = label
         , viewData =
             \data ->
-                accessor data
-                    |> copyableLongIdentifierPathfinder vc []
-                    |> List.singleton
+                (accessor data |> copyableLongIdentifierPathfinder vc [])
+                    :: (case lblfn data of
+                            Just lbl ->
+                                [ span [ title lbl ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
+
+                            _ ->
+                                []
+                       )
                     |> Table.HtmlDetails
                         (([ PCSS.mGap |> Css.padding ] |> css)
                             :: (onClick
@@ -77,6 +83,24 @@ txColumn vc { label, accessor, onClick } =
                         )
 
         -- , sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
+        }
+
+
+txColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
+txColumn =
+    identifierColumn (\_ -> Nothing)
+
+
+stringColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
+stringColumn vc { label, accessor } =
+    Table.veryCustomColumn
+        { name = label
+        , viewData =
+            \data ->
+                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+                    [ text (accessor data)
+                    ]
         , sorter = Table.unsortable
         }
 

@@ -26,6 +26,7 @@ config vc network =
                 , accessor = getAddress
                 , onClick = Nothing
                 }
+                Nothing
             ]
         , customizations = customizations vc
         }

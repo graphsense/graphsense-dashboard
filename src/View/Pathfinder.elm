@@ -441,6 +441,9 @@ txDetailsContentView vc gc model id viewState =
             , rule
             ]
 
+        getLbl id_ =
+            Dict.get id_ model.tagSummaries |> Maybe.andThen .bestLabel
+
         ( detailsTblBody, sections ) =
             case viewState.tx.type_ of
                 Tx.Account tx ->
@@ -450,7 +453,7 @@ txDetailsContentView vc gc model id viewState =
 
                 Tx.Utxo tx ->
                     ( [ utxoTxDetailsContentView vc tx.raw ]
-                    , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw ]
+                    , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl ]
                     )
     in
     div []
@@ -476,23 +479,23 @@ utxoTxDetailsContentView vc data =
     div [] tbls
 
 
-ioTableView : View.Config -> Network -> String -> List Api.Data.TxValue -> Html Msg
-ioTableView vc network currency data =
+ioTableView : View.Config -> Network -> String -> List Api.Data.TxValue -> (Id -> Maybe String) -> Html Msg
+ioTableView vc network currency data getLbl =
     let
         isCheckedFn =
             flip Network.hasAddress network
     in
-    Table.rawTableView vc [] (IoTable.config vc currency isCheckedFn) "Value" data
+    Table.rawTableView vc [ css [ Css.overflowY Css.scroll, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ] (IoTable.config vc currency isCheckedFn (Just getLbl)) "Value" data
 
 
-utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> Html Msg
-utxoTxDetailsSectionsView vc network viewState data =
+utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> (Id -> Maybe String) -> Html Msg
+utxoTxDetailsSectionsView vc network viewState data getLbl =
     let
         combinedData =
             (data.inputs |> Maybe.withDefault [] |> List.map negateTxValue) ++ (data.outputs |> Maybe.withDefault [])
 
         content =
-            ioTableView vc network data.currency combinedData
+            ioTableView vc network data.currency combinedData getLbl
 
         ioIndicatorState =
             Just (inOutIndicator Nothing data.noOutputs data.noInputs)

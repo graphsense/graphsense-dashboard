@@ -88,7 +88,13 @@ edge _ vc _ addresses hovered tx =
                                     |> pair { network = Id.network id, asset = Id.network id }
                                     |> List.singleton
                                     |> Locale.currency vc.locale
-                                    |> (\x -> if (aggregatesN > 1) then x ++ " (" ++ String.fromInt aggregatesN ++ ")" else x)
+                                    |> (\x ->
+                                            if aggregatesN > 1 then
+                                                x ++ " (" ++ String.fromInt aggregatesN ++ ")"
+
+                                            else
+                                                x
+                                       )
                                     >> pair
                                 )
                     )

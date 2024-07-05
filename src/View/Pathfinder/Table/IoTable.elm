@@ -21,8 +21,8 @@ customizationsIO vc =
     { tc | tableAttrs = tc.tableAttrs ++ [ Css.ioTableStyle vc |> Css.toAttr ] }
 
 
-config : View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.TxValue Msg
-config vc network isCheckedFn =
+config : View.Config -> String -> (Id -> Bool) -> Maybe (Id -> Maybe String) -> Table.Config Api.Data.TxValue Msg
+config vc network isCheckedFn lblFn =
     let
         toId =
             .address
@@ -46,10 +46,11 @@ config vc network isCheckedFn =
                 , accessor = .address >> String.join ","
                 , onClick = Nothing
                 }
+                (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.andThen fn))
             , PT.debitCreditColumn vc
                 (\_ -> assetFromBase network)
                 "Value"
                 .value
             ]
-        , customizations = customizationsIO vc
+        , customizations = customizations vc
         }

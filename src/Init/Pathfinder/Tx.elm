@@ -59,10 +59,15 @@ fromTxUtxoData tx coords =
                 |> Maybe.map (List.filterMap (createIoIntermediate isOut))
                 |> Maybe.withDefault []
 
-        inputsWithCoinbase = (if (tx.coinbase) then (Just [{address=["coinbase"], value = Util.Data.valuesZero}]) else tx.inputs)
+        inputsWithCoinbase =
+            if tx.coinbase then
+                Just [ { address = [ "coinbase" ], value = Util.Data.valuesZero } ]
+
+            else
+                tx.inputs
 
         groupedIos =
-            Dict.Extra.groupBy .address ((getAddressValuesIntermediates tx.outputs True) ++ (getAddressValuesIntermediates inputsWithCoinbase False))
+            Dict.Extra.groupBy .address (getAddressValuesIntermediates tx.outputs True ++ getAddressValuesIntermediates inputsWithCoinbase False)
 
         sumIoEntries addr l =
             let
