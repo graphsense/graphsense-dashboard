@@ -63,6 +63,7 @@ type Selection
 
 type Hovered
     = HoveredTx Id
+    | HoveredAddress Id
     | NoHover
 
 

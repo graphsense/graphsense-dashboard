@@ -65,6 +65,10 @@ view _ _ _ address =
                 , UserClickedAddress address.id |> onClickWithStop
                 , UserPushesLeftMouseButtonOnAddress address.id
                     |> Util.Graph.mousedown
+                , UserMovesMouseOverAddress address.id
+                    |> onMouseOver
+                , UserMovesMouseOutAddress address.id
+                    |> onMouseOut
                 , css [ Css.cursor Css.pointer ]
                 ]
             |> s_iconsPlusIn (plus Incoming)

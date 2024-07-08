@@ -3,7 +3,7 @@ module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, de
 import Api.Data
 import Config.View as View
 import Css
-import Css.Pathfinder as PCSS
+import Css.Pathfinder as PCSS exposing (toAttr)
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
@@ -57,18 +57,22 @@ addressColumn vc cc lblfn =
 
 identifierColumn : (data -> Maybe String) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
 identifierColumn lblfn vc { label, accessor, onClick } =
+    let
+        tagcss =
+            [ Css.width (Css.px 15), Css.display Css.inlineBlock ] |> toAttr
+    in
     Table.veryCustomColumn
         { name = label
         , viewData =
             \data ->
-                (accessor data |> copyableLongIdentifierPathfinder vc [])
-                    :: (case lblfn data of
-                            Just lbl ->
-                                [ span [ title lbl ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
+                (case lblfn data of
+                    Just lbl ->
+                        [ span [ tagcss, title lbl ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
 
-                            _ ->
-                                []
-                       )
+                    _ ->
+                        [ span [ tagcss ] [] ]
+                )
+                    ++ (accessor data |> copyableLongIdentifierPathfinder vc [] |> List.singleton)
                     |> Table.HtmlDetails
                         (([ PCSS.mGap |> Css.padding ] |> css)
                             :: (onClick

@@ -196,7 +196,11 @@ updateByMsg plugins uc msg model =
                 |> pairTo (fetchTagSummaryForAddress data model.tagSummaries :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
-            browserGotTxForAddress plugins uc addressId direction data model
+            let
+                ( m, eff ) =
+                    browserGotTxForAddress plugins uc addressId direction data model
+            in
+            ( m, eff ++ fetchTagSummariesForTx data model.tagSummaries )
 
         SearchMsg m ->
             case m of
@@ -475,6 +479,41 @@ updateByMsg plugins uc msg model =
                 |> List.singleton
             )
 
+        UserMovesMouseOverAddress id ->
+            let
+                ( hc, cmd ) =
+                    Id.toString id
+                        |> Hovercard.init
+            in
+            ( { model
+                | tooltip =
+                    model.network.addresses
+                        |> Dict.get id
+                        |> Maybe.andThen
+                            (\addr ->
+                                Tooltip.Address addr |> Tooltip.init hc |> Just
+                            )
+
+                -- , network = Network.updateTx id (s_hovered True) model.network
+                , hovered = HoveredAddress id
+              }
+            , Cmd.map HovercardMsg cmd
+                |> CmdEffect
+                |> List.singleton
+            )
+
+        UserMovesMouseOutAddress id ->
+            { model
+                | tooltip = Nothing
+                , hovered =
+                    if model.hovered == HoveredAddress id then
+                        NoHover
+
+                    else
+                        model.hovered
+            }
+                |> n
+
         HovercardMsg hcMsg ->
             model.tooltip
                 |> Maybe.map
@@ -688,6 +727,7 @@ updateByMsg plugins uc msg model =
                 | network = nw
             }
                 |> checkSelection uc
+                |> Tuple.mapSecond ((++) (fetchTagSummariesForTx tx model.tagSummaries))
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -718,31 +758,38 @@ updateByMsg plugins uc msg model =
             WorkflowNextTxByTime.update context wm model
 
         BrowserGotTagSummary id data ->
-            if data.tagCount > 0 then
-                let
-                    net =
-                        (if data.broadCategory == "exchange" then
-                            Network.updateAddress id
-                                (s_exchange data.bestLabel)
-                                model.network
-
-                         else
-                            model.network
-                        )
-                            |> Network.updateAddress id (s_hasTags True)
-                            |> Network.updateAddress id (s_hasActor (data.bestActor /= Nothing))
-                in
-                n
-                    { model
-                        | tagSummaries = Dict.insert id data model.tagSummaries
-                        , network = net
-                    }
-
-            else
-                n model
+            let
+                m2 =
+                    updateTagDataOnAddress model id
+            in
+            n
+                { m2
+                    | tagSummaries = Dict.insert id data model.tagSummaries
+                }
 
         BrowserGotAddressTags id data ->
             n model
+
+
+updateTagDataOnAddress : Model -> Id -> Model
+updateTagDataOnAddress m addressId =
+    let
+        tag =
+            Dict.get addressId m.tagSummaries
+
+        net tagdata =
+            (if tagdata.broadCategory == "exchange" then
+                Network.updateAddress addressId
+                    (s_exchange tagdata.bestLabel)
+                    m.network
+
+             else
+                m.network
+            )
+                |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0))
+                |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
+    in
+    tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
 
 getNextTxEffects : Model -> Id -> Direction -> List Effect
@@ -855,6 +902,9 @@ loadAddress _ id model starting =
 
     else
         let
+            tg =
+                Dict.get id model.tagSummaries
+
             nw =
                 Network.addAddress id model.network
                     |> Network.updateAddress id
@@ -865,7 +915,7 @@ loadAddress _ id model starting =
                             }
                         )
         in
-        ( { model | network = nw }
+        ( { model | network = nw } |> flip updateTagDataOnAddress id
         , BrowserGotAddressData id
             |> Api.GetAddressEffect
                 { currency = Id.network id
@@ -1045,17 +1095,32 @@ fetchTags id =
     BrowserGotTagSummary id |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id } |> ApiEffect
 
 
-fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Effect
-fetchTagSummaryForAddress d existing =
+fetchTagSummariesForTx : Api.Data.Tx -> Dict.Dict Id Api.Data.TagSummary -> List Effect
+fetchTagSummariesForTx tx existing =
     let
-        id =
-            ( d.currency, d.address )
+        addresses x =
+            x |> Maybe.map (List.concatMap .address) |> Maybe.withDefault []
     in
+    case tx of
+        Api.Data.TxTxUtxo x ->
+            x.inputs |> addresses |> List.map (pair x.currency) |> List.map (flip fetchTagsForId existing)
+
+        _ ->
+            []
+
+
+fetchTagsForId : Id -> Dict.Dict Id Api.Data.TagSummary -> Effect
+fetchTagsForId id existing =
     if Dict.member id existing then
         CmdEffect Cmd.none
 
     else
         fetchTags id
+
+
+fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Effect
+fetchTagSummaryForAddress d existing =
+    fetchTagsForId ( d.currency, d.address ) existing
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect

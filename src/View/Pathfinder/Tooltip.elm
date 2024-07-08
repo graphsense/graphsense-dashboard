@@ -7,6 +7,8 @@ import Hovercard
 import Html.Attributes
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (css)
+import Model.Pathfinder.Address as Address
+import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
 import Theme.Html.GraphComponents as GraphComponents exposing (defaultProperty1DownAttributes)
@@ -20,6 +22,9 @@ view vc tt =
     (case tt.type_ of
         UtxoTx t ->
             utxoTx vc t
+
+        Address a ->
+            address vc a
     )
         |> Html.toUnstyled
         |> List.singleton
@@ -36,6 +41,45 @@ view vc tt =
                 |> List.map (\( k, v ) -> Html.Attributes.style k v)
             )
         |> Html.fromUnstyled
+
+
+address : View.Config -> Address.Address -> Html msg
+address vc adr =
+    let
+        key =
+            Locale.string vc.locale
+                >> text
+                >> List.singleton
+                >> div
+                    [ css GraphComponents.property1DownLabel1Details.styles
+                    ]
+
+        val =
+            List.singleton
+                >> div
+                    [ css GraphComponents.property1DownValue1Details.styles
+                    ]
+    in
+    div
+        [ css GraphComponents.property1DownDetails.styles
+        ]
+        [ div
+            [ css GraphComponents.property1DownContent1Details.styles
+            , css [ Css.whiteSpace Css.noWrap ]
+            ]
+            [ key "Address"
+            ]
+        , div
+            [ css GraphComponents.property1DownContent2Details.styles
+            , css [ Css.whiteSpace Css.noWrap ]
+            ]
+            [ adr.id
+                |> Id.id
+                |> truncateLongIdentifierWithLengths 8 4
+                |> text
+                |> val
+            ]
+        ]
 
 
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg

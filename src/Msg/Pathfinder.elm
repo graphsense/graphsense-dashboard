@@ -58,6 +58,8 @@ type Msg
     | UserReleasedDeleteKey
     | UserMovesMouseOverUtxoTx Id
     | UserMovesMouseOutUtxoTx Id
+    | UserMovesMouseOverAddress Id
+    | UserMovesMouseOutAddress Id
     | HovercardMsg Hovercard.Msg
 
 
