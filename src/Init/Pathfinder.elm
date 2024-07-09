@@ -10,6 +10,7 @@ import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
+import Set exposing (..)
 import Task
 import Time
 
@@ -19,6 +20,7 @@ init _ =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
+      , noTags = Set.empty
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "eth", "trx", "zec", "ltc" ])

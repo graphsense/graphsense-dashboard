@@ -1,7 +1,7 @@
 module Model.Pathfinder.Address exposing (..)
 
 import Animation exposing (Animation, Clock)
-import Api.Data
+import Api.Data exposing (Values)
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
@@ -59,6 +59,26 @@ getOutDegree a =
     case a.data of
         Success x ->
             Just x.outDegree
+
+        _ ->
+            Nothing
+
+
+getBalance : Address -> Maybe Values
+getBalance a =
+    case a.data of
+        Success x ->
+            Just x.balance
+
+        _ ->
+            Nothing
+
+
+getTotalReceived : Address -> Maybe Values
+getTotalReceived a =
+    case a.data of
+        Success x ->
+            Just x.totalReceived
 
         _ ->
             Nothing

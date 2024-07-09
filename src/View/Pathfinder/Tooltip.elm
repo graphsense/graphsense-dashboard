@@ -1,30 +1,35 @@
 module View.Pathfinder.Tooltip exposing (view)
 
+import Api.Data exposing (TagSummary)
+import Config.Graph exposing (AddressLabelType(..))
 import Config.View as View
 import Css
 import Css.View as Css
+import Dict exposing (Dict)
 import Hovercard
 import Html.Attributes
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (css)
+import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
+import RemoteData exposing (WebData)
 import Theme.Html.GraphComponents as GraphComponents exposing (defaultProperty1DownAttributes)
 import Util.Css as Css
 import Util.View exposing (none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Tooltip -> Html msg
-view vc tt =
+view : View.Config -> Dict Id.Id TagSummary -> Tooltip -> Html msg
+view vc ts tt =
     (case tt.type_ of
         UtxoTx t ->
             utxoTx vc t
 
         Address a ->
-            address vc a
+            address vc (Dict.get a.id ts) a
     )
         |> Html.toUnstyled
         |> List.singleton
@@ -43,9 +48,24 @@ view vc tt =
         |> Html.fromUnstyled
 
 
-address : View.Config -> Address.Address -> Html msg
-address vc adr =
+address : View.Config -> Maybe TagSummary -> Address.Address -> Html msg
+address vc ts adr =
     let
+        net =
+            Id.network adr.id
+
+        category =
+            ts |> Maybe.map .broadCategory |> Maybe.withDefault "-"
+
+        lbl =
+            ts |> Maybe.andThen .bestLabel |> Maybe.withDefault "-"
+
+        balance =
+            Address.getBalance adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
+
+        totalReceived =
+            Address.getTotalReceived adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
+
         key =
             Locale.string vc.locale
                 >> text
@@ -67,15 +87,25 @@ address vc adr =
             [ css GraphComponents.property1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            [ key "Address"
+            [ key "Category"
+            , key "Label"
+            , key "Balance"
+            , key "Total Received"
             ]
         , div
             [ css GraphComponents.property1DownContent2Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            [ adr.id
-                |> Id.id
-                |> truncateLongIdentifierWithLengths 8 4
+            [ category
+                |> text
+                |> val
+            , lbl
+                |> text
+                |> val
+            , balance
+                |> text
+                |> val
+            , totalReceived
                 |> text
                 |> val
             ]

@@ -50,6 +50,7 @@ import Plugin.Update as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Route.Pathfinder as Route
+import Set exposing (..)
 import Svg.Attributes exposing (x)
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
@@ -193,14 +194,14 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries :: fetchActorsForAddress data model.actors ++ eff)
+                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries model.noTags :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
             let
                 ( m, eff ) =
                     browserGotTxForAddress plugins uc addressId direction data model
             in
-            ( m, eff ++ fetchTagSummariesForTx data model.tagSummaries )
+            ( m, eff ++ fetchTagSummariesForTx data model.tagSummaries model.noTags )
 
         SearchMsg m ->
             case m of
@@ -727,7 +728,7 @@ updateByMsg plugins uc msg model =
                 | network = nw
             }
                 |> checkSelection uc
-                |> Tuple.mapSecond ((++) (fetchTagSummariesForTx tx model.tagSummaries))
+                |> Tuple.mapSecond ((++) (fetchTagSummariesForTx tx model.tagSummaries model.noTags))
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -758,14 +759,19 @@ updateByMsg plugins uc msg model =
             WorkflowNextTxByTime.update context wm model
 
         BrowserGotTagSummary id data ->
-            let
-                m2 =
-                    updateTagDataOnAddress model id
-            in
-            n
-                { m2
-                    | tagSummaries = Dict.insert id data model.tagSummaries
-                }
+            if data.tagCount > 0 then
+                n
+                    ({ model
+                        | tagSummaries = Dict.insert id data model.tagSummaries
+                     }
+                        |> flip updateTagDataOnAddress id
+                    )
+
+            else
+                n
+                    { model
+                        | noTags = Set.insert id model.noTags
+                    }
 
         BrowserGotAddressTags id data ->
             n model
@@ -1095,32 +1101,32 @@ fetchTags id =
     BrowserGotTagSummary id |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id } |> ApiEffect
 
 
-fetchTagSummariesForTx : Api.Data.Tx -> Dict.Dict Id Api.Data.TagSummary -> List Effect
-fetchTagSummariesForTx tx existing =
+fetchTagSummariesForTx : Api.Data.Tx -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> List Effect
+fetchTagSummariesForTx tx existing noTags =
     let
         addresses x =
             x |> Maybe.map (List.concatMap .address) |> Maybe.withDefault []
     in
     case tx of
         Api.Data.TxTxUtxo x ->
-            x.inputs |> addresses |> List.map (pair x.currency) |> List.map (flip fetchTagsForId existing)
+            x.inputs |> addresses |> List.map (pair x.currency) |> List.map (\i -> fetchTagsForId i existing noTags)
 
         _ ->
             []
 
 
-fetchTagsForId : Id -> Dict.Dict Id Api.Data.TagSummary -> Effect
-fetchTagsForId id existing =
-    if Dict.member id existing then
+fetchTagsForId : Id -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> Effect
+fetchTagsForId id existing noTags =
+    if Dict.member id existing || Set.member id noTags then
         CmdEffect Cmd.none
 
     else
         fetchTags id
 
 
-fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Effect
-fetchTagSummaryForAddress d existing =
-    fetchTagsForId ( d.currency, d.address ) existing
+fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> Effect
+fetchTagSummaryForAddress d existing noTags =
+    fetchTagsForId ( d.currency, d.address ) existing noTags
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect

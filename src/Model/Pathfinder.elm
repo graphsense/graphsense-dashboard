@@ -16,6 +16,7 @@ import Model.Pathfinder.Tooltip exposing (Tooltip)
 import Model.Pathfinder.TxDetails as TxDetails
 import Model.Search as Search
 import RemoteData exposing (WebData)
+import Set exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Time exposing (Posix)
 
@@ -29,6 +30,7 @@ type alias Model =
     { network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id Api.Data.TagSummary
+    , noTags : Set Id
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered

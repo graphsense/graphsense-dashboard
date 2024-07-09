@@ -69,9 +69,11 @@ view _ _ _ address =
                     |> onMouseOver
                 , UserMovesMouseOutAddress address.id
                     |> onMouseOut
-                , Id.toString address.id
-                    |> Svg.id
                 , css [ Css.cursor Css.pointer ]
+                ]
+            |> s_nodeFrame
+                [ Id.toString address.id
+                    |> Svg.id
                 ]
             |> s_iconsPlusIn (plus Incoming)
             |> s_iconsPlusOut (plus Outgoing)

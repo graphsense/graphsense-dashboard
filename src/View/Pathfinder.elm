@@ -249,7 +249,7 @@ graph plugins states vc gc model =
     , graphSelectionToolsView plugins states vc gc model
     ]
         ++ (model.tooltip
-                |> Maybe.map (Tooltip.view vc)
+                |> Maybe.map (Tooltip.view vc model.tagSummaries)
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
