@@ -61,7 +61,9 @@ init network locale address data =
         |> Maybe.withDefault
             ( { table = table True
               , order = Nothing
-              , dateRangePicker = Nothing
+              , dateRangePicker = datePickerSettings locale (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
+                            |> DateRangePicker.init UpdateDateRangePicker (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
+                            |> Just
               }
             , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
                 |> Api.GetAddressTxsEffect

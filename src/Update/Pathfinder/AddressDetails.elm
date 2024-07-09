@@ -131,7 +131,7 @@ update uc pathfinderModel msg id model =
                                 , direction = Nothing
                                 , pagesize = model.txs.table.itemsPerPage
                                 , nextpage = model.txs.table.table.nextpage
-                                , order = Nothing
+                                , order = model.txs.order
                                 , minHeight = model.txMinBlock
                                 , maxHeight = model.txMaxBlock
                                 }
