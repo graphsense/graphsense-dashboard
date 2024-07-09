@@ -1,13 +1,16 @@
 module Update.Pathfinder.AddressDetails exposing (showTransactionsTable, update)
 
 import Basics.Extra exposing (flip)
+import Config.DateRangePicker exposing (datePickerSettings)
 import Config.Update as Update
 import Effect exposing (n)
 import Effect.Api as Api
 import Effect.Pathfinder exposing (Effect(..))
+import Init.DateRangePicker as DateRangePicker
 import Init.Pathfinder.Table.TransactionTable as TransactionTable
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder as Pathfinder exposing (Details(..))
+import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Table as PT
@@ -235,8 +238,17 @@ update uc pathfinderModel msg id model =
                 |> Maybe.withDefault (n model)
 
         OpenDateRangePicker ->
+            let
+                ( mn, mx ) =
+                    Address.getActivityRange model.data
+            in
             model.txs.dateRangePicker
-                |> Maybe.map DateRangePicker.openPicker
+                |> Maybe.withDefault
+                    (datePickerSettings uc.locale mn mx
+                        |> DateRangePicker.init UpdateDateRangePicker mn mx
+                    )
+                |> DateRangePicker.openPicker
+                |> Just
                 |> flip s_dateRangePicker model.txs
                 |> flip s_txs model
                 |> n

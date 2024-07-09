@@ -1,5 +1,6 @@
 module View.Pathfinder.Tx.Path exposing (accountPath, inPath, inPathHovered, outPath, outPathHovered)
 
+import Bezier
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -112,6 +113,7 @@ coloredPath vc c =
         x2 =
             if c.x1 == c.x2 then
                 c.x2 + 0.01
+                -- need to add this for the gradient to work
 
             else
                 c.x2
@@ -130,6 +132,17 @@ coloredPath vc c =
 
         ( val, pa ) =
             if c.isOutgoing then
+                if dx < 0 then
+                    ( GraphComponents.inputPathInputValueDetails
+                    , GraphComponents.inputPathDetails
+                    )
+
+                else
+                    ( GraphComponents.outputPathOutputValueDetails
+                    , GraphComponents.outputPathDetails
+                    )
+
+            else if dx < 0 then
                 ( GraphComponents.outputPathOutputValueDetails
                 , GraphComponents.outputPathDetails
                 )
@@ -139,36 +152,58 @@ coloredPath vc c =
                 , GraphComponents.inputPathDetails
                 )
 
-        ( nodes, lx, ly ) =
+        { p0, p1, p2, p3 } =
             let
                 ( mx, my ) =
                     ( c.x1 + dx / 2
                     , c.y1 + dy / 2
                     )
             in
-            ( [ ( x2, y2 )
-                    |> C
-                        ( mx, c.y1 )
-                        ( mx, c.y2 )
-              ]
-            , if c.isOutgoing then
+            { p0 = { x = c.x1, y = c.y1 }
+            , p1 = { x = mx, y = c.y1 }
+            , p2 = { x = mx, y = c.y2 }
+            , p3 = { x = x2, y = y2 }
+            }
+
+        spline =
+            if dx > 0 then
+                Bezier.fromPoints p0 p1 p2 p3
+
+            else
+                Bezier.fromPoints p3 p2 p1 p0
+
+        lx =
+            if c.isOutgoing then
                 if dx < 0 then
-                    x2 + val.x
+                    p3.x - (val.x / pa.width) * dx
 
                 else
-                    x2 - (pa.width - val.x - val.width)
+                    p3.x - (pa.width - val.x - val.width) / pa.width * dx
 
-              else if dx < 0 then
-                c.x1 - val.x - val.width
+            else if dx < 0 then
+                p0.x + ((val.x - val.width) / pa.width) * dx
 
-              else
-                c.x1 + val.x
-            , if c.isOutgoing then
-                c.y2 + val.y
+            else
+                p0.x + (val.x / pa.width) * dx
 
-              else
-                c.y1 + val.y
-            )
+        ly =
+            if c.isOutgoing then
+                val.y
+                    + (Bezier.atX (Debug.log "lx" lx) spline |> Debug.log "by" |> .point |> .y)
+
+            else
+                val.y
+                    + (Bezier.atX lx spline |> .point |> .y)
+
+        p =
+            [ M ( p0.x, p0.y )
+            , C
+                ( p1.x, p1.y )
+                ( p2.x, p2.y )
+                ( p3.x, p3.y )
+            ]
+                |> pathD
+                |> d
     in
     [ if c.highlight then
         let
@@ -180,10 +215,7 @@ coloredPath vc c =
                     GraphComponents.inputPathHighlightLineDetails
         in
         Svg.path
-            [ nodes
-                |> (::) (M ( c.x1, c.y1 ))
-                |> pathD
-                |> d
+            [ p
             , css det.styles
             ]
             []
@@ -191,10 +223,7 @@ coloredPath vc c =
       else
         g [] []
     , Svg.path
-        [ nodes
-            |> (::) (M ( c.x1, c.y1 ))
-            |> pathD
-            |> d
+        [ p
         , let
             det =
                 if c.isOutgoing then
@@ -284,10 +313,17 @@ coloredPath vc c =
             [ translate lx ly
                 |> transform
             , if c.isOutgoing then
-                textAnchor "end"
+                if dx > 0 then
+                    textAnchor "end"
+
+                else
+                    textAnchor "start"
+
+              else if dx > 0 then
+                textAnchor "start"
 
               else
-                textAnchor "start"
+                textAnchor "end"
             ]
     ]
         |> g

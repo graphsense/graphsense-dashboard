@@ -438,7 +438,7 @@ graphActionButtonStyle vc _ =
 dateTimeRangeBoxStyle : View.Config -> List Style
 dateTimeRangeBoxStyle vc =
     [ margin4 mGap mGap mlGap mGap
-    , padding4 zero mGap zero mGap
+    , padding mGap
     , emphTextColor vc |> color
     , defaultBackgroundColor vc |> backgroundColor
     , boxBorderColor vc |> border3 xsGap solid
@@ -446,6 +446,7 @@ dateTimeRangeBoxStyle vc =
     , displayFlex
     , alignItems center
     , justifyContent spaceBetween
+    , flexGrow <| num 1
     ]
 
 

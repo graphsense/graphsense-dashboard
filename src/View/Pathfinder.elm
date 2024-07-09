@@ -929,7 +929,6 @@ dateRangePickerView vc model =
         , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
         , span [] [ Html.text (Locale.string vc.locale "to") ]
         , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
-        , span [ dateTimeRangeFilterButtonStyle vc |> toAttr ] [ secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True) ]
         ]
 
 
@@ -952,6 +951,17 @@ transactionTableView vc currency txOnGraphFn model =
                 model.table
                 prevMsg
                 nextMsg
+
+        filterRow drp =
+            div
+                [ css
+                    [ Css.displayFlex
+                    , Css.justifyContent Css.spaceBetween
+                    ]
+                ]
+                [ drp
+                , secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                ]
     in
     (case model.dateRangePicker of
         Just drp ->
@@ -967,11 +977,13 @@ transactionTableView vc currency txOnGraphFn model =
 
             else
                 [ dateRangePickerView vc drp
+                    |> filterRow
                 , table
                 ]
 
         Nothing ->
-            [ table
+            [ filterRow none
+            , table
             ]
     )
         |> div []

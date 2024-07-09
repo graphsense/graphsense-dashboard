@@ -54,6 +54,7 @@
             "krisajenkins/remotedata": "6.0.1",
             "lukewestby/elm-string-interpolate": "1.0.4",
             "mathiajusth/nonempty-dict": "1.1.1",
+            "mdgriffith/elm-bezier": "1.0.0",
             "mercurymedia/elm-datetime-picker": "8.0.1",
             "mgold/elm-animation": "2.0.0",
             "mgold/elm-nonempty-list": "4.2.0",
