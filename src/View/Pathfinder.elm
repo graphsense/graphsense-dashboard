@@ -572,60 +572,89 @@ addressDetailsContentView vc gc model id viewState =
     in
     div []
         (div [ detailsContainerStyle |> toAttr ]
-            [ div [ detailsViewContainerStyle vc |> toAttr ]
-                [ div [ [ Css.paddingRight (Css.px 5) ] |> toAttr ]
-                    [ GraphComponents.addressNodeSvg
-                        [ SA.width <| String.fromFloat <| df.width + df.strokeWidth * 2
-                        , SA.height <| String.fromFloat <| df.height + df.strokeWidth * 2 + 1
-                        ]
-                        { defaultAddressNodeAttributes
-                            | addressNode =
-                                [ Util.Graph.translate
-                                    (-df.x + df.strokeWidth)
-                                    (-df.y + df.strokeWidth)
-                                    |> transform
-                                ]
-                        }
-                        { addressId = ""
-                        , highlight = False
-                        , plusInVisible = False
-                        , plusOutVisible = False
-                        , nodeIcon = Address.toNodeIcon address
-                        , exchangeLabel = ""
-                        , exchangeLabel2 = False
-                        , startingPoint = False
-                        , tagIcon = False
-                        }
+            [ SidebarComponents.sidePanelHeaderComponent
+                SidebarComponents.defaultSidePanelHeaderComponentAttributes
+                { sidePanelHeaderMain =
+                    { header = Id.network id ++ " " ++ Locale.string vc.locale "address" }
+                , sidePanelHeaderTags =
+                    { exchangeTag = True
+                    , otherTag = True
+                    }
+                , iconTextI2685112226851110 =
+                    { icon = Icons.iconsTag Icons.defaultIconsTagAttributes {}
+                    , text = (String.join ", " tagsDisplayWithMore)
+                    }
+                , iconTextI2685112226851105 =
+                    { icon =
+                        actorImg
+                            |> Maybe.map
+                                (\imgSrc ->
+                                    img
+                                        [ src imgSrc
+                                        , HA.alt <| Maybe.withDefault "" <| actorText
+
+                                        --, HA.width <| round SidebarComponents.actorTagIconsTagDetails.width
+                                        --, HA.height <| round SidebarComponents.actorTagIconsTagDetails.height
+                                        ]
+                                        []
+                                )
+                            |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes { iconsTag = {} })
+                    , text = actorText |> Maybe.withDefault ""
+                    }
+                }
+
+            {-
+               [ GraphComponents.addressNodeSvg
+                   [ SA.width <| String.fromFloat <| df.width + df.strokeWidth * 2
+                   , SA.height <| String.fromFloat <| df.height + df.strokeWidth * 2 + 1
+                   ]
+                   { defaultAddressNodeAttributes
+                       | addressNode =
+                           [ Util.Graph.translate
+                               (-df.x + df.strokeWidth)
+                               (-df.y + df.strokeWidth)
+                               |> transform
+                           ]
+                   }
+                   { addressId = ""
+                   , highlight = False
+                   , plusInVisible = False
+                   , plusOutVisible = False
+                   , nodeIcon = Address.toNodeIcon address
+                   , exchangeLabel = ""
+                   , exchangeLabel2 = False
+                   , startingPoint = False
+                   , tagIcon = False
+                   }
+               , div [ css [ Css.flexGrow <| Css.num 1 ] ]
+                   ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
+                    , actorText
+                       |> Maybe.map
+                           (\actorText_ ->
+                               SidebarComponents.actorTag SidebarComponents.defaultActorTagAttributes
+                                   { tagIcon =
+                                       actorImg
+                                           |> Maybe.map
+                                               (\imgSrc ->
+                                                   img
+                                                       [ src imgSrc
+                                                       , HA.alt actorText_
+                                                       , HA.width <| round SidebarComponents.actorTagIconsTagDetails.width
+                                                       , HA.height <| round SidebarComponents.actorTagIconsTagDetails.height
+                                                       ]
+                                                       []
+                                               )
+                                           |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes {})
+                                   , tagLabels = actorText_
+                                   }
+                           )
+                       |> Maybe.withDefault none
+                    , rule
                     ]
-                , div [ css [ Css.flexGrow <| Css.num 1 ] ]
-                    ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
-                     , actorText
-                        |> Maybe.map
-                            (\actorText_ ->
-                                SidebarComponents.actorTag SidebarComponents.defaultActorTagAttributes
-                                    { tagIcon =
-                                        actorImg
-                                            |> Maybe.map
-                                                (\imgSrc ->
-                                                    img
-                                                        [ src imgSrc
-                                                        , HA.alt actorText_
-                                                        , HA.width <| round SidebarComponents.actorTagIconsTagDetails.width
-                                                        , HA.height <| round SidebarComponents.actorTagIconsTagDetails.height
-                                                        ]
-                                                        []
-                                                )
-                                            |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes {})
-                                    , tagLabels = actorText_
-                                    }
-                            )
-                        |> Maybe.withDefault none
-                     , div [] [ Html.text (String.join ", " tagsDisplayWithMore) ]
-                     , rule
-                     ]
-                        ++ tbls
-                    )
-                ]
+                       ++ tbls
+                   )
+               ]
+            -}
             ]
             :: sections
         )

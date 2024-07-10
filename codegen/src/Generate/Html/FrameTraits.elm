@@ -6,6 +6,7 @@ import Generate.Common.FrameTraits as Common
 import Generate.Html.CornerTrait as CornerTrait
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasFramePropertiesTrait as HasFramePropertiesTrait
+import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Types exposing (Details)
 
@@ -16,6 +17,7 @@ toStyles node =
         ++ HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasLayoutTrait.toStyles node.hasLayoutTrait
         ++ HasFramePropertiesTrait.toStyles node.hasFramePropertiesTrait
+        ++ HasGeometryTrait.toStyles node.hasGeometryTrait
 
 
 toDetails : { a | frameTraits : FrameTraits } -> Details

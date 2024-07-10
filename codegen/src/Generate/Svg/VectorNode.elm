@@ -6,11 +6,11 @@ import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
+import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (a, toTranslate, withVisibility)
 import Generate.Util.Paint as Paint
 import Types exposing (Config, Details)
-import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 
 
 toExpressions : Config -> VectorNode -> List Elm.Expression
@@ -20,7 +20,7 @@ toExpressions config node =
         [ toStrokePaths node
         , toFillPaths node
         ]
-        |> withVisibility config.propertyExpressions node.cornerRadiusShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (Common.getNameId node.cornerRadiusShapeTraits) config.propertyExpressions node.cornerRadiusShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

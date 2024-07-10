@@ -6,7 +6,7 @@ import Elm exposing (Expression)
 
 
 type alias Config =
-    { propertyExpressions : ComponentPropertyExpressions
+    { propertyExpressions : Dict ( String, String ) ComponentPropertyExpressions
     , attributes : Expression
     }
 

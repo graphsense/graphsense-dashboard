@@ -28,7 +28,7 @@ toExpressions config node =
                 )
         )
         (Elm.list [])
-        |> withVisibility config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (Common.getNameId node.rectangularShapeTraits) config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

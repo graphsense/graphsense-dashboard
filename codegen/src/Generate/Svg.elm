@@ -8,7 +8,7 @@ import Elm.Annotation as Annotation
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
-import Generate.Common exposing (adjustBoundingBoxes)
+import Generate.Common as Common exposing (adjustBoundingBoxes)
 import Generate.Common.FrameTraits
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.EllipseNode as EllipseNode
@@ -16,11 +16,9 @@ import Generate.Svg.FrameTraits as FrameTraits
 import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
-import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, toTranslate, withVisibility)
+import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, toTranslate, withVisibility)
 import Set
 import String.Case exposing (toCamelCaseUpper)
-import String.Extra
-import Tuple exposing (mapFirst)
 import Types exposing (Config, Details)
 
 
@@ -118,20 +116,8 @@ componentNodeToDeclarations node =
             details.name
                 :: List.map .name descendantsDetails
 
-        formatName =
-            String.Extra.leftOf "#" >> sanitize
-
         properties =
-            node.componentPropertiesTrait.componentPropertyDefinitions
-                |> Maybe.map
-                    (Dict.toList
-                        >> List.map
-                            (mapFirst
-                                formatName
-                            )
-                        >> Dict.fromList
-                    )
-                |> Maybe.withDefault Dict.empty
+            Common.componentNodeToProperties details.name node
 
         defaultAttributeConfig : List String -> Elm.Expression
         defaultAttributeConfig =
@@ -172,7 +158,7 @@ componentNodeToDeclarations node =
 
         propertiesParam =
             ( propertiesParamName
-            , properties |> propertiesType |> Just
+            , properties |> Common.propertiesType Gen.Svg.Styled.annotation_.svg |> Just
             )
     in
     details
@@ -186,7 +172,7 @@ componentNodeToDeclarations node =
         |> List.map (detailsToDeclaration details.name)
         |> (++)
             [ properties
-                |> propertiesType
+                |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
                 |> Elm.alias (details.name ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
@@ -198,10 +184,7 @@ componentNodeToDeclarations node =
                     let
                         config =
                             { propertyExpressions =
-                                node.componentPropertiesTrait.componentPropertyDefinitions
-                                    |> Maybe.map
-                                        (Dict.map (\nam _ -> properties_ |> Elm.get (formatName nam)))
-                                    |> Maybe.withDefault Dict.empty
+                                Common.propertiesToPropertyExpressions properties_ properties
                             , attributes = attributes
                             }
                     in
@@ -252,27 +235,6 @@ withFrameTraitsNodeToDetails node =
     )
 
 
-propertiesType : Dict.Dict String ComponentPropertyDefinition -> Annotation.Annotation
-propertiesType =
-    Dict.map
-        (\_ def ->
-            case def.type_ of
-                ComponentPropertyTypeBOOLEAN ->
-                    Annotation.bool
-
-                ComponentPropertyTypeINSTANCESWAP ->
-                    Gen.Svg.Styled.annotation_.svg (Annotation.var "msg")
-
-                ComponentPropertyTypeTEXT ->
-                    Annotation.string
-
-                ComponentPropertyTypeVARIANT ->
-                    Debug.todo "support variant"
-        )
-        >> Dict.toList
-        >> Annotation.record
-
-
 frameTraitsToExpressions : Config -> FrameTraits -> List Elm.Expression
 frameTraitsToExpressions config node =
     node.children
@@ -283,15 +245,18 @@ frameTraitsToExpressions config node =
 withFrameTraitsNodeToExpressions : Config -> { a | frameTraits : FrameTraits } -> List Elm.Expression
 withFrameTraitsNodeToExpressions config node =
     let
-        { name } =
-            Generate.Common.FrameTraits.toDetails FrameTraits.toStyles node
+        name =
+            Generate.Common.FrameTraits.getName node
+
+        id =
+            Generate.Common.FrameTraits.getId node
     in
     Gen.Svg.Styled.call_.g
         (getElementAttributes config name)
         (frameTraitsToExpressions config node.frameTraits
             |> Elm.list
         )
-        |> withVisibility config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility ( name, id ) config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
@@ -302,10 +267,20 @@ instanceNodeToExpressions config node =
             node.frameTraits.absoluteBoundingBox
                 |> toTranslate
                 |> Attributes.transform
+
+        name =
+            Generate.Common.FrameTraits.getName node
+
+        id =
+            Generate.Common.FrameTraits.getId node
     in
     node.frameTraits.isLayerTrait.componentPropertyReferences
         |> Maybe.andThen (Dict.get "mainComponent")
-        |> Maybe.andThen (\ref -> Dict.get ref config.propertyExpressions)
+        |> Maybe.andThen
+            (\ref ->
+                getByNameId ( name, id ) config.propertyExpressions
+                    |> Maybe.andThen (Dict.get ref)
+            )
         |> Maybe.map
             (List.singleton
                 >> Elm.list

@@ -1,6 +1,6 @@
 module Generate.Html.HasFramePropertiesTrait exposing (..)
 
-import Api.Raw exposing (CounterAxisAlignItems(..), HasFramePropertiesTrait, LayoutMode(..))
+import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
 import Elm
 import Gen.Css as Css
@@ -17,8 +17,25 @@ toStyles node =
         |> m (Css.px >> Css.paddingTop) node.paddingTop
         |> m (Css.px >> Css.paddingBottom) node.paddingBottom
         |> mm layoutMode node.layoutMode
+        |> m primaryAxisAlignItems node.primaryAxisAlignItems
         |> m counterAxisAlignItems node.counterAxisAlignItems
         |> m (String.fromFloat >> flip (++) "px" >> Css.property "gap") node.itemSpacing
+
+
+primaryAxisAlignItems : PrimaryAxisAlignItems -> Elm.Expression
+primaryAxisAlignItems axis =
+    case axis of
+        PrimaryAxisAlignItemsMIN ->
+            Css.call_.justifyContent Css.start
+
+        PrimaryAxisAlignItemsMAX ->
+            Css.call_.justifyContent Css.end
+
+        PrimaryAxisAlignItemsCENTER ->
+            Css.call_.justifyContent Css.center
+
+        PrimaryAxisAlignItemsSPACEBETWEEN ->
+            Css.call_.justifyContent Css.spaceBetween
 
 
 counterAxisAlignItems : CounterAxisAlignItems -> Elm.Expression

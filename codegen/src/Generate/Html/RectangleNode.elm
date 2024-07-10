@@ -13,8 +13,8 @@ import RecordSetter exposing (..)
 import Types exposing (Config, Details)
 
 
-toExpressions : Config -> RectangleNode -> List Elm.Expression
-toExpressions config node =
+toExpressions : Config -> ( String, String ) -> RectangleNode -> List Elm.Expression
+toExpressions config nameId node =
     Html.call_.div
         (getName node
             |> getElementAttributes config
@@ -27,7 +27,7 @@ toExpressions config node =
                 )
         )
         (Elm.list [])
-        |> withVisibility config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility nameId config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

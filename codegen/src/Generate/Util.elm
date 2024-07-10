@@ -1,10 +1,11 @@
 module Generate.Util exposing (..)
 
 import Api.Raw exposing (ComponentPropertyReferences, Rectangle, Transform)
-import Dict
+import Dict exposing (Dict)
 import Elm exposing (Expression)
 import Elm.Annotation as Annotation
 import Gen.Svg.Styled
+import Maybe.Extra
 import String.Case exposing (toCamelCaseLower)
 import String.Format as Format
 import Types exposing (ComponentPropertyExpressions, Config, Details)
@@ -86,17 +87,45 @@ uniqueElementName arg1 arg2 =
         |> sanitize
 
 
-withVisibility : ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
-withVisibility def references element =
+getByNameId : ( String, String ) -> Dict ( String, String ) a -> Maybe a
+getByNameId ( name, id ) d =
+    Dict.get ( name, id ) d
+        |> Maybe.Extra.orElse (Dict.get ( name, "" ) d)
+
+
+withVisibility : ( String, String ) -> Dict ( String, String ) ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
+withVisibility ( componentName, id ) def references element =
     references
+        |> Debug.log ("123 references " ++ componentName)
         |> Maybe.andThen (Dict.get "visible")
-        |> Maybe.andThen (\ref -> Dict.get ref def)
+        |> Debug.log "123 visibl "
+        |> Maybe.andThen
+            (\ref ->
+                getByNameId ( componentName, id ) def
+                    |> Debug.log "123 get def"
+                    |> Maybe.andThen (Dict.get ref)
+                    |> Debug.log "123 found"
+            )
         |> Maybe.map
             (\bool ->
                 Gen.Svg.Styled.text ""
                     |> Elm.ifThen bool element
             )
         |> Maybe.withDefault element
+
+
+getTextProperty : ( String, String ) -> Dict ( String, String ) ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Maybe Expression
+getTextProperty ( componentName, id ) def references =
+    references
+        |> Debug.log ("xyz getTextProperty " ++ componentName)
+        |> Maybe.andThen (Dict.get "characters")
+        |> Debug.log "xyz characters"
+        |> Maybe.andThen
+            (\ref ->
+                getByNameId ( componentName, id ) (Debug.log "xyz def" def)
+                    |> Debug.log "xyz getFromExpressions"
+                    |> Maybe.andThen (Dict.get ref)
+            )
 
 
 withInstanceSwap : ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression

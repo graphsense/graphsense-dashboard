@@ -16,9 +16,21 @@ adjustBoundingBox { x, y } node =
         |> flip s_defaultShapeTraits node
 
 
+getId : { a | defaultShapeTraits : DefaultShapeTraits } -> String
+getId node =
+    node.defaultShapeTraits.isLayerTrait.id
+
+
 getName : { a | defaultShapeTraits : DefaultShapeTraits } -> String
 getName node =
     node.defaultShapeTraits.isLayerTrait.name
+
+
+getNameId : { a | defaultShapeTraits : DefaultShapeTraits } -> ( String, String )
+getNameId node =
+    ( getName node
+    , getId node
+    )
 
 
 getBoundingBox : { a | defaultShapeTraits : DefaultShapeTraits } -> Rectangle

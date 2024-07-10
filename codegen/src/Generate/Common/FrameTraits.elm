@@ -20,6 +20,11 @@ getName node =
     node.frameTraits.isLayerTrait.name
 
 
+getId : { a | frameTraits : FrameTraits } -> String
+getId node =
+    node.frameTraits.isLayerTrait.id
+
+
 getBoundingBox : { a | frameTraits : FrameTraits } -> Rectangle
 getBoundingBox node =
     node.frameTraits.absoluteBoundingBox

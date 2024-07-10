@@ -4,12 +4,13 @@ module Generate.Html exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (uncurry)
-import Dict
+import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
+import Generate.Common as Common
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
@@ -17,11 +18,12 @@ import Generate.Html.FrameTraits as FrameTraits
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
-import Generate.Util exposing (detailsToDeclaration, getElementAttributes, sanitize, withVisibility)
+import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
+import Maybe.Extra
 import Set
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
-import Tuple exposing (mapFirst)
+import Tuple exposing (mapBoth, pair)
 import Types exposing (Config, Details)
 
 
@@ -40,51 +42,26 @@ subcanvasNodeComponentsToDeclarations node =
             []
 
 
-subcanvasNodeToExpressions : Config -> SubcanvasNode -> List Elm.Expression
-subcanvasNodeToExpressions config node =
+subcanvasNodeToExpressions : Config -> ( String, String ) -> SubcanvasNode -> List Elm.Expression
+subcanvasNodeToExpressions config nameId node =
     case node of
         SubcanvasNodeTextNode n ->
-            TextNode.toExpressions config n
+            TextNode.toExpressions config nameId n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToExpressions config n
+            withFrameTraitsNodeToExpressions config nameId n
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsNodeToExpressions config n
+            withFrameTraitsNodeToExpressions config nameId n
 
         SubcanvasNodeInstanceNode n ->
-            instanceNodeToExpressions config n
+            instanceNodeToExpressions config nameId n
 
         SubcanvasNodeRectangleNode n ->
-            RectangleNode.toExpressions config n
+            RectangleNode.toExpressions config nameId n
 
         SubcanvasNodeVectorNode n ->
             VectorNode.toExpressions config n
-
-        _ ->
-            []
-
-
-subcanvasNodeToStyles : SubcanvasNode -> List Elm.Expression
-subcanvasNodeToStyles node =
-    case node of
-        SubcanvasNodeTextNode n ->
-            TextNode.toStyles n
-
-        SubcanvasNodeGroupNode n ->
-            FrameTraits.toStyles n.frameTraits
-
-        SubcanvasNodeFrameNode n ->
-            FrameTraits.toStyles n.frameTraits
-
-        SubcanvasNodeInstanceNode n ->
-            instanceNodeToStyles n
-
-        SubcanvasNodeRectangleNode n ->
-            RectangleNode.toStyles n
-
-        SubcanvasNodeVectorNode _ ->
-            []
 
         _ ->
             []
@@ -100,20 +77,9 @@ componentNodeToDeclarations node =
             details.name
                 :: List.map .name descendantsDetails
 
-        formatName =
-            String.Extra.leftOf "#" >> sanitize
-
         properties =
-            node.componentPropertiesTrait.componentPropertyDefinitions
-                |> Maybe.map
-                    (Dict.toList
-                        >> List.map
-                            (mapFirst
-                                formatName
-                            )
-                        >> Dict.fromList
-                    )
-                |> Maybe.withDefault Dict.empty
+            Common.componentNodeToProperties details.name node
+                |> Debug.log ("abc properties " ++ details.name)
 
         defaultAttributeConfig : List String -> Elm.Expression
         defaultAttributeConfig =
@@ -131,6 +97,13 @@ componentNodeToDeclarations node =
                         )
                     )
                 >> Elm.record
+
+        nameId =
+            ( details.name, Generate.Common.FrameTraits.getId node )
+
+        propertiesType =
+            properties
+                |> Common.propertiesType Gen.Html.Styled.annotation_.html
     in
     details
         :: descendantsDetails
@@ -142,8 +115,7 @@ componentNodeToDeclarations node =
         |> Dict.values
         |> List.map (detailsToDeclaration details.name)
         |> (++)
-            [ properties
-                |> propertiesType
+            [ propertiesType
                 |> Elm.alias (details.name ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
@@ -156,16 +128,14 @@ componentNodeToDeclarations node =
                     |> Just
                 )
                 ( "properties"
-                , Nothing
+                , Just propertiesType
                 )
                 (\attributes properties_ ->
                     let
                         config =
                             { propertyExpressions =
-                                node.componentPropertiesTrait.componentPropertyDefinitions
-                                    |> Maybe.map
-                                        (Dict.map (\nam _ -> properties_ |> Elm.get (formatName nam)))
-                                    |> Maybe.withDefault Dict.empty
+                                Common.propertiesToPropertyExpressions properties_ properties
+                                    |> Debug.log ("abc properties of " ++ details.name)
                             , attributes = attributes
                             }
                     in
@@ -178,7 +148,7 @@ componentNodeToDeclarations node =
                                     |> Elm.list
                                 )
                         )
-                        (frameTraitsToExpressions config node.frameTraits
+                        (frameTraitsToExpressions config nameId node.frameTraits
                             |> Elm.list
                         )
                 )
@@ -186,61 +156,85 @@ componentNodeToDeclarations node =
             ]
 
 
-frameTraitsToExpressions : Config -> FrameTraits -> List Elm.Expression
-frameTraitsToExpressions config node =
+frameTraitsToExpressions : Config -> ( String, String ) -> FrameTraits -> List Elm.Expression
+frameTraitsToExpressions config nameId node =
     node.children
-        |> List.map (subcanvasNodeToExpressions config)
+        |> List.map (subcanvasNodeToExpressions config nameId)
         |> List.concat
 
 
-propertiesType : Dict.Dict String ComponentPropertyDefinition -> Annotation.Annotation
-propertiesType =
-    Dict.map
-        (\_ def ->
-            case def.type_ of
-                ComponentPropertyTypeBOOLEAN ->
-                    Annotation.bool
-
-                ComponentPropertyTypeINSTANCESWAP ->
-                    Gen.Html.Styled.annotation_.html (Annotation.var "msg")
-
-                ComponentPropertyTypeTEXT ->
-                    Annotation.string
-
-                ComponentPropertyTypeVARIANT ->
-                    Debug.todo "support variant"
-        )
-        >> Dict.toList
-        >> Annotation.record
-
-
-withFrameTraitsNodeToExpressions : Config -> { a | frameTraits : FrameTraits } -> List Elm.Expression
-withFrameTraitsNodeToExpressions config node =
+withFrameTraitsNodeToExpressions : Config -> ( String, String ) -> { a | frameTraits : FrameTraits } -> List Elm.Expression
+withFrameTraitsNodeToExpressions config nameId node =
     let
         name =
             Generate.Common.FrameTraits.getName node
+                |> Debug.log "123 withFrameTraitsToExp name"
     in
     Gen.Html.Styled.call_.div
-        (getElementAttributes config name)
-        (frameTraitsToExpressions config node.frameTraits
+        (getElementAttributes config name
+            |> Elm.Op.append
+                (FrameTraits.toStyles node.frameTraits
+                    |> Attributes.css
+                    |> List.singleton
+                    |> Elm.list
+                )
+        )
+        (frameTraitsToExpressions config nameId node.frameTraits
             |> Elm.list
         )
-        |> withVisibility config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (Debug.log "123 withFrameTraitsToExp withVisibility" nameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
-instanceNodeToExpressions : Config -> InstanceNode -> List Elm.Expression
-instanceNodeToExpressions config node =
+instanceNodeToExpressions : Config -> ( String, String ) -> InstanceNode -> List Elm.Expression
+instanceNodeToExpressions config parentNameId node =
+    let
+        name =
+            Generate.Common.FrameTraits.getName node
+                |> Debug.log "123 instanceNodeToExp name"
+
+        id =
+            Generate.Common.FrameTraits.getId node
+                |> Debug.log "123 instanceNodeToExp id"
+
+        _ =
+            Debug.log "123 instanceNodeToExp parentNameId" parentNameId
+
+        subNameId =
+            Debug.log "123 instanceNodeToExp subNameId" <|
+                if node.componentProperties /= Nothing then
+                    ( name, id )
+
+                else
+                    parentNameId
+    in
     node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> Debug.log ("123 propertyReferences " ++ name ++ id)
         |> Maybe.andThen (Dict.get "mainComponent")
-        |> Maybe.andThen (\ref -> Dict.get ref config.propertyExpressions)
+        |> Debug.log "123 mainComponent"
+        |> Maybe.andThen
+            (\ref ->
+                getByNameId parentNameId config.propertyExpressions
+                    |> Debug.log "123 getByNameId"
+                    |> Maybe.andThen (Dict.get ref)
+                    |> Debug.log ("123 getRef " ++ ref)
+            )
         |> Maybe.map
             (List.singleton
                 >> Gen.Html.Styled.div []
+                >> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
                 >> List.singleton
             )
-        |> Maybe.withDefault
-            (withFrameTraitsNodeToExpressions config node)
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Gen.Html.Styled.call_.div
+                    (getElementAttributes config name)
+                    (frameTraitsToExpressions config subNameId node.frameTraits
+                        |> Elm.list
+                    )
+                    |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentNameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
+                    |> List.singleton
+            )
 
 
 instanceNodeToStyles : InstanceNode -> List Elm.Expression

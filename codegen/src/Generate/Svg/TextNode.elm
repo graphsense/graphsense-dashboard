@@ -10,7 +10,7 @@ import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.TextNode exposing (getName)
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.TypeStyle as TypeStyle
-import Generate.Util exposing (getElementAttributes, m, mm)
+import Generate.Util exposing (getElementAttributes, getTextProperty, m, mm)
 import Types exposing (Config, Details)
 
 
@@ -25,9 +25,7 @@ toExpressions config node =
                     |> Elm.list
                 )
         )
-        (node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
-            |> Maybe.andThen (Dict.get "characters")
-            |> Maybe.andThen (\ref -> Dict.get ref config.propertyExpressions)
+        (getTextProperty (Common.getNameId node) config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> Maybe.map Gen.Svg.Styled.call_.text
             |> Maybe.withDefault (Gen.Svg.Styled.text node.characters)
             |> List.singleton

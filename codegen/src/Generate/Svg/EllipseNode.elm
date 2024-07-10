@@ -5,6 +5,7 @@ import Elm exposing (Expression)
 import Elm.Op
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes exposing (cx, cy, rx, ry)
+import Generate.Common.DefaultShapeTraits as Common
 import Generate.Svg.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Util exposing (getElementAttributes, withVisibility)
 import RecordSetter exposing (..)
@@ -28,7 +29,7 @@ toExpressions config node =
                 )
         )
         (Elm.list [])
-        |> withVisibility config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (Common.getNameId node) config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
