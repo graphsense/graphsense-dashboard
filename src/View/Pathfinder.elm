@@ -409,19 +409,19 @@ getAddressAnnotationBtns vc data actor hasTags =
         isContract x =
             x.isContract |> Maybe.withDefault False
     in
-    (if hasTags then
-        [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
+    -- (if hasTags then
+    --     [ BtnConfig FontAwesome.tags (Locale.string vc.locale "has tags") NoOp True ]
 
-     else
-        []
-    )
-        ++ (if isContract data then
+    --  else
+    --     []
+    -- )
+        (if isContract data then
                 [ BtnConfig FontAwesome.cog (Locale.string vc.locale "is contract") NoOp True ]
 
             else
                 []
            )
-        ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
+        -- ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
 
 
 getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
@@ -516,8 +516,17 @@ addressDetailsContentView vc gc model id viewState =
                 |> Dict.get id
                 |> Maybe.withDefault viewState.address
 
+        ts = Dict.get id model.tagSummaries
+
+
+        tags =ts |> Maybe.map (.labelTagCloud >> Dict.toList >> List.sortBy (Tuple.second >> (.weighted)) ) |> Maybe.withDefault []
+
+        tagsDisplay = (tags |> List.reverse |> List.take 2 |>  List.map (Tuple.first) ) 
+
+        tagsDisplayWithMore = tagsDisplay ++ (if (List.length tags > List.length tagsDisplay) then ["..."] else [])
+ 
         actor_id =
-            Dict.get id model.tagSummaries |> Maybe.andThen .bestActor
+            ts |> Maybe.andThen .bestActor
 
         actor =
             actor_id
@@ -554,7 +563,9 @@ addressDetailsContentView vc gc model id viewState =
     div []
         (div [ detailsContainerStyle |> toAttr ]
             [ div [ detailsViewContainerStyle vc |> toAttr ]
-                [ GraphComponents.addressNodeSvg
+                [  div [ [Css.paddingRight (Css.px 5)] |> toAttr]
+                    [
+                    GraphComponents.addressNodeSvg
                     [ SA.width <| String.fromFloat <| df.width + df.strokeWidth * 2
                     , SA.height <| String.fromFloat <| df.height + df.strokeWidth * 2 + 1
                     ]
@@ -576,6 +587,7 @@ addressDetailsContentView vc gc model id viewState =
                     , startingPoint = False
                     , tagIcon = False
                     }
+                    ]
                 , div [ css [ Css.flexGrow <| Css.num 1 ] ]
                     ([ longIdentDetailsHeadingView vc gc id "Address" addressAnnotationBtns
                      , actorText
@@ -599,6 +611,7 @@ addressDetailsContentView vc gc model id viewState =
                                     }
                             )
                         |> Maybe.withDefault none
+                     , div [] [ Html.text (String.join ", " tagsDisplayWithMore)]
                      , rule
                      ]
                         ++ tbls
