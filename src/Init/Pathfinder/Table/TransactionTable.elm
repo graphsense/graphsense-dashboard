@@ -59,30 +59,12 @@ init network locale address data =
                 )
             )
         |> Maybe.withDefault
-            ( { table = table True
-              , order = Nothing
-              , dateRangePicker = datePickerSettings locale (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
-                            |> DateRangePicker.init UpdateDateRangePicker (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
-                            |> Just
-              }
-            , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
-                |> Api.GetAddressTxsEffect
-                    { currency = Id.network address.id
-                    , address = Id.id address.id
-                    , direction = Nothing
-                    , pagesize = itemsPerPage
-                    , nextpage = Nothing
-                    , order = Nothing
-                    , minHeight = Nothing
-                    , maxHeight = Nothing
-                    }
-                |> ApiEffect
-                |> List.singleton
+            ( initWithoutFilter address locale data
             )
 
 
-initWithoutFilter : Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
-initWithoutFilter address data =
+initWithoutFilter : Address  -> Locale.Model -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
+initWithoutFilter address locale data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
@@ -100,7 +82,9 @@ initWithoutFilter address data =
     in
     ( { table = table True
       , order = Nothing
-      , dateRangePicker = Nothing
+      , dateRangePicker = datePickerSettings locale (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
+                            |> DateRangePicker.init UpdateDateRangePicker (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
+                            |> Just
       }
     , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
         |> Api.GetAddressTxsEffect

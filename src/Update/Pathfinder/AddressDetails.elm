@@ -256,7 +256,7 @@ update uc pathfinderModel msg id model =
                             -- ( m2, eff ) =
                             --     updateDatePickerRangeBlockRange uc pathfinderModel id model Reset Reset
                             ( ft, teff ) =
-                                TransactionTable.initWithoutFilter model.address model.data
+                                TransactionTable.initWithoutFilter model.address uc.locale model.data
                         in
                         ( { model
                             | txs = ft
