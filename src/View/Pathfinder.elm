@@ -605,13 +605,13 @@ addressDetailsContentView vc gc model id viewState =
                                         |> List.singleton
                                         |> div
                                             [ HA.css Theme.Html.Icons.iconsTagDetails.styles
-                                            , HA.css 
+                                            , HA.css
                                                 [ Theme.Html.Icons.iconsTagDetails.width
                                                     |> Css.px
-                                                    |> Css.width 
+                                                    |> Css.width
                                                 , Theme.Html.Icons.iconsTagDetails.height
                                                     |> Css.px
-                                                    |> Css.height 
+                                                    |> Css.height
                                                 ]
                                             ]
                                 )

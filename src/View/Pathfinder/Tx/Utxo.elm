@@ -69,8 +69,10 @@ view _ _ _ id highlight tx =
                     |> Svg.Styled.Attributes.id
                 ]
         }
-        { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
-        , highlightVisible = highlight
+        { txNode =
+            { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
+            , highlightVisible = highlight
+            }
         }
 
 

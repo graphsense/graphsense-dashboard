@@ -17,6 +17,7 @@ import Generate.Svg.RectangleNode as RectangleNode
 import Generate.Svg.TextNode as TextNode
 import Generate.Svg.VectorNode as VectorNode
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, toTranslate, withVisibility)
+import Maybe.Extra
 import Set
 import String.Case exposing (toCamelCaseUpper)
 import Types exposing (Config, Details)
@@ -38,26 +39,26 @@ subcanvasNodeComponentsToDeclarations node =
             []
 
 
-subcanvasNodeToExpressions : Config -> SubcanvasNode -> List Elm.Expression
-subcanvasNodeToExpressions config node =
+subcanvasNodeToExpressions : Config -> ( String, String ) -> SubcanvasNode -> List Elm.Expression
+subcanvasNodeToExpressions config nameId node =
     case node of
         SubcanvasNodeTextNode n ->
-            TextNode.toExpressions config n
+            TextNode.toExpressions config nameId n
 
         SubcanvasNodeEllipseNode n ->
-            EllipseNode.toExpressions config n
+            EllipseNode.toExpressions config nameId n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToExpressions config n
+            withFrameTraitsNodeToExpressions config nameId n
 
         SubcanvasNodeInstanceNode n ->
-            instanceNodeToExpressions config n
+            instanceNodeToExpressions config nameId n
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toExpressions config n
+            VectorNode.toExpressions config nameId n
 
         SubcanvasNodeRectangleNode n ->
-            RectangleNode.toExpressions config n
+            RectangleNode.toExpressions config nameId n
 
         _ ->
             []
@@ -110,7 +111,7 @@ componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
 componentNodeToDeclarations node =
     let
         ( details, descendantsDetails ) =
-            withFrameTraitsNodeToDetails node
+            componentNodeToDetails node
 
         names =
             details.name
@@ -135,6 +136,9 @@ componentNodeToDeclarations node =
                         )
                     )
                 >> Elm.record
+
+        nameId =
+            ( details.name, Generate.Common.FrameTraits.getId node )
 
         funName =
             sanitize details.name
@@ -190,7 +194,7 @@ componentNodeToDeclarations node =
                     in
                     Gen.Svg.Styled.call_.g
                         (getElementAttributes config details.name)
-                        (frameTraitsToExpressions config node.frameTraits
+                        (frameTraitsToExpressions config nameId node.frameTraits
                             |> Elm.list
                         )
                 )
@@ -235,33 +239,35 @@ withFrameTraitsNodeToDetails node =
     )
 
 
-frameTraitsToExpressions : Config -> FrameTraits -> List Elm.Expression
-frameTraitsToExpressions config node =
+componentNodeToDetails : ComponentNode -> ( Details, List Details )
+componentNodeToDetails =
+    withFrameTraitsNodeToDetails
+
+
+frameTraitsToExpressions : Config -> ( String, String ) -> FrameTraits -> List Elm.Expression
+frameTraitsToExpressions config nameId node =
     node.children
-        |> List.map (subcanvasNodeToExpressions config)
+        |> List.map (subcanvasNodeToExpressions config nameId)
         |> List.concat
 
 
-withFrameTraitsNodeToExpressions : Config -> { a | frameTraits : FrameTraits } -> List Elm.Expression
-withFrameTraitsNodeToExpressions config node =
+withFrameTraitsNodeToExpressions : Config -> ( String, String ) -> { a | frameTraits : FrameTraits } -> List Elm.Expression
+withFrameTraitsNodeToExpressions config nameId node =
     let
         name =
             Generate.Common.FrameTraits.getName node
-
-        id =
-            Generate.Common.FrameTraits.getId node
     in
     Gen.Svg.Styled.call_.g
         (getElementAttributes config name)
-        (frameTraitsToExpressions config node.frameTraits
+        (frameTraitsToExpressions config nameId node.frameTraits
             |> Elm.list
         )
-        |> withVisibility ( name, id ) config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility nameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
-instanceNodeToExpressions : Config -> InstanceNode -> List Elm.Expression
-instanceNodeToExpressions config node =
+instanceNodeToExpressions : Config -> ( String, String ) -> InstanceNode -> List Elm.Expression
+instanceNodeToExpressions config parentNameId node =
     let
         coords =
             node.frameTraits.absoluteBoundingBox
@@ -273,6 +279,13 @@ instanceNodeToExpressions config node =
 
         id =
             Generate.Common.FrameTraits.getId node
+
+        subNameId =
+            if node.componentProperties /= Nothing then
+                ( name, id )
+
+            else
+                parentNameId
     in
     node.frameTraits.isLayerTrait.componentPropertyReferences
         |> Maybe.andThen (Dict.get "mainComponent")
@@ -285,7 +298,16 @@ instanceNodeToExpressions config node =
             (List.singleton
                 >> Elm.list
                 >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
+                >> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
                 >> List.singleton
             )
-        |> Maybe.withDefault
-            (withFrameTraitsNodeToExpressions config node)
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                Gen.Svg.Styled.call_.g
+                    (getElementAttributes config name)
+                    (frameTraitsToExpressions config subNameId node.frameTraits
+                        |> Elm.list
+                    )
+                    |> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+                    |> List.singleton
+            )

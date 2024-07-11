@@ -14,8 +14,8 @@ import Generate.Util exposing (getElementAttributes, getTextProperty, m, mm)
 import Types exposing (Config, Details)
 
 
-toExpressions : Config -> TextNode -> List Elm.Expression
-toExpressions config node =
+toExpressions : Config -> ( String, String ) -> TextNode -> List Elm.Expression
+toExpressions config componentNameId node =
     Gen.Svg.Styled.call_.text_
         (getName node
             |> getElementAttributes config
@@ -25,7 +25,7 @@ toExpressions config node =
                     |> Elm.list
                 )
         )
-        (getTextProperty (Common.getNameId node) config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        (getTextProperty componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> Maybe.map Gen.Svg.Styled.call_.text
             |> Maybe.withDefault (Gen.Svg.Styled.text node.characters)
             |> List.singleton

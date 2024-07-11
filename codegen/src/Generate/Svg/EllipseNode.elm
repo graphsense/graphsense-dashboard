@@ -12,8 +12,8 @@ import RecordSetter exposing (..)
 import Types exposing (Config)
 
 
-toExpressions : Config -> EllipseNode -> List Elm.Expression
-toExpressions config node =
+toExpressions : Config -> ( String, String ) -> EllipseNode -> List Elm.Expression
+toExpressions config componentNameId node =
     let
         name =
             getName node
@@ -29,7 +29,7 @@ toExpressions config node =
                 )
         )
         (Elm.list [])
-        |> withVisibility (Common.getNameId node) config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

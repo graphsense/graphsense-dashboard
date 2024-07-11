@@ -6,8 +6,8 @@ import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Svg.VectorNode
-import Types exposing (Config, Details)
 import RecordSetter exposing (s_styles)
+import Types exposing (Config, Details)
 
 
 toStyles : VectorNode -> List Elm.Expression
@@ -22,9 +22,9 @@ toStyles node =
     ]
 
 
-toExpressions : Config -> VectorNode -> List Elm.Expression
-toExpressions config node =
-    Generate.Svg.VectorNode.toExpressions config node
+toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
+toExpressions config componentNameId node =
+    Generate.Svg.VectorNode.toExpressions config componentNameId node
         |> Gen.Svg.Styled.svg
             [ node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.width
                 |> String.fromFloat
@@ -39,4 +39,4 @@ toExpressions config node =
 toDetails : VectorNode -> Details
 toDetails node =
     Generate.Svg.VectorNode.toDetails node
-    |> s_styles (toStyles node)
+        |> s_styles (toStyles node)

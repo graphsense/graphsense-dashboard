@@ -64,7 +64,7 @@ subcanvasNodeToExpressions config nameId node =
             RectangleNode.toExpressions config nameId n
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toExpressions config n
+            VectorNode.toExpressions config nameId n
 
         _ ->
             []
@@ -82,7 +82,6 @@ componentNodeToDeclarations node =
 
         properties =
             Common.componentNodeToProperties details.name node
-                |> Debug.log ("abc properties " ++ details.name)
 
         defaultAttributeConfig : List String -> Elm.Expression
         defaultAttributeConfig =
@@ -212,15 +211,11 @@ instanceNodeToExpressions config parentNameId node =
                     parentNameId
     in
     node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> Debug.log ("123 propertyReferences " ++ name ++ id)
         |> Maybe.andThen (Dict.get "mainComponent")
-        |> Debug.log "123 mainComponent"
         |> Maybe.andThen
             (\ref ->
                 getByNameId parentNameId config.propertyExpressions
-                    |> Debug.log "123 getByNameId"
                     |> Maybe.andThen (Dict.get ref)
-                    |> Debug.log ("123 getRef " ++ ref)
             )
         |> Maybe.map
             (withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
