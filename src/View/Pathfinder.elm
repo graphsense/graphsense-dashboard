@@ -42,7 +42,6 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
-import Theme.Html.GraphComponents exposing (defaultAddressNodeAttributes)
 import Theme.Html.Icons
 import Theme.Html.SidebarComponents as SidebarComponents
 import Theme.Svg.GraphComponents as GraphComponents
@@ -51,10 +50,9 @@ import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
-import Util.View exposing (copyIcon, copyableLongIdentifier, none, truncateLongIdentifier)
+import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifier)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
-import View.Pathfinder.Address as Address
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
 import View.Pathfinder.Table as Table
@@ -63,6 +61,7 @@ import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
 import View.Search
+import Util.View exposing (truncateLongIdentifierWithLengths)
 
 
 type alias BtnConfig =
@@ -582,12 +581,12 @@ addressDetailsContentView vc gc model id viewState =
                     , otherTag = True
                     }
                 , iconTextI2685112226851110 =
-                    { icon = Icons.iconsTag Icons.defaultIconsTagAttributes {}
-                    , text = (String.join ", " tagsDisplayWithMore)
+                    { icon = Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes { iconsTag = {} }
+                    , text = String.join ", " tagsDisplayWithMore
                     }
                 , iconTextI2685112126921179 =
                     { icon = Id.id id |> copyIcon vc
-                    , text = Id.id id |> truncateLongIdentifier
+                    , text = Id.id id |> truncateLongIdentifierWithLengths 13 13
                     }
                 , iconTextI2685112226851105 =
                     { icon =
