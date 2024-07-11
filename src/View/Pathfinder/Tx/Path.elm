@@ -173,19 +173,22 @@ coloredPath vc c =
                 Bezier.fromPoints p3 p2 p1 p0
 
         lx =
-            if c.isOutgoing then
-                if dx < 0 then
-                    p3.x - (val.x / pa.width) * dx
+            p0.x + dx / 2
 
-                else
-                    p3.x - (pa.width - val.x - val.width) / pa.width * dx
+        {-
+           if c.isOutgoing then
+               if dx < 0 then
+                   p3.x - (val.x / pa.width) * dx
 
-            else if dx < 0 then
-                p0.x + ((val.x - val.width) / pa.width) * dx
+               else
+                   p3.x - (pa.width - val.x - val.width) / pa.width * dx
 
-            else
-                p0.x + (val.x / pa.width) * dx
+           else if dx < 0 then
+               p0.x + ((val.x - val.width) / pa.width) * dx
 
+           else
+               p0.x + (val.x / pa.width) * dx
+        -}
         ly =
             if c.isOutgoing then
                 val.y
@@ -307,18 +310,21 @@ coloredPath vc c =
       text_
         [ translate lx ly
             |> transform
-        , if c.isOutgoing then
-            if dx > 0 then
-                textAnchor "end"
 
-            else
-                textAnchor "start"
+        {- , if c.isOutgoing then
+             if dx > 0 then
+                 textAnchor "end"
 
-          else if dx > 0 then
-            textAnchor "start"
+             else
+                 textAnchor "start"
 
-          else
-            textAnchor "end"
+           else if dx > 0 then
+             textAnchor "start"
+
+           else
+             textAnchor "end"
+        -}
+        , textAnchor "middle"
         , dominantBaseline "hanging"
         ]
         [ text c.label ]
