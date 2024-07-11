@@ -118,6 +118,8 @@ subcanvasNodeToProperties node =
                     )
                 |> Maybe.withDefault []
                 |> (++) (withFrameTraitsToProperties n)
+        SubcanvasNodeFrameNode n ->
+            withFrameTraitsToProperties n
 
         _ ->
             []

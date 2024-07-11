@@ -8,6 +8,7 @@ import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
+import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Generate.Common as Common
@@ -20,6 +21,7 @@ import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
+import RecordSetter exposing (s_styles)
 import Set
 import String.Case exposing (toCamelCaseUpper)
 import String.Extra
@@ -31,7 +33,8 @@ subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
 subcanvasNodeComponentsToDeclarations node =
     case node of
         SubcanvasNodeComponentNode n ->
-            componentNodeToDeclarations n
+            Common.adjustBoundingBoxes n
+                |> componentNodeToDeclarations
 
         SubcanvasNodeComponentSetNode n ->
             n.frameTraits.children
@@ -71,7 +74,7 @@ componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
 componentNodeToDeclarations node =
     let
         ( details, descendantsDetails ) =
-            withFrameTraitsNodeToDetails node
+            componentNodeToDetails node
 
         names =
             details.name
@@ -220,15 +223,20 @@ instanceNodeToExpressions config parentNameId node =
                     |> Debug.log ("123 getRef " ++ ref)
             )
         |> Maybe.map
-            (List.singleton
-                >> Gen.Html.Styled.div []
-                >> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+            (withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
                 >> List.singleton
             )
         |> Maybe.Extra.withDefaultLazy
             (\_ ->
                 Gen.Html.Styled.call_.div
-                    (getElementAttributes config name)
+                    (getElementAttributes config name
+                        |> Elm.Op.append
+                            (FrameTraits.toStyles node.frameTraits
+                                |> Attributes.css
+                                |> List.singleton
+                                |> Elm.list
+                            )
+                    )
                     (frameTraitsToExpressions config subNameId node.frameTraits
                         |> Elm.list
                     )
@@ -283,6 +291,16 @@ subcanvasNodeToDetails node =
 
         _ ->
             []
+
+
+componentNodeToDetails : ComponentNode -> ( Details, List Details )
+componentNodeToDetails node =
+    ( FrameTraits.toDetails node
+        |> s_styles (ComponentNode.toStyles node)
+    , node.frameTraits.children
+        |> List.map subcanvasNodeToDetails
+        |> List.concat
+    )
 
 
 withFrameTraitsNodeToDetails : { a | frameTraits : FrameTraits } -> ( Details, List Details )

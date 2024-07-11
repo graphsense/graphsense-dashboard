@@ -43,6 +43,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Table
 import Theme.Html.GraphComponents exposing (defaultAddressNodeAttributes)
+import Theme.Html.Icons
 import Theme.Html.SidebarComponents as SidebarComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
@@ -50,7 +51,7 @@ import Update.Graph.Transform as Transform
 import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
-import Util.View exposing (copyableLongIdentifierPathfinder, none)
+import Util.View exposing (copyIcon, copyableLongIdentifier, none, truncateLongIdentifier)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Address as Address
@@ -575,7 +576,7 @@ addressDetailsContentView vc gc model id viewState =
             [ SidebarComponents.sidePanelHeaderComponent
                 SidebarComponents.defaultSidePanelHeaderComponentAttributes
                 { sidePanelHeaderMain =
-                    { header = Id.network id ++ " " ++ Locale.string vc.locale "address" }
+                    { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address" }
                 , sidePanelHeaderTags =
                     { exchangeTag = True
                     , otherTag = True
@@ -583,6 +584,10 @@ addressDetailsContentView vc gc model id viewState =
                 , iconTextI2685112226851110 =
                     { icon = Icons.iconsTag Icons.defaultIconsTagAttributes {}
                     , text = (String.join ", " tagsDisplayWithMore)
+                    }
+                , iconTextI2685112126921179 =
+                    { icon = Id.id id |> copyIcon vc
+                    , text = Id.id id |> truncateLongIdentifier
                     }
                 , iconTextI2685112226851105 =
                     { icon =
@@ -592,11 +597,23 @@ addressDetailsContentView vc gc model id viewState =
                                     img
                                         [ src imgSrc
                                         , HA.alt <| Maybe.withDefault "" <| actorText
-
-                                        --, HA.width <| round SidebarComponents.actorTagIconsTagDetails.width
-                                        --, HA.height <| round SidebarComponents.actorTagIconsTagDetails.height
+                                        , HA.width <| round Icons.iconsTagTagIconDetails.width
+                                        , HA.height <| round Icons.iconsTagTagIconDetails.height
+                                        , HA.css Theme.Html.Icons.iconsTagTagIconDetails.styles
                                         ]
                                         []
+                                        |> List.singleton
+                                        |> div
+                                            [ HA.css Theme.Html.Icons.iconsTagDetails.styles
+                                            , HA.css 
+                                                [ Theme.Html.Icons.iconsTagDetails.width
+                                                    |> Css.px
+                                                    |> Css.width 
+                                                , Theme.Html.Icons.iconsTagDetails.height
+                                                    |> Css.px
+                                                    |> Css.height 
+                                                ]
+                                            ]
                                 )
                             |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes { iconsTag = {} })
                     , text = actorText |> Maybe.withDefault ""

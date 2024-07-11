@@ -68,7 +68,7 @@ layoutMode mode =
             ]
 
         LayoutModeNONE ->
-            []
+            [ ]
 
 
 
