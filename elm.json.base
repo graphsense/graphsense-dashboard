@@ -34,7 +34,7 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "elm-community/basics-extra": "4.1.0",
-            "elm-community/dict-extra": "2.3.0",
+            "elm-community/dict-extra": "2.4.0",
             "elm-community/easing-functions": "2.0.0",
             "elm-community/html-extra": "3.4.0",
             "elm-community/intdict": "3.0.0",
