@@ -302,7 +302,7 @@ instanceNodeToExpressions config parentNameId node =
         |> Maybe.andThen (Dict.get "mainComponent")
         |> Maybe.andThen
             (\ref ->
-                getByNameId ( name, id ) config.propertyExpressions
+                getByNameId parentNameId config.propertyExpressions
                     |> Maybe.andThen (Dict.get ref)
             )
         |> Maybe.map
