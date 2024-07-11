@@ -304,12 +304,7 @@ coloredPath vc c =
         fr =
             GraphComponents.txLabelRectangleDetails
       in
-      tspan
-        [ alignmentBaseline "hanging"
-        ]
-        [ text c.label ]
-        |> List.singleton
-        |> text_
+        text_
             [ translate lx ly
                 |> transform
             , if c.isOutgoing then
@@ -324,7 +319,9 @@ coloredPath vc c =
 
               else
                 textAnchor "end"
+            , dominantBaseline "hanging"
             ]
+            [ text c.label ]
     ]
         |> g
             [ c.opacity |> String.fromFloat |> opacity
