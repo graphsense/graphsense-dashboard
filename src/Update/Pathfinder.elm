@@ -721,13 +721,13 @@ updateByMsg plugins uc msg model =
 
         BrowserGotTx tx ->
             let
-                nw =
-                    Network.addTx tx model.network
+                aggAddressAdd a ( m, eff ) =
+                    loadAddress plugins a m False |> Tuple.mapSecond ((++) eff)
             in
-            { model
-                | network = nw
-            }
-                |> checkSelection uc
+            getAddressesToLoadForTx tx
+                |> List.foldl aggAddressAdd (n (model |> s_network (Network.addTx tx model.network)))
+                |> Tuple.mapFirst (checkSelection uc)
+                |> (\( ( m, effa ), effb ) -> ( m, effa ++ effb ))
                 |> Tuple.mapSecond ((++) (fetchTagSummariesForTx tx model.tagSummaries model.noTags))
 
         ChangedDisplaySettingsMsg submsg ->
@@ -908,9 +908,6 @@ loadAddress _ id model starting =
 
     else
         let
-            tg =
-                Dict.get id model.tagSummaries
-
             nw =
                 Network.addAddress id model.network
                     |> Network.updateAddress id
@@ -1137,6 +1134,56 @@ fetchActorsForAddress d existing =
         |> Maybe.withDefault []
 
 
+getBiggestIO : Maybe (List Api.Data.TxValue) -> String -> Maybe String
+getBiggestIO io exceptAddress =
+    Maybe.withDefault [] io
+        |> List.filter (.address >> List.all ((/=) exceptAddress))
+        |> List.sortBy (.value >> .value)
+        |> List.reverse
+        |> List.head
+        |> Maybe.map .address
+        |> Maybe.andThen List.head
+
+
+getAddressesToLoadForTx : Api.Data.Tx -> List Id
+getAddressesToLoadForTx tx =
+    let
+        src =
+            getAddressForDirection tx Incoming Nothing
+
+        dst =
+            getAddressForDirection tx Outgoing (src |> Maybe.map Id.id)
+    in
+    [ src
+    , dst
+    ]
+        |> List.filterMap identity
+
+
+getAddressForDirection : Api.Data.Tx -> Direction -> Maybe String -> Maybe Id
+getAddressForDirection tx direction butNotAddress =
+    case tx of
+        Api.Data.TxTxUtxo t ->
+            (case direction of
+                Incoming ->
+                    getBiggestIO t.inputs (butNotAddress |> Maybe.withDefault "")
+
+                Outgoing ->
+                    getBiggestIO t.outputs (butNotAddress |> Maybe.withDefault "")
+            )
+                |> Maybe.map (Id.init t.currency)
+
+        Api.Data.TxTxAccount t ->
+            (case direction of
+                Incoming ->
+                    Just t.fromAddress
+
+                Outgoing ->
+                    Just t.toAddress
+            )
+                |> Maybe.map (Id.init t.currency)
+
+
 browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
 browserGotTxForAddress plugins _ addressId direction tx model =
     let
@@ -1170,33 +1217,9 @@ browserGotTxForAddress plugins _ addressId direction tx model =
         address =
             Id.id addressId
 
-        getBiggest io =
-            Maybe.withDefault [] io
-                |> List.filter (.address >> List.all ((/=) address))
-                |> List.sortBy (.value >> .value)
-                |> List.reverse
-                |> List.head
-                |> Maybe.map .address
-                |> Maybe.andThen List.head
-
         -- TODO what if multisig?
         firstAddress =
-            case tx of
-                Api.Data.TxTxUtxo t ->
-                    case direction of
-                        Incoming ->
-                            getBiggest t.inputs
-
-                        Outgoing ->
-                            getBiggest t.outputs
-
-                Api.Data.TxTxAccount t ->
-                    case direction of
-                        Incoming ->
-                            Just t.fromAddress
-
-                        Outgoing ->
-                            Just t.toAddress
+            getAddressForDirection tx direction (Just address) |> Maybe.map Id.id
     in
     firstAddress
         |> Maybe.map

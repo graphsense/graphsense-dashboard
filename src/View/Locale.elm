@@ -250,7 +250,7 @@ timestampDateUniform model =
             , yearNumber
             ]
     in
-    timestampWithFormat format {model | zone = Time.utc}
+    timestampWithFormat format { model | zone = Time.utc }
 
 
 timestampTimeUniform : Model -> Int -> String
@@ -264,7 +264,7 @@ timestampTimeUniform model =
             , amPmUppercase
             ]
     in
-    timestampWithFormat format {model | zone = Time.utc}
+    timestampWithFormat format { model | zone = Time.utc }
 
 
 timesampDateTimeUniform : Model -> Int -> String
@@ -284,7 +284,7 @@ timesampDateTimeUniform model =
             , amPmUppercase
             ]
     in
-    timestampWithFormat format {model | zone = Time.utc}
+    timestampWithFormat format { model | zone = Time.utc }
 
 
 date : Model -> Int -> String
