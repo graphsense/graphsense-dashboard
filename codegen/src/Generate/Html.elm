@@ -16,6 +16,7 @@ import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.FrameTraits as FrameTraits
+import Generate.Html.LineNode as LineNode
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
@@ -65,6 +66,9 @@ subcanvasNodeToExpressions config nameId node =
 
         SubcanvasNodeVectorNode n ->
             VectorNode.toExpressions config nameId n
+
+        SubcanvasNodeLineNode n ->
+            DefaultShapeTraits.toExpressions config nameId n
 
         _ ->
             []
@@ -282,6 +286,10 @@ subcanvasNodeToDetails node =
 
         SubcanvasNodeVectorNode n ->
             VectorNode.toDetails n
+                |> List.singleton
+
+        SubcanvasNodeLineNode n ->
+            LineNode.toDetails n
                 |> List.singleton
 
         _ ->

@@ -8,7 +8,13 @@ import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Svg.VectorNode
 import RecordSetter exposing (s_styles)
 import Types exposing (Config, Details)
+import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 
+
+toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
+toExpressions config componentNameId =
+    .cornerRadiusShapeTraits
+    >> DefaultShapeTraits.toExpressions config componentNameId
 
 toStyles : VectorNode -> List Elm.Expression
 toStyles node =
@@ -20,20 +26,6 @@ toStyles node =
         |> Css.px
         |> Css.left
     ]
-
-
-toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
-toExpressions config componentNameId node =
-    Generate.Svg.VectorNode.toExpressions config componentNameId node
-        |> Gen.Svg.Styled.svg
-            [ node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.width
-                |> String.fromFloat
-                |> Attributes.width
-            , node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.height
-                |> String.fromFloat
-                |> Attributes.height
-            ]
-        |> List.singleton
 
 
 toDetails : VectorNode -> Details

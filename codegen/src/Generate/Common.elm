@@ -49,6 +49,10 @@ subcanvasNodeAdjustBoundingBox adjust node =
             VectorNode.adjustBoundingBox adjust n
                 |> SubcanvasNodeVectorNode
 
+        SubcanvasNodeLineNode n ->
+            DefaultShapeTraits.adjustBoundingBox adjust n
+                |> SubcanvasNodeLineNode
+
         SubcanvasNodeRectangleNode n ->
             RectangleNode.adjustBoundingBox adjust n
                 |> SubcanvasNodeRectangleNode
@@ -118,6 +122,7 @@ subcanvasNodeToProperties node =
                     )
                 |> Maybe.withDefault []
                 |> (++) (withFrameTraitsToProperties n)
+
         SubcanvasNodeFrameNode n ->
             withFrameTraitsToProperties n
 

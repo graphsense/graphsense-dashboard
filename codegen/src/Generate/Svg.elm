@@ -55,10 +55,13 @@ subcanvasNodeToExpressions config nameId node =
             instanceNodeToExpressions config nameId n
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toExpressions config nameId n
+            DefaultShapeTraits.toExpressions config nameId n.cornerRadiusShapeTraits
 
         SubcanvasNodeRectangleNode n ->
             RectangleNode.toExpressions config nameId n
+
+        SubcanvasNodeLineNode n ->
+            DefaultShapeTraits.toExpressions config nameId n
 
         _ ->
             []
@@ -100,7 +103,11 @@ subcanvasNodeToDetails node =
                 |> List.singleton
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toDetails n
+            DefaultShapeTraits.toDetails n.cornerRadiusShapeTraits
+                |> List.singleton
+
+        SubcanvasNodeLineNode n ->
+            DefaultShapeTraits.toDetails n
                 |> List.singleton
 
         _ ->
@@ -219,8 +226,12 @@ componentNodeToDeclarations node =
                         |> Gen.Svg.Styled.call_.svg
                             (attributes_
                                 |> Elm.Op.append
-                                    ([ Attributes.width <| String.fromFloat details.bbox.width
-                                     , Attributes.height <| String.fromFloat details.bbox.height
+                                    ([ max 1 details.bbox.width
+                                        |> String.fromFloat
+                                        |> Attributes.width
+                                     , max 1 details.bbox.height
+                                        |> String.fromFloat
+                                        |> Attributes.height
                                      ]
                                         |> Elm.list
                                     )
