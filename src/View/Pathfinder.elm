@@ -572,7 +572,14 @@ addressDetailsContentView vc gc model id viewState =
     SidebarComponents.sidePanelHeaderComponent
         df
         { sidePanelHeaderMain =
-            { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address" }
+            { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
+            , icon =
+                if address.exchange /= Nothing then
+                    Icons.iconsExchangeSvg [] Icons.defaultIconsExchangeAttributes { iconsExchange = {} }
+
+                else
+                    Icons.iconsUntaggedSvg [] Icons.defaultIconsUntaggedAttributes { iconsUntagged = {} }
+            }
         , sidePanelHeaderTags =
             { exchangeTag = actorText /= Nothing
             , otherTag = List.isEmpty tags |> not
