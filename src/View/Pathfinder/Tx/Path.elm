@@ -189,7 +189,7 @@ coloredPath vc c =
         ly =
             if c.isOutgoing then
                 val.y
-                    + (Bezier.atX (Debug.log "lx" lx) spline |> Debug.log "by" |> .point |> .y)
+                    + (Bezier.atX lx spline |> .point |> .y)
 
             else
                 val.y
