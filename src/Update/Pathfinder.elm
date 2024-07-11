@@ -721,8 +721,15 @@ updateByMsg plugins uc msg model =
 
         BrowserGotTx tx ->
             let
+                isTxOnGraphAlready =
+                    Network.isTxInNetwork tx model.network
+
                 aggAddressAdd a ( m, eff ) =
-                    loadAddress plugins a m False |> Tuple.mapSecond ((++) eff)
+                    if isTxOnGraphAlready then
+                        ( m, eff )
+
+                    else
+                        loadAddress plugins a m False |> Tuple.mapSecond ((++) eff)
             in
             getAddressesToLoadForTx tx
                 |> List.foldl aggAddressAdd (n (model |> s_network (Network.addTx tx model.network)))

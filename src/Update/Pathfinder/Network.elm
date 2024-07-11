@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -364,16 +364,26 @@ findAddressCoords id network =
         |> Maybe.withDefault (findFreeCoords network)
 
 
+getTxId : Api.Data.Tx -> Id
+getTxId tx =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            Id.init t.currency t.txHash
+
+        Api.Data.TxTxUtxo t ->
+            Id.init t.currency t.txHash
+
+
+isTxInNetwork : Api.Data.Tx -> Network -> Bool
+isTxInNetwork tx net =
+    Dict.member (getTxId tx) net.txs
+
+
 addTx : Api.Data.Tx -> Network -> Network
 addTx tx network =
     let
         id =
-            case tx of
-                Api.Data.TxTxAccount t ->
-                    Id.init t.currency t.txHash
-
-                Api.Data.TxTxUtxo t ->
-                    Id.init t.currency t.txHash
+            getTxId tx
     in
     if Dict.member id network.txs then
         network

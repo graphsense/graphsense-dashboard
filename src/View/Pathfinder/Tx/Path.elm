@@ -304,24 +304,24 @@ coloredPath vc c =
         fr =
             GraphComponents.txLabelRectangleDetails
       in
-        text_
-            [ translate lx ly
-                |> transform
-            , if c.isOutgoing then
-                if dx > 0 then
-                    textAnchor "end"
+      text_
+        [ translate lx ly
+            |> transform
+        , if c.isOutgoing then
+            if dx > 0 then
+                textAnchor "end"
 
-                else
-                    textAnchor "start"
-
-              else if dx > 0 then
+            else
                 textAnchor "start"
 
-              else
-                textAnchor "end"
-            , dominantBaseline "hanging"
-            ]
-            [ text c.label ]
+          else if dx > 0 then
+            textAnchor "start"
+
+          else
+            textAnchor "end"
+        , dominantBaseline "hanging"
+        ]
+        [ text c.label ]
     ]
         |> g
             [ c.opacity |> String.fromFloat |> opacity
