@@ -30,9 +30,6 @@ toExpressions config componentNameId node =
             |> Maybe.withDefault (Gen.Svg.Styled.text node.characters)
             |> List.singleton
             |> Elm.list
-            |> Gen.Svg.Styled.call_.tspan (tspanAttributes node |> Elm.list)
-            |> List.singleton
-            |> Elm.list
         )
         |> List.singleton
 
@@ -48,15 +45,9 @@ toDetails node =
     Common.toDetails (toStyles node) node
 
 
-tspanAttributes : TextNode -> List Elm.Expression
-tspanAttributes node =
-    []
-        |> m toAlignmentBaseline node.style.textAlignVertical
-
-
 toAlignmentBaseline : TypeStyleTextAlignVertical -> Elm.Expression
 toAlignmentBaseline align =
-    Attributes.alignmentBaseline <|
+    Attributes.dominantBaseline <|
         case align of
             TypeStyleTextAlignVerticalTOP ->
                 "hanging"
@@ -73,6 +64,7 @@ toAttributes node =
     []
         |> mm (toCoords node.style) (Just node.defaultShapeTraits.absoluteBoundingBox)
         |> m toTextAnchor node.style.textAlignHorizontal
+        |> m toAlignmentBaseline node.style.textAlignVertical
 
 
 toTextAnchor : TypeStyleTextAlignHorizontal -> Elm.Expression
