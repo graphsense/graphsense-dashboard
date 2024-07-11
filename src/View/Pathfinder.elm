@@ -570,7 +570,13 @@ addressDetailsContentView vc gc model id viewState =
             SidebarComponents.defaultSidePanelHeaderComponentAttributes
     in
     SidebarComponents.sidePanelHeaderComponent
-        df
+        { df
+            | exchangeLabel =
+                [ css
+                    [ Css.whiteSpace Css.noWrap
+                    ]
+                ]
+        }
         { sidePanelHeaderMain =
             { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
             , icon =
