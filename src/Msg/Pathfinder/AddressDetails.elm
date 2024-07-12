@@ -5,6 +5,7 @@ import Api.Request.Addresses
 import DurationDatePicker
 import Model.Direction exposing (Direction)
 import Model.Pathfinder.Id exposing (Id)
+import Table
 import Time exposing (Posix)
 
 
@@ -24,3 +25,4 @@ type Msg
     | ResetDateRangePicker
     | BrowserGotFromDateBlock Posix Api.Data.BlockAtDate
     | BrowserGotToDateBlock Posix Api.Data.BlockAtDate
+    | TableMsg Table.State

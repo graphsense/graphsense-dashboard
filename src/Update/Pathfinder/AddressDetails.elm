@@ -283,6 +283,9 @@ update uc pathfinderModel msg id model =
 
         BrowserGotToDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange uc pathfinderModel id model NoSet (Set blockAt.afterBlock)
+        TableMsg state ->
+            n model
+
 
 
 type SetOrNoSet x

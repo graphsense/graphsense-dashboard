@@ -10,6 +10,7 @@ import Model.Pathfinder.Tools exposing (PointerTool)
 import Msg.Pathfinder.AddressDetails as AddressDetails
 import Msg.Search as Search
 import Plugin.Msg as Plugin
+import Table
 import Time exposing (Posix)
 
 
@@ -71,6 +72,7 @@ type DisplaySettingsMsg
 
 type TxDetailsMsg
     = UserClickedToggleIOTable
+    | TableMsg Table.State
 
 
 type alias WorkflowNextTxContext =

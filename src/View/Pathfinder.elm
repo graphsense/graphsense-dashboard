@@ -8,6 +8,7 @@ import Config.View as View
 import Css
 import Css.Graph
 import Css.Pathfinder as Css exposing (..)
+import Css.Table
 import Css.View
 import Dict
 import DurationDatePicker as DatePicker
@@ -21,6 +22,7 @@ import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
 import Model.Graph.Coords exposing (BBox, Coords)
+import Model.Graph.Table
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.AddressDetails as AddressDetails
@@ -35,6 +37,7 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
+import RecordSetter exposing (s_headRow)
 import RemoteData
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
@@ -51,6 +54,7 @@ import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
@@ -61,6 +65,8 @@ import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
 import View.Search
+import RecordSetter exposing (s_root)
+import RecordSetter exposing (s_root)
 
 
 type alias BtnConfig =
@@ -479,23 +485,31 @@ utxoTxDetailsContentView vc data =
     div [] tbls
 
 
-ioTableView : View.Config -> Network -> String -> List Api.Data.TxValue -> (Id -> Maybe String) -> Html Msg
-ioTableView vc network currency data getLbl =
+ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> Maybe String) -> Html Msg
+ioTableView vc network currency table getLbl =
     let
         isCheckedFn =
             flip Network.hasAddress network
+
+        styles =
+            Css.Table.styles
+                |> s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block ])
+                |> s_headRow (\vc_ -> Css.Table.styles.headRow vc_ ++ [ Css.textAlign Css.right ])
     in
-    Table.rawTableView vc [ css [ Css.overflowY Css.scroll, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ] (IoTable.config vc currency isCheckedFn (Just getLbl)) "Value" data
+    View.Graph.Table.table
+        styles
+        vc
+        [ css [ Css.overflowY Css.auto, Css.maxHeight (Css.px ((vc.size |> Maybe.map .height |> Maybe.withDefault 500) * 0.5)) ] ]
+        noTools
+        (IoTable.config styles vc currency isCheckedFn (Just getLbl))
+        table
 
 
 utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> (Id -> Maybe String) -> Html Msg
 utxoTxDetailsSectionsView vc network viewState data getLbl =
     let
-        combinedData =
-            (data.inputs |> Maybe.withDefault [] |> List.map negateTxValue) ++ (data.outputs |> Maybe.withDefault [])
-
         content =
-            ioTableView vc network data.currency combinedData getLbl
+            ioTableView vc network data.currency viewState.table getLbl
 
         ioIndicatorState =
             Just (inOutIndicator Nothing data.noOutputs data.noInputs)

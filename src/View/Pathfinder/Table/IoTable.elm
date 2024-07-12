@@ -6,23 +6,15 @@ import Css.Pathfinder as Css
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Id exposing (Id)
-import Msg.Pathfinder exposing (Msg(..))
+import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
 import Table
-import View.Pathfinder.Table exposing (customizations)
+import View.Graph.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
+import Css.Table exposing (Styles)
 
 
-customizationsIO : View.Config -> Table.Customizations data msg
-customizationsIO vc =
-    let
-        tc =
-            customizations vc
-    in
-    { tc | tableAttrs = tc.tableAttrs ++ [ Css.ioTableStyle vc |> Css.toAttr ] }
-
-
-config : View.Config -> String -> (Id -> Bool) -> Maybe (Id -> Maybe String) -> Table.Config Api.Data.TxValue Msg
-config vc network isCheckedFn lblFn =
+config : Styles -> View.Config -> String -> (Id -> Bool) -> Maybe (Id -> Maybe String) -> Table.Config Api.Data.TxValue Msg
+config styles vc network isCheckedFn lblFn =
     let
         toId =
             .address
@@ -31,7 +23,7 @@ config vc network isCheckedFn lblFn =
     in
     Table.customConfig
         { toId = .address >> String.join ""
-        , toMsg = \_ -> NoOp
+        , toMsg = TableMsg >> TxDetailsMsg
         , columns =
             [ PT.checkboxColumn vc
                 { isChecked =
@@ -52,5 +44,5 @@ config vc network isCheckedFn lblFn =
                 "Value"
                 .value
             ]
-        , customizations = customizations vc
+        , customizations = customizations styles vc
         }

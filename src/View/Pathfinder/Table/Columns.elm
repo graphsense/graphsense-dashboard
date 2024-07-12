@@ -11,6 +11,7 @@ import Html.Styled.Events exposing (..)
 import Model.Currency exposing (AssetIdentifier)
 import Table
 import Util.View exposing (copyableLongIdentifierPathfinder, none)
+import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 
@@ -74,7 +75,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                 )
                     ++ (accessor data |> copyableLongIdentifierPathfinder vc [] |> List.singleton)
                     |> Table.HtmlDetails
-                        (([ PCSS.mGap |> Css.padding ] |> css)
+                        (([ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] |> css)
                             :: (onClick
                                     |> Maybe.map
                                         (\cl ->
@@ -85,9 +86,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                                     |> Maybe.withDefault []
                                )
                         )
-
-        -- , sorter = Table.increasingOrDecreasingBy accessor
-        , sorter = Table.unsortable
+        , sorter = Table.increasingOrDecreasingBy accessor
         }
 
 
@@ -148,9 +147,7 @@ valueColumnWithOptions hideCode hideFlowIndicator vc getCoinCode name getValues 
     Table.veryCustomColumn
         { name = name
         , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator (getCoinCode data)
-
-        -- , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
-        , sorter = Table.unsortable
+        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
         }
 
 
@@ -174,7 +171,7 @@ valuesCell vc hideCode hideFlowIndicator coinCode values =
             else
                 inIcon
     in
-    Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+    Table.HtmlDetails [ [ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] |> css ]
         [ if hideFlowIndicator then
             none
 
