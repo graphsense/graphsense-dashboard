@@ -54,7 +54,7 @@ view _ _ _ address =
             fd.y + fd.height / 2
     in
     GraphComponents.addressNode
-        (GraphComponents.defaultAddressNodeAttributes
+        (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
                     ((address.x + address.dx) * unit - adjX)
@@ -100,7 +100,7 @@ view _ _ _ address =
 toNodeIcon : Address -> Svg msg
 toNodeIcon address =
     if address.exchange == Nothing then
-        Icons.iconsUntagged Icons.defaultIconsUntaggedAttributes {}
+        Icons.iconsUntagged Icons.iconsUntaggedAttributes {}
 
     else
-        Icons.iconsExchange Icons.defaultIconsExchangeAttributes {}
+        Icons.iconsExchange Icons.iconsExchangeAttributes {}

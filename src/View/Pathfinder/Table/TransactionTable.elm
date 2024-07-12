@@ -2,12 +2,18 @@ module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
+import Css.Table exposing (Styles)
+import Html.Styled
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Locale
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Table
+import Theme.Html.SidebarComponents as SidebarComponents
+import Util.View exposing (truncateLongIdentifier)
+import View.Graph.Table
+import View.Locale as Locale
 import View.Pathfinder.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
@@ -36,8 +42,8 @@ getId { currency, txHash } =
     Id.init currency txHash
 
 
-config : View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
-config vc network isCheckedFn =
+config : Styles -> View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
+config styles vc network isCheckedFn =
     Table.customConfig
         { toId = toGerneric >> getId >> Id.toString
         , toMsg = \_ -> NoOp
@@ -46,15 +52,53 @@ config vc network isCheckedFn =
                 { isChecked = toGerneric >> getId >> isCheckedFn
                 , onClick = UserClickedTxCheckboxInTable
                 }
-            , PT.timestampDateMultiRowColumn vc
+            , View.Graph.Table.htmlColumn
+                styles
+                vc
                 "Timestamp"
                 (toGerneric >> .timestamp)
-            , PT.txColumn vc
-                { label = "Hash"
-                , accessor = toGerneric >> .txHash
-                , onClick = Just (toGerneric >> getId >> UserClickedTx)
+                (\data ->
+                    let
+                        d =
+                            toGerneric data |> .timestamp
+                    in
+                    SidebarComponents.txListCellTimestamp
+                        SidebarComponents.txListCellTimestampAttributes
+                        { txListCellTimestamp =
+                            { checkbox = False
+                            , date =
+                                Locale.timestampDateUniform vc.locale d
+                            , time =
+                                Locale.timestampTimeUniform vc.locale d
+                            }
+                        }
+                        |> List.singleton
+                )
+            , View.Graph.Table.htmlColumnWithSorter
+                Table.unsortable
+                styles
+                vc
+                "Hash"
+                (toGerneric >> .txHash)
+                (\data ->
+                    let
+                        d =
+                            toGerneric data
+                    in
+                    SidebarComponents.txListCellValue
+                        SidebarComponents.txListCellValueAttributes
+                        { txListCellValue =
+                            { txValue = truncateLongIdentifier d.txHash
+                            }
+                        }
+                        |> List.singleton
+                )
+            , PT.valueColumnWithOptions
+                { sortable = False
+                , hideCode = False
+                , hideFlowIndicator = False
                 }
-            , PT.debitCreditColumn vc
+                vc
                 (toGerneric >> .asset >> asset network)
                 "Debit/Credit"
                 (toGerneric >> .value)

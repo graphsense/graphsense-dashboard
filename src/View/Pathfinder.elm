@@ -581,7 +581,7 @@ addressDetailsContentView vc gc model id viewState =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
 
         df =
-            SidebarComponents.defaultSidePanelHeaderComponentAttributes
+            SidebarComponents.sidePanelHeaderComponentAttributes
     in
     SidebarComponents.sidePanelHeaderComponent
         { df
@@ -595,17 +595,17 @@ addressDetailsContentView vc gc model id viewState =
             { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
             , icon =
                 if address.exchange /= Nothing then
-                    Icons.iconsExchangeSvg [] Icons.defaultIconsExchangeAttributes { iconsExchange = {} }
+                    Icons.iconsExchangeSvg [] Icons.iconsExchangeAttributes { iconsExchange = {} }
 
                 else
-                    Icons.iconsUntaggedSvg [] Icons.defaultIconsUntaggedAttributes { iconsUntagged = {} }
+                    Icons.iconsUntaggedSvg [] Icons.iconsUntaggedAttributes { iconsUntagged = {} }
             }
         , sidePanelHeaderTags =
             { exchangeTag = actorText /= Nothing
             , otherTag = List.isEmpty tags |> not
             }
         , iconTextI2685112226851110 =
-            { icon = Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes { iconsTag = {} }
+            { icon = Icons.iconsTagSvg [] Icons.iconsTagAttributes { iconsTag = {} }
             , text = String.join ", " tagsDisplayWithMore
             }
         , iconTextI2685112126921179 =
@@ -638,7 +638,7 @@ addressDetailsContentView vc gc model id viewState =
                                         ]
                                     ]
                         )
-                    |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.defaultIconsTagAttributes { iconsTag = {} })
+                    |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.iconsTagAttributes { iconsTag = {} })
             , text = actorText |> Maybe.withDefault ""
             }
         }
@@ -961,10 +961,13 @@ transactionTableView vc currency txOnGraphFn model =
         nextMsg =
             \_ -> AddressDetailsMsg AddressDetails.UserClickedNextPageTransactionTable
 
+        styles =
+            Css.Table.styles
+
         table =
             Table.pagedTableView vc
                 attributes
-                (TransactionTable.config vc currency txOnGraphFn)
+                (TransactionTable.config styles vc currency txOnGraphFn)
                 model.table
                 prevMsg
                 nextMsg

@@ -1,4 +1,4 @@
-module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn)
+module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, debitCreditColumn, stringColumn, timestampDateMultiRowColumn, txColumn, valueColumn, valueColumnWithOptions)
 
 import Api.Data
 import Config.View as View
@@ -134,20 +134,40 @@ checkboxColumn _ { isChecked, onClick } =
 
 debitCreditColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 debitCreditColumn =
-    valueColumnWithOptions False False
+    valueColumnWithOptions
+        { sortable = True
+        , hideCode = False
+        , hideFlowIndicator = False
+        }
 
 
 valueColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 valueColumn =
-    valueColumnWithOptions True True
+    valueColumnWithOptions
+        { sortable = True
+        , hideCode = True
+        , hideFlowIndicator = True
+        }
 
 
-valueColumnWithOptions : Bool -> Bool -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithOptions hideCode hideFlowIndicator vc getCoinCode name getValues =
+type alias ValueColumnOptions =
+    { sortable : Bool
+    , hideCode : Bool
+    , hideFlowIndicator : Bool
+    }
+
+
+valueColumnWithOptions : ValueColumnOptions -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
+valueColumnWithOptions { sortable, hideCode, hideFlowIndicator } vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
         , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator (getCoinCode data)
-        , sorter = Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
+        , sorter =
+            if sortable then
+                Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
+
+            else
+                Table.unsortable
         }
 
 

@@ -14,7 +14,7 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
-import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxLabelAttributes)
+import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
 import Util.View
 
@@ -297,17 +297,7 @@ coloredPath vc c =
 
       else
         text ""
-    , let
-        lw =
-            c.label
-                |> String.length
-                |> toFloat
-                |> (*) (GraphComponents.txLabelLabelDetails.width / 3)
-
-        fr =
-            GraphComponents.txLabelRectangleDetails
-      in
-      text_
+    , text_
         [ translate lx ly
             |> transform
 

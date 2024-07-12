@@ -23,7 +23,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Theme.Svg.GraphComponents as GraphComponents exposing (defaultTxNodeAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeAttributes)
 import Tuple exposing (pair, second)
 import Util.Data
 import Util.Graph exposing (translate)
@@ -49,7 +49,7 @@ view _ _ _ id highlight tx =
             fd.y + fd.height / 2
     in
     GraphComponents.txNode
-        { defaultTxNodeAttributes
+        { txNodeAttributes
             | txNode =
                 [ translate
                     ((tx.x + tx.dx) * unit - adjX)

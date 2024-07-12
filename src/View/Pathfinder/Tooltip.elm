@@ -16,7 +16,7 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
 import RemoteData exposing (WebData)
-import Theme.Html.GraphComponents as GraphComponents exposing (defaultProperty1DownAttributes)
+import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1DownAttributes)
 import Util.Css as Css
 import Util.View exposing (none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
@@ -73,20 +73,20 @@ address vc ts adr =
                 >> text
                 >> List.singleton
                 >> div
-                    [ css GraphComponents.property1DownLabel1Details.styles
+                    [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
                     ]
 
         val =
             List.singleton
                 >> div
-                    [ css GraphComponents.property1DownValue1Details.styles
+                    [ css GraphComponents.tooltipProperty1DownValue1Details.styles
                     ]
     in
     div
-        [ css GraphComponents.property1DownDetails.styles
+        [ css GraphComponents.tooltipProperty1DownDetails.styles
         ]
         [ div
-            [ css GraphComponents.property1DownContent1Details.styles
+            [ css GraphComponents.tooltipProperty1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
             [ key "Category"
@@ -95,7 +95,7 @@ address vc ts adr =
             , key "Total Received"
             ]
         , div
-            [ css GraphComponents.property1DownContent2Details.styles
+            [ css GraphComponents.tooltipProperty1DownContent2Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
             [ category
@@ -122,27 +122,27 @@ utxoTx vc tx =
                 >> text
                 >> List.singleton
                 >> div
-                    [ css GraphComponents.property1DownLabel1Details.styles
+                    [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
                     ]
 
         val =
             List.singleton
                 >> div
-                    [ css GraphComponents.property1DownValue1Details.styles
+                    [ css GraphComponents.tooltipProperty1DownValue1Details.styles
                     ]
     in
     div
-        [ css GraphComponents.property1DownDetails.styles
+        [ css GraphComponents.tooltipProperty1DownDetails.styles
         ]
         [ div
-            [ css GraphComponents.property1DownContent1Details.styles
+            [ css GraphComponents.tooltipProperty1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
             [ key "Tx hash"
             , key "Timestamp"
             ]
         , div
-            [ css GraphComponents.property1DownContent2Details.styles
+            [ css GraphComponents.tooltipProperty1DownContent2Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
             [ tx.raw.txHash
