@@ -9,11 +9,14 @@ import Generate.Html.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
 import Types exposing (Config, Details)
+import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
+import Generate.Html.HasLayoutTrait as HasLayoutTrait
 
 
 toStyles : DefaultShapeTraits -> List Elm.Expression
 toStyles node =
-    HasGeometryTrait.toStyles node.hasGeometryTrait
+        HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
+        ++ HasGeometryTrait.toStyles node.hasGeometryTrait
 
 
 toDetails : { a | defaultShapeTraits : DefaultShapeTraits } -> Details

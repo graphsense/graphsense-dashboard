@@ -3,12 +3,13 @@ module Generate.Html.RectangleNode exposing (..)
 import Api.Raw exposing (..)
 import Elm
 import Elm.Op
+import Gen.Css as Css
 import Gen.Html.Styled as Html
 import Gen.Html.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Common.RectangleNode exposing (getName)
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
-import Generate.Util exposing (getElementAttributes, withVisibility)
+import Generate.Util exposing (getElementAttributes, m, withVisibility)
 import RecordSetter exposing (..)
 import Types exposing (Config, Details)
 
@@ -34,6 +35,8 @@ toExpressions config nameId node =
 toStyles : RectangleNode -> List Elm.Expression
 toStyles node =
     DefaultShapeTraits.toStyles node.rectangularShapeTraits.defaultShapeTraits
+        |> m (Css.px >> Css.width) (Maybe.map .x node.rectangularShapeTraits.defaultShapeTraits.size)
+        |> m (Css.px >> Css.height) (Maybe.map .y node.rectangularShapeTraits.defaultShapeTraits.size)
 
 
 toDetails : RectangleNode -> Details
