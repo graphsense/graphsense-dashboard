@@ -298,11 +298,14 @@ collapsibleSectionHeadingDisplaySettingsStyle vc =
     ]
 
 
-toolItemSmallStyle : View.Config -> List Style
-toolItemSmallStyle _ =
+toolItemSmallStyle : View.Config -> Bool -> List Style
+toolItemSmallStyle vc active =
     [ px 30 |> minWidth
     , textAlign center
-    ]
+    , margin (px 2)
+    , highlightPrimaryFrostedColor vc |> border3 xsGap solid
+    , px 3 |> borderRadius
+    ] ++ if (active) then [highlightPrimaryFrostedColor vc |> backgroundColor] else []
 
 
 toolItemStyle : View.Config -> List Style
@@ -437,7 +440,7 @@ graphActionButtonStyle vc _ =
 
 dateTimeRangeBoxStyle : View.Config -> List Style
 dateTimeRangeBoxStyle vc =
-    [ margin4 mGap mGap mlGap mGap
+    [ margin4 mGap mGap mGap mGap
     , padding mGap
     , emphTextColor vc |> color
     , defaultBackgroundColor vc |> backgroundColor
@@ -469,7 +472,7 @@ detailsActionButtonStyle vc bt _ =
         base =
             [ mGap |> margin
             , cursor pointer
-            , padding4 (px 4) mlGap (px 4) mlGap
+            , padding4 (px 2) mlGap (px 2) mlGap
             , fontWeight bold
             , px 3 |> borderRadius
             ]

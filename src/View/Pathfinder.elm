@@ -311,7 +311,7 @@ graphSelectionToolsView _ _ vc _ m =
 
 graphSelectionToolButton : View.Config -> BtnConfig -> Bool -> Svg Msg
 graphSelectionToolButton vc btn selected =
-    div [ toolItemSmallStyle vc |> toAttr ]
+    div [ toolItemSmallStyle vc selected |> toAttr ]
         [ disableableButton (toggleToolButtonStyle vc selected)
             btn
             [ HA.title (Locale.string vc.locale btn.text) ]
@@ -577,8 +577,8 @@ addressDetailsContentView vc gc model id viewState =
         tbls =
             [ detailsFactTableView vc (apiAddressToRows viewState.data), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
 
-        addressAnnotationBtns =
-            getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
+        -- addressAnnotationBtns =
+        --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
 
         df =
             SidebarComponents.defaultSidePanelHeaderComponentAttributes
@@ -974,6 +974,7 @@ transactionTableView vc currency txOnGraphFn model =
                 [ css
                     [ Css.displayFlex
                     , Css.justifyContent Css.spaceBetween
+                    , Css.marginBottom (Css.px 5)
                     ]
                 ]
                 [ drp
