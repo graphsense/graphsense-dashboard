@@ -8,6 +8,7 @@ import Css.Pathfinder as Css
 import Dict exposing (Dict)
 import Dict.Extra
 import Dict.Nonempty as NDict
+import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
@@ -63,7 +64,7 @@ view _ _ _ id highlight tx =
                 , UserMovesMouseOverUtxoTx id
                     |> onMouseOver
                 , UserMovesMouseOutUtxoTx id
-                    |> onMouseOut
+                    |> onMouseLeave
                 , css [ Css.cursor Css.pointer ]
                 , Id.toString id
                     |> Svg.Styled.Attributes.id
@@ -198,7 +199,7 @@ edge _ vc _ addresses hovered tx =
                 |> onMouseOver
             , txId
                 |> UserMovesMouseOutUtxoTx
-                |> onMouseOut
+                |> onMouseLeave
             , txId
                 |> UserClickedTx
                 |> onClick

@@ -452,56 +452,64 @@ updateByMsg plugins uc msg model =
                 |> n
 
         UserMovesMouseOverUtxoTx id ->
-            let
-                ( hc, cmd ) =
-                    Id.toString id
-                        |> Hovercard.init
-            in
-            ( { model
-                | tooltip =
-                    model.network.txs
-                        |> Dict.get id
-                        |> Maybe.andThen
-                            (\tx ->
-                                case tx.type_ of
-                                    Tx.Utxo t ->
-                                        Tooltip.UtxoTx t
-                                            |> Tooltip.init hc
-                                            |> Just
+            if model.hovered == HoveredTx id then
+                n model
 
-                                    _ ->
-                                        Nothing
-                            )
-                , network = Network.updateTx id (s_hovered True) model.network
-                , hovered = HoveredTx id
-              }
-            , Cmd.map HovercardMsg cmd
-                |> CmdEffect
-                |> List.singleton
-            )
+            else
+                let
+                    ( hc, cmd ) =
+                        Id.toString id
+                            |> Hovercard.init
+                in
+                ( { model
+                    | tooltip =
+                        model.network.txs
+                            |> Dict.get id
+                            |> Maybe.andThen
+                                (\tx ->
+                                    case tx.type_ of
+                                        Tx.Utxo t ->
+                                            Tooltip.UtxoTx t
+                                                |> Tooltip.init hc
+                                                |> Just
+
+                                        _ ->
+                                            Nothing
+                                )
+                    , network = Network.updateTx id (s_hovered True) model.network
+                    , hovered = HoveredTx id
+                  }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
 
         UserMovesMouseOverAddress id ->
-            let
-                ( hc, cmd ) =
-                    Id.toString id
-                        |> Hovercard.init
-            in
-            ( { model
-                | tooltip =
-                    model.network.addresses
-                        |> Dict.get id
-                        |> Maybe.andThen
-                            (\addr ->
-                                Tooltip.Address addr |> Tooltip.init hc |> Just
-                            )
+            if model.hovered == HoveredAddress id then
+                n model
 
-                -- , network = Network.updateTx id (s_hovered True) model.network
-                , hovered = HoveredAddress id
-              }
-            , Cmd.map HovercardMsg cmd
-                |> CmdEffect
-                |> List.singleton
-            )
+            else
+                let
+                    ( hc, cmd ) =
+                        Id.toString id
+                            |> Hovercard.init
+                in
+                ( { model
+                    | tooltip =
+                        model.network.addresses
+                            |> Dict.get id
+                            |> Maybe.andThen
+                                (\addr ->
+                                    Tooltip.Address addr |> Tooltip.init hc |> Just
+                                )
+
+                    -- , network = Network.updateTx id (s_hovered True) model.network
+                    , hovered = HoveredAddress id
+                  }
+                , Cmd.map HovercardMsg cmd
+                    |> CmdEffect
+                    |> List.singleton
+                )
 
         UserMovesMouseOutAddress id ->
             { model

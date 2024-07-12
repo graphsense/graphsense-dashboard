@@ -5,6 +5,7 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
+import Html.Styled.Events exposing (onMouseLeave)
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
@@ -68,7 +69,7 @@ view _ _ _ address =
                 , UserMovesMouseOverAddress address.id
                     |> onMouseOver
                 , UserMovesMouseOutAddress address.id
-                    |> onMouseOut
+                    |> onMouseLeave
                 , css [ Css.cursor Css.pointer ]
                 ]
             |> s_nodeFrame
