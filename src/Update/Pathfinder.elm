@@ -301,16 +301,18 @@ updateByMsg plugins uc msg model =
 
                         DraggingNode _ start current ->
                             draggingToClick start current
+
+                m1  = {model | tooltip = Nothing}
             in
             if click then
-                ( model
+                ( m1
                 , Route.Root
                     |> NavPushRouteEffect
                     |> List.singleton
                 )
 
             else
-                n model
+                n m1
 
         UserReleasesMouseButton ->
             case model.dragging of
@@ -436,6 +438,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
+                    ,  tooltip = Nothing
             }
                 |> n
 
@@ -448,6 +451,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
+                    , tooltip = Nothing
             }
                 |> n
 
@@ -563,6 +567,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
+                  ,  tooltip = Nothing
             }
                 |> n
 
