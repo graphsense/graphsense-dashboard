@@ -85,7 +85,7 @@ graphActionTools m =
 graphActionButtons : List BtnConfig
 graphActionButtons =
     [ BtnConfig FontAwesome.arrowUp "Import file" UserClickedImportFile True
-    , BtnConfig FontAwesome.download "Export" UserClickedExportGraph True
+    , BtnConfig FontAwesome.download "Export" (UserClickedExportGraphAsPNG "graph") True
     ]
 
 

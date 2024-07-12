@@ -104,6 +104,9 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
+        UserClickedExportGraphAsPNG _ -> n model
+
+
         NoOp ->
             n model
 

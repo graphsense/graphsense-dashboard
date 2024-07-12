@@ -11,6 +11,7 @@ import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
+import Effect.Pathfinder as Pathfinder
 import Effect.Locale as Locale
 import File.Download
 import Hovercard
@@ -607,6 +608,15 @@ update plugins uc msg model =
                     model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
             in
             ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
+
+        PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name )->
+                    ( model
+                    ,  (name ++ ".png")
+                        |> Ports.exportGraphPNG
+                        |> Pathfinder.CmdEffect
+                        |> PathfinderEffect
+                        |> List.singleton
+                    )
 
         PathfinderMsg m ->
             let

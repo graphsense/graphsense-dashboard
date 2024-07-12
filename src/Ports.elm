@@ -8,6 +8,8 @@ port console : String -> Cmd msg
 
 port exportGraphics : String -> Cmd msg
 
+port exportGraphPNG : String -> Cmd msg
+
 
 port deserialize : () -> Cmd msg
 

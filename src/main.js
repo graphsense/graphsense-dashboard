@@ -54,6 +54,32 @@ window.onbeforeunload = function (evt) {
 
 app.ports.console.subscribe(console.error)
 
+app.ports.exportGraphPNG.subscribe((filename) => {
+    let svg = document.querySelector('svg#graph')
+    let canvas = document.createElement("canvas");
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
+
+    var width = window.innerWidth
+    || document.documentElement.clientWidth
+    || document.body.clientWidth;
+
+    var height = window.innerHeight
+    || document.documentElement.clientHeight
+    || document.body.clientHeight;
+
+    canvas.width = width; // Set the canvas width
+    canvas.height = height; // Set the canvas height
+    let img = new Image();
+    img.onload = function () {
+      let ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob((blob) => download(filename, blob))
+    };
+    img.src = "data:image/svg+xml;base64," + svgDataBase64;
+ }
+)
+
 app.ports.exportGraphics.subscribe((filename) => {
   const classMap = new Map()
   const sheets = ([...document.styleSheets]).filter(({ href }) => !href)

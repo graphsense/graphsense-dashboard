@@ -62,6 +62,7 @@ type Msg
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
     | HovercardMsg Hovercard.Msg
+    | UserClickedExportGraphAsPNG String
 
 
 type DisplaySettingsMsg
