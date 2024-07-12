@@ -23,16 +23,19 @@ import String.Case exposing (toCamelCaseUpper)
 import Types exposing (Config, Details)
 
 
-subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations node =
+subcanvasNodeComponentsToDeclarations : String -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations parentName node =
     case node of
         SubcanvasNodeComponentNode n ->
             adjustBoundingBoxes n
-                |> componentNodeToDeclarations
+                |> componentNodeToDeclarations parentName
 
         SubcanvasNodeComponentSetNode n ->
             n.frameTraits.children
-                |> List.map subcanvasNodeComponentsToDeclarations
+                |> List.map
+                    (subcanvasNodeComponentsToDeclarations
+                        (Generate.Common.FrameTraits.getName n)
+                    )
                 |> List.concat
 
         _ ->
@@ -114,8 +117,8 @@ subcanvasNodeToDetails node =
             []
 
 
-componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
-componentNodeToDeclarations node =
+componentNodeToDeclarations : String -> ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations parentName node =
     let
         ( details, descendantsDetails ) =
             componentNodeToDetails node
@@ -148,7 +151,7 @@ componentNodeToDeclarations node =
             ( details.name, Generate.Common.FrameTraits.getId node )
 
         funName =
-            sanitize details.name
+            sanitize declarationName
 
         attributesParamName =
             "childrenAttributes"
@@ -171,6 +174,9 @@ componentNodeToDeclarations node =
             ( propertiesParamName
             , properties |> Common.propertiesType Gen.Svg.Styled.annotation_.svg |> Just
             )
+
+        declarationName =
+            parentName ++ " " ++ details.name
     in
     details
         :: descendantsDetails
@@ -180,14 +186,14 @@ componentNodeToDeclarations node =
             )
             Dict.empty
         |> Dict.values
-        |> List.map (detailsToDeclaration details.name)
+        |> List.map (detailsToDeclaration parentName details.name)
         |> (++)
             [ properties
                 |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
-                |> Elm.alias (details.name ++ " properties" |> toCamelCaseUpper)
+                |> Elm.alias (declarationName ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
-                |> Elm.declaration ("default " ++ details.name ++ " attributes" |> sanitize)
+                |> Elm.declaration (declarationName ++ " attributes" |> sanitize)
             , Elm.fn2
                 attributesParam
                 propertiesParam

@@ -30,16 +30,19 @@ import Tuple exposing (mapBoth, pair)
 import Types exposing (Config, Details)
 
 
-subcanvasNodeComponentsToDeclarations : SubcanvasNode -> List Elm.Declaration
-subcanvasNodeComponentsToDeclarations node =
+subcanvasNodeComponentsToDeclarations : String -> SubcanvasNode -> List Elm.Declaration
+subcanvasNodeComponentsToDeclarations parentName node =
     case node of
         SubcanvasNodeComponentNode n ->
             Common.adjustBoundingBoxes n
-                |> componentNodeToDeclarations
+                |> componentNodeToDeclarations parentName
 
         SubcanvasNodeComponentSetNode n ->
             n.frameTraits.children
-                |> List.map subcanvasNodeComponentsToDeclarations
+                |> List.map
+                    (subcanvasNodeComponentsToDeclarations
+                        (Generate.Common.FrameTraits.getName n)
+                    )
                 |> List.concat
 
         _ ->
@@ -74,8 +77,8 @@ subcanvasNodeToExpressions config nameId node =
             []
 
 
-componentNodeToDeclarations : ComponentNode -> List Elm.Declaration
-componentNodeToDeclarations node =
+componentNodeToDeclarations : String -> ComponentNode -> List Elm.Declaration
+componentNodeToDeclarations parentName node =
     let
         ( details, descendantsDetails ) =
             componentNodeToDetails node
@@ -110,6 +113,9 @@ componentNodeToDeclarations node =
         propertiesType =
             properties
                 |> Common.propertiesType Gen.Html.Styled.annotation_.html
+
+        declarationName =
+            parentName ++ " " ++ details.name
     in
     details
         :: descendantsDetails
@@ -119,13 +125,13 @@ componentNodeToDeclarations node =
             )
             Dict.empty
         |> Dict.values
-        |> List.map (detailsToDeclaration details.name)
+        |> List.map (detailsToDeclaration parentName details.name)
         |> (++)
             [ propertiesType
-                |> Elm.alias (details.name ++ " properties" |> toCamelCaseUpper)
+                |> Elm.alias (declarationName ++ " properties" |> toCamelCaseUpper)
             , names
                 |> defaultAttributeConfig
-                |> Elm.declaration ("default " ++ details.name ++ " attributes" |> sanitize)
+                |> Elm.declaration (declarationName ++ " attributes" |> sanitize)
             , Elm.fn2
                 ( "attributes"
                 , names
@@ -158,7 +164,7 @@ componentNodeToDeclarations node =
                             |> Elm.list
                         )
                 )
-                |> Elm.declaration (sanitize details.name)
+                |> Elm.declaration (sanitize declarationName)
             ]
 
 

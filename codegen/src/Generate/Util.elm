@@ -155,10 +155,11 @@ toMatrix ( ( a_, c, e ), ( b, d, f ) ) =
         |> Format.value ([ a_, b, c, d, 0, 0 ] |> List.map String.fromFloat |> String.join ",")
 
 
-detailsToDeclaration : String -> Details -> Elm.Declaration
-detailsToDeclaration componentName details =
+detailsToDeclaration : String -> String -> Details -> Elm.Declaration
+detailsToDeclaration parentName componentName details =
     let
         prefix =
+            parentName ++ " " ++ 
             if componentName == details.name then
                 componentName
 

@@ -5,16 +5,17 @@ import Elm
 import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
+import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Svg.VectorNode
 import RecordSetter exposing (s_styles)
 import Types exposing (Config, Details)
-import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 
 
 toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
 toExpressions config componentNameId =
     .cornerRadiusShapeTraits
-    >> DefaultShapeTraits.toExpressions config componentNameId
+        >> DefaultShapeTraits.toExpressions config componentNameId
+
 
 toStyles : VectorNode -> List Elm.Expression
 toStyles node =

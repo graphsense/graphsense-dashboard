@@ -52,11 +52,11 @@ frameToFiles node =
                         |> (::) "Theme"
             in
             [ frameNodeToDeclarations
-                Generate.Svg.subcanvasNodeComponentsToDeclarations
+                (Generate.Svg.subcanvasNodeComponentsToDeclarations "")
                 n
                 |> Elm.file (name "Svg")
             , frameNodeToDeclarations
-                Generate.Html.subcanvasNodeComponentsToDeclarations
+                (Generate.Html.subcanvasNodeComponentsToDeclarations "")
                 n
                 |> Elm.file (name "Html")
             ]
