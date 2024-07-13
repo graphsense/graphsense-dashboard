@@ -272,17 +272,17 @@ formatComponentPropertyName =
 
 componentNodeToProperties : String -> ComponentNode -> Dict String (Dict String ComponentPropertyType)
 componentNodeToProperties name node =
-    ( name
-    , node.componentPropertiesTrait.componentPropertyDefinitions
+    node.componentPropertiesTrait.componentPropertyDefinitions
         |> Maybe.map
             (Dict.toList
                 >> List.map
                     (mapSecond .type_)
                 >> Dict.fromList
             )
-        |> Maybe.withDefault Dict.empty
-    )
-        :: withFrameTraitsToProperties node
+        |> Maybe.map (pair name >> List.singleton)
+        |> Maybe.withDefault []
+        |> (++)
+            (withFrameTraitsToProperties node)
         |> Dict.fromList
 
 
