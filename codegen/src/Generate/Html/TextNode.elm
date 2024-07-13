@@ -1,7 +1,6 @@
 module Generate.Html.TextNode exposing (..)
 
 import Api.Raw exposing (..)
-import Dict
 import Elm
 import Elm.Op
 import Gen.Html.Styled
@@ -13,8 +12,8 @@ import Generate.Util exposing (getElementAttributes, getTextProperty, withVisibi
 import Types exposing (Config, Details)
 
 
-toExpressions : Config -> ( String, String ) -> TextNode -> List Elm.Expression
-toExpressions config componentNameId node =
+toExpressions : Config -> String -> TextNode -> List Elm.Expression
+toExpressions config componentName node =
     Gen.Html.Styled.call_.div
         (Common.getName node
             |> getElementAttributes config
@@ -23,10 +22,10 @@ toExpressions config componentNameId node =
                     |> Elm.list
                 )
         )
-        (getTextProperty componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        (getTextProperty componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> Maybe.map Gen.Html.Styled.call_.text
             |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
-            |> withVisibility componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+            |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
             |> Elm.list
         )

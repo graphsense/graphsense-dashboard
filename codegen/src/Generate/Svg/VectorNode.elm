@@ -13,14 +13,14 @@ import Generate.Util.Paint as Paint
 import Types exposing (Config, Details)
 
 
-toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
-toExpressions config componentNameId node =
+toExpressions : Config -> String -> VectorNode -> List Elm.Expression
+toExpressions config componentName node =
     Gen.Svg.Styled.g
         (toAttributes node)
         [ toStrokePaths node
         , toFillPaths node
         ]
-        |> withVisibility componentNameId config.propertyExpressions node.cornerRadiusShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility componentName config.propertyExpressions node.cornerRadiusShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

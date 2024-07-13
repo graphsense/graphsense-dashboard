@@ -14,8 +14,8 @@ import RecordSetter exposing (..)
 import Types exposing (Config, Details, OriginAdjust)
 
 
-toExpressions : Config -> (String, String) -> RectangleNode -> List Elm.Expression
-toExpressions config componentNameId node =
+toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
+toExpressions config componentName node =
     Gen.Svg.Styled.call_.rect
         (getName node
             |> getElementAttributes config
@@ -28,7 +28,7 @@ toExpressions config componentNameId node =
                 )
         )
         (Elm.list [])
-        |> withVisibility componentNameId config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility componentName config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

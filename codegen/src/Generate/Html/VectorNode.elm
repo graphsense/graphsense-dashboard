@@ -11,10 +11,10 @@ import RecordSetter exposing (s_styles)
 import Types exposing (Config, Details)
 
 
-toExpressions : Config -> ( String, String ) -> VectorNode -> List Elm.Expression
-toExpressions config componentNameId =
+toExpressions : Config -> String -> VectorNode -> List Elm.Expression
+toExpressions config componentName =
     .cornerRadiusShapeTraits
-        >> DefaultShapeTraits.toExpressions config componentNameId
+        >> DefaultShapeTraits.toExpressions config componentName
 
 
 toStyles : VectorNode -> List Elm.Expression

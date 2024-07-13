@@ -2,13 +2,11 @@ module Generate.Html.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
-import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
 import Types exposing (Config, Details)
@@ -25,13 +23,13 @@ toDetails node =
     Common.toDetails (toStyles node.defaultShapeTraits) node
 
 
-toExpressions : Config -> ( String, String ) -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
-toExpressions config componentNameId node =
+toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
+toExpressions config componentName node =
     let
         bbox =
             node.defaultShapeTraits.absoluteBoundingBox
     in
-    Generate.Svg.DefaultShapeTraits.toExpressions config componentNameId node
+    Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
         |> Gen.Svg.Styled.svg
             [ max 3 bbox.width
                 |> String.fromFloat

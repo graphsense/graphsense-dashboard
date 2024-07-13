@@ -1,7 +1,7 @@
 module Generate.Common exposing (..)
 
 import Api.Raw exposing (..)
-import Basics.Extra exposing (flip, uncurry)
+import Basics.Extra exposing (flip)
 import Dict exposing (Dict)
 import Dict.Extra
 import Elm exposing (Expression)
@@ -12,11 +12,10 @@ import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
 import Generate.Util exposing (sanitize)
 import List.Extra
-import List.Nonempty as NList
 import RecordSetter exposing (s_children, s_frameTraits)
 import Set
 import String.Extra
-import Tuple exposing (first, mapBoth, mapFirst, mapSecond, pair, second)
+import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Types exposing (ComponentPropertyExpressions, OriginAdjust)
 
 
@@ -271,9 +270,9 @@ formatComponentPropertyName =
     String.Extra.leftOf "#"
 
 
-componentNodeToProperties : String -> ComponentNode -> Dict ( String, String ) (Dict String ComponentPropertyType)
+componentNodeToProperties : String -> ComponentNode -> Dict String (Dict String ComponentPropertyType)
 componentNodeToProperties name node =
-    ( ( name, "" )
+    ( name
     , node.componentPropertiesTrait.componentPropertyDefinitions
         |> Maybe.map
             (Dict.toList
@@ -287,14 +286,14 @@ componentNodeToProperties name node =
         |> Dict.fromList
 
 
-withFrameTraitsToProperties : { a | frameTraits : FrameTraits } -> List ( ( String, String ), Dict String ComponentPropertyType )
+withFrameTraitsToProperties : { a | frameTraits : FrameTraits } -> List ( String, Dict String ComponentPropertyType )
 withFrameTraitsToProperties node =
     node.frameTraits.children
         |> List.map subcanvasNodeToProperties
         |> List.concat
 
 
-subcanvasNodeToProperties : SubcanvasNode -> List ( ( String, String ), Dict String ComponentPropertyType )
+subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String ComponentPropertyType )
 subcanvasNodeToProperties node =
     case node of
         SubcanvasNodeInstanceNode n ->
@@ -303,7 +302,7 @@ subcanvasNodeToProperties node =
                     (Dict.toList
                         >> List.map (mapSecond .type_)
                         >> Dict.fromList
-                        >> pair ( FrameTraits.getName n, FrameTraits.getId n )
+                        >> pair (FrameTraits.getName n)
                         >> List.singleton
                     )
                 |> Maybe.withDefault []
@@ -316,26 +315,20 @@ subcanvasNodeToProperties node =
             []
 
 
-propertiesToPropertyExpressions : Expression -> Dict ( String, String ) (Dict String ComponentPropertyType) -> Dict ( String, String ) ComponentPropertyExpressions
+propertiesToPropertyExpressions : Expression -> Dict String (Dict String ComponentPropertyType) -> Dict String ComponentPropertyExpressions
 propertiesToPropertyExpressions properties_ =
-    disambiguateNames
-        >> Dict.map
-            (\( componentName, id ) ->
-                Dict.map
-                    (\nam _ ->
-                        properties_
-                            |> Elm.get (sanitizeTuple componentName id)
-                            |> Elm.get (formatComponentPropertyName nam |> sanitize)
-                    )
-            )
+    Dict.map
+        (\componentName ->
+            Dict.map
+                (\nam _ ->
+                    properties_
+                        |> Elm.get (sanitize componentName)
+                        |> Elm.get (formatComponentPropertyName nam |> sanitize)
+                )
+        )
 
 
-sanitizeTuple : String -> String -> String
-sanitizeTuple componentName id =
-    sanitize <| componentName ++ " " ++ id
-
-
-propertiesType : (Annotation -> Annotation) -> Dict ( String, String ) (Dict String ComponentPropertyType) -> Annotation
+propertiesType : (Annotation -> Annotation) -> Dict String (Dict String ComponentPropertyType) -> Annotation
 propertiesType elementType =
     Dict.map
         (\_ ->
@@ -359,9 +352,8 @@ propertiesType elementType =
                 >> List.map (mapFirst (formatComponentPropertyName >> sanitize))
                 >> Annotation.record
         )
-        >> disambiguateNames
         >> Dict.toList
-        >> List.map (mapFirst (uncurry sanitizeTuple))
+        >> List.map (mapFirst sanitize)
         >> Annotation.record
 
 

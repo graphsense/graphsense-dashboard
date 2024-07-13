@@ -22,8 +22,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
-import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
-import Util.View exposing (none)
+import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg

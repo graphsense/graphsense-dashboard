@@ -93,15 +93,15 @@ getByNameId ( name, id ) d =
         |> Maybe.Extra.orElse (Dict.get ( name, "" ) d)
 
 
-withVisibility : ( String, String ) -> Dict ( String, String ) ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
-withVisibility ( componentName, id ) def references element =
+withVisibility : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
+withVisibility componentName def references element =
     references
         |> Debug.log ("123 references " ++ componentName)
         |> Maybe.andThen (Dict.get "visible")
         |> Debug.log "123 visibl "
         |> Maybe.andThen
             (\ref ->
-                getByNameId ( componentName, id ) def
+                Dict.get componentName def
                     |> Debug.log "123 get def"
                     |> Maybe.andThen (Dict.get ref)
                     |> Debug.log "123 found"
@@ -114,15 +114,15 @@ withVisibility ( componentName, id ) def references element =
         |> Maybe.withDefault element
 
 
-getTextProperty : ( String, String ) -> Dict ( String, String ) ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Maybe Expression
-getTextProperty ( componentName, id ) def references =
+getTextProperty : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Maybe Expression
+getTextProperty componentName def references =
     references
         |> Debug.log ("xyz getTextProperty " ++ componentName)
         |> Maybe.andThen (Dict.get "characters")
         |> Debug.log "xyz characters"
         |> Maybe.andThen
             (\ref ->
-                getByNameId ( componentName, id ) (Debug.log "xyz def" def)
+                Dict.get componentName def
                     |> Debug.log "xyz getFromExpressions"
                     |> Maybe.andThen (Dict.get ref)
             )
@@ -159,12 +159,14 @@ detailsToDeclaration : String -> String -> Details -> Elm.Declaration
 detailsToDeclaration parentName componentName details =
     let
         prefix =
-            parentName ++ " " ++ 
-            if componentName == details.name then
-                componentName
+            parentName
+                ++ " "
+                ++ (if componentName == details.name then
+                        componentName
 
-            else
-                componentName ++ " " ++ details.name
+                    else
+                        componentName ++ " " ++ details.name
+                   )
     in
     [ ( "x", Elm.float details.bbox.x )
     , ( "y", Elm.float details.bbox.y )

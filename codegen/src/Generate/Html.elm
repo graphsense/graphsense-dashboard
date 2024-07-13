@@ -52,29 +52,29 @@ subcanvasNodeComponentsToDeclarations parentName node =
             []
 
 
-subcanvasNodeToExpressions : Config -> ( String, String ) -> SubcanvasNode -> List Elm.Expression
-subcanvasNodeToExpressions config nameId node =
+subcanvasNodeToExpressions : Config -> String -> SubcanvasNode -> List Elm.Expression
+subcanvasNodeToExpressions config name node =
     case node of
         SubcanvasNodeTextNode n ->
-            TextNode.toExpressions config nameId n
+            TextNode.toExpressions config name n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToExpressions config nameId n
+            withFrameTraitsNodeToExpressions config name n
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsNodeToExpressions config nameId n
+            withFrameTraitsNodeToExpressions config name n
 
         SubcanvasNodeInstanceNode n ->
-            instanceNodeToExpressions config nameId n
+            instanceNodeToExpressions config name n
 
         SubcanvasNodeRectangleNode n ->
-            RectangleNode.toExpressions config nameId n
+            RectangleNode.toExpressions config name n
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toExpressions config nameId n
+            VectorNode.toExpressions config name n
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.toExpressions config nameId n
+            DefaultShapeTraits.toExpressions config name n
 
         _ ->
             []
@@ -92,9 +92,6 @@ componentNodeToDeclarations parentName node =
 
         properties =
             Common.componentNodeToProperties details.name node
-
-        nameId =
-            ( details.name, Generate.Common.FrameTraits.getId node )
 
         propertiesType =
             properties
@@ -186,7 +183,7 @@ componentNodeToDeclarations parentName node =
                                     |> Elm.list
                                 )
                         )
-                        (frameTraitsToExpressions config nameId node.frameTraits
+                        (frameTraitsToExpressions config details.name node.frameTraits
                             |> Elm.list
                         )
                 )
@@ -254,15 +251,15 @@ componentNodeToDeclarations parentName node =
             ]
 
 
-frameTraitsToExpressions : Config -> ( String, String ) -> FrameTraits -> List Elm.Expression
-frameTraitsToExpressions config nameId node =
+frameTraitsToExpressions : Config -> String -> FrameTraits -> List Elm.Expression
+frameTraitsToExpressions config componentName node =
     node.children
-        |> List.map (subcanvasNodeToExpressions config nameId)
+        |> List.map (subcanvasNodeToExpressions config componentName)
         |> List.concat
 
 
-withFrameTraitsNodeToExpressions : Config -> ( String, String ) -> { a | frameTraits : FrameTraits } -> List Elm.Expression
-withFrameTraitsNodeToExpressions config nameId node =
+withFrameTraitsNodeToExpressions : Config -> String -> { a | frameTraits : FrameTraits } -> List Elm.Expression
+withFrameTraitsNodeToExpressions config componentName node =
     let
         name =
             Generate.Common.FrameTraits.getName node
@@ -277,34 +274,27 @@ withFrameTraitsNodeToExpressions config nameId node =
                     |> Elm.list
                 )
         )
-        (frameTraitsToExpressions config nameId node.frameTraits
+        (frameTraitsToExpressions config componentName node.frameTraits
             |> Elm.list
         )
-        |> withVisibility (Debug.log "123 withFrameTraitsToExp withVisibility" nameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (Debug.log "123 withFrameTraitsToExp withVisibility" componentName) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 
-instanceNodeToExpressions : Config -> ( String, String ) -> InstanceNode -> List Elm.Expression
-instanceNodeToExpressions config parentNameId node =
+instanceNodeToExpressions : Config -> String -> InstanceNode -> List Elm.Expression
+instanceNodeToExpressions config parentName node =
     let
         name =
             Generate.Common.FrameTraits.getName node
                 |> Debug.log "123 instanceNodeToExp name"
 
-        id =
-            Generate.Common.FrameTraits.getId node
-                |> Debug.log "123 instanceNodeToExp id"
-
-        _ =
-            Debug.log "123 instanceNodeToExp parentNameId" parentNameId
-
         subNameId =
             Debug.log "123 instanceNodeToExp subNameId" <|
                 if node.componentProperties /= Nothing then
-                    ( name, id )
+                    name
 
                 else
-                    parentNameId
+                    parentName
     in
     Elm.get name config.instances
         |> Gen.Maybe.withDefault
@@ -312,11 +302,11 @@ instanceNodeToExpressions config parentNameId node =
                 |> Maybe.andThen (Dict.get "mainComponent")
                 |> Maybe.andThen
                     (\ref ->
-                        getByNameId parentNameId config.propertyExpressions
+                        Dict.get parentName config.propertyExpressions
                             |> Maybe.andThen (Dict.get ref)
                     )
                 |> Maybe.map
-                    (withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences)
+                    (withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences)
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
                         Gen.Html.Styled.call_.div
@@ -331,7 +321,7 @@ instanceNodeToExpressions config parentNameId node =
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
-                            |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentNameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
+                            |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentName) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
                     )
             )
         |> List.singleton
