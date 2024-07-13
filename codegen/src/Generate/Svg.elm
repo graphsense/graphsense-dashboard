@@ -54,6 +54,9 @@ subcanvasNodeToExpressions config nameId node =
         SubcanvasNodeGroupNode n ->
             withFrameTraitsNodeToExpressions config nameId n
 
+        SubcanvasNodeFrameNode n ->
+            withFrameTraitsNodeToExpressions config nameId n
+
         SubcanvasNodeInstanceNode n ->
             instanceNodeToExpressions config nameId n
 
