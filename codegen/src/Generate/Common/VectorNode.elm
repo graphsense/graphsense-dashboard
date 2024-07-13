@@ -5,6 +5,7 @@ import Basics.Extra exposing (flip)
 import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
 import RecordSetter exposing (s_cornerRadiusShapeTraits)
 import Types exposing (OriginAdjust)
+import Dict exposing (Dict)
 
 
 getName : VectorNode -> String
@@ -16,4 +17,10 @@ adjustBoundingBox : OriginAdjust -> VectorNode -> VectorNode
 adjustBoundingBox adjust node =
     node.cornerRadiusShapeTraits
         |> DefaultShapeTraits.adjustBoundingBox adjust
+        |> flip s_cornerRadiusShapeTraits node
+
+adjustName : Dict String String -> VectorNode -> VectorNode
+adjustName names node =
+    node.cornerRadiusShapeTraits
+        |> DefaultShapeTraits.adjustName names
         |> flip s_cornerRadiusShapeTraits node

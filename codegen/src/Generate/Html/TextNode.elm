@@ -9,7 +9,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Html.TypeStyle as TypeStyle
-import Generate.Util exposing (getElementAttributes, getTextProperty)
+import Generate.Util exposing (getElementAttributes, getTextProperty, withVisibility)
 import Types exposing (Config, Details)
 
 
@@ -26,6 +26,7 @@ toExpressions config componentNameId node =
         (getTextProperty componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> Maybe.map Gen.Html.Styled.call_.text
             |> Maybe.withDefault (Gen.Html.Styled.text node.characters)
+            |> withVisibility componentNameId config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
             |> List.singleton
             |> Elm.list
         )

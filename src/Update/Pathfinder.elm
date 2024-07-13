@@ -104,8 +104,8 @@ updateByMsg plugins uc msg model =
             -- handled in src/Update.elm
             n model
 
-        UserClickedExportGraphAsPNG _ -> n model
-
+        UserClickedExportGraphAsPNG _ ->
+            n model
 
         NoOp ->
             n model
@@ -305,7 +305,8 @@ updateByMsg plugins uc msg model =
                         DraggingNode _ start current ->
                             draggingToClick start current
 
-                m1  = {model | tooltip = Nothing}
+                m1 =
+                    { model | tooltip = Nothing }
             in
             if click then
                 ( m1
@@ -441,7 +442,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             NoDragging
-                    ,  tooltip = Nothing
+                , tooltip = Nothing
             }
                 |> n
 
@@ -454,7 +455,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                    , tooltip = Nothing
+                , tooltip = Nothing
             }
                 |> n
 
@@ -570,7 +571,7 @@ updateByMsg plugins uc msg model =
 
                         _ ->
                             model.dragging
-                  ,  tooltip = Nothing
+                , tooltip = Nothing
             }
                 |> n
 

@@ -2,8 +2,9 @@ module Generate.Common.FrameTraits exposing (..)
 
 import Api.Raw exposing (FrameTraits, Rectangle)
 import Basics.Extra exposing (flip)
+import Dict exposing (Dict)
 import Elm
-import RecordSetter exposing (s_absoluteBoundingBox, s_frameTraits)
+import RecordSetter exposing (..)
 import Types exposing (Details, OriginAdjust)
 
 
@@ -13,6 +14,18 @@ adjustBoundingBox { x, y } node =
         |> (\bb -> { bb | x = bb.x - x, y = bb.y - y })
         |> flip s_absoluteBoundingBox node.frameTraits
         |> flip s_frameTraits node
+
+
+adjustName : Dict String String -> { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
+adjustName names node =
+    Dict.get (getId node) names
+        |> Debug.log ("adjustName " ++ getId node ++ "/" ++ getName node ++ " to ")
+        |> Maybe.map
+            (flip s_name node.frameTraits.isLayerTrait
+                >> flip s_isLayerTrait node.frameTraits
+                >> flip s_frameTraits node
+            )
+        |> Maybe.withDefault node
 
 
 getName : { a | frameTraits : FrameTraits } -> String

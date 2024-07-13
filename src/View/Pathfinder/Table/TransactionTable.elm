@@ -63,8 +63,8 @@ config styles vc network isCheckedFn =
                             toGerneric data |> .timestamp
                     in
                     SidebarComponents.txListCellTimestamp
-                        SidebarComponents.txListCellTimestampAttributes
-                        { txListCellTimestamp =
+                        { checkboxes = {}
+                        , txListCellTimestamp =
                             { checkbox = False
                             , date =
                                 Locale.timestampDateUniform vc.locale d
@@ -86,7 +86,6 @@ config styles vc network isCheckedFn =
                             toGerneric data
                     in
                     SidebarComponents.txListCellValue
-                        SidebarComponents.txListCellValueAttributes
                         { txListCellValue =
                             { txValue = truncateLongIdentifier d.txHash
                             }

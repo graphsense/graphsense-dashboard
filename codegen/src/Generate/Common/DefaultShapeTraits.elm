@@ -2,9 +2,10 @@ module Generate.Common.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Basics.Extra exposing (flip)
+import Dict exposing (Dict)
 import Elm
 import Generate.Util exposing (..)
-import RecordSetter exposing (s_absoluteBoundingBox, s_defaultShapeTraits)
+import RecordSetter exposing (..)
 import Types exposing (Details, OriginAdjust)
 
 
@@ -14,6 +15,17 @@ adjustBoundingBox { x, y } node =
         |> (\bb -> { bb | x = bb.x - x, y = bb.y - y })
         |> flip s_absoluteBoundingBox node.defaultShapeTraits
         |> flip s_defaultShapeTraits node
+
+
+adjustName : Dict String String -> { a | defaultShapeTraits : DefaultShapeTraits } -> { a | defaultShapeTraits : DefaultShapeTraits }
+adjustName names node =
+    Dict.get (getId node) names
+        |> Maybe.map
+            (flip s_name node.defaultShapeTraits.isLayerTrait
+                >> flip s_isLayerTrait node.defaultShapeTraits
+                >> flip s_defaultShapeTraits node
+            )
+        |> Maybe.withDefault node
 
 
 getId : { a | defaultShapeTraits : DefaultShapeTraits } -> String

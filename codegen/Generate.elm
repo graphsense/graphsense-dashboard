@@ -5,6 +5,7 @@ module Generate exposing (main)
 import Api.Raw exposing (..)
 import Elm
 import Gen.CodeGen.Generate as Generate
+import Generate.Common as Common
 import Generate.Html
 import Generate.Svg
 import Json.Decode

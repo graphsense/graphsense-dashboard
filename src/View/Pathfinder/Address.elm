@@ -23,6 +23,7 @@ import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (none)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
@@ -53,7 +54,7 @@ view _ _ _ address =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.addressNode
+    GraphComponents.addressNodeWithAttributes
         (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
@@ -91,8 +92,10 @@ view _ _ _ address =
             , exchangeLabel =
                 address.exchange
                     |> Maybe.withDefault ""
+            , exchangeLabel2 = address.exchange /= Nothing
             , startingPoint = address.isStartingPoint
             , tagIcon = address.hasTags
+            , plusArrows = none
             }
         }
 
@@ -100,7 +103,7 @@ view _ _ _ address =
 toNodeIcon : Address -> Svg msg
 toNodeIcon address =
     if address.exchange == Nothing then
-        Icons.iconsUntagged Icons.iconsUntaggedAttributes {}
+        Icons.iconsUntagged { iconsUntagged = {} }
 
     else
-        Icons.iconsExchange Icons.iconsExchangeAttributes {}
+        Icons.iconsExchange { iconsExchange = {} }

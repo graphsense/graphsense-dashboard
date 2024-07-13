@@ -6,6 +6,7 @@ import Dict
 import Elm
 import Elm.Annotation as Annotation
 import Elm.Op
+import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common as Common exposing (adjustBoundingBoxes)
@@ -28,6 +29,7 @@ subcanvasNodeComponentsToDeclarations parentName node =
     case node of
         SubcanvasNodeComponentNode n ->
             adjustBoundingBoxes n
+                |> Common.adjustNames
                 |> componentNodeToDeclarations parentName
 
         SubcanvasNodeComponentSetNode n ->
@@ -133,28 +135,8 @@ componentNodeToDeclarations parentName node =
         properties =
             Common.componentNodeToProperties details.name node
 
-        defaultAttributeConfig : List String -> Elm.Expression
-        defaultAttributeConfig =
-            Set.fromList
-                >> Set.toList
-                >> List.map
-                    (\n ->
-                        ( sanitize n
-                        , Elm.list []
-                            |> Elm.withType
-                                (Gen.Svg.Styled.annotation_.attribute
-                                    (Annotation.var "msg")
-                                    |> Annotation.list
-                                )
-                        )
-                    )
-                >> Elm.record
-
         nameId =
             ( details.name, Generate.Common.FrameTraits.getId node )
-
-        funName =
-            sanitize declarationName
 
         attributesParamName =
             "childrenAttributes"
@@ -162,24 +144,65 @@ componentNodeToDeclarations parentName node =
         propertiesParamName =
             "properties"
 
-        attributesParam =
-            ( attributesParamName
-            , names
-                |> List.map sanitize
-                |> Set.fromList
-                |> Set.toList
+        childrenAttributesType =
+            names
                 |> List.map (\n -> ( n, Gen.Svg.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
                 |> Annotation.record
+
+        attributesParam =
+            ( "attributes", Nothing )
+
+        childrenAttributesParam =
+            ( attributesParamName
+            , childrenAttributesType
                 |> Just
             )
 
+        propertiesType =
+            properties |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
+
         propertiesParam =
             ( propertiesParamName
-            , properties |> Common.propertiesType Gen.Svg.Styled.annotation_.svg |> Just
+            , propertiesType |> Just
+            )
+
+        instancesType =
+            names
+                |> List.map
+                    (\n ->
+                        ( n
+                        , Gen.Svg.Styled.annotation_.svg (Annotation.var "msg")
+                            |> Annotation.maybe
+                        )
+                    )
+                |> Annotation.record
+
+        attributesType =
+            Gen.Svg.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list
+
+        instancesParam =
+            ( "instances"
+            , instancesType
+                |> Just
             )
 
         declarationName =
-            parentName ++ " " ++ details.name
+            parentName ++ " " ++ details.name |> sanitize
+
+        declarationNameWithInstances =
+            declarationName ++ " with instances" |> sanitize
+
+        declarationNameWithAttributes =
+            declarationName ++ " with attributes" |> sanitize
+
+        declarationNameWithInstancesSvg =
+            declarationNameWithInstances ++ " svg" |> sanitize
+
+        declarationNameAttributes =
+            declarationName ++ " attributes" |> sanitize
+
+        declarationNameInstances =
+            declarationName ++ " instances" |> sanitize
     in
     details
         :: descendantsDetails
@@ -193,19 +216,24 @@ componentNodeToDeclarations parentName node =
         |> (++)
             [ properties
                 |> Common.propertiesType Gen.Svg.Styled.annotation_.svg
-                |> Elm.alias (declarationName ++ " properties" |> toCamelCaseUpper)
+                |> Elm.alias (declarationName ++ " properties" |> sanitize)
             , names
-                |> defaultAttributeConfig
-                |> Elm.declaration (declarationName ++ " attributes" |> sanitize)
-            , Elm.fn2
-                attributesParam
+                |> Common.defaultAttributeConfig Gen.Svg.Styled.annotation_.attribute
+                |> Elm.declaration declarationNameAttributes
+            , names
+                |> Common.defaultInstancesConfig Gen.Svg.Styled.annotation_.svg
+                |> Elm.declaration declarationNameInstances
+            , Elm.fn3
+                childrenAttributesParam
+                instancesParam
                 propertiesParam
-                (\attributes properties_ ->
+                (\attributes instances properties_ ->
                     let
                         config =
                             { propertyExpressions =
                                 Common.propertiesToPropertyExpressions properties_ properties
                             , attributes = attributes
+                            , instances = instances
                             }
                     in
                     Gen.Svg.Styled.call_.g
@@ -214,20 +242,84 @@ componentNodeToDeclarations parentName node =
                             |> Elm.list
                         )
                 )
-                |> Elm.declaration funName
-            , Elm.fn3
-                ( "attributes", Nothing )
-                attributesParam
+                |> Elm.withType
+                    (Annotation.function
+                        [ childrenAttributesType, instancesType, propertiesType ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration declarationNameWithInstances
+            , Elm.fn
                 propertiesParam
-                (\attributes_ childrenAttributes properties_ ->
+                (\properties_ ->
                     Elm.apply
                         (Elm.value
                             { importFrom = []
-                            , name = funName
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ Elm.value
+                            { importFrom = []
+                            , name = declarationNameAttributes
+                            , annotation = Nothing
+                            }
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ propertiesType ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize declarationName)
+            , Elm.fn2
+                childrenAttributesParam
+                propertiesParam
+                (\attributes properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ childrenAttributesType, propertiesType ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration declarationNameWithAttributes
+
+            -- SVG VARIANTS
+            , Elm.fn4
+                attributesParam
+                childrenAttributesParam
+                instancesParam
+                propertiesParam
+                (\attributes_ childrenAttributes instances properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
                             , annotation = Nothing
                             }
                         )
                         [ childrenAttributes
+                        , instances
                         , properties_
                         ]
                         |> List.singleton
@@ -246,7 +338,75 @@ componentNodeToDeclarations parentName node =
                                     )
                             )
                 )
-                |> Elm.declaration (sanitize <| funName ++ " svg")
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType
+                        , childrenAttributesType
+                        , instancesType
+                        , propertiesType
+                        ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration declarationNameWithInstancesSvg
+            , Elm.fn2
+                attributesParam
+                propertiesParam
+                (\attributes properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstancesSvg
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameAttributes
+                            , annotation = Nothing
+                            }
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, propertiesType ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize <| declarationName ++ " svg")
+            , Elm.fn3
+                attributesParam
+                childrenAttributesParam
+                propertiesParam
+                (\attributes childrenAttributes properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstancesSvg
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes
+                        , childrenAttributes
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, childrenAttributesType, propertiesType ]
+                        (Gen.Svg.Styled.annotation_.svg (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize <| declarationNameWithAttributes ++ " svg")
             ]
 
 
@@ -307,27 +467,29 @@ instanceNodeToExpressions config parentNameId node =
             else
                 parentNameId
     in
-    node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> Maybe.andThen (Dict.get "mainComponent")
-        |> Maybe.andThen
-            (\ref ->
-                getByNameId parentNameId config.propertyExpressions
-                    |> Maybe.andThen (Dict.get ref)
-            )
-        |> Maybe.map
-            (List.singleton
-                >> Elm.list
-                >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
-                >> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
-                >> List.singleton
-            )
-        |> Maybe.Extra.withDefaultLazy
-            (\_ ->
-                Gen.Svg.Styled.call_.g
-                    (getElementAttributes config name)
-                    (frameTraitsToExpressions config subNameId node.frameTraits
-                        |> Elm.list
+    Elm.get name config.instances
+        |> Gen.Maybe.withDefault
+            (node.frameTraits.isLayerTrait.componentPropertyReferences
+                |> Maybe.andThen (Dict.get "mainComponent")
+                |> Maybe.andThen
+                    (\ref ->
+                        getByNameId parentNameId config.propertyExpressions
+                            |> Maybe.andThen (Dict.get ref)
                     )
-                    |> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
-                    |> List.singleton
+                |> Maybe.map
+                    (List.singleton
+                        >> Elm.list
+                        >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
+                        >> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+                    )
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        Gen.Svg.Styled.call_.g
+                            (getElementAttributes config name)
+                            (frameTraitsToExpressions config subNameId node.frameTraits
+                                |> Elm.list
+                            )
+                            |> withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
+                    )
             )
+        |> List.singleton

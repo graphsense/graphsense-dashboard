@@ -23,7 +23,7 @@ import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
-import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeAttributes)
+import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
 import Tuple exposing (pair, second)
 import Util.Data
 import Util.Graph exposing (translate)
@@ -40,7 +40,7 @@ view _ _ _ id highlight tx =
                 >> List.any (second >> .visible >> not)
 
         fd =
-            GraphComponents.txNodeBodyEllipseDetails
+            GraphComponents.txNodeCircleTxNodeDetails
 
         adjX =
             fd.x + fd.width / 2
@@ -48,9 +48,9 @@ view _ _ _ id highlight tx =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.txNode
-        { txNodeAttributes
-            | txNode =
+    GraphComponents.txNodeCircleWithAttributes
+        { txNodeCircleAttributes
+            | txNodeCircle =
                 [ translate
                     ((tx.x + tx.dx) * unit - adjX)
                     ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
@@ -70,9 +70,9 @@ view _ _ _ id highlight tx =
                     |> Svg.Styled.Attributes.id
                 ]
         }
-        { txNode =
-            { moreVisible = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
-            , highlightVisible = highlight
+        { txNodeCircle =
+            { multipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
+            , highlight = highlight
             }
         }
 

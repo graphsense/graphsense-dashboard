@@ -37,7 +37,7 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RecordSetter exposing (s_headRow)
+import RecordSetter exposing (s_headRow, s_root)
 import RemoteData
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
@@ -65,8 +65,6 @@ import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
 import View.Search
-import RecordSetter exposing (s_root)
-import RecordSetter exposing (s_root)
 
 
 type alias BtnConfig =
@@ -579,7 +577,6 @@ addressDetailsContentView vc gc model id viewState =
 
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
-
         df =
             SidebarComponents.sidePanelHeaderComponentAttributes
     in
@@ -940,13 +937,27 @@ dateRangePickerView vc model =
         endS =
             Locale.posixDate vc.locale endP
     in
-    div [ dateTimeRangeBoxStyle vc |> toAttr ]
-        [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
-        , span [] [ Html.text selectedDuration ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
-        , span [] [ Html.text (Locale.string vc.locale "to") ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
-        ]
+    SidebarComponents.txListFilterRow
+        { timePicker =
+            { from = startS
+            , to = endS
+            }
+        , framedIcon =
+            { icon = Icons.iconsFilterSvg [] { iconsFilter = {} }
+            }
+        }
+
+
+
+{-
+   div [ dateTimeRangeBoxStyle vc |> toAttr ]
+       [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
+       , span [] [ Html.text selectedDuration ]
+       , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
+       , span [] [ Html.text (Locale.string vc.locale "to") ]
+       , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
+       ]
+-}
 
 
 transactionTableView : View.Config -> String -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
@@ -998,7 +1009,6 @@ transactionTableView vc currency txOnGraphFn model =
 
             else
                 [ dateRangePickerView vc drp
-                    |> filterRow
                 , table
                 ]
 

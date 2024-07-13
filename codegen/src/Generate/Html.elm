@@ -7,10 +7,12 @@ import Basics.Extra exposing (uncurry)
 import Dict exposing (Dict)
 import Elm
 import Elm.Annotation as Annotation
+import Elm.Case
 import Elm.Op
 import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
+import Gen.Maybe
 import Generate.Common as Common
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
@@ -35,6 +37,7 @@ subcanvasNodeComponentsToDeclarations parentName node =
     case node of
         SubcanvasNodeComponentNode n ->
             Common.adjustBoundingBoxes n
+                |> Common.adjustNames
                 |> componentNodeToDeclarations parentName
 
         SubcanvasNodeComponentSetNode n ->
@@ -90,23 +93,6 @@ componentNodeToDeclarations parentName node =
         properties =
             Common.componentNodeToProperties details.name node
 
-        defaultAttributeConfig : List String -> Elm.Expression
-        defaultAttributeConfig =
-            Set.fromList
-                >> Set.toList
-                >> List.map
-                    (\n ->
-                        ( sanitize n
-                        , Elm.list []
-                            |> Elm.withType
-                                (Gen.Html.Styled.annotation_.attribute
-                                    (Annotation.var "msg")
-                                    |> Annotation.list
-                                )
-                        )
-                    )
-                >> Elm.record
-
         nameId =
             ( details.name, Generate.Common.FrameTraits.getId node )
 
@@ -116,6 +102,48 @@ componentNodeToDeclarations parentName node =
 
         declarationName =
             parentName ++ " " ++ details.name
+
+        propertiesParam =
+            ( "properties"
+            , Just propertiesType
+            )
+
+        instancesType =
+            names
+                |> List.map
+                    (\n ->
+                        ( n
+                        , Gen.Html.Styled.annotation_.html (Annotation.var "msg")
+                            |> Annotation.maybe
+                        )
+                    )
+                |> Annotation.record
+
+        instancesParam =
+            ( "instances"
+            , instancesType
+                |> Just
+            )
+
+        attributesType =
+            names
+                |> List.map (\n -> ( n, Gen.Html.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
+                |> Annotation.record
+
+        attributesParam =
+            ( "attributes"
+            , attributesType
+                |> Just
+            )
+
+        declarationNameWithInstances =
+            declarationName ++ " with instances" |> sanitize
+
+        declarationNameAttributes =
+            declarationName ++ " attributes" |> sanitize
+
+        declarationNameInstances =
+            declarationName ++ " instances" |> sanitize
     in
     details
         :: descendantsDetails
@@ -128,27 +156,25 @@ componentNodeToDeclarations parentName node =
         |> List.map (detailsToDeclaration parentName details.name)
         |> (++)
             [ propertiesType
-                |> Elm.alias (declarationName ++ " properties" |> toCamelCaseUpper)
+                |> Elm.alias (declarationName ++ " properties" |> sanitize)
             , names
-                |> defaultAttributeConfig
-                |> Elm.declaration (declarationName ++ " attributes" |> sanitize)
-            , Elm.fn2
-                ( "attributes"
-                , names
-                    |> List.map (\n -> ( n, Gen.Html.Styled.annotation_.attribute (Annotation.var "msg") |> Annotation.list ))
-                    |> Annotation.record
-                    |> Just
-                )
-                ( "properties"
-                , Just propertiesType
-                )
-                (\attributes properties_ ->
+                |> Common.defaultAttributeConfig Gen.Html.Styled.annotation_.attribute
+                |> Elm.declaration declarationNameAttributes
+            , names
+                |> Common.defaultInstancesConfig Gen.Html.Styled.annotation_.html
+                |> Elm.declaration declarationNameInstances
+            , Elm.fn3
+                attributesParam
+                instancesParam
+                propertiesParam
+                (\attributes instances properties_ ->
                     let
                         config =
                             { propertyExpressions =
                                 Common.propertiesToPropertyExpressions properties_ properties
                                     |> Debug.log ("abc properties of " ++ details.name)
                             , attributes = attributes
+                            , instances = instances
                             }
                     in
                     Gen.Html.Styled.call_.div
@@ -164,7 +190,67 @@ componentNodeToDeclarations parentName node =
                             |> Elm.list
                         )
                 )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, instancesType, propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration declarationNameWithInstances
+            , Elm.fn
+                propertiesParam
+                (\properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ Elm.value
+                            { importFrom = []
+                            , name = declarationNameAttributes
+                            , annotation = Nothing
+                            }
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
                 |> Elm.declaration (sanitize declarationName)
+            , Elm.fn2
+                attributesParam
+                propertiesParam
+                (\attributes properties_ ->
+                    Elm.apply
+                        (Elm.value
+                            { importFrom = []
+                            , name = declarationNameWithInstances
+                            , annotation = Nothing
+                            }
+                        )
+                        [ attributes
+                        , Elm.value
+                            { importFrom = []
+                            , name = declarationNameInstances
+                            , annotation = Nothing
+                            }
+                        , properties_
+                        ]
+                )
+                |> Elm.withType
+                    (Annotation.function
+                        [ attributesType, propertiesType ]
+                        (Gen.Html.Styled.annotation_.html (Annotation.var "msg"))
+                    )
+                |> Elm.declaration (sanitize <| declarationName ++ " with attributes")
             ]
 
 
@@ -220,34 +306,35 @@ instanceNodeToExpressions config parentNameId node =
                 else
                     parentNameId
     in
-    node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> Maybe.andThen (Dict.get "mainComponent")
-        |> Maybe.andThen
-            (\ref ->
-                getByNameId parentNameId config.propertyExpressions
-                    |> Maybe.andThen (Dict.get ref)
-            )
-        |> Maybe.map
-            (withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
-                >> List.singleton
-            )
-        |> Maybe.Extra.withDefaultLazy
-            (\_ ->
-                Gen.Html.Styled.call_.div
-                    (getElementAttributes config name
-                        |> Elm.Op.append
-                            (FrameTraits.toStyles node.frameTraits
-                                |> Attributes.css
-                                |> List.singleton
+    Elm.get name config.instances
+        |> Gen.Maybe.withDefault
+            (node.frameTraits.isLayerTrait.componentPropertyReferences
+                |> Maybe.andThen (Dict.get "mainComponent")
+                |> Maybe.andThen
+                    (\ref ->
+                        getByNameId parentNameId config.propertyExpressions
+                            |> Maybe.andThen (Dict.get ref)
+                    )
+                |> Maybe.map
+                    (withVisibility parentNameId config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences)
+                |> Maybe.Extra.withDefaultLazy
+                    (\_ ->
+                        Gen.Html.Styled.call_.div
+                            (getElementAttributes config name
+                                |> Elm.Op.append
+                                    (FrameTraits.toStyles node.frameTraits
+                                        |> Attributes.css
+                                        |> List.singleton
+                                        |> Elm.list
+                                    )
+                            )
+                            (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
+                            |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentNameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
                     )
-                    (frameTraitsToExpressions config subNameId node.frameTraits
-                        |> Elm.list
-                    )
-                    |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentNameId) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
-                    |> List.singleton
             )
+        |> List.singleton
 
 
 instanceNodeToStyles : InstanceNode -> List Elm.Expression
