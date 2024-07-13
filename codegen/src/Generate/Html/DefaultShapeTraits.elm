@@ -2,20 +2,21 @@ module Generate.Html.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
+import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Common.DefaultShapeTraits as Common
+import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
 import Generate.Html.HasGeometryTrait as HasGeometryTrait
+import Generate.Html.HasLayoutTrait as HasLayoutTrait
 import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (..)
 import Types exposing (Config, Details)
-import Generate.Html.HasBlendModeAndOpacityTrait as HasBlendModeAndOpacityTrait
-import Generate.Html.HasLayoutTrait as HasLayoutTrait
 
 
 toStyles : DefaultShapeTraits -> List Elm.Expression
 toStyles node =
-        HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
+    HasBlendModeAndOpacityTrait.toStyles node.hasBlendModeAndOpacityTrait
         ++ HasGeometryTrait.toStyles node.hasGeometryTrait
 
 

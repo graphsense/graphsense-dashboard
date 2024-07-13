@@ -7,21 +7,19 @@ import Generate.Util exposing (..)
 import Tuple exposing (pair)
 
 
-toStyles : HasLayoutTrait -> HasFramePropertiesTrait -> List Elm.Expression
-toStyles node fpt =
+toStyles : HasLayoutTrait -> List Elm.Expression
+toStyles node =
     []
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
-        |> a (width fpt) (Maybe.map2 pair node.layoutSizingHorizontal node.size)
-        |> a (height fpt) (Maybe.map2 pair node.layoutSizingVertical node.size)
+        |> a (width) (Maybe.map2 pair node.layoutSizingHorizontal node.size)
+        |> a (height) (Maybe.map2 pair node.layoutSizingVertical node.size)
 
 
-width : HasFramePropertiesTrait -> ( LayoutSizingHorizontal, Vector ) -> Maybe Elm.Expression
-width fpt ( sizing, { x, y } ) =
+width :  ( LayoutSizingHorizontal, Vector ) -> Maybe Elm.Expression
+width ( sizing, { x, y } ) =
     case sizing of
         LayoutSizingHorizontalFIXED ->
             x
-                - (fpt.paddingLeft |> Maybe.withDefault 0)
-                - (fpt.paddingRight |> Maybe.withDefault 0)
                 |> Css.px
                 |> Css.width
                 |> Just
@@ -30,13 +28,11 @@ width fpt ( sizing, { x, y } ) =
             Nothing
 
 
-height : HasFramePropertiesTrait -> ( LayoutSizingVertical, Vector ) -> Maybe Elm.Expression
-height fpt ( sizing, { x, y } ) =
+height : ( LayoutSizingVertical, Vector ) -> Maybe Elm.Expression
+height ( sizing, { x, y } ) =
     case sizing of
         LayoutSizingVerticalFIXED ->
             y
-                - (fpt.paddingTop |> Maybe.withDefault 0)
-                - (fpt.paddingBottom |> Maybe.withDefault 0)
                 |> Css.px
                 |> Css.height
                 |> Just
