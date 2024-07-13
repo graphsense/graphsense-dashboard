@@ -102,7 +102,7 @@ view _ _ _ address =
 toNodeIcon : Address -> Svg msg
 toNodeIcon address =
     if address.exchange == Nothing then
-        Icons.iconsUntagged { iconsUntagged = {} }
+        Icons.iconsUntagged { }
 
     else
-        Icons.iconsExchange { iconsExchange = {} }
+        Icons.iconsExchange { }

@@ -580,9 +580,9 @@ addressDetailsContentView vc gc model id viewState =
         df =
             SidebarComponents.sidePanelHeaderComponentAttributes
     in
-    SidebarComponents.sidePanelHeaderComponent
+    SidebarComponents.sidePanelHeaderComponentWithAttributes
         { df
-            | exchangeLabel =
+            | exchangeLabelOf8 =
                 [ css
                     [ Css.whiteSpace Css.noWrap
                     ]
@@ -592,24 +592,24 @@ addressDetailsContentView vc gc model id viewState =
             { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
             , icon =
                 if address.exchange /= Nothing then
-                    Icons.iconsExchangeSvg [] Icons.iconsExchangeAttributes { iconsExchange = {} }
+                    Icons.iconsExchangeSvg [] {}
 
                 else
-                    Icons.iconsUntaggedSvg [] Icons.iconsUntaggedAttributes { iconsUntagged = {} }
+                    Icons.iconsUntaggedSvg [] {}
             }
         , sidePanelHeaderTags =
             { exchangeTag = actorText /= Nothing
             , otherTag = List.isEmpty tags |> not
             }
-        , iconTextI2685112226851110 =
-            { icon = Icons.iconsTagSvg [] Icons.iconsTagAttributes { iconsTag = {} }
+        , iconTextOf16 =
+            { icon = Icons.iconsTagSvg [] {}
             , text = String.join ", " tagsDisplayWithMore
             }
-        , iconTextI2685112126921179 =
+        , iconTextOf6 =
             { icon = Id.id id |> copyIcon vc
             , text = Id.id id |> truncateLongIdentifierWithLengths 13 13
             }
-        , iconTextI2685112226851105 =
+        , iconTextOf12 =
             { icon =
                 actorImg
                     |> Maybe.map
@@ -635,7 +635,7 @@ addressDetailsContentView vc gc model id viewState =
                                         ]
                                     ]
                         )
-                    |> Maybe.withDefault (Icons.iconsTagSvg [] Icons.iconsTagAttributes { iconsTag = {} })
+                    |> Maybe.withDefault (Icons.iconsTagSvg [] {})
             , text = actorText |> Maybe.withDefault ""
             }
         }
@@ -943,7 +943,7 @@ dateRangePickerView vc model =
             , to = endS
             }
         , framedIcon =
-            { icon = Icons.iconsFilterSvg [] { iconsFilter = {} }
+            { icon = Icons.iconsFilterSvg [] {}
             }
         }
 
