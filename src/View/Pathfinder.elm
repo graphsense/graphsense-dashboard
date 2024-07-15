@@ -579,14 +579,31 @@ addressDetailsContentView vc gc model id viewState =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
         df =
             SidebarComponents.sidePanelHeaderComponentAttributes
+
+        inst =
+            SidebarComponents.sidePanelHeaderComponentInstances
+
+        showExchangeTag =
+            actorText /= Nothing
+
+        showOtherTag =
+            List.isEmpty tags |> not
     in
-    SidebarComponents.sidePanelHeaderComponentWithAttributes
+    SidebarComponents.sidePanelHeaderComponentWithInstances
         { df
             | exchangeLabelOf8 =
                 [ css
                     [ Css.whiteSpace Css.noWrap
                     ]
                 ]
+        }
+        { inst
+            | sidePanelHeaderTags =
+                if showExchangeTag || showOtherTag then
+                    Nothing
+
+                else
+                    Just none
         }
         { sidePanelHeaderMain =
             { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
@@ -598,8 +615,8 @@ addressDetailsContentView vc gc model id viewState =
                     Icons.iconsUntaggedSvg [] {}
             }
         , sidePanelHeaderTags =
-            { exchangeTag = actorText /= Nothing
-            , otherTag = List.isEmpty tags |> not
+            { exchangeTag = showExchangeTag
+            , otherTag = showOtherTag
             }
         , iconTextOf16 =
             { icon = Icons.iconsTagSvg [] {}
@@ -937,27 +954,13 @@ dateRangePickerView vc model =
         endS =
             Locale.posixDate vc.locale endP
     in
-    SidebarComponents.txListFilterRow
-        { timePicker =
-            { from = startS
-            , to = endS
-            }
-        , framedIcon =
-            { icon = Icons.iconsFilterSvg [] {}
-            }
-        }
-
-
-
-{-
-   div [ dateTimeRangeBoxStyle vc |> toAttr ]
-       [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
-       , span [] [ Html.text selectedDuration ]
-       , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
-       , span [] [ Html.text (Locale.string vc.locale "to") ]
-       , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
-       ]
--}
+    div [ dateTimeRangeBoxStyle vc |> toAttr ]
+        [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
+        , span [] [ Html.text selectedDuration ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
+        , span [] [ Html.text (Locale.string vc.locale "to") ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
+        ]
 
 
 transactionTableView : View.Config -> String -> (Id -> Bool) -> TransactionTable.Model -> Html Msg
@@ -1009,6 +1012,7 @@ transactionTableView vc currency txOnGraphFn model =
 
             else
                 [ dateRangePickerView vc drp
+                    |> filterRow
                 , table
                 ]
 
