@@ -53,7 +53,7 @@ view _ _ _ address =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.addressNodeWithAttributes
+    GraphComponents.addressNodeWithInstances
         (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
@@ -76,8 +76,25 @@ view _ _ _ address =
                 [ Id.toString address.id
                     |> Svg.id
                 ]
-            |> s_iconsPlusIn (plus Incoming)
-            |> s_iconsPlusOut (plus Outgoing)
+         --|> s_iconsPlusIn (plus Incoming)
+         --|> s_iconsPlusOut (plus Outgoing)
+        )
+        (GraphComponents.addressNodeInstances
+            |> s_iconsPlusOut
+                (Icons.iconsNodeOpenRightWithAttributes
+                    (Icons.iconsNodeOpenRightAttributes
+                        |> s_iconsNodeOpenRight
+                            ((translate
+                                GraphComponents.addressNodeIconsPlusOutDetails.x
+                                GraphComponents.addressNodeIconsPlusOutDetails.y
+                                |> Svg.transform
+                             )
+                                :: plus Outgoing
+                            )
+                    )
+                    {}
+                    |> Just
+                )
         )
         { addressNode =
             { addressId =
