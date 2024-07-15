@@ -3,6 +3,7 @@ module View.Pathfinder.Table.IoTable exposing (..)
 import Api.Data
 import Config.View as View
 import Css.Pathfinder as Css
+import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder.Id exposing (Id)
@@ -10,7 +11,6 @@ import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
 import Table
 import View.Graph.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
-import Css.Table exposing (Styles)
 
 
 config : Styles -> View.Config -> String -> (Id -> Bool) -> Maybe (Id -> Maybe String) -> Table.Config Api.Data.TxValue Msg

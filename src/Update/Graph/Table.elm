@@ -79,6 +79,3 @@ filterTable filter table =
         | data = List.filter filter table.data
         , filtered = List.filter filter table.data
     }
-
-
-

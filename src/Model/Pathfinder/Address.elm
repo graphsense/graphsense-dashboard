@@ -45,21 +45,28 @@ getCoords a =
 
 
 getInDegree : Address -> Maybe Int
-getInDegree a = RemoteData.unwrap Nothing (.inDegree >> Just) a.data
+getInDegree a =
+    RemoteData.unwrap Nothing (.inDegree >> Just) a.data
 
 
 getOutDegree : Address -> Maybe Int
-getOutDegree a =RemoteData.unwrap Nothing (.outDegree >> Just) a.data
+getOutDegree a =
+    RemoteData.unwrap Nothing (.outDegree >> Just) a.data
 
 
 getBalance : Address -> Maybe Values
-getBalance a = RemoteData.unwrap Nothing (.balance >> Just) a.data
+getBalance a =
+    RemoteData.unwrap Nothing (.balance >> Just) a.data
+
 
 getTotalReceived : Address -> Maybe Values
-getTotalReceived a = RemoteData.unwrap Nothing (.totalReceived >> Just) a.data
+getTotalReceived a =
+    RemoteData.unwrap Nothing (.totalReceived >> Just) a.data
+
 
 getCurrency : Address -> Maybe String
-getCurrency a = RemoteData.unwrap Nothing (.currency >> Just) a.data
+getCurrency a =
+    RemoteData.unwrap Nothing (.currency >> Just) a.data
 
 
 getActivityRange : Api.Data.Address -> ( Posix, Posix )

@@ -10,7 +10,7 @@ import List.Nonempty as NList
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
+import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), coinbasePseudoAddress)
 import Monocle.Compose exposing (isoWithIso)
 import Util.Data
 
@@ -61,7 +61,7 @@ fromTxUtxoData tx coords =
 
         inputsWithCoinbase =
             if tx.coinbase then
-                Just [ { address = [ "coinbase" ], value = Util.Data.valuesZero } ]
+                Just [ { address = [ coinbasePseudoAddress ], value = Util.Data.valuesZero } ]
 
             else
                 tx.inputs

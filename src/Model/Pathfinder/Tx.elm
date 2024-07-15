@@ -14,6 +14,11 @@ import Tuple exposing (first, pair)
 import Util.Pathfinder exposing (getAddress)
 
 
+coinbasePseudoAddress : String
+coinbasePseudoAddress =
+    "coinbase"
+
+
 type alias Tx =
     { id : Id
     , hovered : Bool

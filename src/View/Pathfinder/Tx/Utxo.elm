@@ -24,7 +24,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
-import Tuple exposing (pair, second)
+import Tuple exposing (first, pair, second)
 import Util.Data
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
@@ -37,6 +37,7 @@ view _ vc pc id highlight tx =
     let
         anyIsNotVisible =
             NDict.toList
+                >> List.filter (first >> Id.id >> (/=) coinbasePseudoAddress)
                 >> List.any (second >> .visible >> not)
 
         fd =

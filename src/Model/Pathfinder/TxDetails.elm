@@ -1,8 +1,8 @@
 module Model.Pathfinder.TxDetails exposing (..)
 
 import Api.Data
-import Model.Pathfinder.Tx exposing (Tx)
 import Model.Graph.Table exposing (Table)
+import Model.Pathfinder.Tx exposing (Tx)
 
 
 type alias Model =

@@ -305,7 +305,13 @@ toolItemSmallStyle vc active =
     , margin (px 2)
     , highlightPrimaryFrostedColor vc |> border3 xsGap solid
     , px 3 |> borderRadius
-    ] ++ if (active) then [highlightPrimaryFrostedColor vc |> backgroundColor] else []
+    ]
+        ++ (if active then
+                [ highlightPrimaryFrostedColor vc |> backgroundColor ]
+
+            else
+                []
+           )
 
 
 toolItemStyle : View.Config -> List Style

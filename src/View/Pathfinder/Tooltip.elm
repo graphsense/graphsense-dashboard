@@ -66,7 +66,8 @@ address vc ts adr =
         totalReceived =
             Address.getTotalReceived adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
 
-        currency = Address.getCurrency adr |> Maybe.map (String.toUpper) |> Maybe.withDefault ""
+        currency =
+            Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
 
         key =
             Locale.string vc.locale
@@ -104,10 +105,14 @@ address vc ts adr =
             , lbl
                 |> text
                 |> val
-            , balance ++ " " ++ currency
+            , balance
+                ++ " "
+                ++ currency
                 |> text
                 |> val
-            , totalReceived ++ " " ++ currency
+            , totalReceived
+                ++ " "
+                ++ currency
                 |> text
                 |> val
             ]

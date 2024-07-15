@@ -11,8 +11,8 @@ import Dict exposing (Dict)
 import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
-import Effect.Pathfinder as Pathfinder
 import Effect.Locale as Locale
+import Effect.Pathfinder as Pathfinder
 import File.Download
 import Hovercard
 import Http exposing (Error(..))
@@ -609,14 +609,14 @@ update plugins uc msg model =
             in
             ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
 
-        PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name )->
-                    ( model
-                    ,  (name ++ ".png")
-                        |> Ports.exportGraphPNG
-                        |> Pathfinder.CmdEffect
-                        |> PathfinderEffect
-                        |> List.singleton
-                    )
+        PathfinderMsg (Pathfinder.UserClickedExportGraphAsPNG name) ->
+            ( model
+            , (name ++ ".png")
+                |> Ports.exportGraphPNG
+                |> Pathfinder.CmdEffect
+                |> PathfinderEffect
+                |> List.singleton
+            )
 
         PathfinderMsg m ->
             let
