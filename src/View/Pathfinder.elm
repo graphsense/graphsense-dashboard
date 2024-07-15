@@ -852,7 +852,7 @@ graphSvg plugins _ vc gc model bbox =
                 (\y mx my ->
                     { message = UserWheeledOnGraph (mx + originShiftX) my y
                     , stopPropagation = False
-                    , preventDefault = False
+                    , preventDefault = True
                     }
                 )
                 (Json.Decode.field "deltaY" Json.Decode.float)
