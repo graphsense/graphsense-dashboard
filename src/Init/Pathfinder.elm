@@ -28,14 +28,15 @@ init _ =
       , transform = Transform.init
       , history = History.init
       , details = Nothing
-      , config = {}
+      , config =
+            { showTxTimestamps = False
+            }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
       , ctrlPressed = False
       , isDirty = False
       , displaySettings =
-            { showTxTimestamps = False
-            , isDisplaySettingsOpen = False
+            { isDisplaySettingsOpen = False
             }
       , tooltip = Nothing
       }

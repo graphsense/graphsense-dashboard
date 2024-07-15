@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (addAddress, addTx, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -11,6 +11,7 @@ import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
 import Init.Pathfinder.Tx as Tx
 import List.Nonempty as NList
+import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
@@ -379,8 +380,18 @@ isTxInNetwork tx net =
     Dict.member (getTxId tx) net.txs
 
 
+type FindPosition
+    = Auto
+    | NextTo ( Direction, Id )
+
+
 addTx : Api.Data.Tx -> Network -> Network
-addTx tx network =
+addTx =
+    addTxWithPosition Auto
+
+
+addTxWithPosition : FindPosition -> Api.Data.Tx -> Network -> Network
+addTxWithPosition position tx network =
     let
         id =
             getTxId tx
@@ -397,7 +408,18 @@ addTx tx network =
             Api.Data.TxTxUtxo t ->
                 let
                     coords =
-                        findUtxoTxCoords t network
+                        case position of
+                            Auto ->
+                                findUtxoTxCoords t network
+
+                            NextTo ( direction, id_ ) ->
+                                Dict.get id_ network.addresses
+                                    |> Maybe.map
+                                        (findUtxoTxCoordsNextToAddress network direction)
+                                    |> Maybe.Extra.withDefaultLazy
+                                        (\_ ->
+                                            findUtxoTxCoords t network
+                                        )
                 in
                 Tx.fromTxUtxoData t coords
                     |> Maybe.map

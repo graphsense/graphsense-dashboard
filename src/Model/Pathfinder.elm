@@ -49,8 +49,7 @@ type alias Model =
 
 
 type alias DisplaySettings =
-    { showTxTimestamps : Bool
-    , isDisplaySettingsOpen : Bool
+    { isDisplaySettingsOpen : Bool
     }
 
 

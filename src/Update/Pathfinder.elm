@@ -760,11 +760,10 @@ updateByMsg plugins uc msg model =
                     n { model | pointerTool = tool }
 
                 UserClickedToggleShowTxTimestamp ->
-                    let
-                        nds =
-                            model.displaySettings |> s_showTxTimestamps (not model.displaySettings.showTxTimestamps)
-                    in
-                    n { model | displaySettings = nds }
+                    model.config
+                        |> s_showTxTimestamps (not model.config.showTxTimestamps)
+                        |> flip s_config model
+                        |> n
 
                 UserClickedToggleDisplaySettings ->
                     let
@@ -1212,7 +1211,7 @@ browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data
 browserGotTxForAddress plugins _ addressId direction tx model =
     let
         network =
-            Network.addTx tx model.network
+            Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
 
         transform =
             case tx of

@@ -33,7 +33,7 @@ import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPath
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> Svg Msg
-view _ _ _ id highlight tx =
+view _ vc pc id highlight tx =
     let
         anyIsNotVisible =
             NDict.toList
@@ -73,6 +73,9 @@ view _ _ _ id highlight tx =
         { txNodeCircle =
             { multipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
             , highlight = highlight
+            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
+            , time = Locale.timestampTimeUniform vc.locale tx.raw.timestamp
+            , timestamp = pc.showTxTimestamps
             }
         }
 

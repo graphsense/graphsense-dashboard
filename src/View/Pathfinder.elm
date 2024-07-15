@@ -269,12 +269,12 @@ topLeftPanel plugins ms vc gc model =
 
 
 settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
-settingsView vc _ m =
+settingsView vc pc m =
     let
         content =
             div []
                 [ span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction Settings") ]
-                , Util.View.switch vc [ HA.checked m.displaySettings.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
+                , Util.View.switch vc [ HA.checked pc.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
