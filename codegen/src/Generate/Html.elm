@@ -305,8 +305,6 @@ instanceNodeToExpressions config parentName node =
                         Dict.get parentName config.propertyExpressions
                             |> Maybe.andThen (Dict.get ref)
                     )
-                |> Maybe.map
-                    (withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences)
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
                         Gen.Html.Styled.call_.div
@@ -321,9 +319,9 @@ instanceNodeToExpressions config parentName node =
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
-                            |> withVisibility (Debug.log "123 instanceNodeToExp withVisibility" parentName) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
                     )
             )
+        |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
 
 

@@ -471,7 +471,6 @@ instanceNodeToExpressions config parentName node =
                     (List.singleton
                         >> Elm.list
                         >> Gen.Svg.Styled.call_.g (Elm.list [ coords ])
-                        >> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
                     )
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
@@ -480,7 +479,7 @@ instanceNodeToExpressions config parentName node =
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
-                            |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
                     )
             )
+        |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
