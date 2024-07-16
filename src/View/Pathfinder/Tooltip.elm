@@ -11,6 +11,7 @@ import Html.Attributes
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes exposing (css)
 import Model.Currency exposing (assetFromBase)
+import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
@@ -22,7 +23,7 @@ import Util.View exposing (none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 
 
-view : View.Config -> Dict Id.Id TagSummary -> Tooltip -> Html msg
+view : View.Config -> Dict Id.Id HavingTags -> Tooltip -> Html msg
 view vc ts tt =
     (case tt.type_ of
         UtxoTx t ->
@@ -48,11 +49,19 @@ view vc ts tt =
         |> Html.fromUnstyled
 
 
-address : View.Config -> Maybe TagSummary -> Address.Address -> Html msg
-address vc ts adr =
+address : View.Config -> Maybe HavingTags -> Address.Address -> Html msg
+address vc havingTags adr =
     let
         net =
             Id.network adr.id
+
+        ts =
+            case havingTags of
+                Just (HasTagSummary t) ->
+                    Just t
+
+                _ ->
+                    Nothing
 
         category =
             ts |> Maybe.map .broadCategory |> Maybe.withDefault "-"

@@ -47,13 +47,11 @@ import Svg.Styled.Lazy as Svg
 import Table
 import Theme.Html.Icons
 import Theme.Html.SidebarComponents as SidebarComponents
-import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
-import Util.Data exposing (negateTxValue)
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
-import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifier, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -446,7 +444,8 @@ txDetailsContentView vc gc model id viewState =
             ]
 
         getLbl id_ =
-            Dict.get id_ model.tagSummaries |> Maybe.andThen .bestLabel
+            Dict.get id_ model.tagSummaries
+                |> Maybe.withDefault NoTags
 
         ( detailsTblBody, sections ) =
             case viewState.tx.type_ of
@@ -483,7 +482,7 @@ utxoTxDetailsContentView vc data =
     div [] tbls
 
 
-ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> Maybe String) -> Html Msg
+ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
 ioTableView vc network currency table getLbl =
     let
         isCheckedFn =
@@ -503,7 +502,7 @@ ioTableView vc network currency table getLbl =
         table
 
 
-utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> (Id -> Maybe String) -> Html Msg
+utxoTxDetailsSectionsView : View.Config -> Network -> TxDetails.Model -> Api.Data.TxUtxo -> (Id -> HavingTags) -> Html Msg
 utxoTxDetailsSectionsView vc network viewState data getLbl =
     let
         content =
@@ -529,7 +528,12 @@ addressDetailsContentView vc gc model id viewState =
                 |> Maybe.withDefault viewState.address
 
         ts =
-            Dict.get id model.tagSummaries
+            case Dict.get id model.tagSummaries of
+                Just (HasTagSummary t) ->
+                    Just t
+
+                _ ->
+                    Nothing
 
         tags =
             ts |> Maybe.map (.labelTagCloud >> Dict.toList >> List.sortBy (Tuple.second >> .weighted)) |> Maybe.withDefault []

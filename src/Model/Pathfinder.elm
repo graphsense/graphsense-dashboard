@@ -29,8 +29,7 @@ unit =
 type alias Model =
     { network : Network
     , actors : Dict String Actor
-    , tagSummaries : Dict Id Api.Data.TagSummary
-    , noTags : Set Id
+    , tagSummaries : Dict Id HavingTags
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered
@@ -46,6 +45,13 @@ type alias Model =
     , displaySettings : DisplaySettings
     , tooltip : Maybe Tooltip
     }
+
+
+type HavingTags
+    = LoadingTags
+    | HasTagSummary Api.Data.TagSummary
+    | HasTags
+    | NoTags
 
 
 type alias DisplaySettings =

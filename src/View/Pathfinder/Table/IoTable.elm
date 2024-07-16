@@ -6,6 +6,7 @@ import Css.Pathfinder as Css
 import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
+import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
 import Table
@@ -13,7 +14,7 @@ import View.Graph.Table exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
-config : Styles -> View.Config -> String -> (Id -> Bool) -> Maybe (Id -> Maybe String) -> Table.Config Api.Data.TxValue Msg
+config : Styles -> View.Config -> String -> (Id -> Bool) -> Maybe (Id -> HavingTags) -> Table.Config Api.Data.TxValue Msg
 config styles vc network isCheckedFn lblFn =
     let
         toId =
@@ -38,7 +39,7 @@ config styles vc network isCheckedFn lblFn =
                 , accessor = .address >> String.join ","
                 , onClick = Nothing
                 }
-                (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.andThen fn))
+                (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.map fn |> Maybe.withDefault NoTags))
             , PT.debitCreditColumn vc
                 (\_ -> assetFromBase network)
                 "Value"

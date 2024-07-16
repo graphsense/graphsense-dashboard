@@ -4,13 +4,16 @@ import Api.Data
 import Config.View as View
 import Css
 import Css.Pathfinder as PCSS exposing (toAttr)
+import Css.Statusbar
 import FontAwesome
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
+import Maybe.Extra
 import Model.Currency exposing (AssetIdentifier)
+import Model.Pathfinder exposing (HavingTags(..))
 import Table
-import Util.View exposing (copyableLongIdentifierPathfinder, none)
+import Util.View exposing (copyableLongIdentifierPathfinder, loadingSpinner, none)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
@@ -51,12 +54,12 @@ type alias ColumnConfig data msg =
     }
 
 
-addressColumn : View.Config -> ColumnConfig data msg -> Maybe (data -> Maybe String) -> Table.Column data msg
+addressColumn : View.Config -> ColumnConfig data msg -> Maybe (data -> HavingTags) -> Table.Column data msg
 addressColumn vc cc lblfn =
-    identifierColumn (lblfn |> Maybe.withDefault (\_ -> Nothing)) vc cc
+    identifierColumn (lblfn |> Maybe.withDefault (\_ -> NoTags)) vc cc
 
 
-identifierColumn : (data -> Maybe String) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
+identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
 identifierColumn lblfn vc { label, accessor, onClick } =
     let
         tagcss =
@@ -67,10 +70,30 @@ identifierColumn lblfn vc { label, accessor, onClick } =
         , viewData =
             \data ->
                 (case lblfn data of
-                    Just lbl ->
-                        [ span [ tagcss, title lbl ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
+                    HasTags ->
+                        [ span [ tagcss ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
 
-                    _ ->
+                    LoadingTags ->
+                        [ span
+                            [ Locale.string vc.locale "Loading tags"
+                                |> title
+                            ]
+                            [ loadingSpinner vc Css.Statusbar.loadingSpinner
+                            ]
+                        ]
+
+                    HasTagSummary ts ->
+                        [ span
+                            [ tagcss
+                            , ts.bestActor
+                                |> Maybe.Extra.or ts.bestLabel
+                                |> Maybe.withDefault ts.broadCategory
+                                |> title
+                            ]
+                            [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ]
+                        ]
+
+                    NoTags ->
                         [ span [ tagcss ] [] ]
                 )
                     ++ (accessor data |> copyableLongIdentifierPathfinder vc [] |> List.singleton)
@@ -92,7 +115,7 @@ identifierColumn lblfn vc { label, accessor, onClick } =
 
 txColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg
 txColumn =
-    identifierColumn (\_ -> Nothing)
+    identifierColumn (\_ -> NoTags)
 
 
 stringColumn : View.Config -> ColumnConfig data msg -> Table.Column data msg

@@ -197,14 +197,14 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries model.noTags :: fetchActorsForAddress data model.actors ++ eff)
+                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
             let
                 ( m, eff ) =
                     browserGotTxForAddress plugins uc addressId direction data model
             in
-            ( m, eff ++ fetchTagSummariesForTx data model.tagSummaries model.noTags )
+            ( m, eff )
 
         SearchMsg m ->
             case m of
@@ -750,9 +750,7 @@ updateByMsg plugins uc msg model =
             in
             getAddressesToLoadForTx tx
                 |> List.foldl aggAddressAdd (n (model |> s_network (Network.addTx tx model.network)))
-                |> Tuple.mapFirst (checkSelection uc)
-                |> (\( ( m, effa ), effb ) -> ( m, effa ++ effb ))
-                |> Tuple.mapSecond ((++) (fetchTagSummariesForTx tx model.tagSummaries model.noTags))
+                |> and (checkSelection uc)
 
         ChangedDisplaySettingsMsg submsg ->
             case submsg of
@@ -782,41 +780,93 @@ updateByMsg plugins uc msg model =
             WorkflowNextTxByTime.update context wm model
 
         BrowserGotTagSummary id data ->
-            if data.tagCount > 0 then
-                n
-                    ({ model
-                        | tagSummaries = Dict.insert id data model.tagSummaries
-                     }
-                        |> flip updateTagDataOnAddress id
-                    )
+            let
+                d =
+                    if data.tagCount > 0 then
+                        HasTagSummary data
 
-            else
-                n
-                    { model
-                        | noTags = Set.insert id model.noTags
-                    }
+                    else
+                        NoTags
+            in
+            n
+                ({ model
+                    | tagSummaries = Dict.insert id d model.tagSummaries
+                 }
+                    |> updateTagDataOnAddress id
+                )
 
-        BrowserGotAddressTags id data ->
-            n model
+        BrowserGotAddressesTags addressIds data ->
+            let
+                updateHasTags tag =
+                    Dict.update (Id.init tag.currency tag.address)
+                        (Maybe.map
+                            (\curr ->
+                                case curr of
+                                    HasTagSummary _ ->
+                                        curr
+
+                                    _ ->
+                                        LoadingTags
+                            )
+                        )
+
+                updateHasNoTags a =
+                    Dict.update a
+                        (Maybe.map
+                            (\curr ->
+                                case curr of
+                                    LoadingTags ->
+                                        NoTags
+
+                                    _ ->
+                                        curr
+                            )
+                        )
+            in
+            ( { model
+                | tagSummaries =
+                    data
+                        |> List.foldl updateHasTags
+                            (addressIds
+                                |> List.foldl
+                                    updateHasNoTags
+                                    model.tagSummaries
+                            )
+              }
+            , let
+                toId a =
+                    Id.init a.currency a.address
+              in
+              data
+                |> List.map (toId >> fetchTags)
+            )
 
 
-updateTagDataOnAddress : Model -> Id -> Model
-updateTagDataOnAddress m addressId =
+updateTagDataOnAddress : Id -> Model -> Model
+updateTagDataOnAddress addressId m =
     let
         tag =
             Dict.get addressId m.tagSummaries
 
-        net tagdata =
-            (if tagdata.broadCategory == "exchange" then
-                Network.updateAddress addressId
-                    (s_exchange tagdata.bestLabel)
-                    m.network
+        net td =
+            case td of
+                HasTagSummary tagdata ->
+                    (if tagdata.broadCategory == "exchange" then
+                        Network.updateAddress addressId
+                            (s_exchange tagdata.bestLabel)
+                            m.network
 
-             else
-                m.network
-            )
-                |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0))
-                |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
+                     else
+                        m.network
+                    )
+                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0))
+                        |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
+
+                HasTags ->
+                    Network.updateAddress addressId (s_hasTags True) m.network
+
+                _ ->
+                    m.network
     in
     tag |> Maybe.map (\n -> { m | network = net n }) |> Maybe.withDefault m
 
@@ -918,7 +968,7 @@ updateByRoute_ plugins uc route model =
                     { model | network = Network.clearSelection model.network }
             in
             loadTx plugins id m1
-                |> mapFirst (selectTx id)
+                |> and (selectTx id)
 
         _ ->
             n model
@@ -941,7 +991,7 @@ loadAddress _ id model starting =
                             }
                         )
         in
-        ( { model | network = nw } |> flip updateTagDataOnAddress id
+        ( { model | network = nw } |> updateTagDataOnAddress id
         , BrowserGotAddressData id
             |> Api.GetAddressEffect
                 { currency = Id.network id
@@ -967,7 +1017,7 @@ loadTx _ id model =
     )
 
 
-selectTx : Id -> Model -> Model
+selectTx : Id -> Model -> ( Model, List Effect )
 selectTx id model =
     case Dict.get id model.network.txs of
         Just tx ->
@@ -990,9 +1040,11 @@ selectTx id model =
                 |> Network.updateTx id (s_selected True)
                 |> flip s_network m1
                 |> s_selection (SelectedTx id)
+                |> bulkfetchTagsForTx tx
 
         Nothing ->
             s_selection (WillSelectTx id) model
+                |> n
 
 
 selectAddress : Update.Config -> Id -> Model -> ( Model, List Effect )
@@ -1121,32 +1173,56 @@ fetchTags id =
     BrowserGotTagSummary id |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id } |> ApiEffect
 
 
-fetchTagSummariesForTx : Api.Data.Tx -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> List Effect
-fetchTagSummariesForTx tx existing noTags =
-    let
-        addresses x =
-            x |> Maybe.map (List.concatMap .address) |> Maybe.withDefault []
-    in
-    case tx of
-        Api.Data.TxTxUtxo x ->
-            x.inputs |> addresses |> List.map (pair x.currency) |> List.map (\i -> fetchTagsForId i existing noTags)
+bulkfetchTagsForTx : Tx.Tx -> Model -> ( Model, List Effect )
+bulkfetchTagsForTx tx model =
+    case tx.type_ of
+        Tx.Utxo { raw } ->
+            let
+                addresses x =
+                    x
+                        |> Maybe.map (List.concatMap .address)
+                        |> Maybe.withDefault []
+                        |> List.map (Id.init raw.currency)
+                        |> List.filter (flip Dict.member model.tagSummaries >> not)
+
+                addr =
+                    addresses raw.inputs ++ addresses raw.outputs
+            in
+            ( { model
+                | tagSummaries =
+                    addr
+                        |> List.foldl
+                            (\a -> Dict.insert a LoadingTags)
+                            model.tagSummaries
+              }
+            , List.Extra.greedyGroupsOf 100 addr
+                |> List.map
+                    (\adr ->
+                        BrowserGotAddressesTags adr
+                            |> Api.BulkGetAddressTagsEffect
+                                { currency = raw.currency
+                                , addresses = List.map Id.id adr
+                                }
+                            |> ApiEffect
+                    )
+            )
 
         _ ->
-            []
+            n model
 
 
-fetchTagsForId : Id -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> Effect
-fetchTagsForId id existing noTags =
-    if Dict.member id existing || Set.member id noTags then
+fetchTagsForId : Id -> Dict.Dict Id HavingTags -> Effect
+fetchTagsForId id existing =
+    if Dict.member id existing then
         CmdEffect Cmd.none
 
     else
         fetchTags id
 
 
-fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id Api.Data.TagSummary -> Set Id -> Effect
-fetchTagSummaryForAddress d existing noTags =
-    fetchTagsForId ( d.currency, d.address ) existing noTags
+fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id HavingTags -> Effect
+fetchTagSummaryForAddress d =
+    fetchTagsForId ( d.currency, d.address )
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect
@@ -1257,7 +1333,6 @@ checkSelection uc model =
     case model.selection of
         WillSelectTx id ->
             selectTx id model
-                |> n
 
         WillSelectAddress id ->
             selectAddress uc id model

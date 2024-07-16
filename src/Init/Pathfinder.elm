@@ -20,7 +20,6 @@ init _ =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
-      , noTags = Set.empty
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "eth", "trx", "zec", "ltc" ])
