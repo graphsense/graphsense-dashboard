@@ -2,7 +2,7 @@ module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddr
 
 import Animation as A exposing (Animation)
 import Api.Data
-import Basics.Extra exposing (flip, uncurry)
+import Basics.Extra exposing (uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
 import Effect.Pathfinder exposing (Effect(..))
@@ -22,7 +22,7 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_selected)
+import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_selected)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
@@ -51,21 +51,38 @@ addAddressWithPosition position id model =
     else
         let
             coords =
-                case position of
-                    Auto ->
-                        findAddressCoords id model
+                avoidOverlappingEdges model id <|
+                    case position of
+                        Auto ->
+                            findAddressCoords id model
 
-                    NextTo ( direction, id_ ) ->
-                        Dict.get id_ model.txs
-                            |> Maybe.andThen
-                                (findAddressCoordsNextToTx model direction)
-                            |> Maybe.Extra.withDefaultLazy
-                                (\_ ->
-                                    findAddressCoords id model
-                                )
+                        NextTo ( direction, id_ ) ->
+                            Dict.get id_ model.txs
+                                |> Maybe.andThen
+                                    (findAddressCoordsNextToTx model direction)
+                                |> Maybe.Extra.withDefaultLazy
+                                    (\_ ->
+                                        findAddressCoords id model
+                                    )
         in
         freeSpaceAroundCoords coords model
             |> placeAddress coords id
+
+
+avoidOverlappingEdges : Network -> Id -> Coords -> Coords
+avoidOverlappingEdges model addressId coords =
+    let
+        sameY =
+            listTxsForAddress model addressId
+                |> List.filterMap (\( _, tx ) -> Tx.getUtxoTx tx)
+                |> List.filter (\tx -> A.getTo tx.y |> round |> (==) (round coords.y))
+                |> List.length
+    in
+    if sameY > 1 then
+        { coords | y = coords.y - toFloat sameY - 1}
+
+    else
+        coords
 
 
 toAddresses : Network -> List Id -> List Address
