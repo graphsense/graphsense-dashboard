@@ -1,11 +1,13 @@
-module Update.Pathfinder.Tx exposing (updateUtxo, updateUtxoIo)
+module Update.Pathfinder.Tx exposing (setAddress, updateUtxo, updateUtxoIo, updateAddress, unsetAddress)
 
 import Basics.Extra exposing (flip)
 import Dict
 import Model.Direction exposing (Direction(..))
+import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx, getUtxoTx)
 import RecordSetter exposing (s_inputs, s_outputs)
+import RecordSetter exposing (s_address)
 
 
 updateUtxo : (UtxoTx -> UtxoTx) -> Tx -> Tx
@@ -39,3 +41,20 @@ updateUtxoIo dir addressId upd t =
             )
         |> Maybe.withDefault ios
         |> flip set t
+
+
+updateAddress : (Address -> Address) -> Io -> Io
+updateAddress update io =
+    { io | address = Maybe.map update io.address }
+
+
+setAddress : Address -> Io -> Io
+setAddress address io =
+    { io
+        | address = Just address
+    }
+
+
+unsetAddress : Io -> Io
+unsetAddress =
+    s_address Nothing

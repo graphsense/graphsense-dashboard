@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -22,7 +22,7 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_selected, s_visible)
+import RecordSetter exposing (s_addresses, s_incomingTxs, s_outgoingTxs, s_selected)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair)
@@ -215,21 +215,29 @@ freeSpaceAroundCoords coords model =
             (getMaxY txsAbove |> moveThings 1 txsAbove)
                 ++ (getMinY txsBelow |> moveThings -1 txsBelow)
 
+        updateUtxo movedTx tx =
+            movedAddresses
+                |> List.foldl
+                    (\a ->
+                        Tx.updateUtxo (Tx.updateUtxoIo Incoming a.id (Tx.setAddress a))
+                            >> Tx.updateUtxo (Tx.updateUtxoIo Outgoing a.id (Tx.setAddress a))
+                    )
+                    (Tx.updateUtxo
+                        (\utxo ->
+                            { utxo
+                                | y = movedTx.y
+                                , clock = movedTx.clock
+                            }
+                        )
+                        tx
+                    )
+
         newTxs =
             movedTxs
                 |> List.foldl
                     (\t ->
                         Dict.update t.id
-                            (Maybe.map
-                                (Tx.updateUtxo
-                                    (\utxo ->
-                                        { utxo
-                                            | y = t.y
-                                            , clock = t.clock
-                                        }
-                                    )
-                                )
-                            )
+                            (Maybe.map (updateUtxo t))
                     )
                     model.txs
     in
@@ -252,6 +260,9 @@ freeSpaceAroundCoords coords model =
 placeAddress : Coords -> Id -> Network -> Network
 placeAddress coords id model =
     let
+        newAddress =
+            Address.init id coords
+
         ( address, newTxs ) =
             listTxsForAddress model id
                 |> List.foldl
@@ -269,13 +280,13 @@ placeAddress coords id model =
                         , Dict.update tx.id
                             (Maybe.map
                                 (Tx.updateUtxo
-                                    (Tx.updateUtxoIo direction addr.id (s_visible True))
+                                    (Tx.updateUtxoIo direction id (Tx.setAddress newAddress))
                                 )
                             )
                             txs
                         )
                     )
-                    ( Address.init id coords
+                    ( newAddress
                     , model.txs
                     )
 
@@ -303,21 +314,15 @@ opacityAnimation =
 
 updateAddress : Id -> (Address -> Address) -> Network -> Network
 updateAddress id update model =
-    { model | addresses = Dict.update id (Maybe.map update) model.addresses }
-
-
-updateAddressIf : (Address -> Bool) -> (Address -> Address) -> Network -> Network
-updateAddressIf predicate upd network =
-    network.addresses
-        |> Dict.map
-            (\_ address ->
-                if predicate address then
-                    upd address
-
-                else
-                    address
+    listTxsForAddress model id
+        |> List.foldl
+            (\( direction, tx ) ->
+                updateTx tx.id
+                    (Tx.updateUtxo (Tx.updateUtxoIo direction id (Tx.updateAddress update)))
             )
-        |> flip s_addresses network
+            { model
+                | addresses = Dict.update id (Maybe.map update) model.addresses
+            }
 
 
 updateTx : Id -> (Tx -> Tx) -> Network -> Network
@@ -439,7 +444,7 @@ addTxWithPosition position tx network =
                     newNetwork =
                         freeSpaceAroundCoords coords network
                 in
-                Tx.fromTxUtxoData t coords
+                Tx.fromTxUtxoData newNetwork t coords
                     |> Tx.updateUtxo
                         (\utxo ->
                             if hasAnimations newNetwork then
@@ -478,7 +483,7 @@ insertTx network tx =
 
         updTx dir a =
             Tx.updateUtxo
-                (Tx.updateUtxoIo dir a.id (s_visible True))
+                (Tx.updateUtxoIo dir a.id (Tx.setAddress a))
     in
     getAddressesForTx network.addresses tx
         |> List.foldl
@@ -598,27 +603,27 @@ animateAddresses delta model =
                             let
                                 clock =
                                     addr.clock + delta
+
+                                newAddr =
+                                    { addr
+                                        | clock = clock
+                                        , opacity =
+                                            if A.isDone clock addr.opacity then
+                                                A.static 1
+
+                                            else
+                                                addr.opacity
+                                    }
                             in
                             { network
-                                | addresses =
-                                    Dict.insert id
-                                        { addr
-                                            | clock = clock
-                                            , opacity =
-                                                if A.isDone clock addr.opacity then
-                                                    A.static 1
-
-                                                else
-                                                    addr.opacity
-                                        }
-                                        network.addresses
-                                , animatedAddresses =
+                                | animatedAddresses =
                                     if A.isDone clock addr.y && A.isDone clock addr.opacity then
                                         Set.remove id network.animatedAddresses
 
                                     else
                                         network.animatedAddresses
                             }
+                                |> updateAddress id (always newAddr)
                         )
                     |> Maybe.withDefault network
             )
@@ -677,9 +682,15 @@ deleteAddress id network =
     Dict.get id network.addresses
         |> Maybe.map
             (\_ ->
-                { network
-                    | addresses = Dict.remove id network.addresses
-                }
+                listTxsForAddress network id
+                    |> List.foldl
+                        (\( direction, tx ) ->
+                            updateTx tx.id
+                                (Tx.updateUtxo (Tx.updateUtxoIo direction id Tx.unsetAddress))
+                        )
+                        { network
+                            | addresses = Dict.remove id network.addresses
+                        }
             )
         |> Maybe.withDefault network
 

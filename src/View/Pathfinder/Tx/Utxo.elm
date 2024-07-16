@@ -5,12 +5,11 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
-import Dict exposing (Dict)
+import Dict
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
-import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (..)
 import Msg.Pathfinder exposing (Msg(..))
@@ -24,7 +23,6 @@ import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
 import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
-import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
@@ -34,7 +32,7 @@ view _ vc pc id highlight tx =
     let
         anyIsNotVisible =
             Dict.toList
-                >> List.any (second >> .visible >> not)
+                >> List.any (second >> .address >> (==) Nothing)
 
         fd =
             GraphComponents.txNodeCircleTxNodeDetails
@@ -77,15 +75,14 @@ view _ vc pc id highlight tx =
         }
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Bool -> UtxoTx -> Svg Msg
-edge _ vc _ addresses hovered tx =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> Svg Msg
+edge _ vc _ hovered tx =
     let
         toValues =
             Dict.toList
                 >> List.filterMap
-                    (\( id, { values, aggregatesN } ) ->
-                        getAddress addresses id
-                            |> Result.toMaybe
+                    (\( id, { values, aggregatesN, address } ) ->
+                        address
                             |> Maybe.map
                                 (values
                                     |> pair { network = Id.network id, asset = Id.network id }

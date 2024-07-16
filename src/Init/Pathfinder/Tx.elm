@@ -7,6 +7,8 @@ import Dict.Extra
 import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder.Id exposing (Id)
+import Model.Pathfinder.Network exposing (Network)
 import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
 import Util.Data
 
@@ -30,8 +32,8 @@ fromTxAccountData tx =
     }
 
 
-fromTxUtxoData : Api.Data.TxUtxo -> Coords -> Tx
-fromTxUtxoData tx coords =
+fromTxUtxoData : Network -> Api.Data.TxUtxo -> Coords -> Tx
+fromTxUtxoData network tx coords =
     let
         id =
             Id.init tx.currency tx.txHash
@@ -72,7 +74,16 @@ fromTxUtxoData tx coords =
             Dict.toList summedIo
                 |> List.map Tuple.second
                 |> List.filter (\x -> x.isOutput == (dir == Outgoing))
-                |> List.map (\ioEntry -> ( Id.init tx.currency ioEntry.address, Io (Util.Data.absValues ioEntry.value) False ioEntry.cnt ))
+                |> List.map
+                    (\ioEntry ->
+                        let
+                            id_ =
+                                Id.init tx.currency ioEntry.address
+                        in
+                        ( id_
+                        , initIo network id_ ioEntry.value ioEntry.cnt
+                        )
+                    )
     in
     { id = id
     , hovered = False
@@ -94,8 +105,16 @@ fromTxUtxoData tx coords =
             , outputs =
                 fn Outgoing
                     |> List.filter
-                        (\( o, _ ) -> Dict.get o inputs == Nothing)
+                        (\( o, _ ) -> Dict.member o inputs |> not)
                     |> Dict.fromList
             , raw = tx
             }
+    }
+
+
+initIo : Network -> Id -> Api.Data.Values -> Int -> Io
+initIo network id values aggregatesN =
+    { values = Util.Data.absValues values
+    , address = Dict.get id network.addresses
+    , aggregatesN = aggregatesN
     }
