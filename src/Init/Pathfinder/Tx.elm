@@ -4,14 +4,10 @@ import Animation as A
 import Api.Data
 import Dict
 import Dict.Extra
-import Dict.Nonempty as NDict
 import Init.Pathfinder.Id as Id
-import List.Nonempty as NList
-import Model.Direction as Direction exposing (Direction(..))
-import Model.Graph.Coords as Coords exposing (Coords)
-import Model.Pathfinder.Id exposing (Id)
-import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), coinbasePseudoAddress)
-import Monocle.Compose exposing (isoWithIso)
+import Model.Direction exposing (Direction(..))
+import Model.Graph.Coords exposing (Coords)
+import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..))
 import Util.Data
 
 
@@ -34,7 +30,7 @@ fromTxAccountData tx =
     }
 
 
-fromTxUtxoData : Api.Data.TxUtxo -> Coords -> Maybe Tx
+fromTxUtxoData : Api.Data.TxUtxo -> Coords -> Tx
 fromTxUtxoData tx coords =
     let
         id =
@@ -59,15 +55,8 @@ fromTxUtxoData tx coords =
                 |> Maybe.map (List.filterMap (createIoIntermediate isOut))
                 |> Maybe.withDefault []
 
-        inputsWithCoinbase =
-            if tx.coinbase then
-                Just [ { address = [ coinbasePseudoAddress ], value = Util.Data.valuesZero } ]
-
-            else
-                tx.inputs
-
         groupedIos =
-            Dict.Extra.groupBy .address (getAddressValuesIntermediates tx.outputs True ++ getAddressValuesIntermediates inputsWithCoinbase False)
+            Dict.Extra.groupBy .address (getAddressValuesIntermediates tx.outputs True ++ getAddressValuesIntermediates tx.inputs False)
 
         sumIoEntries addr l =
             let
@@ -84,35 +73,29 @@ fromTxUtxoData tx coords =
                 |> List.map Tuple.second
                 |> List.filter (\x -> x.isOutput == (dir == Outgoing))
                 |> List.map (\ioEntry -> ( Id.init tx.currency ioEntry.address, Io (Util.Data.absValues ioEntry.value) False ioEntry.cnt ))
-                |> NList.fromList
     in
-    Maybe.map2
-        (\in_ out ->
-            { id = id
-            , hovered = False
-            , selected = False
-            , type_ =
-                let
-                    inputs =
-                        NDict.fromNonemptyList in_
-                in
-                Utxo
-                    { x = coords.x
-                    , y = A.static coords.y
-                    , dx = 0
-                    , dy = 0
-                    , opacity = A.static 1
-                    , clock = 0
-                    , inputs = inputs
-                    , outputs =
-                        out
-                            |> NList.filter
-                                (\( o, _ ) -> NDict.get o inputs == Nothing)
-                                (NList.head out)
-                            |> NDict.fromNonemptyList
-                    , raw = tx
-                    }
+    { id = id
+    , hovered = False
+    , selected = False
+    , type_ =
+        let
+            inputs =
+                fn Incoming
+                    |> Dict.fromList
+        in
+        Utxo
+            { x = coords.x
+            , y = A.static coords.y
+            , dx = 0
+            , dy = 0
+            , opacity = A.static 1
+            , clock = 0
+            , inputs = inputs
+            , outputs =
+                fn Outgoing
+                    |> List.filter
+                        (\( o, _ ) -> Dict.get o inputs == Nothing)
+                    |> Dict.fromList
+            , raw = tx
             }
-        )
-        (fn Incoming)
-        (fn Outgoing)
+    }

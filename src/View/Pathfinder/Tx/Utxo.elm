@@ -6,8 +6,6 @@ import Config.View as View
 import Css
 import Css.Pathfinder as Css
 import Dict exposing (Dict)
-import Dict.Extra
-import Dict.Nonempty as NDict
 import Html.Styled.Events exposing (onMouseLeave)
 import Init.Pathfinder.Id as Id
 import Model.Direction exposing (Direction(..))
@@ -24,8 +22,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Keyed as Keyed
 import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
-import Tuple exposing (first, pair, second)
-import Util.Data
+import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
@@ -36,8 +33,7 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> Sv
 view _ vc pc id highlight tx =
     let
         anyIsNotVisible =
-            NDict.toList
-                >> List.filter (first >> Id.id >> (/=) coinbasePseudoAddress)
+            Dict.toList
                 >> List.any (second >> .visible >> not)
 
         fd =
@@ -85,7 +81,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Bool ->
 edge _ vc _ addresses hovered tx =
     let
         toValues =
-            NDict.toList
+            Dict.toList
                 >> List.filterMap
                     (\( id, { values, aggregatesN } ) ->
                         getAddress addresses id

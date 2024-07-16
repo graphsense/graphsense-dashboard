@@ -2,7 +2,6 @@ module View.Pathfinder.Table.IoTable exposing (..)
 
 import Api.Data
 import Config.View as View
-import Css.Pathfinder as Css
 import Css.Table exposing (Styles)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)

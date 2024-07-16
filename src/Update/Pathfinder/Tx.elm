@@ -1,7 +1,7 @@
 module Update.Pathfinder.Tx exposing (updateUtxo, updateUtxoIo)
 
 import Basics.Extra exposing (flip)
-import Dict.Nonempty as NDict
+import Dict
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx, getUtxoTx)
@@ -32,10 +32,10 @@ updateUtxoIo dir addressId upd t =
                     ( t.outputs, s_outputs )
     in
     ios
-        |> NDict.get addressId
+        |> Dict.get addressId
         |> Maybe.map
             (upd
-                >> flip (NDict.insert addressId) ios
+                >> flip (Dict.insert addressId) ios
             )
         |> Maybe.withDefault ios
         |> flip set t

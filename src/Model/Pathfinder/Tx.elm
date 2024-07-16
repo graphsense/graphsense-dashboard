@@ -3,7 +3,6 @@ module Model.Pathfinder.Tx exposing (..)
 import Animation exposing (Animation, Clock)
 import Api.Data
 import Dict exposing (Dict)
-import Dict.Nonempty as NDict exposing (NonemptyDict)
 import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -12,11 +11,6 @@ import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id exposing (Id)
 import Tuple exposing (first, pair)
 import Util.Pathfinder exposing (getAddress)
-
-
-coinbasePseudoAddress : String
-coinbasePseudoAddress =
-    "coinbase"
 
 
 type alias Tx =
@@ -47,8 +41,8 @@ type alias UtxoTx =
     , dy : Float
     , clock : Clock
     , opacity : Animation
-    , inputs : NonemptyDict Id Io
-    , outputs : NonemptyDict Id Io
+    , inputs : Dict Id Io
+    , outputs : Dict Id Io
     , raw : Api.Data.TxUtxo
     }
 
@@ -72,7 +66,7 @@ hasOutput id tx =
             to == id
 
         Utxo { outputs } ->
-            NDict.get id outputs /= Nothing
+            Dict.get id outputs /= Nothing
 
 
 hasInput : Id -> Tx -> Bool
@@ -82,7 +76,7 @@ hasInput id tx =
             from == id
 
         Utxo { inputs } ->
-            NDict.get id inputs /= Nothing
+            Dict.get id inputs /= Nothing
 
 
 getAddressesForTx : Dict Id Address -> Tx -> List ( Direction, Address )
@@ -92,11 +86,11 @@ getAddressesForTx addresses tx =
             [ ( Incoming, from ), ( Outgoing, to ) ]
 
         Utxo { inputs, outputs } ->
-            (NDict.toList inputs
+            (Dict.toList inputs
                 |> List.map first
                 |> List.map (pair Incoming)
             )
-                ++ (NDict.toList outputs
+                ++ (Dict.toList outputs
                         |> List.map first
                         |> List.map (pair Outgoing)
                    )

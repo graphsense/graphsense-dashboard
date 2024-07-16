@@ -6,7 +6,6 @@ import Basics.Extra exposing (flip)
 import Config.Update as Update
 import Css.Pathfinder exposing (searchBoxMinWidth)
 import Dict
-import Dict.Nonempty as NDict
 import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
@@ -59,7 +58,7 @@ import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
 import Update.Pathfinder.AddressDetails as AddressDetails
-import Update.Pathfinder.Network as Network
+import Update.Pathfinder.Network as Network exposing (FindPosition(..))
 import Update.Pathfinder.Node as Node
 import Update.Pathfinder.Tx as Tx
 import Update.Pathfinder.TxDetails as TxDetails
@@ -975,14 +974,19 @@ updateByRoute_ plugins uc route model =
 
 
 loadAddress : Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
-loadAddress _ id model starting =
+loadAddress =
+    loadAddressWithPosition Auto
+
+
+loadAddressWithPosition : FindPosition -> Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
+loadAddressWithPosition position _ id model starting =
     if Dict.member id model.network.addresses then
         n model
 
     else
         let
             nw =
-                Network.addAddress id model.network
+                Network.addAddressWithPosition position id model.network
                     |> Network.updateAddress id
                         (\a ->
                             { a
@@ -1289,10 +1293,14 @@ browserGotTxForAddress plugins _ addressId direction tx model =
         network =
             Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
 
-        transform =
+        ( transform, txId ) =
             case tx of
                 Api.Data.TxTxUtxo t ->
-                    Dict.get (Id.init t.currency t.txHash) network.txs
+                    let
+                        txId_ =
+                            Id.init t.currency t.txHash
+                    in
+                    ( Dict.get txId_ network.txs
                         |> Maybe.andThen Tx.getUtxoTx
                         |> Maybe.map
                             (\t_ ->
@@ -1303,9 +1311,13 @@ browserGotTxForAddress plugins _ addressId direction tx model =
                                     }
                                     model.transform
                             )
+                    , txId_
+                    )
 
-                Api.Data.TxTxAccount _ ->
-                    Nothing
+                Api.Data.TxTxAccount t ->
+                    ( Nothing
+                    , Id.init t.currency t.txHash
+                    )
 
         newmodel =
             { model
@@ -1323,7 +1335,11 @@ browserGotTxForAddress plugins _ addressId direction tx model =
     firstAddress
         |> Maybe.map
             (\a ->
-                loadAddress plugins (Id.init (Id.network addressId) a) newmodel False
+                let
+                    position =
+                        NextTo ( direction, txId )
+                in
+                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) newmodel False
             )
         |> Maybe.withDefault (n newmodel)
 
@@ -1427,7 +1443,7 @@ isIsolatedTx model tx =
         Tx.Utxo x ->
             let
                 keys =
-                    (x.outputs |> NDict.toDict |> Dict.keys) ++ (x.inputs |> NDict.toDict |> Dict.keys)
+                    Dict.keys x.outputs ++ Dict.keys x.inputs
             in
             not (List.any (\y -> Dict.member y model.network.addresses) keys)
 

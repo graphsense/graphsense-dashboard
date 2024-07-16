@@ -1,11 +1,10 @@
-module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
+module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateAddressIf, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
 import Basics.Extra exposing (flip, uncurry)
 import Config.Pathfinder exposing (nodeXOffset, nodeYOffset)
 import Dict
-import Dict.Nonempty as NDict
 import Effect.Pathfinder exposing (Effect(..))
 import Init.Pathfinder.Address as Address
 import Init.Pathfinder.Id as Id
@@ -40,14 +39,30 @@ clearSelection n =
 
 
 addAddress : Id -> Network -> Network
-addAddress id model =
+addAddress =
+    addAddressWithPosition Auto
+
+
+addAddressWithPosition : FindPosition -> Id -> Network -> Network
+addAddressWithPosition position id model =
     if Dict.member id model.addresses then
         model
 
     else
         let
             coords =
-                findAddressCoords id model
+                case position of
+                    Auto ->
+                        findAddressCoords id model
+
+                    NextTo ( direction, id_ ) ->
+                        Dict.get id_ model.txs
+                            |> Maybe.andThen
+                                (findAddressCoordsNextToTx model direction)
+                            |> Maybe.Extra.withDefaultLazy
+                                (\_ ->
+                                    findAddressCoords id model
+                                )
         in
         freeSpaceAroundCoords coords model
             |> placeAddress coords id
@@ -67,7 +82,7 @@ findAddressCoordsNextToTx model direction tx =
                 ( Outgoing, Tx.Utxo t ) ->
                     Just
                         ( t.outputs
-                            |> NDict.toList
+                            |> Dict.toList
                             |> List.map first
                         , t.x
                         , A.getTo t.y
@@ -76,7 +91,7 @@ findAddressCoordsNextToTx model direction tx =
                 ( Incoming, Tx.Utxo t ) ->
                     Just
                         ( t.inputs
-                            |> NDict.toList
+                            |> Dict.toList
                             |> List.map first
                         , t.x
                         , A.getTo t.y
@@ -420,32 +435,26 @@ addTxWithPosition position tx network =
                                         (\_ ->
                                             findUtxoTxCoords t network
                                         )
+
+                    newNetwork =
+                        freeSpaceAroundCoords coords network
                 in
                 Tx.fromTxUtxoData t coords
-                    |> Maybe.map
-                        (\tx_ ->
-                            let
-                                newNetwork =
-                                    freeSpaceAroundCoords coords network
-                            in
-                            Tx.updateUtxo
-                                (\utxo ->
-                                    if hasAnimations newNetwork then
-                                        utxo
+                    |> Tx.updateUtxo
+                        (\utxo ->
+                            if hasAnimations newNetwork then
+                                utxo
 
-                                    else
-                                        { utxo
-                                            | opacity = opacityAnimation
-                                            , clock = 0
-                                        }
-                                )
-                                tx_
-                                |> insertTx
-                                    { newNetwork
-                                        | animatedTxs = Set.insert id newNetwork.animatedTxs
-                                    }
+                            else
+                                { utxo
+                                    | opacity = opacityAnimation
+                                    , clock = 0
+                                }
                         )
-                    |> Maybe.withDefault network
+                    |> insertTx
+                        { newNetwork
+                            | animatedTxs = Set.insert id newNetwork.animatedTxs
+                        }
 
 
 insertTx : Network -> Tx -> Network
@@ -555,7 +564,7 @@ findUtxoTxCoordsNextToAddress model direction address =
                                             Incoming ->
                                                 tx.inputs
                                         )
-                                            |> NDict.toList
+                                            |> Dict.toList
                                             |> List.map first
                                             |> toAddresses model
                                     )
