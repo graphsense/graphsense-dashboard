@@ -78,6 +78,8 @@ address vc havingTags adr =
         currency =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
 
+        cluster = adr |> Address.getClusterId |> Maybe.withDefault "-"
+
         key =
             Locale.string vc.locale
                 >> text
@@ -103,6 +105,7 @@ address vc havingTags adr =
             , key "Label"
             , key "Balance"
             , key "Total Received"
+            , key "Cluster"
             ]
         , div
             [ css GraphComponents.tooltipProperty1DownContent2Details.styles
@@ -124,6 +127,7 @@ address vc havingTags adr =
                 ++ currency
                 |> text
                 |> val
+            , cluster |> text |> val
             ]
         ]
 

@@ -774,9 +774,9 @@ updateByMsg plugins uc msg model =
                 UserClickedToggleDisplaySettings ->
                     let
                         nds =
-                            model.displaySettings |> s_isDisplaySettingsOpen (not model.displaySettings.isDisplaySettingsOpen)
+                            model.config |> s_isDisplaySettingsOpen (not model.config.isDisplaySettingsOpen)
                     in
-                    n { model | displaySettings = nds }
+                    n { model | config = nds }
 
         Tick time ->
             n { model | currentTime = time }

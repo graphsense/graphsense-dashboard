@@ -42,7 +42,6 @@ type alias Model =
     , pointerTool : PointerTool
     , ctrlPressed : Bool
     , isDirty : Bool
-    , displaySettings : DisplaySettings
     , tooltip : Maybe Tooltip
     }
 
@@ -52,11 +51,6 @@ type HavingTags
     | HasTagSummary Api.Data.TagSummary
     | HasTags
     | NoTags
-
-
-type alias DisplaySettings =
-    { isDisplaySettingsOpen : Bool
-    }
 
 
 type Selection

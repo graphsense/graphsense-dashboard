@@ -17,4 +17,4 @@ nodeYOffset =
 
 
 type alias Config =
-    { showTxTimestamps : Bool }
+    { showTxTimestamps : Bool, isDisplaySettingsOpen : Bool }

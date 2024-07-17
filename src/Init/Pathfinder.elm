@@ -28,15 +28,13 @@ init _ =
       , history = History.init
       , details = Nothing
       , config =
-            { showTxTimestamps = False
+            { showTxTimestamps = True
+            ,  isDisplaySettingsOpen = False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag
       , ctrlPressed = False
       , isDirty = False
-      , displaySettings =
-            { isDisplaySettingsOpen = False
-            }
       , tooltip = Nothing
       }
     , Task.perform Tick Time.now

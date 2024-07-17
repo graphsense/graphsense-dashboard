@@ -63,6 +63,7 @@ import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
 import View.Search
+import Hex
 
 
 type alias BtnConfig =
@@ -91,6 +92,7 @@ graphActionButtons =
 
 type ValueType
     = ValueInt Int
+    | ValueHex Int
     | Text String
     | Currency Api.Data.Values String
     | CurrencyWithCode Api.Data.Values String
@@ -137,6 +139,9 @@ renderValueTypeValue vc val =
     case val of
         ValueInt v ->
             span [] [ Html.text (String.fromInt v) ]
+        
+        ValueHex v ->
+            span [] [ Html.text (Hex.toString v) ]
 
         InOut total inv outv ->
             inOutIndicator total inv outv
@@ -276,7 +281,7 @@ settingsView vc pc m =
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
-        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.displaySettings.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
         ]
 
 
@@ -738,6 +743,7 @@ apiAddressToRows address =
     , Gap
     , Row "First usage" (Timestamp address.firstTx.timestamp)
     , Row "Last usage" (Timestamp address.lastTx.timestamp)
+    , Row "Cluster" (ValueHex address.entity)
     ]
 
 
