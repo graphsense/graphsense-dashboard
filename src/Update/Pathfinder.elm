@@ -638,12 +638,21 @@ updateByMsg plugins uc msg model =
                 }
 
         AnimationFrameDeltaForMove delta ->
-            n
-                { model
-                    | network =
-                        Network.animateAddresses delta model.network
-                            |> Network.animateTxs delta
-                }
+            ( { model
+                | network =
+                    Network.animateAddresses delta model.network
+                        |> Network.animateTxs delta
+              }
+            , Maybe.map
+                (.hovercard
+                    >> Hovercard.getElement
+                    >> Cmd.map HovercardMsg
+                    >> CmdEffect
+                    >> List.singleton
+                )
+                model.tooltip
+                |> Maybe.withDefault []
+            )
 
         UserClickedAddressExpandHandle id direction ->
             let
