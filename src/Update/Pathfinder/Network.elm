@@ -28,6 +28,7 @@ import Set
 import Tuple exposing (first, pair)
 import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Tx as Tx
+import Tuple exposing (second)
 
 
 clearSelection : Network -> Network
@@ -50,8 +51,12 @@ addAddressWithPosition position id model =
 
     else
         let
+            things =
+                listTxsForAddress model id
+                    |> List.filterMap (\( _, tx ) -> Tx.getUtxoTx tx)
+
             coords =
-                avoidOverlappingEdges model id <|
+                avoidOverlappingEdges model things <|
                     case position of
                         Auto ->
                             findAddressCoords id model
@@ -69,17 +74,16 @@ addAddressWithPosition position id model =
             |> placeAddress coords id
 
 
-avoidOverlappingEdges : Network -> Id -> Coords -> Coords
-avoidOverlappingEdges model addressId coords =
+avoidOverlappingEdges : Network -> List { a | y : Animation } -> Coords -> Coords
+avoidOverlappingEdges model things coords =
     let
         sameY =
-            listTxsForAddress model addressId
-                |> List.filterMap (\( _, tx ) -> Tx.getUtxoTx tx)
+            things
                 |> List.filter (\tx -> A.getTo tx.y |> round |> (==) (round coords.y))
                 |> List.length
     in
     if sameY > 1 then
-        { coords | y = coords.y - toFloat sameY - 1}
+        { coords | y = coords.y - toFloat sameY - 1 }
 
     else
         coords
@@ -444,19 +448,23 @@ addTxWithPosition position tx network =
 
             Api.Data.TxTxUtxo t ->
                 let
+                    things =
+                        listInOutputsOfApiTxUtxo network t
+                        |> List.map second
                     coords =
-                        case position of
-                            Auto ->
-                                findUtxoTxCoords t network
+                        avoidOverlappingEdges network things <|
+                            case position of
+                                Auto ->
+                                    findUtxoTxCoords network t
 
-                            NextTo ( direction, id_ ) ->
-                                Dict.get id_ network.addresses
-                                    |> Maybe.map
-                                        (findUtxoTxCoordsNextToAddress network direction)
-                                    |> Maybe.Extra.withDefaultLazy
-                                        (\_ ->
-                                            findUtxoTxCoords t network
-                                        )
+                                NextTo ( direction, id_ ) ->
+                                    Dict.get id_ network.addresses
+                                        |> Maybe.map
+                                            (findUtxoTxCoordsNextToAddress network direction)
+                                        |> Maybe.Extra.withDefaultLazy
+                                            (\_ ->
+                                                findUtxoTxCoords network t
+                                            )
 
                     newNetwork =
                         freeSpaceAroundCoords coords network
@@ -515,8 +523,8 @@ insertTx network tx =
             }
 
 
-findUtxoTxCoords : Api.Data.TxUtxo -> Network -> Coords
-findUtxoTxCoords tx network =
+listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List (Direction, Address)
+listInOutputsOfApiTxUtxo network tx =
     let
         toSet =
             Maybe.withDefault []
@@ -545,6 +553,12 @@ findUtxoTxCoords tx network =
     in
     normalizeAddresses Outgoing inputSet
         ++ normalizeAddresses Incoming outputSet
+        
+
+
+findUtxoTxCoords : Network -> Api.Data.TxUtxo -> Coords
+findUtxoTxCoords network tx =
+    listInOutputsOfApiTxUtxo network tx
         |> NList.fromList
         |> Maybe.map
             (\list ->
