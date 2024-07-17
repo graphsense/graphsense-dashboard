@@ -202,7 +202,7 @@ intWithFormat model format =
 
 posixDate : Model -> Posix -> String
 posixDate m d =
-    timestampDateUniform m (Time.posixToMillis d // 1000)
+    date m (Time.posixToMillis d // 1000)
 
 
 timestamp : Model -> Int -> String

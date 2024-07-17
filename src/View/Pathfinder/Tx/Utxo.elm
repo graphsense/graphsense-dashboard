@@ -68,8 +68,8 @@ view _ vc pc id highlight tx =
         { txNodeCircle =
             { multipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
             , highlight = highlight
-            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
-            , time = Locale.timestampTimeUniform vc.locale tx.raw.timestamp
+            , date = Locale.date vc.locale tx.raw.timestamp
+            , time = Locale.time vc.locale tx.raw.timestamp
             , timestamp = pc.showTxTimestamps
             }
         }

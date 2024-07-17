@@ -154,10 +154,10 @@ renderValueTypeValue vc val =
             Util.View.copyableLongIdentifierPathfinder vc [] ident
 
         Timestamp ts ->
-            span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
+            span [] [ Locale.date vc.locale ts |> Html.text ]
 
         TimestampWithTime ts ->
-            span [] [ Locale.timesampDateTimeUniform vc.locale ts |> Html.text ]
+            span [] [ Locale.time vc.locale ts |> Html.text ]
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg

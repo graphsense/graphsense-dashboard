@@ -31,10 +31,10 @@ timestampDateMultiRowColumn vc name accessor =
                             accessor data
 
                         date =
-                            Locale.timestampDateUniform vc.locale d
+                            Locale.date vc.locale d
 
                         time =
-                            Locale.timestampTimeUniform vc.locale d
+                            Locale.time vc.locale d
                       in
                       div [ [ PCSS.mGap |> Css.padding ] |> css ]
                         [ div [ [ PCSS.mGap |> Css.padding ] |> css ] [ text date ]
