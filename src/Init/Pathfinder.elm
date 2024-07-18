@@ -13,23 +13,23 @@ import Msg.Pathfinder exposing (Msg(..))
 import Set exposing (..)
 import Task
 import Time
+import Config.UserSettings exposing (UserSettings)
 
-
-init : Maybe Api.Data.Stats -> ( Model, Cmd Msg )
-init _ =
+init :UserSettings -> Maybe Api.Data.Stats -> ( Model, Cmd Msg )
+init us _ =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
-      , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "eth", "trx", "zec", "ltc" ])
+      , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "zec", "ltc" ])
       , dragging = NoDragging
       , transform = Transform.init
       , history = History.init
       , details = Nothing
       , config =
             { showTxTimestamps = True
-            ,  isDisplaySettingsOpen = False
+            , isDisplaySettingsOpen = False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag

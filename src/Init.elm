@@ -33,7 +33,7 @@ init plugins uc flags url key =
             Plugin.init plugins flags.pluginFlags
 
         ( pathfinderState, pathfinderCmd ) =
-            Pathfinder.init Nothing
+            Pathfinder.init settings Nothing
     in
     ( { url = url
       , key = key
@@ -42,6 +42,7 @@ init plugins uc flags url key =
             , theme = config.theme
             , lightmode = settings.lightMode |> Maybe.withDefault True
             , size = Nothing
+            , showDatesInUserLocale = True
             }
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)

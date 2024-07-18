@@ -59,6 +59,7 @@ import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
 import Yaml.Decode
+import DurationDatePicker exposing (Settings)
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -599,10 +600,39 @@ update plugins uc msg model =
             else
                 n model
 
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg  Pathfinder.UserClickedToggleDatesInUserLocale) ->
+                    let
+                        ( pf, pfeff ) =
+                            Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg  Pathfinder.UserClickedToggleDatesInUserLocale) model.pathfinder
+
+                        newModel =
+                            { model | pathfinder = pf }
+
+                        modeleff =
+                            (if( newModel.config.showDatesInUserLocale) then
+                                    ( newModel, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) :: List.map PathfinderEffect pfeff )
+                                else
+                                    let
+                                        locale =
+                                            Locale.changeTimeZone Time.utc model.locale
+
+                                        mwithtz =
+                                            { newModel
+                                                | locale = locale
+                                                , config =
+                                                    newModel.config
+                                                        |> s_locale locale
+                                            }
+                                    in
+                                    ( mwithtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwithtz) :: List.map PathfinderEffect pfeff )
+                            )
+                    in
+                    modeleff
+
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
-                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
+                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model)  (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
             in
             ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
 

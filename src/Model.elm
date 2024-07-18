@@ -104,7 +104,6 @@ type Msg
     | UserClickedExampleSearch String
     | UserHovercardMsg Hovercard.Msg
 
-
 type RequestLimit
     = Unlimited
     | Limited { remaining : Int, limit : Int, reset : Int }
@@ -165,6 +164,6 @@ userSettingsFromMainModel model =
     , edgeLabel = Just model.graph.config.txLabelType
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
-    , showDatesInUserLocale = Just model.graph.config.showDatesInUserLocale
+    , showDatesInUserLocale = Just model.config.showDatesInUserLocale
     , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     }

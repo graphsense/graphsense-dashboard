@@ -771,6 +771,10 @@ updateByMsg plugins uc msg model =
                         |> flip s_config model
                         |> n
 
+                UserClickedToggleDatesInUserLocale -> 
+                    -- handled Uptream
+                    n model
+
                 UserClickedToggleDisplaySettings ->
                     let
                         nds =

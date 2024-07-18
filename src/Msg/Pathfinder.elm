@@ -69,6 +69,7 @@ type DisplaySettingsMsg
     = ChangePointerTool PointerTool
     | UserClickedToggleDisplaySettings
     | UserClickedToggleShowTxTimestamp
+    | UserClickedToggleDatesInUserLocale
 
 
 type TxDetailsMsg
