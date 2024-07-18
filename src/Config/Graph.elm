@@ -176,7 +176,8 @@ type alias Config =
     , highlighter : Bool
     , showEntityShadowLinks : Bool
     , showAddressShadowLinks : Bool
-    , showDatesInUserLocale : Bool
+
+    -- , showDatesInUserLocale : Bool
     , showZeroTransactions : Bool
     }
 
@@ -191,6 +192,7 @@ init addressLabelType txLabelType showEntityShadowLinks showAddressShadowLinks s
     , highlighter = False
     , showEntityShadowLinks = showEntityShadowLinks |> Maybe.withDefault True
     , showAddressShadowLinks = showAddressShadowLinks |> Maybe.withDefault False
-    , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
+
+    -- , showDatesInUserLocale = showDatesInUserLocale |> Maybe.withDefault True
     , showZeroTransactions = showZeroTransactions |> Maybe.withDefault True
     }

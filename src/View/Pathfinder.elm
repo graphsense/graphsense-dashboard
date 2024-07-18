@@ -13,6 +13,7 @@ import Css.View
 import Dict
 import DurationDatePicker as DatePicker
 import FontAwesome
+import Hex
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
@@ -63,7 +64,6 @@ import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
 import View.Search
-import Hex
 
 
 type alias BtnConfig =
@@ -139,7 +139,7 @@ renderValueTypeValue vc val =
     case val of
         ValueInt v ->
             span [] [ Html.text (String.fromInt v) ]
-        
+
         ValueHex v ->
             span [] [ Html.text (Hex.toString v) ]
 
@@ -274,12 +274,19 @@ topLeftPanel plugins ms vc gc model =
 settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
 settingsView vc pc m =
     let
+        utc_text =
+            if vc.showDatesInUserLocale then
+                "User"
+
+            else
+                "UTC"
+
         content =
             div []
                 [ span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction Settings") ]
                 , Util.View.onOffSwitch vc [ HA.checked pc.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
                 , span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date Settings") ]
-                , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "UTC")
+                , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]

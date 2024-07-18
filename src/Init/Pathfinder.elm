@@ -1,6 +1,7 @@
 module Init.Pathfinder exposing (..)
 
 import Api.Data
+import Config.UserSettings exposing (UserSettings)
 import Dict
 import Init.Graph.History as History
 import Init.Graph.Transform as Transform
@@ -13,9 +14,9 @@ import Msg.Pathfinder exposing (Msg(..))
 import Set exposing (..)
 import Task
 import Time
-import Config.UserSettings exposing (UserSettings)
 
-init :UserSettings -> Maybe Api.Data.Stats -> ( Model, Cmd Msg )
+
+init : UserSettings -> Maybe Api.Data.Stats -> ( Model, Cmd Msg )
 init us _ =
     ( { network = Network.init
       , actors = Dict.empty

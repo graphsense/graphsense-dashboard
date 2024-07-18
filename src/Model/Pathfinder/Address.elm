@@ -2,13 +2,14 @@ module Model.Pathfinder.Address exposing (..)
 
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
+import Hex
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
 import Util.Data exposing (timestampToPosix)
-import Hex
+
 
 type alias Address =
     { x : Float
@@ -75,5 +76,7 @@ getActivityRange x =
     , timestampToPosix x.lastTx.timestamp
     )
 
-getClusterId: Address -> Maybe String
-getClusterId a = RemoteData.unwrap Nothing (.entity >> Hex.toString  >> Just) a.data
+
+getClusterId : Address -> Maybe String
+getClusterId a =
+    RemoteData.unwrap Nothing (.entity >> Hex.toString >> Just) a.data

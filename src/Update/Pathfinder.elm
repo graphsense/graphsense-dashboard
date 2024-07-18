@@ -771,7 +771,7 @@ updateByMsg plugins uc msg model =
                         |> flip s_config model
                         |> n
 
-                UserClickedToggleDatesInUserLocale -> 
+                UserClickedToggleDatesInUserLocale ->
                     -- handled Uptream
                     n model
 

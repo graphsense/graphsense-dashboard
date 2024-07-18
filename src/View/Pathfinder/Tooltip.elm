@@ -78,7 +78,8 @@ address vc havingTags adr =
         currency =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
 
-        cluster = adr |> Address.getClusterId |> Maybe.withDefault "-"
+        cluster =
+            adr |> Address.getClusterId |> Maybe.withDefault "-"
 
         key =
             Locale.string vc.locale

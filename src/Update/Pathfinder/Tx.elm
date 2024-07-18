@@ -1,4 +1,4 @@
-module Update.Pathfinder.Tx exposing (setAddress, updateUtxo, updateUtxoIo, updateAddress, unsetAddress)
+module Update.Pathfinder.Tx exposing (setAddress, unsetAddress, updateAddress, updateUtxo, updateUtxoIo)
 
 import Basics.Extra exposing (flip)
 import Dict
@@ -6,8 +6,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Io, Tx, TxType(..), UtxoTx, getUtxoTx)
-import RecordSetter exposing (s_inputs, s_outputs)
-import RecordSetter exposing (s_address)
+import RecordSetter exposing (s_address, s_inputs, s_outputs)
 
 
 updateUtxo : (UtxoTx -> UtxoTx) -> Tx -> Tx

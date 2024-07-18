@@ -25,10 +25,9 @@ import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_selected)
 import RemoteData exposing (RemoteData(..))
 import Set
-import Tuple exposing (first, pair)
+import Tuple exposing (first, pair, second)
 import Update.Pathfinder.Address as Address
 import Update.Pathfinder.Tx as Tx
-import Tuple exposing (second)
 
 
 clearSelection : Network -> Network
@@ -450,7 +449,8 @@ addTxWithPosition position tx network =
                 let
                     things =
                         listInOutputsOfApiTxUtxo network t
-                        |> List.map second
+                            |> List.map second
+
                     coords =
                         avoidOverlappingEdges network things <|
                             case position of
@@ -523,7 +523,7 @@ insertTx network tx =
             }
 
 
-listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List (Direction, Address)
+listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
 listInOutputsOfApiTxUtxo network tx =
     let
         toSet =
@@ -553,7 +553,6 @@ listInOutputsOfApiTxUtxo network tx =
     in
     normalizeAddresses Outgoing inputSet
         ++ normalizeAddresses Incoming outputSet
-        
 
 
 findUtxoTxCoords : Network -> Api.Data.TxUtxo -> Coords

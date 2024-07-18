@@ -8,6 +8,7 @@ import Browser.Dom
 import Config.Update exposing (Config)
 import DateFormat
 import Dict exposing (Dict)
+import DurationDatePicker exposing (Settings)
 import Effect exposing (n)
 import Effect.Api
 import Effect.Graph as Graph
@@ -59,7 +60,6 @@ import Update.Statusbar as Statusbar
 import Url exposing (Url)
 import View.Locale as Locale
 import Yaml.Decode
-import DurationDatePicker exposing (Settings)
 
 
 update : Plugins -> Config -> Msg -> Model key -> ( Model key, List Effect )
@@ -600,39 +600,23 @@ update plugins uc msg model =
             else
                 n model
 
-        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg  Pathfinder.UserClickedToggleDatesInUserLocale) ->
-                    let
-                        ( pf, pfeff ) =
-                            Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg  Pathfinder.UserClickedToggleDatesInUserLocale) model.pathfinder
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleDatesInUserLocale) model.pathfinder
 
-                        newModel =
-                            { model | pathfinder = pf }
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
 
-                        modeleff =
-                            (if( newModel.config.showDatesInUserLocale) then
-                                    ( newModel, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) :: List.map PathfinderEffect pfeff )
-                                else
-                                    let
-                                        locale =
-                                            Locale.changeTimeZone Time.utc model.locale
-
-                                        mwithtz =
-                                            { newModel
-                                                | locale = locale
-                                                , config =
-                                                    newModel.config
-                                                        |> s_locale locale
-                                            }
-                                    in
-                                    ( mwithtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwithtz) :: List.map PathfinderEffect pfeff )
-                            )
-                    in
-                    modeleff
+                ( m, eff ) =
+                    toggleShowDatesInUserLocale nm
+            in
+            ( m, eff ++ neff )
 
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
-                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model)  (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
+                    model.stats |> RD.map (\x -> Init.Pathfinder.init (Model.userSettingsFromMainModel model) (Just x)) |> RD.withDefault ( model.pathfinder, Cmd.none )
             in
             ( { model | pathfinder = m }, [ CmdEffect (cmd |> Cmd.map PathfinderMsg) ] )
 
@@ -760,29 +744,13 @@ update plugins uc msg model =
                         ( graph, graphEffects ) =
                             Graph.update plugins uc m model.graph
 
-                        newModel =
-                            { model | graph = graph }
+                        ( nm, neff ) =
+                            ( model |> s_graph graph, graphEffects |> List.map GraphEffect )
 
-                        modeleff =
-                            case newModel.graph.config.showDatesInUserLocale of
-                                True ->
-                                    ( newModel, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) :: List.map GraphEffect graphEffects )
-
-                                False ->
-                                    let
-                                        locale =
-                                            Locale.changeTimeZone Time.utc model.config.locale
-
-                                        mwithtz =
-                                            { newModel
-                                                | config =
-                                                    newModel.config
-                                                        |> s_locale locale
-                                            }
-                                    in
-                                    ( mwithtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwithtz) :: List.map GraphEffect graphEffects )
+                        ( newm, eff ) =
+                            toggleShowDatesInUserLocale nm
                     in
-                    modeleff
+                    ( newm, eff ++ neff )
 
                 Graph.UserChangesAddressLabelType _ ->
                     let
@@ -1395,3 +1363,22 @@ updateSize w h model =
                         }
                     )
     }
+
+
+toggleShowDatesInUserLocale : Model key -> ( Model key, List Effect )
+toggleShowDatesInUserLocale m =
+    let
+        nm =
+            m |> s_config (m.config |> s_showDatesInUserLocale (not m.config.showDatesInUserLocale))
+
+        utcLocale =
+            Locale.changeTimeZone Time.utc nm.config.locale
+
+        mwUTCtz =
+            nm |> s_config (nm.config |> s_locale utcLocale)
+    in
+    if nm.config.showDatesInUserLocale then
+        ( nm, LocaleEffect (Locale.GetTimezoneEffect LocaleMsg.BrowserSentTimezone) |> List.singleton )
+
+    else
+        ( mwUTCtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwUTCtz) |> List.singleton )
