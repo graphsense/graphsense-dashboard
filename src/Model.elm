@@ -46,7 +46,6 @@ type alias Model navigationKey =
     , key : navigationKey
     , config : Config.View.Config
     , page : Page
-    , locale : Model.Locale.Model
     , search : Model.Search.Model
     , graph : Model.Graph.Model
     , pathfinder : Model.Pathfinder.Model
@@ -158,10 +157,10 @@ type Thing
 
 userSettingsFromMainModel : Model key -> UserSettings
 userSettingsFromMainModel model =
-    { selectedLanguage = model.locale.locale
+    { selectedLanguage = model.config.locale.locale
     , lightMode = Just model.config.lightmode
-    , valueDetail = Just model.locale.valueDetail
-    , valueDenomination = Just model.locale.currency
+    , valueDetail = Just model.config.locale.valueDetail
+    , valueDenomination = Just model.config.locale.currency
     , addressLabel = Just model.graph.config.addressLabelType
     , edgeLabel = Just model.graph.config.txLabelType
     , showAddressShadowLinks = Just model.graph.config.showAddressShadowLinks

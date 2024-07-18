@@ -43,7 +43,6 @@ init plugins uc flags url key =
             , lightmode = settings.lightMode |> Maybe.withDefault True
             , size = Nothing
             }
-      , locale = locale
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)
       , graph = Graph.init settings flags.now

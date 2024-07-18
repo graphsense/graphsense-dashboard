@@ -260,7 +260,7 @@ messageFromApiEffect model effect =
                                         |> Maybe.withDefault cat
                                 )
                             |> Maybe.withDefault ""
-                            |> (\s -> Locale.string model.locale "category" ++ " " ++ s)
+                            |> (\s -> Locale.string model.config.locale "category" ++ " " ++ s)
 
                     _ ->
                         ""

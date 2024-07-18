@@ -115,11 +115,10 @@ update plugins uc msg model =
         BrowserGotSupportedTokens currency configs ->
             let
                 locale =
-                    Locale.setSupportedTokens configs currency model.locale
+                    Locale.setSupportedTokens configs currency model.config.locale
             in
             { model
                 | supportedTokens = Dict.insert currency configs model.supportedTokens
-                , locale = locale
                 , config =
                     model.config
                         |> s_locale locale
@@ -246,12 +245,11 @@ update plugins uc msg model =
         UserSwitchesLocale loc ->
             let
                 locale =
-                    Locale.switch loc model.locale
+                    Locale.switch loc model.config.locale
 
                 newModel =
                     { model
-                        | locale = locale
-                        , config =
+                        | config =
                             model.config
                                 |> s_locale locale
                     }
@@ -451,12 +449,11 @@ update plugins uc msg model =
         LocaleMsg m ->
             let
                 ( locale, localeEffects ) =
-                    Locale.update m model.locale
+                    Locale.update m model.config.locale
 
                 newModel =
                     { model
-                        | locale = locale
-                        , config =
+                        | config =
                             model.config
                                 |> s_locale locale
                     }
@@ -525,7 +522,7 @@ update plugins uc msg model =
                                         (\stats ->
                                             { m2
                                                 | dialog =
-                                                    { message = Locale.string model.locale "Please choose a crypto ledger"
+                                                    { message = Locale.string model.config.locale "Please choose a crypto ledger"
                                                     , options =
                                                         stats.currencies
                                                             |> List.map .name
@@ -590,7 +587,7 @@ update plugins uc msg model =
             if model.pathfinder.isDirty then
                 { model
                     | dialog =
-                        { message = Locale.string model.locale "Do you want to start from scratch?"
+                        { message = Locale.string model.config.locale "Do you want to start from scratch?"
                         , onYes = PathfinderMsg Pathfinder.UserClickedRestartYes
                         , onNo = NoOp
                         }
@@ -673,12 +670,11 @@ update plugins uc msg model =
                 Graph.UserChangesCurrency currency ->
                     let
                         locale =
-                            Locale.changeCurrency currency model.locale
+                            Locale.changeCurrency currency model.config.locale
 
                         newModel =
                             { model
-                                | locale = locale
-                                , config =
+                                | config =
                                     model.config
                                         |> s_locale locale
                             }
@@ -688,12 +684,11 @@ update plugins uc msg model =
                 Graph.UserChangesValueDetail detail ->
                     let
                         locale =
-                            Locale.changeValueDetail detail model.locale
+                            Locale.changeValueDetail detail model.config.locale
 
                         newModel =
                             { model
-                                | locale = locale
-                                , config =
+                                | config =
                                     model.config
                                         |> s_locale locale
                             }
@@ -746,12 +741,11 @@ update plugins uc msg model =
                                 False ->
                                     let
                                         locale =
-                                            Locale.changeTimeZone Time.utc model.locale
+                                            Locale.changeTimeZone Time.utc model.config.locale
 
                                         mwithtz =
                                             { newModel
-                                                | locale = locale
-                                                , config =
+                                                | config =
                                                     newModel.config
                                                         |> s_locale locale
                                             }
@@ -790,7 +784,7 @@ update plugins uc msg model =
                             Just t ->
                                 Graph.serialize model.graph
                                     |> pair
-                                        (makeTimestampFilename model.locale t
+                                        (makeTimestampFilename model.config.locale t
                                             |> (\tt -> tt ++ ".gs")
                                         )
                                     |> Ports.serialize
@@ -810,7 +804,7 @@ update plugins uc msg model =
                                 |> Task.perform (Just >> Graph.UserClickedExportGraphics)
 
                         Just t ->
-                            makeTimestampFilename model.locale t
+                            makeTimestampFilename model.config.locale t
                                 |> (\tt -> tt ++ ".svg")
                                 |> Ports.exportGraphics
                       )
@@ -829,7 +823,7 @@ update plugins uc msg model =
                         Just t ->
                             let
                                 filename =
-                                    makeTimestampFilename model.locale t
+                                    makeTimestampFilename model.config.locale t
                                         |> (\tt -> tt ++ ".yaml")
                             in
                             Graph.makeTagPack model.graph t
@@ -869,7 +863,7 @@ update plugins uc msg model =
                     if model.dirty then
                         { model
                             | dialog =
-                                { message = Locale.string model.locale "Do you want to start from scratch?"
+                                { message = Locale.string model.config.locale "Do you want to start from scratch?"
                                 , onYes = GraphMsg Graph.UserClickedNewYes
                                 , onNo = NoOp
                                 }

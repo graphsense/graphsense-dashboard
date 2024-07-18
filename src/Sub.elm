@@ -14,7 +14,7 @@ import Time
 
 subscriptions : Model Nav.Key -> Sub Msg
 subscriptions model =
-    [ Locale.subscriptions model.locale
+    [ Locale.subscriptions model.config.locale
         |> Sub.map LocaleMsg
     , Graph.subscriptions model.graph
         |> Sub.map GraphMsg
