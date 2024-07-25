@@ -37,7 +37,7 @@ view _ _ _ address =
                 |> Maybe.map ((<) 0)
                 |> Maybe.withDefault False
 
-        plus direction =
+        expand direction =
             [ UserClickedAddressExpandHandle address.id direction |> onClickWithStop
             , Json.Decode.succeed ( NoOp, True )
                 |> stopPropagationOn "mousedown"
@@ -53,7 +53,7 @@ view _ _ _ address =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.addressNodeWithInstances
+    GraphComponents.addressNodeWithAttributes
         (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
@@ -76,42 +76,24 @@ view _ _ _ address =
                 [ Id.toString address.id
                     |> Svg.id
                 ]
-         --|> s_iconsPlusIn (plus Incoming)
-         --|> s_iconsPlusOut (plus Outgoing)
-        )
-        (GraphComponents.addressNodeInstances
-            |> s_iconsPlusOut
-                (Icons.iconsNodeOpenRightWithAttributes
-                    (Icons.iconsNodeOpenRightAttributes
-                        |> s_iconsNodeOpenRight
-                            ((translate
-                                GraphComponents.addressNodeIconsPlusOutDetails.x
-                                GraphComponents.addressNodeIconsPlusOutDetails.y
-                                |> Svg.transform
-                             )
-                                :: plus Outgoing
-                            )
-                    )
-                    {}
-                    |> Just
-                )
+            |> s_iconsNodeOpenLeft (expand Incoming)
+            |> s_iconsNodeOpenRight (expand Outgoing)
         )
         { addressNode =
-            { addressId =
+            { label =
                 address.id
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
-            , highlight = address.selected
-            , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs && address.exchange == Nothing
-            , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs && address.exchange == Nothing
-            , nodeIcon = toNodeIcon address
+            , highlightVisible = address.selected
+            , expandLeftVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs --&& address.exchange == Nothing
+            , expandRightVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs --&& address.exchange == Nothing
+            , iconInstance = toNodeIcon address
             , exchangeLabel =
                 address.exchange
                     |> Maybe.withDefault ""
-            , exchangeLabel2 = address.exchange /= Nothing
-            , startingPoint = address.isStartingPoint
-            , tagIcon = address.hasTags
-            , plusArrows = none
+            , exchangeLabelVisible = address.exchange /= Nothing
+            , isStartingPoint = address.isStartingPoint
+            , tagIconVisible = address.hasTags
             }
         }
 
