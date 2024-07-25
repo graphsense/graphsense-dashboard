@@ -1,4 +1,4 @@
-module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, isTxInNetwork, updateAddress, updateTx)
+module Update.Pathfinder.Network exposing (FindPosition(..), addAddress, addAddressWithPosition, addTx, addTxWithPosition, animateAddresses, animateTxs, clearSelection, deleteAddress, deleteTx, updateAddress, updateTx)
 
 import Animation as A exposing (Animation)
 import Api.Data
@@ -14,7 +14,7 @@ import Maybe.Extra
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
 import Model.Graph.Id as Id
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address, txsToSet)
 import Model.Pathfinder.Error exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
@@ -26,7 +26,7 @@ import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_selected)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair, second)
-import Update.Pathfinder.Address as Address
+import Update.Pathfinder.Address as Address exposing (txsInsertId, txsSetMap)
 import Update.Pathfinder.Tx as Tx
 
 
@@ -55,7 +55,7 @@ addAddressWithPosition position id model =
                     |> List.filterMap (\( _, tx ) -> Tx.getUtxoTx tx)
 
             coords =
-                avoidOverlappingEdges model things <|
+                avoidOverlappingEdges things <|
                     case position of
                         Auto ->
                             findAddressCoords id model
@@ -73,8 +73,8 @@ addAddressWithPosition position id model =
             |> placeAddress coords id
 
 
-avoidOverlappingEdges : Network -> List { a | y : Animation } -> Coords -> Coords
-avoidOverlappingEdges model things coords =
+avoidOverlappingEdges : List { a | y : Animation } -> Coords -> Coords
+avoidOverlappingEdges things coords =
     let
         sameY =
             things
@@ -290,12 +290,12 @@ placeAddress coords id model =
                         ( case direction of
                             Incoming ->
                                 { addr
-                                    | outgoingTxs = Set.insert tx.id addr.outgoingTxs
+                                    | outgoingTxs = txsInsertId tx.id addr.outgoingTxs
                                 }
 
                             Outgoing ->
                                 { addr
-                                    | incomingTxs = Set.insert tx.id addr.incomingTxs
+                                    | incomingTxs = txsInsertId tx.id addr.incomingTxs
                                 }
                         , Dict.update tx.id
                             (Maybe.map
@@ -405,21 +405,6 @@ findAddressCoords id network =
         |> Maybe.withDefault (findFreeCoords network)
 
 
-getTxId : Api.Data.Tx -> Id
-getTxId tx =
-    case tx of
-        Api.Data.TxTxAccount t ->
-            Id.init t.currency t.txHash
-
-        Api.Data.TxTxUtxo t ->
-            Id.init t.currency t.txHash
-
-
-isTxInNetwork : Api.Data.Tx -> Network -> Bool
-isTxInNetwork tx net =
-    Dict.member (getTxId tx) net.txs
-
-
 type FindPosition
     = Auto
     | NextTo ( Direction, Id )
@@ -434,9 +419,9 @@ addTxWithPosition : FindPosition -> Api.Data.Tx -> Network -> Network
 addTxWithPosition position tx network =
     let
         id =
-            getTxId tx
+            Tx.getTxId tx
     in
-    if Dict.member id network.txs then
+    if hasTx id network then
         network
 
     else
@@ -452,7 +437,7 @@ addTxWithPosition position tx network =
                             |> List.map second
 
                     coords =
-                        avoidOverlappingEdges network things <|
+                        avoidOverlappingEdges things <|
                             case position of
                                 Auto ->
                                     findUtxoTxCoords network t
@@ -500,11 +485,11 @@ insertTx network tx =
                         Incoming ->
                             ( .outgoingTxs, s_outgoingTxs )
             in
-            if Set.member tx.id <| get addr then
+            if Debug.log "insertTx Memerb" <| Set.member tx.id <| txsToSet <| get addr then
                 addr
 
             else
-                set (Set.insert tx.id <| get addr) addr
+                set (get addr |> Debug.log "insertTx get" |> txsInsertId tx.id |> Debug.log "inserted") addr
 
         updTx dir a =
             Tx.updateUtxo
@@ -609,10 +594,12 @@ findUtxoTxCoordsNextToAddress model direction address =
         siblings =
             case direction of
                 Outgoing ->
-                    toSiblings address.outgoingTxs
+                    txsToSet address.outgoingTxs
+                        |> toSiblings
 
                 Incoming ->
-                    toSiblings address.incomingTxs
+                    txsToSet address.incomingTxs
+                        |> toSiblings
     in
     { x = address.x + Direction.signOffsetByDirection direction nodeXOffset
     , y =

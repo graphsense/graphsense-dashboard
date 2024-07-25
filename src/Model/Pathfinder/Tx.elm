@@ -3,6 +3,7 @@ module Model.Pathfinder.Tx exposing (..)
 import Animation exposing (Animation, Clock)
 import Api.Data
 import Dict exposing (Dict)
+import Init.Pathfinder.Id as Id
 import List.Nonempty as NList
 import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords as Coords exposing (Coords)
@@ -161,3 +162,13 @@ getRawTimestamp tx =
 
         Utxo t ->
             t.raw.timestamp
+
+
+getTxId : Api.Data.Tx -> Id
+getTxId tx =
+    case tx of
+        Api.Data.TxTxAccount t ->
+            Id.init t.currency t.txHash
+
+        Api.Data.TxTxUtxo t ->
+            Id.init t.currency t.txHash

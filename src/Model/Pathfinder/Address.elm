@@ -3,8 +3,10 @@ module Model.Pathfinder.Address exposing (..)
 import Animation exposing (Animation, Clock)
 import Api.Data exposing (Values)
 import Hex
+import Model.Direction exposing (Direction(..))
 import Model.Graph.Coords exposing (Coords)
 import Model.Pathfinder.Id exposing (Id)
+import RecordSetter exposing (s_incomingTxs, s_outgoingTxs)
 import RemoteData exposing (RemoteData(..), WebData)
 import Set exposing (Set)
 import Time exposing (Posix)
@@ -19,8 +21,8 @@ type alias Address =
     , dy : Float
     , opacity : Animation
     , id : Id
-    , incomingTxs : Set Id
-    , outgoingTxs : Set Id
+    , incomingTxs : Txs
+    , outgoingTxs : Txs
     , data : WebData Api.Data.Address
     , selected : Bool
     , exchange : Maybe String
@@ -28,6 +30,33 @@ type alias Address =
     , hasActor : Bool
     , isStartingPoint : Bool
     }
+
+
+type Txs
+    = Txs (Set Id)
+    | TxsLastCheckedChangeTx Api.Data.TxUtxo
+    | TxsLoading
+    | TxsNotFetched
+
+
+txsGetSet : Txs -> Maybe (Set Id)
+txsGetSet txs =
+    case txs of
+        Txs set ->
+            Just set
+
+        _ ->
+            Nothing
+
+
+txsToSet : Txs -> Set Id
+txsToSet txs =
+    case txs of
+        Txs set ->
+            set
+
+        _ ->
+            Set.empty
 
 
 getNrTxs : Address -> Maybe Int
@@ -80,3 +109,23 @@ getActivityRange x =
 getClusterId : Address -> Maybe String
 getClusterId a =
     RemoteData.unwrap Nothing (.entity >> Hex.toString >> Just) a.data
+
+
+getTxs : Address -> Direction -> Txs
+getTxs address direction =
+    case direction of
+        Incoming ->
+            address.incomingTxs
+
+        Outgoing ->
+            address.outgoingTxs
+
+
+txsSetter : Direction -> (Txs -> Address -> Address)
+txsSetter direction =
+    case direction of
+        Incoming ->
+            s_incomingTxs
+
+        Outgoing ->
+            s_outgoingTxs

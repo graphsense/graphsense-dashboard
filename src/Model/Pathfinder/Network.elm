@@ -3,7 +3,7 @@ module Model.Pathfinder.Network exposing (..)
 import Dict exposing (Dict)
 import List.Extra
 import Model.Direction exposing (Direction(..))
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address, txsGetSet)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
 import Set exposing (Set)
@@ -58,16 +58,17 @@ getRecentTxForAddress network direction addressId =
             case direction of
                 Incoming ->
                     .incomingTxs
+                        >> txsGetSet
 
                 Outgoing ->
                     .outgoingTxs
+                        >> txsGetSet
     in
     Dict.get addressId network.addresses
+        |> Maybe.andThen getTxSet
         |> Maybe.andThen
-            (\address ->
-                getTxSet address
-                    |> Set.toList
-                    |> List.filterMap (\txId -> Dict.get txId network.txs)
-                    |> List.sortBy Tx.getRawTimestamp
-                    |> List.Extra.last
+            (Set.toList
+                >> List.filterMap (\txId -> Dict.get txId network.txs)
+                >> List.sortBy Tx.getRawTimestamp
+                >> List.Extra.last
             )

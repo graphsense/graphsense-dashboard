@@ -80,6 +80,7 @@ type TxDetailsMsg
 type alias WorkflowNextTxContext =
     { addressId : Id
     , direction : Direction
+    , hops : Int
     }
 
 

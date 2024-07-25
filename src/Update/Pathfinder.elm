@@ -25,7 +25,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
-import Model.Pathfinder.Address as Addr
+import Model.Pathfinder.Address as Addr exposing (Txs(..), getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, network)
@@ -655,15 +655,47 @@ updateByMsg plugins uc msg model =
             )
 
         UserClickedAddressExpandHandle id direction ->
-            let
-                ( newmodel, eff ) =
-                    model
-                        |> selectAddress uc id
-            in
-            ( newmodel
-            , getNextTxEffects newmodel id direction
-                ++ eff
-            )
+            Dict.get id model.network.addresses
+                |> Maybe.map
+                    (\address ->
+                        let
+                            ( newmodel, eff ) =
+                                model
+                                    |> selectAddress uc id
+
+                            setter =
+                                txsSetter direction
+
+                            setLoading =
+                                s_network
+                                    (Network.updateAddress id (setter TxsLoading) newmodel.network)
+                        in
+                        case getTxs address direction of
+                            Txs _ ->
+                                n newmodel
+
+                            TxsLoading ->
+                                n newmodel
+
+                            TxsLastCheckedChangeTx tx ->
+                                ( newmodel
+                                    |> setLoading
+                                , WorkflowNextUtxoTx.loadReferencedTx
+                                    { addressId = id
+                                    , direction = direction
+                                    , hops = 0
+                                    }
+                                    tx
+                                    |> List.singleton
+                                )
+
+                            TxsNotFetched ->
+                                ( newmodel |> setLoading
+                                , getNextTxEffects newmodel id direction
+                                    ++ eff
+                                )
+                    )
+                |> Maybe.withDefault (n model)
 
         UserClickedAddress id ->
             if model.ctrlPressed then
@@ -746,11 +778,8 @@ updateByMsg plugins uc msg model =
 
         BrowserGotTx tx ->
             let
-                isTxOnGraphAlready =
-                    Network.isTxInNetwork tx model.network
-
                 aggAddressAdd a ( m, eff ) =
-                    if isTxOnGraphAlready then
+                    if Network.hasTx (Tx.getTxId tx) model.network then
                         ( m, eff )
 
                     else
@@ -889,6 +918,7 @@ getNextTxEffects model addressId direction =
         context =
             { addressId = addressId
             , direction = direction
+            , hops = 0
             }
     in
     Network.getRecentTxForAddress model.network (Direction.flip direction) addressId

@@ -8,18 +8,26 @@ import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (Model)
+import Model.Pathfinder.Address exposing (Txs(..), txsSetter)
 import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..), WorkflowNextTxContext, WorkflowNextUtxoTxMsg(..))
+import RecordSetter exposing (s_network)
 import Set
 import Task
 import Tuple exposing (pair)
+import Update.Pathfinder.Network as Network
 
 
 update : WorkflowNextTxContext -> WorkflowNextUtxoTxMsg -> Model -> ( Model, List Effect )
 update context msg model =
     case msg of
         BrowserGotReferencedTxs refs ->
-            ( model
+            ( if List.isEmpty refs then
+                model
+                    |> s_network (Network.updateAddress context.addressId (Txs Set.empty |> txsSetter context.direction) model.network)
+
+              else
+                model
             , refs
                 |> List.map
                     (\ref ->
@@ -52,9 +60,17 @@ update context msg model =
                         |> Set.fromList
             in
             if Set.singleton context.addressId == io then
-                loadReferencedTx context tx
-                    |> List.singleton
-                    |> pair model
+                if context.hops > 50 then
+                    model
+                        |> s_network
+                            (Network.updateAddress context.addressId (TxsLastCheckedChangeTx tx |> txsSetter context.direction) model.network)
+                        |> n
+
+                else
+                    ( model
+                    , loadReferencedTx { context | hops = context.hops + 1 } tx
+                        |> List.singleton
+                    )
 
             else
                 Api.Data.TxTxUtxo tx

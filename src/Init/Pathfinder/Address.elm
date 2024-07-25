@@ -2,7 +2,7 @@ module Init.Pathfinder.Address exposing (..)
 
 import Animation
 import Model.Graph.Coords exposing (Coords)
-import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Address exposing (Address, Txs(..))
 import Model.Pathfinder.Id exposing (Id)
 import RemoteData exposing (RemoteData(..))
 import Set
@@ -17,8 +17,8 @@ init id { x, y } =
     , dy = 0
     , opacity = Animation.static 1
     , id = id
-    , incomingTxs = Set.empty
-    , outgoingTxs = Set.empty
+    , incomingTxs = TxsNotFetched
+    , outgoingTxs = TxsNotFetched
     , data = NotAsked
     , selected = False
     , exchange = Nothing

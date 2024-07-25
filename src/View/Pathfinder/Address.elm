@@ -22,7 +22,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Util.Graph exposing (translate)
-import Util.View exposing (none, onClickWithStop, truncateLongIdentifierWithLengths)
+import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
@@ -31,17 +31,42 @@ view _ _ _ address =
         data =
             RemoteData.toMaybe address.data
 
-        nonZero field =
+        directionToField direction =
+            case direction of
+                Incoming ->
+                    .noIncomingTxs
+
+                Outgoing ->
+                    .noOutgoingTxs
+
+        nonZero direction =
             data
-                |> Maybe.map field
+                |> Maybe.map (directionToField direction)
                 |> Maybe.map ((<) 0)
                 |> Maybe.withDefault False
+
+        expandVisible direction =
+            nonZero direction
+                && (getTxs address direction
+                        |> txsGetSet
+                        |> (==) Nothing
+                   )
+                && (address.exchange == Nothing)
 
         expand direction =
             [ UserClickedAddressExpandHandle address.id direction |> onClickWithStop
             , Json.Decode.succeed ( NoOp, True )
                 |> stopPropagationOn "mousedown"
-            , css [ Css.cursor Css.pointer ]
+            , css
+                [ Css.cursor Css.pointer
+                , Css.opacity <|
+                    Css.num <|
+                        if getTxs address direction == TxsLoading then
+                            0.5
+
+                        else
+                            1
+                ]
             ]
 
         fd =
@@ -85,8 +110,8 @@ view _ _ _ address =
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
             , highlightVisible = address.selected
-            , expandLeftVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs --&& address.exchange == Nothing
-            , expandRightVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs --&& address.exchange == Nothing
+            , expandLeftVisible = expandVisible Incoming
+            , expandRightVisible = expandVisible Outgoing
             , iconInstance = toNodeIcon address
             , exchangeLabel =
                 address.exchange
