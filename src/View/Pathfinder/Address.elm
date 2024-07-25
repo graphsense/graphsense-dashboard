@@ -102,8 +102,8 @@ view _ _ _ address =
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
             , highlight = address.selected
-            , plusInVisible = False --nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs
-            , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs
+            , plusInVisible = nonZero .noIncomingTxs && Set.isEmpty address.incomingTxs && address.exchange == Nothing
+            , plusOutVisible = nonZero .noOutgoingTxs && Set.isEmpty address.outgoingTxs && address.exchange == Nothing
             , nodeIcon = toNodeIcon address
             , exchangeLabel =
                 address.exchange
