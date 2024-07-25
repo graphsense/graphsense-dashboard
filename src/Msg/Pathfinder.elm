@@ -85,6 +85,7 @@ type alias WorkflowNextTxContext =
 
 type WorkflowNextUtxoTxMsg
     = BrowserGotReferencedTxs (List Api.Data.TxRef)
+    | BrowserGotTxForReferencedTx Api.Data.Tx
 
 
 type WorkflowNextTxByTimeMsg

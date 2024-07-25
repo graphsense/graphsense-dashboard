@@ -201,7 +201,7 @@ updateByMsg plugins uc msg model =
         BrowserGotTxForAddress addressId direction data ->
             let
                 ( m, eff ) =
-                    browserGotTxForAddress plugins uc addressId direction data model
+                    addTx plugins uc addressId direction data model
             in
             ( m, eff )
 
@@ -904,31 +904,10 @@ getNextTxEffects model addressId direction =
                                     t.raw.timestamp
                                         |> timestampToPosix
                                 }
+                            |> ApiEffect
 
                     Tx.Utxo t ->
-                        let
-                            ( listLinkedTxRefs, getIo ) =
-                                case direction of
-                                    Incoming ->
-                                        ( Api.ListSpendingTxRefsEffect, .inputs )
-
-                                    Outgoing ->
-                                        ( Api.ListSpentInTxRefsEffect, .outputs )
-
-                            index =
-                                getIo t.raw
-                                    |> Maybe.andThen
-                                        (List.Extra.findIndex
-                                            (.address >> List.any ((==) (Id.id addressId)))
-                                        )
-                        in
-                        BrowserGotReferencedTxs
-                            >> WorkflowNextUtxoTx context
-                            |> listLinkedTxRefs
-                                { currency = t.raw.currency
-                                , txHash = t.raw.txHash
-                                , index = index
-                                }
+                        WorkflowNextUtxoTx.loadReferencedTx context t.raw
             )
         |> Maybe.withDefault
             (BrowserGotRecentTx
@@ -943,9 +922,9 @@ getNextTxEffects model addressId direction =
                     , minHeight = Nothing
                     , maxHeight = Nothing
                     }
+                |> ApiEffect
             )
         |> List.singleton
-        |> List.map ApiEffect
 
 
 updateByRoute : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, List Effect )
@@ -1300,8 +1279,8 @@ getAddressForDirection tx direction butNotAddress =
                 |> Maybe.map (Id.init t.currency)
 
 
-browserGotTxForAddress : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
-browserGotTxForAddress plugins _ addressId direction tx model =
+addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
+addTx plugins _ addressId direction tx model =
     let
         network =
             Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
