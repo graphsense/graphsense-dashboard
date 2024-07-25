@@ -23,6 +23,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Svg.GraphComponents as GraphComponents exposing (txNodeCircleAttributes)
 import Tuple exposing (pair, second)
 import Util.Graph exposing (translate)
+import Util.View exposing (onClickWithStop)
 import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
@@ -53,7 +54,7 @@ view _ vc pc id highlight tx =
                 , A.animate tx.clock tx.opacity
                     |> String.fromFloat
                     |> opacity
-                , UserClickedTx id |> onClick
+                , UserClickedTx id |> onClickWithStop
                 , UserPushesLeftMouseButtonOnUtxoTx id
                     |> Util.Graph.mousedown
                 , UserMovesMouseOverUtxoTx id
@@ -199,5 +200,5 @@ edge _ vc _ hovered tx =
                 |> onMouseLeave
             , txId
                 |> UserClickedTx
-                |> onClick
+                |> onClickWithStop
             ]
