@@ -485,11 +485,11 @@ insertTx network tx =
                         Incoming ->
                             ( .outgoingTxs, s_outgoingTxs )
             in
-            if Debug.log "insertTx Memerb" <| Set.member tx.id <| txsToSet <| get addr then
+            if Set.member tx.id <| txsToSet <| get addr then
                 addr
 
             else
-                set (get addr |> Debug.log "insertTx get" |> txsInsertId tx.id |> Debug.log "inserted") addr
+                set (get addr |> txsInsertId tx.id) addr
 
         updTx dir a =
             Tx.updateUtxo
