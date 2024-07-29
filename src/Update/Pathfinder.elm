@@ -720,7 +720,7 @@ updateByMsg plugins uc msg model =
                 removeAddress id model
 
             else
-                loadAddress plugins id model False
+                loadAddress plugins id False model
 
         UserClickedTx id ->
             if model.ctrlPressed then
@@ -778,14 +778,21 @@ updateByMsg plugins uc msg model =
 
         BrowserGotTx tx ->
             let
-                aggAddressAdd a ( m, eff ) =
-                    if Network.hasTx (Tx.getTxId tx) model.network then
+                aggAddressAdd addressId ( m, eff ) =
+                    if Network.hasAddress addressId model.network then
                         ( m, eff )
 
                     else
-                        loadAddress plugins a m False |> Tuple.mapSecond ((++) eff)
+                        loadAddress plugins addressId False m |> Tuple.mapSecond ((++) eff)
+
+                src =
+                    getAddressForDirection tx Incoming Nothing
+
+                dst =
+                    getAddressForDirection tx Outgoing (src |> Maybe.map Id.id)
             in
-            getAddressesToLoadForTx tx
+            [ src, dst ]
+                |> List.filterMap identity
                 |> List.foldl aggAddressAdd (n (model |> s_network (Network.addTx tx model.network)))
                 |> and (checkSelection uc)
 
@@ -973,11 +980,9 @@ updateByRoute_ plugins uc route model =
             let
                 id =
                     Id.init network a
-
-                m1 =
-                    { model | network = Network.clearSelection model.network }
             in
-            loadAddress plugins id m1 True
+            { model | network = Network.clearSelection model.network }
+                |> loadAddress plugins id True
                 |> and (selectAddress uc id)
 
         Route.Network network (Route.Tx a) ->
@@ -995,13 +1000,13 @@ updateByRoute_ plugins uc route model =
             n model
 
 
-loadAddress : Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
+loadAddress : Plugins -> Id -> Bool -> Model -> ( Model, List Effect )
 loadAddress =
     loadAddressWithPosition Auto
 
 
-loadAddressWithPosition : FindPosition -> Plugins -> Id -> Model -> Bool -> ( Model, List Effect )
-loadAddressWithPosition position _ id model starting =
+loadAddressWithPosition : FindPosition -> Plugins -> Id -> Bool -> Model -> ( Model, List Effect )
+loadAddressWithPosition position _ id starting model =
     if Dict.member id model.network.addresses then
         n model
 
@@ -1259,10 +1264,14 @@ fetchActorsForAddress d existing =
         |> Maybe.withDefault []
 
 
-getBiggestIO : Maybe (List Api.Data.TxValue) -> String -> Maybe String
+getBiggestIO : Maybe (List Api.Data.TxValue) -> Maybe String -> Maybe String
 getBiggestIO io exceptAddress =
     Maybe.withDefault [] io
-        |> List.filter (.address >> List.all ((/=) exceptAddress))
+        |> (exceptAddress
+                |> Maybe.map
+                    (\a -> List.filter (.address >> List.all ((/=) a)))
+                |> Maybe.withDefault identity
+           )
         |> List.sortBy (.value >> .value)
         |> List.reverse
         |> List.head
@@ -1270,31 +1279,16 @@ getBiggestIO io exceptAddress =
         |> Maybe.andThen List.head
 
 
-getAddressesToLoadForTx : Api.Data.Tx -> List Id
-getAddressesToLoadForTx tx =
-    let
-        src =
-            getAddressForDirection tx Incoming Nothing
-
-        dst =
-            getAddressForDirection tx Outgoing (src |> Maybe.map Id.id)
-    in
-    [ src
-    , dst
-    ]
-        |> List.filterMap identity
-
-
 getAddressForDirection : Api.Data.Tx -> Direction -> Maybe String -> Maybe Id
-getAddressForDirection tx direction butNotAddress =
+getAddressForDirection tx direction exceptAddress =
     case tx of
         Api.Data.TxTxUtxo t ->
             (case direction of
                 Incoming ->
-                    getBiggestIO t.inputs (butNotAddress |> Maybe.withDefault "")
+                    getBiggestIO t.inputs exceptAddress
 
                 Outgoing ->
-                    getBiggestIO t.outputs (butNotAddress |> Maybe.withDefault "")
+                    getBiggestIO t.outputs exceptAddress
             )
                 |> Maybe.map (Id.init t.currency)
 
@@ -1361,7 +1355,7 @@ addTx plugins _ addressId direction tx model =
                     position =
                         NextTo ( direction, txId )
                 in
-                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) newmodel False
+                loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) False newmodel
             )
         |> Maybe.withDefault (n newmodel)
 

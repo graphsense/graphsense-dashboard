@@ -5,5 +5,5 @@ import Tuple exposing (pair)
 
 
 init : String -> String -> Id
-init =
-    pair
+init network =
+    pair (String.toLower network)
