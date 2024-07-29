@@ -5,6 +5,7 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
+import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Json.Decode
 import Model.Direction exposing (Direction(..))
@@ -26,7 +27,7 @@ import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
 view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
-view _ _ _ address =
+view _ vc _ address =
     let
         data =
             RemoteData.toMaybe address.data
@@ -54,20 +55,18 @@ view _ _ _ address =
                 && (address.exchange == Nothing)
 
         expand direction =
-            [ UserClickedAddressExpandHandle address.id direction |> onClickWithStop
-            , Json.Decode.succeed ( NoOp, True )
-                |> stopPropagationOn "mousedown"
-            , css
-                [ Css.cursor Css.pointer
-                , Css.opacity <|
-                    Css.num <|
-                        if getTxs address direction == TxsLoading then
-                            0.5
+            case getTxs address direction of
+                TxsLoading ->
+                    []
 
-                        else
-                            1
-                ]
-            ]
+                _ ->
+                    [ UserClickedAddressExpandHandle address.id direction |> onClickWithStop
+                    , Json.Decode.succeed ( NoOp, True )
+                        |> stopPropagationOn "mousedown"
+                    , css
+                        [ Css.cursor Css.pointer
+                        ]
+                    ]
 
         fd =
             GraphComponents.addressNodeNodeFrameDetails
@@ -78,7 +77,7 @@ view _ _ _ address =
         adjY =
             fd.y + fd.height / 2
     in
-    GraphComponents.addressNodeWithAttributes
+    GraphComponents.addressNodeWithInstances
         (GraphComponents.addressNodeAttributes
             |> s_addressNode
                 [ translate
@@ -104,6 +103,16 @@ view _ _ _ address =
             |> s_iconsNodeOpenLeft (expand Incoming)
             |> s_iconsNodeOpenRight (expand Outgoing)
         )
+        (GraphComponents.addressNodeInstances
+            |> s_iconsNodeOpenLeft
+                (GraphComponents.addressNodeIconsNodeOpenLeftDetails
+                    |> expandHandleLoadingSpinner vc address Incoming
+                )
+            |> s_iconsNodeOpenRight
+                (GraphComponents.addressNodeIconsNodeOpenRightDetails
+                    |> expandHandleLoadingSpinner vc address Outgoing
+                )
+        )
         { addressNode =
             { label =
                 address.id
@@ -121,6 +130,35 @@ view _ _ _ address =
             , tagIconVisible = address.hasTags
             }
         }
+
+
+expandHandleLoadingSpinner : View.Config -> Address -> Direction -> { x : Float, y : Float, width : Float, height : Float, strokeWidth : Float, styles : List Css.Style } -> Maybe (Svg Msg)
+expandHandleLoadingSpinner vc address direction details =
+    if getTxs address direction == TxsLoading then
+        let
+            offset =
+                5
+        in
+        image
+            [ translate
+                (details.x + offset / 2)
+                (details.y + offset / 2)
+                |> Svg.transform
+            , details.width
+                - offset
+                |> String.fromFloat
+                |> Svg.width
+            , details.height
+                - offset
+                |> String.fromFloat
+                |> Svg.height
+            , Html.attribute "href" vc.theme.loadingSpinnerUrl
+            ]
+            []
+            |> Just
+
+    else
+        Nothing
 
 
 toNodeIcon : Address -> Svg msg

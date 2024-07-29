@@ -661,8 +661,8 @@ perform apiKey wrapMsg effect =
                         [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
                         , ( "pagesize"
                           , e.pagesize
-                            |> Maybe.map Json.Encode.int
-                            |> Maybe.withDefault Json.Encode.null
+                                |> Maybe.map Json.Encode.int
+                                |> Maybe.withDefault Json.Encode.null
                           )
                         ]
                     )

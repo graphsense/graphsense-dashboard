@@ -747,6 +747,7 @@ updateByMsg plugins uc msg model =
                         { model
                             | network =
                                 Network.addTx (Api.Data.TxTxAccount t) model.network
+                                    |> second
                                     |> Network.addAddress (Id.init t.currency t.fromAddress)
                                     |> Network.addAddress (Id.init t.currency t.toAddress)
                         }
@@ -778,22 +779,34 @@ updateByMsg plugins uc msg model =
 
         BrowserGotTx tx ->
             let
-                aggAddressAdd addressId ( m, eff ) =
-                    if Network.hasAddress addressId model.network then
-                        ( m, eff )
+                ( newTx, newNetwork ) =
+                    Network.addTx tx model.network
 
-                    else
-                        loadAddress plugins addressId False m |> Tuple.mapSecond ((++) eff)
+                addresses =
+                    Tx.listAddressesForTx newNetwork.addresses newTx
+                        |> List.map first
+
+                aggAddressAdd addressId =
+                    and (loadAddress plugins addressId False)
 
                 src =
-                    getAddressForDirection tx Incoming Nothing
+                    if List.any ((==) Incoming) addresses then
+                        Nothing
+
+                    else
+                        getAddressForDirection tx Incoming Nothing
 
                 dst =
-                    getAddressForDirection tx Outgoing (src |> Maybe.map Id.id)
+                    if List.any ((==) Outgoing) addresses then
+                        Nothing
+
+                    else
+                        (src |> Maybe.map Id.id)
+                            |> getAddressForDirection tx Outgoing
             in
             [ src, dst ]
                 |> List.filterMap identity
-                |> List.foldl aggAddressAdd (n (model |> s_network (Network.addTx tx model.network)))
+                |> List.foldl aggAddressAdd (n (model |> s_network newNetwork))
                 |> and (checkSelection uc)
 
         ChangedDisplaySettingsMsg submsg ->
@@ -1304,33 +1317,20 @@ getAddressForDirection tx direction exceptAddress =
 addTx : Plugins -> Update.Config -> Id -> Direction -> Api.Data.Tx -> Model -> ( Model, List Effect )
 addTx plugins _ addressId direction tx model =
     let
-        network =
+        ( newTx, network ) =
             Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
 
-        ( transform, txId ) =
-            case tx of
-                Api.Data.TxTxUtxo t ->
-                    let
-                        txId_ =
-                            Id.init t.currency t.txHash
-                    in
-                    ( Dict.get txId_ network.txs
-                        |> Maybe.andThen Tx.getUtxoTx
-                        |> Maybe.map
-                            (\t_ ->
-                                Transform.move
-                                    { x = t_.x * unit
-                                    , y = A.getTo t_.y * unit
-                                    , z = Transform.initZ
-                                    }
-                                    model.transform
-                            )
-                    , txId_
-                    )
-
-                Api.Data.TxTxAccount t ->
-                    ( Nothing
-                    , Id.init t.currency t.txHash
+        transform =
+            newTx
+                |> Tx.getUtxoTx
+                |> Maybe.map
+                    (\t_ ->
+                        Transform.move
+                            { x = t_.x * unit
+                            , y = A.getTo t_.y * unit
+                            , z = Transform.initZ
+                            }
+                            model.transform
                     )
 
         newmodel =
@@ -1351,7 +1351,7 @@ addTx plugins _ addressId direction tx model =
             (\a ->
                 let
                     position =
-                        NextTo ( direction, txId )
+                        NextTo ( direction, newTx.id )
                 in
                 loadAddressWithPosition position plugins (Id.init (Id.network addressId) a) False newmodel
             )

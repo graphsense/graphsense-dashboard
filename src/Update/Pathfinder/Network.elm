@@ -20,13 +20,14 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Id.Address as Address
 import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
-import Model.Pathfinder.Tx as Tx exposing (Tx, getAddressesForTx)
+import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_selected)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair, second)
-import Update.Pathfinder.Address as Address exposing (txsInsertId, txsSetMap)
+import Tuple2 exposing (pairTo)
+import Update.Pathfinder.Address as Address exposing (txsInsertId)
 import Update.Pathfinder.Tx as Tx
 
 
@@ -410,69 +411,70 @@ type FindPosition
     | NextTo ( Direction, Id )
 
 
-addTx : Api.Data.Tx -> Network -> Network
+addTx : Api.Data.Tx -> Network -> ( Tx, Network )
 addTx =
     addTxWithPosition Auto
 
 
-addTxWithPosition : FindPosition -> Api.Data.Tx -> Network -> Network
+addTxWithPosition : FindPosition -> Api.Data.Tx -> Network -> ( Tx, Network )
 addTxWithPosition position tx network =
     let
         id =
             Tx.getTxId tx
     in
-    if hasTx id network then
-        network
+    Dict.get id network.txs
+        |> Maybe.map (pairTo network)
+        |> Maybe.Extra.withDefaultLazy
+            (\_ ->
+                case tx of
+                    Api.Data.TxTxAccount t ->
+                        Tx.fromTxAccountData t
+                            |> insertTx network
 
-    else
-        case tx of
-            Api.Data.TxTxAccount t ->
-                Tx.fromTxAccountData t
-                    |> insertTx network
+                    Api.Data.TxTxUtxo t ->
+                        let
+                            things =
+                                listInOutputsOfApiTxUtxo network t
+                                    |> List.map second
 
-            Api.Data.TxTxUtxo t ->
-                let
-                    things =
-                        listInOutputsOfApiTxUtxo network t
-                            |> List.map second
+                            coords =
+                                avoidOverlappingEdges things <|
+                                    case position of
+                                        Auto ->
+                                            findUtxoTxCoords network t
 
-                    coords =
-                        avoidOverlappingEdges things <|
-                            case position of
-                                Auto ->
-                                    findUtxoTxCoords network t
+                                        NextTo ( direction, id_ ) ->
+                                            Dict.get id_ network.addresses
+                                                |> Maybe.map
+                                                    (findUtxoTxCoordsNextToAddress network direction)
+                                                |> Maybe.Extra.withDefaultLazy
+                                                    (\_ ->
+                                                        findUtxoTxCoords network t
+                                                    )
 
-                                NextTo ( direction, id_ ) ->
-                                    Dict.get id_ network.addresses
-                                        |> Maybe.map
-                                            (findUtxoTxCoordsNextToAddress network direction)
-                                        |> Maybe.Extra.withDefaultLazy
-                                            (\_ ->
-                                                findUtxoTxCoords network t
-                                            )
+                            newNetwork =
+                                freeSpaceAroundCoords coords network
+                        in
+                        Tx.fromTxUtxoData newNetwork t coords
+                            |> Tx.updateUtxo
+                                (\utxo ->
+                                    if hasAnimations newNetwork then
+                                        utxo
 
-                    newNetwork =
-                        freeSpaceAroundCoords coords network
-                in
-                Tx.fromTxUtxoData newNetwork t coords
-                    |> Tx.updateUtxo
-                        (\utxo ->
-                            if hasAnimations newNetwork then
-                                utxo
-
-                            else
-                                { utxo
-                                    | opacity = opacityAnimation
-                                    , clock = 0
+                                    else
+                                        { utxo
+                                            | opacity = opacityAnimation
+                                            , clock = 0
+                                        }
+                                )
+                            |> insertTx
+                                { newNetwork
+                                    | animatedTxs = Set.insert id newNetwork.animatedTxs
                                 }
-                        )
-                    |> insertTx
-                        { newNetwork
-                            | animatedTxs = Set.insert id newNetwork.animatedTxs
-                        }
+            )
 
 
-insertTx : Network -> Tx -> Network
+insertTx : Network -> Tx -> ( Tx, Network )
 insertTx network tx =
     let
         upd dir addr =
@@ -495,7 +497,7 @@ insertTx network tx =
             Tx.updateUtxo
                 (Tx.updateUtxoIo dir a.id (Tx.setAddress a))
     in
-    getAddressesForTx network.addresses tx
+    listAddressesForTx network.addresses tx
         |> List.foldl
             (\( dir, a ) nw ->
                 { nw
@@ -506,6 +508,7 @@ insertTx network tx =
             { network
                 | txs = Dict.insert tx.id tx network.txs
             }
+        |> pair tx
 
 
 listInOutputsOfApiTxUtxo : Network -> Api.Data.TxUtxo -> List ( Direction, Address )
@@ -719,7 +722,7 @@ deleteTx id network =
             (\tx ->
                 { network
                     | addresses =
-                        Tx.getAddressesForTx network.addresses tx
+                        Tx.listAddressesForTx network.addresses tx
                             |> List.foldl
                                 (\( _, address ) ->
                                     Dict.insert address.id (Address.removeTx tx.id address)

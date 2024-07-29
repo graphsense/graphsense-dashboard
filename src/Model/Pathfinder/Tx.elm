@@ -80,8 +80,8 @@ hasInput id tx =
             Dict.get id inputs /= Nothing
 
 
-getAddressesForTx : Dict Id Address -> Tx -> List ( Direction, Address )
-getAddressesForTx addresses tx =
+listAddressesForTx : Dict Id Address -> Tx -> List ( Direction, Address )
+listAddressesForTx addresses tx =
     (case tx.type_ of
         Account { from, to } ->
             [ ( Incoming, from ), ( Outgoing, to ) ]
