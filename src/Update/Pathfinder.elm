@@ -196,7 +196,7 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagSummaryForAddress data model.tagSummaries :: fetchActorsForAddress data model.actors ++ eff)
+                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff)
 
         BrowserGotTxForAddress addressId direction data ->
             let
@@ -870,9 +870,8 @@ updateByMsg plugins uc msg model =
                                         curr
                             )
                         )
-            in
-            ( { model
-                | tagSummaries =
+
+                tagSummaries =
                     data
                         |> List.foldl updateHasTags
                             (addressIds
@@ -880,13 +879,15 @@ updateByMsg plugins uc msg model =
                                     updateHasNoTags
                                     model.tagSummaries
                             )
+            in
+            ( { model
+                | tagSummaries = tagSummaries
               }
-            , let
-                toId a =
-                    Id.init a.currency a.address
-              in
-              data
-                |> List.map (toId >> fetchTags)
+            , data
+                |> List.map (\a -> Id.init a.currency a.address)
+                |> Set.fromList
+                |> Set.toList
+                |> List.map (fetchTagSummaryForId tagSummaries)
             )
 
 
@@ -1199,11 +1200,6 @@ fetchActor id =
     BrowserGotActor id |> Api.GetActorEffect { actorId = id } |> ApiEffect
 
 
-fetchTags : Id -> Effect
-fetchTags id =
-    BrowserGotTagSummary id |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id } |> ApiEffect
-
-
 bulkfetchTagsForTx : Tx.Tx -> Model -> ( Model, List Effect )
 bulkfetchTagsForTx tx model =
     case tx.type_ of
@@ -1217,7 +1213,10 @@ bulkfetchTagsForTx tx model =
                         |> List.filter (flip Dict.member model.tagSummaries >> not)
 
                 addr =
-                    addresses raw.inputs ++ addresses raw.outputs
+                    addresses raw.inputs
+                        ++ addresses raw.outputs
+                        |> Set.fromList
+                        |> Set.toList
             in
             ( { model
                 | tagSummaries =
@@ -1233,6 +1232,7 @@ bulkfetchTagsForTx tx model =
                             |> Api.BulkGetAddressTagsEffect
                                 { currency = raw.currency
                                 , addresses = List.map Id.id adr
+                                , pagesize = Just 1
                                 }
                             |> ApiEffect
                     )
@@ -1242,18 +1242,16 @@ bulkfetchTagsForTx tx model =
             n model
 
 
-fetchTagsForId : Id -> Dict.Dict Id HavingTags -> Effect
-fetchTagsForId id existing =
-    if Dict.member id existing then
-        CmdEffect Cmd.none
+fetchTagSummaryForId : Dict.Dict Id HavingTags -> Id -> Effect
+fetchTagSummaryForId existing id =
+    case Dict.get id existing of
+        Just (HasTagSummary _) ->
+            CmdEffect Cmd.none
 
-    else
-        fetchTags id
-
-
-fetchTagSummaryForAddress : Api.Data.Address -> Dict.Dict Id HavingTags -> Effect
-fetchTagSummaryForAddress d =
-    fetchTagsForId ( d.currency, d.address )
+        _ ->
+            BrowserGotTagSummary id
+                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id }
+                |> ApiEffect
 
 
 fetchActorsForAddress : Api.Data.Address -> Dict.Dict String Api.Data.Actor -> List Effect

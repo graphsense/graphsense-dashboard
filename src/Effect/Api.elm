@@ -214,6 +214,7 @@ type Effect msg
     | BulkGetAddressTagsEffect
         { currency : String
         , addresses : List String
+        , pagesize : Maybe Int
         }
         (List Api.Data.AddressTag -> msg)
     | BulkGetEntityEffect
@@ -658,6 +659,11 @@ perform apiKey wrapMsg effect =
                     Api.Request.MyBulk.OperationListTagsByAddress
                     (Json.Encode.object
                         [ ( "address", Json.Encode.list Json.Encode.string e.addresses )
+                        , ( "pagesize"
+                          , e.pagesize
+                            |> Maybe.map Json.Encode.int
+                            |> Maybe.withDefault Json.Encode.null
+                          )
                         ]
                     )
                 |> send apiKey wrapMsg effect toMsg
