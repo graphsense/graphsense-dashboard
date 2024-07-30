@@ -2,7 +2,7 @@ module Init.Pathfinder.Table.NeighborsTable exposing (..)
 
 import Api.Data
 import Init.Graph.Table
-import Model.Pathfinder.Table exposing (PagedTable)
+import Model.Pathfinder.PagedTable exposing (PagedTable)
 
 
 init : Int -> PagedTable Api.Data.NeighborAddress

@@ -4,7 +4,7 @@ import Api.Data
 import Api.Request.Addresses
 import Model.DateRangePicker as DateRangePicker
 import Model.Graph.Table as Table
-import Model.Pathfinder.Table exposing (PagedTable)
+import Model.Pathfinder.PagedTable exposing (PagedTable)
 import Msg.Pathfinder.AddressDetails exposing (Msg)
 
 

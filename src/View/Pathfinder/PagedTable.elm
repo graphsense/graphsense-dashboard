@@ -1,4 +1,4 @@
-module View.Pathfinder.Table exposing (alignColumnsRight, customizations, pagedTableView, rawTableView)
+module View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations, pagedTableView, rawTableView)
 
 import Config.View as View
 import Css
@@ -7,7 +7,7 @@ import Css.Table exposing (loadingSpinner, styles)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
-import Model.Pathfinder.Table as PT exposing (PagedTable)
+import Model.Pathfinder.PagedTable as PT exposing (PagedTable)
 import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
 import Set
 import Table
@@ -56,7 +56,7 @@ pageIndicatorView pt =
 
 
 rawTableView : View.Config -> List (Attribute msg) -> Table.Config data msg -> String -> List data -> Html msg
-rawTableView vc attributes config sortColumn data =
+rawTableView _ attributes config sortColumn data =
     div []
         [ div attributes
             [ Table.view config (Table.initialSort sortColumn) data ]

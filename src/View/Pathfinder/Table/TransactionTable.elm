@@ -10,7 +10,7 @@ import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Set
 import Table
-import View.Pathfinder.Table exposing (alignColumnsRight, customizations)
+import View.Pathfinder.PagedTable exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
@@ -39,7 +39,7 @@ getId { currency, txHash } =
 
 
 config : Styles -> View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
-config styles vc network isCheckedFn =
+config _ vc network isCheckedFn =
     let
         rightAlignedColumns =
             [ "Value" ]

@@ -2,11 +2,10 @@ module View.Pathfinder.Table.NeighborsTable exposing (..)
 
 import Api.Data
 import Config.View as View
-import Model.Currency exposing (asset)
 import Model.Locale
 import Msg.Pathfinder exposing (Msg(..))
 import Table
-import View.Pathfinder.Table exposing (customizations)
+import View.Pathfinder.PagedTable exposing (customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
@@ -16,7 +15,7 @@ getAddress n =
 
 
 config : View.Config -> String -> Table.Config Api.Data.NeighborAddress Msg
-config vc network =
+config vc _ =
     Table.customConfig
         { toId = getAddress
         , toMsg = \_ -> NoOp

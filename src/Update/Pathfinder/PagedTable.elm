@@ -1,7 +1,7 @@
-module Update.Pathfinder.Table exposing (appendData)
+module Update.Pathfinder.PagedTable exposing (appendData)
 
 import Model.Graph.Table as GT
-import Model.Pathfinder.Table as PT
+import Model.Pathfinder.PagedTable as PT
 import RecordSetter exposing (s_loading, s_nextpage)
 import Update.Graph.Table as GT
 

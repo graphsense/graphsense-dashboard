@@ -13,7 +13,7 @@ import Model.Pathfinder as Pathfinder exposing (Details(..))
 import Model.Pathfinder.Address as Address
 import Model.Pathfinder.AddressDetails exposing (..)
 import Model.Pathfinder.Id as Id exposing (Id)
-import Model.Pathfinder.Table as PT
+import Model.Pathfinder.PagedTable as PT
 import Model.Pathfinder.Table.NeighborsTable as NeighborsTable
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
 import Msg.Pathfinder exposing (Msg(..))
@@ -21,7 +21,7 @@ import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import RecordSetter exposing (..)
 import Update.DateRangePicker as DateRangePicker
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
-import Update.Pathfinder.Table as PT
+import Update.Pathfinder.PagedTable as PT
 
 
 update : Update.Config -> Pathfinder.Model -> Msg -> Id -> Model -> ( Model, List Effect )
@@ -169,7 +169,7 @@ update uc pathfinderModel msg id model =
 
         UserClickedToggleTransactionTable ->
             not model.transactionsTableOpen
-                |> showTransactionsTable id model
+                |> showTransactionsTable model
 
         GotNextPageTxsForAddressDetails responseId txs ->
             if responseId == id then
@@ -282,7 +282,7 @@ update uc pathfinderModel msg id model =
         BrowserGotToDateBlock _ blockAt ->
             updateDatePickerRangeBlockRange uc pathfinderModel id model NoSet (Set blockAt.afterBlock)
 
-        TableMsg state ->
+        TableMsg _ ->
             n model
 
 
@@ -360,26 +360,6 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
     )
 
 
-showTransactionsTable : Id -> Model -> Bool -> ( Model, List Effect )
-showTransactionsTable id model show =
-    let
-        eff =
-            if List.isEmpty model.txs.table.table.data then
-                (GotTxsForAddressDetails id >> AddressDetailsMsg)
-                    |> Api.GetAddressTxsEffect
-                        { currency = Id.network id
-                        , address = Id.id id
-                        , direction = Nothing
-                        , pagesize = model.txs.table.itemsPerPage
-                        , nextpage = model.txs.table.table.nextpage
-                        , order = model.txs.order
-                        , minHeight = Nothing
-                        , maxHeight = Nothing
-                        }
-                    |> ApiEffect
-                    |> List.singleton
-
-            else
-                []
-    in
+showTransactionsTable : Model -> Bool -> ( Model, List Effect )
+showTransactionsTable model show =
     ( { model | transactionsTableOpen = show }, [] )

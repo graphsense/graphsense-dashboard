@@ -1409,7 +1409,7 @@ openAddressTransactionsTable model =
         Just (AddressDetails id (Success ad)) ->
             let
                 ( new, eff ) =
-                    AddressDetails.showTransactionsTable id ad True
+                    AddressDetails.showTransactionsTable ad True
             in
             ( { model
                 | details = Just (AddressDetails id (Success new))

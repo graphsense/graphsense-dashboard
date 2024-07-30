@@ -1,4 +1,4 @@
-module Model.Pathfinder.Table exposing (PagedTable, decPage, getPage, hasNextPage, incPage, isNextPageLoaded, nrPages, setLoading)
+module Model.Pathfinder.PagedTable exposing (PagedTable, decPage, getPage, hasNextPage, incPage, isNextPageLoaded, nrPages, setLoading)
 
 import Model.Graph.Table exposing (Table)
 import RecordSetter exposing (s_loading)

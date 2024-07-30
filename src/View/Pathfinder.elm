@@ -59,7 +59,7 @@ import View.Graph.Transform as Transform
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
 import View.Pathfinder.Network as Network
-import View.Pathfinder.Table as Table
+import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
@@ -732,9 +732,9 @@ addressNeighborsTableView vc _ _ viewState data =
         content =
             div []
                 [ h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Outgoing" ]
-                , Table.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
+                , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsOutgoing (prevMsg Outgoing) (nextMsg Outgoing)
                 , h2 [ panelHeadingStyle2 vc |> toAttr ] [ Html.text "Incoming" ]
-                , Table.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
+                , PagedTable.pagedTableView vc attributes tblCfg viewState.neighborsIncoming (prevMsg Incoming) (nextMsg Incoming)
                 ]
 
         ioIndicatorState =
@@ -1019,7 +1019,7 @@ transactionTableView vc currency txOnGraphFn model =
             Css.Table.styles
 
         table =
-            Table.pagedTableView vc
+            PagedTable.pagedTableView vc
                 attributes
                 (TransactionTable.config styles vc currency txOnGraphFn)
                 model.table
