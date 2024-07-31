@@ -52,7 +52,7 @@ disambiguateCollectedNames dict =
         dis level index id names =
             case names of
                 fst :: rest ->
-                    if List.any (List.Extra.getAt level >> (==) (Just fst)) (list id) then
+                    if List.any (List.Extra.getAt level >> Maybe.map sanitize >> (==) (Just (sanitize fst))) (list id) then
                         if level == 0 then
                             fst ++ " of " ++ dis (level + 1) index id rest
 
