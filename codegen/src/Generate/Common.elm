@@ -10,7 +10,7 @@ import Generate.Common.DefaultShapeTraits as DefaultShapeTraits
 import Generate.Common.FrameTraits as FrameTraits
 import Generate.Common.RectangleNode as RectangleNode
 import Generate.Common.VectorNode as VectorNode
-import Generate.Util exposing (sanitize)
+import Generate.Util exposing (getMainComponentProperty, sanitize)
 import List.Extra
 import RecordSetter exposing (s_children, s_frameTraits)
 import Set
@@ -297,16 +297,25 @@ subcanvasNodeToProperties : SubcanvasNode -> List ( String, Dict String Componen
 subcanvasNodeToProperties node =
     case node of
         SubcanvasNodeInstanceNode n ->
-            n.componentProperties
-                |> Maybe.map
-                    (Dict.toList
-                        >> List.map (mapSecond .type_)
-                        >> Dict.fromList
-                        >> pair (FrameTraits.getName n)
-                        >> List.singleton
-                    )
-                |> Maybe.withDefault []
-                |> (++) (withFrameTraitsToProperties n)
+            let
+                hasMainComponentProperty =
+                    getMainComponentProperty n.frameTraits.isLayerTrait.componentPropertyReferences
+                        /= Nothing
+            in
+            if hasMainComponentProperty then
+                []
+
+            else
+                n.componentProperties
+                    |> Maybe.map
+                        (Dict.toList
+                            >> List.map (mapSecond .type_)
+                            >> Dict.fromList
+                            >> pair (FrameTraits.getName n)
+                            >> List.singleton
+                        )
+                    |> Maybe.withDefault []
+                    |> (++) (withFrameTraitsToProperties n)
 
         SubcanvasNodeFrameNode n ->
             withFrameTraitsToProperties n

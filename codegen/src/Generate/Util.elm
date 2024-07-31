@@ -130,10 +130,14 @@ getTextProperty componentName def references =
 
 withInstanceSwap : ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
 withInstanceSwap def references element =
-    references
-        |> Maybe.andThen (Dict.get "mainComponent")
+    getMainComponentProperty references
         |> Maybe.andThen (\ref -> Dict.get ref def)
         |> Maybe.withDefault element
+
+
+getMainComponentProperty : Maybe (ComponentPropertyReferences) -> Maybe String
+getMainComponentProperty =
+    Maybe.andThen (Dict.get "mainComponent")
 
 
 toTranslate : Rectangle -> String
