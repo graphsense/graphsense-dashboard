@@ -627,13 +627,7 @@ addressDetailsContentView vc gc model id viewState =
             List.isEmpty tags |> not
     in
     SidebarComponents.sidePanelHeaderComponentWithInstances
-        { df
-            | exchangeLabelOf8 =
-                [ css
-                    [ Css.whiteSpace Css.noWrap
-                    ]
-                ]
-        }
+        df
         { inst
             | sidePanelHeaderTags =
                 if showExchangeTag || showOtherTag then
@@ -642,28 +636,34 @@ addressDetailsContentView vc gc model id viewState =
                 else
                     Just none
         }
-        { sidePanelHeaderMain =
-            { header = (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
-            , icon =
-                if address.exchange /= Nothing then
-                    Icons.iconsExchangeSvg [] {}
+        { sidePanelHeaderComponent =
+            { headerInstance =
+                SidebarComponents.addressHeader
+                    { addressHeader =
+                        { iconInstance =
+                            if address.exchange /= Nothing then
+                                Icons.iconsExchangeSvg [] {}
 
-                else
-                    Icons.iconsUntaggedSvg [] {}
+                            else
+                                Icons.iconsUntaggedSvg [] {}
+                        , headerText =
+                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
+                        }
+                    , addressLabelCopyIcon =
+                        { icon = Id.id id |> copyIcon vc
+                        , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
+                        }
+                    }
             }
         , sidePanelHeaderTags =
             { exchangeTag = showExchangeTag
             , otherTag = showOtherTag
             }
-        , iconTextOf16 =
+        , tagsLabel =
             { icon = Icons.iconsTagSvg [] {}
             , text = String.join ", " tagsDisplayWithMore
             }
-        , iconTextOf6 =
-            { icon = Id.id id |> copyIcon vc
-            , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
-            }
-        , iconTextOf12 =
+        , actorLabel =
             { icon =
                 actorImg
                     |> Maybe.map

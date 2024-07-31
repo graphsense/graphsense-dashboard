@@ -16,7 +16,6 @@ import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData
-import Set
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as Svg exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
@@ -114,7 +113,7 @@ view _ vc _ address =
                 )
         )
         { addressNode =
-            { label =
+            { addressId =
                 address.id
                     |> Id.id
                     |> truncateLongIdentifierWithLengths 8 4
