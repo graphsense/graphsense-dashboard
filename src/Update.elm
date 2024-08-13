@@ -1278,10 +1278,12 @@ clearSearch plugins model =
     let
         new =
             Plugin.clearSearch plugins model.plugins
+        pf = model.pathfinder
     in
     { model
         | search = Search.clear model.search
         , plugins = new
+        , pathfinder = {pf | search = Search.clear pf.search}
     }
         |> n
 
