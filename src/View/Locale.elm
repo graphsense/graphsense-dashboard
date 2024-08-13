@@ -16,6 +16,7 @@ module View.Locale exposing
     , interpolated
     , percentage
     , posixDate
+    , posixDateUniform
     , relativeTime
     , string
     , text
@@ -203,6 +204,11 @@ intWithFormat model format =
 posixDate : Model -> Posix -> String
 posixDate m d =
     date m (Time.posixToMillis d // 1000)
+
+
+posixDateUniform : Model -> Posix -> String
+posixDateUniform m d =
+    timestampDateUniform m (Time.posixToMillis d // 1000)
 
 
 timestamp : Model -> Int -> String

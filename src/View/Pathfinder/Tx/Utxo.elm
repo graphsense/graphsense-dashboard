@@ -69,7 +69,7 @@ view _ vc pc id highlight tx =
         { txNodeCircle =
             { multipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
             , highlight = highlight
-            , date = Locale.date vc.locale tx.raw.timestamp
+            , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
             , time = Locale.time vc.locale tx.raw.timestamp
             , timestamp = pc.showTxTimestamps
             }
@@ -89,13 +89,12 @@ edge _ vc _ hovered tx =
                                     |> pair { network = Id.network id, asset = Id.network id }
                                     |> List.singleton
                                     |> Locale.currency vc.locale
-                                    |> (\x ->
-                                            if aggregatesN > 1 then
-                                                x ++ " (" ++ String.fromInt aggregatesN ++ ")"
-
-                                            else
-                                                x
-                                       )
+                                    --|> (\x ->
+                                    --        if aggregatesN > 1 then
+                                    --            x ++ " (" ++ String.fromInt aggregatesN ++ ")"
+                                    --        else
+                                    --            x
+                                    --   )
                                     >> pair
                                 )
                     )

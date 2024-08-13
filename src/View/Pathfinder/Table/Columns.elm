@@ -17,6 +17,7 @@ import Util.View exposing (copyableLongIdentifierPathfinder, loadingSpinner, non
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
+import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
@@ -26,20 +27,7 @@ timestampDateMultiRowColumn vc name accessor =
         , viewData =
             \data ->
                 Table.HtmlDetails []
-                    [ let
-                        d =
-                            accessor data
-
-                        date =
-                            Locale.date vc.locale d
-
-                        time =
-                            Locale.time vc.locale d
-                      in
-                      div [ [ PCSS.mGap |> Css.padding ] |> css ]
-                        [ div [ [ PCSS.mGap |> Css.padding ] |> css ] [ text date ]
-                        , div [ [ PCSS.mGap |> Css.padding, PCSS.sText |> Css.fontSize ] |> css ] [ text time ]
-                        ]
+                    [ multiLineDateTimeFromTimestamp vc (accessor data)
                     ]
 
         -- , sorter = Table.increasingOrDecreasingBy accessor

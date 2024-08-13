@@ -18,7 +18,7 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
-import Model.Currency exposing (assetFromBase)
+import Model.Currency exposing (Currency(..), assetFromBase)
 import Model.DateRangePicker as DateRangePicker
 import Model.Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
@@ -63,6 +63,7 @@ import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
+import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 import View.Search
 
 
@@ -153,23 +154,39 @@ renderValueTypeValue vc val =
             span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value) ]
 
         CurrencyWithCode v ticker ->
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
+            -- span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode vc.locale [ ( assetFromBase ticker, v ) ]) ]
 
         CopyIdent ident ->
             Util.View.copyableLongIdentifierPathfinder vc [] ident
 
         Timestamp ts ->
-            span [] [ Locale.date vc.locale ts |> Html.text ]
+            span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
 
         TimestampWithTime ts ->
-            span [] [ Locale.time vc.locale ts |> Html.text ]
+            multiLineDateTimeFromTimestamp vc ts
+
+
+
+--span [] [ Locale.time vc.locale ts |> Html.text ]
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
-renderValueTypeExtension _ val =
+renderValueTypeExtension vc val =
     case val of
         Currency _ ticker ->
-            span [] [ Html.text (String.toUpper ticker) ]
+            span []
+                [ Html.text
+                    (String.toUpper
+                        (case vc.locale.currency of
+                            Coin ->
+                                ticker
+
+                            Fiat x ->
+                                x
+                        )
+                    )
+                ]
 
         _ ->
             none
@@ -749,8 +766,8 @@ apiAddressToRows address =
     , Row "Total sent" (Currency address.totalSpent address.currency)
     , Row "Balance" (Currency address.balance address.currency)
     , Gap
-    , Row "First usage" (Timestamp address.firstTx.timestamp)
-    , Row "Last usage" (Timestamp address.lastTx.timestamp)
+    , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
+    , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
     , Row "Cluster" (ValueHex address.entity)
     ]
 
@@ -967,10 +984,10 @@ dateRangePickerView vc model =
             Locale.durationPosix vc.locale 1 startP endP
 
         startS =
-            Locale.posixDate vc.locale startP
+            Locale.posixDateUniform vc.locale startP
 
         endS =
-            Locale.posixDate vc.locale endP
+            Locale.posixDateUniform vc.locale endP
     in
     div [ dateTimeRangeBoxStyle vc |> toAttr ]
         [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
