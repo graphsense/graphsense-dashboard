@@ -11,12 +11,13 @@ import Model.Locale
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import RecordSetter exposing (s_checkboxes, s_txListCellTimestamp)
+import Set
 import Table
 import Theme.Html.SidebarComponents as SidebarComponents
 import Util.View exposing (none, truncateLongIdentifier)
 import View.Graph.Table
 import View.Locale as Locale
-import View.Pathfinder.Table exposing (customizations)
+import View.Pathfinder.Table exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
 
 
@@ -46,6 +47,10 @@ getId { currency, txHash } =
 
 config : Styles -> View.Config -> String -> (Id -> Bool) -> Table.Config Api.Data.AddressTx Msg
 config styles vc network isCheckedFn =
+    let
+        rightAlignedColumns =
+            [ "Value" ]
+    in
     Table.customConfig
         { toId = toGerneric >> getId >> Id.toString
         , toMsg = \_ -> NoOp
@@ -61,10 +66,11 @@ config styles vc network isCheckedFn =
                 { label = "Hash"
                 , accessor = toGerneric >> .txHash
                 , onClick = Just (toGerneric >> getId >> UserClickedTx)
+                , tagsPlaceholder = False
                 }
             , PT.debitCreditColumn vc
                 (toGerneric >> .asset >> asset network)
-                "Debit/Credit"
+                "Value"
                 (toGerneric >> .value)
 
             {-
@@ -143,7 +149,7 @@ config styles vc network isCheckedFn =
                    (toGerneric >> .value)
             -}
             ]
-        , customizations = customizations vc
+        , customizations = customizations vc |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
         }
 
 

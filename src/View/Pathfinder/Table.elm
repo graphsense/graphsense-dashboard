@@ -1,13 +1,15 @@
-module View.Pathfinder.Table exposing (customizations, pagedTableView, rawTableView)
+module View.Pathfinder.Table exposing (alignColumnsRight, customizations, pagedTableView, rawTableView)
 
 import Config.View as View
+import Css
 import Css.Pathfinder exposing (centerContent, fullWidth, linkButtonStyle, toAttr)
 import Css.Table exposing (loadingSpinner, styles)
 import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (..)
+import Html.Styled.Attributes as HA exposing (..)
 import Html.Styled.Events exposing (..)
 import Model.Pathfinder.Table as PT exposing (PagedTable)
 import RecordSetter exposing (s_rowAttrs, s_tableAttrs, s_thead)
+import Set
 import Table
 import Tuple3
 import Util.View
@@ -16,6 +18,22 @@ import View.Graph.Table exposing (simpleThead, tableHint)
 
 type alias PagingMsg data msg =
     PagedTable data -> msg
+
+
+alignColumnsRight : View.Config -> Set.Set String -> Table.Customizations data msg -> Table.Customizations data msg
+alignColumnsRight vc columns tc =
+    let
+        addAttr ( name, x, attr ) =
+            ( name
+            , x
+            , if Set.member name columns then
+                ([ Css.textAlign Css.right ] |> HA.css) :: attr
+
+              else
+                attr
+            )
+    in
+    tc |> s_thead (List.map (Tuple3.mapThird List.singleton) >> List.map addAttr >> simpleThead styles vc)
 
 
 customizations : View.Config -> Table.Customizations data msg

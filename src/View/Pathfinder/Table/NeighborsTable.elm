@@ -25,6 +25,7 @@ config vc network =
                 { label = "Address"
                 , accessor = getAddress
                 , onClick = Nothing
+                , tagsPlaceholder = True
                 }
                 Nothing
             ]

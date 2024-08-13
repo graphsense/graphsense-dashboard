@@ -3,7 +3,7 @@ module View.Pathfinder.Table.Columns exposing (addressColumn, checkboxColumn, de
 import Api.Data
 import Config.View as View
 import Css
-import Css.Pathfinder as PCSS exposing (toAttr)
+import Css.Pathfinder as PCSS exposing (inoutStyle, toAttr)
 import Css.Statusbar
 import FontAwesome
 import Html.Styled exposing (..)
@@ -51,6 +51,7 @@ type alias ColumnConfig data msg =
     { label : String
     , accessor : data -> String
     , onClick : Maybe (data -> msg)
+    , tagsPlaceholder : Bool
     }
 
 
@@ -60,7 +61,7 @@ addressColumn vc cc lblfn =
 
 
 identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
-identifierColumn lblfn vc { label, accessor, onClick } =
+identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
     let
         tagcss =
             [ Css.width (Css.px 15), Css.display Css.inlineBlock ] |> toAttr
@@ -94,11 +95,19 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                         ]
 
                     NoTags ->
-                        [ span [ tagcss ] [] ]
+                        [ span
+                            (if tagsPlaceholder then
+                                [ tagcss ]
+
+                             else
+                                []
+                            )
+                            []
+                        ]
                 )
                     ++ (accessor data |> copyableLongIdentifierPathfinder vc [] |> List.singleton)
                     |> Table.HtmlDetails
-                        (([ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] |> css)
+                        (([ PCSS.mGap |> Css.padding ] |> css)
                             :: (onClick
                                     |> Maybe.map
                                         (\cl ->
@@ -109,7 +118,9 @@ identifierColumn lblfn vc { label, accessor, onClick } =
                                     |> Maybe.withDefault []
                                )
                         )
-        , sorter = Table.increasingOrDecreasingBy accessor
+
+        --, sorter = Table.increasingOrDecreasingBy accessor
+        , sorter = Table.unsortable
         }
 
 
@@ -158,9 +169,10 @@ checkboxColumn _ { isChecked, onClick } =
 debitCreditColumn : View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
 debitCreditColumn =
     valueColumnWithOptions
-        { sortable = True
+        { sortable = False
         , hideCode = False
-        , hideFlowIndicator = False
+        , hideFlowIndicator = True
+        , colorFlowDirection = True
         }
 
 
@@ -170,6 +182,7 @@ valueColumn =
         { sortable = True
         , hideCode = True
         , hideFlowIndicator = True
+        , colorFlowDirection = False
         }
 
 
@@ -177,14 +190,15 @@ type alias ValueColumnOptions =
     { sortable : Bool
     , hideCode : Bool
     , hideFlowIndicator : Bool
+    , colorFlowDirection : Bool
     }
 
 
 valueColumnWithOptions : ValueColumnOptions -> View.Config -> (data -> AssetIdentifier) -> String -> (data -> Api.Data.Values) -> Table.Column data msg
-valueColumnWithOptions { sortable, hideCode, hideFlowIndicator } vc getCoinCode name getValues =
+valueColumnWithOptions { sortable, hideCode, hideFlowIndicator, colorFlowDirection } vc getCoinCode name getValues =
     Table.veryCustomColumn
         { name = name
-        , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator (getCoinCode data)
+        , viewData = \data -> getValues data |> valuesCell vc hideCode hideFlowIndicator colorFlowDirection (getCoinCode data)
         , sorter =
             if sortable then
                 Table.decreasingOrIncreasingBy (\data -> getValues data |> valuesSorter vc (getCoinCode data))
@@ -194,8 +208,8 @@ valueColumnWithOptions { sortable, hideCode, hideFlowIndicator } vc getCoinCode 
         }
 
 
-valuesCell : View.Config -> Bool -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
-valuesCell vc hideCode hideFlowIndicator coinCode values =
+valuesCell : View.Config -> Bool -> Bool -> Bool -> AssetIdentifier -> Api.Data.Values -> Table.HtmlDetails msg
+valuesCell vc hideCode hideFlowIndicator colorFlowDirection coinCode values =
     let
         value =
             (if hideCode then
@@ -207,14 +221,24 @@ valuesCell vc hideCode hideFlowIndicator coinCode values =
                 vc.locale
                 [ ( coinCode, values ) ]
 
+        isOutFlow =
+            String.startsWith "-" value
+
         flowIndicator =
-            if String.startsWith "-" value then
+            if isOutFlow then
                 outIcon
 
             else
                 inIcon
+
+        addCss =
+            if colorFlowDirection then
+                inoutStyle isOutFlow
+
+            else
+                []
     in
-    Table.HtmlDetails [ [ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] |> css ]
+    Table.HtmlDetails [ ([ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] ++ addCss) |> css ]
         [ if hideFlowIndicator then
             none
 

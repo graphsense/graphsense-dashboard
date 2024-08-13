@@ -505,7 +505,6 @@ ioTableView vc network currency table getLbl =
         styles =
             Css.Table.styles
                 |> s_root (\vc_ -> Css.Table.styles.root vc_ ++ [ Css.display Css.block ])
-                |> s_headRow (\vc_ -> Css.Table.styles.headRow vc_ ++ [ Css.textAlign Css.right ])
     in
     View.Graph.Table.table
         styles

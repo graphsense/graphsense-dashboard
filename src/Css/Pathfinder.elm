@@ -577,6 +577,16 @@ outIconStyle =
     [ color redColor, ch 0.5 |> paddingRight, ch 0.2 |> paddingLeft ]
 
 
+inoutStyle : Bool -> List Style
+inoutStyle out =
+    [ if out then
+        color redColor
+
+      else
+        color greenColor
+    ]
+
+
 ioOutIndicatorStyle : List Style
 ioOutIndicatorStyle =
     [ ch 0.5 |> paddingLeft ]

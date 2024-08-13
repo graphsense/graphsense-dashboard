@@ -2,14 +2,20 @@ module View.Pathfinder.Table.IoTable exposing (..)
 
 import Api.Data
 import Config.View as View
+import Css
 import Css.Table exposing (Styles)
+import Html.Styled.Attributes as HA exposing (id, src)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..), TxDetailsMsg(..))
+import RecordSetter exposing (..)
+import Set
 import Table
-import View.Graph.Table exposing (customizations)
+import Tuple3
+import View.Graph.Table exposing (customizations, simpleThead)
+import View.Pathfinder.Table exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
 
 
@@ -20,6 +26,9 @@ config styles vc network isCheckedFn lblFn =
             .address
                 >> List.head
                 >> Maybe.map (Id.init network)
+
+        rightAlignedColumns =
+            [ "Value" ]
     in
     Table.customConfig
         { toId = .address >> String.join ""
@@ -37,6 +46,7 @@ config styles vc network isCheckedFn lblFn =
                 { label = "Address"
                 , accessor = .address >> String.join ","
                 , onClick = Nothing
+                , tagsPlaceholder = True
                 }
                 (lblFn |> Maybe.map (\fn -> \data -> toId data |> Maybe.map fn |> Maybe.withDefault NoTags))
             , PT.debitCreditColumn vc
@@ -44,5 +54,5 @@ config styles vc network isCheckedFn lblFn =
                 "Value"
                 .value
             ]
-        , customizations = customizations styles vc
+        , customizations = customizations styles vc |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
         }
