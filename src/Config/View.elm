@@ -11,4 +11,5 @@ type alias Config =
     , lightmode : Bool
     , size : Maybe BBox -- position and size of the main pane
     , showDatesInUserLocale : Bool
+    , showTimeZoneOffset: Bool
     }

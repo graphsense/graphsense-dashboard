@@ -70,7 +70,7 @@ view _ vc pc id highlight tx =
             { multipleInOutputs = anyIsNotVisible tx.inputs || anyIsNotVisible tx.outputs
             , highlight = highlight
             , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
-            , time = Locale.time vc.locale tx.raw.timestamp
+            , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
             , timestamp = pc.showTxTimestamps
             }
         }

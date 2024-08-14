@@ -824,6 +824,11 @@ updateByMsg plugins uc msg model =
                     -- handled Uptream
                     n model
 
+                UserClickedToggleShowTimeZoneOffset ->
+                    -- handled Uptream
+                    n model
+
+
                 UserClickedToggleDisplaySettings ->
                     let
                         nds =

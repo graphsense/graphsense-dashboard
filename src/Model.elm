@@ -167,4 +167,5 @@ userSettingsFromMainModel model =
     , showClusterShadowLinks = Just model.graph.config.showEntityShadowLinks
     , showDatesInUserLocale = Just model.config.showDatesInUserLocale
     , showZeroValueTxs = Just model.graph.config.showZeroTransactions
+    , showTimeZoneOffset = Just model.config.showTimeZoneOffset
     }

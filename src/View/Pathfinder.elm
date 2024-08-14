@@ -304,6 +304,7 @@ settingsView vc pc m =
                 , Util.View.onOffSwitch vc [ HA.checked pc.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
                 , span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date Settings") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
+                , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
@@ -658,7 +659,7 @@ addressDetailsContentView vc gc model id viewState =
             }
         , iconTextOf6 =
             { icon = Id.id id |> copyIcon vc
-            , text = Id.id id |> truncateLongIdentifierWithLengths 13 13
+            , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
             }
         , iconTextOf12 =
             { icon =

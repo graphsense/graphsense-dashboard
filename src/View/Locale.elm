@@ -49,7 +49,8 @@ import String.Interpolate
 import Time exposing (Posix)
 import Tuple exposing (..)
 import Util.Data exposing (timestampToPosix)
-
+import Time.Extra exposing (toOffset)
+import Basics.Extra exposing (flip)
 
 type CodeVisibility
     = Hidden
@@ -256,41 +257,28 @@ timestampDateUniform model =
             , yearNumber
             ]
     in
-    timestampWithFormat format { model | zone = Time.utc }
+    timestampWithFormat format model -- { model | zone = Time.utc }
 
 
-timestampTimeUniform : Model -> Int -> String
-timestampTimeUniform model =
+timestampTimeUniform : Model -> Bool -> Int -> String
+timestampTimeUniform model showTimeZoneOffset x =
     let
+        timezoneOffset = if (showTimeZoneOffset) then "+" ++ (toOffset model.zone (timestampToPosix x) |>  flip (//) 60 |> String.fromInt) else ""
         format =
             [ hourFixed
             , DateFormat.text ":"
             , minuteFixed
-            , DateFormat.text " "
-            , amPmUppercase
-            ]
-    in
-    timestampWithFormat format { model | zone = Time.utc }
-
-
-timesampDateTimeUniform : Model -> Int -> String
-timesampDateTimeUniform model =
-    let
-        format =
-            [ monthNameAbbreviated
-            , DateFormat.text " "
-            , dayOfMonthSuffix
-            , DateFormat.text ", "
-            , yearNumber
-            , DateFormat.text " "
-            , hourFixed
             , DateFormat.text ":"
-            , minuteFixed
+            , secondFixed
             , DateFormat.text " "
             , amPmUppercase
             ]
     in
-    timestampWithFormat format { model | zone = Time.utc }
+    timestampWithFormat format model x ++ timezoneOffset --{ model | zone = Time.utc }
+
+
+timesampDateTimeUniform : Model -> Bool -> Int -> String
+timesampDateTimeUniform model showTimeZoneOffset  x = timestampDateUniform model x ++ " " ++ timestampTimeUniform model showTimeZoneOffset x
 
 
 date : Model -> Int -> String

@@ -613,6 +613,19 @@ update plugins uc msg model =
             in
             ( m, eff ++ neff )
 
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTimeZoneOffset) model.pathfinder
+
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+
+                ( m, eff ) =
+                    toggleShowTimeZoneOffset nm
+            in
+            ( m, eff ++ neff )
+
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
@@ -1386,3 +1399,13 @@ toggleShowDatesInUserLocale m =
 
     else
         ( mwUTCtz, SaveUserSettingsEffect (Model.userSettingsFromMainModel mwUTCtz) |> List.singleton )
+
+
+toggleShowTimeZoneOffset : Model key -> ( Model key, List Effect )
+toggleShowTimeZoneOffset m =
+    let
+        nm =
+            m |> s_config (m.config |> s_showTimeZoneOffset (not m.config.showTimeZoneOffset))
+
+    in
+        ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )

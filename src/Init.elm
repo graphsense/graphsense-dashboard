@@ -42,7 +42,8 @@ init plugins uc flags url key =
             , theme = config.theme
             , lightmode = settings.lightMode |> Maybe.withDefault True
             , size = Nothing
-            , showDatesInUserLocale = True
+            , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
+            , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
             }
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)

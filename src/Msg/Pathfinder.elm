@@ -70,6 +70,7 @@ type DisplaySettingsMsg
     | UserClickedToggleDisplaySettings
     | UserClickedToggleShowTxTimestamp
     | UserClickedToggleDatesInUserLocale
+    | UserClickedToggleShowTimeZoneOffset
 
 
 type TxDetailsMsg

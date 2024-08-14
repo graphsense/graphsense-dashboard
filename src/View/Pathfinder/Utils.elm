@@ -15,7 +15,7 @@ multiLineDateTimeFromTimestamp vc d =
             Locale.timestampDateUniform vc.locale d
 
         time =
-            Locale.time vc.locale d
+            Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
     in
     div []
         [ div [ [ PCSS.sGap |> Css.paddingBottom ] |> css ] [ text date ]
