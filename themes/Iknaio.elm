@@ -95,13 +95,15 @@ colors =
 
 fontFam : List String
 fontFam =
-    [ "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
+    ["Roboto", "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
 
 
 headingFontFamilies : List String
 headingFontFamilies =
-    [ "Conv_Octarine-Light" ]
+    [ "Roboto", "Conv_Octarine-Light" ]
 
+monospacedFontFamilies : List String
+monospacedFontFamilies = ["RobotoMono", "monospace"]
 
 theme : Theme
 theme =
@@ -295,7 +297,7 @@ theme =
                     ]
                 ]
             )
-        |> s_longIdentifier [ fontFamily monospace ]
+        |> s_longIdentifier [ fontFamilies monospacedFontFamilies ]
         |> s_hint
             (\lightmode ->
                 [ colorWithLightmode lightmode colors.greyDark
@@ -452,7 +454,7 @@ theme =
             (Search.default
                 |> s_frame
                     [ scaled 1 |> rem |> marginRight
-                    , fontFamily monospace
+                    , fontFamilies monospacedFontFamilies
                     ]
                 |> s_form
                     [ scaled 3 |> rem |> fontSize
@@ -1000,7 +1002,7 @@ theme =
                 |> s_linkColorSelected (\lightmode -> switchColor lightmode colors.red)
                 |> s_linkLabel
                     (\lightmode hovered selected color ->
-                        [ fontFamily monospace
+                        [ fontFamilies monospacedFontFamilies
                         , (if hovered then
                             Util.Theme.switchColor lightmode colors.black
 

@@ -92,7 +92,7 @@ getAddressDetailStats id model madvs =
         nrTxs =
             case madvs of
                 Just advs ->
-                    case ( advs.txMinBlock, advs.txMaxBlock ) of
+                    case ( advs.txs.txMinBlock, advs.txs.txMaxBlock ) of
                         ( Just _, Just _ ) ->
                             Nothing
 

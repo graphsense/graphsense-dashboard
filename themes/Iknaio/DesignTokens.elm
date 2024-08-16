@@ -15,17 +15,20 @@ white =
 
 red : Variable
 red =
-    Variable "red" "#ed3c10"
+    -- Variable "red" "#ed3c10"
+    Variable "red" "#E84137"
 
 
 green : Variable
 green =
-    Variable "green" "#8dc299"
+    -- Variable "green" "#8dc299"
+    Variable "green" "#369D8F"
 
 
 gred : Variable
 gred =
-    Variable "gred" "#ab9671"
+    -- Variable "gred" "#ab9671"
+    Variable "gred" "#E84137"
 
 
 gutter : Variable

@@ -1406,6 +1406,5 @@ toggleShowTimeZoneOffset m =
     let
         nm =
             m |> s_config (m.config |> s_showTimeZoneOffset (not m.config.showTimeZoneOffset))
-
     in
-        ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )

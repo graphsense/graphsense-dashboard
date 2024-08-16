@@ -169,7 +169,7 @@ utxoTx vc tx =
                 |> text
                 |> val
             , tx.raw.timestamp
-                |> Locale.timesampDateTimeUniform vc.locale vc.showTimeZoneOffset
+                |> Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset
                 |> text
                 |> val
             ]

@@ -20,7 +20,7 @@ type alias UserSettings =
     , showClusterShadowLinks : Maybe Bool
     , showDatesInUserLocale : Maybe Bool
     , showZeroValueTxs : Maybe Bool
-    , showTimeZoneOffset: Maybe Bool
+    , showTimeZoneOffset : Maybe Bool
     }
 
 

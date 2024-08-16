@@ -135,8 +135,8 @@ update uc pathfinderModel msg id model =
                                 , pagesize = model.txs.table.itemsPerPage
                                 , nextpage = model.txs.table.table.nextpage
                                 , order = model.txs.order
-                                , minHeight = model.txMinBlock
-                                , maxHeight = model.txMaxBlock
+                                , minHeight = model.txs.txMinBlock
+                                , maxHeight = model.txs.txMaxBlock
                                 }
                             |> ApiEffect
                             |> List.singleton
@@ -215,7 +215,7 @@ update uc pathfinderModel msg id model =
                                     )
 
                                 else
-                                    ( model.txMinBlock, [] )
+                                    ( model.txs.txMinBlock, [] )
 
                             ( txMaxBlock, endEff ) =
                                 if newPicker.toDate /= dateRangePicker.toDate then
@@ -225,12 +225,10 @@ update uc pathfinderModel msg id model =
                                     )
 
                                 else
-                                    ( model.txMaxBlock, [] )
+                                    ( model.txs.txMaxBlock, [] )
                         in
                         ( { model
-                            | txs = s_dateRangePicker (Just newPicker) model.txs
-                            , txMinBlock = txMinBlock
-                            , txMaxBlock = txMaxBlock
+                            | txs = s_dateRangePicker (Just newPicker) model.txs |> s_txMinBlock txMinBlock |> s_txMaxBlock txMaxBlock
                           }
                         , startEff ++ endEff
                         )
@@ -303,7 +301,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
                     Nothing
 
                 NoSet ->
-                    model.txMinBlock
+                    model.txs.txMinBlock
 
                 Set x ->
                     Just x
@@ -314,7 +312,7 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
                     Nothing
 
                 NoSet ->
-                    model.txMaxBlock
+                    model.txs.txMaxBlock
 
                 Set x ->
                     Just x
@@ -353,8 +351,11 @@ updateDatePickerRangeBlockRange _ _ id model txMinBlock txMaxBlock =
 
                 _ ->
                     []
+
+        txsNew =
+            model.txs |> s_txMinBlock txmin |> s_txMaxBlock txmax
     in
-    ( { model | txMinBlock = txmin, txMaxBlock = txmax }
+    ( { model | txs = txsNew }
     , effects
     )
 

@@ -20,14 +20,16 @@ import Msg.Pathfinder.AddressDetails exposing (Msg(..))
 import Util.Data exposing (timestampToPosix)
 
 
+itemsPerPage : Int
+itemsPerPage =
+    5
+
+
 init : Network -> Locale.Model -> Address -> Api.Data.Address -> ( TransactionTable.Model, List Effect )
 init network locale address data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
-
-        itemsPerPage =
-            5
 
         table isDesc =
             { table =
@@ -54,6 +56,8 @@ init network locale address data =
                         datePickerSettings locale mn mx
                             |> DateRangePicker.init UpdateDateRangePicker mn mx
                             |> Just
+                  , txMinBlock = Just data.firstTx.height
+                  , txMaxBlock = Just data.lastTx.height
                   }
                 , loadTxs address.id mn mx
                 )
@@ -67,9 +71,6 @@ initWithoutFilter address locale data =
     let
         nrItems =
             data.noIncomingTxs + data.noOutgoingTxs
-
-        itemsPerPage =
-            5
 
         table isDesc =
             { table =
@@ -85,6 +86,8 @@ initWithoutFilter address locale data =
             datePickerSettings locale (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
                 |> DateRangePicker.init UpdateDateRangePicker (data.firstTx.timestamp |> timestampToPosix) (data.lastTx.timestamp |> timestampToPosix)
                 |> Just
+      , txMinBlock = Nothing
+      , txMaxBlock = Nothing
       }
     , (GotTxsForAddressDetails address.id >> AddressDetailsMsg)
         |> Api.GetAddressTxsEffect

@@ -19,7 +19,9 @@ init uc =
     let
         locale =
             uc.selectedLanguage
-        fetchTimezone = uc.showDatesInUserLocale |> Maybe.withDefault True
+
+        fetchTimezone =
+            uc.showDatesInUserLocale |> Maybe.withDefault True
     in
     ( { mapping = Empty
       , locale = locale
@@ -33,6 +35,11 @@ init uc =
       , supportedTokens = Dict.empty
       }
         |> switch locale
-    , ( Effect.Locale.getTranslationEffect locale
-      ) :: if (fetchTimezone) then [GetTimezoneEffect BrowserSentTimezone] else []
+    , Effect.Locale.getTranslationEffect locale
+        :: (if fetchTimezone then
+                [ GetTimezoneEffect BrowserSentTimezone ]
+
+            else
+                []
+           )
     )

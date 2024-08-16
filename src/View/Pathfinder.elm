@@ -63,7 +63,7 @@ import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
 import View.Pathfinder.Tooltip as Tooltip
-import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
+import View.Pathfinder.Utils exposing (dateFromTimestamp, multiLineDateTimeFromTimestamp)
 import View.Search
 
 
@@ -164,7 +164,7 @@ renderValueTypeValue vc val =
             span [] [ Locale.timestampDateUniform vc.locale ts |> Html.text ]
 
         TimestampWithTime ts ->
-            multiLineDateTimeFromTimestamp vc ts
+            span [] [ multiLineDateTimeFromTimestamp vc ts ]
 
 
 
@@ -972,8 +972,8 @@ drawDragSelector vc m =
             rect [ x "0", y "0", width "0", height "0" ] []
 
 
-dateRangePickerView : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html Msg
-dateRangePickerView vc model =
+dateRangePickerSelectionView : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html Msg
+dateRangePickerSelectionView vc model =
     let
         startP =
             model.fromDate
@@ -984,18 +984,19 @@ dateRangePickerView vc model =
         selectedDuration =
             Locale.durationPosix vc.locale 1 startP endP
 
-        startS =
-            Locale.posixDateUniform vc.locale startP
+        startML =
+            dateFromTimestamp vc (Locale.posixToTimestampSeconds startP)
 
-        endS =
-            Locale.posixDateUniform vc.locale endP
+        endML =
+            dateFromTimestamp vc (Locale.posixToTimestampSeconds endP)
     in
     div [ dateTimeRangeBoxStyle vc |> toAttr ]
         [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
         , span [] [ Html.text selectedDuration ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text startS ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ startML ]
         , span [] [ Html.text (Locale.string vc.locale "to") ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ Html.text endS ]
+        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ endML ]
+        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
         ]
 
 
@@ -1033,6 +1034,9 @@ transactionTableView vc currency txOnGraphFn model =
                 [ drp
                 , secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
+
+        showSelectionRow =
+            (model.txMaxBlock /= Nothing) || (model.txMinBlock /= Nothing)
     in
     (case model.dateRangePicker of
         Just drp ->
@@ -1047,7 +1051,12 @@ transactionTableView vc currency txOnGraphFn model =
                 ]
 
             else
-                [ dateRangePickerView vc drp
+                [ (if showSelectionRow then
+                    dateRangePickerSelectionView vc drp
+
+                   else
+                    none
+                  )
                     |> filterRow
                 , table
                 ]

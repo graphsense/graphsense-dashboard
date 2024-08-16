@@ -4,7 +4,6 @@ import Config.View as View
 import Css exposing (..)
 import Html.Styled
 import Html.Styled.Attributes as HA
-import Update.Graph.Transform exposing (wheel)
 
 
 address : View.Config -> List Style
@@ -156,7 +155,17 @@ lightGreyColor =
 
 blackColor : Color
 blackColor =
-    rgb 0 0 0
+    rgb 33 33 33
+
+
+lightBlackColor : Color
+lightBlackColor =
+    rgb 33 33 33
+
+
+greyColor : Color
+greyColor =
+    rgb 79 79 79
 
 
 whiteColor : Color
@@ -176,12 +185,14 @@ lighterDarkBlue =
 
 greenColor : Color
 greenColor =
-    rgb 141 194 153
+    -- rgb 141 194 153
+    hex "#369D8F"
 
 
 redColor : Color
 redColor =
-    rgb 194 141 141
+    -- rgb 194 141 141
+    hex "#E84137"
 
 
 
@@ -406,6 +417,7 @@ topRightPanelStyle _ =
     , mlGap |> right
     , mlGap |> top
     , minWidth (px 330)
+    , fontSize (px 14)
     ]
 
 
@@ -550,7 +562,7 @@ kVTableKeyTdStyle vc =
 
 kVTableValueTdStyle : View.Config -> List Style
 kVTableValueTdStyle vc =
-    textAlign right :: kVTableTdStyle vc
+    textAlign right :: kVTableTdStyle vc ++ [ mGap |> paddingTop, mGap |> paddingBottom ]
 
 
 copyableIdentifierStyle : View.Config -> List Style
@@ -585,6 +597,21 @@ inoutStyle out =
       else
         color greenColor
     ]
+
+
+dateStyle : List Style
+dateStyle =
+    [ fontWeight (int 600) ]
+
+
+multiLineDatetimeDateStyle : List Style
+multiLineDatetimeDateStyle =
+    paddingBottom (px 4) :: dateStyle
+
+
+multiLineDatetimeTimeStyle : List Style
+multiLineDatetimeTimeStyle =
+    [ color greyColor ]
 
 
 ioOutIndicatorStyle : List Style

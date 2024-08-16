@@ -16,13 +16,15 @@ module View.Locale exposing
     , interpolated
     , percentage
     , posixDate
+    , posixDateTimeUniform
     , posixDateUniform
+    , posixToTimestampSeconds
     , relativeTime
     , string
     , text
     , time
-    , timesampDateTimeUniform
     , timestamp
+    , timestampDateTimeUniform
     , timestampDateUniform
     , timestampTimeUniform
     , timestampWithFormat
@@ -31,7 +33,7 @@ module View.Locale exposing
     )
 
 import Api.Data
-import Basics.Extra exposing (uncurry)
+import Basics.Extra exposing (flip, uncurry)
 import Css exposing (num, opacity)
 import Css.Transitions as T exposing (transition)
 import DateFormat exposing (..)
@@ -47,10 +49,10 @@ import Model.Currency exposing (..)
 import Model.Locale exposing (..)
 import String.Interpolate
 import Time exposing (Posix)
+import Time.Extra exposing (toOffset)
 import Tuple exposing (..)
 import Util.Data exposing (timestampToPosix)
-import Time.Extra exposing (toOffset)
-import Basics.Extra exposing (flip)
+
 
 type CodeVisibility
     = Hidden
@@ -202,14 +204,24 @@ intWithFormat model format =
     toFloat >> floatWithFormat model format
 
 
+posixToTimestampSeconds : Posix -> Int
+posixToTimestampSeconds =
+    Time.posixToMillis >> flip (//) 1000
+
+
 posixDate : Model -> Posix -> String
 posixDate m d =
-    date m (Time.posixToMillis d // 1000)
+    date m (posixToTimestampSeconds d)
 
 
 posixDateUniform : Model -> Posix -> String
 posixDateUniform m d =
-    timestampDateUniform m (Time.posixToMillis d // 1000)
+    timestampDateUniform m (posixToTimestampSeconds d)
+
+
+posixDateTimeUniform : Model -> Bool -> Posix -> String
+posixDateTimeUniform m showTimeZoneOffset d =
+    timestampDateTimeUniform m showTimeZoneOffset (posixToTimestampSeconds d)
 
 
 timestamp : Model -> Int -> String
@@ -257,13 +269,23 @@ timestampDateUniform model =
             , yearNumber
             ]
     in
-    timestampWithFormat format model -- { model | zone = Time.utc }
+    timestampWithFormat format model
+
+
+
+-- { model | zone = Time.utc }
 
 
 timestampTimeUniform : Model -> Bool -> Int -> String
 timestampTimeUniform model showTimeZoneOffset x =
     let
-        timezoneOffset = if (showTimeZoneOffset) then "+" ++ (toOffset model.zone (timestampToPosix x) |>  flip (//) 60 |> String.fromInt) else ""
+        timezoneOffset =
+            if showTimeZoneOffset then
+                "+" ++ (toOffset model.zone (timestampToPosix x) |> flip (//) 60 |> String.fromInt)
+
+            else
+                ""
+
         format =
             [ hourFixed
             , DateFormat.text ":"
@@ -274,11 +296,16 @@ timestampTimeUniform model showTimeZoneOffset x =
             , amPmUppercase
             ]
     in
-    timestampWithFormat format model x ++ timezoneOffset --{ model | zone = Time.utc }
+    timestampWithFormat format model x ++ timezoneOffset
 
 
-timesampDateTimeUniform : Model -> Bool -> Int -> String
-timesampDateTimeUniform model showTimeZoneOffset  x = timestampDateUniform model x ++ " " ++ timestampTimeUniform model showTimeZoneOffset x
+
+--{ model | zone = Time.utc }
+
+
+timestampDateTimeUniform : Model -> Bool -> Int -> String
+timestampDateTimeUniform model showTimeZoneOffset x =
+    timestampDateUniform model x ++ " " ++ timestampTimeUniform model showTimeZoneOffset x
 
 
 date : Model -> Int -> String

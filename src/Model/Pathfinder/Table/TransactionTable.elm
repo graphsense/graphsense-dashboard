@@ -12,6 +12,8 @@ type alias Model =
     { table : PagedTable Api.Data.AddressTx
     , order : Maybe Api.Request.Addresses.Order_
     , dateRangePicker : Maybe (DateRangePicker.Model Msg)
+    , txMinBlock : Maybe Int
+    , txMaxBlock : Maybe Int
     }
 
 
