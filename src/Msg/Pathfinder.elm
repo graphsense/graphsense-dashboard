@@ -30,6 +30,7 @@ type Msg
     | UserClosedDetailsView
     | UserPressedCtrlKey
     | UserReleasedCtrlKey
+    | UserReleasedEscape
     | UserPressedNormalKey String
     | UserReleasedNormalKey String
     | AddressDetailsMsg AddressDetails.Msg

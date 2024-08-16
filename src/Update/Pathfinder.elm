@@ -122,6 +122,9 @@ updateByMsg plugins uc msg model =
         UserReleasedCtrlKey ->
             n { model | ctrlPressed = False }
 
+        UserReleasedEscape ->
+            n (model |> unselect |> s_details Nothing)
+
         UserReleasedDeleteKey ->
             case model.selection of
                 SelectedAddress id ->

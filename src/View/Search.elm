@@ -7,6 +7,7 @@ import Css exposing (Style)
 import Css.Button
 import Css.Search as Css
 import FontAwesome
+import Html
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (..)
 import Html.Styled.Events exposing (..)
@@ -15,6 +16,7 @@ import List.Extra
 import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
+import String.Extra
 import Util.View
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
@@ -127,6 +129,9 @@ resultList plugins vc sc { autocomplete, searchType } =
             Autocomplete.choices autocomplete
                 |> List.indexedMap Tuple.pair
 
+        q =
+            (Autocomplete.viewState autocomplete).query
+
         labelBadge =
             { title = Locale.string vc.locale "Labels"
             , badge =
@@ -198,6 +203,7 @@ resultList plugins vc sc { autocomplete, searchType } =
                     , List.map
                         (\( index, rl ) ->
                             resultLineToHtml vc
+                                q
                                 sc.resultsAsLink
                                 selectedValue
                                 (choiceEvents index)
@@ -228,8 +234,8 @@ resultList plugins vc sc { autocomplete, searchType } =
 --++ Plugin.searchResultList plugins pluginStates vc
 
 
-resultLineToHtml : Config -> Bool -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
-resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
+resultLineToHtml : Config -> String -> Bool -> Maybe ResultLine -> List (Attribute Msg) -> ResultLine -> Html Msg
+resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
     let
         ( icon, label ) =
             case resultLine of
@@ -270,7 +276,15 @@ resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
             |> Html.Styled.fromUnstyled
             |> List.singleton
             |> span [ Css.resultLineIcon vc |> css ]
-        , text label
+        , if String.contains query label then
+            span []
+                [ text (String.Extra.leftOf query label)
+                , span [ [ Css.fontWeight Css.bold ] |> css ] [ text query ]
+                , text (String.Extra.rightOf query label)
+                ]
+
+          else
+            text label
         ]
 
 
