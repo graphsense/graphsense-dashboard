@@ -512,7 +512,7 @@ theme =
             (Autocomplete.default
                 |> s_result
                     (\lightmode ->
-                        [ calc (pct 100) minus (scaled 4 |> rem) |> width
+                        [ calc (pct 100) minus (scaled 4 |> rem) |> minWidth
                         , scaled 2 |> rem |> padding
                         , borderRadius4
                             zero

@@ -240,7 +240,7 @@ resultLineToHtml vc asLink selectedValue choiceEvents resultLine =
 
                 Tx _ a ->
                     ( FontAwesome.exchangeAlt
-                    , Util.View.truncate 50 a
+                    , Util.View.truncate 64 a
                     )
 
                 Block _ a ->

@@ -38,7 +38,7 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RecordSetter exposing (s_headRow, s_root)
+import RecordSetter exposing (s_root)
 import RemoteData
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
@@ -82,8 +82,8 @@ graphActionTools m =
 
 graphActionButtons : List BtnConfig
 graphActionButtons =
-    [ BtnConfig FontAwesome.arrowUp "Import file" UserClickedImportFile True
-    , BtnConfig FontAwesome.download "Export" (UserClickedExportGraphAsPNG "graph") True
+    [ -- BtnConfig FontAwesome.arrowUp "Import file" UserClickedImportFile True
+      BtnConfig FontAwesome.download "Export" (UserClickedExportGraphAsPNG "graph") True
     ]
 
 
@@ -388,7 +388,7 @@ searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Mod
 searchBoxView plugins _ vc _ model =
     div
         [ searchBoxStyle vc Nothing |> toAttr ]
-        [ span [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Search") ]
+        [ div [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Search") ]
         , div [ searchBoxContainerStyle vc |> toAttr ]
             [ span [ searchBoxIconStyle vc |> toAttr ] [ FontAwesome.icon FontAwesome.search |> Html.fromUnstyled ]
             , View.Search.search plugins
