@@ -391,6 +391,7 @@ topLeftPanelStyle _ =
     [ position absolute
     , mlGap |> left
     , mlGap |> top
+    , fontSize (px 14)
     ]
 
 

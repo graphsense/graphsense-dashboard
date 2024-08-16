@@ -2,21 +2,14 @@ module View.Pathfinder.Table.TransactionTable exposing (config, prepareCSV)
 
 import Api.Data
 import Config.View as View
-import Css
 import Css.Table exposing (Styles)
-import Html.Styled.Attributes exposing (css)
 import Init.Pathfinder.Id as Id
 import Model.Currency exposing (asset)
 import Model.Locale
 import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_checkboxes, s_txListCellTimestamp)
 import Set
 import Table
-import Theme.Html.SidebarComponents as SidebarComponents
-import Util.View exposing (none, truncateLongIdentifier)
-import View.Graph.Table
-import View.Locale as Locale
 import View.Pathfinder.Table exposing (alignColumnsRight, customizations)
 import View.Pathfinder.Table.Columns as PT
 
@@ -149,7 +142,9 @@ config styles vc network isCheckedFn =
                    (toGerneric >> .value)
             -}
             ]
-        , customizations = customizations vc |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
+        , customizations =
+            customizations vc
+                |> alignColumnsRight vc (Set.fromList rightAlignedColumns)
         }
 
 

@@ -264,7 +264,9 @@ timestampDateUniform model =
         format =
             [ monthNameAbbreviated
             , DateFormat.text " "
-            , dayOfMonthSuffix
+
+            --, dayOfMonthSuffix
+            , dayOfMonthFixed
             , DateFormat.text ", "
             , yearNumber
             ]
@@ -287,13 +289,14 @@ timestampTimeUniform model showTimeZoneOffset x =
                 ""
 
         format =
-            [ hourFixed
+            [ hourMilitaryFixed
             , DateFormat.text ":"
             , minuteFixed
             , DateFormat.text ":"
             , secondFixed
             , DateFormat.text " "
-            , amPmUppercase
+
+            --, amPmUppercase
             ]
     in
     timestampWithFormat format model x ++ timezoneOffset

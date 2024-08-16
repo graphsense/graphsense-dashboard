@@ -26,7 +26,7 @@ timestampDateMultiRowColumn vc name accessor =
         { name = name
         , viewData =
             \data ->
-                Table.HtmlDetails []
+                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
                     [ multiLineDateTimeFromTimestamp vc (accessor data)
                     ]
 

@@ -21,6 +21,7 @@ import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1D
 import Util.Css as Css
 import Util.View exposing (none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
+import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 
 
 view : View.Config -> Dict Id.Id HavingTags -> Tooltip -> Html msg
@@ -102,9 +103,9 @@ address vc havingTags adr =
             [ css GraphComponents.tooltipProperty1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            [ key "Category"
-            , key "Label"
-            , key "Balance"
+            -- [ key "Category"
+            -- , key "Label"
+            [ key "Balance"
             , key "Total Received"
             , key "Cluster"
             ]
@@ -112,13 +113,13 @@ address vc havingTags adr =
             [ css GraphComponents.tooltipProperty1DownContent2Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            [ category
-                |> text
-                |> val
-            , lbl
-                |> text
-                |> val
-            , balance
+            -- [ category
+            --     |> text
+            --     |> val
+            -- , lbl
+            --     |> text
+            --     |> val
+            [ balance
                 ++ " "
                 ++ currency
                 |> text
@@ -169,8 +170,7 @@ utxoTx vc tx =
                 |> text
                 |> val
             , tx.raw.timestamp
-                |> Locale.timestampDateTimeUniform vc.locale vc.showTimeZoneOffset
-                |> text
+                |> multiLineDateTimeFromTimestamp vc
                 |> val
             ]
         ]

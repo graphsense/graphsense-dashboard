@@ -67,6 +67,7 @@ import Update.Pathfinder.WorkflowNextUtxoTx as WorkflowNextUtxoTx
 import Update.Search as Search
 import Util.Data exposing (timestampToPosix)
 import Util.Pathfinder.History as History
+import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 
 
 update : Plugins -> Update.Config -> Msg -> Model -> ( Model, List Effect )
@@ -467,29 +468,41 @@ updateByMsg plugins uc msg model =
                     ( hc, cmd ) =
                         Id.toString id
                             |> Hovercard.init
-                in
-                ( { model
-                    | tooltip =
-                        model.network.txs
-                            |> Dict.get id
-                            |> Maybe.andThen
-                                (\tx ->
-                                    case tx.type_ of
-                                        Tx.Utxo t ->
-                                            Tooltip.UtxoTx t
-                                                |> Tooltip.init hc
-                                                |> Just
 
-                                        _ ->
-                                            Nothing
-                                )
-                    , network = Network.updateTx id (s_hovered True) model.network
-                    , hovered = HoveredTx id
-                  }
-                , Cmd.map HovercardMsg cmd
-                    |> CmdEffect
-                    |> List.singleton
-                )
+                    hovered =
+                        ( { model
+                            | tooltip =
+                                model.network.txs
+                                    |> Dict.get id
+                                    |> Maybe.andThen
+                                        (\tx ->
+                                            case tx.type_ of
+                                                Tx.Utxo t ->
+                                                    Tooltip.UtxoTx t
+                                                        |> Tooltip.init hc
+                                                        |> Just
+
+                                                _ ->
+                                                    Nothing
+                                        )
+                            , network = Network.updateTx id (s_hovered True) model.network
+                            , hovered = HoveredTx id
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                in
+                case model.details of
+                    Just (TxDetails txid _) ->
+                        if id /= txid then
+                            hovered
+
+                        else
+                            n model
+
+                    _ ->
+                        hovered
 
         UserMovesMouseOverAddress id ->
             if model.hovered == HoveredAddress id then
@@ -500,23 +513,35 @@ updateByMsg plugins uc msg model =
                     ( hc, cmd ) =
                         Id.toString id
                             |> Hovercard.init
-                in
-                ( { model
-                    | tooltip =
-                        model.network.addresses
-                            |> Dict.get id
-                            |> Maybe.andThen
-                                (\addr ->
-                                    Tooltip.Address addr |> Tooltip.init hc |> Just
-                                )
 
-                    -- , network = Network.updateTx id (s_hovered True) model.network
-                    , hovered = HoveredAddress id
-                  }
-                , Cmd.map HovercardMsg cmd
-                    |> CmdEffect
-                    |> List.singleton
-                )
+                    showHover =
+                        ( { model
+                            | tooltip =
+                                model.network.addresses
+                                    |> Dict.get id
+                                    |> Maybe.andThen
+                                        (\addr ->
+                                            Tooltip.Address addr |> Tooltip.init hc |> Just
+                                        )
+
+                            -- , network = Network.updateTx id (s_hovered True) model.network
+                            , hovered = HoveredAddress id
+                          }
+                        , Cmd.map HovercardMsg cmd
+                            |> CmdEffect
+                            |> List.singleton
+                        )
+                in
+                case model.details of
+                    Just (AddressDetails aid _) ->
+                        if id /= aid then
+                            showHover
+
+                        else
+                            n model
+
+                    _ ->
+                        showHover
 
         UserMovesMouseOutAddress id ->
             { model
@@ -925,7 +950,7 @@ updateTagDataOnAddress addressId m =
                      else
                         m.network
                     )
-                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0))
+                        |> Network.updateAddress addressId (s_hasTags (tagdata.tagCount > 0 && not (hasOnlyExchangeTags tagdata)))
                         |> Network.updateAddress addressId (s_hasActor (tagdata.bestActor /= Nothing))
 
                 HasTags ->

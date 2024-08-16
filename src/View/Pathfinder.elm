@@ -52,6 +52,7 @@ import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
+import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
 import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
@@ -108,10 +109,6 @@ type KVTableRow
     | Gap
 
 
-
--- http://probablyprogramming.com/2009/03/15/the-tiniest-gif-ever
-
-
 renderKVTable : View.Config -> List KVTableRow -> Html Msg
 renderKVTable vc rows =
     table [ fullWidth |> toAttr ] (rows |> List.map (renderKVRow vc))
@@ -165,10 +162,6 @@ renderValueTypeValue vc val =
 
         TimestampWithTime ts ->
             span [] [ multiLineDateTimeFromTimestamp vc ts ]
-
-
-
---span [] [ Locale.time vc.locale ts |> Html.text ]
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
@@ -567,7 +560,16 @@ addressDetailsContentView vc gc model id viewState =
                     Nothing
 
         tags =
-            ts |> Maybe.map (.labelTagCloud >> Dict.toList >> List.sortBy (Tuple.second >> .weighted)) |> Maybe.withDefault []
+            ts
+                |> Maybe.map
+                    (\x ->
+                        if hasOnlyExchangeTags x then
+                            []
+
+                        else
+                            (.labelTagCloud >> Dict.toList >> List.sortBy (Tuple.second >> .weighted)) x
+                    )
+                |> Maybe.withDefault []
 
         tagsDisplay =
             tags |> List.reverse |> List.take 2 |> List.map Tuple.first
@@ -769,7 +771,8 @@ apiAddressToRows address =
     , Gap
     , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
     , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
-    , Row "Cluster" (ValueHex address.entity)
+
+    -- , Row "Cluster" (ValueHex address.entity)
     ]
 
 

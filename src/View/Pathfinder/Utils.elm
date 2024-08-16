@@ -1,7 +1,6 @@
 module View.Pathfinder.Utils exposing (dateFromTimestamp, multiLineDateTimeFromTimestamp)
 
 import Config.View as View
-import Css
 import Css.Pathfinder exposing (dateStyle, multiLineDatetimeDateStyle, multiLineDatetimeTimeStyle)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
