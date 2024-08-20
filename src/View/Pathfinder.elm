@@ -660,7 +660,7 @@ addressDetailsContentView vc gc model id viewState =
             , otherTag = showOtherTag
             }
         , tagsLabel =
-            { icon = Icons.iconsTagSvg [] {}
+            { icon = Icons.iconsTagLargeSvg [] {}
             , text = String.join ", " tagsDisplayWithMore
             }
         , actorLabel =
@@ -671,25 +671,25 @@ addressDetailsContentView vc gc model id viewState =
                             img
                                 [ src imgSrc
                                 , HA.alt <| Maybe.withDefault "" <| actorText
-                                , HA.width <| round Icons.iconsTagTagIconDetails.width
-                                , HA.height <| round Icons.iconsTagTagIconDetails.height
-                                , HA.css Theme.Html.Icons.iconsTagTagIconDetails.styles
+                                , HA.width <| round Icons.iconsTagLargeTagIconDetails.width
+                                , HA.height <| round Icons.iconsTagLargeTagIconDetails.height
+                                , HA.css Theme.Html.Icons.iconsTagLargeTagIconDetails.styles
                                 ]
                                 []
                                 |> List.singleton
                                 |> div
-                                    [ HA.css Theme.Html.Icons.iconsTagDetails.styles
+                                    [ HA.css Theme.Html.Icons.iconsTagLargeDetails.styles
                                     , HA.css
-                                        [ Theme.Html.Icons.iconsTagDetails.width
+                                        [ Theme.Html.Icons.iconsTagLargeDetails.width
                                             |> Css.px
                                             |> Css.width
-                                        , Theme.Html.Icons.iconsTagDetails.height
+                                        , Theme.Html.Icons.iconsTagLargeDetails.height
                                             |> Css.px
                                             |> Css.height
                                         ]
                                     ]
                         )
-                    |> Maybe.withDefault (Icons.iconsTagSvg [] {})
+                    |> Maybe.withDefault (Icons.iconsTagLargeSvg [] {})
             , text = actorText |> Maybe.withDefault ""
             }
         }
