@@ -15,7 +15,7 @@ import Set
 import Table
 import Tuple3
 import View.Graph.Table exposing (customizations, simpleThead)
-import View.Pathfinder.Table exposing (alignColumnsRight)
+import View.Pathfinder.PagedTable exposing (alignColumnsRight)
 import View.Pathfinder.Table.Columns as PT
 
 
