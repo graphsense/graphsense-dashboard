@@ -45,9 +45,8 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
-import Table
 import Theme.Html.Icons
-import Theme.Html.SidebarComponents as SidebarComponents
+import Theme.Html.SidePanelComponents as SidebarComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -615,10 +614,10 @@ addressDetailsContentView vc gc model id viewState =
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
         df =
-            SidebarComponents.sidePanelHeaderComponentAttributes
+            SidebarComponents.sidePanelHeaderAttributes
 
         inst =
-            SidebarComponents.sidePanelHeaderComponentInstances
+            SidebarComponents.sidePanelHeaderInstances
 
         showExchangeTag =
             actorText /= Nothing
@@ -626,7 +625,7 @@ addressDetailsContentView vc gc model id viewState =
         showOtherTag =
             List.isEmpty tags |> not
     in
-    SidebarComponents.sidePanelHeaderComponentWithInstances
+    SidebarComponents.sidePanelHeaderWithInstances
         df
         { inst
             | sidePanelHeaderTags =
@@ -636,10 +635,10 @@ addressDetailsContentView vc gc model id viewState =
                 else
                     Just none
         }
-        { sidePanelHeaderComponent =
+        { sidePanelHeader =
             { headerInstance =
-                SidebarComponents.addressHeader
-                    { addressHeader =
+                SidebarComponents.sidePanelAddressHeader
+                    { sidePanelAddressHeader =
                         { iconInstance =
                             if address.exchange /= Nothing then
                                 Icons.iconsExchangeSvg [] {}
@@ -650,21 +649,21 @@ addressDetailsContentView vc gc model id viewState =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
                         }
                     , addressLabelCopyIcon =
-                        { icon = Id.id id |> copyIcon vc
+                        { iconInstance = Id.id id |> copyIcon vc
                         , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
                         }
                     }
             }
         , sidePanelHeaderTags =
-            { exchangeTag = showExchangeTag
-            , otherTag = showOtherTag
+            { exchangeTagVisible = showExchangeTag
+            , otherTagVisible = showOtherTag
             }
         , tagsLabel =
-            { icon = Icons.iconsTagLargeSvg [] {}
+            { iconInstance = Icons.iconsTagLargeSvg [] {}
             , text = String.join ", " tagsDisplayWithMore
             }
         , actorLabel =
-            { icon =
+            { iconInstance =
                 actorImg
                     |> Maybe.map
                         (\imgSrc ->
