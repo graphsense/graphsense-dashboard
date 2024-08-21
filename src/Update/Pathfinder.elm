@@ -28,6 +28,7 @@ import Model.Locale exposing (State(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address as Addr exposing (Txs(..), getTxs, txsSetter)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id as Id exposing (Id, network)
 import Model.Pathfinder.Network as Network
@@ -201,6 +202,16 @@ updateByMsg plugins uc msg model =
                 clusterId =
                     Id.init data.currency (Hex.toString data.entity)
 
+                isSecondAddressFromSameCluster =
+                    Network.isClusterFriendAlreadyOnGraph clusterId model.network
+
+                ncolors =
+                    if isSecondAddressFromSameCluster then
+                        Colors.assignNextColor Colors.Clusters clusterId model.colors
+
+                    else
+                        model.colors
+
                 effwithCluster =
                     eff
                         ++ (if Dict.member clusterId model.clusters then
@@ -213,6 +224,7 @@ updateByMsg plugins uc msg model =
             model
                 |> s_network net
                 |> s_details details
+                |> s_colors ncolors
                 |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ effwithCluster)
 
         BrowserGotClusterData id data ->

@@ -5,6 +5,7 @@ import Config.View as View
 import Dict exposing (Dict)
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.Address exposing (Address)
+import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Tx exposing (Tx, TxType(..))
 import Msg.Pathfinder exposing (Msg(..))
@@ -18,12 +19,12 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Svg Msg
-addresses plugins vc gc =
+addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id Address -> Svg Msg
+addresses plugins vc gc colors =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
-            , Svg.lazy4 Address.view plugins vc gc address
+            , Svg.lazy5 Address.view plugins vc gc colors address
             )
                 :: svg
         )

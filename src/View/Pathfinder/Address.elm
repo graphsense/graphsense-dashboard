@@ -5,12 +5,14 @@ import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
 import Css.Pathfinder as Css
+import Hex
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (..)
+import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
@@ -25,12 +27,15 @@ import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Address -> Svg Msg
-view _ vc _ address =
+view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> Svg Msg
+view _ vc _ colors address =
     let
         data =
             RemoteData.toMaybe address.data
 
+        -- clusterid = data |> Maybe.map (\z -> (z.currency, (Hex.toString z.entity)))
+        -- clusterColor = clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map (.color)
+        -- colorCss = clusterColor |> Maybe.map (Util.View.toCssColor >> Css.color >> List.singleton) |> Maybe.withDefault []
         directionToField direction =
             case direction of
                 Incoming ->

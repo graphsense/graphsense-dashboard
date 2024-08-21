@@ -3,7 +3,7 @@ module View.Pathfinder exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Events exposing (Visibility(..))
-import Color
+import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -28,6 +28,7 @@ import Model.Graph.Table
 import Model.Graph.Transform exposing (Transition(..))
 import Model.Pathfinder exposing (..)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Id as Id exposing (Id)
 import Model.Pathfinder.Network as Network exposing (Network)
 import Model.Pathfinder.Table.TransactionTable as TransactionTable
@@ -97,7 +98,7 @@ graphActionButtons =
 
 
 type alias ClusterSummaryData =
-    { id : Id, noAddresses : Int, hasMoreTags : Bool, hasMoreBalance : Bool }
+    { id : Id, noAddresses : Int, hasMoreTags : Bool, hasMoreBalance : Bool, color : Maybe Color }
 
 
 type ValueType
@@ -200,8 +201,11 @@ renderValueTypeValue vc val =
                         ]
                         [ Html.text "..." ]
                     ]
+
+                clr =
+                    cs.color |> Maybe.map (Util.View.toCssColor >> Css.color >> List.singleton) |> Maybe.withDefault []
             in
-            Html.span [] (noAddrPart ++ tagsPart ++ balancePart ++ moreLink)
+            Html.span [ clr |> css ] (noAddrPart ++ tagsPart ++ balancePart ++ moreLink)
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
@@ -653,7 +657,7 @@ addressDetailsContentView vc gc model id viewState =
             ]
 
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows nrTagsAddress viewState.data (Dict.get ( viewState.data.currency, Hex.toString viewState.data.entity ) model.clusters)), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
+            [ detailsFactTableView vc (apiAddressToRows model.colors nrTagsAddress viewState.data (Dict.get ( viewState.data.currency, Hex.toString viewState.data.entity ) model.clusters)), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
 
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
@@ -806,8 +810,8 @@ annotationButton vc btn =
     disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
 
 
-apiAddressToRows : Int -> Api.Data.Address -> Maybe Api.Data.Entity -> List KVTableRow
-apiAddressToRows nrTagsAddress address cluster =
+apiAddressToRows : Colors.ScopedColorAssignment -> Int -> Api.Data.Address -> Maybe Api.Data.Entity -> List KVTableRow
+apiAddressToRows colors nrTagsAddress address cluster =
     [ Row "Total received" (Currency address.totalReceived address.currency)
     , Row "Total sent" (Currency address.totalSpent address.currency)
     , Row "Balance" (Currency address.balance address.currency)
@@ -815,13 +819,25 @@ apiAddressToRows nrTagsAddress address cluster =
     , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
     , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
     ]
-        ++ (cluster |> Maybe.map (apiEntityToRows nrTagsAddress address) |> Maybe.withDefault [])
+        ++ (cluster |> Maybe.map (apiEntityToRows colors nrTagsAddress address) |> Maybe.withDefault [])
 
 
-apiEntityToRows : Int -> Api.Data.Address -> Api.Data.Entity -> List KVTableRow
-apiEntityToRows nrTagsAddress address cluster =
+apiEntityToRows : Colors.ScopedColorAssignment -> Int -> Api.Data.Address -> Api.Data.Entity -> List KVTableRow
+apiEntityToRows colors nrTagsAddress address cluster =
+    let
+        clstrId =
+            ( cluster.currency, Hex.toString cluster.entity )
+    in
     [ Gap
-    , Row "Cluster" (ClusterSummary { id = ( cluster.currency, Hex.toString cluster.entity ), noAddresses = cluster.noAddresses, hasMoreTags = cluster.noAddressTags > nrTagsAddress, hasMoreBalance = cluster.balance.value > address.balance.value })
+    , Row "Cluster"
+        (ClusterSummary
+            { id = clstrId
+            , noAddresses = cluster.noAddresses
+            , hasMoreTags = cluster.noAddressTags > nrTagsAddress
+            , hasMoreBalance = cluster.balance.value > address.balance.value
+            , color = Colors.getAssignedColor Colors.Clusters clstrId colors |> Maybe.map .color
+            }
+        )
     ]
 
 
@@ -976,7 +992,7 @@ graphSvg plugins _ vc gc model bbox =
             , gradient "accountOutEdgeBack" Colors.pathOut Colors.pathIn
             , gradient "accountInEdgeBack" Colors.pathOut Colors.pathIn
             ]
-        , Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
+        , Svg.lazy5 Network.addresses plugins vc gc model.colors model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy4 Network.edges plugins vc gc model.network.txs
         , drawDragSelector vc model

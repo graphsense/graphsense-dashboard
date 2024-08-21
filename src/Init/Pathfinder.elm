@@ -9,6 +9,7 @@ import Init.Pathfinder.Network as Network
 import Init.Search as Search
 import Model.Graph exposing (Dragging(..))
 import Model.Pathfinder exposing (Hovered(..), Model, Selection(..))
+import Model.Pathfinder.Colors as Colors
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (Msg(..))
 import Set exposing (..)
@@ -21,6 +22,7 @@ init us _ =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
+      , colors = Colors.init
       , clusters = Dict.empty
       , selection = NoSelection
       , hovered = NoHover

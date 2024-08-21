@@ -8,6 +8,7 @@ import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Pathfinder.Address as Address exposing (Address)
 import Model.Pathfinder.AddressDetails as AddressDetails
+import Model.Pathfinder.Colors exposing (ScopedColorAssignment)
 import Model.Pathfinder.History.Entry as Entry
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Network exposing (Network)
@@ -31,6 +32,7 @@ type alias Model =
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
     , clusters : Dict Id Entity
+    , colors : ScopedColorAssignment
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered

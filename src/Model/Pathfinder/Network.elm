@@ -1,11 +1,14 @@
 module Model.Pathfinder.Network exposing (..)
 
 import Dict exposing (Dict)
+import Hex
+import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address, txsGetSet)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
+import RemoteData exposing (RemoteData)
 import Set exposing (Set)
 
 
@@ -25,6 +28,20 @@ hasTx id network =
 hasAddress : Id -> Network -> Bool
 hasAddress id network =
     Dict.member id network.addresses
+
+
+getClustersOnGraph : Network -> Set Id
+getClustersOnGraph net =
+    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map (\x -> Id.init x.currency (Hex.toString x.entity)) |> Set.fromList
+
+
+isClusterFriendAlreadyOnGraph : Id -> Network -> Bool
+isClusterFriendAlreadyOnGraph id net =
+    let
+        clusters =
+            getClustersOnGraph net
+    in
+    Set.member id clusters
 
 
 listTxsForAddress : Network -> Id -> List ( Direction, Tx )
