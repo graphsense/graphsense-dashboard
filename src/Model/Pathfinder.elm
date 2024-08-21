@@ -1,6 +1,6 @@
 module Model.Pathfinder exposing (..)
 
-import Api.Data exposing (Actor)
+import Api.Data exposing (Actor, Entity)
 import Config.Pathfinder exposing (Config)
 import Dict exposing (Dict)
 import Model.Graph exposing (Dragging)
@@ -30,6 +30,7 @@ type alias Model =
     { network : Network
     , actors : Dict String Actor
     , tagSummaries : Dict Id HavingTags
+    , clusters : Dict Id Entity
     , dragging : Dragging Id
     , selection : Selection
     , hovered : Hovered

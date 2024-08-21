@@ -38,6 +38,7 @@ type Msg
     | AnimationFrameDeltaForTransform Float
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id Api.Data.Address
+    | BrowserGotClusterData Id Api.Data.Entity
     | BrowserGotAddressesTags (List Id) (List Api.Data.AddressTag)
     | BrowserGotTagSummary Id Api.Data.TagSummary
     | UserClickedAddressExpandHandle Id Direction

@@ -9,6 +9,7 @@ import Dict
 import Effect exposing (and, n)
 import Effect.Api as Api
 import Effect.Pathfinder as Pathfinder exposing (Effect(..))
+import Hex
 import Hovercard
 import Init.Graph.Transform as Transform
 import Init.Pathfinder.AddressDetails as AddressDetails
@@ -196,11 +197,26 @@ updateByMsg plugins uc msg model =
                         _ ->
                             model.details
                                 |> n
+
+                clusterId =
+                    Id.init data.currency (Hex.toString data.entity)
+
+                effwithCluster =
+                    eff
+                        ++ (if Dict.member clusterId model.clusters then
+                                []
+
+                            else
+                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffect { currency = Id.network id, entity = data.entity } |> ApiEffect ]
+                           )
             in
             model
                 |> s_network net
                 |> s_details details
-                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ eff)
+                |> pairTo (fetchTagSummaryForId model.tagSummaries id :: fetchActorsForAddress data model.actors ++ effwithCluster)
+
+        BrowserGotClusterData id data ->
+            n { model | clusters = Dict.insert id data model.clusters }
 
         BrowserGotTxForAddress addressId direction data ->
             let

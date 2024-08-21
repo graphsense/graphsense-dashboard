@@ -21,6 +21,7 @@ init us _ =
     ( { network = Network.init
       , actors = Dict.empty
       , tagSummaries = Dict.empty
+      , clusters = Dict.empty
       , selection = NoSelection
       , hovered = NoHover
       , search = Search.init (Search.initSearchAddressAndTxs [ "btc", "bch", "zec", "ltc" ])

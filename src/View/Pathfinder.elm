@@ -40,6 +40,8 @@ import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (s_root)
 import RemoteData
+import Route
+import Route.Graph
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
@@ -91,6 +93,10 @@ graphActionButtons =
 -- Helpers
 
 
+type alias ClusterSummaryData =
+    { id : Id, noAddresses : Int, hasMoreTags : Bool, hasMoreBalance : Bool }
+
+
 type ValueType
     = ValueInt Int
     | ValueHex Int
@@ -101,6 +107,7 @@ type ValueType
     | Timestamp Int
     | TimestampWithTime Int
     | CopyIdent String
+    | ClusterSummary ClusterSummaryData
 
 
 type KVTableRow
@@ -141,7 +148,7 @@ renderValueTypeValue vc val =
             span [] [ Html.text (Hex.toString v) ]
 
         InOut total inv outv ->
-            inOutIndicator total inv outv
+            inOutIndicator vc total inv outv
 
         Text txt ->
             span [] [ Html.text txt ]
@@ -161,6 +168,40 @@ renderValueTypeValue vc val =
 
         TimestampWithTime ts ->
             span [] [ multiLineDateTimeFromTimestamp vc ts ]
+
+        ClusterSummary cs ->
+            let
+                _ =
+                    Debug.log "" cs.id
+
+                noAddrPart =
+                    [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.at |> Html.fromUnstyled ], span [ Css.smPaddingRight |> css ] [ Html.text (Locale.int vc.locale cs.noAddresses) ] ]
+
+                tagsPart =
+                    if cs.hasMoreTags then
+                        [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.tag |> Html.fromUnstyled ] ]
+
+                    else
+                        []
+
+                balancePart =
+                    if cs.hasMoreBalance then
+                        [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.wallet |> Html.fromUnstyled ] ]
+
+                    else
+                        []
+
+                moreLink =
+                    [ Html.a
+                        [ Route.Graph.entityRoute { currency = Id.network cs.id, entity = Id.id cs.id |> Hex.fromString |> Result.withDefault 0, layer = Nothing, table = Nothing }
+                            |> Route.Graph
+                            |> Route.toUrl
+                            |> HA.href
+                        ]
+                        [ Html.text "..." ]
+                    ]
+            in
+            Html.span [] (noAddrPart ++ tagsPart ++ balancePart ++ moreLink)
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
@@ -202,13 +243,13 @@ rule =
     hr [ ruleStyle |> toAttr ] []
 
 
-inOutIndicator : Maybe Int -> Int -> Int -> Html Msg
-inOutIndicator mnr inNr outNr =
+inOutIndicator : View.Config -> Maybe Int -> Int -> Int -> Html Msg
+inOutIndicator vc mnr inNr outNr =
     let
         prefix =
-            String.trim (String.join " " [ mnr |> Maybe.map String.fromInt |> Maybe.withDefault "", "(" ])
+            String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale) |> Maybe.withDefault "", "(" ])
     in
-    span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (String.fromInt inNr), Html.text ",", outIcon, Html.text (String.fromInt outNr), Html.text ")" ]
+    span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), Html.text ",", outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
 
 
 collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
@@ -532,7 +573,7 @@ utxoTxDetailsSectionsView vc network viewState data getLbl =
             ioTableView vc network data.currency viewState.table getLbl
 
         ioIndicatorState =
-            Just (inOutIndicator Nothing data.noOutputs data.noInputs)
+            Just (inOutIndicator vc Nothing data.noOutputs data.noInputs)
     in
     collapsibleSection vc "In- and Outputs" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
@@ -557,6 +598,9 @@ addressDetailsContentView vc gc model id viewState =
 
                 _ ->
                     Nothing
+
+        nrTagsAddress =
+            ts |> Maybe.map .tagCount |> Maybe.withDefault 0
 
         tags =
             ts
@@ -609,7 +653,7 @@ addressDetailsContentView vc gc model id viewState =
             ]
 
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows viewState.data), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
+            [ detailsFactTableView vc (apiAddressToRows nrTagsAddress viewState.data (Dict.get ( viewState.data.currency, Hex.toString viewState.data.entity ) model.clusters)), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
 
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
@@ -708,7 +752,7 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
             transactionTableView vc data.currency txOnGraphFn viewState.txs
 
         ioIndicatorState =
-            Just (inOutIndicator (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
+            Just (inOutIndicator vc (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
     in
     collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 
@@ -737,7 +781,7 @@ addressNeighborsTableView vc _ _ viewState data =
                 ]
 
         ioIndicatorState =
-            Just (inOutIndicator Nothing data.inDegree data.outDegree)
+            Just (inOutIndicator vc Nothing data.inDegree data.outDegree)
     in
     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
@@ -762,16 +806,22 @@ annotationButton vc btn =
     disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
 
 
-apiAddressToRows : Api.Data.Address -> List KVTableRow
-apiAddressToRows address =
+apiAddressToRows : Int -> Api.Data.Address -> Maybe Api.Data.Entity -> List KVTableRow
+apiAddressToRows nrTagsAddress address cluster =
     [ Row "Total received" (Currency address.totalReceived address.currency)
     , Row "Total sent" (Currency address.totalSpent address.currency)
     , Row "Balance" (Currency address.balance address.currency)
     , Gap
     , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
     , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
+    ]
+        ++ (cluster |> Maybe.map (apiEntityToRows nrTagsAddress address) |> Maybe.withDefault [])
 
-    -- , Row "Cluster" (ValueHex address.entity)
+
+apiEntityToRows : Int -> Api.Data.Address -> Api.Data.Entity -> List KVTableRow
+apiEntityToRows nrTagsAddress address cluster =
+    [ Gap
+    , Row "Cluster" (ClusterSummary { id = ( cluster.currency, Hex.toString cluster.entity ), noAddresses = cluster.noAddresses, hasMoreTags = cluster.noAddressTags > nrTagsAddress, hasMoreBalance = cluster.balance.value > address.balance.value })
     ]
 
 
