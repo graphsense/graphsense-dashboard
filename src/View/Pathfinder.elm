@@ -171,8 +171,6 @@ renderValueTypeValue vc val =
 
         ClusterSummary cs ->
             let
-                _ =
-                    Debug.log "" cs.id
 
                 noAddrPart =
                     [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.at |> Html.fromUnstyled ], span [ Css.smPaddingRight |> css ] [ Html.text (Locale.int vc.locale cs.noAddresses) ] ]
