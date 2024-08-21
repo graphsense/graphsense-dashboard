@@ -161,7 +161,7 @@ successColor _ =
 
 highlightPrimaryColor : View.Config -> Color
 highlightPrimaryColor _ =
-    Colors.brandHighlight
+    Colors.highlight
         |> Util.View.toCssColor
 
 

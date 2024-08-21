@@ -39,7 +39,7 @@ import Msg.Pathfinder.AddressDetails as AddressDetails
 import Number.Bounded exposing (value)
 import Plugin.Model exposing (ModelState)
 import Plugin.View as Plugin exposing (Plugins)
-import RecordSetter exposing (s_root)
+import RecordSetter exposing (..)
 import RemoteData
 import Route
 import Route.Graph
@@ -51,6 +51,7 @@ import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Icons
 import Theme.Html.SidePanelComponents as SidebarComponents
+import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
 import Util.ExternalLinks exposing (addProtocolPrefx)
@@ -173,7 +174,6 @@ renderValueTypeValue vc val =
 
         ClusterSummary cs ->
             let
-
                 noAddrPart =
                     [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.at |> Html.fromUnstyled ], span [ Css.smPaddingRight |> css ] [ Html.text (Locale.int vc.locale cs.noAddresses) ] ]
 
@@ -1015,15 +1015,21 @@ drawDragSelector vc m =
 
                 heightn =
                     abs (start.y - now.y) * z
-
-                pos =
-                    Util.Graph.translate xn yn |> transform
             in
-            rect [ Css.graphSelectionStyle vc |> css, pos, width (String.fromFloat widthn), height (String.fromFloat heightn), opacity "0.3" ]
-                []
+            GraphComponents.selectionBoxWithAttributes
+                (GraphComponents.selectionBoxAttributes
+                    |> s_selectionBox
+                        [ Util.Graph.translate xn yn |> transform
+                        ]
+                    |> s_rectangle
+                        [ String.fromFloat widthn |> width
+                        , String.fromFloat heightn |> height
+                        ]
+                )
+                {}
 
         _ ->
-            rect [ x "0", y "0", width "0", height "0" ] []
+            none
 
 
 dateRangePickerSelectionView : View.Config -> DateRangePicker.Model AddressDetails.Msg -> Html Msg
