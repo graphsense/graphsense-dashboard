@@ -3,6 +3,7 @@ module View.Pathfinder exposing (view)
 import Api.Data
 import Basics.Extra exposing (flip)
 import Browser.Events exposing (Visibility(..))
+import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -47,6 +48,7 @@ import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
+import Theme.Colors as Colors
 import Theme.Html.Icons
 import Theme.Html.SidePanelComponents as SidebarComponents
 import Theme.Svg.Icons as Icons
@@ -909,12 +911,14 @@ graphSvg plugins _ vc gc model bbox =
                 ]
                 [ stop
                     [ from
+                        |> Color.toCssString
                         |> SA.stopColor
                     ]
                     []
                 , stop
                     [ SA.offset "70%"
                     , to
+                        |> Color.toCssString
                         |> SA.stopColor
                     ]
                     []
@@ -963,14 +967,14 @@ graphSvg plugins _ vc gc model bbox =
         )
         [ defs
             []
-            [ gradient "utxoOutEdgeForth" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.outEdgeColor
-            , gradient "utxoInEdgeForth" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.edgeColor
-            , gradient "utxoOutEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.edgeColor
-            , gradient "utxoInEdgeBack" vc.theme.pathfinder.edgeColor vc.theme.pathfinder.inEdgeColor
-            , gradient "accountOutEdgeForth" vc.theme.pathfinder.inEdgeColor vc.theme.pathfinder.outEdgeColor
-            , gradient "accountInEdgeForth" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
-            , gradient "accountOutEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
-            , gradient "accountInEdgeBack" vc.theme.pathfinder.outEdgeColor vc.theme.pathfinder.inEdgeColor
+            [ gradient "utxoOutEdgeForth" Colors.pathMiddle Colors.pathOut
+            , gradient "utxoInEdgeForth" Colors.pathIn Colors.pathMiddle
+            , gradient "utxoOutEdgeBack" Colors.pathOut Colors.pathMiddle
+            , gradient "utxoInEdgeBack" Colors.pathMiddle Colors.pathIn
+            , gradient "accountOutEdgeForth" Colors.pathIn Colors.pathOut
+            , gradient "accountInEdgeForth" Colors.pathOut Colors.pathIn
+            , gradient "accountOutEdgeBack" Colors.pathOut Colors.pathIn
+            , gradient "accountInEdgeBack" Colors.pathOut Colors.pathIn
             ]
         , Svg.lazy4 Network.addresses plugins vc gc model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs

@@ -4,8 +4,6 @@ import Color exposing (rgb255)
 import Css exposing (..)
 import Css.Transitions
 import Iknaio.ColorScheme exposing (..)
-import Iknaio.DesignToken as DesignToken
-import Iknaio.DesignTokens exposing (..)
 import Model.Graph exposing (NodeType(..))
 import Model.Graph.Tool as Tool
 import RecordSetter exposing (..)
@@ -17,7 +15,6 @@ import Theme.Dialog as Dialog
 import Theme.Graph as Graph
 import Theme.Hovercard as Hovercard
 import Theme.Landingpage as Landingpage
-import Theme.Pathfinder as Pathfinder
 import Theme.Search as Search
 import Theme.Stats as Stats
 import Theme.Statusbar as Statusbar
@@ -37,11 +34,6 @@ import Util.Theme
         , switchColor
         )
 import Util.View exposing (toCssColor)
-
-
-duration : Int
-duration =
-    500
 
 
 type alias Colors =
@@ -95,15 +87,18 @@ colors =
 
 fontFam : List String
 fontFam =
-    ["Roboto", "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
+    [ "Roboto", "system-ui", " BlinkMacSystemFont", " -apple-system", " Segoe UI", " Roboto", " Oxygen", " Ubuntu", " Cantarell", " Fira Sans", " Droid Sans", " Helvetica Neue", " sans-serif" ]
 
 
 headingFontFamilies : List String
 headingFontFamilies =
     [ "Roboto", "Conv_Octarine-Light" ]
 
+
 monospacedFontFamilies : List String
-monospacedFontFamilies = ["RobotoMono", "monospace"]
+monospacedFontFamilies =
+    [ "RobotoMono", "monospace" ]
+
 
 theme : Theme
 theme =
@@ -115,7 +110,6 @@ theme =
                 [ colorWithLightmode lightmode colors.brandText
                 , fontFamilies fontFam
                 , scaled 3.5 |> rem |> fontSize
-                , DesignToken.variables lightmode designTokens
                 ]
             )
         |> s_header
@@ -679,47 +673,6 @@ theme =
                         , cursor pointer
                         ]
                     )
-            )
-        |> s_pathfinder
-            (Pathfinder.default
-                |> s_addressRadius 30
-                |> s_txRadius 5
-                |> s_address
-                    [ DesignToken.init
-                        |> DesignToken.token "stroke" addressStrokeColor
-                        |> DesignToken.token "fill" addressFillColor
-                        |> DesignToken.withDuration duration
-                        |> DesignToken.css
-                    ]
-                |> s_addressLabel
-                    [ DesignToken.init
-                        |> DesignToken.token "fill" addressFontColor
-                        |> DesignToken.token "font-weight" addressFontWeight
-                        |> DesignToken.css
-                    ]
-                |> s_tx
-                    [ DesignToken.init
-                        |> DesignToken.token "stroke" txStrokeColor
-                        |> DesignToken.token "fill" txFillColor
-                        |> DesignToken.withDuration duration
-                        |> DesignToken.css
-                    ]
-                |> s_edgeColor (DesignToken.toVariable edgeUtxoStrokeColor)
-                |> s_outEdgeColor (DesignToken.toVariable edgeUtxoOutStrokeColor)
-                |> s_inEdgeColor (DesignToken.toVariable edgeUtxoInStrokeColor)
-                |> s_edge
-                    [ DesignToken.init
-                        |> DesignToken.token "stroke" edgeUtxoStrokeColor
-                        |> DesignToken.token "stroke-width" edgeUtxoStrokeWidth
-                        |> DesignToken.withDuration duration
-                        |> DesignToken.css
-                    ]
-                |> s_edgeLabel
-                    [ DesignToken.init
-                        |> DesignToken.token "fill" edgeLabelFontColor
-                        |> DesignToken.token "font-weight" edgeLabelFontWeight
-                        |> DesignToken.css
-                    ]
             )
         |> s_graph
             (Graph.default

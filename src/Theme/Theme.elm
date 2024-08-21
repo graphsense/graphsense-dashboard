@@ -10,7 +10,6 @@ import Theme.Dialog as Dialog exposing (Dialog)
 import Theme.Graph as Graph exposing (Graph)
 import Theme.Hovercard as Hovercard exposing (Hovercard)
 import Theme.Landingpage as Landingpage exposing (Landingpage)
-import Theme.Pathfinder as Pathfinder exposing (Pathfinder)
 import Theme.Search as Search exposing (Search)
 import Theme.Stats as Stats exposing (Stats)
 import Theme.Statusbar as Statusbar exposing (Statusbar)
@@ -53,7 +52,6 @@ type alias Theme =
     , autocomplete : Autocomplete
     , button : Button
     , graph : Graph
-    , pathfinder : Pathfinder
     , landingpage : Landingpage
     , browser : Browser
     , contextMenu : ContextMenu
@@ -120,7 +118,6 @@ default =
     , statusbar = Statusbar.default
     , footer = []
     , graph = Graph.default
-    , pathfinder = Pathfinder.default
     , browser = Browser.default
     , contextMenu = ContextMenu.default
     , table = Table.default

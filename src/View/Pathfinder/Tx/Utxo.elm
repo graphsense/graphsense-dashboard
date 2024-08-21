@@ -114,7 +114,7 @@ edge _ vc _ hovered tx =
             fd.width / 2
 
         txRad =
-            vc.theme.pathfinder.txRadius
+            GraphComponents.txNodeCircleTxNodeDetails.width / 2
 
         toCoords address =
             { tx = tx.x + tx.dx

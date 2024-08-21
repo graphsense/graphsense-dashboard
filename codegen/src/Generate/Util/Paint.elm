@@ -49,9 +49,9 @@ getBasePaint =
             )
 
 
-toColor : Maybe (List Paint) -> Maybe Elm.Expression
+toColor : List Paint -> Maybe Elm.Expression
 toColor =
-    Maybe.andThen toRGBA
+    toRGBA
         >> Maybe.map (\{ r, g, b, a } -> Color.rgba r g b a)
 
 

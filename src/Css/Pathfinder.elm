@@ -4,58 +4,13 @@ import Config.View as View
 import Css exposing (..)
 import Html.Styled
 import Html.Styled.Attributes as HA
-
-
-address : View.Config -> List Style
-address vc =
-    cursor pointer
-        :: vc.theme.pathfinder.address
-
-
-addressBody : View.Config -> Bool -> List Css.Style
-addressBody vc selected =
-    if selected then
-        [ primaryColorSelection |> Css.fill ]
-
-    else
-        []
-
-
-ioTableStyle : View.Config -> List Css.Style
-ioTableStyle _ =
-    [ maxHeight (ex 40), display block, overflowY scroll ]
+import Theme.Colors as Colors
+import Util.View
 
 
 graphSelectionStyle : View.Config -> List Css.Style
 graphSelectionStyle vc =
     [ primaryColorSelection |> Css.fill, highlightPrimaryFrostedColor vc |> border3 xsGap solid ]
-
-
-addressHandle : View.Config -> List Style
-addressHandle vc =
-    vc.theme.pathfinder.addressHandle
-
-
-addressLabel : View.Config -> List Style
-addressLabel vc =
-    vc.theme.pathfinder.addressLabel
-
-
-tx : View.Config -> List Style
-tx vc =
-    cursor pointer
-        :: vc.theme.pathfinder.tx
-
-
-edge : View.Config -> List Style
-edge vc =
-    property "fill" "none"
-        :: vc.theme.pathfinder.edge
-
-
-edgeLabel : View.Config -> List Style
-edgeLabel vc =
-    vc.theme.pathfinder.edgeLabel
 
 
 
@@ -133,11 +88,6 @@ primaryColorSelection =
     rgb 178 226 217
 
 
-primaryColor : Color
-primaryColor =
-    rgb 26 197 176
-
-
 primaryFrostedColor : Color
 primaryFrostedColor =
     rgb 107 203 186
@@ -211,7 +161,8 @@ successColor _ =
 
 highlightPrimaryColor : View.Config -> Color
 highlightPrimaryColor _ =
-    primaryColor
+    Colors.brandHighlight
+        |> Util.View.toCssColor
 
 
 highlightPrimaryFrostedColor : View.Config -> Color

@@ -1,6 +1,7 @@
 module View.Pathfinder.Tx.Path exposing (accountPath, inPath, inPathHovered, outPath, outPathHovered)
 
 import Bezier
+import Color
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -14,9 +15,9 @@ import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
+import Theme.Colors as Colors
 import Theme.Svg.GraphComponents as GraphComponents
 import Util.Graph exposing (translate)
-import Util.View
 
 
 inPath : View.Config -> String -> Float -> Float -> Float -> Float -> Float -> Svg Msg
@@ -107,6 +108,11 @@ type alias ColoredPathConfig =
     }
 
 
+arrowLength : Float
+arrowLength =
+    5
+
+
 coloredPath : View.Config -> ColoredPathConfig -> Svg Msg
 coloredPath vc c =
     let
@@ -130,7 +136,7 @@ coloredPath vc c =
             , y2 - c.y1
             )
 
-        ( val, pa ) =
+        ( val, _ ) =
             if c.isOutgoing then
                 if dx < 0 then
                     ( GraphComponents.inputPathInputValueDetails
@@ -154,7 +160,7 @@ coloredPath vc c =
 
         { p0, p1, p2, p3 } =
             let
-                ( mx, my ) =
+                ( mx, _ ) =
                     ( c.x1 + dx / 2
                     , c.y1 + dy / 2
                     )
@@ -264,10 +270,6 @@ coloredPath vc c =
         ]
         []
     , if c.isOutgoing then
-        let
-            arrowLength =
-                vc.theme.pathfinder.arrowLength
-        in
         Svg.path
             [ d <|
                 pathD
@@ -288,10 +290,12 @@ coloredPath vc c =
                    )
                 ++ ")"
                 |> transform
-            , css
-                (Css.edge vc
-                    ++ [ Css.property "stroke" vc.theme.pathfinder.outEdgeColor ]
-                )
+            , (Colors.pathOut
+                |> Color.toCssString
+                |> Css.property "stroke"
+              )
+                :: GraphComponents.outputPathMainLineDetails.styles
+                |> css
             ]
             []
 
@@ -354,7 +358,7 @@ bendedPath vc _ label withArrow x1 y1 x2 y2 =
                 let
                     ( mx, my ) =
                         ( x1 + dx / 2
-                        , y1 + Basics.max (dy / 2) vc.theme.pathfinder.addressRadius
+                        , y1 + Basics.max (dy / 2) (GraphComponents.addressNodeNodeFrameDetails.width / 2)
                         )
 
                     ( c1x, c1y ) =
@@ -388,14 +392,9 @@ bendedPath vc _ label withArrow x1 y1 x2 y2 =
             |> (::) (M ( x1, y1 ))
             |> pathD
             |> d
-        , Css.edge vc |> css
         ]
         []
     , if withArrow then
-        let
-            arrowLength =
-                vc.theme.pathfinder.arrowLength
-        in
         Svg.path
             [ d <|
                 pathD
@@ -403,7 +402,6 @@ bendedPath vc _ label withArrow x1 y1 x2 y2 =
                     , l ( arrowLength, arrowLength )
                     , l ( -arrowLength, arrowLength )
                     ]
-            , Css.edge vc |> css
             ]
             []
 
@@ -413,7 +411,6 @@ bendedPath vc _ label withArrow x1 y1 x2 y2 =
         [ lx |> String.fromFloat |> x
         , ly |> String.fromFloat |> y
         , textAnchor "middle"
-        , Css.edgeLabel vc |> css
         ]
         [ text label
         ]

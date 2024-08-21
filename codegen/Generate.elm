@@ -5,12 +5,11 @@ module Generate exposing (main)
 import Api.Raw exposing (..)
 import Elm
 import Gen.CodeGen.Generate as Generate
-import Generate.Common as Common
+import Generate.Colors as Colors
 import Generate.Html
 import Generate.Svg
 import Json.Decode
-import String.Case exposing (toCamelCaseLower, toCamelCaseUpper)
-import Tuple exposing (mapFirst)
+import String.Case exposing (toCamelCaseUpper)
 
 
 main : Program Json.Decode.Value () ()
@@ -34,33 +33,37 @@ canvasNodeToFiles node =
         |> List.concat
 
 
-formatExpression : ( String, Elm.Expression ) -> Elm.Declaration
-formatExpression =
-    mapFirst toCamelCaseLower
-        >> (\( name, expr ) -> Elm.declaration name expr)
-
-
 frameToFiles : SubcanvasNode -> List Generate.File
 frameToFiles node =
+    let
+        themeFolder =
+            "Theme"
+    in
     case node of
         SubcanvasNodeFrameNode n ->
-            let
-                name sub =
-                    n.frameTraits.isLayerTrait.name
-                        |> toCamelCaseUpper
-                        |> List.singleton
-                        |> (::) sub
-                        |> (::) "Theme"
-            in
-            [ frameNodeToDeclarations
-                (Generate.Svg.subcanvasNodeComponentsToDeclarations "")
-                n
-                |> Elm.file (name "Svg")
-            , frameNodeToDeclarations
-                (Generate.Html.subcanvasNodeComponentsToDeclarations "")
-                n
-                |> Elm.file (name "Html")
-            ]
+            if n.frameTraits.isLayerTrait.name == "Colors" then
+                Colors.frameNodeToDeclarations n
+                    |> Elm.file [ themeFolder, "Colors" ]
+                    |> List.singleton
+
+            else
+                let
+                    name sub =
+                        n.frameTraits.isLayerTrait.name
+                            |> toCamelCaseUpper
+                            |> List.singleton
+                            |> (::) sub
+                            |> (::) themeFolder
+                in
+                [ frameNodeToDeclarations
+                    (Generate.Svg.subcanvasNodeComponentsToDeclarations "")
+                    n
+                    |> Elm.file (name "Svg")
+                , frameNodeToDeclarations
+                    (Generate.Html.subcanvasNodeComponentsToDeclarations "")
+                    n
+                    |> Elm.file (name "Html")
+                ]
 
         _ ->
             []
@@ -68,7 +71,7 @@ frameToFiles node =
 
 frameNodeToDeclarations : (SubcanvasNode -> List Elm.Declaration) -> FrameNode -> List Elm.Declaration
 frameNodeToDeclarations gen node =
-    if True || node.frameTraits.readyForDev then
+    if node.frameTraits.readyForDev then
         List.map gen node.frameTraits.children
             |> List.concat
 

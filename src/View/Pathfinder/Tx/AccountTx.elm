@@ -15,6 +15,7 @@ import Svg.PathD exposing (..)
 import Svg.Styled as Svg exposing (..)
 import Svg.Styled.Attributes exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
+import Theme.Svg.GraphComponents as GraphComponents
 import Tuple exposing (pair)
 import Util.Pathfinder exposing (getAddress)
 import View.Locale as Locale
@@ -25,7 +26,7 @@ edge : Plugins -> View.Config -> Pathfinder.Config -> Dict Id Address -> Account
 edge _ vc _ addresses tx =
     let
         rad =
-            vc.theme.pathfinder.addressRadius
+            GraphComponents.addressNodeNodeFrameDetails.width / 2
     in
     tx.to
         |> getAddress addresses
