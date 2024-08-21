@@ -8,14 +8,6 @@ import Theme.Colors as Colors
 import Util.View
 
 
-graphSelectionStyle : View.Config -> List Css.Style
-graphSelectionStyle vc =
-    [ primaryColorSelection |> Css.fill, highlightPrimaryFrostedColor vc |> border3 xsGap solid ]
-
-
-
--- helpers
-
 
 toAttr : List Style -> Html.Styled.Attribute msg
 toAttr =
