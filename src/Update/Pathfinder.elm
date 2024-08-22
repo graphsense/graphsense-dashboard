@@ -909,12 +909,12 @@ updateByMsg plugins uc msg model =
                     else
                         NoTags
             in
-            n
-                ({ model
-                    | tagSummaries = Dict.insert id d model.tagSummaries
-                 }
-                    |> updateTagDataOnAddress id
-                )
+            ( { model
+                | tagSummaries = Dict.insert id d model.tagSummaries
+              }
+                |> updateTagDataOnAddress id
+            , data.bestActor |> Maybe.map (List.singleton >> flip fetchActors model.actors) |> Maybe.withDefault []
+            )
 
         BrowserGotAddressesTags addressIds data ->
             let
@@ -1333,6 +1333,13 @@ fetchActorsForAddress d existing =
         |> Maybe.map (List.filter (\l -> not (Dict.member l.id existing)))
         |> Maybe.map (List.map (.id >> fetchActor))
         |> Maybe.withDefault []
+
+
+fetchActors : List String -> Dict.Dict String Api.Data.Actor -> List Effect
+fetchActors d existing =
+    d
+        |> List.filter (\l -> not (Dict.member l existing))
+        |> List.map fetchActor
 
 
 getBiggestIO : Maybe (List Api.Data.TxValue) -> Maybe String -> Maybe String

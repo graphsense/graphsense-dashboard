@@ -1,6 +1,7 @@
 module View.Pathfinder.Address exposing (toNodeIcon, view)
 
 import Animation as A
+import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -33,9 +34,12 @@ view _ vc _ colors address =
         data =
             RemoteData.toMaybe address.data
 
-        -- clusterid = data |> Maybe.map (\z -> (z.currency, (Hex.toString z.entity)))
-        -- clusterColor = clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map (.color)
-        -- colorCss = clusterColor |> Maybe.map (Util.View.toCssColor >> Css.color >> List.singleton) |> Maybe.withDefault []
+        clusterid =
+            data |> Maybe.map (\z -> ( z.currency, Hex.toString z.entity ))
+
+        clusterColor =
+            clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map .color
+
         directionToField direction =
             case direction of
                 Incoming ->
@@ -125,7 +129,7 @@ view _ vc _ colors address =
             , highlightVisible = address.selected
             , expandLeftVisible = expandVisible Incoming
             , expandRightVisible = expandVisible Outgoing
-            , iconInstance = toNodeIcon address
+            , iconInstance = toNodeIcon address clusterColor
             , exchangeLabel =
                 address.exchange
                     |> Maybe.withDefault ""
@@ -165,10 +169,21 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIcon : Address -> Svg msg
-toNodeIcon address =
-    if address.exchange == Nothing then
-        Icons.iconsUntagged {}
+toNodeIcon : Address -> Maybe Color -> Svg msg
+toNodeIcon address clusterColor =
+    case ( address.exchange, clusterColor ) of
+        ( Nothing, Nothing ) ->
+            Icons.iconsUntagged {}
 
-    else
-        Icons.iconsExchange {}
+        ( Nothing, Just c ) ->
+            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]) {}
+
+        ( Just _, Just c ) ->
+            let
+                cattr =
+                    [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
+            in
+            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_vector14 cattr |> s_vector15Of10 cattr |> s_vector15Of11 cattr) {}
+
+        ( Just _, _ ) ->
+            Icons.iconsExchange {}
