@@ -3,10 +3,8 @@ module Generate.Html.VectorNode exposing (..)
 import Api.Raw exposing (..)
 import Elm
 import Gen.Css as Css
-import Gen.Svg.Styled
-import Gen.Svg.Styled.Attributes as Attributes
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
-import Generate.Svg.VectorNode
+import Generate.Svg.DefaultShapeTraits
 import RecordSetter exposing (s_styles)
 import Types exposing (Config, Details)
 
@@ -31,5 +29,5 @@ toStyles node =
 
 toDetails : VectorNode -> Details
 toDetails node =
-    Generate.Svg.VectorNode.toDetails node
+    Generate.Svg.DefaultShapeTraits.toDetails node.cornerRadiusShapeTraits
         |> s_styles (toStyles node)

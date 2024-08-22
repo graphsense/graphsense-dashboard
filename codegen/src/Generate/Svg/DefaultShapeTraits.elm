@@ -2,6 +2,8 @@ module Generate.Svg.DefaultShapeTraits exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
+import Elm.Op
+import List.Nonempty as NList
 import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
@@ -17,8 +19,8 @@ toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTrait
 toExpressions config componentName node =
     Gen.Svg.Styled.g
         (toAttributes node)
-        [ toStrokePaths node
-        , toFillPaths node
+        [ toStrokePaths config node
+        , toFillPaths config node
         ]
         |> withVisibility componentName config.propertyExpressions node.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
@@ -32,8 +34,8 @@ renderPath { path } =
         []
 
 
-toStrokePaths : { a | defaultShapeTraits : DefaultShapeTraits } -> Elm.Expression
-toStrokePaths node =
+toStrokePaths : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> Elm.Expression
+toStrokePaths config node =
     let
         strokes =
             node.defaultShapeTraits.hasGeometryTrait.strokes
@@ -54,17 +56,25 @@ toStrokePaths node =
                     strokes
     in
     node.defaultShapeTraits.strokeGeometry
-        |> Maybe.map (List.map renderPath)
-        |> Maybe.withDefault []
-        |> Elm.list
-        |> Gen.Svg.Styled.call_.g
-            ([ css |> Attributes.css ]
-                |> Elm.list
+        |> Maybe.andThen NList.fromList
+        |> Maybe.map NList.toList
+        |> Maybe.map
+            (List.map renderPath
+                >> Elm.list
+                >> Gen.Svg.Styled.call_.g
+                    (Common.getName node
+                        |> getElementAttributes config
+                        |> Elm.Op.append
+                            ([ css |> Attributes.css ]
+                                |> Elm.list
+                            )
+                    )
             )
+        |> Maybe.withDefault (Gen.Svg.Styled.g [] [])
 
 
-toFillPaths : { a | defaultShapeTraits : DefaultShapeTraits } -> Elm.Expression
-toFillPaths node =
+toFillPaths : Config -> { a | defaultShapeTraits : DefaultShapeTraits } -> Elm.Expression
+toFillPaths config node =
     let
         css =
             node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
@@ -75,8 +85,12 @@ toFillPaths node =
         |> Maybe.withDefault []
         |> Elm.list
         |> Gen.Svg.Styled.call_.g
-            ([ css |> Attributes.css ]
-                |> Elm.list
+            (Common.getName node
+                |> getElementAttributes config
+                |> Elm.Op.append
+                    ([ css |> Attributes.css ]
+                        |> Elm.list
+                    )
             )
 
 
