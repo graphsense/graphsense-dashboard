@@ -1,6 +1,7 @@
 module View.Pathfinder.Address exposing (toNodeIcon, view)
 
 import Animation as A
+import Api.Data
 import Color exposing (Color)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
@@ -14,7 +15,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
 import Model.Pathfinder.Address exposing (..)
 import Model.Pathfinder.Colors as Colors
-import Model.Pathfinder.Id as Id
+import Model.Pathfinder.Id as Id exposing (Id)
 import Msg.Pathfinder exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
@@ -28,8 +29,8 @@ import Util.Graph exposing (translate)
 import Util.View exposing (onClickWithStop, truncateLongIdentifierWithLengths)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> Svg Msg
-view _ vc _ colors address =
+view : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Address -> (Id -> Maybe Api.Data.Entity) -> Svg Msg
+view _ vc _ colors address getCluster =
     let
         data =
             RemoteData.toMaybe address.data
@@ -39,6 +40,9 @@ view _ vc _ colors address =
 
         clusterColor =
             clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map .color
+
+        cluster =
+            clusterid |> Maybe.andThen getCluster
 
         directionToField direction =
             case direction of
@@ -129,7 +133,7 @@ view _ vc _ colors address =
             , highlightVisible = address.selected
             , expandLeftVisible = expandVisible Incoming
             , expandRightVisible = expandVisible Outgoing
-            , iconInstance = toNodeIcon address clusterColor
+            , iconInstance = toNodeIcon vc.highlightClusterFriends address cluster clusterColor
             , exchangeLabel =
                 address.exchange
                     |> Maybe.withDefault ""
@@ -169,19 +173,38 @@ expandHandleLoadingSpinner vc address direction details =
         Nothing
 
 
-toNodeIcon : Address -> Maybe Color -> Svg msg
-toNodeIcon address clusterColor =
+toNodeIcon : Bool -> Address -> Maybe Api.Data.Entity -> Maybe Color -> Svg msg
+toNodeIcon highlight address cluster clusterColor =
+    let
+        clstrSize =
+            cluster |> Maybe.map .noAddresses |> Maybe.withDefault 0
+
+        getHighlight c =
+            if highlight then
+                [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
+
+            else
+                []
+    in
     case ( address.exchange, clusterColor ) of
         ( Nothing, Nothing ) ->
-            Icons.iconsUntagged {}
+            if clstrSize > 1 then
+                Icons.iconsCluster {}
+
+            else
+                Icons.iconsUntagged {}
 
         ( Nothing, Just c ) ->
-            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]) {}
+            if clstrSize > 1 then
+                Icons.iconsClusterWithAttributes (Icons.iconsClusterAttributes |> s_vector (getHighlight c)) {}
+
+            else
+                Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 (getHighlight c)) {}
 
         ( Just _, Just c ) ->
             let
                 cattr =
-                    [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
+                    getHighlight c
             in
             Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_vector14 cattr |> s_vector15Of10 cattr |> s_vector15Of11 cattr) {}
 

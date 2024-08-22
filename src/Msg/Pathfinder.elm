@@ -73,6 +73,7 @@ type DisplaySettingsMsg
     | UserClickedToggleShowTxTimestamp
     | UserClickedToggleDatesInUserLocale
     | UserClickedToggleShowTimeZoneOffset
+    | UserClickedToggleHighlightClusterFriends
 
 
 type TxDetailsMsg

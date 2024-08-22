@@ -338,10 +338,11 @@ settingsView vc pc m =
         content =
             div []
                 [ span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction Settings") ]
-                , Util.View.onOffSwitch vc [ HA.checked pc.showTxTimestamps, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
+                , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
                 , span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date Settings") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
                 , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
+                , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
@@ -662,7 +663,7 @@ addressDetailsContentView vc gc model id viewState =
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
         df =
-            SidebarComponents.sidePanelHeaderAttributes
+            SidebarComponents.sidePanelHeaderAttributes |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
 
         inst =
             SidebarComponents.sidePanelHeaderInstances
@@ -685,7 +686,8 @@ addressDetailsContentView vc gc model id viewState =
         }
         { sidePanelHeader =
             { headerInstance =
-                SidebarComponents.sidePanelAddressHeader
+                SidebarComponents.sidePanelAddressHeaderWithAttributes
+                    (SidebarComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
                     { sidePanelAddressHeader =
                         { iconInstance =
                             if address.exchange /= Nothing then
@@ -712,31 +714,38 @@ addressDetailsContentView vc gc model id viewState =
             }
         , actorLabel =
             { iconInstance =
+                let
+                    iconDetails =
+                        Theme.Html.Icons.iconsAssignDetails
+
+                    icon =
+                        Icons.iconsAssignSvg
+                in
                 actorImg
                     |> Maybe.map
                         (\imgSrc ->
                             img
                                 [ src imgSrc
                                 , HA.alt <| Maybe.withDefault "" <| actorText
-                                , HA.width <| round Icons.iconsTagLargeTagIconDetails.width
-                                , HA.height <| round Icons.iconsTagLargeTagIconDetails.height
-                                , HA.css Theme.Html.Icons.iconsTagLargeTagIconDetails.styles
+                                , HA.width <| round iconDetails.width
+                                , HA.height <| round iconDetails.height
+                                , HA.css iconDetails.styles
                                 ]
                                 []
                                 |> List.singleton
                                 |> div
-                                    [ HA.css Theme.Html.Icons.iconsTagLargeDetails.styles
+                                    [ HA.css iconDetails.styles
                                     , HA.css
-                                        [ Theme.Html.Icons.iconsTagLargeDetails.width
+                                        [ iconDetails.width
                                             |> Css.px
                                             |> Css.width
-                                        , Theme.Html.Icons.iconsTagLargeDetails.height
+                                        , iconDetails.height
                                             |> Css.px
                                             |> Css.height
                                         ]
                                     ]
                         )
-                    |> Maybe.withDefault (Icons.iconsTagLargeSvg [] {})
+                    |> Maybe.withDefault (icon [] {})
             , text = actorText |> Maybe.withDefault ""
             }
         }
@@ -992,7 +1001,7 @@ graphSvg plugins _ vc gc model bbox =
             , gradient "accountOutEdgeBack" Colors.pathOut Colors.pathIn
             , gradient "accountInEdgeBack" Colors.pathOut Colors.pathIn
             ]
-        , Svg.lazy5 Network.addresses plugins vc gc model.colors model.network.addresses
+        , Svg.lazy6 Network.addresses plugins vc gc model.colors model.clusters model.network.addresses
         , Svg.lazy4 Network.txs plugins vc gc model.network.txs
         , Svg.lazy4 Network.edges plugins vc gc model.network.txs
         , drawDragSelector vc model

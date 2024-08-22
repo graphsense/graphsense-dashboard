@@ -21,6 +21,8 @@ type alias UserSettings =
     , showDatesInUserLocale : Maybe Bool
     , showZeroValueTxs : Maybe Bool
     , showTimeZoneOffset : Maybe Bool
+    , highlightClusterFriends : Maybe Bool
+    , showTimestampOnTxEdge : Maybe Bool
     }
 
 
@@ -114,6 +116,8 @@ decoder =
         |> optional "showDatesInUserLocale" (nullable bool |> fromString) Nothing
         |> optional "showZeroValueTxs" (nullable bool |> fromString) Nothing
         |> optional "showTimeZoneOffset" (nullable bool |> fromString) Nothing
+        |> optional "highlightClusterFriends" (nullable bool |> fromString) Nothing
+        |> optional "showTimestampOnTxEdge" (nullable bool |> fromString) Nothing
 
 
 encoder : UserSettings -> Json.Encode.Value
@@ -130,6 +134,8 @@ encoder settings =
         , ( "showDatesInUserLocale", settings.showDatesInUserLocale |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showZeroValueTxs", settings.showZeroValueTxs |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         , ( "showTimeZoneOffset", settings.showTimeZoneOffset |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "highlightClusterFriends", settings.highlightClusterFriends |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
+        , ( "showTimestampOnTxEdge", settings.showTimestampOnTxEdge |> Maybe.map Json.Encode.bool |> Maybe.withDefault Json.Encode.null )
         ]
 
 
@@ -146,4 +152,6 @@ default =
     , showDatesInUserLocale = Nothing
     , showZeroValueTxs = Nothing
     , showTimeZoneOffset = Nothing
+    , highlightClusterFriends = Nothing
+    , showTimestampOnTxEdge = Nothing
     }

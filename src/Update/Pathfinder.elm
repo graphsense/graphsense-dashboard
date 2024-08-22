@@ -871,16 +871,22 @@ updateByMsg plugins uc msg model =
                     n { model | pointerTool = tool }
 
                 UserClickedToggleShowTxTimestamp ->
-                    model.config
-                        |> s_showTxTimestamps (not model.config.showTxTimestamps)
-                        |> flip s_config model
-                        |> n
+                    -- handled Upstream
+                    n model
 
+                -- model.config
+                --     |> s_showTxTimestamps (not model.config.showTxTimestamps)
+                --     |> flip s_config model
+                --     |> n
                 UserClickedToggleDatesInUserLocale ->
                     -- handled Uptream
                     n model
 
                 UserClickedToggleShowTimeZoneOffset ->
+                    -- handled Uptream
+                    n model
+
+                UserClickedToggleHighlightClusterFriends ->
                     -- handled Uptream
                     n model
 

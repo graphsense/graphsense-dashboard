@@ -32,8 +32,7 @@ init us _ =
       , history = History.init
       , details = Nothing
       , config =
-            { showTxTimestamps = True
-            , isDisplaySettingsOpen = False
+            { isDisplaySettingsOpen = False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag

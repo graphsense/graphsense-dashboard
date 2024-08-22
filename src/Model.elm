@@ -168,4 +168,6 @@ userSettingsFromMainModel model =
     , showDatesInUserLocale = Just model.config.showDatesInUserLocale
     , showZeroValueTxs = Just model.graph.config.showZeroTransactions
     , showTimeZoneOffset = Just model.config.showTimeZoneOffset
+    , showTimestampOnTxEdge = Just model.config.showTimestampOnTxEdge
+    , highlightClusterFriends = Just model.config.highlightClusterFriends
     }

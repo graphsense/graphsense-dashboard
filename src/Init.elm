@@ -44,6 +44,8 @@ init plugins uc flags url key =
             , size = Nothing
             , showDatesInUserLocale = settings.showDatesInUserLocale |> Maybe.withDefault True
             , showTimeZoneOffset = settings.showTimeZoneOffset |> Maybe.withDefault False
+            , highlightClusterFriends = settings.highlightClusterFriends |> Maybe.withDefault True
+            , showTimestampOnTxEdge = settings.showTimestampOnTxEdge |> Maybe.withDefault True
             }
       , page = Stats
       , search = Search.init (Search.initSearchAll Nothing)

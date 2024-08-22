@@ -71,7 +71,7 @@ view _ vc pc id highlight tx =
             , highlightVisible = highlight
             , date = Locale.timestampDateUniform vc.locale tx.raw.timestamp
             , time = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
-            , timestampVisible = pc.showTxTimestamps
+            , timestampVisible = vc.showTimestampOnTxEdge
             }
         }
 

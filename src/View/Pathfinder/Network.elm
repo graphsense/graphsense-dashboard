@@ -1,5 +1,7 @@
 module View.Pathfinder.Network exposing (addresses, edges, txs)
 
+import Api.Data
+import Basics.Extra exposing (flip)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Dict exposing (Dict)
@@ -19,12 +21,12 @@ import View.Pathfinder.Address as Address
 import View.Pathfinder.Tx as Tx
 
 
-addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id Address -> Svg Msg
-addresses plugins vc gc colors =
+addresses : Plugins -> View.Config -> Pathfinder.Config -> Colors.ScopedColorAssignment -> Dict Id Api.Data.Entity -> Dict Id Address -> Svg Msg
+addresses plugins vc gc colors clusters =
     Dict.foldl
         (\id address svg ->
             ( Id.toString id
-            , Svg.lazy5 Address.view plugins vc gc colors address
+            , Svg.lazy6 Address.view plugins vc gc colors address (flip Dict.get clusters)
             )
                 :: svg
         )

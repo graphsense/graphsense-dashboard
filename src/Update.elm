@@ -626,6 +626,32 @@ update plugins uc msg model =
             in
             ( m, eff ++ neff )
 
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleHighlightClusterFriends) model.pathfinder
+
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+
+                ( m, eff ) =
+                    toggleHighlightClusterFriends nm
+            in
+            ( m, eff ++ neff )
+
+        PathfinderMsg (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) ->
+            let
+                ( pf, pfeff ) =
+                    Pathfinder.update plugins uc (Pathfinder.ChangedDisplaySettingsMsg Pathfinder.UserClickedToggleShowTxTimestamp) model.pathfinder
+
+                ( nm, neff ) =
+                    ( model |> s_pathfinder pf, pfeff |> List.map PathfinderEffect )
+
+                ( m, eff ) =
+                    togglShowTimestampOnTxEdge nm
+            in
+            ( m, eff ++ neff )
+
         PathfinderMsg Pathfinder.UserClickedRestartYes ->
             let
                 ( m, cmd ) =
@@ -1406,5 +1432,23 @@ toggleShowTimeZoneOffset m =
     let
         nm =
             m |> s_config (m.config |> s_showTimeZoneOffset (not m.config.showTimeZoneOffset))
+    in
+    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+
+
+toggleHighlightClusterFriends : Model key -> ( Model key, List Effect )
+toggleHighlightClusterFriends m =
+    let
+        nm =
+            m |> s_config (m.config |> s_highlightClusterFriends (not m.config.highlightClusterFriends))
+    in
+    ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )
+
+
+togglShowTimestampOnTxEdge : Model key -> ( Model key, List Effect )
+togglShowTimestampOnTxEdge m =
+    let
+        nm =
+            m |> s_config (m.config |> s_showTimestampOnTxEdge (not m.config.showTimestampOnTxEdge))
     in
     ( nm, SaveUserSettingsEffect (Model.userSettingsFromMainModel nm) |> List.singleton )

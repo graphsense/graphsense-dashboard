@@ -8,7 +8,7 @@ import Model.Direction exposing (Direction(..))
 import Model.Pathfinder.Address exposing (Address, txsGetSet)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
-import RemoteData exposing (RemoteData)
+import RemoteData
 import Set exposing (Set)
 
 
