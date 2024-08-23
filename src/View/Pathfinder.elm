@@ -394,10 +394,10 @@ graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Con
 graphSelectionToolsView _ _ vc _ m =
     let
         selectBtn =
-            BtnConfig (\_ -> Theme.Html.Icons.iconsMouseCursor {}) "select" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
+            BtnConfig (\_ -> Theme.Html.Icons.iconsMouseCursor {}) "Selection Tool" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
 
         dragBtn =
-            BtnConfig (\_ -> Theme.Html.Icons.iconsHand {}) "Drag" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
+            BtnConfig (\_ -> Theme.Html.Icons.iconsHand {}) "Move Tool" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
     in
     div
         [ graphSelectionToolsStyle vc |> toAttr
