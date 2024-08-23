@@ -932,7 +932,7 @@ updateByMsg plugins uc msg model =
                                         curr
 
                                     _ ->
-                                        LoadingTags
+                                        HasTags
                             )
                         )
 
