@@ -224,7 +224,7 @@ panelHeadingStyle2 _ =
 panelHeadingStyle3 : View.Config -> List Style
 panelHeadingStyle3 _ =
     [ fontWeight bold
-    , mText |> fontSize
+    , Css.marginTop (Css.px 15)
     , mlGap |> marginBottom
     ]
 
@@ -244,9 +244,8 @@ collapsibleSectionHeadingStyle vc =
 collapsibleSectionHeadingDisplaySettingsStyle : View.Config -> List Style
 collapsibleSectionHeadingDisplaySettingsStyle vc =
     [ fontWeight bold
-    , lText |> fontSize
-    , mlGap |> marginBottom
-    , mlGap |> marginTop
+    , sGap |> marginBottom
+    , sGap |> marginTop
     , cursor pointer
     ]
 
@@ -462,7 +461,7 @@ searchBoxContainerStyle _ =
 
 searchBoxIconStyle : View.Config -> List Style
 searchBoxIconStyle _ =
-    [ position absolute, px 7 |> top, px 7 |> left ]
+    [ position absolute, px 4 |> top, px 7 |> left ]
 
 
 addressDetailsViewActorImageStyle : View.Config -> List Style

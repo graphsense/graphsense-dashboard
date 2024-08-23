@@ -218,7 +218,7 @@ updateByMsg plugins uc msg model =
                                 []
 
                             else
-                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffect { currency = Id.network id, entity = data.entity } |> ApiEffect ]
+                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffectWithDetails { currency = Id.network id, entity = data.entity, include_actor = False, include_best_tag = False } |> ApiEffect ]
                            )
             in
             model
@@ -874,10 +874,6 @@ updateByMsg plugins uc msg model =
                     -- handled Upstream
                     n model
 
-                -- model.config
-                --     |> s_showTxTimestamps (not model.config.showTxTimestamps)
-                --     |> flip s_config model
-                --     |> n
                 UserClickedToggleDatesInUserLocale ->
                     -- handled Uptream
                     n model
@@ -896,6 +892,9 @@ updateByMsg plugins uc msg model =
                             model.config |> s_isDisplaySettingsOpen (not model.config.isDisplaySettingsOpen)
                     in
                     n { model | config = nds }
+
+        UserClickedToggleClusterDetailsOpen ->
+            n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
 
         Tick time ->
             n { model | currentTime = time }
@@ -924,8 +923,8 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressesTags addressIds data ->
             let
-                updateHasTags tag =
-                    Dict.update (Id.init tag.currency tag.address)
+                updateHasTags ( id, tag ) =
+                    Dict.update id
                         (Maybe.map
                             (\curr ->
                                 case curr of
@@ -950,8 +949,11 @@ updateByMsg plugins uc msg model =
                             )
                         )
 
+                zipped =
+                    List.map2 Tuple.pair addressIds data
+
                 tagSummaries =
-                    data
+                    zipped
                         |> List.foldl updateHasTags
                             (addressIds
                                 |> List.foldl
@@ -962,11 +964,12 @@ updateByMsg plugins uc msg model =
             ( { model
                 | tagSummaries = tagSummaries
               }
-            , data
-                |> List.map (\a -> Id.init a.currency a.address)
-                |> Set.fromList
-                |> Set.toList
-                |> List.map (fetchTagSummaryForId tagSummaries)
+            , []
+              -- , zipped
+              --     |> List.map (\( id, tag ) -> id)
+              --     |> Set.fromList
+              --     |> Set.toList
+              --     |> List.map (fetchTagSummaryForId tagSummaries)
             )
 
 
@@ -1312,6 +1315,7 @@ bulkfetchTagsForTx tx model =
                                 { currency = raw.currency
                                 , addresses = List.map Id.id adr
                                 , pagesize = Just 1
+                                , include_best_cluster_tag = True
                                 }
                             |> ApiEffect
                     )
@@ -1329,7 +1333,7 @@ fetchTagSummaryForId existing id =
 
         _ ->
             BrowserGotTagSummary id
-                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id }
+                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, include_best_cluster_tag = True }
                 |> ApiEffect
 
 

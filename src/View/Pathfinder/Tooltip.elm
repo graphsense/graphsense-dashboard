@@ -56,20 +56,16 @@ address vc havingTags adr =
         net =
             Id.network adr.id
 
-        ts =
-            case havingTags of
-                Just (HasTagSummary t) ->
-                    Just t
-
-                _ ->
-                    Nothing
-
-        category =
-            ts |> Maybe.map .broadCategory |> Maybe.withDefault "-"
-
-        lbl =
-            ts |> Maybe.andThen .bestLabel |> Maybe.withDefault "-"
-
+        -- ts =
+        --     case havingTags of
+        --         Just (HasTagSummary t) ->
+        --             Just t
+        --         _ ->
+        --             Nothing
+        -- category =
+        --     ts |> Maybe.map .broadCategory |> Maybe.withDefault "-"
+        -- lbl =
+        --     ts |> Maybe.andThen .bestLabel |> Maybe.withDefault "-"
         balance =
             Address.getBalance adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
 
@@ -79,9 +75,8 @@ address vc havingTags adr =
         currency =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
 
-        cluster =
-            adr |> Address.getClusterId |> Maybe.withDefault "-"
-
+        -- cluster =
+        --     adr |> Address.getClusterId |> Maybe.withDefault "-"
         key =
             Locale.string vc.locale
                 >> text
@@ -107,7 +102,8 @@ address vc havingTags adr =
             -- , key "Label"
             [ key "Balance"
             , key "Total Received"
-            , key "Cluster"
+
+            -- , key "Cluster"
             ]
         , div
             [ css GraphComponents.tooltipProperty1DownContent2Details.styles
@@ -129,7 +125,8 @@ address vc havingTags adr =
                 ++ currency
                 |> text
                 |> val
-            , cluster |> text |> val
+
+            -- , cluster |> text |> val
             ]
         ]
 

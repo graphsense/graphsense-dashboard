@@ -33,6 +33,7 @@ init us _ =
       , details = Nothing
       , config =
             { isDisplaySettingsOpen = False
+            , isClusterDetailsOpen = False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag

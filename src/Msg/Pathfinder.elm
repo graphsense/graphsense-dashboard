@@ -39,7 +39,7 @@ type Msg
     | AnimationFrameDeltaForMove Float
     | BrowserGotAddressData Id Api.Data.Address
     | BrowserGotClusterData Id Api.Data.Entity
-    | BrowserGotAddressesTags (List Id) (List Api.Data.AddressTag)
+    | BrowserGotAddressesTags (List Id) (List (Maybe Api.Data.AddressTag))
     | BrowserGotTagSummary Id Api.Data.TagSummary
     | UserClickedAddressExpandHandle Id Direction
     | UserClickedAddress Id
@@ -65,6 +65,7 @@ type Msg
     | UserMovesMouseOutAddress Id
     | HovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
+    | UserClickedToggleClusterDetailsOpen
 
 
 type DisplaySettingsMsg

@@ -45,17 +45,18 @@ color6 =
 
 color7 : Color
 color7 =
-    rgb255 150 118 98
-
+    rgb255 87 120 164
 
 color8 : Color
 color8 =
-    rgb255 184 176 172
+    rgb255 150 118 98
 
 
 color9 : Color
 color9 =
-    rgb255 87 120 164
+    rgb255 184 176 172
+
+
 
 
 colorScheme : List Color

@@ -308,6 +308,14 @@ messageFromApiEffect model effect =
             )
                 |> Just
 
+        Api.GetEntityEffectWithDetails e _ ->
+            ( "{1}: loading entity {0}"
+            , [ String.fromInt e.entity
+              , e.currency |> String.toUpper
+              ]
+            )
+                |> Just
+
         Api.GetBlockEffect e _ ->
             ( "{1}: loading block {0}"
             , [ String.fromInt e.height

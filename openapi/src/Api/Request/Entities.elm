@@ -185,19 +185,6 @@ getEntity currency_path entity_path excludeBestAddressTag_query includeActors_qu
 
 
 
-getTagSummaryByEntity : (String) -> (Int) -> Api.Request Api.Data.TagSummary
-getTagSummaryByEntity currency_path entity_path =
-    Api.request
-        "GET"
-        "/{currency}/entities/{entity}/tag_summary"
-        [ ( "currency", identity currency_path ), ( "entity", String.fromInt entity_path ) ]
-        []
-        []
-        Nothing
-        Api.Data.tagSummaryDecoder
-
-
-
 listAddressTagsByEntity : (String) -> (Int) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.AddressTags
 listAddressTagsByEntity currency_path entity_path page_query pagesize_query =
     Api.request

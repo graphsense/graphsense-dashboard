@@ -5,6 +5,7 @@ import Api.Data
 import Api.Request.Addresses
 import Api.Request.Blocks
 import Api.Request.Entities
+import Api.Request.Experimental
 import Api.Request.General
 import Api.Request.MyBulk
 import Api.Request.Tags
@@ -39,6 +40,13 @@ type Effect msg
     | GetEntityEffect
         { currency : String
         , entity : Int
+        }
+        (Api.Data.Entity -> msg)
+    | GetEntityEffectWithDetails
+        { currency : String
+        , entity : Int
+        , include_actor : Bool
+        , include_best_tag : Bool
         }
         (Api.Data.Entity -> msg)
     | GetActorEffect
@@ -115,6 +123,7 @@ type Effect msg
     | GetAddressTagSummaryEffect
         { currency : String
         , address : String
+        , include_best_cluster_tag : Bool
         }
         (Api.Data.TagSummary -> msg)
     | GetActorTagsEffect
@@ -215,8 +224,9 @@ type Effect msg
         { currency : String
         , addresses : List String
         , pagesize : Maybe Int
+        , include_best_cluster_tag : Bool
         }
-        (List Api.Data.AddressTag -> msg)
+        (List (Maybe Api.Data.AddressTag) -> msg)
     | BulkGetEntityEffect
         { currency : String
         , entities : List Int
@@ -341,6 +351,11 @@ map mapMsg effect =
             m
                 >> mapMsg
                 |> GetEntityEffect eff
+
+        GetEntityEffectWithDetails eff m ->
+            m
+                >> mapMsg
+                |> GetEntityEffectWithDetails eff
 
         GetActorEffect eff m ->
             m
@@ -486,8 +501,8 @@ map mapMsg effect =
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
-        GetAddressTagSummaryEffect { currency, address } toMsg ->
-            Api.Request.Addresses.getTagSummaryByAddress currency address
+        GetAddressTagSummaryEffect { currency, address, include_best_cluster_tag } toMsg ->
+            Api.Request.Experimental.getTagSummaryByAddress currency address (Just include_best_cluster_tag)
                 |> send apiKey wrapMsg effect toMsg
 
         SearchEffect { query, currency, limit } toMsg ->
@@ -534,6 +549,10 @@ perform apiKey wrapMsg effect =
 
         GetEntityEffect { currency, entity } toMsg ->
             Api.Request.Entities.getEntity currency entity (Just False) (Just True)
+                |> send apiKey wrapMsg effect toMsg
+
+        GetEntityEffectWithDetails { currency, entity, include_actor, include_best_tag } toMsg ->
+            Api.Request.Entities.getEntity currency entity (Just (not include_best_tag)) (Just include_actor)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
@@ -586,7 +605,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressTagsEffect { currency, address, pagesize, nextpage } toMsg ->
-            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize)
+            Api.Request.Addresses.listTagsByAddress currency address nextpage (Just pagesize) (Just False)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorTagsEffect { actorId, pagesize, nextpage } toMsg ->
@@ -653,7 +672,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagsEffect e toMsg ->
-            listWithMaybes Api.Data.addressTagDecoder
+            Json.Decode.list (Json.Decode.maybe Api.Data.addressTagDecoder)
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationListTagsByAddress
@@ -664,6 +683,7 @@ perform apiKey wrapMsg effect =
                                 |> Maybe.map Json.Encode.int
                                 |> Maybe.withDefault Json.Encode.null
                           )
+                        , ( "include_best_cluster_tag", Json.Encode.bool e.include_best_cluster_tag )
                         ]
                     )
                 |> send apiKey wrapMsg effect toMsg

@@ -4,6 +4,7 @@ module View.Locale exposing
     , currency
     , currencyAsFloat
     , currencyWithoutCode
+    , currencyWithoutCode2
     , date
     , durationPosix
     , durationToString
@@ -439,6 +440,33 @@ currencyWithOptions vis model values =
                 |> fiat model code
 
 
+currencyWithOptions2 : CodeVisibility -> Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithOptions2 vis model values =
+    case model.currency of
+        Coin ->
+            if List.all (second >> .value >> (==) 0) values then
+                "0"
+
+            else
+                bestAssetAsInt model values
+                    |> Maybe.map
+                        (\( asset, value ) ->
+                            coinWithOptions vis model asset value
+                                ++ (if List.length values == 1 then
+                                        ""
+
+                                    else
+                                        " +"
+                                            ++ (List.length values - 1 |> String.fromInt)
+                                   )
+                        )
+                    |> Maybe.withDefault "0"
+
+        Fiat code ->
+            sumFiats code values
+                |> fiatWithOptions vis model code
+
+
 currency : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currency =
     currencyWithOptions One
@@ -447,6 +475,11 @@ currency =
 currencyWithoutCode : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
 currencyWithoutCode =
     currencyWithOptions Hidden
+
+
+currencyWithoutCode2 : Model -> List ( AssetIdentifier, Api.Data.Values ) -> String
+currencyWithoutCode2 =
+    currencyWithOptions2 Hidden
 
 
 fiat : Model -> String -> Float -> String

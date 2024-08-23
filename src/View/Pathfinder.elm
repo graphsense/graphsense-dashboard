@@ -74,31 +74,89 @@ import View.Search
 
 
 type alias BtnConfig =
-    { icon : FontAwesome.Icon, text : String, msg : Msg, enable : Bool }
+    { icon : Bool -> Html Msg, text : String, msg : Msg, enable : Bool }
+
+
+inlineExportIcon : Html Msg
+inlineExportIcon =
+    Theme.Html.Icons.iconExportWithAttributes (Theme.Html.Icons.iconExportAttributes |> s_iconExport [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineCloseSmallIcon : Html Msg
+inlineCloseSmallIcon =
+    Theme.Html.Icons.iconsCloseSmallWithAttributes (Theme.Html.Icons.iconsCloseSmallAttributes |> s_iconsCloseSmall [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineDoneIcon : Html Msg
+inlineDoneIcon =
+    Theme.Html.Icons.iconsDoneWithAttributes (Theme.Html.Icons.iconsDoneAttributes |> s_iconsDone [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineTagLargeIcon : Html Msg
+inlineTagLargeIcon =
+    Theme.Html.Icons.iconsTagLargeWithAttributes (Theme.Html.Icons.iconsTagLargeAttributes |> s_iconsTagLarge [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineClusterIcon : Bool -> Color -> Html Msg
+inlineClusterIcon highlight clr =
+    let
+        getHighlight c =
+            if highlight then
+                [ css ((Util.View.toCssColor >> Css.fill >> Css.important >> List.singleton) c) ]
+
+            else
+                []
+    in
+    Theme.Html.Icons.iconsClusterWithAttributes (Theme.Html.Icons.iconsClusterAttributes |> s_iconsCluster [ css [ Css.display Css.inline ] ] |> s_vector (getHighlight clr)) {}
+
+
+inlineChevronRightThickIcon : Html Msg
+inlineChevronRightThickIcon =
+    Theme.Html.Icons.iconsChevronRightThickWithAttributes (Theme.Html.Icons.iconsChevronRightThickAttributes |> s_iconsChevronRightThick [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineChevronDownThickIcon : Html Msg
+inlineChevronDownThickIcon =
+    Theme.Html.Icons.iconsChevronDownThickWithAttributes (Theme.Html.Icons.iconsChevronDownThickAttributes |> s_iconsChevronDownThick [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineChevronDownThinIcon : Html Msg
+inlineChevronDownThinIcon =
+    Theme.Html.Icons.iconsChevronDownThinWithAttributes (Theme.Html.Icons.iconsChevronDownThinAttributes |> s_iconsChevronDownThin [ css [ Css.display Css.inline ] ]) {}
+
+
+inlineChevronUpThinIcon : Html Msg
+inlineChevronUpThinIcon =
+    Theme.Html.Icons.iconsChevronUpThinWithAttributes (Theme.Html.Icons.iconsChevronUpThinAttributes |> s_iconsChevronUpThin [ css [ Css.display Css.inline ] ]) {}
 
 
 graphActionTools : Model -> List BtnConfig
 graphActionTools m =
-    [ BtnConfig FontAwesome.file "restart" UserClickedRestart m.isDirty
-    , BtnConfig FontAwesome.folder "open" NoOp False
-    , BtnConfig FontAwesome.redo "redo" UserClickedRedo (not (List.isEmpty m.history.future))
-    , BtnConfig FontAwesome.undo "undo" UserClickedUndo (not (List.isEmpty m.history.past))
+    [ BtnConfig (\_ -> Theme.Html.Icons.iconsNewFile {}) "restart" UserClickedRestart m.isDirty
+    , BtnConfig (\_ -> Theme.Html.Icons.iconsOpen {}) "open" NoOp False
+    , BtnConfig
+        (\enabled ->
+            if not enabled then
+                Theme.Html.Icons.iconsRedoStateDisabled {}
+
+            else
+                Theme.Html.Icons.iconsRedoStateActive {}
+        )
+        "redo"
+        UserClickedRedo
+        (not (List.isEmpty m.history.future))
+    , BtnConfig (\_ -> Theme.Html.Icons.iconsUndo {}) "undo" UserClickedUndo (not (List.isEmpty m.history.past))
     ]
 
 
 graphActionButtons : List BtnConfig
 graphActionButtons =
-    [ -- BtnConfig FontAwesome.arrowUp "Import file" UserClickedImportFile True
-      BtnConfig FontAwesome.download "Export" (UserClickedExportGraphAsPNG "graph") True
+    [ BtnConfig (\_ -> inlineExportIcon) "Export" (UserClickedExportGraphAsPNG "graph") True
     ]
 
 
 
 -- Helpers
-
-
-type alias ClusterSummaryData =
-    { id : Id, noAddresses : Int, hasMoreTags : Bool, hasMoreBalance : Bool, color : Maybe Color }
 
 
 type ValueType
@@ -111,11 +169,11 @@ type ValueType
     | Timestamp Int
     | TimestampWithTime Int
     | CopyIdent String
-    | ClusterSummary ClusterSummaryData
 
 
 type KVTableRow
     = Row String ValueType
+    | LinkRow String String
     | Gap
 
 
@@ -141,12 +199,19 @@ renderKVRow vc row =
                 , td [] []
                 ]
 
+        LinkRow n l ->
+            tr []
+                [ td [ kVTableKeyTdStyle vc |> toAttr ] []
+                , td [] []
+                , td [] [ Html.a [ HA.href l, Css.View.link vc |> css ] [ Html.text n ] ]
+                ]
+
 
 renderValueTypeValue : View.Config -> ValueType -> Html Msg
 renderValueTypeValue vc val =
     case val of
         ValueInt v ->
-            span [] [ Html.text (String.fromInt v) ]
+            span [] [ Html.text (Locale.int vc.locale v) ]
 
         ValueHex v ->
             span [] [ Html.text (Hex.toString v) ]
@@ -158,7 +223,7 @@ renderValueTypeValue vc val =
             span [] [ Html.text txt ]
 
         Currency v ticker ->
-            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value) ]
+            span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.currencyWithoutCode2 vc.locale [ ( assetFromBase ticker, v ) ]) ]
 
         CurrencyWithCode v ticker ->
             -- span [ HA.title (String.fromInt v.value) ] [ Html.text (Locale.coinWithoutCode vc.locale (assetFromBase ticker) v.value ++ " " ++ ticker) ]
@@ -172,40 +237,6 @@ renderValueTypeValue vc val =
 
         TimestampWithTime ts ->
             span [] [ multiLineDateTimeFromTimestamp vc ts ]
-
-        ClusterSummary cs ->
-            let
-                noAddrPart =
-                    [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.at |> Html.fromUnstyled ], span [ Css.smPaddingRight |> css ] [ Html.text (Locale.int vc.locale cs.noAddresses) ] ]
-
-                tagsPart =
-                    if cs.hasMoreTags then
-                        [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.tag |> Html.fromUnstyled ] ]
-
-                    else
-                        []
-
-                balancePart =
-                    if cs.hasMoreBalance then
-                        [ span [ Css.smPaddingRight |> css ] [ FontAwesome.icon FontAwesome.wallet |> Html.fromUnstyled ] ]
-
-                    else
-                        []
-
-                moreLink =
-                    [ Html.a
-                        [ Route.Graph.entityRoute { currency = Id.network cs.id, entity = Id.id cs.id |> Hex.fromString |> Result.withDefault 0, layer = Nothing, table = Nothing }
-                            |> Route.Graph
-                            |> Route.toUrl
-                            |> HA.href
-                        ]
-                        [ Html.text "..." ]
-                    ]
-
-                clr =
-                    cs.color |> Maybe.map (Util.View.toCssColor >> Css.color >> List.singleton) |> Maybe.withDefault []
-            in
-            Html.span [ clr |> css ] (noAddrPart ++ tagsPart ++ balancePart ++ moreLink)
 
 
 renderValueTypeExtension : View.Config -> ValueType -> Html Msg
@@ -266,10 +297,10 @@ collapsibleSectionRaw headingAttr iconAttr vc title open indicator content actio
     let
         icon =
             if open then
-                FontAwesome.chevronDown
+                inlineChevronDownThickIcon
 
             else
-                FontAwesome.chevronRight
+                inlineChevronRightThickIcon
 
         data =
             if open then
@@ -280,7 +311,7 @@ collapsibleSectionRaw headingAttr iconAttr vc title open indicator content actio
     in
     div []
         (div [ headingAttr, onClick action ]
-            [ span [ iconAttr ] [ FontAwesome.icon icon |> Html.fromUnstyled ]
+            [ span [ iconAttr ] [ icon ]
             , Html.text (Locale.string vc.locale title)
             , indicator |> Maybe.withDefault none
             ]
@@ -335,18 +366,21 @@ settingsView vc pc m =
             else
                 "UTC"
 
+        padding =
+            [ Css.marginTop (Css.px 15) ]
+
         content =
             div []
-                [ span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction Settings") ]
+                [ div [ (panelHeadingStyle3 vc ++ padding) |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
-                , span [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date Settings") ]
+                , div [ (panelHeadingStyle3 vc ++ padding) |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
                 , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
                 , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
-        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Settings" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
         ]
 
 
@@ -362,10 +396,10 @@ graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Con
 graphSelectionToolsView _ _ vc _ m =
     let
         selectBtn =
-            BtnConfig FontAwesome.mousePointer "select" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
+            BtnConfig (\_ -> Theme.Html.Icons.iconsMouseCursor {}) "select" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
 
         dragBtn =
-            BtnConfig FontAwesome.handPaper "Drag" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
+            BtnConfig (\_ -> Theme.Html.Icons.iconsHand {}) "Drag" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
     in
     div
         [ graphSelectionToolsStyle vc |> toAttr
@@ -381,7 +415,7 @@ graphSelectionToolButton vc btn selected =
         [ disableableButton (toggleToolButtonStyle vc selected)
             btn
             [ HA.title (Locale.string vc.locale btn.text) ]
-            [ div [ toolIconStyle vc |> toAttr ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+            [ div [ toolIconStyle vc |> toAttr ] [ btn.icon btn.enable ]
             ]
         ]
 
@@ -392,7 +426,7 @@ graphToolButton vc btn =
         [ disableableButton (toolButtonStyle vc)
             btn
             []
-            [ div [ toolIconStyle vc |> toAttr ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+            [ div [ toolIconStyle vc |> toAttr ] [ btn.icon btn.enable ]
             , Html.text (Locale.string vc.locale btn.text)
             ]
         ]
@@ -414,12 +448,12 @@ graphActionsView vc _ _ =
 
 graphActionButton : View.Config -> BtnConfig -> Html Msg
 graphActionButton vc btn =
-    disableableButton (graphActionButtonStyle vc) btn [] (iconWithText vc btn.icon (Locale.string vc.locale btn.text))
+    disableableButton (graphActionButtonStyle vc) btn [] (iconWithText vc (btn.icon True) (Locale.string vc.locale btn.text))
 
 
-iconWithText : View.Config -> FontAwesome.Icon -> String -> List (Html Msg)
+iconWithText : View.Config -> Html Msg -> String -> List (Html Msg)
 iconWithText _ faIcon text =
-    [ span [ iconWithTextStyle |> toAttr ] [ FontAwesome.icon faIcon |> Html.fromUnstyled ], Html.text text ]
+    [ span [ iconWithTextStyle |> toAttr ] [ faIcon ], Html.text text ]
 
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -428,7 +462,7 @@ searchBoxView plugins _ vc _ model =
         [ searchBoxStyle vc Nothing |> toAttr ]
         [ div [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Search") ]
         , div [ searchBoxContainerStyle vc |> toAttr ]
-            [ span [ searchBoxIconStyle vc |> toAttr ] [ FontAwesome.icon FontAwesome.search |> Html.fromUnstyled ]
+            [ span [ searchBoxIconStyle vc |> toAttr ] [ Theme.Html.Icons.iconsSearchLarge {} ]
             , View.Search.search plugins
                 vc
                 { css = searchInputStyle vc
@@ -471,7 +505,7 @@ detailsViewCloseRow vc =
 
 closeButton : View.Config -> Msg -> Html Msg
 closeButton vc msg =
-    button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
+    button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ Theme.Html.Icons.iconsCloseSmall {} ]
 
 
 getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
@@ -486,23 +520,15 @@ getAddressAnnotationBtns vc data actor hasTags =
     --     []
     -- )
     if isContract data then
-        [ BtnConfig FontAwesome.cog (Locale.string vc.locale "is contract") NoOp True ]
+        [ BtnConfig (\_ -> Theme.Html.Icons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
 
     else
         []
 
 
-
--- ++ (actor |> Maybe.map (\a -> [ BtnConfig FontAwesome.user a.label NoOp True ]) |> Maybe.withDefault [])
-
-
 getAddressActionBtns : Id -> Api.Data.Address -> List BtnConfig
 getAddressActionBtns _ _ =
     []
-
-
-
--- [ BtnConfig FontAwesome.tags "Remove from Graph" (UserClickedRemoveAddressFromGraph id) True ]
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
@@ -545,7 +571,6 @@ utxoTxDetailsContentView vc data =
         actionBtns =
             []
 
-        -- [ BtnConfig FontAwesome.tags "Do it" NoOp True ]
         tbls =
             [ detailsFactTableView vc (apiUtxoTxToRows data), detailsActionsView vc actionBtns ]
     in
@@ -657,8 +682,17 @@ addressDetailsContentView vc gc model id viewState =
             -- , addressNeighborsTableView vc gc id viewState viewState.data
             ]
 
+        clstrId =
+            ( viewState.data.currency, Hex.toString viewState.data.entity )
+
+        clstr =
+            Dict.get clstrId model.clusters
+
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows model.colors nrTagsAddress viewState.data (Dict.get ( viewState.data.currency, Hex.toString viewState.data.entity ) model.clusters)), detailsActionsView vc (getAddressActionBtns id viewState.data) ]
+            [ detailsFactTableView vc (apiAddressToRows viewState.data)
+            , clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress clstrId clstr
+            , detailsActionsView vc (getAddressActionBtns id viewState.data)
+            ]
 
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
@@ -816,11 +850,11 @@ longIdentDetailsHeadingView vc _ id typeName annotations =
 
 annotationButton : View.Config -> BtnConfig -> Html Msg
 annotationButton vc btn =
-    disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+    disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ btn.icon btn.enable ]
 
 
-apiAddressToRows : Colors.ScopedColorAssignment -> Int -> Api.Data.Address -> Maybe Api.Data.Entity -> List KVTableRow
-apiAddressToRows colors nrTagsAddress address cluster =
+apiAddressToRows : Api.Data.Address -> List KVTableRow
+apiAddressToRows address =
     [ Row "Total received" (Currency address.totalReceived address.currency)
     , Row "Total sent" (Currency address.totalSpent address.currency)
     , Row "Balance" (Currency address.balance address.currency)
@@ -828,31 +862,88 @@ apiAddressToRows colors nrTagsAddress address cluster =
     , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
     , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
     ]
-        ++ (cluster |> Maybe.map (apiEntityToRows colors nrTagsAddress address) |> Maybe.withDefault [])
 
 
-apiEntityToRows : Colors.ScopedColorAssignment -> Int -> Api.Data.Address -> Api.Data.Entity -> List KVTableRow
-apiEntityToRows colors nrTagsAddress address cluster =
-    let
-        clstrId =
-            ( cluster.currency, Hex.toString cluster.entity )
-    in
+apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow
+apiEntityToRows clstrid clstr =
     [ Gap
-    , Row "Cluster"
-        (ClusterSummary
-            { id = clstrId
-            , noAddresses = cluster.noAddresses
-            , hasMoreTags = cluster.noAddressTags > nrTagsAddress
-            , hasMoreBalance = cluster.balance.value > address.balance.value
-            , color = Colors.getAssignedColor Colors.Clusters clstrId colors |> Maybe.map .color
-            }
+    , Row "Number of Addresses" (ValueInt clstr.noAddresses)
+    , Row "Total received" (Currency clstr.totalReceived clstr.currency)
+    , Row "Total sent" (Currency clstr.totalSpent clstr.currency)
+    , Row "Balance" (Currency clstr.balance clstr.currency)
+    , Gap
+    , Row "First usage" (Timestamp clstr.firstTx.timestamp)
+    , Row "Last usage" (Timestamp clstr.lastTx.timestamp)
+    , LinkRow "more..."
+        (Route.Graph.entityRoute { currency = Id.network clstrid, entity = Id.id clstrid |> Hex.fromString |> Result.withDefault 0, layer = Nothing, table = Nothing }
+            |> Route.Graph
+            |> Route.toUrl
         )
     ]
 
 
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Id -> Maybe Api.Data.Entity -> Html Msg
+clusterInfoView vc open colors nrAddessTags clstrid mcluster =
+    case mcluster of
+        Just clstr ->
+            if clstr.noAddresses > 1 then
+                let
+                    openIcon =
+                        FontAwesome.icon FontAwesome.minus |> Html.fromUnstyled
+
+                    --inlineChevronUpThinIcon
+                    closeIcon =
+                        FontAwesome.icon FontAwesome.plus |> Html.fromUnstyled
+
+                    --inlineChevronDownThinIcon
+                    clusterColor =
+                        Colors.getAssignedColor Colors.Clusters clstrid colors
+
+                    clusterIcon =
+                        clusterColor |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends) |> Maybe.withDefault none
+                in
+                div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
+                    [ span [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor ], onClick UserClickedToggleClusterDetailsOpen ]
+                        [ span [ css Css.smPaddingRight ]
+                            [ if open then
+                                openIcon
+
+                              else
+                                closeIcon
+                            ]
+                        , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
+                        , span [ css [ Css.float Css.right, Css.paddingRight (Css.px 15) ] ]
+                            [ if vc.highlightClusterFriends then
+                                span [ css Css.smPaddingRight, HA.title (Id.id clstrid) ] [ clusterIcon ]
+
+                              else
+                                none
+                            , if clstr.noAddressTags > nrAddessTags then
+                                span [ HA.title (Locale.string vc.locale "Cluster has addidional tags") ] [ inlineTagLargeIcon ]
+
+                              else
+                                none
+                            ]
+                        ]
+                    , if open then
+                        div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
+                            [ detailsFactTableView vc (apiEntityToRows clstrid clstr)
+                            ]
+
+                      else
+                        none
+                    ]
+
+            else
+                none
+
+        _ ->
+            none
+
+
 apiUtxoTxToRows : Api.Data.TxUtxo -> List KVTableRow
 apiUtxoTxToRows tx =
-    [ Row "Timstamp" (TimestampWithTime tx.timestamp)
+    [ Row "Timestamp" (TimestampWithTime tx.timestamp)
     , Gap
     , Row "Total Input" (Currency tx.totalInput tx.currency)
     , Row "Total Output" (Currency tx.totalOutput tx.currency)
@@ -887,7 +978,7 @@ optionalTextButton vc bt btn =
     disableableButton (detailsActionButtonStyle vc bt)
         btn
         []
-        (span iconattr [ FontAwesome.icon btn.icon |> Html.fromUnstyled ]
+        (span iconattr [ btn.icon btn.enable ]
             :: content
         )
 
@@ -1076,12 +1167,12 @@ dateRangePickerSelectionView vc model =
             dateFromTimestamp vc (Locale.posixToTimestampSeconds endP)
     in
     div [ dateTimeRangeBoxStyle vc |> toAttr ]
-        [ FontAwesome.iconWithOptions FontAwesome.calendar FontAwesome.Regular [] [] |> Html.fromUnstyled
+        [ Theme.Html.Icons.iconsCalendar {}
         , span [] [ Html.text selectedDuration ]
         , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ startML ]
         , span [] [ Html.text (Locale.string vc.locale "to") ]
         , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ endML ]
-        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ FontAwesome.icon FontAwesome.times |> Html.fromUnstyled ]
+        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ Theme.Html.Icons.iconsCloseSmall {} ]
         ]
 
 
@@ -1117,7 +1208,7 @@ transactionTableView vc currency txOnGraphFn model =
                     ]
                 ]
                 [ drp
-                , secondaryButton vc (BtnConfig FontAwesome.filter "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                , secondaryButton vc (BtnConfig (\_ -> Theme.Html.Icons.iconsFilter {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
 
         showSelectionRow =
@@ -1126,9 +1217,9 @@ transactionTableView vc currency txOnGraphFn model =
     (case model.dateRangePicker of
         Just drp ->
             if DatePicker.isOpen drp.dateRangePicker then
-                [ div []
-                    [ primaryButton vc (BtnConfig FontAwesome.check "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
-                    , secondaryButton vc (BtnConfig FontAwesome.times "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
+                [ span []
+                    [ primaryButton vc (BtnConfig (\_ -> inlineDoneIcon) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
+                    , secondaryButton vc (BtnConfig (\_ -> inlineCloseSmallIcon) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                     ]
                 , DatePicker.view drp.settings drp.dateRangePicker
                     |> Html.fromUnstyled

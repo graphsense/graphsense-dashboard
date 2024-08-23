@@ -17,4 +17,4 @@ nodeYOffset =
 
 
 type alias Config =
-    { isDisplaySettingsOpen : Bool }
+    { isDisplaySettingsOpen : Bool, isClusterDetailsOpen : Bool }

@@ -13,6 +13,7 @@ import Maybe.Extra
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
 import Table
+import Theme.Html.Icons
 import Util.View exposing (copyableLongIdentifierPathfinder, loadingSpinner, none)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
@@ -52,7 +53,7 @@ identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg 
 identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
     let
         tagcss =
-            [ Css.width (Css.px 15), Css.display Css.inlineBlock ] |> toAttr
+            [ Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 3) ] |> toAttr
     in
     Table.veryCustomColumn
         { name = label
@@ -60,7 +61,7 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
             \data ->
                 (case lblfn data of
                     HasTags ->
-                        [ span [ tagcss ] [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ] ]
+                        [ span [ tagcss ] [ Theme.Html.Icons.iconsTagSmall {} ] ]
 
                     LoadingTags ->
                         [ span
@@ -79,7 +80,7 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
                                 |> Maybe.withDefault ts.broadCategory
                                 |> title
                             ]
-                            [ FontAwesome.icon FontAwesome.tag |> Html.Styled.fromUnstyled ]
+                            [ Theme.Html.Icons.iconsTagSmall {} ]
                         ]
 
                     NoTags ->
