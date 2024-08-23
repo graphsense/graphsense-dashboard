@@ -203,7 +203,7 @@ renderKVRow vc row =
             tr []
                 [ td [ kVTableKeyTdStyle vc |> toAttr ] []
                 , td [] []
-                , td [] [ Html.a [ HA.href l, Css.View.link vc |> css ] [ Html.text n ] ]
+                , td [] [ Html.a [ HA.href l, Css.View.link vc |> css ] [ Locale.text vc.locale n ] ]
                 ]
 
 
