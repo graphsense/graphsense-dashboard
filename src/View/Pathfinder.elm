@@ -366,16 +366,14 @@ settingsView vc pc m =
             else
                 "UTC"
 
-        padding =
-            [ Css.marginTop (Css.px 15) ]
-
         content =
             div []
-                [ div [ (panelHeadingStyle3 vc ++ padding) |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
+                [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
-                , div [ (panelHeadingStyle3 vc ++ padding) |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
+                , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
                 , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
+                , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Cluster") ]
                 , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
                 ]
     in
