@@ -60,11 +60,13 @@ app.ports.exportGraphPNG.subscribe((filename) => {
     const svgData = new XMLSerializer().serializeToString(svg)
     const svgDataBase64 = btoa(unescape(encodeURIComponent(svgData)))
 
-    var width = window.innerWidth
+    var width = svg.innerWidth
+    || window.innerWidth
     || document.documentElement.clientWidth
     || document.body.clientWidth;
 
-    var height = window.innerHeight
+    var height = svg.innerHeight 
+    || window.innerHeight
     || document.documentElement.clientHeight
     || document.body.clientHeight;
 
