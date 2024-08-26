@@ -226,6 +226,7 @@ componentNodeToDeclarations parentName node =
                         config =
                             { propertyExpressions =
                                 Common.propertiesToPropertyExpressions properties_ properties
+                            , positionRelatively = Nothing
                             , attributes = attributes
                             , instances = instances
                             }

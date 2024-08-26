@@ -14,6 +14,7 @@ import RecordSetter exposing (..)
 import Types exposing (Config, Details)
 
 
+{-
 toExpressions : Config -> String -> RectangleNode -> List Elm.Expression
 toExpressions config componentName node =
     Html.call_.div
@@ -30,7 +31,7 @@ toExpressions config componentName node =
         (Elm.list [])
         |> withVisibility componentName config.propertyExpressions node.rectangularShapeTraits.defaultShapeTraits.isLayerTrait.componentPropertyReferences
         |> List.singleton
-
+-}
 
 toStyles : RectangleNode -> List Elm.Expression
 toStyles node =

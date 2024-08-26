@@ -140,7 +140,7 @@ getMainComponentProperty =
     Maybe.andThen (Dict.get "mainComponent")
 
 
-toTranslate : Rectangle -> String
+toTranslate : {a | x : Float, y : Float } -> String
 toTranslate b =
     "translate({{ x }}, {{ y }})"
         |> Format.namedValue "x" (b.x |> String.fromFloat)

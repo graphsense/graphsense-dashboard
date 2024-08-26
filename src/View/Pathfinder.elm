@@ -51,7 +51,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Icons
-import Theme.Html.SidePanelComponents as SidebarComponents
+import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
@@ -548,17 +548,16 @@ txDetailsContentView vc gc model id viewState =
                     , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl ]
                     )
     in
-    SidebarComponents.sidePanelHeader
+    SidePanelComponents.sidePanelHeader
         { sidePanelHeader =
             { headerInstance =
-                SidebarComponents.sidePanelAddressHeaderWithAttributes
-                    (SidebarComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
-                    { sidePanelAddressHeader =
-                        { iconInstance = SidebarComponents.sidePanelTxNode {}
-                        , headerText =
+                SidePanelComponents.sidePanelTxHeaderWithAttributes
+                    (SidePanelComponents.sidePanelTxHeaderAttributes |> s_sidePanelTxHeader [ css [ Css.padding (Css.px 0) ] ])
+                    { sidePanelTxHeader =
+                        { headerText =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
                         }
-                    , addressLabelCopyIcon =
+                    , iconText =
                         { iconInstance = Id.id id |> copyIconPathfinder vc
                         , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
                         }
@@ -715,10 +714,10 @@ addressDetailsContentView vc gc model id viewState =
         -- addressAnnotationBtns =
         --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
         df =
-            SidebarComponents.sidePanelHeaderAttributes |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
+            SidePanelComponents.sidePanelHeaderAttributes |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
 
         inst =
-            SidebarComponents.sidePanelHeaderInstances
+            SidePanelComponents.sidePanelHeaderInstances
 
         showExchangeTag =
             actorText /= Nothing
@@ -726,7 +725,7 @@ addressDetailsContentView vc gc model id viewState =
         showOtherTag =
             List.isEmpty tags |> not
     in
-    SidebarComponents.sidePanelHeaderWithInstances
+    SidePanelComponents.sidePanelHeaderWithInstances
         df
         { inst
             | sidePanelHeaderTags =
@@ -738,8 +737,8 @@ addressDetailsContentView vc gc model id viewState =
         }
         { sidePanelHeader =
             { headerInstance =
-                SidebarComponents.sidePanelAddressHeaderWithAttributes
-                    (SidebarComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
+                SidePanelComponents.sidePanelAddressHeaderWithAttributes
+                    (SidePanelComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
                     { sidePanelAddressHeader =
                         { iconInstance =
                             if address.exchange /= Nothing then

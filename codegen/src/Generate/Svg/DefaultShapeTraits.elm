@@ -3,7 +3,6 @@ module Generate.Svg.DefaultShapeTraits exposing (..)
 import Api.Raw exposing (..)
 import Elm
 import Elm.Op
-import List.Nonempty as NList
 import Gen.Css as Css
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes as Attributes
@@ -12,6 +11,7 @@ import Generate.Svg.HasGeometryTrait as HasGeometryTrait
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Util exposing (..)
 import Generate.Util.Paint as Paint
+import List.Nonempty as NList
 import Types exposing (Config, Details)
 
 

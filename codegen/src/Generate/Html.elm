@@ -13,6 +13,8 @@ import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
+import Gen.Svg.Styled
+import Gen.Svg.Styled.Attributes
 import Generate.Common as Common
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
@@ -22,6 +24,7 @@ import Generate.Html.LineNode as LineNode
 import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
+import Generate.Svg.DefaultShapeTraits
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (s_styles)
@@ -59,22 +62,24 @@ subcanvasNodeToExpressions config name node =
             TextNode.toExpressions config name n
 
         SubcanvasNodeGroupNode n ->
-            withFrameTraitsNodeToExpressions config name n
+            withFrameTraitsNodeToExpression config name name n
+                |> List.singleton
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsNodeToExpressions config name n
+            withFrameTraitsNodeToExpression config name name n
+                |> List.singleton
 
         SubcanvasNodeInstanceNode n ->
             instanceNodeToExpressions config name n
 
         SubcanvasNodeRectangleNode n ->
-            RectangleNode.toExpressions config name n
+            Generate.Svg.DefaultShapeTraits.toExpressions config name n.rectangularShapeTraits
 
         SubcanvasNodeVectorNode n ->
-            VectorNode.toExpressions config name n
+            Generate.Svg.DefaultShapeTraits.toExpressions config name n.cornerRadiusShapeTraits
 
         SubcanvasNodeLineNode n ->
-            DefaultShapeTraits.toExpressions config name n
+            Generate.Svg.DefaultShapeTraits.toExpressions config name n
 
         _ ->
             []
@@ -170,10 +175,13 @@ componentNodeToDeclarations parentName node =
                             { propertyExpressions =
                                 Common.propertiesToPropertyExpressions properties_ properties
                                     |> Debug.log ("abc properties of " ++ details.name)
+                            , positionRelatively = Nothing
                             , attributes = attributes
                             , instances = instances
                             }
                     in
+                    withFrameTraitsNodeToExpression config details.name details.name node
+                 {-
                     Gen.Html.Styled.call_.div
                         (getElementAttributes config details.name
                             |> Elm.Op.append
@@ -186,6 +194,7 @@ componentNodeToDeclarations parentName node =
                         (frameTraitsToExpressions config details.name node.frameTraits
                             |> Elm.list
                         )
+                 -}
                 )
                 |> Elm.withType
                     (Annotation.function
@@ -253,32 +262,98 @@ componentNodeToDeclarations parentName node =
 
 frameTraitsToExpressions : Config -> String -> FrameTraits -> List Elm.Expression
 frameTraitsToExpressions config componentName node =
+    let
+        config_ =
+            { config
+                | positionRelatively =
+                    if node.layoutMode == Just LayoutModeNONE then
+                        Just { x = node.absoluteBoundingBox.x, y = node.absoluteBoundingBox.y }
+
+                    else
+                        Nothing
+            }
+    in
     node.children
-        |> List.map (subcanvasNodeToExpressions config componentName)
+        |> List.map (subcanvasNodeToExpressions config_ componentName)
         |> List.concat
 
 
-withFrameTraitsNodeToExpressions : Config -> String -> { a | frameTraits : FrameTraits } -> List Elm.Expression
-withFrameTraitsNodeToExpressions config componentName node =
+isSvgChild : SubcanvasNode -> Bool
+isSvgChild child =
+    case child of
+        SubcanvasNodeRectangleNode _ ->
+            True
+
+        SubcanvasNodeVectorNode _ ->
+            True
+
+        SubcanvasNodeEllipseNode _ ->
+            True
+
+        SubcanvasNodeLineNode _ ->
+            True
+
+        SubcanvasNodeGroupNode n ->
+            List.all isSvgChild n.frameTraits.children
+
+        _ ->
+            False
+
+
+withFrameTraitsNodeToExpression : Config -> String -> String -> { a | frameTraits : FrameTraits } -> Elm.Expression
+withFrameTraitsNodeToExpression config componentName componentNameForChildren node =
     let
         name =
             Generate.Common.FrameTraits.getName node
                 |> Debug.log "123 withFrameTraitsToExp name"
+
+        hasOnlySvgChildren =
+            List.all isSvgChild node.frameTraits.children
+                |> Debug.log ("456 hasOnlySvgChildren " ++ name)
+
+        bbox =
+            node.frameTraits.absoluteBoundingBox
+
+        attributes =
+            getElementAttributes config name
+                |> Elm.Op.append
+                    (FrameTraits.toStyles node.frameTraits
+                        |> Attributes.css
+                        |> List.singleton
+                        |> Elm.list
+                    )
+
+        frame =
+            if hasOnlySvgChildren then
+                attributes
+                    |> Elm.Op.append
+                        ([ max 3 bbox.width
+                            |> String.fromFloat
+                            |> Gen.Svg.Styled.Attributes.width
+                         , max 3 bbox.height
+                            |> String.fromFloat
+                            |> Gen.Svg.Styled.Attributes.height
+                         , [ bbox.x
+                           , bbox.y
+                           , max 1 bbox.width
+                           , max 1 bbox.height
+                           ]
+                            |> List.map String.fromFloat
+                            |> String.join " "
+                            |> Gen.Svg.Styled.Attributes.viewBox
+                         ]
+                            |> Elm.list
+                        )
+                    |> Gen.Svg.Styled.call_.svg
+
+            else
+                Gen.Html.Styled.call_.div attributes
     in
-    Gen.Html.Styled.call_.div
-        (getElementAttributes config name
-            |> Elm.Op.append
-                (FrameTraits.toStyles node.frameTraits
-                    |> Attributes.css
-                    |> List.singleton
-                    |> Elm.list
-                )
-        )
-        (frameTraitsToExpressions config componentName node.frameTraits
+    frame
+        (frameTraitsToExpressions config componentNameForChildren node.frameTraits
             |> Elm.list
         )
         |> withVisibility (Debug.log "123 withFrameTraitsToExp withVisibility" componentName) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
-        |> List.singleton
 
 
 instanceNodeToExpressions : Config -> String -> InstanceNode -> List Elm.Expression
@@ -307,6 +382,8 @@ instanceNodeToExpressions config parentName node =
                     )
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
+                        withFrameTraitsNodeToExpression config name subNameId node
+                        {-
                         Gen.Html.Styled.call_.div
                             (getElementAttributes config name
                                 |> Elm.Op.append
@@ -319,6 +396,7 @@ instanceNodeToExpressions config parentName node =
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
+                        -}
                     )
             )
         |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences

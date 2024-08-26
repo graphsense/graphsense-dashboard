@@ -255,7 +255,7 @@ withFrameTraitsAdjustNames names node =
         |> FrameTraits.adjustName names
 
 
-getOriginAdjust : ComponentNode -> OriginAdjust
+getOriginAdjust : { a | frameTraits : FrameTraits } -> OriginAdjust
 getOriginAdjust node =
     node.frameTraits.absoluteBoundingBox
         |> (\r ->
