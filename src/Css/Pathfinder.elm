@@ -499,7 +499,7 @@ kVTableTdStyle _ =
 
 kVTableKeyTdStyle : View.Config -> List Style
 kVTableKeyTdStyle vc =
-    [ mGap |> paddingTop, mGap |> paddingBottom, emphTextColor vc |> color ] ++ kVTableTdStyle vc
+    [ mGap |> paddingTop, mGap |> paddingBottom ] ++ kVTableTdStyle vc
 
 
 kVTableValueTdStyle : View.Config -> List Style

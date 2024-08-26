@@ -2,7 +2,7 @@ module Model.Pathfinder.Colors exposing (ColorScope(..), ScopedColorAssignment, 
 
 import Color exposing (Color)
 import Dict
-import Iknaio.ColorScheme exposing (colorScheme)
+import Iknaio.ColorScheme exposing (colorSchemePathfinder)
 import List.Extra exposing (getAt)
 import Model.Pathfinder.Id as Id exposing (Id)
 
@@ -74,4 +74,4 @@ assignNextColor_ id c =
 
 init : ScopedColorAssignment
 init =
-    Dict.fromList [ ( Clusters |> scopeToId, { currentIndex = 0, assignments = Dict.empty, colorSet = colorScheme } ) ]
+    Dict.fromList [ ( Clusters |> scopeToId, { currentIndex = 0, assignments = Dict.empty, colorSet = colorSchemePathfinder } ) ]

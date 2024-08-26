@@ -72,3 +72,34 @@ colorScheme =
     , color8
     , color9
     ]
+
+
+color2Pathfinder : Color
+color2Pathfinder = rgb255 59 114 71
+
+
+-- color0 = 228 148 68
+-- color1 = 133 182 178
+-- color2 = 59 114 71
+-- color3 = 231 202 96
+-- color4 = 168 124 159
+-- color5 = 241 162 169
+-- color6 = 87 120 164
+-- color7 = 150 118 98
+-- color8 = 106 159 88
+-- color9 = 184 176 172
+
+
+colorSchemePathfinder : List Color
+colorSchemePathfinder = 
+    [ color0
+    , color2
+    , color2Pathfinder
+    , color4
+    , color5
+    , color6
+    , color7
+    , color8
+    , color3
+    , color9
+    ]

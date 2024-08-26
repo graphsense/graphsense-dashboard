@@ -14,7 +14,9 @@ import Html.Styled exposing (Attribute, Html, div, img, span, text)
 import Html.Styled.Attributes exposing (classList, css, src, title, value)
 import Html.Styled.Events exposing (stopPropagationOn)
 import Json.Decode
+import RecordSetter exposing (s_iconsCopySmall)
 import Switch
+import Theme.Html.Icons
 import View.Locale as Locale
 
 
@@ -208,7 +210,28 @@ copyableLongIdentifierPathfinder vc attr identifier =
                 (title identifier
                     :: attr
                 )
-        , copyIcon vc identifier
+        , copyIconPathfinder vc identifier
+        ]
+
+
+copyIconPathfinder : View.Config -> String -> Html msg
+copyIconPathfinder =
+    copyIconWithAttrPathfinder []
+
+
+copyIconWithAttrPathfinder : List (Attribute msg) -> View.Config -> String -> Html msg
+copyIconWithAttrPathfinder attr vc value =
+    Html.Styled.a
+        ([ Css.copyIcon vc |> css
+         , title (Locale.string vc.locale "copy to clipboard")
+         ]
+            ++ attr
+        )
+        [ Html.Styled.node "copy-icon"
+            [ Html.Styled.Attributes.attribute "data-value" value
+            ]
+            [ Theme.Html.Icons.iconsCopySmallWithAttributes (Theme.Html.Icons.iconsCopySmallAttributes |> s_iconsCopySmall [ css [ Css.display Css.inlineBlock, Css.color Css.inherit ] ]) {}
+            ]
         ]
 
 

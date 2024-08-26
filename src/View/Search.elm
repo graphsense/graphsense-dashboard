@@ -278,9 +278,9 @@ resultLineToHtml vc query asLink selectedValue choiceEvents resultLine =
             |> span [ Css.resultLineIcon vc |> css ]
         , if String.contains query label then
             span []
-                [ text (String.Extra.leftOf query label)
-                , span [ [ Css.fontWeight Css.bold ] |> css ] [ text query ]
-                , text (String.Extra.rightOf query label)
+                [ span [ [ Css.fontWeight Css.bold ] |> css ] [ text (String.Extra.leftOf query label) ]
+                , text query
+                , span [ [ Css.fontWeight Css.bold ] |> css ] [ text (String.Extra.rightOf query label) ]
                 ]
 
           else

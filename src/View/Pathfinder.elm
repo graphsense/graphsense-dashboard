@@ -58,7 +58,7 @@ import Update.Graph.Transform as Transform
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIcon, copyableLongIdentifierPathfinder, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -378,7 +378,7 @@ settingsView vc pc m =
                 ]
     in
     div [ boxStyle vc Nothing |> toAttr ]
-        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Settings" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
         ]
 
 
@@ -532,11 +532,6 @@ getAddressActionBtns _ _ =
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
 txDetailsContentView vc gc model id viewState =
     let
-        header =
-            [ longIdentDetailsHeadingView vc gc id "Transaction" []
-            , rule
-            ]
-
         getLbl id_ =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault NoTags
@@ -553,14 +548,39 @@ txDetailsContentView vc gc model id viewState =
                     , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl ]
                     )
     in
-    div []
-        (div [ detailsContainerStyle |> toAttr ]
-            [ div [ detailsViewContainerStyle vc |> toAttr ]
-                [ div [ fullWidth |> toAttr ] (header ++ detailsTblBody)
-                ]
-            ]
-            :: sections
-        )
+    SidebarComponents.sidePanelHeader
+        { sidePanelHeader =
+            { headerInstance =
+                SidebarComponents.sidePanelAddressHeaderWithAttributes
+                    (SidebarComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
+                    { sidePanelAddressHeader =
+                        { iconInstance = SidebarComponents.sidePanelTxNode {}
+                        , headerText =
+                            (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
+                        }
+                    , addressLabelCopyIcon =
+                        { iconInstance = Id.id id |> copyIconPathfinder vc
+                        , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
+                        }
+                    }
+            }
+        , sidePanelHeaderTags =
+            { exchangeTagVisible = False
+            , otherTagVisible = False
+            }
+        , tagsLabel =
+            { iconInstance = none
+            , text = ""
+            }
+        , actorLabel =
+            { iconInstance = none
+            , text = ""
+            }
+        }
+        :: detailsTblBody
+        |> div [ detailsContainerStyle |> toAttr ]
+        |> flip (::) sections
+        |> div []
 
 
 utxoTxDetailsContentView : View.Config -> Api.Data.TxUtxo -> Html Msg
@@ -731,7 +751,7 @@ addressDetailsContentView vc gc model id viewState =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
                         }
                     , addressLabelCopyIcon =
-                        { iconInstance = Id.id id |> copyIcon vc
+                        { iconInstance = Id.id id |> copyIconPathfinder vc
                         , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
                         }
                     }
@@ -1155,21 +1175,24 @@ dateRangePickerSelectionView vc model =
         endP =
             model.toDate
 
-        selectedDuration =
-            Locale.durationPosix vc.locale 1 startP endP
-
+        -- selectedDuration =
+        --     Locale.durationPosix vc.locale 1 startP endP
         startML =
             dateFromTimestamp vc (Locale.posixToTimestampSeconds startP)
 
         endML =
             dateFromTimestamp vc (Locale.posixToTimestampSeconds endP)
+
+        attr =
+            [ css [ Css.cursor Css.pointer ], onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) ]
     in
     div [ dateTimeRangeBoxStyle vc |> toAttr ]
-        [ Theme.Html.Icons.iconsCalendar {}
-        , span [] [ Html.text selectedDuration ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ startML ]
-        , span [] [ Html.text (Locale.string vc.locale "to") ]
-        , span [ dateTimeRangeHighlightedDateStyle vc |> toAttr ] [ endML ]
+        [ span attr [ Theme.Html.Icons.iconsCalendar {} ]
+
+        -- , span [] [ Html.text selectedDuration ]
+        , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ startML ]
+        , span attr [ Html.text (Locale.string vc.locale "to") ]
+        , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ endML ]
         , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ Theme.Html.Icons.iconsCloseSmall {} ]
         ]
 
