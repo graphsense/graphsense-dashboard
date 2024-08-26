@@ -923,53 +923,36 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressesTags addressIds data ->
             let
+                _ =
+                    Debug.log "" addressIds
+
+                _ =
+                    Debug.log "tags" data
+
                 updateHasTags ( id, tag ) =
                     Dict.update id
                         (Maybe.map
                             (\curr ->
-                                case curr of
-                                    HasTagSummary _ ->
+                                case ( curr, tag ) of
+                                    ( HasTagSummary _, _ ) ->
                                         curr
 
-                                    _ ->
+                                    ( _, Just _ ) ->
                                         HasTags
-                            )
-                        )
 
-                updateHasNoTags a =
-                    Dict.update a
-                        (Maybe.map
-                            (\curr ->
-                                case curr of
-                                    LoadingTags ->
+                                    ( _, Nothing ) ->
                                         NoTags
-
-                                    _ ->
-                                        curr
                             )
                         )
-
-                zipped =
-                    List.map2 Tuple.pair addressIds data
 
                 tagSummaries =
-                    zipped
-                        |> List.foldl updateHasTags
-                            (addressIds
-                                |> List.foldl
-                                    updateHasNoTags
-                                    model.tagSummaries
-                            )
+                    data
+                        |> List.foldl updateHasTags model.tagSummaries
             in
             ( { model
                 | tagSummaries = tagSummaries
               }
             , []
-              -- , zipped
-              --     |> List.map (\( id, tag ) -> id)
-              --     |> Set.fromList
-              --     |> Set.toList
-              --     |> List.map (fetchTagSummaryForId tagSummaries)
             )
 
 

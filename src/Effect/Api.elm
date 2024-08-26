@@ -226,7 +226,7 @@ type Effect msg
         , pagesize : Maybe Int
         , include_best_cluster_tag : Bool
         }
-        (List (Maybe Api.Data.AddressTag) -> msg)
+        (List ( ( String, String ), Maybe Api.Data.AddressTag ) -> msg)
     | BulkGetEntityEffect
         { currency : String
         , entities : List Int
@@ -672,7 +672,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         BulkGetAddressTagsEffect e toMsg ->
-            Json.Decode.list (Json.Decode.maybe Api.Data.addressTagDecoder)
+            Json.Decode.list (Json.Decode.map2 Tuple.pair (Json.Decode.field "_request_address" Json.Decode.string |> Json.Decode.map (Tuple.pair e.currency)) (Json.Decode.maybe Api.Data.addressTagDecoder))
                 |> Api.Request.MyBulk.bulkJson
                     e.currency
                     Api.Request.MyBulk.OperationListTagsByAddress
