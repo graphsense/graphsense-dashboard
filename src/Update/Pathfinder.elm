@@ -923,12 +923,6 @@ updateByMsg plugins uc msg model =
 
         BrowserGotAddressesTags addressIds data ->
             let
-                _ =
-                    Debug.log "" addressIds
-
-                _ =
-                    Debug.log "tags" data
-
                 updateHasTags ( id, tag ) =
                     Dict.update id
                         (Maybe.map
