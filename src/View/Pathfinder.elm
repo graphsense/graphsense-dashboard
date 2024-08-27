@@ -767,6 +767,71 @@ addressDetailsContentView vc gc model id viewState =
                         ]
                         (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.indexedMap showTag))
                     )
+            , actorLabel =
+                let
+                    iconDetails =
+                        Theme.Html.Icons.iconsAssignDetails
+
+                    icon =
+                        Icons.iconsAssignSvg
+
+                    link =
+                        Route.Graph.actorRoute (actor_id |> Maybe.withDefault "noActor") Nothing
+                            |> Route.Graph
+                            |> Route.toUrl
+
+                    text =
+                        actorText |> Maybe.withDefault ""
+
+                    iconForActor =
+                        actorImg
+                            |> Maybe.map
+                                (\imgSrc ->
+                                    img
+                                        [ src imgSrc
+                                        , HA.alt <| Maybe.withDefault "" <| actorText
+                                        , HA.width <| round iconDetails.width
+                                        , HA.height <| round iconDetails.height
+                                        , HA.css iconDetails.styles
+                                        ]
+                                        []
+                                        |> List.singleton
+                                        |> div
+                                            [ HA.css iconDetails.styles
+                                            , HA.css
+                                                [ iconDetails.width
+                                                    |> Css.px
+                                                    |> Css.width
+                                                , iconDetails.height
+                                                    |> Css.px
+                                                    |> Css.height
+                                                ]
+                                            ]
+                                )
+                            |> Maybe.withDefault (icon [] {})
+                in
+                Just
+                    (div
+                        [ HA.css
+                            [ Css.borderRadius (Css.px 0)
+                            , Css.opacity (Css.num 1)
+                            , Css.height (Css.px 15)
+                            , Css.displayFlex
+                            , Css.property "gap" "8px"
+                            , Css.alignItems Css.center
+                            , Css.justifyContent Css.start
+                            , Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.paddingBottom (Css.px 0)
+                            , Css.paddingTop (Css.px 0)
+                            , Css.paddingRight (Css.px 0)
+                            , Css.paddingLeft (Css.px 0)
+                            , Css.backgroundColor (Css.rgba 0 0 0 0)
+                            , Css.borderWidth (Css.px 1)
+                            ]
+                        ]
+                        [ iconForActor, Html.a [ HA.href link, Css.tagLinkButtonStyle vc |> css ] [ Html.text text ] ]
+                    )
         }
         { sidePanelHeader =
             { headerInstance =
@@ -793,44 +858,12 @@ addressDetailsContentView vc gc model id viewState =
             , otherTagVisible = showOtherTag
             }
         , tagsLabel =
-            { iconInstance = Icons.iconsTagLargeSvg [] {}
+            { iconInstance = none
             , text = ""
             }
         , actorLabel =
-            { iconInstance =
-                let
-                    iconDetails =
-                        Theme.Html.Icons.iconsAssignDetails
-
-                    icon =
-                        Icons.iconsAssignSvg
-                in
-                actorImg
-                    |> Maybe.map
-                        (\imgSrc ->
-                            img
-                                [ src imgSrc
-                                , HA.alt <| Maybe.withDefault "" <| actorText
-                                , HA.width <| round iconDetails.width
-                                , HA.height <| round iconDetails.height
-                                , HA.css iconDetails.styles
-                                ]
-                                []
-                                |> List.singleton
-                                |> div
-                                    [ HA.css iconDetails.styles
-                                    , HA.css
-                                        [ iconDetails.width
-                                            |> Css.px
-                                            |> Css.width
-                                        , iconDetails.height
-                                            |> Css.px
-                                            |> Css.height
-                                        ]
-                                    ]
-                        )
-                    |> Maybe.withDefault (icon [] {})
-            , text = actorText |> Maybe.withDefault ""
+            { iconInstance = none
+            , text = ""
             }
         }
         :: tbls
