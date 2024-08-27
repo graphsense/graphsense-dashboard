@@ -68,6 +68,7 @@ type Msg
     | HovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
     | UserClickedToggleClusterDetailsOpen
+    | UserClickedToolbarDeleteIcon
 
 
 type DisplaySettingsMsg
@@ -77,6 +78,7 @@ type DisplaySettingsMsg
     | UserClickedToggleDatesInUserLocale
     | UserClickedToggleShowTimeZoneOffset
     | UserClickedToggleHighlightClusterFriends
+    | DisplaySettingsHovercardMsg Hovercard.Msg
 
 
 type TxDetailsMsg

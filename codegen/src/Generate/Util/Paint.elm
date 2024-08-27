@@ -24,8 +24,11 @@ toRGBA =
         >> Maybe.andThen
             (\p ->
                 case p of
-                    PaintSolidPaint { color } ->
-                        Just color
+                    PaintSolidPaint { color, basePaint } ->
+                        { color
+                            | a = color.a * Maybe.withDefault 1 basePaint.opacity
+                        }
+                            |> Just
 
                     _ ->
                         Nothing

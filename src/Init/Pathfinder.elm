@@ -32,7 +32,7 @@ init us _ =
       , history = History.init
       , details = Nothing
       , config =
-            { isDisplaySettingsOpen = False
+            { displaySettingsHovercard = Nothing
             , isClusterDetailsOpen = False
             }
       , currentTime = Time.millisToPosix 0

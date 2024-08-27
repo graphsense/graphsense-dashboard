@@ -20,7 +20,7 @@ import Model.Pathfinder.Tx as Tx
 import RemoteData exposing (WebData)
 import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1DownAttributes)
 import Util.Css as Css
-import Util.View exposing (none, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 
@@ -39,19 +39,7 @@ view vc ts tt =
     )
         |> Html.toUnstyled
         |> List.singleton
-        |> Hovercard.view
-            { tickLength = 16
-            , zIndex = Css.zIndexMainValue + 1
-            , borderColor = (vc.theme.hovercard vc.lightmode).borderColor
-            , backgroundColor = (vc.theme.hovercard vc.lightmode).backgroundColor
-            , borderWidth = (vc.theme.hovercard vc.lightmode).borderWidth
-            , viewport = vc.size
-            }
-            tt.hovercard
-            (Css.hovercard vc
-                |> List.map (\( k, v ) -> Html.Attributes.style k v)
-            )
-        |> Html.fromUnstyled
+        |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
 
 
 getConfidenceIndicator : View.Config -> Float -> Html msg

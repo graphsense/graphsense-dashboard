@@ -128,28 +128,7 @@ updateByMsg plugins uc msg model =
             n (model |> unselect |> s_details Nothing)
 
         UserReleasedDeleteKey ->
-            case model.selection of
-                SelectedAddress id ->
-                    removeAddress id model
-
-                SelectedTx id ->
-                    removeTx id model
-
-                MultiSelect items ->
-                    List.foldl
-                        (\i ( m, _ ) ->
-                            case i of
-                                MSelectedAddress id ->
-                                    removeAddress id m
-
-                                MSelectedTx id ->
-                                    removeTx id m
-                        )
-                        ( model, [] )
-                        items
-
-                _ ->
-                    n model
+            deleteSelection model
 
         UserPressedNormalKey key ->
             case key of
@@ -893,6 +872,17 @@ updateByMsg plugins uc msg model =
                 |> and (checkSelection uc)
 
         ChangedDisplaySettingsMsg submsg ->
+            let
+                toEffect =
+                    Cmd.map
+                        (DisplaySettingsHovercardMsg >> ChangedDisplaySettingsMsg)
+                        >> CmdEffect
+                        >> List.singleton
+
+                updateHovercard =
+                    flip s_displaySettingsHovercard model.config
+                        >> flip s_config model
+            in
             case submsg of
                 ChangePointerTool tool ->
                     n { model | pointerTool = tool }
@@ -914,11 +904,27 @@ updateByMsg plugins uc msg model =
                     n model
 
                 UserClickedToggleDisplaySettings ->
-                    let
-                        nds =
-                            model.config |> s_isDisplaySettingsOpen (not model.config.isDisplaySettingsOpen)
-                    in
-                    n { model | config = nds }
+                    case model.config.displaySettingsHovercard of
+                        Nothing ->
+                            "toolbar-display-settings"
+                                |> Hovercard.init
+                                |> mapFirst (Just >> updateHovercard)
+                                |> mapSecond toEffect
+
+                        Just _ ->
+                            s_displaySettingsHovercard Nothing model.config
+                                |> flip s_config model
+                                |> n
+
+                DisplaySettingsHovercardMsg hcMsg ->
+                    model.config.displaySettingsHovercard
+                        |> Maybe.map
+                            (\hc ->
+                                Hovercard.update hcMsg hc
+                                    |> mapFirst (Just >> updateHovercard)
+                                    |> mapSecond toEffect
+                            )
+                        |> Maybe.withDefault (n model)
 
         UserClickedToggleClusterDetailsOpen ->
             n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
@@ -975,6 +981,35 @@ updateByMsg plugins uc msg model =
               }
             , []
             )
+
+        UserClickedToolbarDeleteIcon ->
+            deleteSelection model
+
+
+deleteSelection : Model -> ( Model, List Effect )
+deleteSelection model =
+    case model.selection of
+        SelectedAddress id ->
+            removeAddress id model
+
+        SelectedTx id ->
+            removeTx id model
+
+        MultiSelect items ->
+            List.foldl
+                (\i ( m, _ ) ->
+                    case i of
+                        MSelectedAddress id ->
+                            removeAddress id m
+
+                        MSelectedTx id ->
+                            removeTx id m
+                )
+                ( model, [] )
+                items
+
+        _ ->
+            n model
 
 
 updateTagDataOnAddress : Id -> Model -> Model

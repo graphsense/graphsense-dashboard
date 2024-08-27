@@ -15,6 +15,7 @@ import Dict
 import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
+import Hovercard
 import Html.Events exposing (onMouseOver)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
@@ -57,10 +58,11 @@ import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
 import Update.Graph.Transform as Transform
+import Util.Css as Css
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, hovercard, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -70,6 +72,7 @@ import View.Pathfinder.PagedTable as PagedTable
 import View.Pathfinder.Table.IoTable as IoTable
 import View.Pathfinder.Table.NeighborsTable as NeighborsTable
 import View.Pathfinder.Table.TransactionTable as TransactionTable
+import View.Pathfinder.Toolbar as Toolbar
 import View.Pathfinder.Tooltip as Tooltip
 import View.Pathfinder.Utils exposing (dateFromTimestamp, multiLineDateTimeFromTimestamp)
 import View.Search
@@ -130,25 +133,6 @@ inlineChevronDownThinIcon =
 inlineChevronUpThinIcon : Html Msg
 inlineChevronUpThinIcon =
     Theme.Html.Icons.iconsChevronUpThinWithAttributes (Theme.Html.Icons.iconsChevronUpThinAttributes |> s_iconsChevronUpThin [ css [ Css.display Css.inline ] ]) {}
-
-
-graphActionTools : Model -> List BtnConfig
-graphActionTools m =
-    [ BtnConfig (\_ -> Theme.Html.Icons.iconsNewFile {}) "restart" UserClickedRestart m.isDirty
-    , BtnConfig (\_ -> Theme.Html.Icons.iconsOpen {}) "open" NoOp False
-    , BtnConfig
-        (\enabled ->
-            if not enabled then
-                Theme.Html.Icons.iconsRedoStateDisabled {}
-
-            else
-                Theme.Html.Icons.iconsRedoStateActive {}
-        )
-        "redo"
-        UserClickedRedo
-        (not (List.isEmpty m.history.future))
-    , BtnConfig (\_ -> Theme.Html.Icons.iconsUndo {}) "undo" UserClickedUndo (not (List.isEmpty m.history.past))
-    ]
 
 
 graphActionButtons : List BtnConfig
@@ -338,6 +322,7 @@ graph plugins states vc gc model =
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
     , topLeftPanel plugins states vc gc model
+    , topCenterPanel plugins states vc gc model
     , topRightPanel plugins states vc gc model
     , graphSelectionToolsView plugins states vc gc model
     ]
@@ -346,20 +331,36 @@ graph plugins states vc gc model =
                 |> Maybe.map List.singleton
                 |> Maybe.withDefault []
            )
+        ++ (model.config.displaySettingsHovercard
+                |> Maybe.map (settingsView vc model)
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+           )
+
+
+topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
+topCenterPanel plugins ms vc gc model =
+    div
+        [ css topCenterPanelStyle
+        ]
+        [ Toolbar.view vc
+            { undoDisabled = List.isEmpty model.history.past
+            , redoDisabled = List.isEmpty model.history.future
+            , pointerTool = model.pointerTool
+            }
+        ]
 
 
 topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 topLeftPanel plugins ms vc gc model =
     div [ topLeftPanelStyle vc |> toAttr ]
         [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
-        , graphActionsTopLeftView plugins ms vc gc model
         , searchBoxView plugins ms vc gc model
-        , settingsView vc gc model
         ]
 
 
-settingsView : View.Config -> Pathfinder.Config -> Model -> Html Msg
-settingsView vc pc m =
+settingsView : View.Config -> Model -> Hovercard.Model -> Html Msg
+settingsView vc m hc =
     let
         utc_text =
             if vc.showDatesInUserLocale then
@@ -367,29 +368,19 @@ settingsView vc pc m =
 
             else
                 "UTC"
-
-        content =
-            div []
-                [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
-                , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
-                , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
-                , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
-                , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
-                , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Cluster") ]
-                , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
-                ]
     in
-    div [ boxStyle vc Nothing |> toAttr ]
-        [ collapsibleSectionRaw (collapsibleSectionHeadingDisplaySettingsStyle vc |> toAttr) (collapsibleSectionDisplaySettingsIconStyle |> toAttr) vc "Display" m.config.isDisplaySettingsOpen Nothing content (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
+    div []
+        [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
+        , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.showDatesInUserLocale, onClick (UserClickedToggleDatesInUserLocale |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale utc_text)
+        , Util.View.onOffSwitch vc [ HA.checked vc.showTimeZoneOffset, onClick (UserClickedToggleShowTimeZoneOffset |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timezone")
+        , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Cluster") ]
+        , Util.View.onOffSwitch vc [ HA.checked vc.highlightClusterFriends, onClick (UserClickedToggleHighlightClusterFriends |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Highlight clusters")
         ]
-
-
-graphActionsTopLeftView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphActionsTopLeftView _ _ vc _ m =
-    div
-        [ graphActionsStyle vc |> toAttr
-        ]
-        (graphActionTools m |> List.map (graphToolButton vc))
+        |> Html.toUnstyled
+        |> List.singleton
+        |> hovercard vc hc (Css.zIndexMainValue + 1)
 
 
 graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg

@@ -25,33 +25,35 @@ toDetails node =
     Common.toDetails (toStyles node.defaultShapeTraits) node
 
 
-
 toExpressions : Config -> String -> { a | defaultShapeTraits : DefaultShapeTraits } -> List Elm.Expression
 toExpressions config componentName node =
-   Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
+    Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
+
+
+
 {-
-       let
-           bbox =
-               node.defaultShapeTraits.absoluteBoundingBox
+   let
+       bbox =
+           node.defaultShapeTraits.absoluteBoundingBox
 
-           positionRelatively =
-               case config.positionRelatively of
-                   Just { x, y } ->
-                       [ Attributes.css
-                           [ "translate({{ x }}px, {{ y }}px)"
-                               |> Format.namedValue "x" (bbox.x - x |> String.fromFloat)
-                               |> Format.namedValue "y" (bbox.y - y |> String.fromFloat)
-                               |> Css.property "transform"
-                           ]
+       positionRelatively =
+           case config.positionRelatively of
+               Just { x, y } ->
+                   [ Attributes.css
+                       [ "translate({{ x }}px, {{ y }}px)"
+                           |> Format.namedValue "x" (bbox.x - x |> String.fromFloat)
+                           |> Format.namedValue "y" (bbox.y - y |> String.fromFloat)
+                           |> Css.property "transform"
                        ]
+                   ]
 
-                   Nothing ->
-                       []
-       in
-       Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
-           |> Gen.Svg.Styled.svg
-               (
-                   ++ positionRelatively
-               )
-           |> List.singleton
+               Nothing ->
+                   []
+   in
+   Generate.Svg.DefaultShapeTraits.toExpressions config componentName node
+       |> Gen.Svg.Styled.svg
+           (
+               ++ positionRelatively
+           )
+       |> List.singleton
 -}

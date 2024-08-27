@@ -17,14 +17,20 @@ toExpressions config componentName =
 
 toStyles : VectorNode -> List Elm.Expression
 toStyles node =
-    [ Css.position Css.absolute
-    , node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.y
-        |> Css.px
-        |> Css.top
-    , node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.x
-        |> Css.px
-        |> Css.left
-    ]
+    []
+
+
+
+{-
+   [ Css.position Css.absolute
+   , node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.y
+       |> Css.px
+       |> Css.top
+   , node.cornerRadiusShapeTraits.defaultShapeTraits.absoluteBoundingBox.x
+       |> Css.px
+       |> Css.left
+   ]
+-}
 
 
 toDetails : VectorNode -> Details

@@ -353,6 +353,14 @@ topLeftPanelStyle _ =
     ]
 
 
+topCenterPanelStyle : List Style
+topCenterPanelStyle =
+    [ position absolute
+    , pct 50 |> left
+    , mlGap |> top
+    ]
+
+
 graphSelectionToolsStyle : View.Config -> List Style
 graphSelectionToolsStyle vc =
     [ position absolute

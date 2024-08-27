@@ -16,6 +16,7 @@ import Gen.Maybe
 import Gen.Svg.Styled
 import Gen.Svg.Styled.Attributes
 import Generate.Common as Common
+import Generate.Common.ComponentSetNode as ComponentSetNode
 import Generate.Common.FrameTraits
 import Generate.Html.ComponentNode as ComponentNode
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
@@ -309,7 +310,6 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
 
         hasOnlySvgChildren =
             List.all isSvgChild node.frameTraits.children
-                |> Debug.log ("456 hasOnlySvgChildren " ++ name)
 
         bbox =
             node.frameTraits.absoluteBoundingBox
@@ -383,7 +383,7 @@ instanceNodeToExpressions config parentName node =
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
                         withFrameTraitsNodeToExpression config name subNameId node
-                        {-
+                     {-
                         Gen.Html.Styled.call_.div
                             (getElementAttributes config name
                                 |> Elm.Op.append
@@ -396,7 +396,7 @@ instanceNodeToExpressions config parentName node =
                             (frameTraitsToExpressions config subNameId node.frameTraits
                                 |> Elm.list
                             )
-                        -}
+                     -}
                     )
             )
         |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences

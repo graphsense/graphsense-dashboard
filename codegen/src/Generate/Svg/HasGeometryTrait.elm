@@ -4,8 +4,8 @@ import Api.Raw exposing (..)
 import Elm
 import Gen.Css as Css
 import Generate.Svg.MinimalFillsTrait as MinimalFillsTrait
-import Generate.Util.Paint as Paint
 import Generate.Util exposing (..)
+import Generate.Util.Paint as Paint
 
 
 toStyles : HasGeometryTrait -> List Elm.Expression
@@ -22,11 +22,13 @@ toStroke paints =
             (Paint.toStylesString
                 >> Maybe.map (Css.call_.property (Elm.string "stroke"))
             )
-            paints
-        |> a
-            (Paint.getBasePaint
-                >> Maybe.andThen .opacity
-                >> Maybe.map String.fromFloat
-                >> Maybe.map (Css.property "stroke-opacity")
-            )
+            {- already covered by color alpha
+               paints
+                  |> a
+                      (Paint.getBasePaint
+                          >> Maybe.andThen .opacity
+                          >> Maybe.map String.fromFloat
+                          >> Maybe.map (Css.property "stroke-opacity")
+                      )
+            -}
             paints
