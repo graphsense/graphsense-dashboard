@@ -45,6 +45,7 @@ update uc pathfinderModel msg id model =
                                         , isOutgoing = dir == Outgoing
                                         , pagesize = tbl.itemsPerPage
                                         , nextpage = tbl.table.nextpage
+                                        , includeActors = False
                                         }
                                     |> ApiEffect
                                 )
@@ -78,6 +79,7 @@ update uc pathfinderModel msg id model =
                                 , isOutgoing = dir == Outgoing
                                 , pagesize = tbl.itemsPerPage
                                 , nextpage = tbl.table.nextpage
+                                , includeActors = False
                                 }
                             |> ApiEffect
                             |> List.singleton

@@ -35,6 +35,7 @@ type Effect msg
     | GetAddressEffect
         { currency : String
         , address : String
+        , includeActors : Bool
         }
         (Api.Data.Address -> msg)
     | GetEntityEffect
@@ -45,8 +46,8 @@ type Effect msg
     | GetEntityEffectWithDetails
         { currency : String
         , entity : Int
-        , include_actor : Bool
-        , include_best_tag : Bool
+        , includeActors : Bool
+        , includeBestTag : Bool
         }
         (Api.Data.Entity -> msg)
     | GetActorEffect
@@ -84,6 +85,7 @@ type Effect msg
         , isOutgoing : Bool
         , onlyIds : Maybe (List String)
         , includeLabels : Bool
+        , includeActors : Bool
         , pagesize : Int
         , nextpage : Maybe String
         }
@@ -123,7 +125,7 @@ type Effect msg
     | GetAddressTagSummaryEffect
         { currency : String
         , address : String
-        , include_best_cluster_tag : Bool
+        , includeBestClusterTag : Bool
         }
         (Api.Data.TagSummary -> msg)
     | GetActorTagsEffect
@@ -224,7 +226,7 @@ type Effect msg
         { currency : String
         , addresses : List String
         , pagesize : Maybe Int
-        , include_best_cluster_tag : Bool
+        , includeBestClusterTag : Bool
         }
         (List ( ( String, String ), Maybe Api.Data.AddressTag ) -> msg)
     | BulkGetEntityEffect
@@ -307,6 +309,7 @@ getAddressEgonet id msg layers =
                     , pagesize = max 1 <| List.length onlyIds
                     , nextpage = Nothing
                     , includeLabels = False
+                    , includeActors = True
                     }
     in
     [ effect True
@@ -501,8 +504,8 @@ map mapMsg effect =
 perform : String -> (Result ( Http.Error, Effect msg ) ( Dict String String, msg ) -> msg) -> Effect msg -> Cmd msg
 perform apiKey wrapMsg effect =
     case effect of
-        GetAddressTagSummaryEffect { currency, address, include_best_cluster_tag } toMsg ->
-            Api.Request.Experimental.getTagSummaryByAddress currency address (Just include_best_cluster_tag)
+        GetAddressTagSummaryEffect { currency, address, includeBestClusterTag } toMsg ->
+            Api.Request.Experimental.getTagSummaryByAddress currency address (Just includeBestClusterTag)
                 |> send apiKey wrapMsg effect toMsg
 
         SearchEffect { query, currency, limit } toMsg ->
@@ -530,7 +533,7 @@ perform apiKey wrapMsg effect =
             Api.Request.Entities.listEntityNeighbors currency entity direction onlyIds (Just False) (Just False) (Just True) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, nextpage } toMsg ->
+        GetAddressNeighborsEffect { currency, address, isOutgoing, onlyIds, pagesize, includeLabels, includeActors, nextpage } toMsg ->
             let
                 direction =
                     case isOutgoing of
@@ -540,19 +543,19 @@ perform apiKey wrapMsg effect =
                         False ->
                             Api.Request.Addresses.DirectionIn
             in
-            Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) nextpage (Just pagesize)
+            Api.Request.Addresses.listAddressNeighbors currency address direction onlyIds (Just includeLabels) (Just includeActors) nextpage (Just pagesize)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetAddressEffect { currency, address } toMsg ->
-            Api.Request.Addresses.getAddress currency address
+        GetAddressEffect { currency, address, includeActors } toMsg ->
+            Api.Request.Addresses.getAddress currency address  (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->
             Api.Request.Entities.getEntity currency entity (Just False) (Just True)
                 |> send apiKey wrapMsg effect toMsg
 
-        GetEntityEffectWithDetails { currency, entity, include_actor, include_best_tag } toMsg ->
-            Api.Request.Entities.getEntity currency entity (Just (not include_best_tag)) (Just include_actor)
+        GetEntityEffectWithDetails { currency, entity, includeActors, includeBestTag } toMsg ->
+            Api.Request.Entities.getEntity currency entity (Just (not includeBestTag)) (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetActorEffect { actorId } toMsg ->
@@ -683,7 +686,7 @@ perform apiKey wrapMsg effect =
                                 |> Maybe.map Json.Encode.int
                                 |> Maybe.withDefault Json.Encode.null
                           )
-                        , ( "include_best_cluster_tag", Json.Encode.bool e.include_best_cluster_tag )
+                        , ( "include_best_cluster_tag", Json.Encode.bool e.includeBestClusterTag )
                         ]
                     )
                 |> send apiKey wrapMsg effect toMsg

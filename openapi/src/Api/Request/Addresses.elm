@@ -107,13 +107,13 @@ makeOrder_FromString str =
 
 
 
-getAddress : (String) -> (String) -> Api.Request Api.Data.Address
-getAddress currency_path address_path =
+getAddress : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.Address
+getAddress currency_path address_path includeActors_query =
     Api.request
         "GET"
         "/{currency}/addresses/{address}"
         [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
-        []
+        [ ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ) ]
         []
         Nothing
         Api.Data.addressDecoder
@@ -146,13 +146,13 @@ listAddressLinks currency_path address_path neighbor_query minHeight_query maxHe
 
 
 
-listAddressNeighbors : (String) -> (String) -> (Direction) -> Maybe (List String) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.NeighborAddresses
-listAddressNeighbors currency_path address_path direction_query onlyIds_query includeLabels_query page_query pagesize_query =
+listAddressNeighbors : (String) -> (String) -> (Direction) -> Maybe (List String) -> Maybe (Bool) -> Maybe (Bool) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.NeighborAddresses
+listAddressNeighbors currency_path address_path direction_query onlyIds_query includeLabels_query includeActors_query page_query pagesize_query =
     Api.request
         "GET"
         "/{currency}/addresses/{address}/neighbors"
         [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
-        [ ( "direction", Just <| (stringFromDirection) direction_query ), ( "only_ids", Maybe.map (String.join "," << List.map identity) onlyIds_query ), ( "include_labels", Maybe.map ((\val -> if val then "true" else "false")) includeLabels_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
+        [ ( "direction", Just <| (stringFromDirection) direction_query ), ( "only_ids", Maybe.map (String.join "," << List.map identity) onlyIds_query ), ( "include_labels", Maybe.map ((\val -> if val then "true" else "false")) includeLabels_query ), ( "include_actors", Maybe.map ((\val -> if val then "true" else "false")) includeActors_query ), ( "page", Maybe.map (identity) page_query ), ( "pagesize", Maybe.map (String.fromInt) pagesize_query ) ]
         []
         Nothing
         Api.Data.neighborAddressesDecoder

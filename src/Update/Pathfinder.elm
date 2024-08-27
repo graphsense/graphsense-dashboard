@@ -218,7 +218,7 @@ updateByMsg plugins uc msg model =
                                 []
 
                             else
-                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffectWithDetails { currency = Id.network id, entity = data.entity, include_actor = False, include_best_tag = False } |> ApiEffect ]
+                                [ BrowserGotClusterData clusterId |> Api.GetEntityEffectWithDetails { currency = Id.network id, entity = data.entity, includeActors = False, includeBestTag = False } |> ApiEffect ]
                            )
             in
             model
@@ -1087,6 +1087,7 @@ loadAddressWithPosition position _ id starting model =
             |> Api.GetAddressEffect
                 { currency = Id.network id
                 , address = Id.id id
+                , includeActors = True
                 }
             |> ApiEffect
             |> List.singleton
@@ -1292,7 +1293,7 @@ bulkfetchTagsForTx tx model =
                                 { currency = raw.currency
                                 , addresses = List.map Id.id adr
                                 , pagesize = Just 1
-                                , include_best_cluster_tag = True
+                                , includeBestClusterTag = True
                                 }
                             |> ApiEffect
                     )
@@ -1310,7 +1311,7 @@ fetchTagSummaryForId existing id =
 
         _ ->
             BrowserGotTagSummary id
-                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, include_best_cluster_tag = True }
+                |> Api.GetAddressTagSummaryEffect { currency = Id.network id, address = Id.id id, includeBestClusterTag = True }
                 |> ApiEffect
 
 

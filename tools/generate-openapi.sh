@@ -35,6 +35,15 @@ sed -i 's/Addressstatus/AddressStatus/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/addressstatus/addressStatus/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/Json.Decode.dict tagCloudEntryDecodertagCloudEntryDecoder/Json.Decode.dict tagCloudEntryDecoder/' "${dir}/../openapi/src/Api/Data.elm"
 
+sed -i 's/labelSummaryDecoderlabelSummaryDecoder/labelSummaryInheritedFromDecoder/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/TaginheritedFrom/TagInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/LabelSummaryinheritedFrom/LabelSummaryInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/AddressTaginheritedFrom/AddressTagInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/addressTaginheritedFromVariants/addressTagInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/labelSummaryinheritedFromVariants/labelSummaryInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/taginheritedFromVariants/tagInheritedFromVariants/' "${dir}/../openapi/src/Api/Data.elm"
+
+
 # remove duplicate Direction and order types
 patterns='^type Direction,^directionVariants : List Direction,^stringFromDirection : Direction -> String,^makeDirectionFromString : String -> Maybe Direction,^type Order_,^orderVariants : List Order_,^stringFromOrder_ : Order_ -> String,^makeOrder_FromString : String -> Maybe Order_'
 python ${dir}/removeDuplicateOccurances.py "${patterns}" ${dir}/../openapi/src/Api/Request/Entities.elm

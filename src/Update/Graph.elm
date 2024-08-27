@@ -1079,6 +1079,7 @@ updateByMsg plugins uc msg model =
                                 , isOutgoing = isOutgoing
                                 , pagesize = 20
                                 , includeLabels = False
+                                , includeActors = True
                                 , onlyIds = Nothing
                                 , nextpage = Nothing
                                 }
@@ -1356,6 +1357,7 @@ updateByMsg plugins uc msg model =
                 |> GetAddressEffect
                     { address = address
                     , currency = Id.currency entityId
+                    , includeActors = True
                     }
                 |> ApiEffect
                 |> List.singleton
@@ -3716,6 +3718,7 @@ loadAddress plugins { currency, address, table, at } model =
                         |> GetAddressEffect
                             { address = address
                             , currency = currency
+                            , includeActors = True
                             }
                         |> ApiEffect
                   ]

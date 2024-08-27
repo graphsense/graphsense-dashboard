@@ -2409,6 +2409,7 @@ getAddressNeighborsEffect isOutgoing { currency, address } nextpage =
         , isOutgoing = isOutgoing
         , pagesize = 100
         , includeLabels = True
+        , includeActors = True
         , onlyIds = Nothing
         , nextpage = nextpage
         }

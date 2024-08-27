@@ -658,7 +658,7 @@ addressDetailsContentView vc gc model id viewState =
                             []
 
                         else
-                            (.labelTagCloud >> Dict.toList >> List.sortBy (Tuple.second >> .weighted)) x
+                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .confidence)) x
                     )
                 |> Maybe.withDefault []
 

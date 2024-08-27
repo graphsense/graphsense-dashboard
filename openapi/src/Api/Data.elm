@@ -18,7 +18,7 @@ module Api.Data exposing
     ( Actor
     , ActorContext
     , Address, AddressStatus(..), addressStatusVariants
-    , AddressTag
+    , AddressTag, AddressTagInheritedFrom(..), addressTagInheritedFromVariants
     , AddressTags
     , AddressTx(..)
     , AddressTxUtxo
@@ -29,6 +29,7 @@ module Api.Data exposing
     , CurrencyStats
     , Entity
     , EntityAddresses
+    , LabelSummary, LabelSummaryInheritedFrom(..), labelSummaryInheritedFromVariants
     , LabeledItemRef
     , Link(..)
     , LinkUtxo
@@ -49,7 +50,7 @@ module Api.Data exposing
     , SearchResultLevel5
     , SearchResultLevel6
     , Stats
-    , Tag
+    , Tag, TagInheritedFrom(..), tagInheritedFromVariants
     , TagCloudEntry
     , TagSummary
     , Taxonomy
@@ -76,6 +77,7 @@ module Api.Data exposing
     , encodeCurrencyStats
     , encodeEntity
     , encodeEntityAddresses
+    , encodeLabelSummary
     , encodeLabeledItemRef
     , encodeLink
     , encodeLinkUtxo
@@ -123,6 +125,7 @@ module Api.Data exposing
     , currencyStatsDecoder
     , entityDecoder
     , entityAddressesDecoder
+    , labelSummaryDecoder
     , labeledItemRefDecoder
     , linkDecoder
     , linkUtxoDecoder
@@ -234,6 +237,7 @@ type alias AddressTag =
     , confidence : Maybe String
     , confidenceLevel : Maybe Int
     , currency : String
+    , inheritedFrom : Maybe AddressTagInheritedFrom
     , isClusterDefiner : Bool
     , label : String
     , lastmod : Maybe Int
@@ -245,6 +249,16 @@ type alias AddressTag =
     , address : String
     , entity : Int
     }
+
+
+type AddressTagInheritedFrom
+    = AddressTagInheritedFromCluster
+
+
+addressTagInheritedFromVariants : List AddressTagInheritedFrom
+addressTagInheritedFromVariants =
+    [ AddressTagInheritedFromCluster
+    ]
 
 
 type alias AddressTags =
@@ -342,6 +356,28 @@ type alias EntityAddresses =
     { addresses : List (Address)
     , nextPage : Maybe String
     }
+
+
+type alias LabelSummary =
+    { concepts : List (String)
+    , confidence : Float
+    , count : Int
+    , creators : List (String)
+    , inheritedFrom : Maybe LabelSummaryInheritedFrom
+    , label : String
+    , lastmod : Int
+    , sources : List (String)
+    }
+
+
+type LabelSummaryInheritedFrom
+    = LabelSummaryInheritedFromCluster
+
+
+labelSummaryInheritedFromVariants : List LabelSummaryInheritedFrom
+labelSummaryInheritedFromVariants =
+    [ LabelSummaryInheritedFromCluster
+    ]
 
 
 type alias LabeledItemRef =
@@ -492,6 +528,7 @@ type alias Tag =
     , confidence : Maybe String
     , confidenceLevel : Maybe Int
     , currency : String
+    , inheritedFrom : Maybe TagInheritedFrom
     , isClusterDefiner : Bool
     , label : String
     , lastmod : Maybe Int
@@ -503,6 +540,16 @@ type alias Tag =
     }
 
 
+type TagInheritedFrom
+    = TagInheritedFromCluster
+
+
+tagInheritedFromVariants : List TagInheritedFrom
+tagInheritedFromVariants =
+    [ TagInheritedFromCluster
+    ]
+
+
 type alias TagCloudEntry =
     { cnt : Int
     , weighted : Float
@@ -510,13 +557,11 @@ type alias TagCloudEntry =
 
 
 type alias TagSummary =
-    { actorsTagCloud : Dict.Dict String (TagCloudEntry)
-    , bestActor : Maybe String
+    { bestActor : Maybe String
     , bestLabel : Maybe String
     , broadCategory : String
     , conceptTagCloud : Dict.Dict String (TagCloudEntry)
-    , labelTagCloud : Dict.Dict String (TagCloudEntry)
-    , labelWordsTagCloud : Dict.Dict String (TagCloudEntry)
+    , labelSummary : Dict.Dict String (LabelSummary)
     , tagCount : Int
     }
 
@@ -750,6 +795,7 @@ encodeAddressTagPairs model =
             , maybeEncode "confidence" Json.Encode.string model.confidence
             , maybeEncode "confidence_level" Json.Encode.int model.confidenceLevel
             , encode "currency" Json.Encode.string model.currency
+            , maybeEncode "inherited_from" encodeAddressTagInheritedFrom model.inheritedFrom
             , encode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
             , encode "label" Json.Encode.string model.label
             , maybeEncode "lastmod" Json.Encode.int model.lastmod
@@ -763,6 +809,29 @@ encodeAddressTagPairs model =
             ]
     in
     pairs
+
+stringFromAddressTagInheritedFrom : AddressTagInheritedFrom -> String
+stringFromAddressTagInheritedFrom model =
+    case model of
+        AddressTagInheritedFromCluster ->
+            "cluster"
+
+
+makeAddressTagInheritedFromFromString : String -> Maybe AddressTagInheritedFrom
+makeAddressTagInheritedFromFromString str =
+    case str of
+    "cluster" ->
+        Just AddressTagInheritedFromCluster
+
+    _ ->
+        Nothing
+
+
+
+encodeAddressTagInheritedFrom : AddressTagInheritedFrom -> Json.Encode.Value
+encodeAddressTagInheritedFrom =
+    Json.Encode.string << stringFromAddressTagInheritedFrom
+
 
 
 encodeAddressTags : AddressTags -> Json.Encode.Value
@@ -1001,6 +1070,56 @@ encodeEntityAddressesPairs model =
             ]
     in
     pairs
+
+
+encodeLabelSummary : LabelSummary -> Json.Encode.Value
+encodeLabelSummary =
+    encodeObject << encodeLabelSummaryPairs
+
+
+encodeLabelSummaryWithTag : ( String, String ) -> LabelSummary -> Json.Encode.Value
+encodeLabelSummaryWithTag (tagField, tag) model =
+    encodeObject (encodeLabelSummaryPairs model ++ [ encode tagField Json.Encode.string tag ])
+
+
+encodeLabelSummaryPairs : LabelSummary -> List EncodedField
+encodeLabelSummaryPairs model =
+    let
+        pairs =
+            [ encode "concepts" (Json.Encode.list Json.Encode.string) model.concepts
+            , encode "confidence" Json.Encode.float model.confidence
+            , encode "count" Json.Encode.int model.count
+            , encode "creators" (Json.Encode.list Json.Encode.string) model.creators
+            , maybeEncode "inherited_from" encodeLabelSummaryInheritedFrom model.inheritedFrom
+            , encode "label" Json.Encode.string model.label
+            , encode "lastmod" Json.Encode.int model.lastmod
+            , encode "sources" (Json.Encode.list Json.Encode.string) model.sources
+            ]
+    in
+    pairs
+
+stringFromLabelSummaryInheritedFrom : LabelSummaryInheritedFrom -> String
+stringFromLabelSummaryInheritedFrom model =
+    case model of
+        LabelSummaryInheritedFromCluster ->
+            "cluster"
+
+
+makeLabelSummaryInheritedFromFromString : String -> Maybe LabelSummaryInheritedFrom
+makeLabelSummaryInheritedFromFromString str =
+    case str of
+    "cluster" ->
+        Just LabelSummaryInheritedFromCluster
+
+    _ ->
+        Nothing
+
+
+
+encodeLabelSummaryInheritedFrom : LabelSummaryInheritedFrom -> Json.Encode.Value
+encodeLabelSummaryInheritedFrom =
+    Json.Encode.string << stringFromLabelSummaryInheritedFrom
+
 
 
 encodeLabeledItemRef : LabeledItemRef -> Json.Encode.Value
@@ -1455,6 +1574,7 @@ encodeTagPairs model =
             , maybeEncode "confidence" Json.Encode.string model.confidence
             , maybeEncode "confidence_level" Json.Encode.int model.confidenceLevel
             , encode "currency" Json.Encode.string model.currency
+            , maybeEncode "inherited_from" encodeTagInheritedFrom model.inheritedFrom
             , encode "is_cluster_definer" Json.Encode.bool model.isClusterDefiner
             , encode "label" Json.Encode.string model.label
             , maybeEncode "lastmod" Json.Encode.int model.lastmod
@@ -1466,6 +1586,29 @@ encodeTagPairs model =
             ]
     in
     pairs
+
+stringFromTagInheritedFrom : TagInheritedFrom -> String
+stringFromTagInheritedFrom model =
+    case model of
+        TagInheritedFromCluster ->
+            "cluster"
+
+
+makeTagInheritedFromFromString : String -> Maybe TagInheritedFrom
+makeTagInheritedFromFromString str =
+    case str of
+    "cluster" ->
+        Just TagInheritedFromCluster
+
+    _ ->
+        Nothing
+
+
+
+encodeTagInheritedFrom : TagInheritedFrom -> Json.Encode.Value
+encodeTagInheritedFrom =
+    Json.Encode.string << stringFromTagInheritedFrom
+
 
 
 encodeTagCloudEntry : TagCloudEntry -> Json.Encode.Value
@@ -1503,13 +1646,11 @@ encodeTagSummaryPairs : TagSummary -> List EncodedField
 encodeTagSummaryPairs model =
     let
         pairs =
-            [ encode "actors_tag_cloud" (Json.Encode.dict identity encodeTagCloudEntry) model.actorsTagCloud
-            , maybeEncode "best_actor" Json.Encode.string model.bestActor
+            [ maybeEncode "best_actor" Json.Encode.string model.bestActor
             , maybeEncode "best_label" Json.Encode.string model.bestLabel
             , encode "broad_category" Json.Encode.string model.broadCategory
             , encode "concept_tag_cloud" (Json.Encode.dict identity encodeTagCloudEntry) model.conceptTagCloud
-            , encode "label_tag_cloud" (Json.Encode.dict identity encodeTagCloudEntry) model.labelTagCloud
-            , encode "label_words_tag_cloud" (Json.Encode.dict identity encodeTagCloudEntry) model.labelWordsTagCloud
+            , encode "label_summary" (Json.Encode.dict identity encodeLabelSummary) model.labelSummary
             , encode "tag_count" Json.Encode.int model.tagCount
             ]
     in
@@ -1819,6 +1960,7 @@ addressTagDecoder =
         |> maybeDecode "confidence" Json.Decode.string Nothing
         |> maybeDecode "confidence_level" Json.Decode.int Nothing
         |> decode "currency" Json.Decode.string 
+        |> maybeDecode "inherited_from" addressTagInheritedFromDecoder Nothing
         |> decode "is_cluster_definer" Json.Decode.bool 
         |> decode "label" Json.Decode.string 
         |> maybeDecode "lastmod" Json.Decode.int Nothing
@@ -1829,6 +1971,21 @@ addressTagDecoder =
         |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
         |> decode "address" Json.Decode.string 
         |> decode "entity" Json.Decode.int 
+
+
+addressTagInheritedFromDecoder : Json.Decode.Decoder AddressTagInheritedFrom
+addressTagInheritedFromDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "cluster" ->
+                        Json.Decode.succeed AddressTagInheritedFromCluster
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
 
 
 addressTagsDecoder : Json.Decode.Decoder AddressTags
@@ -1949,6 +2106,34 @@ entityAddressesDecoder =
     Json.Decode.succeed EntityAddresses
         |> decode "addresses" (Json.Decode.list addressDecoder) 
         |> maybeDecode "next_page" Json.Decode.string Nothing
+
+
+labelSummaryDecoder : Json.Decode.Decoder LabelSummary
+labelSummaryDecoder =
+    Json.Decode.succeed LabelSummary
+        |> decode "concepts" (Json.Decode.list Json.Decode.string) 
+        |> decode "confidence" Json.Decode.float 
+        |> decode "count" Json.Decode.int 
+        |> decode "creators" (Json.Decode.list Json.Decode.string) 
+        |> maybeDecode "inherited_from" labelSummaryInheritedFromDecoder Nothing
+        |> decode "label" Json.Decode.string 
+        |> decode "lastmod" Json.Decode.int 
+        |> decode "sources" (Json.Decode.list Json.Decode.string) 
+
+
+labelSummaryInheritedFromDecoder : Json.Decode.Decoder LabelSummaryInheritedFrom
+labelSummaryInheritedFromDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "cluster" ->
+                        Json.Decode.succeed LabelSummaryInheritedFromCluster
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
 
 
 labeledItemRefDecoder : Json.Decode.Decoder LabeledItemRef
@@ -2134,6 +2319,7 @@ tagDecoder =
         |> maybeDecode "confidence" Json.Decode.string Nothing
         |> maybeDecode "confidence_level" Json.Decode.int Nothing
         |> decode "currency" Json.Decode.string 
+        |> maybeDecode "inherited_from" tagInheritedFromDecoder Nothing
         |> decode "is_cluster_definer" Json.Decode.bool 
         |> decode "label" Json.Decode.string 
         |> maybeDecode "lastmod" Json.Decode.int Nothing
@@ -2142,6 +2328,21 @@ tagDecoder =
         |> decode "tagpack_is_public" Json.Decode.bool 
         |> decode "tagpack_title" Json.Decode.string 
         |> maybeDecode "tagpack_uri" Json.Decode.string Nothing
+
+
+tagInheritedFromDecoder : Json.Decode.Decoder TagInheritedFrom
+tagInheritedFromDecoder =
+    Json.Decode.string
+        |> Json.Decode.andThen
+            (\value ->
+                case value of
+                    "cluster" ->
+                        Json.Decode.succeed TagInheritedFromCluster
+
+                    other ->
+                        Json.Decode.fail <| "Unknown type: " ++ other
+            )
+
 
 
 tagCloudEntryDecoder : Json.Decode.Decoder TagCloudEntry
@@ -2154,13 +2355,11 @@ tagCloudEntryDecoder =
 tagSummaryDecoder : Json.Decode.Decoder TagSummary
 tagSummaryDecoder =
     Json.Decode.succeed TagSummary
-        |> decode "actors_tag_cloud" (Json.Decode.dict tagCloudEntryDecoder) 
         |> maybeDecode "best_actor" Json.Decode.string Nothing
         |> maybeDecode "best_label" Json.Decode.string Nothing
         |> decode "broad_category" Json.Decode.string 
         |> decode "concept_tag_cloud" (Json.Decode.dict tagCloudEntryDecoder) 
-        |> decode "label_tag_cloud" (Json.Decode.dict tagCloudEntryDecoder) 
-        |> decode "label_words_tag_cloud" (Json.Decode.dict tagCloudEntryDecoder) 
+        |> decode "label_summary" (Json.Decode.dict labelSummaryDecoder) 
         |> decode "tag_count" Json.Decode.int 
 
 
