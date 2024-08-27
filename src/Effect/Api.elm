@@ -547,7 +547,7 @@ perform apiKey wrapMsg effect =
                 |> send apiKey wrapMsg effect toMsg
 
         GetAddressEffect { currency, address, includeActors } toMsg ->
-            Api.Request.Addresses.getAddress currency address  (Just includeActors)
+            Api.Request.Addresses.getAddress currency address (Just includeActors)
                 |> send apiKey wrapMsg effect toMsg
 
         GetEntityEffect { currency, entity } toMsg ->

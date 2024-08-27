@@ -4,6 +4,7 @@ import Api.Data exposing (TagSummary)
 import Config.Graph exposing (AddressLabelType(..))
 import Config.View as View
 import Css
+import Css.Pathfinder as Css
 import Css.View as Css
 import Dict exposing (Dict)
 import Hovercard
@@ -32,6 +33,9 @@ view vc ts tt =
 
         Address a ->
             address vc (Dict.get a.id ts) a
+
+        TagLabel lblid x ->
+            tagLabel vc lblid x
     )
         |> Html.toUnstyled
         |> List.singleton
@@ -50,22 +54,89 @@ view vc ts tt =
         |> Html.fromUnstyled
 
 
+getConfidenceIndicator : View.Config -> Float -> Html msg
+getConfidenceIndicator vc x =
+    if x >= 0.8 then
+        span [ css [ Css.color (Css.successColor vc) ] ] [ Locale.text vc.locale "High" ]
+
+    else if x >= 0.4 then
+        span [ css [ Css.color (Css.warningColor vc) ] ] [ Locale.text vc.locale "Medium" ]
+
+    else
+        span [ css [ Css.color (Css.alertColor vc) ] ] [ Locale.text vc.locale "Low" ]
+
+
+key : View.Config -> String -> Html msg
+key vc =
+    Locale.string vc.locale
+        >> text
+        >> List.singleton
+        >> div
+            [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
+            ]
+
+
+val : Html msg -> Html msg
+val =
+    List.singleton
+        >> div
+            [ css GraphComponents.tooltipProperty1DownValue1Details.styles
+            ]
+
+
+tagLabel : View.Config -> String -> TagSummary -> Html msg
+tagLabel vc lbl tag =
+    let
+        mlbldata =
+            Dict.get lbl tag.labelSummary
+    in
+    case mlbldata of
+        Just lbldata ->
+            div
+                [ css GraphComponents.tooltipProperty1DownDetails.styles
+                ]
+                [ div
+                    [ css GraphComponents.tooltipProperty1DownContent1Details.styles
+                    , css [ Css.whiteSpace Css.noWrap ]
+                    ]
+                    [ key vc "Tag Label"
+                    , key vc "Confidence"
+                    , key vc "Sources"
+                    , key vc "Mentions"
+                    , key vc "Last Modified"
+                    ]
+                , div
+                    [ css GraphComponents.tooltipProperty1DownContent2Details.styles
+                    , css [ Css.whiteSpace Css.noWrap ]
+                    ]
+                    [ lbldata.label
+                        |> text
+                        |> val
+                    , getConfidenceIndicator vc lbldata.confidence |> val
+                    , List.length lbldata.sources
+                        |> String.fromInt
+                        |> text
+                        |> val
+                    , lbldata.count
+                        |> String.fromInt
+                        |> text
+                        |> val
+                    , lbldata.lastmod
+                        |> multiLineDateTimeFromTimestamp vc
+                        |> val
+                    ]
+                ]
+
+        _ ->
+            none
+
+
 address : View.Config -> Maybe HavingTags -> Address.Address -> Html msg
 address vc havingTags adr =
     let
         net =
             Id.network adr.id
 
-        -- ts =
-        --     case havingTags of
-        --         Just (HasTagSummary t) ->
-        --             Just t
-        --         _ ->
-        --             Nothing
-        -- category =
-        --     ts |> Maybe.map .broadCategory |> Maybe.withDefault "-"
-        -- lbl =
-        --     ts |> Maybe.andThen .bestLabel |> Maybe.withDefault "-"
         balance =
             Address.getBalance adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
 
@@ -74,22 +145,6 @@ address vc havingTags adr =
 
         currency =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
-
-        -- cluster =
-        --     adr |> Address.getClusterId |> Maybe.withDefault "-"
-        key =
-            Locale.string vc.locale
-                >> text
-                >> List.singleton
-                >> div
-                    [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
-                    ]
-
-        val =
-            List.singleton
-                >> div
-                    [ css GraphComponents.tooltipProperty1DownValue1Details.styles
-                    ]
     in
     div
         [ css GraphComponents.tooltipProperty1DownDetails.styles
@@ -98,23 +153,13 @@ address vc havingTags adr =
             [ css GraphComponents.tooltipProperty1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            -- [ key "Category"
-            -- , key "Label"
-            [ key "Balance"
-            , key "Total Received"
-
-            -- , key "Cluster"
+            [ key vc "Balance"
+            , key vc "Total Received"
             ]
         , div
             [ css GraphComponents.tooltipProperty1DownContent2Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            -- [ category
-            --     |> text
-            --     |> val
-            -- , lbl
-            --     |> text
-            --     |> val
             [ balance
                 ++ " "
                 ++ currency
@@ -125,29 +170,12 @@ address vc havingTags adr =
                 ++ currency
                 |> text
                 |> val
-
-            -- , cluster |> text |> val
             ]
         ]
 
 
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg
 utxoTx vc tx =
-    let
-        key =
-            Locale.string vc.locale
-                >> text
-                >> List.singleton
-                >> div
-                    [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
-                    ]
-
-        val =
-            List.singleton
-                >> div
-                    [ css GraphComponents.tooltipProperty1DownValue1Details.styles
-                    ]
-    in
     div
         [ css GraphComponents.tooltipProperty1DownDetails.styles
         ]
@@ -155,8 +183,8 @@ utxoTx vc tx =
             [ css GraphComponents.tooltipProperty1DownContent1Details.styles
             , css [ Css.whiteSpace Css.noWrap ]
             ]
-            [ key "Tx hash"
-            , key "Timestamp"
+            [ key vc "Tx hash"
+            , key vc "Timestamp"
             ]
         , div
             [ css GraphComponents.tooltipProperty1DownContent2Details.styles

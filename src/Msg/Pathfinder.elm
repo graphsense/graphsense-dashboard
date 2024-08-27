@@ -63,6 +63,8 @@ type Msg
     | UserMovesMouseOutUtxoTx Id
     | UserMovesMouseOverAddress Id
     | UserMovesMouseOutAddress Id
+    | UserMovesMouseOverTagLabel String
+    | UserMovesMouseOutTagLabel String
     | HovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
     | UserClickedToggleClusterDetailsOpen

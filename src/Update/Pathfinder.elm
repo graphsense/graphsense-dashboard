@@ -586,6 +586,33 @@ updateByMsg plugins uc msg model =
             }
                 |> n
 
+        UserMovesMouseOverTagLabel x ->
+            case model.details of
+                Just (AddressDetails id _) ->
+                    let
+                        ( hc, cmd ) =
+                            x |> Hovercard.init
+                    in
+                    ( { model
+                        | tooltip =
+                            case Dict.get id model.tagSummaries of
+                                Just (HasTagSummary ts) ->
+                                    Just (Tooltip.TagLabel x ts |> Tooltip.init hc)
+
+                                _ ->
+                                    Nothing
+                      }
+                    , Cmd.map HovercardMsg cmd
+                        |> CmdEffect
+                        |> List.singleton
+                    )
+
+                _ ->
+                    n model
+
+        UserMovesMouseOutTagLabel x ->
+            n { model | tooltip = Nothing }
+
         HovercardMsg hcMsg ->
             model.tooltip
                 |> Maybe.map

@@ -1,5 +1,6 @@
 module Css.Pathfinder exposing (..)
 
+import Color exposing (red)
 import Config.View as View
 import Css exposing (..)
 import Html.Styled
@@ -136,6 +137,12 @@ redColor =
     hex "#E84137"
 
 
+orangeColor : Color
+orangeColor =
+    -- rgb 194 141 141
+    hex "#FF9800"
+
+
 
 -- Styles
 
@@ -148,6 +155,11 @@ alertColor _ =
 successColor : View.Config -> Color
 successColor _ =
     greenColor
+
+
+warningColor : View.Config -> Color
+warningColor _ =
+    orangeColor
 
 
 highlightPrimaryColor : View.Config -> Color
@@ -301,6 +313,11 @@ linkButtonStyle vc enabled =
     , mGap |> paddingRight
     , clr |> color
     ]
+
+
+tagLinkButtonStyle : View.Config -> List Style
+tagLinkButtonStyle vc =
+    [ fontSize (px 16), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color, Css.textDecoration Css.none ]
 
 
 toggleToolButtonStyle : View.Config -> Bool -> Bool -> List Style
@@ -523,12 +540,12 @@ ruleStyle =
 
 inIconStyle : List Style
 inIconStyle =
-    [ color greenColor, ch 0.5 |> paddingRight, ch 0.2 |> paddingLeft ]
+    [ fill greenColor, px 3 |> paddingRight, px 1 |> paddingLeft ] |> List.map important
 
 
 outIconStyle : List Style
 outIconStyle =
-    [ color redColor, ch 0.5 |> paddingRight, ch 0.2 |> paddingLeft ]
+    [ fill redColor, px 3 |> paddingRight, px 8 |> paddingLeft ] |> List.map important
 
 
 inoutStyle : Bool -> List Style

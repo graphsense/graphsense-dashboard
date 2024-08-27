@@ -15,8 +15,10 @@ import Dict
 import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
+import Html.Events exposing (onMouseOver)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
+import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Html.Styled.Lazy exposing (..)
 import Json.Decode
 import Model.Currency exposing (Currency(..), assetFromBase)
@@ -43,7 +45,7 @@ import Plugin.View as Plugin exposing (Plugins)
 import RecordSetter exposing (..)
 import RemoteData
 import Route
-import Route.Graph
+import Route.Graph exposing (AddressTable(..))
 import Route.Pathfinder exposing (Route(..))
 import Svg.Styled exposing (..)
 import Svg.Styled.Attributes as SA exposing (..)
@@ -282,9 +284,9 @@ inOutIndicator : View.Config -> Maybe Int -> Int -> Int -> Html Msg
 inOutIndicator vc mnr inNr outNr =
     let
         prefix =
-            String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale) |> Maybe.withDefault "", "(" ])
+            String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale >> (++) " - ") |> Maybe.withDefault "", "(" ])
     in
-    span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), Html.text ",", outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
+    span [ ioOutIndicatorStyle |> toAttr ] [ Html.text prefix, inIcon, Html.text (Locale.int vc.locale inNr), outIcon, Html.text (Locale.int vc.locale outNr), Html.text ")" ]
 
 
 collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
@@ -649,7 +651,7 @@ addressDetailsContentView vc gc model id viewState =
         nrTagsAddress =
             ts |> Maybe.map .tagCount |> Maybe.withDefault 0
 
-        tags =
+        tagLabels =
             ts
                 |> Maybe.map
                     (\x ->
@@ -657,21 +659,12 @@ addressDetailsContentView vc gc model id viewState =
                             []
 
                         else
-                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .confidence)) x
+                            (.labelSummary >> Dict.toList >> List.sortBy (Tuple.second >> .confidence) >> List.reverse) x
                     )
                 |> Maybe.withDefault []
 
-        tagsDisplay =
-            tags |> List.reverse |> List.take 2 |> List.map Tuple.first
-
-        tagsDisplayWithMore =
-            tagsDisplay
-                ++ (if List.length tags > List.length tagsDisplay then
-                        [ "..." ]
-
-                    else
-                        []
-                   )
+        lenTagLabels =
+            List.length tagLabels
 
         actor_id =
             ts |> Maybe.andThen .bestActor
@@ -723,7 +716,24 @@ addressDetailsContentView vc gc model id viewState =
             actorText /= Nothing
 
         showOtherTag =
-            List.isEmpty tags |> not
+            List.isEmpty tagLabels |> not
+
+        showTag i ( tid, t ) =
+            let
+                link =
+                    Route.Graph.addressRoute { currency = Id.network id, address = Id.id id, layer = Nothing, table = Just AddressTagsTable }
+                        |> Route.Graph
+                        |> Route.toUrl
+            in
+            Html.a [ onMouseEnter (UserMovesMouseOverTagLabel tid), onMouseLeave (UserMovesMouseOutTagLabel tid), Css.tagLinkButtonStyle vc |> css, HA.id tid, HA.href link ]
+                (Html.text t.label
+                    :: (if i < (lenTagLabels - 1) then
+                            [ Html.text "," ]
+
+                        else
+                            []
+                       )
+                )
     in
     SidePanelComponents.sidePanelHeaderWithInstances
         df
@@ -734,6 +744,29 @@ addressDetailsContentView vc gc model id viewState =
 
                 else
                     Just none
+            , tagsLabel =
+                Just
+                    (div
+                        [ HA.css
+                            [ Css.borderRadius (Css.px 0)
+                            , Css.opacity (Css.num 1)
+                            , Css.height (Css.px 15)
+                            , Css.displayFlex
+                            , Css.property "gap" "8px"
+                            , Css.alignItems Css.center
+                            , Css.justifyContent Css.start
+                            , Css.displayFlex
+                            , Css.flexDirection Css.row
+                            , Css.paddingBottom (Css.px 0)
+                            , Css.paddingTop (Css.px 0)
+                            , Css.paddingRight (Css.px 0)
+                            , Css.paddingLeft (Css.px 0)
+                            , Css.backgroundColor (Css.rgba 0 0 0 0)
+                            , Css.borderWidth (Css.px 1)
+                            ]
+                        ]
+                        (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.indexedMap showTag))
+                    )
         }
         { sidePanelHeader =
             { headerInstance =
@@ -761,7 +794,7 @@ addressDetailsContentView vc gc model id viewState =
             }
         , tagsLabel =
             { iconInstance = Icons.iconsTagLargeSvg [] {}
-            , text = String.join ", " tagsDisplayWithMore
+            , text = ""
             }
         , actorLabel =
             { iconInstance =
@@ -818,7 +851,7 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
         ioIndicatorState =
             Just (inOutIndicator vc (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
     in
-    collapsibleSection vc "Transactions" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+    collapsibleSection vc "Transaction" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 
 
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
