@@ -308,7 +308,7 @@ linkButtonStyle vc enabled =
 
 tagLinkButtonStyle : View.Config -> List Style
 tagLinkButtonStyle vc =
-    [ fontSize (px 16), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color, Css.textDecoration Css.none ]
+    [ fontSize (px 14), no |> padding, xsGap |> paddingRight, cursor pointer, blackColor |> color ]
 
 
 toggleToolButtonStyle : View.Config -> Bool -> Bool -> List Style
