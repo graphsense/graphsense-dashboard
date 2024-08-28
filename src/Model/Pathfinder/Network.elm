@@ -5,6 +5,7 @@ import Hex
 import Init.Pathfinder.Id as Id
 import List.Extra
 import Model.Direction exposing (Direction(..))
+import Model.Graph.Coords as Coords
 import Model.Pathfinder.Address exposing (Address, txsGetSet)
 import Model.Pathfinder.Id exposing (Id)
 import Model.Pathfinder.Tx as Tx exposing (Tx)
@@ -18,6 +19,15 @@ type alias Network =
     , animatedAddresses : Set Id
     , animatedTxs : Set Id
     }
+
+
+
+-- getBoundingBox : Network -> Coords.BBox
+-- getBoundingBox net =
+--     let
+--         addressPos = Dict.toList net.addresses |> List.map (\(id, a) -> {x = a.x + a.dx, y=a.y + a.dy })
+--      in
+--     { x = 0.0, y = 0.0, width = 0.0, height = 0.0 }
 
 
 hasTx : Id -> Network -> Bool

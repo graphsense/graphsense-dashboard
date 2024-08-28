@@ -400,7 +400,7 @@ updateByMsg plugins uc msg model =
                         moveNode txOrAdrId net =
                             Network.updateAddress txOrAdrId Node.release net
                                 |> Network.updateTx txOrAdrId
-                                    (Tx.updateUtxo Node.release)
+                                    Node.release
 
                         moveSelectedNode sel net =
                             case sel of
@@ -669,7 +669,7 @@ updateByMsg plugins uc msg model =
                         moveNode txOrAdrId net =
                             Network.updateAddress txOrAdrId (Node.move vectorRel) net
                                 |> Network.updateTx txOrAdrId
-                                    (Tx.updateUtxo (Node.move vectorRel))
+                                    (Node.move vectorRel)
 
                         moveSelectedNode sel net =
                             case sel of
@@ -1438,22 +1438,21 @@ addTx plugins _ addressId direction tx model =
             Network.addTxWithPosition (Network.NextTo ( direction, addressId )) tx model.network
 
         transform =
-            newTx
-                |> Tx.getUtxoTx
-                |> Maybe.map
-                    (\t_ ->
-                        Transform.move
-                            { x = t_.x * unit
-                            , y = A.getTo t_.y * unit
-                            , z = Transform.initZ
-                            }
-                            model.transform
-                    )
+            Transform.move
+                { x = newTx.x * unit
+                , y = A.getTo newTx.y * unit
+                , z = Transform.initZ
+                }
+                model.transform
 
+        -- |> Tx.getUtxoTx
+        -- |> Maybe.map
+        --     (\t_ ->
+        --     )
         newmodel =
             { model
                 | network = network
-                , transform = Maybe.withDefault model.transform transform
+                , transform = transform
             }
 
         address =

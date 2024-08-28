@@ -20,7 +20,7 @@ view : Plugins -> View.Config -> Pathfinder.Config -> Tx -> Svg Msg
 view plugins vc gc tx =
     case tx.type_ of
         Utxo t ->
-            Utxo.view plugins vc gc tx.id (tx.selected || tx.hovered) t
+            Utxo.view plugins vc gc tx.id (tx.selected || tx.hovered) t tx
 
         Account _ ->
             text ""
@@ -31,7 +31,7 @@ edge plugins vc gc tx =
     ( Id.toString tx.id
     , case tx.type_ of
         Utxo t ->
-            Svg.lazy5 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t
+            Svg.lazy6 Utxo.edge plugins vc gc (tx.selected || tx.hovered) t tx
 
         Account t ->
             AccountTx.edge plugins vc gc Dict.empty t

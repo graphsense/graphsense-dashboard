@@ -22,7 +22,7 @@ import Model.Pathfinder.Id.Tx as Tx
 import Model.Pathfinder.Network exposing (..)
 import Model.Pathfinder.Tx as Tx exposing (Tx, listAddressesForTx)
 import Msg.Pathfinder exposing (Msg(..))
-import RecordSetter exposing (s_incomingTxs, s_outgoingTxs, s_selected)
+import RecordSetter exposing (..)
 import RemoteData exposing (RemoteData(..))
 import Set
 import Tuple exposing (first, pair, second)
@@ -53,7 +53,7 @@ addAddressWithPosition position id model =
         let
             things =
                 listTxsForAddress model id
-                    |> List.filterMap (\( _, tx ) -> Tx.getUtxoTx tx)
+                    |> List.map Tuple.second
 
             coords =
                 avoidOverlappingEdges things <|
@@ -105,8 +105,8 @@ findAddressCoordsNextToTx model direction tx =
                         ( t.outputs
                             |> Dict.toList
                             |> List.map first
-                        , t.x
-                        , A.getTo t.y
+                        , tx.x
+                        , A.getTo tx.y
                         )
 
                 ( Incoming, Tx.Utxo t ) ->
@@ -114,8 +114,8 @@ findAddressCoordsNextToTx model direction tx =
                         ( t.inputs
                             |> Dict.toList
                             |> List.map first
-                        , t.x
-                        , A.getTo t.y
+                        , tx.x
+                        , A.getTo tx.y
                         )
 
                 ( Outgoing, Tx.Account t ) ->
@@ -220,8 +220,8 @@ freeSpaceAroundCoords coords model =
                     (\tx ->
                         case tx.type_ of
                             Tx.Utxo t ->
-                                if t.x > coords.x - 1 && t.x < coords.x + 1 then
-                                    Just { id = tx.id, x = t.x, y = t.y, clock = t.clock }
+                                if tx.x > coords.x - 1 && tx.x < coords.x + 1 then
+                                    Just { id = tx.id, x = tx.x, y = tx.y, clock = tx.clock }
 
                                 else
                                     Nothing
@@ -243,15 +243,7 @@ freeSpaceAroundCoords coords model =
                         Tx.updateUtxo (Tx.updateUtxoIo Incoming a.id (Tx.setAddress a))
                             >> Tx.updateUtxo (Tx.updateUtxoIo Outgoing a.id (Tx.setAddress a))
                     )
-                    (Tx.updateUtxo
-                        (\utxo ->
-                            { utxo
-                                | y = movedTx.y
-                                , clock = movedTx.clock
-                            }
-                        )
-                        tx
-                    )
+                    (tx |> s_y movedTx.y |> s_clock movedTx.clock)
 
         newTxs =
             movedTxs
@@ -362,7 +354,7 @@ findFreeCoords model =
             |> Maybe.withDefault
                 (model.txs
                     |> Dict.values
-                    |> List.filterMap Tx.getUtxoTx
+                    -- |> List.filterMap Tx.getUtxoTx
                     |> getMinY
                     |> Maybe.withDefault 0
                 )
@@ -456,17 +448,16 @@ addTxWithPosition position tx network =
                                 freeSpaceAroundCoords coords network
                         in
                         Tx.fromTxUtxoData newNetwork t coords
-                            |> Tx.updateUtxo
-                                (\utxo ->
+                            |> (\tx_i ->
                                     if hasAnimations newNetwork then
-                                        utxo
+                                        tx_i
 
                                     else
-                                        { utxo
+                                        { tx_i
                                             | opacity = opacityAnimation
                                             , clock = 0
                                         }
-                                )
+                               )
                             |> insertTx
                                 { newNetwork
                                     | animatedTxs = Set.insert id newNetwork.animatedTxs
@@ -658,39 +649,30 @@ animateTxs delta model =
                 Dict.get id network.txs
                     |> Maybe.map
                         (\tx ->
-                            case tx.type_ of
-                                Tx.Account _ ->
-                                    network
+                            let
+                                clock =
+                                    tx.clock + delta
+                            in
+                            { network
+                                | txs =
+                                    Dict.insert id
+                                        { tx
+                                            | clock = clock
+                                            , opacity =
+                                                if A.isDone clock tx.opacity then
+                                                    A.static 1
 
-                                Tx.Utxo t ->
-                                    let
-                                        clock =
-                                            t.clock + delta
-                                    in
-                                    { network
-                                        | txs =
-                                            Dict.insert id
-                                                { tx
-                                                    | type_ =
-                                                        { t
-                                                            | clock = clock
-                                                            , opacity =
-                                                                if A.isDone clock t.opacity then
-                                                                    A.static 1
+                                                else
+                                                    tx.opacity
+                                        }
+                                        network.txs
+                                , animatedTxs =
+                                    if A.isDone clock tx.y && A.isDone clock tx.opacity then
+                                        Set.remove id network.animatedTxs
 
-                                                                else
-                                                                    t.opacity
-                                                        }
-                                                            |> Tx.Utxo
-                                                }
-                                                network.txs
-                                        , animatedTxs =
-                                            if A.isDone clock t.y && A.isDone clock t.opacity then
-                                                Set.remove id network.animatedTxs
-
-                                            else
-                                                network.animatedTxs
-                                    }
+                                    else
+                                        network.animatedTxs
+                            }
                         )
                     |> Maybe.withDefault network
             )

@@ -1,6 +1,6 @@
 module View.Pathfinder.Tx.Utxo exposing (edge, view)
 
-import Animation as A
+import Animation as A exposing (Animation, Clock)
 import Config.Pathfinder as Pathfinder
 import Config.View as View
 import Css
@@ -28,8 +28,12 @@ import View.Locale as Locale
 import View.Pathfinder.Tx.Path exposing (inPath, inPathHovered, outPath, outPathHovered)
 
 
-view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> Svg Msg
-view _ vc pc id highlight tx =
+type alias TxPos ex =
+    { ex | x : Float, dx : Float, y : Animation, dy : Float, opacity : Animation, clock : Clock }
+
+
+view : Plugins -> View.Config -> Pathfinder.Config -> Id -> Bool -> UtxoTx -> TxPos x -> Svg Msg
+view _ vc pc id highlight tx pos =
     let
         anyIsNotVisible =
             Dict.toList
@@ -48,10 +52,10 @@ view _ vc pc id highlight tx =
         { txNodeCircleAttributes
             | txNodeCircle =
                 [ translate
-                    ((tx.x + tx.dx) * unit - adjX)
-                    ((A.animate tx.clock tx.y + tx.dy) * unit - adjY)
+                    ((pos.x + pos.dx) * unit - adjX)
+                    ((A.animate pos.clock pos.y + pos.dy) * unit - adjY)
                     |> transform
-                , A.animate tx.clock tx.opacity
+                , A.animate pos.clock pos.opacity
                     |> String.fromFloat
                     |> opacity
                 , UserClickedTx id |> onClickWithStop
@@ -76,8 +80,8 @@ view _ vc pc id highlight tx =
         }
 
 
-edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> Svg Msg
-edge _ vc _ hovered tx =
+edge : Plugins -> View.Config -> Pathfinder.Config -> Bool -> UtxoTx -> TxPos x -> Svg Msg
+edge _ vc _ hovered tx pos =
     let
         toValues =
             Dict.toList
@@ -117,8 +121,8 @@ edge _ vc _ hovered tx =
             GraphComponents.txNodeCircleTxNodeDetails.width / 2
 
         toCoords address =
-            { tx = tx.x + tx.dx
-            , ty = A.animate tx.clock tx.y + tx.dy
+            { tx = pos.x + pos.dx
+            , ty = A.animate pos.clock pos.y + pos.dy
             , ax = address.x + address.dx
             , ay = A.animate address.clock address.y + address.dy
             }
@@ -154,7 +158,7 @@ edge _ vc _ hovered tx =
                     (c.ay * unit)
                     (c.tx * unit - (txRad * sign))
                     (c.ty * unit)
-                    (A.animate tx.clock tx.opacity)
+                    (A.animate pos.clock pos.opacity)
                 )
             )
     )

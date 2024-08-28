@@ -19,6 +19,12 @@ type alias Tx =
     , hovered : Bool
     , selected : Bool
     , type_ : TxType
+    , x : Float
+    , y : Animation
+    , dx : Float
+    , dy : Float
+    , clock : Clock
+    , opacity : Animation
     }
 
 
@@ -36,13 +42,7 @@ type alias AccountTx =
 
 
 type alias UtxoTx =
-    { x : Float
-    , y : Animation
-    , dx : Float
-    , dy : Float
-    , clock : Clock
-    , opacity : Animation
-    , inputs : Dict Id Io
+    { inputs : Dict Id Io
     , outputs : Dict Id Io
     , raw : Api.Data.TxUtxo
     }
@@ -111,13 +111,8 @@ calcCoords =
 
 getCoords : Tx -> Maybe Coords
 getCoords tx =
-    case tx.type_ of
-        Utxo { x, y, clock } ->
-            Coords x (Animation.animate clock y)
-                |> Just
-
-        Account _ ->
-            Nothing
+    Coords tx.x (Animation.animate tx.clock tx.y)
+        |> Just
 
 
 avg : (Address -> Float) -> List Address -> Result Error Float

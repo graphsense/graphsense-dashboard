@@ -22,6 +22,12 @@ fromTxAccountData tx =
     { id = id
     , hovered = False
     , selected = False
+    , x = 0
+    , y = A.static 0
+    , dx = 0
+    , dy = 0
+    , opacity = A.static 1
+    , clock = 0
     , type_ =
         Account
             { from = Id.init tx.currency tx.fromAddress
@@ -88,6 +94,12 @@ fromTxUtxoData network tx coords =
     { id = id
     , hovered = False
     , selected = False
+    , x = coords.x
+    , y = A.static coords.y
+    , dx = 0
+    , dy = 0
+    , opacity = A.static 1
+    , clock = 0
     , type_ =
         let
             inputs =
@@ -95,13 +107,7 @@ fromTxUtxoData network tx coords =
                     |> Dict.fromList
         in
         Utxo
-            { x = coords.x
-            , y = A.static coords.y
-            , dx = 0
-            , dy = 0
-            , opacity = A.static 1
-            , clock = 0
-            , inputs = inputs
+            { inputs = inputs
             , outputs =
                 fn Outgoing
                     |> List.filter
