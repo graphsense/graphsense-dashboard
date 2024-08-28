@@ -483,8 +483,7 @@ detailsView vc gc model =
         Just details ->
             div
                 [ detailsViewStyle vc |> toAttr ]
-                [ detailsViewCloseRow vc
-                , case details of
+                [ case details of
                     AddressDetails id state ->
                         RemoteData.unwrap
                             (Util.View.loadingSpinner vc Css.View.loadingSpinner)

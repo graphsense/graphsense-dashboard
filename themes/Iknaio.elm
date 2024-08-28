@@ -97,7 +97,7 @@ headingFontFamilies =
 
 monospacedFontFamilies : List String
 monospacedFontFamilies =
-    [ "RobotoMono", "monospace" ]
+    [ "Roboto Mono", "monospace" ]
 
 
 theme : Theme

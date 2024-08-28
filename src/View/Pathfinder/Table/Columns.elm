@@ -12,9 +12,11 @@ import Html.Styled.Events exposing (..)
 import Maybe.Extra
 import Model.Currency exposing (AssetIdentifier)
 import Model.Pathfinder exposing (HavingTags(..))
+import RecordSetter exposing (..)
 import Table
 import Theme.Html.Icons
-import Util.View exposing (copyableLongIdentifierPathfinder, loadingSpinner, none)
+import Theme.Html.SidePanelComponents as SidePanelComponents
+import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, loadingSpinner, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
@@ -61,44 +63,48 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
         { name = label
         , viewData =
             \data ->
-                (case lblfn data of
-                    HasTags ->
-                        [ span [ tagcss ] [ Theme.Html.Icons.iconsTagSmall {} ] ]
+                SidePanelComponents.sidePanelIoListAddressCellWithInstances
+                    SidePanelComponents.sidePanelIoListAddressCellAttributes
+                    (SidePanelComponents.sidePanelIoListAddressCellInstances
+                        |> s_iconsTagSmall
+                            (case lblfn data of
+                                LoadingTags ->
+                                    span
+                                        [ Locale.string vc.locale "Loading tags"
+                                            |> title
+                                        ]
+                                        [ loadingSpinner vc Css.Statusbar.loadingSpinner
+                                        ]
+                                        |> Just
 
-                    LoadingTags ->
-                        [ span
-                            [ Locale.string vc.locale "Loading tags"
-                                |> title
-                            ]
-                            [ loadingSpinner vc Css.Statusbar.loadingSpinner
-                            ]
-                        ]
-
-                    HasTagSummary ts ->
-                        [ span
-                            [ tagcss
-                            , ts.bestActor
-                                |> Maybe.Extra.or ts.bestLabel
-                                |> Maybe.withDefault ts.broadCategory
-                                |> title
-                            ]
-                            [ Theme.Html.Icons.iconsTagSmall {} ]
-                        ]
-
-                    NoTags ->
-                        [ span
-                            (if tagsPlaceholder then
-                                [ tagcss ]
-
-                             else
-                                []
+                                _ ->
+                                    Nothing
                             )
-                            []
-                        ]
-                )
-                    ++ (accessor data |> copyableLongIdentifierPathfinder vc [] |> List.singleton)
+                    )
+                    { sidePanelIoListAddressCell =
+                        { tagIconVisible =
+                            case lblfn data of
+                                NoTags ->
+                                    False
+
+                                _ ->
+                                    True
+                        }
+                    , iconText =
+                        { iconInstance =
+                            accessor data |> copyIconPathfinder vc
+                        , text =
+                            accessor data
+                                |> truncateLongIdentifierWithLengths 8 4
+                        }
+                    }
+                    |> List.singleton
                     |> Table.HtmlDetails
-                        (([ PCSS.mGap |> Css.padding ] |> css)
+                        (([ PCSS.mGap |> Css.padding
+                          , Css.verticalAlign Css.middle
+                          ]
+                            |> css
+                         )
                             :: (onClick
                                     |> Maybe.map
                                         (\cl ->

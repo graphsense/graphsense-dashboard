@@ -1119,7 +1119,8 @@ updateByRoute_ : Plugins -> Update.Config -> Route.Route -> Model -> ( Model, Li
 updateByRoute_ plugins uc route model =
     case route |> Log.log "route" of
         Route.Root ->
-            n model
+            unselect model
+                |> n
 
         Route.Network network (Route.Address a) ->
             let
@@ -1288,6 +1289,7 @@ unselect model =
     in
     network
         |> flip s_network model
+        |> s_details Nothing
         |> s_selection NoSelection
 
 
