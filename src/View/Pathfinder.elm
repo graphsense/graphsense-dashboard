@@ -54,6 +54,7 @@ import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
 import Theme.Html.Icons
+import Theme.Html.SettingsComponents as SettingsComponents
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
 import Theme.Svg.Icons as Icons
@@ -341,22 +342,34 @@ graph plugins states vc gc model =
 topCenterPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 topCenterPanel plugins ms vc gc model =
     div
-        [ css topCenterPanelStyle
+        [ css topPanelStyle
         ]
-        [ Toolbar.view vc
-            { undoDisabled = List.isEmpty model.history.past
-            , redoDisabled = List.isEmpty model.history.future
-            , pointerTool = model.pointerTool
-            }
+        [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
+        , div
+            [ css
+                [ Css.displayFlex
+                , Css.property "gap" "10px"
+                , Css.property "pointer-events" "all"
+                ]
+            ]
+            [ searchBoxView plugins ms vc gc model
+            , Toolbar.view vc
+                { undoDisabled = List.isEmpty model.history.past
+                , redoDisabled = List.isEmpty model.history.future
+                , pointerTool = model.pointerTool
+                }
+            ]
+        , div
+            [ css [ Css.property "pointer-events" "all" ] ]
+            [ graphActionsView vc gc model
+            ]
         ]
 
 
 topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 topLeftPanel plugins ms vc gc model =
     div [ topLeftPanelStyle vc |> toAttr ]
-        [ h2 [ vc.theme.heading2 |> toAttr ] [ Html.text "Pathfinder" ]
-        , searchBoxView plugins ms vc gc model
-        ]
+        []
 
 
 settingsView : View.Config -> Model -> Hovercard.Model -> Html Msg
@@ -426,8 +439,7 @@ graphToolButton vc btn =
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 topRightPanel _ _ vc gc model =
     div [ topRightPanelStyle vc |> toAttr ]
-        [ graphActionsView vc gc model
-        , detailsView vc gc model
+        [ detailsView vc gc model
         ]
 
 
@@ -449,22 +461,34 @@ iconWithText _ faIcon text =
 
 searchBoxView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
 searchBoxView plugins _ vc _ model =
-    div
-        [ searchBoxStyle vc Nothing |> toAttr ]
-        [ div [ panelHeadingStyle2 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Search") ]
-        , div [ searchBoxContainerStyle vc |> toAttr ]
-            [ span [ searchBoxIconStyle vc |> toAttr ] [ Theme.Html.Icons.iconsSearchLarge {} ]
-            , View.Search.search plugins
-                vc
-                { css = searchInputStyle vc
-                , multiline = False
-                , resultsAsLink = True
-                , showIcon = False
-                }
-                model.search
-                |> Html.map SearchMsg
-            ]
-        ]
+    SettingsComponents.toolbarSearchFieldWithInstances
+        (SettingsComponents.toolbarSearchFieldAttributes
+            |> s_toolbarSearchField
+                [ css [ Css.alignItems Css.stretch |> Css.important ] ]
+        )
+        (SettingsComponents.toolbarSearchFieldInstances
+            |> s_searchInputField
+                (View.Search.searchWithMoreCss plugins
+                    vc
+                    { css = searchInputStyle vc
+                    , formCss =
+                        Just
+                            [ Css.flexGrow <| Css.num 1
+                            ]
+                    , frameCss =
+                        Just
+                            [ Css.height <| Css.pct 100
+                            ]
+                    , multiline = False
+                    , resultsAsLink = True
+                    , showIcon = False
+                    }
+                    model.search
+                    |> Html.map SearchMsg
+                    |> Just
+                )
+        )
+        {}
 
 
 detailsView : View.Config -> Pathfinder.Config -> Model -> Html Msg

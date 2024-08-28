@@ -1,4 +1,4 @@
-module View.Search exposing (search)
+module View.Search exposing (search, searchWithMoreCss)
 
 import Autocomplete
 import Autocomplete.Styled as Autocomplete
@@ -17,7 +17,7 @@ import Model.Search exposing (..)
 import Msg.Search exposing (Msg(..))
 import Plugin.View as Plugin exposing (Plugins)
 import String.Extra
-import Util.View
+import Util.View exposing (nona)
 import View.Autocomplete as Autocomplete
 import View.Locale as Locale
 
@@ -30,8 +30,32 @@ type alias SearchConfig =
     }
 
 
+type alias SearchConfigWithMoreCss =
+    { css : String -> List Style
+    , formCss : Maybe (List Style)
+    , frameCss : Maybe (List Style)
+    , resultsAsLink : Bool
+    , multiline : Bool
+    , showIcon : Bool
+    }
+
+
 search : Plugins -> Config -> SearchConfig -> Model -> Html Msg
 search plugins vc sc model =
+    searchWithMoreCss plugins
+        vc
+        { css = sc.css
+        , resultsAsLink = sc.resultsAsLink
+        , multiline = sc.multiline
+        , showIcon = sc.showIcon
+        , formCss = Nothing
+        , frameCss = Nothing
+        }
+        model
+
+
+searchWithMoreCss : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
+searchWithMoreCss plugins vc sc model =
     let
         { inputEvents } =
             Autocomplete.events
@@ -44,11 +68,17 @@ search plugins vc sc model =
     in
     Html.Styled.form
         [ Css.form vc sc.showIcon |> css
+        , sc.formCss
+            |> Maybe.map css
+            |> Maybe.withDefault nona
         , stopPropagationOn "click" (Json.Decode.succeed ( NoOp, True ))
         , onSubmit UserClicksResultLine
         ]
         [ div
             [ Css.frame vc |> css
+            , sc.frameCss
+                |> Maybe.map css
+                |> Maybe.withDefault nona
             ]
             [ input
                 ([ sc.css query |> css
@@ -104,7 +134,7 @@ search plugins vc sc model =
         ]
 
 
-searchResult : Plugins -> Config -> SearchConfig -> Model -> Html Msg
+searchResult : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> Html Msg
 searchResult plugins vc sc model =
     let
         viewState =
@@ -122,7 +152,7 @@ searchResult plugins vc sc model =
         text ""
 
 
-resultList : Plugins -> Config -> SearchConfig -> Model -> List (Html Msg)
+resultList : Plugins -> Config -> SearchConfigWithMoreCss -> Model -> List (Html Msg)
 resultList plugins vc sc { autocomplete, searchType } =
     let
         choices =

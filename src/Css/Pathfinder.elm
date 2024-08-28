@@ -207,13 +207,12 @@ boxStyle vc upadding =
 searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
     [ all |> width
-    , px 20 |> height
+    , calc (pct 100) minus (px 2) |> height
+    , padding <| px 1
     , display block
     , emphTextColor vc |> color
-    , boxBorderColor vc |> border3 (px 1) solid
-    , defaultBackgroundColor vc |> backgroundColor
-    , sGap |> borderRadius
-    , px 25 |> textIndent
+    , boxBorderColor vc |> border3 (px 0) solid
+    , outline none
     ]
 
 
@@ -353,11 +352,16 @@ topLeftPanelStyle _ =
     ]
 
 
-topCenterPanelStyle : List Style
-topCenterPanelStyle =
+topPanelStyle : List Style
+topPanelStyle =
     [ position absolute
-    , pct 50 |> left
+    , marginLeft mlGap
     , mlGap |> top
+    , displayFlex
+    , alignItems center
+    , width all
+    , pointerEvents none
+    , justifyContent spaceBetween
     ]
 
 
@@ -382,7 +386,7 @@ topRightPanelStyle : View.Config -> List Style
 topRightPanelStyle _ =
     [ position absolute
     , mlGap |> right
-    , mlGap |> top
+    , top (px 70)
     , minWidth (px 330)
     , fontSize (px 14)
     ]

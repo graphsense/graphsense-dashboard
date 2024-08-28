@@ -67,7 +67,9 @@ subcanvasNodeToExpressions config name node =
                 |> List.singleton
 
         SubcanvasNodeFrameNode n ->
-            withFrameTraitsNodeToExpression config name name n
+            Elm.get (Generate.Common.FrameTraits.getName n) config.instances
+                |> Gen.Maybe.withDefault
+                    (withFrameTraitsNodeToExpression config name name n)
                 |> List.singleton
 
         SubcanvasNodeInstanceNode n ->
@@ -333,6 +335,8 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                          , max 3 bbox.height
                             |> String.fromFloat
                             |> Gen.Svg.Styled.Attributes.height
+                        , Gen.Svg.Styled.Attributes.css
+                            [ Css.display Css.inline ]
                          , [ bbox.x
                            , bbox.y
                            , max 1 bbox.width
