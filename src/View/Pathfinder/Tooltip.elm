@@ -10,7 +10,7 @@ import Dict exposing (Dict)
 import Hovercard
 import Html.Attributes
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled.Attributes exposing (css, title)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Address
@@ -40,6 +40,11 @@ view vc ts tt =
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
+
+
+tooltipBaseCss : List Css.Style
+tooltipBaseCss =
+    GraphComponents.tooltipProperty1DownDetails.styles ++ [ Css.width Css.auto, Css.minWidth (Css.px 100) ]
 
 
 getConfidenceIndicator : View.Config -> Float -> Html msg
@@ -81,11 +86,11 @@ tagLabel vc lbl tag =
     case mlbldata of
         Just lbldata ->
             div
-                [ css GraphComponents.tooltipProperty1DownDetails.styles
+                [ css tooltipBaseCss
                 ]
                 [ div
                     [ css GraphComponents.tooltipProperty1DownContent1Details.styles
-                    , css [ Css.whiteSpace Css.noWrap ]
+                    , css [ Css.whiteSpace Css.noWrap, Css.alignItems Css.stretch ]
                     ]
                     [ key vc "Tag Label"
                     , key vc "Confidence"
@@ -135,7 +140,7 @@ address vc havingTags adr =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
     in
     div
-        [ css GraphComponents.tooltipProperty1DownDetails.styles
+        [ css tooltipBaseCss
         ]
         [ div
             [ css GraphComponents.tooltipProperty1DownContent1Details.styles
@@ -165,7 +170,7 @@ address vc havingTags adr =
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg
 utxoTx vc tx =
     div
-        [ css GraphComponents.tooltipProperty1DownDetails.styles
+        [ css tooltipBaseCss
         ]
         [ div
             [ css GraphComponents.tooltipProperty1DownContent1Details.styles

@@ -750,19 +750,14 @@ addressDetailsContentView vc gc model id viewState =
                         [ HA.css
                             [ Css.borderRadius (Css.px 0)
                             , Css.opacity (Css.num 1)
-                            , Css.height (Css.px 15)
                             , Css.displayFlex
                             , Css.property "gap" "8px"
                             , Css.alignItems Css.center
-                            , Css.justifyContent Css.start
-                            , Css.displayFlex
-                            , Css.flexDirection Css.row
-                            , Css.paddingBottom (Css.px 0)
-                            , Css.paddingTop (Css.px 0)
-                            , Css.paddingRight (Css.px 0)
-                            , Css.paddingLeft (Css.px 0)
-                            , Css.backgroundColor (Css.rgba 0 0 0 0)
-                            , Css.borderWidth (Css.px 1)
+                            , Css.justifyContent Css.flexStart
+                            , Css.flexFlow2 Css.row Css.wrap
+                            , Css.padding Css.no
+                            , Css.backgroundColor Css.transparent
+                            , Css.borderWidth (Css.px 0)
                             ]
                         ]
                         (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.indexedMap showTag))
