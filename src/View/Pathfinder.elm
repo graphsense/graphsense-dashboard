@@ -325,7 +325,6 @@ graph plugins states vc gc model =
     , topLeftPanel plugins states vc gc model
     , topCenterPanel plugins states vc gc model
     , topRightPanel plugins states vc gc model
-    , graphSelectionToolsView plugins states vc gc model
     ]
         ++ (model.tooltip
                 |> Maybe.map (Tooltip.view vc model.tagSummaries)
@@ -382,7 +381,7 @@ settingsView vc m hc =
             else
                 "UTC"
     in
-    div []
+    div [ css [ Css.padding (Css.mlGap) ]]
         [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
         , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
         , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
@@ -394,23 +393,6 @@ settingsView vc m hc =
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
-
-
-graphSelectionToolsView : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-graphSelectionToolsView _ _ vc _ m =
-    let
-        selectBtn =
-            BtnConfig (\_ -> Theme.Html.Icons.iconsMouseCursor {}) "Selection Tool" (ChangePointerTool Select |> ChangedDisplaySettingsMsg) True
-
-        dragBtn =
-            BtnConfig (\_ -> Theme.Html.Icons.iconsHand {}) "Move Tool" (ChangePointerTool Drag |> ChangedDisplaySettingsMsg) True
-    in
-    div
-        [ graphSelectionToolsStyle vc |> toAttr
-        ]
-        [ graphSelectionToolButton vc selectBtn (m.pointerTool == Select)
-        , graphSelectionToolButton vc dragBtn (m.pointerTool == Drag)
-        ]
 
 
 graphSelectionToolButton : View.Config -> BtnConfig -> Bool -> Svg Msg

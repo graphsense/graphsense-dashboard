@@ -12,6 +12,7 @@ import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
 import Util.View exposing (none, onClickWithStop, toCssColor)
+import View.Locale as Locale
 
 
 type alias Config =
@@ -40,25 +41,38 @@ view vc config =
                     else
                         Css.rgba 0 0 0 0
             ]
+
+        title str =
+            Locale.string vc.locale str
+                |> HA.title
     in
     SettingsComponents.toolbarWithInstances
         (SettingsComponents.toolbarAttributes
             |> s_iconsDelete
-                (onClickWithStop UserClickedToolbarDeleteIcon :: iconsAttr)
+                (onClickWithStop UserClickedToolbarDeleteIcon
+                    :: title "Delete"
+                    :: iconsAttr
+                )
             |> s_iconsNewFile
-                (onClickWithStop UserClickedRestart :: iconsAttr)
+                (onClickWithStop UserClickedRestart
+                    :: title "Restart"
+                    :: iconsAttr
+                )
             |> s_iconsMouseCursor
                 (onClickWithStop (ChangePointerTool Select |> ChangedDisplaySettingsMsg)
+                    :: title "Selection tool"
                     :: css (highlightBackground Select)
                     :: iconsAttr
                 )
             |> s_iconsHand
                 (onClickWithStop (ChangePointerTool Drag |> ChangedDisplaySettingsMsg)
+                    :: title "Move tool"
                     :: css (highlightBackground Drag)
                     :: iconsAttr
                 )
             |> s_iconsDisplayConfiguration
                 (id "toolbar-display-settings"
+                    :: title "Display settings"
                     :: onClickWithStop (UserClickedToggleDisplaySettings |> ChangedDisplaySettingsMsg)
                     :: iconsAttr
                 )
@@ -76,7 +90,10 @@ view vc config =
                         Icons.iconsRedoStateActiveWithAttributes
                             (Icons.iconsRedoStateActiveAttributes
                                 |> s_stateActive
-                                    (onClickWithStop UserClickedRedo :: iconsAttr)
+                                    (onClickWithStop UserClickedRedo
+                                        :: title "Redo"
+                                        :: iconsAttr
+                                    )
                             )
                             {}
                 )
@@ -86,7 +103,9 @@ view vc config =
                         Icons.iconsUndoWithAttributes
                             (Icons.iconsUndoAttributes
                                 |> s_iconsUndo
-                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
+                                    (title "Undo"
+                                        :: [ css [ Css.opacity <| Css.num 0.3 ] ]
+                                    )
                             )
                             {}
 
@@ -94,7 +113,10 @@ view vc config =
                         Icons.iconsUndoWithAttributes
                             (Icons.iconsUndoAttributes
                                 |> s_iconsUndo
-                                    (onClickWithStop UserClickedUndo :: iconsAttr)
+                                    (onClickWithStop UserClickedUndo
+                                        :: title "Undo"
+                                        :: iconsAttr
+                                    )
                             )
                             {}
                 )
