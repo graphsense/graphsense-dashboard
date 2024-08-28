@@ -206,7 +206,7 @@ boxStyle vc upadding =
 
 searchInputStyle : View.Config -> String -> List Style
 searchInputStyle vc _ =
-    [ all |> width
+    [ width (ex 40)
     , calc (pct 100) minus (px 2) |> height
     , padding <| px 1
     , display block
