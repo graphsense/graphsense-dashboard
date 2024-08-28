@@ -53,7 +53,9 @@ identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg 
 identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
     let
         tagcss =
-            [ Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 3) ] |> toAttr
+            [ Css.verticalAlign Css.bottom, Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 5) ] |> toAttr
+
+        -- [ Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 3) ] |> toAttr
     in
     Table.veryCustomColumn
         { name = label

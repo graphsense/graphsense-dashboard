@@ -422,7 +422,7 @@ graphActionButtonStyle : View.Config -> Bool -> List Style
 graphActionButtonStyle vc _ =
     [ mGap |> margin
     , cursor pointer
-    , padding4 sGap mlGap sGap mlGap
+    , padding4 xsGap mlGap xsGap mlGap
     , emphTextColor vc |> color
     , defaultBackgroundColor vc |> backgroundColor
     , boxBorderColor vc |> border3 xsGap solid
@@ -434,8 +434,9 @@ graphActionButtonStyle vc _ =
 
 dateTimeRangeBoxStyle : View.Config -> List Style
 dateTimeRangeBoxStyle vc =
-    [ margin4 mGap mGap mGap mGap
-    , padding mGap
+    [ padding4 xsGap mGap xsGap mGap
+    , marginRight sGap
+    , marginLeft sGap
     , emphTextColor vc |> color
     , defaultBackgroundColor vc |> backgroundColor
     , boxBorderColor vc |> border3 xsGap solid
@@ -464,9 +465,8 @@ detailsActionButtonStyle : View.Config -> ButtonType -> Bool -> List Style
 detailsActionButtonStyle vc bt _ =
     let
         base =
-            [ mGap |> margin
+            [ mGap |> marginRight
             , cursor pointer
-            , padding4 (px 2) mlGap (px 2) mlGap
             , fontWeight bold
             , px 3 |> borderRadius
             ]
@@ -557,12 +557,12 @@ ruleStyle =
 
 inIconStyle : List Style
 inIconStyle =
-    [ fill greenColor, px 3 |> paddingRight, px 1 |> paddingLeft ] |> List.map important
+    [ fill greenColor ] |> List.map important
 
 
 outIconStyle : List Style
 outIconStyle =
-    [ fill redColor, px 3 |> paddingRight, px 8 |> paddingLeft ] |> List.map important
+    [ fill redColor ] |> List.map important
 
 
 inoutStyle : Bool -> List Style

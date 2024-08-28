@@ -20,7 +20,7 @@ import Model.Pathfinder.Tx as Tx
 import RemoteData exposing (WebData)
 import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1DownAttributes)
 import Util.Css as Css
-import Util.View exposing (hovercard, truncateLongIdentifierWithLengths)
+import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
 import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 

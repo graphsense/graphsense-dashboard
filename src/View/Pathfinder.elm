@@ -90,17 +90,17 @@ inlineExportIcon =
 
 inlineCloseSmallIcon : Html Msg
 inlineCloseSmallIcon =
-    Theme.Html.Icons.iconsCloseSmallWithAttributes (Theme.Html.Icons.iconsCloseSmallAttributes |> s_iconsCloseSmall [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsCloseSmallWithAttributes Theme.Html.Icons.iconsCloseSmallAttributes {}
 
 
 inlineDoneIcon : Html Msg
 inlineDoneIcon =
-    Theme.Html.Icons.iconsDoneWithAttributes (Theme.Html.Icons.iconsDoneAttributes |> s_iconsDone [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsDoneWithAttributes Theme.Html.Icons.iconsDoneAttributes {}
 
 
 inlineTagLargeIcon : Html Msg
 inlineTagLargeIcon =
-    Theme.Html.Icons.iconsTagLargeWithAttributes (Theme.Html.Icons.iconsTagLargeAttributes |> s_iconsTagLarge [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsTagLargeWithAttributes Theme.Html.Icons.iconsTagLargeAttributes {}
 
 
 inlineClusterIcon : Bool -> Color -> Html Msg
@@ -115,7 +115,6 @@ inlineClusterIcon highlight clr =
     in
     Theme.Html.Icons.iconsClusterWithAttributes
         (Theme.Html.Icons.iconsClusterAttributes
-            |> s_iconsCluster [ css [ Css.display Css.inline ] ]
             |> s_vector (getHighlight clr)
         )
         {}

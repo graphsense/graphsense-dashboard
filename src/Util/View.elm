@@ -216,7 +216,7 @@ copyableLongIdentifierPathfinder vc attr identifier =
 
 copyIconPathfinder : View.Config -> String -> Html msg
 copyIconPathfinder =
-    copyIconWithAttrPathfinder []
+    copyIconWithAttrPathfinder (([ Css.verticalAlign Css.middle ] |> css) |> List.singleton)
 
 
 copyIconWithAttrPathfinder : List (Attribute msg) -> View.Config -> String -> Html msg

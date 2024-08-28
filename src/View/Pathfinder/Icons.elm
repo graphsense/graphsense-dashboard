@@ -10,23 +10,11 @@ import RecordSetter exposing (..)
 import Theme.Html.Icons as Icons
 
 
-iconsCss s =
-    HA.css (Css.display Css.inline :: s) |> List.singleton
-
-
 inIcon : Html msg
 inIcon =
-    Icons.iconsArrowDownThinWithAttributes (Icons.iconsArrowDownThinAttributes |> s_iconsArrowDownThin (iconsCss inIconStyle) |> s_vector (iconsCss inIconStyle)) {}
-
-
-
--- span [ inIconStyle |> toAttr ] [ FontAwesome.icon FontAwesome.signInAlt |> Html.fromUnstyled ]
+    Icons.iconsArrowDownThinWithAttributes (Icons.iconsArrowDownThinAttributes |> s_iconsArrowDownThin (inIconStyle |> HA.css |> List.singleton) |> s_vector (inIconStyle |> HA.css |> List.singleton)) {}
 
 
 outIcon : Html msg
 outIcon =
-    Icons.iconsArrowUpThinWithAttributes (Icons.iconsArrowUpThinAttributes |> s_iconsArrowUpThin (iconsCss outIconStyle) |> s_vector (iconsCss outIconStyle)) {}
-
-
-
--- span [ outIconStyle |> toAttr ] [ FontAwesome.icon FontAwesome.signOutAlt |> Html.fromUnstyled ]
+    Icons.iconsArrowUpThinWithAttributes (Icons.iconsArrowUpThinAttributes |> s_iconsArrowUpThin (outIconStyle |> HA.css |> List.singleton) |> s_vector (outIconStyle |> HA.css |> List.singleton)) {}
