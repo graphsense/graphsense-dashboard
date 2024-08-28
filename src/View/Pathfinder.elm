@@ -53,7 +53,7 @@ import Svg.Styled.Attributes as SA exposing (..)
 import Svg.Styled.Events as Svg exposing (..)
 import Svg.Styled.Lazy as Svg
 import Theme.Colors as Colors
-import Theme.Html.Icons
+import Theme.Html.Icons as HIcons
 import Theme.Html.SettingsComponents as SettingsComponents
 import Theme.Html.SidePanelComponents as SidePanelComponents
 import Theme.Svg.GraphComponents as GraphComponents
@@ -85,22 +85,22 @@ type alias BtnConfig =
 
 inlineExportIcon : Html Msg
 inlineExportIcon =
-    Theme.Html.Icons.iconExportWithAttributes (Theme.Html.Icons.iconExportAttributes |> s_iconExport [ css [ Css.display Css.inline ] ]) {}
+    HIcons.iconExportWithAttributes HIcons.iconExportAttributes {}
 
 
 inlineCloseSmallIcon : Html Msg
 inlineCloseSmallIcon =
-    Theme.Html.Icons.iconsCloseSmallWithAttributes Theme.Html.Icons.iconsCloseSmallAttributes {}
+    HIcons.iconsCloseSmallWithAttributes HIcons.iconsCloseSmallAttributes {}
 
 
-inlineDoneIcon : Html Msg
-inlineDoneIcon =
-    Theme.Html.Icons.iconsDoneWithAttributes Theme.Html.Icons.iconsDoneAttributes {}
+inlineDoneSmallIcon : Html Msg
+inlineDoneSmallIcon =
+    HIcons.iconsDoneSmallWithAttributes HIcons.iconsDoneSmallAttributes {}
 
 
 inlineTagLargeIcon : Html Msg
 inlineTagLargeIcon =
-    Theme.Html.Icons.iconsTagLargeWithAttributes Theme.Html.Icons.iconsTagLargeAttributes {}
+    HIcons.iconsTagLargeWithAttributes HIcons.iconsTagLargeAttributes {}
 
 
 inlineClusterIcon : Bool -> Color -> Html Msg
@@ -113,8 +113,8 @@ inlineClusterIcon highlight clr =
             else
                 []
     in
-    Theme.Html.Icons.iconsClusterWithAttributes
-        (Theme.Html.Icons.iconsClusterAttributes
+    HIcons.iconsClusterWithAttributes
+        (HIcons.iconsClusterAttributes
             |> s_vector (getHighlight clr)
         )
         {}
@@ -122,22 +122,22 @@ inlineClusterIcon highlight clr =
 
 inlineChevronRightThickIcon : Html Msg
 inlineChevronRightThickIcon =
-    Theme.Html.Icons.iconsChevronRightThick {}
+    HIcons.iconsChevronRightThick {}
 
 
 inlineChevronDownThickIcon : Html Msg
 inlineChevronDownThickIcon =
-    Theme.Html.Icons.iconsChevronDownThick {}
+    HIcons.iconsChevronDownThick {}
 
 
 inlineChevronDownThinIcon : Html Msg
 inlineChevronDownThinIcon =
-    Theme.Html.Icons.iconsChevronDownThin {}
+    HIcons.iconsChevronDownThin {}
 
 
 inlineChevronUpThinIcon : Html Msg
 inlineChevronUpThinIcon =
-    Theme.Html.Icons.iconsChevronUpThin {}
+    HIcons.iconsChevronUpThin {}
 
 
 graphActionButtons : List BtnConfig
@@ -303,7 +303,7 @@ collapsibleSectionRaw headingAttr iconAttr vc title open indicator content actio
     div []
         (div [ headingAttr, onClick action ]
             [ span [ iconAttr ] [ icon ]
-            , Html.text (Locale.string vc.locale title)
+            , span [ iconAttr ] [ Html.text (Locale.string vc.locale title) ]
             , indicator |> Maybe.withDefault none
             ]
             :: data
@@ -1181,8 +1181,21 @@ graphSvg plugins _ vc gc model bbox =
         , Svg.lazy4 Network.edges plugins vc gc model.network.txs
         , drawDragSelector vc model
 
-        -- , rect [ fill "red", width "3", height "3", x "8", y "0" ] [] -- Mark zero point in coordinate system
+        -- , rect [ fill "red", width "3", height "3", x "0", y "0" ] [] -- Mark zero point in coordinate system
+        -- , showBoundingBox model
         ]
+
+
+showBoundingBox : Model -> Svg Msg
+showBoundingBox model =
+    let
+        bb =
+            Network.getBoundingBox model.network
+
+        hu =
+            unit / 2
+    in
+    rect [ fill "red", width (bb.width * unit + unit |> String.fromFloat), height (bb.height * unit + unit |> String.fromFloat), x (bb.x * unit - hu |> String.fromFloat), y ((bb.y * unit - hu) |> String.fromFloat) ] []
 
 
 drawDragSelector : View.Config -> Model -> Svg Msg
@@ -1291,11 +1304,11 @@ transactionTableView vc currency txOnGraphFn model =
                 [ css
                     [ Css.displayFlex
                     , Css.justifyContent Css.spaceBetween
-                    , Css.marginBottom (Css.px 5)
+                    , Css.marginBottom Css.lGap
                     ]
                 ]
                 [ drp
-                , secondaryButton vc (BtnConfig (\_ -> Theme.Html.Icons.iconsFilter {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                , secondaryButton vc (BtnConfig (\_ -> Theme.Html.Icons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
 
         showSelectionRow =
@@ -1305,7 +1318,7 @@ transactionTableView vc currency txOnGraphFn model =
         Just drp ->
             if DatePicker.isOpen drp.dateRangePicker then
                 [ span []
-                    [ primaryButton vc (BtnConfig (\_ -> inlineDoneIcon) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
+                    [ primaryButton vc (BtnConfig (\_ -> inlineDoneSmallIcon) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
                     , secondaryButton vc (BtnConfig (\_ -> inlineCloseSmallIcon) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                     ]
                 , DatePicker.view drp.settings drp.dateRangePicker

@@ -50,22 +50,6 @@ no =
     px 0
 
 
-sText =
-    em 0.8
-
-
-mText =
-    em 1.1
-
-
-lText =
-    em 1.3
-
-
-xlText =
-    em 1.4
-
-
 
 -- colors
 
@@ -143,6 +127,11 @@ orangeColor =
     hex "#FF9800"
 
 
+veryLightGrayColor : Color
+veryLightGrayColor =
+    hex "#EEEEEE"
+
+
 
 -- Styles
 
@@ -211,7 +200,7 @@ searchInputStyle vc _ =
     , padding <| px 1
     , display block
     , emphTextColor vc |> color
-    , boxBorderColor vc |> border3 (px 0) solid
+    , boxBorderColor vc |> border3 no solid
     , outline none
     ]
 
@@ -219,7 +208,6 @@ searchInputStyle vc _ =
 panelHeadingStyle : View.Config -> List Style
 panelHeadingStyle _ =
     [ fontWeight bold
-    , xlText |> fontSize
     , mlGap |> marginBottom
     ]
 
@@ -227,7 +215,6 @@ panelHeadingStyle _ =
 panelHeadingStyle2 : View.Config -> List Style
 panelHeadingStyle2 _ =
     [ fontWeight bold
-    , lText |> fontSize
     , mlGap |> marginBottom
     ]
 
@@ -243,10 +230,13 @@ panelHeadingStyle3 _ =
 collapsibleSectionHeadingStyle : View.Config -> List Style
 collapsibleSectionHeadingStyle vc =
     [ fontWeight bold
-    , mText |> fontSize
-    , mlGap |> marginBottom
+
+    -- , mlGap |> marginBottom
     , mlGap |> marginTop
-    , boxBorderColor vc |> borderBottom3 (px 0.3) solid
+    , mlGap |> padding
+
+    -- , veryLightGrayColor |> borderBottom3 (px 0.3) solid
+    , veryLightGrayColor |> borderTop3 (px 0.3) solid
     , px 30 |> height
     , cursor pointer
     , displayFlex
@@ -340,8 +330,8 @@ toolButtonStyle vc enabled =
 
 toolIconStyle : View.Config -> List Style
 toolIconStyle _ =
-    [ mText |> fontSize
-    , mGap |> marginBottom
+    -- [ mText |> fontSize
+    [ mGap |> marginBottom
     ]
 
 
@@ -415,7 +405,7 @@ detailsViewStyle vc =
 
 graphActionsViewStyle : View.Config -> List Style
 graphActionsViewStyle _ =
-    [ displayFlex, justifyContent flexEnd, mGap |> margin ]
+    [ displayFlex, justifyContent flexEnd, paddingRight lGap ]
 
 
 graphActionButtonStyle : View.Config -> Bool -> List Style
@@ -557,12 +547,12 @@ ruleStyle =
 
 inIconStyle : List Style
 inIconStyle =
-    [ fill greenColor ] |> List.map important
+    [ fill greenColor, verticalAlign bottom ] |> List.map important
 
 
 outIconStyle : List Style
 outIconStyle =
-    [ fill redColor ] |> List.map important
+    [ fill redColor, verticalAlign bottom ] |> List.map important
 
 
 inoutStyle : Bool -> List Style

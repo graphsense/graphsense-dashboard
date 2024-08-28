@@ -1,5 +1,6 @@
 module Model.Pathfinder.Network exposing (..)
 
+import Animation
 import Dict exposing (Dict)
 import Hex
 import Init.Pathfinder.Id as Id
@@ -21,13 +22,37 @@ type alias Network =
     }
 
 
+getBoundingBox : Network -> Coords.BBox
+getBoundingBox net =
+    let
+        extractCord ( _, a ) =
+            { x = a.x + a.dx, y = (a.y |> Animation.getTo) + a.dy }
 
--- getBoundingBox : Network -> Coords.BBox
--- getBoundingBox net =
---     let
---         addressPos = Dict.toList net.addresses |> List.map (\(id, a) -> {x = a.x + a.dx, y=a.y + a.dy })
---      in
---     { x = 0.0, y = 0.0, width = 0.0, height = 0.0 }
+        addressPos =
+            Dict.toList net.addresses |> List.map extractCord
+
+        txPos =
+            Dict.toList net.txs |> List.map extractCord
+
+        xs =
+            (addressPos ++ txPos) |> List.map .x
+
+        ys =
+            (addressPos ++ txPos) |> List.map .y
+
+        mxx =
+            xs |> List.maximum |> Maybe.withDefault 0
+
+        mxy =
+            ys |> List.maximum |> Maybe.withDefault 0
+
+        mix =
+            xs |> List.minimum |> Maybe.withDefault 0
+
+        miy =
+            ys |> List.minimum |> Maybe.withDefault 0
+    in
+    { x = mix, y = miy, width = abs (mxx - mix), height = abs (mxy - miy) }
 
 
 hasTx : Id -> Network -> Bool

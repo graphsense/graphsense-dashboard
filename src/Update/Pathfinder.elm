@@ -21,7 +21,7 @@ import List.Extra
 import Log
 import Model.Direction as Direction exposing (Direction(..))
 import Model.Graph exposing (Dragging(..))
-import Model.Graph.Coords exposing (relativeToGraphZero)
+import Model.Graph.Coords as Coords exposing (relativeToGraphZero)
 import Model.Graph.History as History
 import Model.Graph.Transform as Transform
 import Model.Locale exposing (State(..))
@@ -56,6 +56,7 @@ import Svg.Attributes exposing (x)
 import Tuple exposing (first, mapFirst, mapSecond, pair, second)
 import Tuple2 exposing (pairTo)
 import Update.Graph exposing (draggingToClick)
+import Update.Graph.Coords as Coords
 import Update.Graph.History as History
 import Update.Graph.Table exposing (UpdateSearchTerm(..))
 import Update.Graph.Transform as Transform
@@ -316,7 +317,7 @@ updateByMsg plugins uc msg model =
                             draggingToClick start current
 
                 m1 =
-                    { model | tooltip = Nothing }
+                    model |> s_tooltip Nothing |> s_config (model.config |> s_displaySettingsHovercard Nothing)
             in
             if click then
                 ( m1
@@ -327,6 +328,28 @@ updateByMsg plugins uc msg model =
 
             else
                 n m1
+
+        UserClickedFitGraph ->
+            let
+                bbox =
+                    Network.getBoundingBox model.network
+            in
+            n
+                { model
+                    | transform =
+                        uc.size
+                            |> Maybe.map
+                                (\{ width, height } ->
+                                    { width = width
+                                    , height = height
+                                    }
+                                )
+                            |> Maybe.map
+                                (Coords.addMargin bbox
+                                    |> Transform.updateByBoundingBox model.transform
+                                )
+                            |> Maybe.withDefault model.transform
+                }
 
         UserReleasesMouseButton ->
             case model.dragging of
@@ -1445,10 +1468,6 @@ addTx plugins _ addressId direction tx model =
                 }
                 model.transform
 
-        -- |> Tx.getUtxoTx
-        -- |> Maybe.map
-        --     (\t_ ->
-        --     )
         newmodel =
             { model
                 | network = network

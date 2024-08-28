@@ -77,7 +77,8 @@ view vc config =
                     :: iconsAttr
                 )
             |> s_iconsCenterGraph
-                (title "Center graph"
+                (onClickWithStop UserClickedFitGraph
+                    :: title "Center graph"
                     :: iconsAttr
                 )
         )
