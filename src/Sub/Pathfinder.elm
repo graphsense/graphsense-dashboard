@@ -40,9 +40,6 @@ toKeyUp keyValue =
             -- https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
             UserReleasedCtrlKey
 
-        "Backspace" ->
-            UserReleasedDeleteKey
-
         "z" ->
             UserReleasedNormalKey keyValue
 
