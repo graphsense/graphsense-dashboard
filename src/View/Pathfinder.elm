@@ -1051,7 +1051,7 @@ optionalTextButton vc bt btn =
                 ( [], [] )
 
             else
-                ( [ smPaddingRight |> toAttr ], [ Html.text (Locale.string vc.locale btn.text) ] )
+                ( [ (smPaddingRight ++ [ Css.verticalAlign Css.middle ]) |> toAttr ], [ Html.text (Locale.string vc.locale btn.text) ] )
     in
     disableableButton (detailsActionButtonStyle vc bt)
         btn
@@ -1311,13 +1311,15 @@ transactionTableView vc currency txOnGraphFn model =
     (case model.dateRangePicker of
         Just drp ->
             if DatePicker.isOpen drp.dateRangePicker then
-                [ span []
+                [ span [ css [ Css.paddingLeft Css.mlGap ] ]
                     [ primaryButton vc (BtnConfig (\_ -> inlineDoneSmallIcon) "Ok" (AddressDetailsMsg <| AddressDetails.CloseDateRangePicker) True)
                     , secondaryButton vc (BtnConfig (\_ -> inlineCloseSmallIcon) "Reset Filter" (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) True)
                     ]
-                , DatePicker.view drp.settings drp.dateRangePicker
-                    |> Html.fromUnstyled
-                    |> Html.map AddressDetailsMsg
+                , span [ css [ Css.fontSize (Css.px 12) ] ]
+                    [ DatePicker.view drp.settings drp.dateRangePicker
+                        |> Html.fromUnstyled
+                        |> Html.map AddressDetailsMsg
+                    ]
                 ]
 
             else
