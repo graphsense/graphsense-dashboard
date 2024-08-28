@@ -506,7 +506,7 @@ detailsViewCloseRow vc =
 
 closeButton : View.Config -> Msg -> Html Msg
 closeButton vc msg =
-    button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ Theme.Html.Icons.iconsCloseSmall {} ]
+    button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ HIcons.iconsCloseSmall {} ]
 
 
 getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
@@ -521,7 +521,7 @@ getAddressAnnotationBtns vc data actor hasTags =
     --     []
     -- )
     if isContract data then
-        [ BtnConfig (\_ -> Theme.Html.Icons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
+        [ BtnConfig (\_ -> HIcons.iconsSettings {}) (Locale.string vc.locale "is contract") NoOp True ]
 
     else
         []
@@ -771,7 +771,7 @@ addressDetailsContentView vc gc model id viewState =
             , actorLabel =
                 let
                     iconDetails =
-                        Theme.Html.Icons.iconsAssignDetails
+                        HIcons.iconsAssignDetails
 
                     icon =
                         Icons.iconsAssignSvg
@@ -1266,13 +1266,13 @@ dateRangePickerSelectionView vc model =
             [ css [ Css.cursor Css.pointer ], onClick (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) ]
     in
     div [ dateTimeRangeBoxStyle vc |> toAttr ]
-        [ span attr [ Theme.Html.Icons.iconsCalendar {} ]
+        [ span attr [ HIcons.iconsCalendar {} ]
 
         -- , span [] [ Html.text selectedDuration ]
         , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ startML ]
         , span attr [ Html.text (Locale.string vc.locale "to") ]
         , span ((dateTimeRangeHighlightedDateStyle vc |> toAttr) :: attr) [ endML ]
-        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ Theme.Html.Icons.iconsCloseSmall {} ]
+        , button [ linkButtonStyle vc True |> toAttr, (AddressDetailsMsg <| AddressDetails.ResetDateRangePicker) |> onClick ] [ HIcons.iconsCloseSmall {} ]
         ]
 
 
@@ -1308,7 +1308,7 @@ transactionTableView vc currency txOnGraphFn model =
                     ]
                 ]
                 [ drp
-                , secondaryButton vc (BtnConfig (\_ -> Theme.Html.Icons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
+                , secondaryButton vc (BtnConfig (\_ -> HIcons.iconsFilterWithAttributes { iconsFilter = [ css [ Css.padding Css.no ] ], filter = [] } {}) "" (AddressDetailsMsg <| AddressDetails.OpenDateRangePicker) True)
                 ]
 
         showSelectionRow =
