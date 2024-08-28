@@ -76,9 +76,12 @@ view vc config =
                     :: onClickWithStop (UserClickedToggleDisplaySettings |> ChangedDisplaySettingsMsg)
                     :: iconsAttr
                 )
+            |> s_iconsCenterGraph
+                (title "Center graph"
+                    :: iconsAttr
+                )
         )
         (SettingsComponents.toolbarInstances
-            |> s_iconsCenterGraph (Just none)
             |> s_iconsRedo
                 (Just <|
                     if config.redoDisabled then
