@@ -235,7 +235,7 @@ valuesCell vc hideCode hideFlowIndicator colorFlowDirection coinCode values =
             else
                 []
     in
-    Table.HtmlDetails [ ([ PCSS.mGap |> Css.padding, Css.textAlign Css.right ] ++ addCss) |> css ]
+    Table.HtmlDetails [ ([ PCSS.mGap |> Css.padding, Css.textAlign Css.right, Css.verticalAlign Css.middle ] ++ addCss) |> css ]
         [ if hideFlowIndicator then
             none
 
