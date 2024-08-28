@@ -249,6 +249,8 @@ collapsibleSectionHeadingStyle vc =
     , boxBorderColor vc |> borderBottom3 (px 0.3) solid
     , px 30 |> height
     , cursor pointer
+    , displayFlex
+    , alignItems center
     ]
 
 
@@ -356,6 +358,7 @@ topPanelStyle : List Style
 topPanelStyle =
     [ position absolute
     , marginLeft mlGap
+    , marginRight mlGap
     , mlGap |> top
     , displayFlex
     , alignItems center
@@ -424,6 +427,8 @@ graphActionButtonStyle vc _ =
     , defaultBackgroundColor vc |> backgroundColor
     , boxBorderColor vc |> border3 xsGap solid
     , px 3 |> borderRadius
+    , displayFlex
+    , alignItems center
     ]
 
 

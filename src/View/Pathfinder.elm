@@ -113,27 +113,32 @@ inlineClusterIcon highlight clr =
             else
                 []
     in
-    Theme.Html.Icons.iconsClusterWithAttributes (Theme.Html.Icons.iconsClusterAttributes |> s_iconsCluster [ css [ Css.display Css.inline ] ] |> s_vector (getHighlight clr)) {}
+    Theme.Html.Icons.iconsClusterWithAttributes
+        (Theme.Html.Icons.iconsClusterAttributes
+            |> s_iconsCluster [ css [ Css.display Css.inline ] ]
+            |> s_vector (getHighlight clr)
+        )
+        {}
 
 
 inlineChevronRightThickIcon : Html Msg
 inlineChevronRightThickIcon =
-    Theme.Html.Icons.iconsChevronRightThickWithAttributes (Theme.Html.Icons.iconsChevronRightThickAttributes |> s_iconsChevronRightThick [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsChevronRightThick {}
 
 
 inlineChevronDownThickIcon : Html Msg
 inlineChevronDownThickIcon =
-    Theme.Html.Icons.iconsChevronDownThickWithAttributes (Theme.Html.Icons.iconsChevronDownThickAttributes |> s_iconsChevronDownThick [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsChevronDownThick {}
 
 
 inlineChevronDownThinIcon : Html Msg
 inlineChevronDownThinIcon =
-    Theme.Html.Icons.iconsChevronDownThinWithAttributes (Theme.Html.Icons.iconsChevronDownThinAttributes |> s_iconsChevronDownThin [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsChevronDownThin {}
 
 
 inlineChevronUpThinIcon : Html Msg
 inlineChevronUpThinIcon =
-    Theme.Html.Icons.iconsChevronUpThinWithAttributes (Theme.Html.Icons.iconsChevronUpThinAttributes |> s_iconsChevronUpThin [ css [ Css.display Css.inline ] ]) {}
+    Theme.Html.Icons.iconsChevronUpThin {}
 
 
 graphActionButtons : List BtnConfig
@@ -276,7 +281,7 @@ inOutIndicator vc mnr inNr outNr =
 
 collapsibleSection : View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
 collapsibleSection vc =
-    collapsibleSectionRaw (collapsibleSectionHeadingStyle vc |> toAttr) (collapsibleSectionIconStyle |> toAttr) vc
+    collapsibleSectionRaw (collapsibleSectionHeadingStyle vc |> toAttr) ([] |> toAttr) vc
 
 
 collapsibleSectionRaw : Html.Attribute Msg -> Html.Attribute Msg -> View.Config -> String -> Bool -> Maybe (Html Msg) -> Html Msg -> Msg -> Html Msg
@@ -381,7 +386,7 @@ settingsView vc m hc =
             else
                 "UTC"
     in
-    div [ css [ Css.padding (Css.mlGap) ]]
+    div [ css [ Css.padding Css.mlGap ] ]
         [ div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Transaction") ]
         , Util.View.onOffSwitch vc [ HA.checked vc.showTimestampOnTxEdge, onClick (UserClickedToggleShowTxTimestamp |> ChangedDisplaySettingsMsg) ] (Locale.string vc.locale "Show timestamp")
         , div [ panelHeadingStyle3 vc |> toAttr ] [ Html.text (Locale.string vc.locale "Date") ]
