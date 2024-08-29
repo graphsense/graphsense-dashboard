@@ -359,6 +359,7 @@ topCenterPanel plugins ms vc gc model =
             , Toolbar.view vc
                 { undoDisabled = List.isEmpty model.history.past
                 , redoDisabled = List.isEmpty model.history.future
+                , deleteDisabled = model.selection == NoSelection
                 , pointerTool = model.pointerTool
                 }
             ]

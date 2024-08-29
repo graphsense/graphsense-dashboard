@@ -18,6 +18,7 @@ import View.Locale as Locale
 type alias Config =
     { undoDisabled : Bool
     , redoDisabled : Bool
+    , deleteDisabled : Bool
     , pointerTool : PointerTool
     }
 
@@ -51,7 +52,12 @@ view vc config =
             |> s_iconsDelete
                 (onClickWithStop UserClickedToolbarDeleteIcon
                     :: title "Delete"
-                    :: iconsAttr
+                    :: (iconsAttr
+                        ++ if config.deleteDisabled then
+                             [ css [ Css.opacity <| Css.num 0.3 ] ]
+                            else
+                                []
+                        )
                 )
             |> s_iconsNewFile
                 (onClickWithStop UserClickedRestart
