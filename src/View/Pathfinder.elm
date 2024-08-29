@@ -706,10 +706,6 @@ addressDetailsContentView vc gc model id viewState =
             ]
 
         -- addressAnnotationBtns =
-        --     getAddressAnnotationBtns vc viewState.data actor (Dict.member id model.tagSummaries)
-        df =
-            SidePanelComponents.sidePanelHeaderAttributes |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
-
         inst =
             SidePanelComponents.sidePanelHeaderInstances
 
@@ -737,15 +733,11 @@ addressDetailsContentView vc gc model id viewState =
                 )
     in
     SidePanelComponents.sidePanelHeaderWithInstances
-        df
+        (SidePanelComponents.sidePanelHeaderAttributes
+            |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
+        )
         { inst
-            | sidePanelHeaderTags =
-                if showExchangeTag || showOtherTag then
-                    Nothing
-
-                else
-                    Just none
-            , tagsLabel =
+            | tagsLabel =
                 Just
                     (div
                         [ HA.css
