@@ -10,8 +10,7 @@ import Generate.Util.Paint as Paint
 
 toStyles : HasGeometryTrait -> List Elm.Expression
 toStyles node =
-    MinimalFillsTrait.toStyles node.minimalFillsTrait
-        |> (++) (toBorder node.strokes)
+    toBorder node.strokes
         |> m (Css.px >> Css.borderWidth) node.strokeWeight
 
 

@@ -8,6 +8,7 @@ import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
 import Generate.Common.DefaultShapeTraits as Common
 import Generate.Html.DefaultShapeTraits as DefaultShapeTraits
+import Generate.Html.MinimalFillsTrait as MinimalFillsTrait
 import Generate.Html.TypeStyle as TypeStyle
 import Generate.Util exposing (getElementAttributes, getTextProperty, withVisibility)
 import Types exposing (Config, Details)
@@ -39,6 +40,7 @@ toExpressions config componentName node =
 toStyles : TextNode -> List Elm.Expression
 toStyles node =
     TypeStyle.toStyles node.style
+        ++ MinimalFillsTrait.toStyles node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
         ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
 
 
