@@ -10,4 +10,4 @@ import Generate.Util exposing (..)
 toStyles : MinimalFillsTrait -> List Elm.Expression
 toStyles node =
     []
-        |> a (Paint.toStyles >> Maybe.map Css.color) (Just node.fills)
+        --|> a (Paint.toStyles >> Maybe.map Css.color) (Just node.fills)
