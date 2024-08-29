@@ -474,10 +474,12 @@ searchBoxView plugins _ vc _ model =
                     , formCss =
                         Just
                             [ Css.flexGrow <| Css.num 1
+                            , Css.height Css.auto |> Css.important
                             ]
                     , frameCss =
                         Just
                             [ Css.height <| Css.pct 100
+                            , Css.marginRight Css.zero |> Css.important
                             ]
                     , multiline = False
                     , resultsAsLink = True
