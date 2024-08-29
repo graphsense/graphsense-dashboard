@@ -26,6 +26,7 @@ import Generate.Html.RectangleNode as RectangleNode
 import Generate.Html.TextNode as TextNode
 import Generate.Html.VectorNode as VectorNode
 import Generate.Svg.DefaultShapeTraits
+import Generate.Svg.FrameTraits
 import Generate.Util exposing (detailsToDeclaration, getByNameId, getElementAttributes, sanitize, withVisibility)
 import Maybe.Extra
 import RecordSetter exposing (s_styles)
@@ -325,33 +326,52 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         |> Elm.list
                     )
 
-        frame =
+        frame children =
             if hasOnlySvgChildren then
-                attributes
-                    |> Elm.Op.append
-                        ([ max 3 bbox.width
-                            |> String.fromFloat
-                            |> Gen.Svg.Styled.Attributes.width
-                         , max 3 bbox.height
-                            |> String.fromFloat
-                            |> Gen.Svg.Styled.Attributes.height
-                        , Gen.Svg.Styled.Attributes.css
-                            [ Css.display Css.inline ]
-                         , [ bbox.x
-                           , bbox.y
-                           , max 1 bbox.width
-                           , max 1 bbox.height
-                           ]
-                            |> List.map String.fromFloat
-                            |> String.join " "
-                            |> Gen.Svg.Styled.Attributes.viewBox
-                         ]
-                            |> Elm.list
+                Gen.Svg.Styled.call_.svg
+                    ([ max 3 bbox.width
+                        |> String.fromFloat
+                        |> Gen.Svg.Styled.Attributes.width
+                     , max 3 bbox.height
+                        |> String.fromFloat
+                        |> Gen.Svg.Styled.Attributes.height
+                     , Gen.Svg.Styled.Attributes.css
+                        [ Css.display Css.inline ]
+                     , [ bbox.x
+                       , bbox.y
+                       , max 1 bbox.width
+                       , max 1 bbox.height
+                       ]
+                        |> List.map String.fromFloat
+                        |> String.join " "
+                        |> Gen.Svg.Styled.Attributes.viewBox
+                     ]
+                        |> Elm.list
+                    )
+                    children
+                    |> List.singleton
+                    |> Elm.list
+                    |> Gen.Html.Styled.call_.div
+                        (getElementAttributes config name
+                            |> Elm.Op.append
+                                (Generate.Svg.FrameTraits.toStyles node.frameTraits
+                                    |> Attributes.css
+                                    |> List.singleton
+                                    |> Elm.list
+                                )
                         )
-                    |> Gen.Svg.Styled.call_.svg
 
             else
-                Gen.Html.Styled.call_.div attributes
+                Gen.Html.Styled.call_.div
+                    (getElementAttributes config name
+                        |> Elm.Op.append
+                            (FrameTraits.toStyles node.frameTraits
+                                |> Attributes.css
+                                |> List.singleton
+                                |> Elm.list
+                            )
+                    )
+                    children
     in
     frame
         (frameTraitsToExpressions config componentNameForChildren node.frameTraits
