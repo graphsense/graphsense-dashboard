@@ -2,6 +2,7 @@ module View exposing (view)
 
 import Browser exposing (Document)
 import Config.View exposing (Config)
+import Css
 import Css.Reset
 import Css.View
 import FontAwesome
@@ -110,15 +111,27 @@ sidebar plugins vc model =
                     |> Route.toUrl
                     |> href
                 ]
-         , FontAwesome.icon FontAwesome.flask
-            |> Html.Styled.fromUnstyled
-            |> List.singleton
+         , [ FontAwesome.icon FontAwesome.flask
+                |> Html.Styled.fromUnstyled
+           , span
+                [ css [ Css.fontSize <| Css.px 9 ]
+                ]
+                [ text "NEW" ]
+           ]
             |> a
-                [ model.page == Pathfinder |> Css.View.sidebarIcon vc |> css
+                [ model.page == Graph |> Css.View.sidebarIcon vc |> css
                 , title (Locale.string vc.locale "Pathfinder")
                 , Route.pathfinderRoute Pathfinder.Root
                     |> Route.toUrl
                     |> href
+                , css
+                    [ Css.displayFlex
+                    , Css.flexDirection Css.column
+                    , Css.alignItems Css.center
+                    , Css.color (Css.rgba 151 219 207 1)
+                    , Css.property "gap" "3px"
+                    , Css.textDecoration Css.none
+                    ]
                 ]
          ]
             ++ (if List.length plugin_menu_items > 0 then
