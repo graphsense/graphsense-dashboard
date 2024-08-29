@@ -53,11 +53,13 @@ view vc config =
                 (onClickWithStop UserClickedToolbarDeleteIcon
                     :: title "Delete"
                     :: (iconsAttr
-                        ++ if config.deleteDisabled then
-                             [ css [ Css.opacity <| Css.num 0.3 ] ]
-                            else
-                                []
-                        )
+                            ++ (if config.deleteDisabled then
+                                    [ css [ Css.opacity <| Css.num 0.3 ] ]
+
+                                else
+                                    []
+                               )
+                       )
                 )
             |> s_iconsNewFile
                 (onClickWithStop UserClickedRestart

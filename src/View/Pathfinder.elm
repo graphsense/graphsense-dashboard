@@ -208,7 +208,7 @@ renderValueTypeValue vc val =
             span [] [ Html.text (Hex.toString v) ]
 
         InOut total inv outv ->
-            inOutIndicator vc total inv outv
+            inOutIndicatorOld vc total inv outv
 
         Text txt ->
             span [] [ Html.text txt ]
@@ -269,8 +269,20 @@ rule =
     hr [ ruleStyle |> toAttr ] []
 
 
-inOutIndicator : View.Config -> Maybe Int -> Int -> Int -> Html Msg
-inOutIndicator vc mnr inNr outNr =
+inOutIndicator : View.Config -> String -> Int -> Int -> Int -> Html Msg
+inOutIndicator vc title mnr inNr outNr =
+    SidePanelComponents.sidePanelListHeaderContent
+        { sidePanelListHeaderContent =
+            { totalNumber = Locale.int vc.locale mnr
+            , incomingNumber = Locale.int vc.locale inNr
+            , outgoingNumber = Locale.int vc.locale outNr
+            , title = title
+            }
+        }
+
+
+inOutIndicatorOld : View.Config -> Maybe Int -> Int -> Int -> Html Msg
+inOutIndicatorOld vc mnr inNr outNr =
     let
         prefix =
             String.trim (String.join " " [ mnr |> Maybe.map (Locale.int vc.locale >> (++) " - ") |> Maybe.withDefault "", "(" ])
@@ -624,9 +636,9 @@ utxoTxDetailsSectionsView vc network viewState data getLbl =
             ioTableView vc network data.currency viewState.table getLbl
 
         ioIndicatorState =
-            Just (inOutIndicator vc Nothing data.noOutputs data.noInputs)
+            Just (inOutIndicator vc "In- and Outputs" (data.noOutputs + data.noInputs) data.noOutputs data.noInputs)
     in
-    collapsibleSection vc "In- and Outputs" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
+    collapsibleSection vc "" viewState.ioTableOpen ioIndicatorState content (TxDetailsMsg UserClickedToggleIOTable)
 
 
 accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
@@ -872,9 +884,9 @@ addressTransactionTableView vc _ _ viewState txOnGraphFn =
             transactionTableView vc data.currency txOnGraphFn viewState.txs
 
         ioIndicatorState =
-            Just (inOutIndicator vc (Just (data.noIncomingTxs + data.noOutgoingTxs)) data.noIncomingTxs data.noOutgoingTxs)
+            Just (inOutIndicator vc "Transactions" (data.noIncomingTxs + data.noOutgoingTxs) data.noIncomingTxs data.noOutgoingTxs)
     in
-    collapsibleSection vc "Transaction" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
+    collapsibleSection vc "" viewState.transactionsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleTransactionTable)
 
 
 addressNeighborsTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> Api.Data.Address -> Html Msg
@@ -901,7 +913,7 @@ addressNeighborsTableView vc _ _ viewState data =
                 ]
 
         ioIndicatorState =
-            Just (inOutIndicator vc Nothing data.inDegree data.outDegree)
+            Just (inOutIndicatorOld vc Nothing data.inDegree data.outDegree)
     in
     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
