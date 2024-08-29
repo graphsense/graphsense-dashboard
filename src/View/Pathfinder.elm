@@ -564,6 +564,7 @@ txDetailsContentView vc gc model id viewState =
                         , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
                         }
                     }
+            , tagInfoVisible = False
             }
         , sidePanelHeaderTags =
             { exchangeTagVisible = False
@@ -847,6 +848,7 @@ addressDetailsContentView vc gc model id viewState =
                         , text = Id.id id |> truncateLongIdentifierWithLengths 8 4
                         }
                     }
+            , tagInfoVisible = showOtherTag || showExchangeTag
             }
         , sidePanelHeaderTags =
             { exchangeTagVisible = showExchangeTag
