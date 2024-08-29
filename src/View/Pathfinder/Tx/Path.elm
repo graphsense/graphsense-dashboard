@@ -167,7 +167,7 @@ coloredPath vc c =
             in
             { p0 = { x = c.x1, y = c.y1 }
             , p1 = { x = mx, y = c.y1 }
-            , p2 = { x = mx, y = c.y2 }
+            , p2 = { x = mx, y = y2 }
             , p3 = { x = x2, y = y2 }
             }
 
