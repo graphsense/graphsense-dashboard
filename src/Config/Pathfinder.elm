@@ -19,4 +19,4 @@ nodeYOffset =
 
 
 type alias Config =
-    { displaySettingsHovercard : Maybe Hovercard.Model, isClusterDetailsOpen : Bool }
+    { displaySettingsHovercard : Maybe Hovercard.Model, isClusterDetailsOpen : Bool, displayAllTagsInDetails : Bool }

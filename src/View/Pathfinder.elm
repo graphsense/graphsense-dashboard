@@ -100,7 +100,7 @@ inlineDoneSmallIcon =
 
 inlineTagLargeIcon : Html Msg
 inlineTagLargeIcon =
-    HIcons.iconsTagLargeWithAttributes HIcons.iconsTagLargeAttributes {}
+    HIcons.iconsTagLargeWithAttributes (HIcons.iconsTagLargeAttributes |> s_iconsTagLarge [ css [ Css.display Css.inline ] ]) {}
 
 
 inlineClusterIcon : Bool -> Color -> Html Msg
@@ -116,6 +116,7 @@ inlineClusterIcon highlight clr =
     HIcons.iconsClusterWithAttributes
         (HIcons.iconsClusterAttributes
             |> s_vector (getHighlight clr)
+            |> s_iconsCluster [ css [ Css.display Css.inline ] ]
         )
         {}
 
@@ -744,6 +745,27 @@ addressDetailsContentView vc gc model id viewState =
                             []
                        )
                 )
+
+        nMaxTags =
+            3
+
+        nTagsToShow =
+            if gc.displayAllTagsInDetails then
+                lenTagLabels
+
+            else
+                nMaxTags
+
+        tagsControl =
+            if lenTagLabels > nMaxTags then
+                if gc.displayAllTagsInDetails then
+                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show less..."), onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text (Locale.string vc.locale "less...") ]
+
+                else
+                    Html.span [ Css.tagLinkButtonStyle vc |> css, HA.title (Locale.string vc.locale "show more..."), onClick UserClickedToggleDisplayAllTagsInDetails ] [ Html.text ("+" ++ String.fromInt (lenTagLabels - nMaxTags) ++ " "), Html.text (Locale.string vc.locale "more...") ]
+
+            else
+                none
     in
     SidePanelComponents.sidePanelHeaderWithInstances
         (SidePanelComponents.sidePanelHeaderAttributes
@@ -766,7 +788,7 @@ addressDetailsContentView vc gc model id viewState =
                             , Css.borderWidth (Css.px 0)
                             ]
                         ]
-                        (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.indexedMap showTag))
+                        (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
                     )
             , actorLabel =
                 let
@@ -988,23 +1010,28 @@ clusterInfoView vc open colors nrAddessTags clstrid mcluster =
                         clusterColor |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends) |> Maybe.withDefault none
                 in
                 div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
-                    [ span [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor ], onClick UserClickedToggleClusterDetailsOpen ]
-                        [ span [ css Css.smPaddingRight ]
-                            [ if open then
-                                openIcon
+                    [ div [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center ], onClick UserClickedToggleClusterDetailsOpen ]
+                        [ div []
+                            [ -- left sind of the bar
+                              span [ css Css.smPaddingRight ]
+                                [ if open then
+                                    openIcon
 
-                              else
-                                closeIcon
+                                  else
+                                    closeIcon
+                                ]
+                            , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
                             ]
-                        , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
-                        , span [ css [ Css.float Css.right, Css.paddingRight (Css.px 15) ] ]
+
+                        -- right side
+                        , div [ css [ Css.float Css.right, Css.paddingRight (Css.px 15) ] ]
                             [ if vc.highlightClusterFriends then
-                                span [ css Css.smPaddingRight, HA.title (Id.id clstrid) ] [ clusterIcon ]
+                                span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
 
                               else
                                 none
                             , if clstr.noAddressTags > nrAddessTags then
-                                span [ HA.title (Locale.string vc.locale "Cluster has addidional tags") ] [ inlineTagLargeIcon ]
+                                span [ HA.title (Locale.string vc.locale "Cluster has addidional tags"), css [ Css.display Css.inline ] ] [ inlineTagLargeIcon ]
 
                               else
                                 none

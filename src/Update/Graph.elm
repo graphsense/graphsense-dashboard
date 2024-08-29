@@ -167,11 +167,19 @@ addAddress plugins uc { address, entity, incoming, outgoing, anchor } model =
                     , pagesize = 10
                     }
                 |> ApiEffect
+
+        tbl =
+            case newModel.route of
+                Route.Currency _ (Route.Address _ t _) ->
+                    t
+
+                _ ->
+                    Nothing
     in
     addedAddress
         |> Maybe.map
             (\a ->
-                selectAddress a Nothing newModel_
+                selectAddress a tbl newModel_
                     |> mapSecond
                         ((++)
                             (getAddressEgonet a.id BrowserGotAddressEgonet newModel_.layers

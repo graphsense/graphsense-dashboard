@@ -69,6 +69,7 @@ type Msg
     | HovercardMsg Hovercard.Msg
     | UserClickedExportGraphAsPNG String
     | UserClickedToggleClusterDetailsOpen
+    | UserClickedToggleDisplayAllTagsInDetails
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
 

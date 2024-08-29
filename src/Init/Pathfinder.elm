@@ -34,6 +34,7 @@ init us _ =
       , config =
             { displaySettingsHovercard = Nothing
             , isClusterDetailsOpen = False
+            , displayAllTagsInDetails = False
             }
       , currentTime = Time.millisToPosix 0
       , pointerTool = Drag

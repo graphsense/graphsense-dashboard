@@ -51,7 +51,7 @@ view vc config =
         (SettingsComponents.toolbarAttributes
             |> s_iconsDelete
                 (onClickWithStop UserClickedToolbarDeleteIcon
-                    :: title "Delete"
+                    :: title (Locale.string vc.locale "Delete")
                     :: (iconsAttr
                             ++ (if config.deleteDisabled then
                                     [ css [ Css.opacity <| Css.num 0.3 ] ]
@@ -63,18 +63,18 @@ view vc config =
                 )
             |> s_iconsNewFile
                 (onClickWithStop UserClickedRestart
-                    :: title "Restart"
+                    :: title (Locale.string vc.locale "Restart")
                     :: iconsAttr
                 )
             |> s_iconsMouseCursor
                 (onClickWithStop (ChangePointerTool Select |> ChangedDisplaySettingsMsg)
-                    :: title "Selection tool"
+                    :: title (Locale.string vc.locale "Selection tool")
                     :: css (highlightBackground Select)
                     :: iconsAttr
                 )
             |> s_iconsHand
                 (onClickWithStop (ChangePointerTool Drag |> ChangedDisplaySettingsMsg)
-                    :: title "Move tool"
+                    :: title (Locale.string vc.locale "Move tool")
                     :: css (highlightBackground Drag)
                     :: iconsAttr
                 )
@@ -86,7 +86,7 @@ view vc config =
                 )
             |> s_iconsCenterGraph
                 (onClickWithStop UserClickedFitGraph
-                    :: title "Center graph"
+                    :: title (Locale.string vc.locale "Center graph")
                     :: iconsAttr
                 )
         )
@@ -103,7 +103,7 @@ view vc config =
                             (Icons.iconsRedoStateActiveAttributes
                                 |> s_stateActive
                                     (onClickWithStop UserClickedRedo
-                                        :: title "Redo"
+                                        :: title (Locale.string vc.locale "Redo")
                                         :: iconsAttr
                                     )
                             )
@@ -115,7 +115,7 @@ view vc config =
                         Icons.iconsUndoWithAttributes
                             (Icons.iconsUndoAttributes
                                 |> s_iconsUndo
-                                    (title "Undo"
+                                    (title (Locale.string vc.locale "Undo")
                                         :: [ css [ Css.opacity <| Css.num 0.3 ] ]
                                     )
                             )
@@ -126,7 +126,7 @@ view vc config =
                             (Icons.iconsUndoAttributes
                                 |> s_iconsUndo
                                     (onClickWithStop UserClickedUndo
-                                        :: title "Undo"
+                                        :: title (Locale.string vc.locale "Undo")
                                         :: iconsAttr
                                     )
                             )

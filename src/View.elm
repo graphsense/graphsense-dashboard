@@ -105,7 +105,7 @@ sidebar plugins vc model =
             |> List.singleton
             |> a
                 [ model.page == Graph |> Css.View.sidebarIcon vc |> css
-                , title (Locale.string vc.locale "Graph")
+                , title (Locale.string vc.locale "Aggregated Network")
                 , model.graph.route
                     |> Route.graphRoute
                     |> Route.toUrl

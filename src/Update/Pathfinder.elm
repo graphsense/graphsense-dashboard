@@ -952,6 +952,9 @@ updateByMsg plugins uc msg model =
         UserClickedToggleClusterDetailsOpen ->
             n (model |> s_config (model.config |> s_isClusterDetailsOpen (not model.config.isClusterDetailsOpen)))
 
+        UserClickedToggleDisplayAllTagsInDetails ->
+            n (model |> s_config (model.config |> s_displayAllTagsInDetails (not model.config.displayAllTagsInDetails)))
+
         Tick time ->
             n { model | currentTime = time }
 
@@ -1290,6 +1293,7 @@ unselect model =
     network
         |> flip s_network model
         |> s_details Nothing
+        |> s_tooltip Nothing
         |> s_selection NoSelection
 
 
