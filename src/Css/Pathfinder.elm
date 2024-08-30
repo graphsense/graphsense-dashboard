@@ -382,6 +382,9 @@ topRightPanelStyle _ =
     , top (px 70)
     , minWidth (px 330)
     , fontSize (px 14)
+    , calc (vh 100) minus (px 150) |> maxHeight
+    , overflowY auto
+    , overflowX hidden
     ]
 
 
