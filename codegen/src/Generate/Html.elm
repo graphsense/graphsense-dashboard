@@ -335,8 +335,6 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                      , max 3 bbox.height
                         |> String.fromFloat
                         |> Gen.Svg.Styled.Attributes.height
-                     , Gen.Svg.Styled.Attributes.css
-                        [ Css.display Css.inline ]
                      , [ bbox.x
                        , bbox.y
                        , max 1 bbox.width
@@ -355,6 +353,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
                         (getElementAttributes config name
                             |> Elm.Op.append
                                 (Generate.Svg.FrameTraits.toStyles node.frameTraits
+                                    |> (::) (Css.display Css.inline)
                                     |> Attributes.css
                                     |> List.singleton
                                     |> Elm.list
