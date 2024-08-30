@@ -1185,17 +1185,21 @@ loadAddressWithPosition position _ id starting model =
 
 loadTx : Plugins -> Id -> Model -> ( Model, List Effect )
 loadTx _ id model =
-    ( model
-    , BrowserGotTx
-        |> Api.GetTxEffect
-            { currency = Id.network id
-            , txHash = Id.id id
-            , includeIo = True
-            , tokenTxId = Nothing
-            }
-        |> ApiEffect
-        |> List.singleton
-    )
+    if Dict.member id model.network.txs then
+        n model
+
+    else
+        ( model
+        , BrowserGotTx
+            |> Api.GetTxEffect
+                { currency = Id.network id
+                , txHash = Id.id id
+                , includeIo = True
+                , tokenTxId = Nothing
+                }
+            |> ApiEffect
+            |> List.singleton
+        )
 
 
 selectTx : Id -> Model -> ( Model, List Effect )
