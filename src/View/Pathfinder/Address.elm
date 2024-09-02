@@ -188,18 +188,21 @@ toNodeIcon highlight address cluster clusterColor =
     in
     case ( address.exchange, clusterColor ) of
         ( Nothing, Nothing ) ->
-            if clstrSize > 1 then
-                Icons.iconsCluster {}
+            {-
+               if clstrSize > 1 then
+                   Icons.iconsCluster {}
 
-            else
-                Icons.iconsUntagged {}
+               else
+            -}
+            Icons.iconsUntagged {}
 
         ( Nothing, Just c ) ->
-            if clstrSize > 1 then
-                Icons.iconsClusterWithAttributes (Icons.iconsClusterAttributes |> s_vector (getHighlight c)) {}
+            {- if clstrSize > 1 then
+                   Icons.iconsClusterWithAttributes (Icons.iconsClusterAttributes |> s_vector (getHighlight c)) {}
 
-            else
-                Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 (getHighlight c)) {}
+               else
+            -}
+            Icons.iconsUntaggedWithAttributes (Icons.iconsUntaggedAttributes |> s_ellipse25 (getHighlight c)) {}
 
         ( Just _, Just c ) ->
             let
