@@ -1013,7 +1013,12 @@ clusterInfoView vc open colors nrAddessTags clstrid mcluster =
                 in
                 div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
                     [ div [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center ], onClick UserClickedToggleClusterDetailsOpen ]
-                        [ div []
+                        [ div
+                            [ css
+                                [ Css.displayFlex
+                                , Css.alignItems Css.center
+                                ]
+                            ]
                             [ -- left sind of the bar
                               span [ css Css.smPaddingRight ]
                                 [ if open then
@@ -1023,17 +1028,8 @@ clusterInfoView vc open colors nrAddessTags clstrid mcluster =
                                     closeIcon
                                 ]
                             , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
-                            ]
-
-                        -- right side
-                        , div [ css [ Css.float Css.right, Css.paddingRight (Css.px 15) ] ]
-                            [ if vc.highlightClusterFriends then
+                            , if vc.highlightClusterFriends then
                                 span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
-
-                              else
-                                none
-                            , if clstr.noAddressTags > nrAddessTags then
-                                span [ HA.title (Locale.string vc.locale "Cluster has addidional tags"), css [ Css.display Css.inline ] ] [ inlineTagLargeIcon ]
 
                               else
                                 none
