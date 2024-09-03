@@ -894,6 +894,17 @@ updateByMsg plugins uc msg model =
                 |> List.foldl aggAddressAdd (n (model |> s_network newNetwork))
                 |> and (checkSelection uc)
 
+        UserClickedSelectionTool ->
+            n
+                { model
+                    | pointerTool =
+                        if model.pointerTool == Select then
+                            Drag
+
+                        else
+                            Select
+                }
+
         ChangedDisplaySettingsMsg submsg ->
             let
                 toEffect =
@@ -907,9 +918,6 @@ updateByMsg plugins uc msg model =
                         >> flip s_config model
             in
             case submsg of
-                ChangePointerTool tool ->
-                    n { model | pointerTool = tool }
-
                 UserClickedToggleShowTxTimestamp ->
                     -- handled Upstream
                     n model

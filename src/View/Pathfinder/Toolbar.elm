@@ -3,7 +3,7 @@ module View.Pathfinder.Toolbar exposing (..)
 import Config.View as View
 import Css
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes as HA exposing (css, id, src)
+import Html.Styled.Attributes as HA exposing (css, id)
 import Html.Styled.Lazy exposing (..)
 import Model.Pathfinder.Tools exposing (PointerTool(..))
 import Msg.Pathfinder exposing (DisplaySettingsMsg(..), Msg(..), TxDetailsMsg(..))
@@ -11,7 +11,7 @@ import RecordSetter exposing (..)
 import Theme.Colors
 import Theme.Html.Icons as Icons
 import Theme.Html.SettingsComponents as SettingsComponents
-import Util.View exposing (none, onClickWithStop, toCssColor)
+import Util.View exposing (onClickWithStop, toCssColor)
 import View.Locale as Locale
 
 
@@ -66,22 +66,16 @@ view vc config =
                     :: title (Locale.string vc.locale "Restart")
                     :: iconsAttr
                 )
-            |> s_iconsMouseCursor
-                (onClickWithStop (ChangePointerTool Select |> ChangedDisplaySettingsMsg)
+            |> s_iconsSelectionTool
+                (onClickWithStop UserClickedSelectionTool
                     :: title (Locale.string vc.locale "Selection tool")
                     :: css (highlightBackground Select)
-                    :: iconsAttr
-                )
-            |> s_iconsHand
-                (onClickWithStop (ChangePointerTool Drag |> ChangedDisplaySettingsMsg)
-                    :: title (Locale.string vc.locale "Move tool")
-                    :: css (highlightBackground Drag)
                     :: iconsAttr
                 )
             |> s_iconsDisplayConfiguration
                 (id "toolbar-display-settings"
                     :: title "Display settings"
-                    :: onClickWithStop (UserClickedToggleDisplaySettings |> ChangedDisplaySettingsMsg)
+                    :: onClickWithStop (ChangedDisplaySettingsMsg UserClickedToggleDisplaySettings)
                     :: iconsAttr
                 )
             |> s_iconsCenterGraph
@@ -115,9 +109,9 @@ view vc config =
                         Icons.iconsUndoWithAttributes
                             (Icons.iconsUndoAttributes
                                 |> s_iconsUndo
-                                    (title (Locale.string vc.locale "Undo")
-                                        :: [ css [ Css.opacity <| Css.num 0.3 ] ]
-                                    )
+                                    [ title (Locale.string vc.locale "Undo")
+                                    , css [ Css.opacity <| Css.num 0.3 ]
+                                    ]
                             )
                             {}
 

@@ -72,11 +72,11 @@ type Msg
     | UserClickedToggleDisplayAllTagsInDetails
     | UserClickedToolbarDeleteIcon
     | UserClickedFitGraph
+    | UserClickedSelectionTool
 
 
 type DisplaySettingsMsg
-    = ChangePointerTool PointerTool
-    | UserClickedToggleDisplaySettings
+    = UserClickedToggleDisplaySettings
     | UserClickedToggleShowTxTimestamp
     | UserClickedToggleDatesInUserLocale
     | UserClickedToggleShowTimeZoneOffset
