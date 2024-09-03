@@ -715,8 +715,32 @@ addressDetailsContentView vc gc model id viewState =
         clstr =
             Dict.get clstrId model.clusters
 
+        valuesToCell currency value =
+            { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
+            , secondRowText = ""
+            , secondRowVisible = False
+            }
+
+        timeToCell d =
+            { firstRowText = Locale.timestampDateUniform vc.locale d
+            , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
+            , secondRowVisible = True
+            }
+
         tbls =
-            [ detailsFactTableView vc (apiAddressToRows viewState.data)
+            [ --detailsFactTableView vc (apiAddressToRows viewState.data)
+              SidePanelComponents.sidePanelDetails
+                { balanceTitle = { text = Locale.string vc.locale "Balance" }
+                , balanceValue = valuesToCell viewState.data.currency viewState.data.balance
+                , totalReceivedTitle = { text = Locale.string vc.locale "Total received" }
+                , totalReceivedValue = valuesToCell viewState.data.currency viewState.data.totalReceived
+                , totalSentTitle = { text = Locale.string vc.locale "Total sent" }
+                , totalSentValue = valuesToCell viewState.data.currency viewState.data.totalSpent
+                , lastUsageTitle = { text = Locale.string vc.locale "Last usage" }
+                , lastUsageValue = timeToCell viewState.data.lastTx.timestamp
+                , firstUsageTitle = { text = Locale.string vc.locale "First usage" }
+                , firstUsageValue = timeToCell viewState.data.firstTx.timestamp
+                }
             , clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress clstrId clstr
             , detailsActionsView vc (getAddressActionBtns id viewState.data)
             ]

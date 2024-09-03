@@ -3,6 +3,7 @@ module Generate.Html.TextNode exposing (..)
 import Api.Raw exposing (..)
 import Elm
 import Elm.Op
+import Gen.Css as Css
 import Gen.Html.Styled
 import Gen.Html.Styled.Attributes as Attributes
 import Gen.Maybe
@@ -39,7 +40,8 @@ toExpressions config componentName node =
 
 toStyles : TextNode -> List Elm.Expression
 toStyles node =
-    TypeStyle.toStyles node.style
+    Css.whiteSpace Css.noWrap
+        :: TypeStyle.toStyles node.style
         ++ MinimalFillsTrait.toStyles node.defaultShapeTraits.hasGeometryTrait.minimalFillsTrait
         ++ DefaultShapeTraits.toStyles node.defaultShapeTraits
 

@@ -19,7 +19,19 @@ toStyles node =
         |> mm layoutMode node.layoutMode
         |> m primaryAxisAlignItems node.primaryAxisAlignItems
         |> m counterAxisAlignItems node.counterAxisAlignItems
-        |> m (String.fromFloat >> flip (++) "px" >> Css.property "gap") node.itemSpacing
+        |> a2 gap node.primaryAxisAlignItems node.itemSpacing
+
+
+gap : PrimaryAxisAlignItems -> Float -> Maybe Elm.Expression
+gap axis itemSpacing =
+    if axis == PrimaryAxisAlignItemsSPACEBETWEEN then
+        Nothing
+
+    else
+        String.fromFloat itemSpacing
+            ++ "px"
+            |> Css.property "gap"
+            |> Just
 
 
 primaryAxisAlignItems : PrimaryAxisAlignItems -> Elm.Expression

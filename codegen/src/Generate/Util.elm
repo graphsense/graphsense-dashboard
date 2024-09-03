@@ -31,6 +31,14 @@ aa fun =
     Maybe.andThen fun >> Maybe.withDefault [] >> (++)
 
 
+a2 : (a -> b -> Maybe Elm.Expression) -> Maybe a -> Maybe b -> List Elm.Expression -> List Elm.Expression
+a2 fun a_ b =
+    Maybe.Extra.andThen2 fun a_ b
+        |> Maybe.map List.singleton
+        |> Maybe.withDefault []
+        |> (++)
+
+
 lengthOrAutoType : Elm.Expression -> Elm.Expression
 lengthOrAutoType =
     Elm.withType
@@ -135,12 +143,12 @@ withInstanceSwap def references element =
         |> Maybe.withDefault element
 
 
-getMainComponentProperty : Maybe (ComponentPropertyReferences) -> Maybe String
+getMainComponentProperty : Maybe ComponentPropertyReferences -> Maybe String
 getMainComponentProperty =
     Maybe.andThen (Dict.get "mainComponent")
 
 
-toTranslate : {a | x : Float, y : Float } -> String
+toTranslate : { a | x : Float, y : Float } -> String
 toTranslate b =
     "translate({{ x }}, {{ y }})"
         |> Format.namedValue "x" (b.x |> String.fromFloat)

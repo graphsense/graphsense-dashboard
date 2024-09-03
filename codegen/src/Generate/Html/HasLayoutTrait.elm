@@ -9,14 +9,14 @@ import Tuple exposing (pair)
 
 toStyles : HasLayoutTrait -> List Elm.Expression
 toStyles node =
-    []
+    [ Css.boxSizing Css.borderBox ]
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
-        |> a (width) (Maybe.map2 pair node.layoutSizingHorizontal node.size)
-        |> a (height) (Maybe.map2 pair node.layoutSizingVertical node.size)
+        |> a2 width node.layoutSizingHorizontal node.size
+        |> a2 height node.layoutSizingVertical node.size
 
 
-width :  ( LayoutSizingHorizontal, Vector ) -> Maybe Elm.Expression
-width ( sizing, { x, y } ) =
+width : LayoutSizingHorizontal -> Vector -> Maybe Elm.Expression
+width sizing { x, y } =
     case sizing of
         LayoutSizingHorizontalFIXED ->
             x
@@ -24,17 +24,27 @@ width ( sizing, { x, y } ) =
                 |> Css.width
                 |> Just
 
+        LayoutSizingHorizontalFILL ->
+            Css.pct 100
+                |> Css.width
+                |> Just
+
         _ ->
             Nothing
 
 
-height : ( LayoutSizingVertical, Vector ) -> Maybe Elm.Expression
-height ( sizing, { x, y } ) =
+height : LayoutSizingVertical -> Vector -> Maybe Elm.Expression
+height sizing { x, y } =
     case sizing of
         LayoutSizingVerticalFIXED ->
             y
                 |> Css.px
                 |> Css.height
+                |> Just
+
+        LayoutSizingVerticalFILL ->
+            Css.pct 100
+                |> Css.width
                 |> Just
 
         _ ->
