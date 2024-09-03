@@ -10,6 +10,7 @@ import Css.Pathfinder as Css
 import Hex
 import Html.Styled.Attributes as Html
 import Html.Styled.Events exposing (onMouseLeave)
+import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Direction exposing (Direction(..))
 import Model.Pathfinder exposing (unit)
@@ -36,7 +37,7 @@ view _ vc _ colors address getCluster =
             RemoteData.toMaybe address.data
 
         clusterid =
-            data |> Maybe.map (\z -> ( z.currency, Hex.toString z.entity ))
+            data |> Maybe.map (\z -> Id.initClusterId z.currency z.entity)
 
         clusterColor =
             clusterid |> Maybe.andThen (\x -> Colors.getAssignedColor Colors.Clusters x colors) |> Maybe.map .color
@@ -209,7 +210,7 @@ toNodeIcon highlight address cluster clusterColor =
                 cattr =
                     getHighlight c
             in
-            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_vector14 cattr |> s_vector15Of10 cattr |> s_vector15Of11 cattr) {}
+            Icons.iconsExchangeWithAttributes (Icons.iconsExchangeAttributes |> s_dollar cattr |> s_arrows cattr) {}
 
         ( Just _, _ ) ->
             Icons.iconsExchange {}

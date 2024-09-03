@@ -67,7 +67,7 @@ hasAddress id network =
 
 getClustersOnGraph : Network -> Set Id
 getClustersOnGraph net =
-    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map (\x -> Id.init x.currency (Hex.toString x.entity)) |> Set.fromList
+    net.addresses |> Dict.values |> List.filterMap (.data >> RemoteData.toMaybe) |> List.map (\x -> Id.initClusterId x.currency x.entity) |> Set.fromList
 
 
 isClusterFriendAlreadyOnGraph : Id -> Network -> Bool

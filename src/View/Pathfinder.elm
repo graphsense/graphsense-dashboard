@@ -21,6 +21,7 @@ import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
 import Html.Styled.Lazy exposing (..)
+import Init.Pathfinder.Id as Id
 import Json.Decode
 import Model.Currency exposing (Currency(..), assetFromBase)
 import Model.DateRangePicker as DateRangePicker
@@ -113,10 +114,9 @@ inlineClusterIcon highlight clr =
             else
                 []
     in
-    HIcons.iconsClusterWithAttributes
-        (HIcons.iconsClusterAttributes
-            |> s_vector (getHighlight clr)
-            |> s_iconsCluster [ css [ Css.display Css.inline ] ]
+    HIcons.iconsUntaggedWithAttributes
+        (HIcons.iconsUntaggedAttributes
+            |> s_ellipse25 (getHighlight clr)
         )
         {}
 
@@ -710,10 +710,7 @@ addressDetailsContentView vc gc model id viewState =
             ]
 
         clstrId =
-            ( viewState.data.currency, Hex.toString viewState.data.entity )
-
-        clstr =
-            Dict.get clstrId model.clusters
+            Id.initClusterId viewState.data.currency viewState.data.entity
 
         valuesToCell currency value =
             { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
@@ -741,7 +738,9 @@ addressDetailsContentView vc gc model id viewState =
                 , firstUsageTitle = { text = Locale.string vc.locale "First usage" }
                 , firstUsageValue = timeToCell viewState.data.firstTx.timestamp
                 }
-            , clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress clstrId clstr
+            , Dict.get clstrId model.clusters
+                |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
+                |> Maybe.withDefault none
             , detailsActionsView vc (getAddressActionBtns id viewState.data)
             ]
 
@@ -792,6 +791,27 @@ addressDetailsContentView vc gc model id viewState =
 
             else
                 none
+
+        clstrid =
+            Id.initClusterId viewState.data.currency viewState.data.entity
+
+        clusterHighlightAttr =
+            if vc.highlightClusterFriends then
+                Colors.getAssignedColor Colors.Clusters clstrid model.colors
+                    |> Debug.log "getAssignedColor"
+                    |> Maybe.map
+                        (.color
+                            >> Util.View.toCssColor
+                            >> Css.fill
+                            >> Css.important
+                            >> List.singleton
+                            >> css
+                            >> List.singleton
+                        )
+                    |> Maybe.withDefault []
+
+            else
+                []
     in
     SidePanelComponents.sidePanelHeaderWithInstances
         (SidePanelComponents.sidePanelHeaderAttributes
@@ -889,10 +909,19 @@ addressDetailsContentView vc gc model id viewState =
                     { sidePanelAddressHeader =
                         { iconInstance =
                             if address.exchange /= Nothing then
-                                Icons.iconsExchangeSvg [] {}
+                                Icons.iconsExchangeWithAttributesSvg []
+                                    (Icons.iconsExchangeAttributes
+                                        |> s_dollar clusterHighlightAttr
+                                        |> s_arrows clusterHighlightAttr
+                                    )
+                                    {}
 
                             else
-                                Icons.iconsUntaggedSvg [] {}
+                                Icons.iconsUntaggedWithAttributesSvg []
+                                    (Icons.iconsUntaggedAttributes
+                                        |> s_ellipse25 clusterHighlightAttr
+                                    )
+                                    {}
                         , headerText =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "address"
                         }
@@ -1015,64 +1044,64 @@ apiEntityToRows clstrid clstr =
     ]
 
 
-clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Id -> Maybe Api.Data.Entity -> Html Msg
-clusterInfoView vc open colors nrAddessTags clstrid mcluster =
-    case mcluster of
-        Just clstr ->
-            if clstr.noAddresses > 1 then
-                let
-                    openIcon =
-                        FontAwesome.icon FontAwesome.minus |> Html.fromUnstyled
+clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Api.Data.Entity -> Html Msg
+clusterInfoView vc open colors nrAddessTags clstr =
+    if clstr.noAddresses <= 1 then
+        none
 
-                    --inlineChevronUpThinIcon
-                    closeIcon =
-                        FontAwesome.icon FontAwesome.plus |> Html.fromUnstyled
+    else
+        let
+            clstrid =
+                Id.initClusterId clstr.currency clstr.entity
 
-                    --inlineChevronDownThinIcon
-                    clusterColor =
-                        Colors.getAssignedColor Colors.Clusters clstrid colors
+            openIcon =
+                FontAwesome.icon FontAwesome.minus |> Html.fromUnstyled
 
-                    clusterIcon =
-                        clusterColor |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends) |> Maybe.withDefault none
-                in
-                div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
-                    [ div [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center ], onClick UserClickedToggleClusterDetailsOpen ]
-                        [ div
-                            [ css
-                                [ Css.displayFlex
-                                , Css.alignItems Css.center
-                                ]
-                            ]
-                            [ -- left sind of the bar
-                              span [ css Css.smPaddingRight ]
-                                [ if open then
-                                    openIcon
+            --inlineChevronUpThinIcon
+            closeIcon =
+                FontAwesome.icon FontAwesome.plus |> Html.fromUnstyled
 
-                                  else
-                                    closeIcon
-                                ]
-                            , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
-                            , if vc.highlightClusterFriends then
-                                span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
+            --inlineChevronDownThinIcon
+            clusterColor =
+                Colors.getAssignedColor Colors.Clusters clstrid colors
 
-                              else
-                                none
-                            ]
+            clusterIcon =
+                clusterColor
+                    |> Maybe.map (.color >> inlineClusterIcon vc.highlightClusterFriends)
+                    |> Maybe.withDefault none
+        in
+        div [ css [ Css.color Css.lightGreyColor, Css.cursor Css.pointer ] ]
+            [ div [ css [ Css.paddingLeft (Css.px 8), Css.color Css.lightGreyColor, Css.displayFlex, Css.justifyContent Css.spaceBetween, Css.alignItems Css.center ], onClick UserClickedToggleClusterDetailsOpen ]
+                [ div
+                    [ css
+                        [ Css.displayFlex
+                        , Css.alignItems Css.center
                         ]
-                    , if open then
-                        div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
-                            [ detailsFactTableView vc (apiEntityToRows clstrid clstr)
-                            ]
+                    ]
+                    [ -- left sind of the bar
+                      span [ css Css.smPaddingRight ]
+                        [ if open then
+                            openIcon
+
+                          else
+                            closeIcon
+                        ]
+                    , span [ css Css.smPaddingRight ] [ Locale.text vc.locale "Cluster Information" ]
+                    , if vc.highlightClusterFriends then
+                        span [ css Css.smPaddingRight, HA.title (Id.id clstrid), css [ Css.display Css.inline ] ] [ clusterIcon ]
 
                       else
                         none
                     ]
+                ]
+            , if open then
+                div [ css [ Css.fontSize (Css.px 12), Css.color Css.lightGreyColor, Css.marginLeft (Css.px 8) ] ]
+                    [ detailsFactTableView vc (apiEntityToRows clstrid clstr)
+                    ]
 
-            else
+              else
                 none
-
-        _ ->
-            none
+            ]
 
 
 apiUtxoTxToRows : Api.Data.TxUtxo -> List KVTableRow

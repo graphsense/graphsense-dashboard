@@ -180,7 +180,7 @@ updateByMsg plugins uc msg model =
                                 |> n
 
                 clusterId =
-                    Id.init data.currency (Hex.toString data.entity)
+                    Id.initClusterId data.currency data.entity
 
                 isSecondAddressFromSameCluster =
                     Network.isClusterFriendAlreadyOnGraph clusterId model.network

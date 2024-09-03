@@ -106,11 +106,6 @@ getActivityRange x =
     )
 
 
-getClusterId : Address -> Maybe String
-getClusterId a =
-    RemoteData.unwrap Nothing (.entity >> Hex.toString >> Just) a.data
-
-
 getTxs : Address -> Direction -> Txs
 getTxs address direction =
     case direction of
