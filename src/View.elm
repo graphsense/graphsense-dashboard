@@ -111,7 +111,7 @@ sidebar plugins vc model =
                     |> Route.toUrl
                     |> href
                 ]
-         , [ FontAwesome.icon FontAwesome.flask
+         , [ FontAwesome.icon FontAwesome.projectDiagram
                 |> Html.Styled.fromUnstyled
            , span
                 [ css [ Css.fontSize <| Css.px 9 ]
