@@ -798,7 +798,6 @@ addressDetailsContentView vc gc model id viewState =
         clusterHighlightAttr =
             if vc.highlightClusterFriends then
                 Colors.getAssignedColor Colors.Clusters clstrid model.colors
-                    |> Debug.log "getAssignedColor"
                     |> Maybe.map
                         (.color
                             >> Util.View.toCssColor
