@@ -178,7 +178,6 @@ componentNodeToDeclarations parentName node =
                         config =
                             { propertyExpressions =
                                 Common.propertiesToPropertyExpressions properties_ properties
-                                    |> Debug.log ("abc properties of " ++ details.name)
                             , positionRelatively = Nothing
                             , attributes = attributes
                             , instances = instances
@@ -309,7 +308,6 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
     let
         name =
             Generate.Common.FrameTraits.getName node
-                |> Debug.log "123 withFrameTraitsToExp name"
 
         hasOnlySvgChildren =
             List.all isSvgChild node.frameTraits.children
@@ -376,7 +374,7 @@ withFrameTraitsNodeToExpression config componentName componentNameForChildren no
         (frameTraitsToExpressions config componentNameForChildren node.frameTraits
             |> Elm.list
         )
-        |> withVisibility (Debug.log "123 withFrameTraitsToExp withVisibility" componentName) (Debug.log "123 propertyExpressions" config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
+        |> withVisibility (componentName) (config.propertyExpressions) node.frameTraits.isLayerTrait.componentPropertyReferences
 
 
 instanceNodeToExpressions : Config -> String -> InstanceNode -> List Elm.Expression
@@ -384,10 +382,8 @@ instanceNodeToExpressions config parentName node =
     let
         name =
             Generate.Common.FrameTraits.getName node
-                |> Debug.log "123 instanceNodeToExp name"
 
         subNameId =
-            Debug.log "123 instanceNodeToExp subNameId" <|
                 if node.componentProperties /= Nothing then
                     name
 

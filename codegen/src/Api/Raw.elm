@@ -4256,7 +4256,7 @@ devStatusDecoder =
             |> Json.Decode.map
                 ((==) "READY_FOR_DEV")
             |> Json.Decode.field "devStatus"
-        , Json.Decode.succeed (Debug.log "false" False)
+        , Json.Decode.succeed False
         ]
 
 

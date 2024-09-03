@@ -33,10 +33,8 @@ adjustNames node =
     let
         names =
             collectNames [] node Dict.empty
-                |> Debug.log "asdf collectNames"
                 |> disambiguateCollectedNames
                 |> Dict.map (\_ -> sanitize)
-                |> Debug.log "asdf disambiguateCollectNames"
     in
     withFrameTraitsAdjustNames names node
 

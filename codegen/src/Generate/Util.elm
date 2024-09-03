@@ -104,15 +104,11 @@ getByNameId ( name, id ) d =
 withVisibility : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Expression -> Expression
 withVisibility componentName def references element =
     references
-        |> Debug.log ("123 references " ++ componentName)
         |> Maybe.andThen (Dict.get "visible")
-        |> Debug.log "123 visibl "
         |> Maybe.andThen
             (\ref ->
                 Dict.get componentName def
-                    |> Debug.log "123 get def"
                     |> Maybe.andThen (Dict.get ref)
-                    |> Debug.log "123 found"
             )
         |> Maybe.map
             (\bool ->
@@ -125,13 +121,10 @@ withVisibility componentName def references element =
 getTextProperty : String -> Dict String ComponentPropertyExpressions -> Maybe ComponentPropertyReferences -> Maybe Expression
 getTextProperty componentName def references =
     references
-        |> Debug.log ("xyz getTextProperty " ++ componentName)
         |> Maybe.andThen (Dict.get "characters")
-        |> Debug.log "xyz characters"
         |> Maybe.andThen
             (\ref ->
                 Dict.get componentName def
-                    |> Debug.log "xyz getFromExpressions"
                     |> Maybe.andThen (Dict.get ref)
             )
 

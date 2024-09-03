@@ -19,7 +19,6 @@ adjustBoundingBox { x, y } node =
 adjustName : Dict String String -> { a | frameTraits : FrameTraits } -> { a | frameTraits : FrameTraits }
 adjustName names node =
     Dict.get (getId node) names
-        |> Debug.log ("adjustName " ++ getId node ++ "/" ++ getName node ++ " to ")
         |> Maybe.map
             (flip s_name node.frameTraits.isLayerTrait
                 >> flip s_isLayerTrait node.frameTraits
