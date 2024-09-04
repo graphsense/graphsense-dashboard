@@ -35,7 +35,7 @@ sed -i 's/Addressstatus/AddressStatus/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/addressstatus/addressStatus/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/Json.Decode.dict tagCloudEntryDecodertagCloudEntryDecoder/Json.Decode.dict tagCloudEntryDecoder/' "${dir}/../openapi/src/Api/Data.elm"
 
-sed -i 's/labelSummaryDecoderlabelSummaryDecoder/labelSummaryInheritedFromDecoder/' "${dir}/../openapi/src/Api/Data.elm"
+sed -i 's/labelSummaryDecoderlabelSummaryDecoder/labelSummaryDecoder/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/TaginheritedFrom/TagInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/LabelSummaryinheritedFrom/LabelSummaryInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"
 sed -i 's/AddressTaginheritedFrom/AddressTagInheritedFrom/' "${dir}/../openapi/src/Api/Data.elm"

@@ -279,10 +279,10 @@ update uc pathfinderModel msg id model =
                 |> Maybe.withDefault (n model)
 
         BrowserGotFromDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange uc pathfinderModel id model (Set blockAt.beforeBlock) NoSet
+            updateDatePickerRangeBlockRange uc pathfinderModel id model (blockAt.beforeBlock |> Maybe.map (Set) |> Maybe.withDefault (NoSet) ) NoSet
 
         BrowserGotToDateBlock _ blockAt ->
-            updateDatePickerRangeBlockRange uc pathfinderModel id model NoSet (Set blockAt.afterBlock)
+            updateDatePickerRangeBlockRange uc pathfinderModel id model NoSet (blockAt.afterBlock |> Maybe.map (Set) |> Maybe.withDefault (NoSet))
 
         TableMsg _ ->
             n model

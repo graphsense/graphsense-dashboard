@@ -300,10 +300,10 @@ type alias Block =
 
 
 type alias BlockAtDate =
-    { afterBlock : Int
-    , afterTimestamp : Int
-    , beforeBlock : Int
-    , beforeTimestamp : Int
+    { afterBlock : Maybe Int
+    , afterTimestamp : Maybe Int
+    , beforeBlock : Maybe Int
+    , beforeTimestamp : Maybe Int
     }
 
 
@@ -952,10 +952,10 @@ encodeBlockAtDatePairs : BlockAtDate -> List EncodedField
 encodeBlockAtDatePairs model =
     let
         pairs =
-            [ encode "after_block" Json.Encode.int model.afterBlock
-            , encode "after_timestamp" Json.Encode.int model.afterTimestamp
-            , encode "before_block" Json.Encode.int model.beforeBlock
-            , encode "before_timestamp" Json.Encode.int model.beforeTimestamp
+            [ maybeEncode "after_block" Json.Encode.int model.afterBlock
+            , maybeEncode "after_timestamp" Json.Encode.int model.afterTimestamp
+            , maybeEncode "before_block" Json.Encode.int model.beforeBlock
+            , maybeEncode "before_timestamp" Json.Encode.int model.beforeTimestamp
             ]
     in
     pairs
@@ -2047,10 +2047,10 @@ blockDecoder =
 blockAtDateDecoder : Json.Decode.Decoder BlockAtDate
 blockAtDateDecoder =
     Json.Decode.succeed BlockAtDate
-        |> decode "after_block" Json.Decode.int 
-        |> decode "after_timestamp" Json.Decode.int 
-        |> decode "before_block" Json.Decode.int 
-        |> decode "before_timestamp" Json.Decode.int 
+        |> maybeDecode "after_block" Json.Decode.int Nothing
+        |> maybeDecode "after_timestamp" Json.Decode.int Nothing
+        |> maybeDecode "before_block" Json.Decode.int Nothing
+        |> maybeDecode "before_timestamp" Json.Decode.int Nothing
 
 
 conceptDecoder : Json.Decode.Decoder Concept

@@ -133,6 +133,19 @@ getAddressEntity currency_path address_path =
 
 
 
+getTagSummaryByAddress : (String) -> (String) -> Maybe (Bool) -> Api.Request Api.Data.TagSummary
+getTagSummaryByAddress currency_path address_path includeBestClusterTag_query =
+    Api.request
+        "GET"
+        "/{currency}/addresses/{address}/tag_summary"
+        [ ( "currency", identity currency_path ), ( "address", identity address_path ) ]
+        [ ( "include_best_cluster_tag", Maybe.map ((\val -> if val then "true" else "false")) includeBestClusterTag_query ) ]
+        []
+        Nothing
+        Api.Data.tagSummaryDecoder
+
+
+
 listAddressLinks : (String) -> (String) -> (String) -> Maybe (Int) -> Maybe (Int) -> Maybe (Order_) -> Maybe (String) -> Maybe (Int) -> Api.Request Api.Data.Links
 listAddressLinks currency_path address_path neighbor_query minHeight_query maxHeight_query order_query page_query pagesize_query =
     Api.request
