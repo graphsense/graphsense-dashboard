@@ -16,7 +16,6 @@ import DurationDatePicker as DatePicker
 import FontAwesome
 import Hex
 import Hovercard
-import Html.Events exposing (onMouseOver)
 import Html.Styled as Html exposing (..)
 import Html.Styled.Attributes as HA exposing (id, src)
 import Html.Styled.Events exposing (onMouseEnter, onMouseLeave)
@@ -64,7 +63,7 @@ import Util.Css as Css
 import Util.ExternalLinks exposing (addProtocolPrefx)
 import Util.Graph
 import Util.Pathfinder.TagSummary exposing (hasOnlyExchangeTags)
-import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder, hovercard, none, truncateLongIdentifierWithLengths)
+import Util.View exposing (copyIconPathfinder, hovercard, none, truncateLongIdentifierWithLengths)
 import View.Graph.Table exposing (noTools)
 import View.Graph.Transform as Transform
 import View.Locale as Locale
@@ -129,16 +128,6 @@ inlineChevronRightThickIcon =
 inlineChevronDownThickIcon : Html Msg
 inlineChevronDownThickIcon =
     HIcons.iconsChevronDownThick {}
-
-
-inlineChevronDownThinIcon : Html Msg
-inlineChevronDownThinIcon =
-    HIcons.iconsChevronDownThin {}
-
-
-inlineChevronUpThinIcon : Html Msg
-inlineChevronUpThinIcon =
-    HIcons.iconsChevronUpThin {}
 
 
 graphActionButtons : List BtnConfig
@@ -339,7 +328,7 @@ graph plugins states vc gc model =
     [ vc.size
         |> Maybe.map (graphSvg plugins states vc gc model)
         |> Maybe.withDefault none
-    , topLeftPanel plugins states vc gc model
+    , topLeftPanel vc
     , topCenterPanel plugins states vc gc model
     , topRightPanel plugins states vc gc model
     ]
@@ -383,14 +372,14 @@ topCenterPanel plugins ms vc gc model =
         ]
 
 
-topLeftPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
-topLeftPanel plugins ms vc gc model =
+topLeftPanel : View.Config -> Html Msg
+topLeftPanel vc =
     div [ topLeftPanelStyle vc |> toAttr ]
         []
 
 
 settingsView : View.Config -> Model -> Hovercard.Model -> Html Msg
-settingsView vc m hc =
+settingsView vc _ hc =
     let
         utc_text =
             if vc.showDatesInUserLocale then
@@ -411,29 +400,6 @@ settingsView vc m hc =
         |> Html.toUnstyled
         |> List.singleton
         |> hovercard vc hc (Css.zIndexMainValue + 1)
-
-
-graphSelectionToolButton : View.Config -> BtnConfig -> Bool -> Svg Msg
-graphSelectionToolButton vc btn selected =
-    div [ toolItemSmallStyle vc selected |> toAttr ]
-        [ disableableButton (toggleToolButtonStyle vc selected)
-            btn
-            [ HA.title (Locale.string vc.locale btn.text) ]
-            [ div [ toolIconStyle vc |> toAttr ] [ btn.icon btn.enable ]
-            ]
-        ]
-
-
-graphToolButton : View.Config -> BtnConfig -> Svg Msg
-graphToolButton vc btn =
-    div [ toolItemStyle vc |> toAttr ]
-        [ disableableButton (toolButtonStyle vc)
-            btn
-            []
-            [ div [ toolIconStyle vc |> toAttr ] [ btn.icon btn.enable ]
-            , Html.text (Locale.string vc.locale btn.text)
-            ]
-        ]
 
 
 topRightPanel : Plugins -> ModelState -> View.Config -> Pathfinder.Config -> Model -> Html Msg
@@ -514,18 +480,13 @@ detailsView vc gc model =
             none
 
 
-detailsViewCloseRow : View.Config -> Html Msg
-detailsViewCloseRow vc =
-    div [ detailsViewCloseButtonStyle |> toAttr ] [ closeButton vc UserClosedDetailsView ]
-
-
 closeButton : View.Config -> Msg -> Html Msg
 closeButton vc msg =
     button [ linkButtonStyle vc True |> toAttr, msg |> onClick ] [ HIcons.iconsCloseSmall {} ]
 
 
 getAddressAnnotationBtns : View.Config -> Api.Data.Address -> Maybe Api.Data.Actor -> Bool -> List BtnConfig
-getAddressAnnotationBtns vc data actor hasTags =
+getAddressAnnotationBtns vc data _ _ =
     let
         isContract x =
             x.isContract |> Maybe.withDefault False
@@ -548,29 +509,45 @@ getAddressActionBtns _ _ =
 
 
 txDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> TxDetails.Model -> Html Msg
-txDetailsContentView vc gc model id viewState =
+txDetailsContentView vc _ model id viewState =
     let
         getLbl id_ =
             Dict.get id_ model.tagSummaries
                 |> Maybe.withDefault NoTags
-
-        ( detailsTblBody, sections ) =
-            case viewState.tx.type_ of
-                Tx.Account tx ->
-                    ( [ accountTxDetailsContentView vc tx.raw ]
-                    , [ none ]
-                    )
-
-                Tx.Utxo tx ->
-                    ( [ utxoTxDetailsContentView vc tx.raw ]
-                    , [ utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl ]
-                    )
     in
-    SidePanelComponents.sidePanelHeader
-        { sidePanelHeader =
+    SidePanelComponents.sidePanelComponent
+        { actor = { iconInstance = none, text = "" }
+        , leftTab = { tabLabel = "" }
+        , rightTab = { tabLabel = "" }
+        , sidePanelComponent =
+            { detailsInstance =
+                case viewState.tx.type_ of
+                    Tx.Account tx ->
+                        accountTxDetailsContentView vc tx.raw
+
+                    Tx.Utxo tx ->
+                        SidePanelComponents.sidePanelTxDetails
+                            { titleOfInput = { text = Locale.string vc.locale "Total input" }
+                            , titleOfOutput = { text = Locale.string vc.locale "Total output" }
+                            , titleOfTimestamp = { text = Locale.string vc.locale "Timestamp" }
+                            , valueOfInput = valuesToCell vc tx.raw.currency tx.raw.totalInput
+                            , valueOfOutput = valuesToCell vc tx.raw.currency tx.raw.totalOutput
+                            , valueOfTimestamp = timeToCell vc tx.raw.timestamp
+                            }
+            , tableInstance =
+                case viewState.tx.type_ of
+                    Tx.Account _ ->
+                        none
+
+                    Tx.Utxo tx ->
+                        utxoTxDetailsSectionsView vc model.network viewState tx.raw getLbl
+            , tabsVisible = False
+            }
+        , sidePanelHeaderTags = { actorVisible = False, tagsVisible = False }
+        , tags = { iconInstance = none, text = "" }
+        , sidePanelHeader =
             { headerInstance =
-                SidePanelComponents.sidePanelTxHeaderWithAttributes
-                    (SidePanelComponents.sidePanelTxHeaderAttributes |> s_sidePanelTxHeader [ css [ Css.padding (Css.px 0) ] ])
+                SidePanelComponents.sidePanelTxHeader
                     { sidePanelTxHeader =
                         { headerText =
                             (String.toUpper <| Id.network id) ++ " " ++ Locale.string vc.locale "Transaction"
@@ -582,35 +559,7 @@ txDetailsContentView vc gc model id viewState =
                     }
             , tagInfoVisible = False
             }
-        , sidePanelHeaderTags =
-            { actorVisible = False
-            , tagsVisible = False
-            }
-        , tags =
-            { iconInstance = none
-            , text = ""
-            }
-        , actor =
-            { iconInstance = none
-            , text = ""
-            }
         }
-        :: detailsTblBody
-        |> div [ detailsContainerStyle |> toAttr ]
-        |> flip (::) sections
-        |> div []
-
-
-utxoTxDetailsContentView : View.Config -> Api.Data.TxUtxo -> Html Msg
-utxoTxDetailsContentView vc data =
-    let
-        actionBtns =
-            []
-
-        tbls =
-            [ detailsFactTableView vc (apiUtxoTxToRows data), detailsActionsView vc actionBtns ]
-    in
-    div [] tbls
 
 
 ioTableView : View.Config -> Network -> String -> Model.Graph.Table.Table Api.Data.TxValue -> (Id -> HavingTags) -> Html Msg
@@ -647,6 +596,22 @@ utxoTxDetailsSectionsView vc network viewState data getLbl =
 accountTxDetailsContentView : View.Config -> Api.Data.TxAccount -> Html Msg
 accountTxDetailsContentView _ _ =
     div [] [ Html.text "I am a Account TX" ]
+
+
+valuesToCell : View.Config -> String -> Api.Data.Values -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+valuesToCell vc currency value =
+    { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
+    , secondRowText = ""
+    , secondRowVisible = False
+    }
+
+
+timeToCell : View.Config -> Int -> { firstRowText : String, secondRowText : String, secondRowVisible : Bool }
+timeToCell vc d =
+    { firstRowText = Locale.timestampDateUniform vc.locale d
+    , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
+    , secondRowVisible = True
+    }
 
 
 addressDetailsContentView : View.Config -> Pathfinder.Config -> Model -> Id -> AddressDetails.Model -> Html Msg
@@ -706,31 +671,19 @@ addressDetailsContentView vc gc model id viewState =
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
 
-        valuesToCell currency value =
-            { firstRowText = Locale.currency vc.locale [ ( assetFromBase currency, value ) ]
-            , secondRowText = ""
-            , secondRowVisible = False
-            }
-
-        timeToCell d =
-            { firstRowText = Locale.timestampDateUniform vc.locale d
-            , secondRowText = Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
-            , secondRowVisible = True
-            }
-
         tbls =
             [ --detailsFactTableView vc (apiAddressToRows viewState.data)
               SidePanelComponents.sidePanelDetails
                 { balanceTitle = { text = Locale.string vc.locale "Balance" }
-                , balanceValue = valuesToCell viewState.data.currency viewState.data.balance
+                , balanceValue = valuesToCell vc viewState.data.currency viewState.data.balance
                 , totalReceivedTitle = { text = Locale.string vc.locale "Total received" }
-                , totalReceivedValue = valuesToCell viewState.data.currency viewState.data.totalReceived
+                , totalReceivedValue = valuesToCell vc viewState.data.currency viewState.data.totalReceived
                 , totalSentTitle = { text = Locale.string vc.locale "Total sent" }
-                , totalSentValue = valuesToCell viewState.data.currency viewState.data.totalSpent
+                , totalSentValue = valuesToCell vc viewState.data.currency viewState.data.totalSpent
                 , lastUsageTitle = { text = Locale.string vc.locale "Last usage" }
-                , lastUsageValue = timeToCell viewState.data.lastTx.timestamp
+                , lastUsageValue = timeToCell vc viewState.data.lastTx.timestamp
                 , firstUsageTitle = { text = Locale.string vc.locale "First usage" }
-                , firstUsageValue = timeToCell viewState.data.firstTx.timestamp
+                , firstUsageValue = timeToCell vc viewState.data.firstTx.timestamp
                 }
             , Dict.get clstrId model.clusters
                 |> Maybe.map (clusterInfoView vc model.config.isClusterDetailsOpen model.colors nrTagsAddress)
@@ -967,35 +920,9 @@ addressNeighborsTableView vc _ _ viewState data =
     collapsibleSection vc "Neighbors" viewState.neighborsTableOpen ioIndicatorState content (AddressDetailsMsg AddressDetails.UserClickedToggleNeighborsTable)
 
 
-longIdentDetailsHeadingView : View.Config -> Pathfinder.Config -> Id -> String -> List BtnConfig -> Html Msg
-longIdentDetailsHeadingView vc _ id typeName annotations =
-    let
-        mNetwork =
-            Id.network id
-
-        heading =
-            String.trim (String.join " " [ mNetwork, Locale.string vc.locale typeName ])
-    in
-    div []
-        [ h1 [ panelHeadingStyle2 vc |> toAttr ] (Html.text (String.toUpper heading) :: (annotations |> List.map (annotationButton vc)))
-        , copyableLongIdentifierPathfinder vc [ copyableIdentifierStyle vc |> toAttr ] (Id.id id)
-        ]
-
-
 annotationButton : View.Config -> BtnConfig -> Html Msg
 annotationButton vc btn =
     disableableButton (linkButtonStyle vc) btn [ HA.title btn.text ] [ btn.icon btn.enable ]
-
-
-apiAddressToRows : Api.Data.Address -> List KVTableRow
-apiAddressToRows address =
-    [ Row "Total received" (Currency address.totalReceived address.currency)
-    , Row "Total sent" (Currency address.totalSpent address.currency)
-    , Row "Balance" (Currency address.balance address.currency)
-    , Gap
-    , Row "First usage" (TimestampWithTime address.firstTx.timestamp)
-    , Row "Last usage" (TimestampWithTime address.lastTx.timestamp)
-    ]
 
 
 apiEntityToRows : Id -> Api.Data.Entity -> List KVTableRow
@@ -1017,7 +944,7 @@ apiEntityToRows clstrid clstr =
 
 
 clusterInfoView : View.Config -> Bool -> Colors.ScopedColorAssignment -> Int -> Api.Data.Entity -> Html Msg
-clusterInfoView vc open colors nrAddessTags clstr =
+clusterInfoView vc open colors _ clstr =
     if clstr.noAddresses <= 1 then
         none
 
@@ -1074,15 +1001,6 @@ clusterInfoView vc open colors nrAddessTags clstr =
               else
                 none
             ]
-
-
-apiUtxoTxToRows : Api.Data.TxUtxo -> List KVTableRow
-apiUtxoTxToRows tx =
-    [ Row "Timestamp" (TimestampWithTime tx.timestamp)
-    , Gap
-    , Row "Total Input" (Currency tx.totalInput tx.currency)
-    , Row "Total Output" (Currency tx.totalOutput tx.currency)
-    ]
 
 
 detailsFactTableView : View.Config -> List KVTableRow -> Html Msg
@@ -1250,7 +1168,7 @@ showBoundingBox model =
 
 
 drawDragSelector : View.Config -> Model -> Svg Msg
-drawDragSelector vc m =
+drawDragSelector _ m =
     case ( m.dragging, m.pointerTool ) of
         ( Dragging tm start now, Select ) ->
             let
