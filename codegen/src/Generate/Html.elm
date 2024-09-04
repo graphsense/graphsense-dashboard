@@ -402,20 +402,6 @@ instanceNodeToExpressions config parentName node =
                 |> Maybe.Extra.withDefaultLazy
                     (\_ ->
                         withFrameTraitsNodeToExpression config name subNameId node
-                     {-
-                        Gen.Html.Styled.call_.div
-                            (getElementAttributes config name
-                                |> Elm.Op.append
-                                    (FrameTraits.toStyles node.frameTraits
-                                        |> Attributes.css
-                                        |> List.singleton
-                                        |> Elm.list
-                                    )
-                            )
-                            (frameTraitsToExpressions config subNameId node.frameTraits
-                                |> Elm.list
-                            )
-                     -}
                     )
             )
         |> withVisibility parentName config.propertyExpressions node.frameTraits.isLayerTrait.componentPropertyReferences

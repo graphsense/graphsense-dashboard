@@ -33,8 +33,16 @@ adjustNames node =
     let
         names =
             collectNames [] node Dict.empty
+                |> Dict.map (\_ -> List.map sanitize)
                 |> disambiguateCollectedNames
                 |> Dict.map (\_ -> sanitize)
+
+        log tit =
+            if FrameTraits.getName node == "Icons/Report" then
+                Debug.log tit
+
+            else
+                identity
     in
     withFrameTraitsAdjustNames names node
 
@@ -42,29 +50,48 @@ adjustNames node =
 disambiguateCollectedNames : Dict String (List String) -> Dict String String
 disambiguateCollectedNames dict =
     let
-        list id =
+        log id tit =
+            if id == "2914:463" then
+                Debug.log tit
+
+            else
+                identity
+
+        list id prefix =
             Dict.toList dict
                 |> List.filter (first >> (/=) id)
+                |> List.filter (second >> List.Extra.isPrefixOf prefix)
                 |> List.map second
 
-        dis level index id names =
+        dis prefix index id names =
+            let
+                level =
+                    List.length prefix
+            in
             case names of
                 fst :: rest ->
-                    if List.any (List.Extra.getAt level >> Maybe.map sanitize >> (==) (Just (sanitize fst))) (list id) then
+                    let
+                        prefix2 =
+                            prefix ++ [ fst ]
+                    in
+                    if List.any (List.Extra.getAt level >> Maybe.map sanitize >> (==) (Just (sanitize fst))) (list id prefix2) |> log id ("123 found " ++ fst ++ " at " ++ String.fromInt level) then
                         if level == 0 then
-                            fst ++ " of " ++ dis (level + 1) index id rest
+                            fst ++ dis prefix2 index id rest
 
                         else
-                            dis (level + 1) index id rest
+                            dis prefix2 index id rest
+e
+                    if level == 0 then
 
-                    else
                         fst
+                    else
+                            " of " ++ fst
 
                 [] ->
                     String.fromInt index
     in
     Dict.toList dict
-        |> List.indexedMap (\i ( id, names ) -> ( id, dis 0 i id names ))
+        |> List.indexedMap (\i ( id, names ) -> ( id, dis [] i id names ))
         |> Dict.fromList
 
 

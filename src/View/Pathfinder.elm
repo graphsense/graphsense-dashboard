@@ -583,14 +583,14 @@ txDetailsContentView vc gc model id viewState =
             , tagInfoVisible = False
             }
         , sidePanelHeaderTags =
-            { exchangeTagVisible = False
-            , otherTagVisible = False
+            { actorVisible = False
+            , tagsVisible = False
             }
-        , tagsLabel =
+        , tags =
             { iconInstance = none
             , text = ""
             }
-        , actorLabel =
+        , actor =
             { iconInstance = none
             , text = ""
             }
@@ -745,9 +745,6 @@ addressDetailsContentView vc gc model id viewState =
             ]
 
         -- addressAnnotationBtns =
-        inst =
-            SidePanelComponents.sidePanelHeaderInstances
-
         showExchangeTag =
             actorText /= Nothing
 
@@ -761,7 +758,15 @@ addressDetailsContentView vc gc model id viewState =
                         |> Route.Graph
                         |> Route.toUrl
             in
-            Html.a [ onMouseEnter (UserMovesMouseOverTagLabel tid), onMouseLeave (UserMovesMouseOutTagLabel tid), Css.tagLinkButtonStyle vc |> css, HA.id tid, HA.href link ]
+            Html.a
+                [ onMouseEnter (UserMovesMouseOverTagLabel tid)
+                , onMouseLeave (UserMovesMouseOutTagLabel tid)
+
+                --, Css.tagLinkButtonStyle vc |> css
+                , HA.css SidePanelComponents.sidePanelComponentLabelOfTagsDetails.styles
+                , HA.id tid
+                , HA.href link
+                ]
                 (Html.text t.label
                     :: (if i < (lenTagLabels - 1) then
                             [ Html.text "," ]
@@ -812,99 +817,89 @@ addressDetailsContentView vc gc model id viewState =
             else
                 []
     in
-    SidePanelComponents.sidePanelHeaderWithInstances
-        (SidePanelComponents.sidePanelHeaderAttributes
-            |> s_sidePanelHeader [ css [ Css.alignItems Css.start |> Css.important ] ]
-        )
-        { inst
-            | tagsLabel =
-                Just
+    SidePanelComponents.sidePanelComponentWithInstances
+        SidePanelComponents.sidePanelComponentAttributes
+        (SidePanelComponents.sidePanelComponentInstances
+            |> s_labelOfTags
+                (Just
                     (div
-                        [ HA.css
-                            [ Css.borderRadius (Css.px 0)
-                            , Css.opacity (Css.num 1)
-                            , Css.displayFlex
-                            , Css.property "gap" "8px"
-                            , Css.alignItems Css.center
-                            , Css.justifyContent Css.flexStart
-                            , Css.flexFlow2 Css.row Css.wrap
-                            , Css.padding Css.no
-                            , Css.backgroundColor Css.transparent
-                            , Css.borderWidth (Css.px 0)
-                            ]
-                        ]
-                        (Icons.iconsTagLargeSvg [] {} :: (tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
-                    )
-            , actorLabel =
-                let
-                    iconDetails =
-                        HIcons.iconsAssignDetails
-
-                    icon =
-                        Icons.iconsAssignSvg
-
-                    link =
-                        Route.Graph.actorRoute (actor_id |> Maybe.withDefault "noActor") Nothing
-                            |> Route.Graph
-                            |> Route.toUrl
-
-                    text =
-                        actorText |> Maybe.withDefault ""
-
-                    iconForActor =
-                        actorImg
-                            |> Maybe.map
-                                (\imgSrc ->
-                                    img
-                                        [ src imgSrc
-                                        , HA.alt <| Maybe.withDefault "" <| actorText
-                                        , HA.width <| round iconDetails.width
-                                        , HA.height <| round iconDetails.height
-                                        , HA.css iconDetails.styles
-                                        ]
-                                        []
-                                        |> List.singleton
-                                        |> div
-                                            [ HA.css iconDetails.styles
-                                            , HA.css
-                                                [ iconDetails.width
-                                                    |> Css.px
-                                                    |> Css.width
-                                                , iconDetails.height
-                                                    |> Css.px
-                                                    |> Css.height
-                                                ]
-                                            ]
-                                )
-                            |> Maybe.withDefault (icon [] {})
-                in
-                Just
-                    (div
-                        [ HA.css
-                            [ Css.borderRadius (Css.px 0)
-                            , Css.opacity (Css.num 1)
-                            , Css.height (Css.px 15)
-                            , Css.displayFlex
-                            , Css.property "gap" "8px"
-                            , Css.alignItems Css.center
-                            , Css.justifyContent Css.start
-                            , Css.displayFlex
+                        [ css
+                            [ Css.displayFlex
                             , Css.flexDirection Css.row
-                            , Css.paddingBottom (Css.px 0)
-                            , Css.paddingTop (Css.px 0)
-                            , Css.paddingRight (Css.px 0)
-                            , Css.paddingLeft (Css.px 0)
-                            , Css.backgroundColor (Css.rgba 0 0 0 0)
-                            , Css.borderWidth (Css.px 1)
+                            , Css.property "gap" "1ex"
                             ]
                         ]
-                        [ iconForActor, Html.a [ HA.href link, Css.tagLinkButtonStyle vc |> css ] [ Html.text text ] ]
+                        ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
                     )
-        }
-        { sidePanelHeader =
+                )
+            |> s_labelOfActor
+                (actor_id
+                    |> Maybe.map
+                        (\aid ->
+                            let
+                                link =
+                                    Route.Graph.actorRoute aid Nothing
+                                        |> Route.Graph
+                                        |> Route.toUrl
+
+                                text =
+                                    actorText |> Maybe.withDefault ""
+                            in
+                            Html.a
+                                [ HA.href link
+                                , css SidePanelComponents.sidePanelComponentLabelOfTagsDetails.styles
+                                ]
+                                [ Html.text text
+                                ]
+                        )
+                )
+        )
+        { actor =
+            { iconInstance =
+                actorImg
+                    |> Maybe.map
+                        (\imgSrc ->
+                            let
+                                iconDetails =
+                                    HIcons.iconsAssignDetails
+                            in
+                            img
+                                [ src imgSrc
+                                , HA.alt <| Maybe.withDefault "" <| actorText
+                                , HA.width <| round iconDetails.width
+                                , HA.height <| round iconDetails.height
+                                , HA.css iconDetails.styles
+                                ]
+                                []
+                                |> List.singleton
+                                |> div
+                                    [ HA.css iconDetails.styles
+                                    , HA.css
+                                        [ iconDetails.width
+                                            |> Css.px
+                                            |> Css.width
+                                        , iconDetails.height
+                                            |> Css.px
+                                            |> Css.height
+                                        ]
+                                    ]
+                        )
+                    |> Maybe.withDefault (Icons.iconsAssignSvg [] {})
+            , text = ""
+            }
+        , leftTab = { tabLabel = "" }
+        , rightTab = { tabLabel = "" }
+        , sidePanelComponent =
+            { detailsInstance =
+                div [] tbls
+            , tableInstance = div [] sections
+            , tabsVisible = False
+            }
+        , sidePanelHeaderTags = { actorVisible = showExchangeTag, tagsVisible = showOtherTag }
+        , tags = { iconInstance = Icons.iconsTagLargeSvg [] {}, text = "" }
+        , sidePanelHeader =
             { headerInstance =
-                SidePanelComponents.sidePanelAddressHeaderWithAttributes
-                    (SidePanelComponents.sidePanelAddressHeaderAttributes |> s_sidePanelAddressHeader [ css [ Css.padding (Css.px 0) ] ])
+                SidePanelComponents.sidePanelAddressHeader
                     { sidePanelAddressHeader =
                         { iconInstance =
                             if address.exchange /= Nothing then
@@ -931,23 +926,7 @@ addressDetailsContentView vc gc model id viewState =
                     }
             , tagInfoVisible = showOtherTag || showExchangeTag
             }
-        , sidePanelHeaderTags =
-            { exchangeTagVisible = showExchangeTag
-            , otherTagVisible = showOtherTag
-            }
-        , tagsLabel =
-            { iconInstance = none
-            , text = ""
-            }
-        , actorLabel =
-            { iconInstance = none
-            , text = ""
-            }
         }
-        :: tbls
-        |> div [ detailsContainerStyle |> toAttr ]
-        |> flip (::) sections
-        |> div []
 
 
 addressTransactionTableView : View.Config -> Pathfinder.Config -> Id -> AddressDetails.Model -> (Id -> Bool) -> Html Msg
