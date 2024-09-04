@@ -4,7 +4,7 @@ import Config.View as View
 import Css.Pathfinder exposing (dateStyle, multiLineDatetimeDateStyle, multiLineDatetimeTimeStyle)
 import Html.Styled exposing (..)
 import Html.Styled.Attributes exposing (css)
-import Theme.Html.SidePanelComponents
+import Theme.Html.GraphComponents
 import View.Locale as Locale
 
 
@@ -17,12 +17,14 @@ multiLineDateTimeFromTimestamp vc d =
         time =
             Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset d
     in
-    Theme.Html.SidePanelComponents.sidePanelTxListTimeCell
-        { sidePanelTxListTimeCell =
-            { date = date
-            , time = time
+    Theme.Html.GraphComponents.tooltipRowValue
+        { tooltipRowValue =
+            { firstRow = date
+            , secondRow = time
+            , secondRowVisible = True
             }
         }
+
 
 
 dateFromTimestamp : View.Config -> Int -> Html msg

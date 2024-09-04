@@ -17,6 +17,7 @@ import Model.Pathfinder.Address as Address
 import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
+import RecordSetter exposing (..)
 import RemoteData exposing (WebData)
 import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1DownAttributes)
 import Util.Css as Css
@@ -42,9 +43,12 @@ view vc ts tt =
         |> hovercard vc tt.hovercard (Css.zIndexMainValue + 1)
 
 
-tooltipBaseCss : List Css.Style
-tooltipBaseCss =
-    GraphComponents.tooltipProperty1DownDetails.styles ++ [ Css.width Css.auto, Css.minWidth (Css.px 100) ]
+
+{-
+   tooltipBaseCss : List Css.Style
+   tooltipBaseCss =
+       GraphComponents.tooltipProperty1DownDetails.styles ++ [ Css.width Css.auto, Css.minWidth (Css.px 100) ]
+-}
 
 
 getConfidenceIndicator : View.Config -> Float -> Html msg
@@ -59,22 +63,12 @@ getConfidenceIndicator vc x =
         span [ css [ Css.color (Css.alertColor vc) ] ] [ Locale.text vc.locale "Low" ]
 
 
-key : View.Config -> String -> Html msg
-key vc =
-    Locale.string vc.locale
-        >> text
-        >> List.singleton
-        >> div
-            [ css GraphComponents.tooltipProperty1DownLabel1Details.styles
-            ]
-
-
-val : Html msg -> Html msg
-val =
-    List.singleton
-        >> div
-            [ css GraphComponents.tooltipProperty1DownValue1Details.styles
-            ]
+val : View.Config -> String -> { firstRow : String, secondRow : String, secondRowVisible : Bool }
+val vc str =
+    { firstRow = Locale.string vc.locale str
+    , secondRow = ""
+    , secondRowVisible = False
+    }
 
 
 tagLabel : View.Config -> String -> TagSummary -> Html msg
@@ -82,42 +76,59 @@ tagLabel vc lbl tag =
     let
         mlbldata =
             Dict.get lbl tag.labelSummary
+
+        row =
+            GraphComponents.tooltipRowWithAttributes
+                (GraphComponents.tooltipRowAttributes
+                    |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+                )
     in
     case mlbldata of
         Just lbldata ->
             div
-                [ css tooltipBaseCss
+                [--css tooltipBaseCss
                 ]
-                [ div
-                    [ css GraphComponents.tooltipProperty1DownContent1Details.styles
-                    , css [ Css.whiteSpace Css.noWrap, Css.alignItems Css.stretch ]
-                    ]
-                    [ key vc "Tag Label"
-                    , key vc "Confidence"
-                    , key vc "Sources"
-                    , key vc "Mentions"
-                    , key vc "Last Modified"
-                    ]
-                , div
-                    [ css GraphComponents.tooltipProperty1DownContent2Details.styles
-                    , css [ Css.whiteSpace Css.noWrap ]
-                    ]
-                    [ lbldata.label
-                        |> text
-                        |> val
-                    , getConfidenceIndicator vc lbldata.confidence |> val
-                    , List.length lbldata.sources
-                        |> String.fromInt
-                        |> text
-                        |> val
-                    , lbldata.count
-                        |> String.fromInt
-                        |> text
-                        |> val
-                    , lbldata.lastmod
-                        |> multiLineDateTimeFromTimestamp vc
-                        |> val
-                    ]
+                [ row
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Tag label" }
+                    , tooltipRowValue = lbldata.label |> val vc
+                    }
+                , GraphComponents.tooltipRowWithInstances
+                    (GraphComponents.tooltipRowAttributes
+                        |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+                    )
+                    (GraphComponents.tooltipRowInstances
+                        |> s_tooltipRowValue
+                            (getConfidenceIndicator vc lbldata.confidence |> Just)
+                    )
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Confidence" }
+                    , tooltipRowValue = { firstRow = "", secondRow = "", secondRowVisible = False }
+                    }
+                , row
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Sources" }
+                    , tooltipRowValue =
+                        List.length lbldata.sources
+                            |> String.fromInt
+                            |> val vc
+                    }
+                , row
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Mentions" }
+                    , tooltipRowValue = lbldata.count |> String.fromInt |> val vc
+                    }
+                , row
+                    { tooltipRowLabel = { title = Locale.string vc.locale "Last modified" }
+                    , tooltipRowValue =
+                        let
+                            date =
+                                Locale.timestampDateUniform vc.locale lbldata.lastmod
+
+                            time =
+                                Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset lbldata.lastmod
+                        in
+                        { firstRow = date
+                        , secondRow = time
+                        , secondRowVisible = True
+                        }
+                    }
                 ]
 
         _ ->
@@ -139,6 +150,7 @@ address vc havingTags adr =
         currency =
             Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
     in
+    Debug.todo """
     div
         [ css tooltipBaseCss
         ]
@@ -165,10 +177,12 @@ address vc havingTags adr =
                 |> val
             ]
         ]
+        """
 
 
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg
 utxoTx vc tx =
+    Debug.todo """
     div
         [ css tooltipBaseCss
         ]
@@ -192,3 +206,4 @@ utxoTx vc tx =
                 |> val
             ]
         ]
+        """

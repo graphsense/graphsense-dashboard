@@ -2,7 +2,7 @@ module Generate.Html.HasLayoutTrait exposing (..)
 
 import Api.Raw exposing (..)
 import Elm
-import Gen.Css as Css
+import Gen.Css as Css exposing (minHeight, minWidth)
 import Generate.Util exposing (..)
 import Tuple exposing (pair)
 
@@ -13,6 +13,8 @@ toStyles node =
         |> m layoutSizingHorizontal node.layoutSizingHorizontal
         |> a2 width node.layoutSizingHorizontal node.size
         |> a2 height node.layoutSizingVertical node.size
+        |> m (Css.px >> minWidth) node.minWidth
+        |> m (Css.px >> minHeight) node.minHeight
 
 
 width : LayoutSizingHorizontal -> Vector -> Maybe Elm.Expression

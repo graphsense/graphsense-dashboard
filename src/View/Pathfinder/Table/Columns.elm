@@ -20,7 +20,6 @@ import Util.View exposing (copyIconPathfinder, copyableLongIdentifierPathfinder,
 import View.Graph.Table exposing (valuesSorter)
 import View.Locale as Locale
 import View.Pathfinder.Icons exposing (inIcon, outIcon)
-import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 
 
 timestampDateMultiRowColumn : View.Config -> String -> (data -> Int) -> Table.Column data msg
@@ -30,7 +29,21 @@ timestampDateMultiRowColumn vc name accessor =
         , viewData =
             \data ->
                 Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
-                    [ multiLineDateTimeFromTimestamp vc (accessor data)
+                    [ let
+                        date =
+                            accessor data
+                                |> Locale.timestampDateUniform vc.locale
+
+                        time =
+                            accessor data
+                                |> Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset
+                      in
+                      SidePanelComponents.sidePanelTxListTimeCell
+                        { sidePanelTxListTimeCell =
+                            { date = date
+                            , time = time
+                            }
+                        }
                     ]
 
         -- , sorter = Table.increasingOrDecreasingBy accessor

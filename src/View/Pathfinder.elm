@@ -773,7 +773,10 @@ addressDetailsContentView vc gc model id viewState =
                         [ css
                             [ Css.displayFlex
                             , Css.flexDirection Css.row
+                            , Css.flexWrap Css.wrap
                             , Css.property "gap" "1ex"
+                            , Css.alignItems Css.center
+                            , Css.maxWidth <| Css.pct 80
                             ]
                         ]
                         ((tagLabels |> List.take nTagsToShow |> List.indexedMap showTag) ++ [ tagsControl ])
