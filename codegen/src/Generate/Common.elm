@@ -74,18 +74,18 @@ disambiguateCollectedNames dict =
                         prefix2 =
                             prefix ++ [ fst ]
                     in
-                    if List.any (List.Extra.getAt level >> Maybe.map sanitize >> (==) (Just (sanitize fst))) (list id prefix2) |> log id ("123 found " ++ fst ++ " at " ++ String.fromInt level) then
+                    if List.any (List.Extra.getAt level >> Maybe.map sanitize >> (==) (Just (sanitize fst))) (list id prefix2) then
                         if level == 0 then
                             fst ++ dis prefix2 index id rest
 
                         else
                             dis prefix2 index id rest
-e
-                    if level == 0 then
 
+                    else if level == 0 then
                         fst
+
                     else
-                            " of " ++ fst
+                        " of " ++ fst
 
                 [] ->
                     String.fromInt index

@@ -29,7 +29,7 @@ timestampDateMultiRowColumn vc name accessor =
         { name = name
         , viewData =
             \data ->
-                Table.HtmlDetails [ [ PCSS.mGap |> Css.padding ] |> css ]
+                Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
                     [ multiLineDateTimeFromTimestamp vc (accessor data)
                     ]
 
@@ -53,12 +53,6 @@ addressColumn vc cc lblfn =
 
 identifierColumn : (data -> HavingTags) -> View.Config -> ColumnConfig data msg -> Table.Column data msg
 identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
-    let
-        tagcss =
-            [ Css.verticalAlign Css.bottom, Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 5) ] |> toAttr
-
-        -- [ Css.width (Css.px 15), Css.display Css.inlineBlock, Css.paddingRight (Css.px 3) ] |> toAttr
-    in
     Table.veryCustomColumn
         { name = label
         , viewData =
@@ -100,8 +94,7 @@ identifierColumn lblfn vc { label, accessor, onClick, tagsPlaceholder } =
                     }
                     |> List.singleton
                     |> Table.HtmlDetails
-                        (([ PCSS.mGap |> Css.padding
-                          , Css.verticalAlign Css.middle
+                        (([ Css.verticalAlign Css.middle
                           ]
                             |> css
                          )
@@ -235,11 +228,13 @@ valuesCell vc hideCode hideFlowIndicator colorFlowDirection coinCode values =
             else
                 []
     in
-    Table.HtmlDetails [ ([ PCSS.mGap |> Css.padding, Css.textAlign Css.right, Css.verticalAlign Css.middle ] ++ addCss) |> css ]
-        [ if hideFlowIndicator then
-            none
-
-          else
-            flowIndicator
-        , text value
+    Table.HtmlDetails [ css [ Css.verticalAlign Css.middle ] ]
+        [ SidePanelComponents.sidePanelTxListValueCellWithAttributes
+            (SidePanelComponents.sidePanelTxListValueCellAttributes
+                |> s_txValue [ addCss |> List.map Css.important |> css ]
+            )
+            { sidePanelTxListValueCell =
+                { txValue = value
+                }
+            }
         ]

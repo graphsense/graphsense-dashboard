@@ -313,7 +313,7 @@ collapsibleSectionRaw headingAttr iconAttr vc title open indicator content actio
             else
                 []
     in
-    div []
+    div [ css [ Css.width <| Css.pct 100 ] ]
         (div [ headingAttr, onClick action ]
             [ span [ iconAttr ] [ icon ]
             , span [ iconAttr ] [ Html.text (Locale.string vc.locale title) ]
@@ -703,12 +703,6 @@ addressDetailsContentView vc gc model id viewState =
         txOnGraphFn =
             \txId -> Dict.member txId model.network.txs
 
-        sections =
-            [ addressTransactionTableView vc gc id viewState txOnGraphFn
-
-            -- , addressNeighborsTableView vc gc id viewState viewState.data
-            ]
-
         clstrId =
             Id.initClusterId viewState.data.currency viewState.data.entity
 
@@ -892,7 +886,7 @@ addressDetailsContentView vc gc model id viewState =
         , sidePanelComponent =
             { detailsInstance =
                 div [] tbls
-            , tableInstance = div [] sections
+            , tableInstance = addressTransactionTableView vc gc id viewState txOnGraphFn
             , tabsVisible = False
             }
         , sidePanelHeaderTags = { actorVisible = showExchangeTag, tagsVisible = showOtherTag }
