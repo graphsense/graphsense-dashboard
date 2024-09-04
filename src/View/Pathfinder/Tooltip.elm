@@ -7,10 +7,8 @@ import Css
 import Css.Pathfinder as Css
 import Css.View as Css
 import Dict exposing (Dict)
-import Hovercard
-import Html.Attributes
 import Html.Styled as Html exposing (..)
-import Html.Styled.Attributes exposing (css, title)
+import Html.Styled.Attributes exposing (css)
 import Model.Currency exposing (assetFromBase)
 import Model.Pathfinder exposing (HavingTags(..))
 import Model.Pathfinder.Address as Address
@@ -18,12 +16,11 @@ import Model.Pathfinder.Id as Id
 import Model.Pathfinder.Tooltip exposing (Tooltip, TooltipType(..))
 import Model.Pathfinder.Tx as Tx
 import RecordSetter exposing (..)
-import RemoteData exposing (WebData)
-import Theme.Html.GraphComponents as GraphComponents exposing (tooltipProperty1DownAttributes)
+import Theme.Html.GraphComponents as GraphComponents 
+import Tuple exposing (pair)
 import Util.Css as Css
 import Util.View exposing (hovercard, none, truncateLongIdentifierWithLengths)
 import View.Locale as Locale
-import View.Pathfinder.Utils exposing (multiLineDateTimeFromTimestamp)
 
 
 view : View.Config -> Dict Id.Id HavingTags -> Tooltip -> Html msg
@@ -71,17 +68,19 @@ val vc str =
     }
 
 
+row : { tooltipRowLabel : { title : String }, tooltipRowValue : { firstRow : String, secondRowVisible : Bool, secondRow : String } } -> Html msg
+row =
+    GraphComponents.tooltipRowWithAttributes
+        (GraphComponents.tooltipRowAttributes
+            |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
+        )
+
+
 tagLabel : View.Config -> String -> TagSummary -> Html msg
 tagLabel vc lbl tag =
     let
         mlbldata =
             Dict.get lbl tag.labelSummary
-
-        row =
-            GraphComponents.tooltipRowWithAttributes
-                (GraphComponents.tooltipRowAttributes
-                    |> s_tooltipRow [ css [ Css.width (Css.pct 100) ] ]
-                )
     in
     case mlbldata of
         Just lbldata ->
@@ -136,74 +135,64 @@ tagLabel vc lbl tag =
 
 
 address : View.Config -> Maybe HavingTags -> Address.Address -> Html msg
-address vc havingTags adr =
+address vc _ adr =
     let
         net =
             Id.network adr.id
-
-        balance =
-            Address.getBalance adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
-
-        totalReceived =
-            Address.getTotalReceived adr |> Maybe.map .value |> Maybe.map (Locale.coinWithoutCode vc.locale (assetFromBase net)) |> Maybe.withDefault ""
-
-        currency =
-            Address.getCurrency adr |> Maybe.map String.toUpper |> Maybe.withDefault ""
     in
-    Debug.todo """
     div
-        [ css tooltipBaseCss
+        []
+        [ row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Balance" }
+            , tooltipRowValue =
+                Address.getBalance adr
+                    |> Maybe.map
+                        (pair (assetFromBase net)
+                            >> List.singleton
+                            >> Locale.currency vc.locale
+                        )
+                    |> Maybe.withDefault ""
+                    |> val vc
+            }
+        , row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Total received" }
+            , tooltipRowValue =
+                Address.getTotalReceived adr
+                    |> Maybe.map
+                        (pair (assetFromBase net)
+                            >> List.singleton
+                            >> Locale.currency vc.locale
+                        )
+                    |> Maybe.withDefault ""
+                    |> val vc
+            }
         ]
-        [ div
-            [ css GraphComponents.tooltipProperty1DownContent1Details.styles
-            , css [ Css.whiteSpace Css.noWrap ]
-            ]
-            [ key vc "Balance"
-            , key vc "Total Received"
-            ]
-        , div
-            [ css GraphComponents.tooltipProperty1DownContent2Details.styles
-            , css [ Css.whiteSpace Css.noWrap ]
-            ]
-            [ balance
-                ++ " "
-                ++ currency
-                |> text
-                |> val
-            , totalReceived
-                ++ " "
-                ++ currency
-                |> text
-                |> val
-            ]
-        ]
-        """
 
 
 utxoTx : View.Config -> Tx.UtxoTx -> Html msg
 utxoTx vc tx =
-    Debug.todo """
     div
-        [ css tooltipBaseCss
+        []
+        [ row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Tx hash" }
+            , tooltipRowValue =
+                tx.raw.txHash
+                    |> truncateLongIdentifierWithLengths 8 4
+                    |> val vc
+            }
+        , row
+            { tooltipRowLabel = { title = Locale.string vc.locale "Timestamp" }
+            , tooltipRowValue =
+                let
+                    date =
+                        Locale.timestampDateUniform vc.locale tx.raw.timestamp
+
+                    time =
+                        Locale.timestampTimeUniform vc.locale vc.showTimeZoneOffset tx.raw.timestamp
+                in
+                { firstRow = date
+                , secondRow = time
+                , secondRowVisible = True
+                }
+            }
         ]
-        [ div
-            [ css GraphComponents.tooltipProperty1DownContent1Details.styles
-            , css [ Css.whiteSpace Css.noWrap ]
-            ]
-            [ key vc "Tx hash"
-            , key vc "Timestamp"
-            ]
-        , div
-            [ css GraphComponents.tooltipProperty1DownContent2Details.styles
-            , css [ Css.whiteSpace Css.noWrap ]
-            ]
-            [ tx.raw.txHash
-                |> truncateLongIdentifierWithLengths 8 4
-                |> text
-                |> val
-            , tx.raw.timestamp
-                |> multiLineDateTimeFromTimestamp vc
-                |> val
-            ]
-        ]
-        """
